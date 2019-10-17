@@ -36,9 +36,9 @@ msbuild cswinrt.sln /p:platform=%cswinrt_platform%;configuration=%cswinrt_config
 
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
 echo Running cswinrt unit tests for %cswinrt_platform% %cswinrt_configuration%
-if %cswinrt_configuration% == x86 (
-set dotnet_exe="%ProgramFiles(x86)%\dotnet\dotnet.exe"
+if %cswinrt_platform% == x86 (
+set program_files="%ProgramFiles(x86)%"
 ) else (
-set dotnet_exe="%ProgramFiles%\dotnet\dotnet.exe"
+set program_files="%ProgramFiles%"
 )
-%dotnet_exe% test --no-build --logger xunit;LogFilePath=test_cswinrt_unittest.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
+%program_files%\dotnet\dotnet.exe test --no-build --logger xunit;LogFilePath=test_%cswinrt_version%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%

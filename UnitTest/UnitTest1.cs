@@ -24,7 +24,7 @@ namespace UnitTest
     using A = IIterable<IStringable>;
     using B = IKeyValuePair<string, IAsyncOperationWithProgress</*A*/IIterable<IStringable>, float>>;
     using IInspectable = ObjectReference<WinRT.Interop.IInspectableVftbl>; // todo
-
+    
     public class TestGuids
     {
         private static void AssertGuid<T>(string expected)
