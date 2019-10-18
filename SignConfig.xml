@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?> 
 <SignConfigXML> 
   <job configuration="Release" dest="__OUTPATHROOT__" jobname="CsWinRT Tools" approvers=""> 
-    <file src="__INPATHROOT__\x86\cppwinrt\cswinrt.exe" signType="400" dest="__OUTPATHROOT__\x86\cswinrt.exe" /> 
+    <file src="__INPATHROOT__\release_x86\cswinrt\cswinrt.exe" signType="400" dest="__OUTPATHROOT__\release_x86\cswinrt.exe" /> 
   </job> 
 </SignConfigXML> 
