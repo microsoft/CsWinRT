@@ -680,7 +680,7 @@ namespace cswinrt
 #endif
 
     template<typename write_params>
-    void write_event_params(writer& w, row_base<Event>::value_type const& evt, write_params write_params)
+    void write_event_params(writer& w, row_base<Event>::value_type const& evt, write_params params)
     {
         method_signature add_sig{ std::get<0>(get_event_methods(evt)) };
         auto semantics = get_type_semantics(add_sig.params().at(0).second->Type());
@@ -690,14 +690,14 @@ namespace cswinrt
             method_signature invoke_sig{ get_delegate_invoke(*td) };
             if (invoke_sig.params().size() > 0)
             {
-                write_params(w, invoke_sig);
+                params(w, invoke_sig);
             }
         }
         else if (auto gti = std::get_if<generic_type_instance>(&semantics))
         {
             auto guard{ w.push_generic_args(*gti) };
             method_signature invoke_sig{ get_delegate_invoke(gti->generic_type) };
-            write_params(w, invoke_sig);
+            params(w, invoke_sig);
         }
     }
 
