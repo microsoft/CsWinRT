@@ -60,10 +60,16 @@
     </Reference>
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(BuildTestProjection)' == 'true'">
+  <Target Name="CopyTestComponent" BeforeTargets="PreBuildEvent">
     <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.dll&quot; &quot;$(TargetDir)&quot;" />
     <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.pdb&quot; &quot;$(TargetDir)&quot;" />
+  </Target>
+
+  <Target Name="ProjectTestComponent" BeforeTargets="CoreCompile" Condition="'$(BuildTestProjection)' == 'true'">
     <Exec Command="$(CsWinrtExe) -verbose -in $(OutDir)TestComp\TestComp.winmd local -out &quot;$(ProjectDir)Generated Files&quot; -include TestComp -include Windows.Foundation -exclude Windows.Foundation.Diagnostics -exclude Windows.Foundation.Metadata" />
+    <ItemGroup>
+      <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
+    </ItemGroup>    
   </Target>
 
 </Project>
