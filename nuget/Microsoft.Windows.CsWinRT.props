@@ -1,0 +1,12 @@
+﻿<!--
+***********************************************************************************************
+Copyright (C) Microsoft Corporation. All rights reserved.
+***********************************************************************************************
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <PropertyGroup>
+        <CsWinRTPath Condition="'$(CsWinRTPath)'==''">$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)))</CsWinRTPath>
+    </PropertyGroup>
+
+</Project>

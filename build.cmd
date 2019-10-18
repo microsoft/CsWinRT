@@ -28,7 +28,7 @@ if /I "%cswinrt_configuration%" equ "all" (
 )
 
 if "%cswinrt_configuration%"=="" (
- set cswinrt_configuration=Debug
+  set cswinrt_configuration=Debug
 )
 
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
@@ -36,9 +36,12 @@ msbuild cswinrt.sln /p:platform=%cswinrt_platform%;configuration=%cswinrt_config
 
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
 echo Running cswinrt unit tests for %cswinrt_platform% %cswinrt_configuration%
-if %cswinrt_platform% == x86 (
-set program_files="%ProgramFiles(x86)%"
+if %cswinrt_platform%==x86 (
+  set program_files="%ProgramFiles(x86)%"
 ) else (
-set program_files="%ProgramFiles%"
+  set program_files="%ProgramFiles%"
 )
-%program_files%\dotnet\dotnet.exe test --no-build --logger xunit;LogFilePath=test_%cswinrt_version%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
+%program_files%\dotnet\dotnet.exe test --no-build --logger xunit;LogFilePath=%~dp0test_%cswinrt_version%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
+
+set cswinrt_bin_dir=%~dp0_build\%cswinrt_platform%\%cswinrt_configuration%
+nuget pack nuget/Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_bin_dir%\cswinrt.exe -Version %cswinrt_version% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed
