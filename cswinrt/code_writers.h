@@ -1228,8 +1228,10 @@ public static implicit operator %(% obj) =>
             get<uint8_t>(get_arg(10)));
     }
 
-    void write_vtbl_entry(writer& w, MethodDef const& method)
+    void write_vtbl_entry(writer& w, MethodDef const& method, uint32_t vtbl_base)
     {
+        XLANG_ASSERT(vtbl_base <= method.index());
+        uint32_t const vtbl_index = method.index() - vtbl_base;
         auto get_delegate_type = [&]() -> std::string
         {
             method_signature signature{ method };
@@ -1287,7 +1289,7 @@ public static implicit operator %(% obj) =>
                 }
             }
 
-            auto delegate_type = w.write_temp("_%_%", method.Name(), method.index());
+            auto delegate_type = w.write_temp("_%_%", method.Name(), vtbl_index);
             w.write("public %delegate int %([In] %);\n",
                 is_unsafe(signature) ? "unsafe " : "",
                 delegate_type,
@@ -1299,11 +1301,12 @@ public static implicit operator %(% obj) =>
         w.write("public % %_%;\n",
             get_delegate_type(),
             method.Name(),
-            method.index());
+            vtbl_index);
     }
 
     void write_event_source_ctors(writer& w, TypeDef const& type)
     {
+        uint32_t const vtbl_base = type.MethodList().first.index();
         for (auto&& evt : type.EventList())
         {
             auto [add, remove] = get_event_methods(evt);
@@ -1316,9 +1319,9 @@ _% =
                 evt.Name(),
                 bind<write_event_param_types>(evt),
                 evt.Name(),
-                add.index(),
+                add.index() - vtbl_base,
                 evt.Name(),
-                remove.index(),
+                remove.index() - vtbl_base,
                 bind<write_event_param_marshalers>(evt));
         }
     }
@@ -1607,6 +1610,7 @@ private EventSource% _%;)",
     void write_interface_members(writer& w, TypeDef const& type,
         std::function<void(writer& w, std::string_view name, std::string_view type)> write_custom)
     {
+        uint32_t const vtbl_base = type.MethodList().first.index();
         for (auto&& method : type.MethodList())
         {
             if (is_special(method))
@@ -1641,7 +1645,7 @@ public %% %(%)
                         bind<write_interop_type>(get_type_semantics(signature.return_signature().Type()))) :
                     "",
                 method.Name(),
-                method.index(),
+                method.index() - vtbl_base,
                 bind_each([](writer& w, auto const& param)
                 {
                     w.write(", %", bind<write_param_marshal_to_native>(param));
@@ -1689,7 +1693,7 @@ return %;
                     }),
                     bind<write_interop_type>(semantics),
                     prop.Name(),
-                    getter.index(),
+                    getter.index() - vtbl_base,
                     bind<write_marshal_from_native>(semantics, "__return_value__"));
             }
             if (setter)
@@ -1706,7 +1710,7 @@ return %;
                         }
                     }),
                     prop.Name(),
-                    setter.index(),
+                    setter.index() - vtbl_base,
                     bind<write_marshal_to_native>(semantics, "value"));
             }
             if (!custom.empty())
@@ -1759,7 +1763,7 @@ remove => _%.Event -= value;
             {
                 "IIterator`1"sv,
                 R"(public WinRT.Interop._get_PropertyAsObject get_CurrentAsObject;)"sv,
-                R"(get_CurrentAsObject = typeof(T).IsClass ? _obj.Vftbl.get_Current.AsDelegate<WinRT.Interop._get_PropertyAsObject>() : null;)"sv,
+                R"(get_CurrentAsObject = typeof(T).IsClass ? _obj.Vftbl.get_Current_0.AsDelegate<WinRT.Interop._get_PropertyAsObject>() : null;)"sv, // TODO: Remove hardcoded vtbl indices from name
                 [](writer& w, std::string_view name, std::string_view)
                 {
                     if (name == "Current"sv)
@@ -1777,8 +1781,8 @@ return marshaler_T.FromNative(__return_value__);
                 "IKeyValuePair`2"sv,
                 R"(public WinRT.Interop._get_PropertyAsObject get_KeyAsObject;
 public WinRT.Interop._get_PropertyAsObject get_ValueAsObject;)"sv,
-                R"(get_KeyAsObject = typeof(K).IsClass ? _obj.Vftbl.get_Key.AsDelegate<WinRT.Interop._get_PropertyAsObject>() : null;
-get_ValueAsObject = typeof(V).IsClass ? _obj.Vftbl.get_Value.AsDelegate<WinRT.Interop._get_PropertyAsObject>() : null;)"sv,
+                R"(get_KeyAsObject = typeof(K).IsClass ? _obj.Vftbl.get_Key_0.AsDelegate<WinRT.Interop._get_PropertyAsObject>() : null;
+get_ValueAsObject = typeof(V).IsClass ? _obj.Vftbl.get_Value_1.AsDelegate<WinRT.Interop._get_PropertyAsObject>() : null;)"sv, // TODO: Remove hardcoded vtbl indices from name
                 [](writer& w, std::string_view name, std::string_view type)
                 {
                     if (name == "Key"sv && type == "get"sv)
@@ -1809,7 +1813,7 @@ return marshaler_V.FromNative(__return_value__);
             {
                 "IMapChangedEventArgs`1"sv,
                 R"(public WinRT.Interop._get_PropertyAsObject get_KeyAsObject;)"sv,
-                R"(get_KeyAsObject = typeof(K).IsClass ? _obj.Vftbl.get_Key.ToGetPropertyAsObject() : null;)"sv,
+                R"(get_KeyAsObject = typeof(K).IsClass ? _obj.Vftbl.get_Key_1.ToGetPropertyAsObject() : null;)"sv, // TODO: Remove hardcoded vtbl indices from name
                 [](writer& w, std::string_view name, std::string_view type)
                 {
                     if (name == "Key"sv && type == "get"sv)
@@ -1838,21 +1842,21 @@ R"(if (typeof(V).IsClass)
 {
 if (typeof(K).IsClass)
 {
-Lookup__ = _obj.Vftbl.Lookup.AsDelegate<_Lookup__>();
+Lookup__ = _obj.Vftbl.Lookup_0.AsDelegate<_Lookup__>();
 }
 else
 {
-LookupK_ = _obj.Vftbl.Lookup.AsDelegate<_LookupK_>();
+LookupK_ = _obj.Vftbl.Lookup_0.AsDelegate<_LookupK_>();
 }
 }
 else if (typeof(K).IsClass)
 {
-Lookup_V = _obj.Vftbl.Lookup.AsDelegate<_Lookup_V>();
+Lookup_V = _obj.Vftbl.Lookup_0.AsDelegate<_Lookup_V>();
 }
 if (typeof(K).IsClass)
 {
-HasKey_ = _obj.Vftbl.HasKey.AsDelegate<_HasKey_>();
-})"sv,
+HasKey_ = _obj.Vftbl.HasKey_2.AsDelegate<_HasKey_>();
+})"sv, // TODO: Remove hardcoded vtbl indices from name
                 [](writer& w, std::string_view name, std::string_view /*type*/)
                 {
                     if (name == "Lookup"sv)
@@ -1912,12 +1916,12 @@ private delegate int _Append_([In] IntPtr @this, IntPtr value);
 private _Append_ Append_;)"sv,
 R"(if (typeof(T).IsClass)
 {
-GetAt_ = _obj.Vftbl.GetAt.AsDelegate<_GetAt_>();
-IndexOf_ = _obj.Vftbl.IndexOf.AsDelegate<_IndexOf_>();
-SetAt_ = _obj.Vftbl.SetAt.AsDelegate<_SetAt_>();
-InsertAt_ = _obj.Vftbl.InsertAt.AsDelegate<_InsertAt_>();
-Append_ = _obj.Vftbl.Append.AsDelegate<_Append_>();
-})"sv,
+GetAt_ = _obj.Vftbl.GetAt_0.AsDelegate<_GetAt_>();
+IndexOf_ = _obj.Vftbl.IndexOf_3.AsDelegate<_IndexOf_>();
+SetAt_ = _obj.Vftbl.SetAt_4.AsDelegate<_SetAt_>();
+InsertAt_ = _obj.Vftbl.InsertAt_5.AsDelegate<_InsertAt_>();
+Append_ = _obj.Vftbl.Append_7.AsDelegate<_Append_>();
+})"sv, // TODO: Remove hardcoded vtbl indices from name
                 [](writer& w, std::string_view name, std::string_view /*type*/)
                 {
                     if (name == "GetAt"sv)
@@ -1969,9 +1973,9 @@ private unsafe delegate int _IndexOf_([In] IntPtr @this, IntPtr value, out uint 
 private _IndexOf_ IndexOf_;)"sv,
 R"(if (typeof(T).IsClass)
 {
-GetAt_ = _obj.Vftbl.GetAt.AsDelegate<_GetAt_>();
-IndexOf_ = _obj.Vftbl.IndexOf.AsDelegate<_IndexOf_>();
-})"sv,
+GetAt_ = _obj.Vftbl.GetAt_0.AsDelegate<_GetAt_>();
+IndexOf_ = _obj.Vftbl.IndexOf_2.AsDelegate<_IndexOf_>();
+})"sv, // TODO: Remove hardcoded vtbl indices from name
                 [](writer& w, std::string_view name, std::string_view /*type*/)
                 {
                     if (name == "GetAt"sv)
@@ -2027,6 +2031,7 @@ R"()"sv
             }) : nullptr;
         XLANG_ASSERT(!is_generic || (generic_helper != std::end(generic_helpers)));
 
+        uint32_t const vtbl_base = type.MethodList().first.index();
         w.write(R"(%
 % class %%
 {
@@ -2064,7 +2069,7 @@ public object % { get; set; }
             bind<write_guid_attribute>(type),
             bind_each([&](writer& w, MethodDef const& method)
             {
-                write_vtbl_entry(w, method);
+                write_vtbl_entry(w, method, vtbl_base);
             }, type.MethodList()),
             bind([&](writer& w) {
                 if (!is_generic) return;
