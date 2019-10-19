@@ -98,12 +98,12 @@ namespace WinRT
         //public delegate int _put_PropertyAsString([In] IntPtr thisPtr, [In, MarshalAs(UnmanagedType.HString)] string value);
         public unsafe delegate int _get_PropertyAsString([In] IntPtr thisPtr, [Out] out IntPtr value);
         public delegate int _put_PropertyAsString([In] IntPtr thisPtr, [In] IntPtr value);
-        public unsafe delegate int _get_PropertyAsVector3([In] IntPtr thisPtr, [Out] out Vector3 value);
-        public delegate int _put_PropertyAsVector3([In] IntPtr thisPtr, [In] Vector3 value);
-        public unsafe delegate int _get_PropertyAsQuaternion([In] IntPtr thisPtr, [Out] out Quaternion value);
-        public delegate int _put_PropertyAsQuaternion([In] IntPtr thisPtr, [In] Quaternion value);
-        public unsafe delegate int _get_PropertyAsMatrix4x4([In] IntPtr thisPtr, [Out] out Matrix4x4 value);
-        public delegate int _put_PropertyAsMatrix4x4([In] IntPtr thisPtr, [In] Matrix4x4 value);
+        public unsafe delegate int _get_PropertyAsVector3([In] IntPtr thisPtr, [Out] out Windows.Foundation.Numerics.Vector3 value);
+        public delegate int _put_PropertyAsVector3([In] IntPtr thisPtr, [In] Windows.Foundation.Numerics.Vector3 value);
+        public unsafe delegate int _get_PropertyAsQuaternion([In] IntPtr thisPtr, [Out] out Windows.Foundation.Numerics.Quaternion value);
+        public delegate int _put_PropertyAsQuaternion([In] IntPtr thisPtr, [In] Windows.Foundation.Numerics.Quaternion value);
+        public unsafe delegate int _get_PropertyAsMatrix4x4([In] IntPtr thisPtr, [Out] out Windows.Foundation.Numerics.Matrix4x4 value);
+        public delegate int _put_PropertyAsMatrix4x4([In] IntPtr thisPtr, [In] Windows.Foundation.Numerics.Matrix4x4 value);
         public unsafe delegate int _add_EventHandler([In] IntPtr thisPtr, [In] IntPtr handler, [Out] out WinRT.Interop.EventRegistrationToken token);
         public delegate int _remove_EventHandler([In] IntPtr thisPtr, [In] WinRT.Interop.EventRegistrationToken token);
 

@@ -34,7 +34,7 @@ namespace cswinrt
         switch (value.Type())
         {
         case ConstantType::Int32:
-            w.write_printf("%d", value.ValueInt32());
+            w.write_printf("%#0x", value.ValueInt32());
             break;
         case ConstantType::UInt32:
             w.write_printf("%#0x", value.ValueUInt32());
@@ -160,7 +160,7 @@ namespace cswinrt
             { s(); write_generic_type_name(w, index++); }, type.GenericParam()));
     }
 
-    void write_full_type_name(writer& w, type_semantics const& semantics, bool include_namespace = false)
+    void write_type_name(writer& w, type_semantics const& semantics, bool include_namespace = false)
     {
         auto write_name = [&](TypeDef const& type)
         {
@@ -181,9 +181,9 @@ namespace cswinrt
             [](auto){ throw_invalid("invalid type"); });
     }
 
-    void write_type_name(writer& w, type_semantics const& semantics)
+    void write_full_type_name(writer& w, type_semantics const& semantics)
     {
-        write_full_type_name(w, semantics);
+        write_type_name(w, semantics, true);
     }
 
     void write_type_inheritance(writer& w, TypeDef const& type)
@@ -390,7 +390,7 @@ namespace cswinrt
                     }
                     case category::struct_type:
                     {
-                        write_type_name(w, type);
+                        write_full_type_name(w, type);
                         break;
                     }
                     default:
@@ -716,7 +716,7 @@ namespace cswinrt
         {
         case category::enum_type:
         {
-            w.write("(%)%%", bind<write_type_name>(type), is_boxed ? "(object)" : "", name);
+            w.write("(%)%%", bind<write_full_type_name>(type), is_boxed ? "(object)" : "", name);
             return;
         }
         case category::delegate_type:
@@ -726,7 +726,7 @@ namespace cswinrt
         }
         case category::struct_type:
         {
-            w.write("/*todo: struct_type %*/%", bind<write_type_name>(type), name);
+            w.write("/*todo: struct_type %*/%", bind<write_full_type_name>(type), name);
             return;
         }
         case category::interface_type:
@@ -768,18 +768,21 @@ namespace cswinrt
         }
     }
 
+    std::string_view const OwnerMemberName = "_WinRT_Owner";
+
     void write_event_param_marshaler(writer& w, method_signature::param_t const& param)
     {
         std::function<void(type_semantics const&)> write_type = [&](type_semantics const& semantics) {
         call(semantics,
             [&](object_type) 
             { 
-                w.write("(IntPtr value) => (obj.ThisPtr == value) ? Owner : ObjectReference<Vftbl>.FromNativePtr(value)");
+                w.write("(IntPtr value) => (obj.ThisPtr == value) ? % : WinRT.ObjectReference<Vftbl>.FromNativePtr(value)", OwnerMemberName);
             },
             [&](type_definition const& type) 
             { 
-                w.write(R"((IntPtr value) => (obj.ThisPtr == value) ? (%)Owner : %)",
+                w.write(R"((IntPtr value) => (obj.ThisPtr == value) ? (%)% : %)",
                     bind<write_projection_param_type>(semantics),
+                    OwnerMemberName,
                     bind<write_object_marshal_from_native>(semantics, type, "value"sv, true));
             },
             [&](generic_type_index const& var) 
@@ -789,8 +792,9 @@ namespace cswinrt
             [&](generic_type_instance const& type) 
             { 
                 auto guard{ w.push_generic_args(type) };
-                w.write(R"((IntPtr value) => (obj.ThisPtr == value) ? (%)Owner : %)",
+                w.write(R"((IntPtr value) => (obj.ThisPtr == value) ? (%)% : %)",
                     bind<write_projection_param_type>(semantics),
+                    OwnerMemberName,
                     bind<write_object_marshal_from_native>(semantics, type.generic_type, "value"sv, true));
             },
             [&](fundamental_type const& type) 
@@ -1055,8 +1059,8 @@ remove => %.% -= value;
         }
 
         auto default_interface = get_default_interface(type);
-        auto default_interface_name = w.write_temp("%", bind<write_type_name>(get_type_semantics(default_interface)));
-        auto type_name = w.write_temp("%", bind<write_type_name>(type));
+        auto default_interface_name = w.write_temp("%", bind<write_full_type_name>(get_type_semantics(default_interface)));
+        auto type_name = w.write_temp("%", bind<write_type_name>(type, false));
         w.write(R"(public %class %
 {
 public IntPtr NativePtr { get => _default.NativePtr; }
@@ -1065,12 +1069,12 @@ private % _default;
 
 public %() : this(ActivationFactory<%>.ActivateInstance<%.Vftbl>()){}
 
-public static % FromNative(IntPtr ^@this) => new %(ObjectReference<%.Vftbl>.FromNativePtr(^@this));
+public static % FromNative(IntPtr ^@this) => new %(WinRT.ObjectReference<%.Vftbl>.FromNativePtr(^@this));
 
 internal %(% ifc)
 {
 _default = ifc;
-_default.Owner = this;
+_default.% = this;
 }
 )",
             bind<write_class_modifiers>(type),
@@ -1083,7 +1087,8 @@ _default.Owner = this;
             type_name,
             default_interface_name,
             type_name,
-            default_interface_name);
+            default_interface_name,
+            OwnerMemberName);
 
         for (auto&& ii : type.InterfaceImpl())
         {
@@ -1093,7 +1098,7 @@ _default.Owner = this;
             {
                 if( !is_exclusive_to(interface_type) )
                 {
-                    auto interface_name = w.write_temp("%", bind<write_full_type_name>(interface_type, true));
+                    auto interface_name = w.write_temp("%", bind<write_full_type_name>(interface_type));
                 w.write(
                     R"(
 public static implicit operator %(% obj) =>
@@ -1128,7 +1133,7 @@ public static implicit operator %(% obj) =>
 
 //        w.write("public %class %%\n{\n", 
 //            bind<write_class_modifiers>(type),
-//            bind<write_type_name>(type), 
+//            bind<write_type_name>(type, false), 
 //            bind<write_type_inheritance>(type));
 //        {
 //            w.write("static Lazy<IntPtr> _factory = new Lazy<IntPtr>(() => Windows.Foundation.IActivationFactory.Get(\"%.%\"));\n",
@@ -1239,7 +1244,7 @@ public static implicit operator %(% obj) =>
                             }
                             case category::struct_type:
                             {
-                                suffix = w.write_temp("<%>", bind<write_type_name>(type));
+                                suffix = w.write_temp("<%>", bind<write_full_type_name>(type));
                                 break;
                             }
                             default:
@@ -1265,7 +1270,7 @@ public static implicit operator %(% obj) =>
                 }
             }
 
-            auto delegate_type = w.write_temp("_%%", method.Name(), vtbl_index);
+            auto delegate_type = w.write_temp("_%_%", method.Name(), vtbl_index);
             w.write("public %delegate int %([In] %);\n",
                 is_unsafe(signature) ? "unsafe " : "",
                 delegate_type,
@@ -1274,10 +1279,10 @@ public static implicit operator %(% obj) =>
             return delegate_type;
         };
 
-        w.write("public %% %;\n",
-            (method.Name() == "ToString"sv || method.Name() == "Equals"sv) ? "new " : "",
+        w.write("public % %_%;\n",
             get_delegate_type(),
-            method.Name());
+            method.Name(),
+            vtbl_index);
     }
 
     void write_event_source_ctors(writer& w, TypeDef const& type)
@@ -1315,7 +1320,7 @@ private EventSource% _%;)",
             call(semantics,
                 [&](object_type)
                 {
-                    w.write("ObjectReference<WinRT.Interop.IInspectableVftbl>.FromNativePtr(%)", name);
+                    w.write("WinRT.ObjectReference<WinRT.Interop.IInspectableVftbl>.FromNativePtr(%)", name);
                 },
                 [&](type_definition const& type)
                 {
@@ -1363,7 +1368,7 @@ private EventSource% _%;)",
             }
             case category::struct_type:
             {
-                w.write("/*todo: struct_type %*/%", bind<write_type_name>(type), name);
+                w.write("/*todo: struct_type %*/%", bind<write_type_name>(type, false), name);
                 return;
             }
             default:
@@ -1454,7 +1459,7 @@ private EventSource% _%;)",
         {
         case category::enum_type:
         {
-//            w.write("(%)%%", bind<write_type_name>(type), is_boxed ? "(object)" : "", name);
+//            w.write("(%)%%", bind<write_type_name>(type, false), is_boxed ? "(object)" : "", name);
             return;
         }
         case category::delegate_type:
@@ -1464,7 +1469,7 @@ private EventSource% _%;)",
         }
         case category::struct_type:
         {
-  //          w.write("/*todo: struct_type %*/%", bind<write_type_name>(type), name);
+  //          w.write("/*todo: struct_type %*/%", bind<write_type_name>(type, false), name);
             return;
         }
         case category::interface_type:
@@ -1484,7 +1489,7 @@ private EventSource% _%;)",
             call(semantics,
                 [&](object_type)
                 {
-                    w.write("ObjectReference<WinRT.Interop.IInspectableVftbl>.FromNativePtr(%)", name);
+                    w.write("WinRT.ObjectReference<WinRT.Interop.IInspectableVftbl>.FromNativePtr(%)", name);
                 },
                 [&](type_definition const& type)
                 {
@@ -1582,10 +1587,14 @@ private EventSource% _%;)",
     void write_interface_members(writer& w, TypeDef const& type,
         std::function<void(writer& w, std::string_view name, std::string_view type)> write_custom)
     {
+        std::vector<int> vtbl_index_props;
+        int vtbl_index = 0;
         for (auto&& method : type.MethodList())
         {
+            w.write("ARR: METHOD: % - %\n", method.Name(), vtbl_index);
             if (is_special(method))
             {
+                vtbl_index_props.push_back(vtbl_index++);
                 continue;
             }
 
@@ -1598,7 +1607,7 @@ private EventSource% _%;)",
             w.write(R"(
 public %% %(%)
 {
-%%%unsafe { Marshal.ThrowExceptionForHR(_obj.Vftbl.%(NativePtr%%)); }%%
+%%%unsafe { Marshal.ThrowExceptionForHR(_obj.Vftbl.%_%(NativePtr%%)); }%%
 })",
                 (method.Name() == "ToString"sv) ? "new " : "",
                 bind<write_method_return>(signature),
@@ -1616,6 +1625,7 @@ public %% %(%)
                         bind<write_interop_type>(get_type_semantics(signature.return_signature().Type()))) :
                     "",
                 method.Name(),
+                vtbl_index++,
                 bind_each([](writer& w, auto const& param)
                 {
                     w.write(", %", bind<write_param_marshal_to_native>(param));
@@ -1632,8 +1642,10 @@ public %% %(%)
             }
         }
 
+        auto curr_vtbl_idx = std::begin(vtbl_index_props);
         for (auto&& prop : type.PropertyList())
         {
+            w.write("ARR: PROP: % - %\n", prop.Name(), *curr_vtbl_idx);
             auto [getter, setter] = get_property_methods(prop);
             auto semantics = get_type_semantics(prop.Type().Type());
             w.write(R"(
@@ -1651,7 +1663,7 @@ public % %
                 w.write(R"(get
 {
 %% __return_value__;
-unsafe { Marshal.ThrowExceptionForHR(_obj.Vftbl.get_%(NativePtr, out __return_value__)); }
+unsafe { Marshal.ThrowExceptionForHR(_obj.Vftbl.get_%_%(NativePtr, out __return_value__)); }
 return %;
 }
 )",
@@ -1663,13 +1675,15 @@ return %;
                     }),
                     bind<write_interop_type>(semantics),
                     prop.Name(),
+                    *curr_vtbl_idx,
                     bind<write_marshal_from_native>(semantics, "__return_value__"));
+                ++curr_vtbl_idx;
             }
             if (setter)
             {
                 w.write(R"(set
 {
-%unsafe { Marshal.ThrowExceptionForHR(_obj.Vftbl.put_%(NativePtr, %)); }
+%unsafe { Marshal.ThrowExceptionForHR(_obj.Vftbl.put_%_%(NativePtr, %)); }
 }
 )",
                     bind([&](writer& w) {
@@ -1679,7 +1693,9 @@ return %;
                         }
                     }),
                     prop.Name(),
+                    *curr_vtbl_idx,
                     bind<write_marshal_to_native>(semantics, "value"));
+                ++curr_vtbl_idx;
             }
             if (!custom.empty())
             {
@@ -1710,7 +1726,7 @@ remove => _%.Event -= value;
     {
         XLANG_ASSERT(get_category(type) == category::interface_type);
 
-        auto type_name = w.write_temp("%", bind<write_type_name>(type));
+        auto type_name = w.write_temp("%", bind<write_type_name>(type, false));
 
         auto is_generic = distance(type.GenericParam()) > 0;
 
@@ -2015,16 +2031,16 @@ WinRT.Interop.IInspectableVftbl IInspectableVftbl;
 
 %private readonly WinRT.ObjectReference<Vftbl> _obj;
 public IntPtr NativePtr { get => _obj.ThisPtr; }
-public static ObjectReference<Vftbl> FromNative(IntPtr ^@this) => ObjectReference<Vftbl>.FromNativePtr(^@this);
+public static WinRT.ObjectReference<Vftbl> FromNative(IntPtr ^@this) => WinRT.ObjectReference<Vftbl>.FromNativePtr(^@this);
 public static implicit operator %(WinRT.IObjectReference obj) => obj.As<Vftbl>();
 public static implicit operator %(WinRT.ObjectReference<Vftbl> obj) => new %(obj);
-public ObjectReference<I> As<I>() => _obj.As<I>();
+public WinRT.ObjectReference<I> As<I>() => _obj.As<I>();
 public @(WinRT.ObjectReference<Vftbl> obj)
 {
 _obj = obj;%%
 }
 
-public object Owner { get; set; }
+public object % { get; set; }
 %%
 }
 )",
@@ -2083,6 +2099,7 @@ R"(public static readonly Marshaler<%> marshaler_% = typeof(%).IsClass ? new Mar
                 w.write("\n%", generic_helper->init_delegate_casts); 
             }),
             bind<write_event_source_ctors>(type),
+            OwnerMemberName,
             bind<write_interface_members>(type, generic_helper ? generic_helper->write_custom : nullptr),
             bind<write_event_sources>(type)
         );
@@ -2165,7 +2182,7 @@ return __hresult;
     {
         method_signature signature{ get_delegate_invoke(type) };
 
-        auto type_name = w.write_temp("%", bind<write_type_name>(type));
+        auto type_name = w.write_temp("%", bind<write_type_name>(type, false));
         auto type_params = w.write_temp("%", bind<write_type_params>(type));
 
         w.write(R"(public delegate % %(%);
@@ -2229,7 +2246,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             w.write("[FlagsAttribute]\n");
         }
 
-        w.write("public enum % : %\n{\n", bind<write_type_name>(type), is_flags_enum(type) ? "uint" : "uint");
+        w.write("public enum % : %\n{\n", bind<write_type_name>(type, false), is_flags_enum(type) ? "uint" : "uint");
         {
             for (auto&& field : type.FieldList())
             {
@@ -2244,7 +2261,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 
     void write_struct(writer& w, TypeDef const& type)
     {
-        w.write("public struct %\n{\n", bind<write_type_name>(type));
+        w.write("public struct %\n{\n", bind<write_type_name>(type, false));
         {
             for (auto&& field : type.FieldList())
             {
@@ -2253,6 +2270,19 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             }
         }
         w.write("}\n");
+    }
+
+    std::string_view get_database_name(winmd::reader::database const& database)
+    {
+        const auto &path = database.path();
+        auto idx = path.rfind('\\'); // TODO: Handle xplat path seperators.
+        if (idx == std::string::npos
+            || idx + 1 >= path.size())
+        {
+            return { path };
+        }
+
+        return { path.data() + idx + 1 };
     }
 
     void write_type(TypeDef const& type)
@@ -2264,14 +2294,16 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
         auto guard{ w.push_generic_params(type.GenericParam()) };
 
         w.write(R"(// This file was generated by cswinrt.exe
+// Type defined in %
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using WinRT;
-            
+
 namespace %
 {
-)", type.TypeNamespace());
+)", get_database_name(type.get_database()), type.TypeNamespace());
         {
             switch (get_category(type))
             {

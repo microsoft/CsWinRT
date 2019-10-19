@@ -5,17 +5,17 @@ namespace cswinrt
     using namespace std::literals;
     using namespace winmd::reader;
 
-	template <typename T>
-	bool has_attribute(T const& row, std::string_view const& type_namespace, std::string_view const& type_name)
-	{
-		return static_cast<bool>(get_attribute(row, type_namespace, type_name));
-	}
+    template <typename T>
+    bool has_attribute(T const& row, std::string_view const& type_namespace, std::string_view const& type_name)
+    {
+        return static_cast<bool>(get_attribute(row, type_namespace, type_name));
+    }
 
-	//template <typename T>
-	//auto get_attribute_value(CustomAttribute const& attribute, uint32_t const arg)
-	//{
-	//	return std::get<T>(std::get<ElemSig>(attribute.Value().FixedArgs()[arg].value).value);
-	//}
+    //template <typename T>
+    //auto get_attribute_value(CustomAttribute const& attribute, uint32_t const arg)
+    //{
+    //	return std::get<T>(std::get<ElemSig>(attribute.Value().FixedArgs()[arg].value).value);
+    //}
 
     bool is_exclusive_to(TypeDef const& type)
     {
@@ -37,15 +37,15 @@ namespace cswinrt
         return get_category(type) == category::class_type && extends_type(type, "System"sv, "Attribute"sv);
     }
 
-	bool is_ptype(TypeDef const& type)
-	{
-		return distance(type.GenericParam()) > 0;
-	}
+    bool is_ptype(TypeDef const& type)
+    {
+        return distance(type.GenericParam()) > 0;
+    }
 
-	bool is_static(TypeDef const& type)
-	{
-		return get_category(type) == category::class_type && type.Flags().Abstract();
-	}
+    bool is_static(TypeDef const& type)
+    {
+        return get_category(type) == category::class_type && type.Flags().Abstract();
+    }
 
     bool is_constructor(MethodDef const& method)
     {
@@ -57,10 +57,10 @@ namespace cswinrt
         return method.SpecialName() || method.Flags().RTSpecialName();
     }
 
-	bool is_static(MethodDef const& method)
-	{
-		return method.Flags().Static();
-	}
+    bool is_static(MethodDef const& method)
+    {
+        return method.Flags().Static();
+    }
 
     auto get_delegate_invoke(TypeDef const& type)
     {
@@ -223,28 +223,28 @@ namespace cswinrt
             {
                 return get_type_semantics(type);
             },
-            [](GenericTypeIndex var) -> type_semantics { 
+            [](GenericTypeIndex var) -> type_semantics {
                 return generic_type_index{ var.index }; },
-            [](GenericTypeInstSig sig) -> type_semantics { 
+            [](GenericTypeInstSig sig) -> type_semantics {
                 return get_type_semantics(sig); },
             [](GenericMethodTypeIndex) -> type_semantics { throw_invalid("Generic methods not supported"); }
             }, signature.Type());
     }
 
-	TypeDef get_typedef(type_semantics const& semantics)
-	{
-		return std::visit(
-			impl::overloaded{
-				[](type_definition type) { return type; },
-				[](generic_type_instance type_instance) { return type_instance.generic_type; },
-				[](auto) -> TypeDef { throw_invalid("type doesn't contain typedef"); }
-			}, semantics);
-	};
+    TypeDef get_typedef(type_semantics const& semantics)
+    {
+        return std::visit(
+            impl::overloaded{
+                [](type_definition type) { return type; },
+                [](generic_type_instance type_instance) { return type_instance.generic_type; },
+                [](auto) -> TypeDef { throw_invalid("type doesn't contain typedef"); }
+            }, semantics);
+    };
 
-	TypeDef get_typedef(coded_index<TypeDefOrRef> const& type)
-	{
-		return get_typedef(get_type_semantics(type));
-	};
+    TypeDef get_typedef(coded_index<TypeDefOrRef> const& type)
+    {
+        return get_typedef(get_type_semantics(type));
+    };
 
     struct method_signature
     {
@@ -371,9 +371,9 @@ namespace cswinrt
             }
         }
 
-        XLANG_ASSERT(get_method);
+        XLANG_ASSERT(get_method || set_method);
 
-        if (set_method)
+        if (get_method && set_method)
         {
             XLANG_ASSERT(get_method.Flags().Static() == set_method.Flags().Static());
         }
@@ -381,122 +381,122 @@ namespace cswinrt
         return std::make_tuple(get_method, set_method);
     }
 
-	auto get_event_methods(Event const& evt)
-	{
-		MethodDef add_method{}, remove_method{};
+    auto get_event_methods(Event const& evt)
+    {
+        MethodDef add_method{}, remove_method{};
 
-		for (auto&& method_semantic : evt.MethodSemantic())
-		{
-			auto semantic = method_semantic.Semantic();
+        for (auto&& method_semantic : evt.MethodSemantic())
+        {
+            auto semantic = method_semantic.Semantic();
 
-			if (semantic.AddOn())
-			{
-				add_method = method_semantic.Method();
-			}
-			else if (semantic.RemoveOn())
-			{
-				remove_method = method_semantic.Method();
-			}
-			else
-			{
-				throw_invalid("Events can only have add and remove methods");
-			}
-		}
+            if (semantic.AddOn())
+            {
+                add_method = method_semantic.Method();
+            }
+            else if (semantic.RemoveOn())
+            {
+                remove_method = method_semantic.Method();
+            }
+            else
+            {
+                throw_invalid("Events can only have add and remove methods");
+            }
+        }
 
-		XLANG_ASSERT(add_method);
-		XLANG_ASSERT(remove_method);
-		XLANG_ASSERT(add_method.Flags().Static() == remove_method.Flags().Static());
+        XLANG_ASSERT(add_method);
+        XLANG_ASSERT(remove_method);
+        XLANG_ASSERT(add_method.Flags().Static() == remove_method.Flags().Static());
 
-		return std::make_tuple(add_method, remove_method);
-	}
+        return std::make_tuple(add_method, remove_method);
+    }
 
-	struct activation_factory
-	{
-		TypeDef type;
-	};
+    struct activation_factory
+    {
+        TypeDef type;
+    };
 
-	struct static_factory
-	{
-		TypeDef type;
-	};
+    struct static_factory
+    {
+        TypeDef type;
+    };
 
-	// TODO: composable factory
+    // TODO: composable factory
 
-	using factory_info = std::variant<activation_factory, static_factory>;
+    using factory_info = std::variant<activation_factory, static_factory>;
 
-	auto get_factories(TypeDef const& type)
-	{
-		auto get_system_type = [&](FixedArgSig const& fixed_arg, bool optional = false) -> TypeDef
-		{
-			if (auto type_param = std::get_if<ElemSig::SystemType>(&std::get<ElemSig>(fixed_arg.value).value))
-			{
-				return type.get_cache().find_required(type_param->name);
-			}
-			
-			if (optional)
-			{
-				return {};
-			}
+    auto get_factories(TypeDef const& type)
+    {
+        auto get_system_type = [&](FixedArgSig const& fixed_arg, bool optional = false) -> TypeDef
+        {
+            if (auto type_param = std::get_if<ElemSig::SystemType>(&std::get<ElemSig>(fixed_arg.value).value))
+            {
+                return type.get_cache().find_required(type_param->name);
+            }
 
-			throw_invalid("Invalid factory argument");
-		};
+            if (optional)
+            {
+                return {};
+            }
 
-		std::vector<factory_info> result;
+            throw_invalid("Invalid factory argument");
+        };
 
-		for (auto&& attribute : type.CustomAttribute())
-		{
-			auto attribute_name = attribute.TypeNamespaceAndName();
+        std::vector<factory_info> result;
 
-			if (attribute_name.first != "Windows.Foundation.Metadata")
-			{
-				continue;
-			}
+        for (auto&& attribute : type.CustomAttribute())
+        {
+            auto attribute_name = attribute.TypeNamespaceAndName();
 
-			auto fixed_args = attribute.Value().FixedArgs();
+            if (attribute_name.first != "Windows.Foundation.Metadata")
+            {
+                continue;
+            }
 
-			if (attribute_name.second == "ActivatableAttribute")
-			{
-				activation_factory info{ get_system_type(fixed_args[0], true) };
-				result.push_back(std::move(info));
-			}
-			else if (attribute_name.second == "StaticAttribute")
-			{
-				static_factory info{ get_system_type(fixed_args[0], true) };
-				XLANG_ASSERT((bool)info.type);
-				result.push_back(std::move(info));
-			}
-			else if (attribute_name.second == "ComposableAttribute")
-			{
-				throw_invalid("ComposableAttribute not implemented");
-				//info.type = get_system_type(fixed_args[0]);
-				//info.composable = true;
+            auto fixed_args = attribute.Value().FixedArgs();
 
-				//auto compositionType = std::get<ElemSig::EnumValue>(std::get<ElemSig>(fixed_args[1].value).value);
-				//info.visible = std::get<int32_t>(compositionType.value) == 2;
-			}
-		}
+            if (attribute_name.second == "ActivatableAttribute")
+            {
+                activation_factory info{ get_system_type(fixed_args[0], true) };
+                result.push_back(std::move(info));
+            }
+            else if (attribute_name.second == "StaticAttribute")
+            {
+                static_factory info{ get_system_type(fixed_args[0], true) };
+                XLANG_ASSERT((bool)info.type);
+                result.push_back(std::move(info));
+            }
+            else if (attribute_name.second == "ComposableAttribute")
+            {
+                throw_invalid("ComposableAttribute not implemented");
+                //info.type = get_system_type(fixed_args[0]);
+                //info.composable = true;
 
-		return std::move(result);
-	}
+                //auto compositionType = std::get<ElemSig::EnumValue>(std::get<ElemSig>(fixed_args[1].value).value);
+                //info.visible = std::get<int32_t>(compositionType.value) == 2;
+            }
+        }
+
+        return std::move(result);
+    }
 
     static coded_index<TypeDefOrRef> get_default_interface(TypeDef const& type)
-	{
-		auto impls = type.InterfaceImpl();
+    {
+        auto impls = type.InterfaceImpl();
 
-		for (auto&& impl : impls)
-		{
-			if (has_attribute(impl, "Windows.Foundation.Metadata", "DefaultAttribute"))
- 			{
-				return impl.Interface();
-			}
-		}
+        for (auto&& impl : impls)
+        {
+            if (has_attribute(impl, "Windows.Foundation.Metadata", "DefaultAttribute"))
+            {
+                return impl.Interface();
+            }
+        }
 
-		if (!empty(impls))
-		{
-			throw_invalid("Type '", type.TypeNamespace(), ".", type.TypeName(), "' does not have a default interface");
-		}
+        if (!empty(impls))
+        {
+            throw_invalid("Type '", type.TypeNamespace(), ".", type.TypeName(), "' does not have a default interface");
+        }
 
-		return {};
-	}
+        return {};
+    }
 
 }
