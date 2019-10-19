@@ -245,7 +245,7 @@ namespace cswinrt
         }
     }
 
-    void write_parameter_name(writer& w, method_signature::param_t const& param)
+    void write_parameter_name_with_modifier(writer& w, method_signature::param_t const& param, bool with_modifier = true)
     {
         static const std::set<std::string_view> keywords = {
             "abstract",  "as",       "base",     "bool",       "break",     "byte",
@@ -267,7 +267,24 @@ namespace cswinrt
             w.write("@");
         }
 
+        if (with_modifier)
+        {
+            switch (get_param_category(param))
+            {
+            case param_category::out:
+                w.write("out ");
+                break;
+            default:
+                break;
+            }
+        }
+
         w.write(param.first.Name());
+    }
+
+    void write_parameter_name(writer& w, method_signature::param_t const& param)
+    {
+        write_parameter_name_with_modifier(w, param, false);
     }
 
     void write_iid_field(writer& w, TypeDef const& type)
@@ -1011,7 +1028,7 @@ public %% %(%)
             signature.return_signature() ? "return " : "",
             interface_member,
             method.Name(),
-            bind_list<write_parameter_name>(", ", signature.params())
+            bind_list<write_parameter_name_with_modifier>(", ", signature.params(), true)
         );
     }
 
@@ -1211,7 +1228,7 @@ public static implicit operator %(% obj) =>
             get<uint8_t>(get_arg(10)));
     }
 
-    void write_vtbl_entry(writer& w, MethodDef const& method, int vtbl_index)
+    void write_vtbl_entry(writer& w, MethodDef const& method)
     {
         auto get_delegate_type = [&]() -> std::string
         {
@@ -1270,7 +1287,7 @@ public static implicit operator %(% obj) =>
                 }
             }
 
-            auto delegate_type = w.write_temp("_%_%", method.Name(), vtbl_index);
+            auto delegate_type = w.write_temp("_%_%", method.Name(), method.index());
             w.write("public %delegate int %([In] %);\n",
                 is_unsafe(signature) ? "unsafe " : "",
                 delegate_type,
@@ -1282,23 +1299,26 @@ public static implicit operator %(% obj) =>
         w.write("public % %_%;\n",
             get_delegate_type(),
             method.Name(),
-            vtbl_index);
+            method.index());
     }
 
     void write_event_source_ctors(writer& w, TypeDef const& type)
     {
         for (auto&& evt : type.EventList())
         {
+            auto [add, remove] = get_event_methods(evt);
             w.write(R"(
 
 _% =
     new EventSource%(_obj,
-    _obj.Vftbl.add_%,
-    _obj.Vftbl.remove_%%);)",
+    _obj.Vftbl.add_%_%,
+    _obj.Vftbl.remove_%_%%);)",
                 evt.Name(),
                 bind<write_event_param_types>(evt),
                 evt.Name(),
+                add.index(),
                 evt.Name(),
+                remove.index(),
                 bind<write_event_param_marshalers>(evt));
         }
     }
@@ -1587,14 +1607,10 @@ private EventSource% _%;)",
     void write_interface_members(writer& w, TypeDef const& type,
         std::function<void(writer& w, std::string_view name, std::string_view type)> write_custom)
     {
-        std::vector<int> vtbl_index_props;
-        int vtbl_index = 0;
         for (auto&& method : type.MethodList())
         {
-            w.write("ARR: METHOD: % - %\n", method.Name(), vtbl_index);
             if (is_special(method))
             {
-                vtbl_index_props.push_back(vtbl_index++);
                 continue;
             }
 
@@ -1625,7 +1641,7 @@ public %% %(%)
                         bind<write_interop_type>(get_type_semantics(signature.return_signature().Type()))) :
                     "",
                 method.Name(),
-                vtbl_index++,
+                method.index(),
                 bind_each([](writer& w, auto const& param)
                 {
                     w.write(", %", bind<write_param_marshal_to_native>(param));
@@ -1642,10 +1658,8 @@ public %% %(%)
             }
         }
 
-        auto curr_vtbl_idx = std::begin(vtbl_index_props);
         for (auto&& prop : type.PropertyList())
         {
-            w.write("ARR: PROP: % - %\n", prop.Name(), *curr_vtbl_idx);
             auto [getter, setter] = get_property_methods(prop);
             auto semantics = get_type_semantics(prop.Type().Type());
             w.write(R"(
@@ -1675,9 +1689,8 @@ return %;
                     }),
                     bind<write_interop_type>(semantics),
                     prop.Name(),
-                    *curr_vtbl_idx,
+                    getter.index(),
                     bind<write_marshal_from_native>(semantics, "__return_value__"));
-                ++curr_vtbl_idx;
             }
             if (setter)
             {
@@ -1693,9 +1706,8 @@ return %;
                         }
                     }),
                     prop.Name(),
-                    *curr_vtbl_idx,
+                    setter.index(),
                     bind<write_marshal_to_native>(semantics, "value"));
-                ++curr_vtbl_idx;
             }
             if (!custom.empty())
             {
@@ -2015,7 +2027,6 @@ R"()"sv
             }) : nullptr;
         XLANG_ASSERT(!is_generic || (generic_helper != std::end(generic_helpers)));
 
-        int vtbl_index = 0;
         w.write(R"(%
 % class %%
 {
@@ -2053,7 +2064,7 @@ public object % { get; set; }
             bind<write_guid_attribute>(type),
             bind_each([&](writer& w, MethodDef const& method)
             {
-                write_vtbl_entry(w, method, vtbl_index++);
+                write_vtbl_entry(w, method);
             }, type.MethodList()),
             bind([&](writer& w) {
                 if (!is_generic) return;
