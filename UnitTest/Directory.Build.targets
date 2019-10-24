@@ -3,7 +3,6 @@
 
   <PropertyGroup>
     <BuildTestProjection Condition="'$(BuildTestProjection)$(Configuration)' == 'Release'">true</BuildTestProjection>
-    <RemoveWindowsReference>true</RemoveWindowsReference>
   </PropertyGroup>
 
   <Target Name="CopyTestComponent" BeforeTargets="PreBuildEvent">
