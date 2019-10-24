@@ -26,7 +26,6 @@ namespace WinRT
     namespace Interop
     {
         // IUnknown
-
         [Guid("00000000-0000-0000-C000-000000000046")]
         public struct IUnknownVftbl
         {
@@ -39,27 +38,13 @@ namespace WinRT
             public _Release Release;
         }
 
-        // IInspectable
-        [Guid("AF86E2E0-B12D-4c6a-9C5A-D7AA65101E90")]
-        public struct IInspectableVftbl
-        {
-            public delegate int _GetIids([In] IntPtr pThis, [Out] uint iidCount, [Out] Guid[] iids);
-            public delegate int _GetRuntimeClassName([In] IntPtr pThis, [Out] IntPtr className);
-            public delegate int _GetTrustLevel([In] IntPtr pThis, [Out] TrustLevel trustLevel);
-
-            public IUnknownVftbl IUnknownVftbl;
-            public _GetIids GetIids;
-            public _GetRuntimeClassName GetRuntimeClassName;
-            public _GetTrustLevel GetTrustLevel;
-        }
-
         // IActivationFactory
         [Guid("00000035-0000-0000-C000-000000000046")]
         public struct IActivationFactoryVftbl
         {
             public unsafe delegate int _ActivateInstance([In] IntPtr pThis, [Out] out IntPtr instance);
 
-            public IInspectableVftbl IInspectableVftbl;
+            public IInspectable.Vftbl IInspectableVftbl;
             public _ActivateInstance ActivateInstance;
         }
 
@@ -120,78 +105,36 @@ namespace WinRT
         {
             public long Value;
         }
-#if false
-        // IReference
-        [Guid("dacbffdc-68ef-5fd0-b657-782d0ac9807e")]
-        public struct IReference_Matrix4x4
+    }
+
+    // IInspectable
+    [Guid("AF86E2E0-B12D-4c6a-9C5A-D7AA65101E90")]
+    public class IInspectable
+    {
+        [Guid("AF86E2E0-B12D-4c6a-9C5A-D7AA65101E90")]
+        public struct Vftbl
         {
-            IInspectableVftbl IInspectableVftbl;
-            public _get_PropertyAsMatrix4x4 get_Value;
+            public delegate int _GetIids([In] IntPtr pThis, [Out] uint iidCount, [Out] Guid[] iids);
+            public delegate int _GetRuntimeClassName([In] IntPtr pThis, [Out] IntPtr className);
+            public delegate int _GetTrustLevel([In] IntPtr pThis, [Out] TrustLevel trustLevel);
+
+            public Interop.IUnknownVftbl IUnknownVftbl;
+            public _GetIids GetIids;
+            public _GetRuntimeClassName GetRuntimeClassName;
+            public _GetTrustLevel GetTrustLevel;
         }
 
-        // IIterator
-        public struct IIteratorOfObject
+        private readonly WinRT.ObjectReference<Vftbl> _obj;
+        public IntPtr NativePtr { get => _obj.ThisPtr; }
+        public static WinRT.ObjectReference<Vftbl> FromNative(IntPtr @this) => WinRT.ObjectReference<Vftbl>.FromNative(@this);
+        public static implicit operator IInspectable(WinRT.IObjectReference obj) => obj.As<Vftbl>();
+        public static implicit operator IInspectable(WinRT.ObjectReference<Vftbl> obj) => new IInspectable(obj);
+        public WinRT.ObjectReference<I> As<I>() => _obj.As<I>();
+        public IInspectable(WinRT.ObjectReference<Vftbl> obj)
         {
-            public unsafe delegate int _MoveNext([In] IntPtr thisPtr, [Out, MarshalAs(UnmanagedType.Bool)] out bool hasCurrent);
-            public unsafe delegate int _GetMany([In] IntPtr thisPtr, [In] uint capacity, [In] ref IntPtr[] values, [Out] out uint actual);
-
-            public IInspectableVftbl IInspectableVftbl;
-            public _get_PropertyAsObject get_Current;
-            public _get_PropertyAsBoolean get_HasCurrent;
-            public _MoveNext MoveNext;
-            public _GetMany GetMany;
+            _obj = obj;
         }
-
-        public struct IIterableOfObject
-        {
-            public IInspectableVftbl IInspectableVftbl;
-            public _get_PropertyAsObject get_First;
-        }
-
-        public struct IVectorViewOfObject
-        {
-            public unsafe delegate int _GetAt([In] IntPtr thisPtr, [In] uint index, [Out] out IntPtr result);
-            public unsafe delegate int _IndexOf([In] IntPtr thisPtr, [In] IntPtr value, [Out] out uint index, [Out, MarshalAs(UnmanagedType.Bool)] out bool found);
-            public unsafe delegate int _GetMany([In] IntPtr thisPtr, [In] uint startingIndex, [In] uint capacity, [In] ref IntPtr[] values, [Out] out uint actual);
-
-            public IInspectableVftbl IInspectableVftbl;
-            public _GetAt GetAt;
-            public _get_PropertyAsUInt32 get_Size;
-            public _IndexOf IndexOf;
-            public _GetMany GetMany;
-        }
-
-        public struct IIteratorOfByte
-        {
-            public unsafe delegate int _MoveNext([In] IntPtr thisPtr, [Out, MarshalAs(UnmanagedType.Bool)] out bool hasCurrent);
-            public unsafe delegate int _GetMany([In] IntPtr thisPtr, [In] uint capacity, [In] ref byte[] values, [Out] out uint actual);
-
-            public IInspectableVftbl IInspectableVftbl;
-            public _get_PropertyAsByte get_Current;
-            public _get_PropertyAsBoolean get_HasCurrent;
-            public _MoveNext MoveNext;
-            public _GetMany GetMany;
-        }
-
-        public struct IIterableOfByte
-        {
-            public IInspectableVftbl IInspectableVftbl;
-            public _get_PropertyAsObject get_First;
-        }
-
-        public struct IVectorViewOfByte
-        {
-            public unsafe delegate int _GetAt([In] IntPtr thisPtr, [In] uint index, [Out] out byte result);
-            public unsafe delegate int _IndexOf([In] IntPtr thisPtr, [In] byte value, [Out] out uint index, [Out, MarshalAs(UnmanagedType.Bool)] out bool found);
-            public unsafe delegate int _GetMany([In] IntPtr thisPtr, [In] uint startingIndex, [In] uint capacity, [In] ref byte[] values, [Out] out uint actual);
-
-            public IInspectableVftbl IInspectableVftbl;
-            public _GetAt GetAt;
-            public _get_PropertyAsUInt32 get_Size;
-            public _IndexOf IndexOf;
-            public _GetMany GetMany;
-        }
-#endif
+        public object _WinRT_Owner { get; set; }
     }
 
     public static class DelegateExtensions
@@ -515,14 +458,14 @@ namespace WinRT
             return obj;
         }
 
-        public static ObjectReference<T> FromNativePtr(object module, IntPtr thisPtr)
+        public static ObjectReference<T> FromNative(object module, IntPtr thisPtr)
         {
             var obj = new ObjectReference<T>(module, thisPtr, true);
             obj._vftblIUnknown.AddRef(obj.ThisPtr);
             return obj;
         }
 
-        public static ObjectReference<T> FromNativePtr(IntPtr thisPtr)
+        public static ObjectReference<T> FromNative(IntPtr thisPtr)
         {
             // Retrieve module handle from QueryInterface function address
             IntPtr qi;
@@ -532,10 +475,10 @@ namespace WinRT
             {
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
             }
-            return FromNativePtr(new DllModuleHandle(moduleHandle), thisPtr);
+            return FromNative(new DllModuleHandle(moduleHandle), thisPtr);
         }
 
-        public static ObjectReference<T> FromNativePtrNoRef(IntPtr thisPtr)
+        public static ObjectReference<T> FromNativeNoRef(IntPtr thisPtr)
         {
             return new ObjectReference<T>(null, thisPtr, false);
         }
@@ -731,7 +674,7 @@ namespace WinRT
         {
             IntPtr instancePtr = IntPtr.Zero;
             unsafe { Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, out instancePtr)); }
-            return ObjectReference<Interop.IInspectableVftbl>.Attach(_IActivationFactory.Module, ref instancePtr).As<I>();
+            return ObjectReference<WinRT.IInspectable.Vftbl>.Attach(_IActivationFactory.Module, ref instancePtr).As<I>();
         }
 
         ObjectReference<I> _As<I>()
@@ -1234,182 +1177,6 @@ namespace WinRT
         }
     }
 
-#if false
-    public class VectorViewOfObject<T> : IReadOnlyList<T>
-    {
-        ObjectReference<Interop.IVectorViewOfObject> _obj;
-        Guid _iidIterable;
-        internal delegate T CreateT(ObjectReference<Interop.IInspectableVftbl> obj);
-        CreateT _createT;
-        T _CreateT(ref IntPtr instancePtr) => _createT(ObjectReference<Interop.IInspectableVftbl>.Attach(_obj.Module, ref instancePtr));
-
-        internal VectorViewOfObject(ObjectReference<Interop.IVectorViewOfObject> obj, Guid iidIterable, CreateT createT)
-        {
-            _obj = obj;
-            _iidIterable = iidIterable;
-            _createT = createT;
-        }
-
-        public class Iterator : IEnumerator<T>
-        {
-            ObjectReference<Interop.IIteratorOfObject> _obj;
-            VectorViewOfObject<T> _parent;
-            internal Iterator(VectorViewOfObject<T> parent)
-            {
-                _parent = parent;
-                Reset();
-            }
-
-            public unsafe T Current
-            {
-                get
-                {
-                    IntPtr instancePtr;
-                    Marshal.ThrowExceptionForHR(_obj.Vftbl.get_Current(_obj.ThisPtr, out instancePtr));
-                    return _parent._CreateT(ref instancePtr);
-                }
-            }
-
-            object IEnumerator.Current => Current;
-
-            public void Dispose()
-            {
-                _obj = null;
-            }
-
-            public unsafe bool MoveNext()
-            {
-                bool hasCurrent;
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.MoveNext(_obj.ThisPtr, out hasCurrent));
-                return hasCurrent;
-            }
-
-            public unsafe void Reset()
-            {
-                var iterable = _parent._obj.As<Interop.IIterableOfObject>(_parent._iidIterable);
-                IntPtr iteratorPtr;
-                Marshal.ThrowExceptionForHR(iterable.Vftbl.get_First(iterable.ThisPtr, out iteratorPtr));
-                _obj = ObjectReference<Interop.IIteratorOfObject>.Attach(_parent._obj.Module, ref iteratorPtr);
-            }
-        }
-
-        public unsafe int Count
-        {
-            get
-            {
-                uint value;
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.get_Size(_obj.ThisPtr, out value));
-                return (int)value;
-            }
-        }
-
-        public unsafe T this[int index]
-        {
-            get
-            {
-                IntPtr instancePtr;
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetAt(_obj.ThisPtr, (uint)index, out instancePtr));
-                return _CreateT(ref instancePtr);
-            }
-        }
-
-        public unsafe IEnumerator<T> GetEnumerator()
-        {
-            return new Iterator(this);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-    }
-
-    public class VectorViewOfByte : IReadOnlyList<byte>
-    {
-        ObjectReference<Interop.IVectorViewOfByte> _obj;
-        Guid _iidIterable;
-
-        internal VectorViewOfByte(ObjectReference<Interop.IVectorViewOfByte> obj, Guid iidIterable)
-        {
-            _obj = obj;
-            _iidIterable = iidIterable;
-        }
-
-        public class Iterator : IEnumerator<byte>
-        {
-            ObjectReference<Interop.IIteratorOfByte> _obj;
-            VectorViewOfByte _parent;
-            internal Iterator(VectorViewOfByte parent)
-            {
-                _parent = parent;
-                Reset();
-            }
-
-            public unsafe byte Current
-            {
-                get
-                {
-                    byte value;
-                    Marshal.ThrowExceptionForHR(_obj.Vftbl.get_Current(_obj.ThisPtr, out value));
-                    return value;
-                }
-            }
-
-            object IEnumerator.Current => Current;
-
-            public void Dispose()
-            {
-                _obj = null;
-            }
-
-            public unsafe bool MoveNext()
-            {
-                bool hasCurrent;
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.MoveNext(_obj.ThisPtr, out hasCurrent));
-                return hasCurrent;
-            }
-
-            public unsafe void Reset()
-            {
-                var iterable = _parent._obj.As<Interop.IIterableOfByte>(_parent._iidIterable);
-                IntPtr iteratorPtr;
-                Marshal.ThrowExceptionForHR(iterable.Vftbl.get_First(iterable.ThisPtr, out iteratorPtr));
-                _obj = ObjectReference<Interop.IIteratorOfByte>.Attach(_parent._obj.Module, ref iteratorPtr);
-            }
-        }
-
-        public unsafe int Count
-        {
-            get
-            {
-                uint value;
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.get_Size(_obj.ThisPtr, out value));
-                return (int)value;
-            }
-        }
-
-        public unsafe byte this[int index]
-        {
-            get
-            {
-                byte value;
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetAt(_obj.ThisPtr, (uint)index, out value));
-                return value;
-            }
-        }
-
-        public unsafe IEnumerator<byte> GetEnumerator()
-        {
-            return new Iterator(this);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-    }
-#endif
-
     public static class TypeExtensions
     {
         public static bool IsDelegate(this Type type)
@@ -1491,8 +1258,7 @@ namespace WinRT
 
         public static string GetSignature(Type type)
         {
-            // todo: project IInspectable            
-            if (type == typeof(ObjectReference<Interop.IInspectableVftbl>))
+            if (type == typeof(IInspectable))
             {
                 return "cinterface(IInspectable)";
             }

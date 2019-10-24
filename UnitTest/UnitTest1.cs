@@ -9,11 +9,9 @@ using WinRT;
 
 using WF = Windows.Foundation;
 using WFC = Windows.Foundation.Collections;
-using WFM = Windows.Foundation.Metadata;
 using WFN = Windows.Foundation.Numerics;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Windows.Foundation.Metadata;
 using Windows.Foundation.Numerics;
 
 using TestComp;
@@ -23,8 +21,7 @@ namespace UnitTest
 {
     using A = IIterable<IStringable>;
     using B = IKeyValuePair<string, IAsyncOperationWithProgress</*A*/IIterable<IStringable>, float>>;
-    using IInspectable = ObjectReference<WinRT.Interop.IInspectableVftbl>; // todo
-    
+
     public class TestGuids
     {
         private static void AssertGuid<T>(string expected)
@@ -101,11 +98,11 @@ namespace UnitTest
         }
     }
 
-    public class TestCompTests
+    public class TestComponent
     {
         public Class TestObject { get; private set; }
 
-        public TestCompTests()
+        public TestComponent()
         {
             TestObject = new Class();
         }
@@ -124,9 +121,9 @@ namespace UnitTest
         public void TestPrimitives()
         {
             var test_int = 21;
-            TestObject.IntPropertyChanged += (Object sender, Int32 value) =>
+            TestObject.IntPropertyChanged += (IInspectable sender, Int32 value) =>
             {
-                var c = (Class)sender;
+                var c = Class.FromNative(sender.NativePtr);
                 Assert.Equal(value, test_int);
             };
             TestObject.IntProperty = test_int;

@@ -31,7 +31,7 @@ namespace TestComp.Manual
         public struct Vftbl
         {
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
-            WinRT.Interop.IInspectableVftbl IInspectableVftbl;
+            WinRT.IInspectable.Vftbl IInspectableVftbl;
 #pragma warning restore 0169
 #pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
             public WinRT.Interop._add_EventHandler add_Event0;
@@ -106,14 +106,14 @@ namespace TestComp.Manual
                 //       both exclusive and polymorphic (e.g. IStringable)
                 // demonstrating 'casting' an interface back to its RC (constructing from IUnknown -> exclusive)
                 // object equivalence via IUnknown, etc
-                (IntPtr value) => (obj.ThisPtr == value) ? Owner : ObjectReference<Vftbl>.FromNativePtr(value),
+                (IntPtr value) => (obj.ThisPtr == value) ? Owner : ObjectReference<Vftbl>.FromNative(value),
                 (IntPtr value) => new MarshaledValue<Int32>(value).UnmarshalFromNative());    
 
             _StringPropertyChanged =
                 new EventSource<Class, HString>(_obj,
                 _obj.Vftbl.add_StringPropertyChanged,
                 _obj.Vftbl.remove_StringPropertyChanged,
-                (IntPtr value) => (obj.ThisPtr == value) ? (Class)Owner : new Class(ObjectReference<Vftbl>.FromNativePtr(value)),
+                (IntPtr value) => (obj.ThisPtr == value) ? (Class)Owner : new Class(ObjectReference<Vftbl>.FromNative(value)),
                 (IntPtr value) => new MarshaledValue<HString>(value).UnmarshalFromNative());    
         }
         
