@@ -2,10 +2,11 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   
   <PropertyGroup>
+    <BuildTestProjection Condition="'$(BuildTestProjection)$(Configuration)' == 'Release'">true</BuildTestProjection>
     <RemoveWindowsReference>true</RemoveWindowsReference>
   </PropertyGroup>
 
-  <Target Name="ProjectWinUI" BeforeTargets="CoreCompile">
+  <Target Name="ProjectWinUI" BeforeTargets="CoreCompile" Condition="'$(BuildTestProjection)' == 'true'">
     <ItemGroup>
       <!--PkgMicrosoft_UI_Xaml is defined by Nuget reference-->
       <WinUIWinMDs Include="$(PkgMicrosoft_UI_Xaml)/**/*.winmd" />

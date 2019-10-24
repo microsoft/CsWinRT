@@ -14,6 +14,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cswinrt", "cswinrt\cswinrt.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinUITest", "WinUITest\WinUITest.csproj", "{AD0BD44A-D9B5-419C-90D0-B017AEE09C85}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build Files", "Build Files", "{96495AB4-2D86-47D1-A174-27D0B436DC98}"
+	ProjectSection(SolutionItems) = preProject
+		build.cmd = build.cmd
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

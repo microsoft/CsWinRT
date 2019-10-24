@@ -2,6 +2,7 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
+    <BuildTestProjection Condition="'$(BuildTestProjection)$(Configuration)' == 'Release'">true</BuildTestProjection>
     <RemoveWindowsReference>true</RemoveWindowsReference>
   </PropertyGroup>
 
@@ -10,7 +11,7 @@
     <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.pdb&quot; &quot;$(TargetDir)&quot;" />
   </Target>
 
-  <Target Name="ProjectTestComponent" BeforeTargets="CoreCompile">
+  <Target Name="ProjectTestComponent" BeforeTargets="CoreCompile" Condition="'$(BuildTestProjection)' == 'true'">
     <Exec Command="$(CsWinrtExe) -verbose -in $(OutDir)TestComp\TestComp.winmd local -out &quot;$(ProjectDir)Generated Files&quot; -include TestComp -include Windows.Foundation -exclude Windows.Foundation.Diagnostics -exclude Windows.Foundation.Metadata" />
     <ItemGroup>
       <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
