@@ -130,13 +130,6 @@ Where <spec> is one or more of:
 
             task_group group;
 
-            //group.add([]
-            //{
-            //    writer w;
-            //    w.write(strings::base_interop);
-            //    w.flush_to_file(settings.output_folder / "base-interop.cs");
-            //});
-
             group.add([]
             {
                 writer w;
@@ -145,18 +138,28 @@ Where <spec> is one or more of:
                 w.flush_to_file(settings.output_folder / "WinRT.cs");
             });
 
-            for (auto&&[ns, members] : c.namespaces())
+            for (auto&& ns_members : c.namespaces())
             {
-                for (auto&&[name, type] : members.types)
+                group.add([&ns_members]
                 {
-                    if (settings.filter.includes(type))
+                    auto&& [ns, members] = ns_members;
+                    writer w(ns);
+                    w.write_begin();
+                    bool written{};
+                    for (auto&& [name, type] : members.types)
                     {
-                        group.add([&type]
+                        if (settings.filter.includes(type))
                         {
-                            write_type(type);
-                        });
+                            written |= write_type(type, w);
+                        };
                     }
-                }
+                    if (written)
+                    {
+                        w.write_end();
+                        auto filename = w.write_temp("%.cs", ns);
+                        w.flush_to_file(settings.output_folder / filename);
+                    }
+                });
             }
 
             group.get();

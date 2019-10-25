@@ -1,0 +1,22 @@
+<!--NOTE: Directory.Build.* files are temporary until C#/WinRT nuget contains msbuild support-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <BuildTestProjection Condition="'$(BuildTestProjection)$(Configuration)' == 'Release'">true</BuildTestProjection>
+  </PropertyGroup>
+
+  <Target Name="CopyTestComponent" BeforeTargets="PreBuildEvent">
+    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.dll&quot; &quot;$(TargetDir)&quot;" />
+    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.pdb&quot; &quot;$(TargetDir)&quot;" />
+  </Target>
+
+  <Target Name="ProjectTestComponent" BeforeTargets="CoreCompile" Condition="'$(BuildTestProjection)' == 'true'">
+    <Exec Command="$(CsWinrtExe) -verbose -in $(OutDir)TestComp\TestComp.winmd 10.0.18362.0 -out &quot;$(ProjectDir)Generated Files&quot; -include TestComp -include Windows.Foundation -exclude Windows.Foundation.Diagnostics -exclude Windows.Foundation.Metadata" />
+    <ItemGroup>
+      <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
+    </ItemGroup>    
+  </Target>
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+
+</Project>

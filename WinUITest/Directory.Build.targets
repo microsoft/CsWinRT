@@ -1,0 +1,38 @@
+<!--NOTE: Directory.Build.* files are temporary until C#/WinRT nuget contains msbuild support-->  
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
+  <PropertyGroup>
+    <BuildTestProjection Condition="'$(BuildTestProjection)$(Configuration)' == 'Release'">true</BuildTestProjection>
+  </PropertyGroup>
+
+  <Target Name="ProjectWinUI" BeforeTargets="CoreCompile" Condition="'$(BuildTestProjection)' == 'true'">
+    <ItemGroup>
+      <!--PkgMicrosoft_UI_Xaml is defined by Nuget reference-->
+      <WinUIWinMDs Include="$(PkgMicrosoft_UI_Xaml)/**/*.winmd" />
+    </ItemGroup>
+    <PropertyGroup>
+      <CsWinRTVerbosity>high</CsWinRTVerbosity>
+      <CsWinRTResponseFile>$(IntDir)cswinrt_platform.rsp</CsWinRTResponseFile>
+      <CsWinRTCommand>$(CsWinrtExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+    </PropertyGroup>
+    <PropertyGroup>
+      <CsWinRTParams>
+          -verbose 
+          -in 10.0.18362.0 @(WinUIWinMDs->'&quot;%(FullPath)&quot;', ' ') 
+          -out &quot;$(ProjectDir)Generated Files&quot; 
+          -include Microsoft Windows
+      </CsWinRTParams>
+    </PropertyGroup>
+    <WriteLinesToFile 
+        File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)"
+        Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)"/>
+    <Exec Command="$(CsWinRTCommand)" />
+    <ItemGroup>
+      <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
+    </ItemGroup>
+  </Target>
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+
+</Project>
