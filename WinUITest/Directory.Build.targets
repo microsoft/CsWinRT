@@ -18,7 +18,7 @@
     <PropertyGroup>
       <CsWinRTParams>
           -verbose 
-          -in local @(WinUIWinMDs->'&quot;%(FullPath)&quot;', ' ') 
+          -in 10.0.18362.0 @(WinUIWinMDs->'&quot;%(FullPath)&quot;', ' ') 
           -out &quot;$(ProjectDir)Generated Files&quot; 
           -include Microsoft Windows
       </CsWinRTParams>
