@@ -139,11 +139,6 @@ namespace WinRT
 
     public static class DelegateExtensions
     {
-        public static Interop._get_PropertyAsObject ToGetPropertyAsObject<T>(this Interop._get_PropertyAs<T> getPropertyAsT)
-        {
-            return Marshal.GetDelegateForFunctionPointer<Interop._get_PropertyAsObject>(
-                Marshal.GetFunctionPointerForDelegate(getPropertyAsT));
-        }
         public static T AsDelegate<T>(this MulticastDelegate del)
         {
             return Marshal.GetDelegateForFunctionPointer<T>(
@@ -433,6 +428,16 @@ namespace WinRT
             IntPtr thatPtr;
             unsafe { Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out thatPtr)); }
             return ObjectReference<T>.Attach(Module, ref thatPtr);
+        }
+
+        public T AsType<T>()
+        {
+            var ctor = typeof(T).GetConstructor(new[] { typeof(IObjectReference) });
+            if (ctor != null)
+            {
+                return (T)ctor.Invoke(new[] { this });
+            }
+            throw new InvalidOperationException("Target type is not a projected interface.");
         }
 
         ~IObjectReference()
@@ -1230,11 +1235,11 @@ namespace WinRT
                 if (type.IsGenericType)
                 {
                     var backtick = type_name.IndexOf('`');
-                    type_name = type_name.Substring(0, backtick) + "Extensions`" + type_name.Substring(backtick + 1);
+                    type_name = type_name.Substring(0, backtick) + "Helper`" + type_name.Substring(backtick + 1);
                 }
                 else
                 {
-                    type_name += "Extensions";
+                    type_name += "Helper";
                 }
                 return Type.GetType(type_name);
             }

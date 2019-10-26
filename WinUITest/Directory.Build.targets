@@ -17,10 +17,10 @@
     </PropertyGroup>
     <PropertyGroup>
       <CsWinRTParams>
-          -verbose 
-          -in 10.0.18362.0 @(WinUIWinMDs->'&quot;%(FullPath)&quot;', ' ') 
-          -out &quot;$(ProjectDir)Generated Files&quot; 
-          -include Microsoft Windows
+-verbose 
+-in 10.0.18362.0 @(WinUIWinMDs->'&quot;%(FullPath)&quot;', ' ') 
+-out &quot;$(ProjectDir)Generated Files&quot; 
+-include Microsoft Windows
       </CsWinRTParams>
     </PropertyGroup>
     <WriteLinesToFile 

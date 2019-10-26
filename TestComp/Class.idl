@@ -6,21 +6,38 @@ namespace TestComp
     delegate void EventHandler2(Class sender, Int32 arg0);
     delegate void EventHandler3(Class sender, Int32 arg0, String arg1);
     delegate void EventHandlerCollection(Class sender, Windows.Foundation.Collections.IVector<Int32> arg0, Windows.Foundation.Collections.IMap<Int32, String> arg1);
-
-    // todo: 
-    // structs 
-    // in, out, const ref
+     
+    // todo:  
+    // params - in, out, ref
+    // structs - blittable and non
     // arrays - fill, receive, pass, of struct
-    // object/IInspectable
-    // generics
+    // inheritance - from generics, overload resolution
+    // statics - interfaces, classes
 
+    delegate Int32 ProvideInt();
     delegate String ProvideString();
+    delegate Object ProvideObject();
 
     [default_interface]
-    runtimeclass Class : Windows.Foundation.IStringable //, Windows.Foundation.Collections.IVector<String>
+    runtimeclass Class : 
+        Windows.Foundation.IStringable
+        //, Windows.Foundation.Collections.IVector<String>,
+        //, Windows.Foundation.Collections.IMap<Int32, String>
     {
+        // factory
         Class();
-    
+        Class(Int32 intProperty);
+        Class(Int32 intProperty, String stringProperty);
+
+        // static
+        static Int32 StaticIntProperty;
+        static event Windows.Foundation.EventHandler<Int32> StaticIntPropertyChanged;
+        static String StaticStringProperty;
+        static event Windows.Foundation.TypedEventHandler<Class, String> StaticStringPropertyChanged;
+        static void StaticGetString();
+        static void StaticSetString(ProvideString provideString);
+
+        // class
         event EventHandler0 Event0;
         void InvokeEvent0();
         event EventHandler1 Event1;
@@ -38,15 +55,20 @@ namespace TestComp
 
         Int32 IntProperty;
         event Windows.Foundation.EventHandler<Int32> IntPropertyChanged;
-        
+        void RaiseIntChanged();
+        void CallForInt(ProvideInt provideInt);
+
         String StringProperty;
         event Windows.Foundation.TypedEventHandler<Class, String> StringPropertyChanged;
+        void RaiseStringChanged();
+        void CallForString(ProvideString provideString);
 
         String StringProperty2;
-
         Windows.Foundation.Collections.IVector<String> StringsProperty;
 
-        void GetString();
-        void SetString(ProvideString provideString);
+        Object ObjectProperty;
+        void RaiseObjectChanged();
+        void CallForObject(ProvideObject provideObject);
+        event Windows.Foundation.EventHandler<Object> ObjectPropertyChanged;
     }
 }
