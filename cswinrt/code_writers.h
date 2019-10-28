@@ -513,7 +513,7 @@ namespace cswinrt
         }
     }
 
-    void write_class_method(writer& w, MethodDef const& method, TypeDef const& /*type*/, bool is_static, std::string_view interface_member)
+    void write_class_method(writer& w, MethodDef const& method, TypeDef const& /*type*/, std::string_view interface_member)
     {
         if (method.Flags().SpecialName())
         {
@@ -546,12 +546,11 @@ namespace cswinrt
         }
 
         w.write(R"(
-public %%% %(%)
+public %% %(%)
 {
 %%.%(%);
 }
 )",
-            is_static ? "static " : "",
             override_or_new,
             return_type,
             method.Name(),
@@ -577,16 +576,15 @@ public % %
     }
 
 
-    void write_class_event(writer& w, Event const& event, bool is_static, std::string_view interface_member)
+    void write_class_event(writer& w, Event const& event, std::string_view interface_member)
     {
         w.write(R"(
-public %event WinRT.EventHandler% %
+public event WinRT.EventHandler% %
 {
 add => %.% += value;
 remove => %.% -= value;
 }
 )",
-            is_static ? "static " : "",
             bind<write_event_param_types>(event),
             event.Name(),
             interface_member,
@@ -599,6 +597,7 @@ remove => %.% -= value;
 //activatable classes, static classes.  
     void write_factory_members(writer& w, TypeDef const& factory_type, TypeDef const& type)
     {
+        // todo: support factory props/events (are these possible with midl 3.0? do we care?)
         if (factory_type)
         {
             for (auto&& method : factory_type.MethodList())
@@ -623,6 +622,7 @@ remove => %.% -= value;
 
     void write_static_members(writer& w, TypeDef const& static_type, TypeDef const& type)
     {
+        // todo: support static props/events (are these possible with midl 3.0? do we care?)
         for (auto&& method : static_type.MethodList())
         {
             //method_signature signature{ method };
@@ -634,11 +634,21 @@ remove => %.% -= value;
         }
     }
 
+    void write_static_class(writer& w, TypeDef const& type)
+    {
+        auto type_name = write_type_name_temp(w, type);
+        w.write(R"(public static class %
+{
+}
+)",
+            type_name);
+    }
+
     void write_class(writer& w, TypeDef const& type)
     {
         if (is_static(type))
         {
-            // todo
+            write_static_class(w, type);
             return;
         }
 
@@ -683,7 +693,7 @@ public I As<I>() => _default.As<I>();
             default_interface_name,
             OwnerMemberName);
 
-        std::map<std::string_view, std::tuple<std::string, std::string, std::string>> property_targets;
+        std::map<std::string_view, std::tuple<std::string, std::string, std::string>> properties;
 
         for (auto&& ii : type.InterfaceImpl())
         {
@@ -692,36 +702,39 @@ public I As<I>() => _default.As<I>();
             auto write_interface = [&](TypeDef const& interface_type)
             {
                 auto interface_name = write_type_name_temp(w, interface_type);
-                w.write(R"(
-private % AsInternal(InterfaceTag<%> _) =>
-    new %(_default.AsInterface<%.Vftbl>());
+                
+                auto is_default_interface = has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute");
+                auto target = is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())");
+                if (!is_default_interface)
+                {
+                    w.write(R"(
+private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>());
 )",
-                    interface_name,
-                    interface_name,
-                    interface_name,
-                    interface_name);
+                        interface_name,
+                        interface_name,
+                        interface_name,
+                        interface_name);
+                }
 
                 if( !is_exclusive_to(interface_type) )
                 {
                     w.write(R"(
-public static implicit operator %(% obj) => obj.AsInternal(new InterfaceTag<%>());
+public static implicit operator %(% obj) => %;
 )",
                         interface_name,
                         type_name,
-                        interface_name);
+                        is_default_interface ? "_default" : w.write_temp("obj.AsInternal(new InterfaceTag<%>())", interface_name));
                 }
 
-                auto is_default_interface = has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute");
-                auto target = is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())");
-                w.write_each<write_class_method>(interface_type.MethodList(), interface_type, false, target);
-                w.write_each<write_class_event>(interface_type.EventList(), false, target);
+                w.write_each<write_class_method>(interface_type.MethodList(), interface_type, target);
+                w.write_each<write_class_event>(interface_type.EventList(), target);
 
                 // Accumulate property getters/setters, since such may be defined across interfaces
                 for (auto&& prop : interface_type.PropertyList())
                 {
                     auto [getter, setter] = get_property_methods(prop);
                     auto projection_type = w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
-                    auto targets = property_targets.try_emplace(prop.Name(), std::move(projection_type), std::move(getter ? target : ""), std::move(setter ? target : ""));
+                    auto targets = properties.try_emplace(prop.Name(), std::move(projection_type), std::move(getter ? target : ""), std::move(setter ? target : ""));
                     if (!targets.second)
                     {
                         auto& [property_type, getter_target, setter_target] = targets.first->second;
@@ -738,7 +751,6 @@ public static implicit operator %(% obj) => obj.AsInternal(new InterfaceTag<%>()
                         }
                     }
                 }
-                //w.write_each<write_class_property>(interface_type.PropertyList(), false, target);
             };
             call(semantics,
                 [&](type_definition const& type){ write_interface(type); },
@@ -750,7 +762,8 @@ public static implicit operator %(% obj) => obj.AsInternal(new InterfaceTag<%>()
                 [](auto){ throw_invalid("invalid type"); });
         }
 
-        for (auto& [property_name, property_data] : property_targets)
+        // Write properties with merged accessors
+        for (auto& [property_name, property_data] : properties)
         {
             auto& [property_type, getter_target, setter_target] = property_data;
             write_class_property(w, property_name, property_type, getter_target, setter_target);

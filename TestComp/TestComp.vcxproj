@@ -74,6 +74,7 @@
     <ClInclude Include="Class.h">
       <DependentUpon>Class.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="StaticClass.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -83,6 +84,7 @@
       <DependentUpon>Class.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="module.g.cpp" />
+    <ClCompile Include="StaticClass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Class.idl" />

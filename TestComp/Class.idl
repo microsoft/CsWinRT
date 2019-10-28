@@ -49,7 +49,7 @@ namespace TestComp
     static runtimeclass StaticClass
     {
         static Class MakeClass();
-        static Int32 NumClasses;
+        static Int32 NumClasses{ get; };
     }
 
     [default_interface]

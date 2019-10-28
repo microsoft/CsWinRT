@@ -97,6 +97,7 @@ namespace UnitTest
         }
     }
 
+    
     public class TestComponent
     {
         public Class TestObject { get; private set; }
@@ -104,6 +105,14 @@ namespace UnitTest
         public TestComponent()
         {
             TestObject = new Class();
+        }
+
+        [Fact]
+        public void TestStaticClass()
+        {
+            var instance = new IStaticClassStatics(ActivationFactory<StaticClass>.ActivateInstance<IStaticClassStatics.Vftbl>());
+            var c = instance.MakeClass();
+            var num = instance.NumClasses;
         }
 
         [Fact]

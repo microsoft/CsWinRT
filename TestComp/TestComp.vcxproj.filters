@@ -13,9 +13,11 @@
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Class.cpp" />
     <ClCompile Include="module.g.cpp" />
+    <ClCompile Include="StaticClass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="StaticClass.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Class.idl" />
