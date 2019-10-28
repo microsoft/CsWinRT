@@ -12,15 +12,53 @@ namespace TestComp
     // structs - blittable and non
     // arrays - fill, receive, pass, of struct
     // inheritance - from generics, overload resolution
-    // statics - interfaces, classes
+    // statics - classes
 
     delegate Int32 ProvideInt();
     delegate String ProvideString();
     delegate Object ProvideObject();
 
+    interface ICowboy
+    {
+        void Draw();
+        void Draw(String gunModel);
+        String DrawTo();
+    }
+
+    interface IArtist
+    {
+        void Draw();
+        void Draw(Int32 figureSides);
+        Int32 DrawTo();
+    }
+
+    interface IProperties1
+    {
+        Int32 ReadWriteProperty{ get; };
+        //Int32 DisjointProperty{ get; };
+        //Int32 DistinctProperty{ get; };
+    }
+
+    interface IProperties2 requires IProperties1
+    {
+        Int32 ReadWriteProperty{ set; };
+        //String DisjointProperty{ set; };
+        //String DistinctProperty{ get; set; };
+    }
+
+    static runtimeclass StaticClass
+    {
+        static Class MakeClass();
+        static Int32 NumClasses;
+    }
+
     [default_interface]
     runtimeclass Class : 
         Windows.Foundation.IStringable
+        //, ICowboy
+        //, IArtist
+        , IProperties1
+        , IProperties2
         //, Windows.Foundation.Collections.IVector<String>,
         //, Windows.Foundation.Collections.IMap<Int32, String>
     {
@@ -36,6 +74,8 @@ namespace TestComp
         static event Windows.Foundation.TypedEventHandler<Class, String> StaticStringPropertyChanged;
         static void StaticGetString();
         static void StaticSetString(ProvideString provideString);
+        static Int32 StaticReadWriteProperty{ get; };
+        static Int32 StaticReadWriteProperty{ set; };
 
         // class
         event EventHandler0 Event0;

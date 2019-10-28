@@ -15,7 +15,6 @@ using Windows.Foundation.Collections;
 using Windows.Foundation.Numerics;
 
 using TestComp;
-//using TestComp.Manual;
 
 namespace UnitTest
 {
@@ -123,6 +122,8 @@ namespace UnitTest
             // explicit cast
             IStringable str2 = TestObject.As<IStringable>();
             Assert.Equal(expected, str2.ToString());
+
+            // TODO: 'is' and 'as' operators - reconsider interface inheritance
         }
 
         [Fact]

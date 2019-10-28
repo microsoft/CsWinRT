@@ -39,6 +39,8 @@ namespace winrt::TestComp::implementation
         static void StaticStringPropertyChanged(winrt::event_token const& token) noexcept;
         static void StaticGetString();
         static void StaticSetString(TestComp::ProvideString const& provideString);
+        static int32_t StaticReadWriteProperty();
+        static void StaticReadWriteProperty(int32_t value);
         winrt::event_token Event0(TestComp::EventHandler0 const& handler);
         void Event0(winrt::event_token const& token) noexcept;
         void InvokeEvent0();
@@ -85,6 +87,19 @@ namespace winrt::TestComp::implementation
         
         // IStringable
         hstring ToString();
+
+        // Property test interfaces
+        //void Draw();
+        //void Draw(hstring const& gunModel);
+        //hstring DrawTo();
+        //void Draw();
+        //void Draw(int32_t figureSides);
+        //int32_t DrawTo();
+        int32_t ReadWriteProperty();
+        //int32_t DistinctProperty();
+        void ReadWriteProperty(int32_t value);
+        //hstring DistinctProperty();
+        //void DistinctProperty(hstring const& value);
 
         // IVector<String>
         //Windows::Foundation::Collections::IIterator<hstring> First();

@@ -10,6 +10,7 @@ namespace winrt::TestComp::implementation
         static winrt::event<Windows::Foundation::EventHandler<int32_t>> _intChanged {};
         static winrt::hstring _string;
         static winrt::event<Windows::Foundation::TypedEventHandler<TestComp::Class, hstring>> _stringChanged {};
+        static int _readWrite{};
     }
 
     Class::Class(int32_t intProperty)
@@ -61,6 +62,14 @@ namespace winrt::TestComp::implementation
     void Class::StaticSetString(TestComp::ProvideString const& provideString)
     {
         statics::_string = provideString();
+    }
+    int32_t Class::StaticReadWriteProperty()
+    {
+        return statics::_readWrite;
+    }
+    void Class::StaticReadWriteProperty(int32_t value)
+    {
+        statics::_readWrite = value;
     }
     winrt::event_token Class::Event0(TestComp::EventHandler0 const& handler)
     {
@@ -240,6 +249,15 @@ namespace winrt::TestComp::implementation
     hstring Class::ToString()
     {
         return _string;
+    }
+
+    int32_t Class::ReadWriteProperty()
+    {
+        return _int;
+    }
+    void Class::ReadWriteProperty(int32_t value)
+    {
+        _int = value;
     }
 
     // IVector<String>

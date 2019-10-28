@@ -410,7 +410,7 @@ namespace cswinrt
         }
         case category::struct_type:
         {
-            w.write("/*todo: struct_type %*/%", bind<write_type_name>(type), name);
+            w.write("%", name);
             return;
         }
         case category::interface_type:
@@ -500,141 +500,6 @@ namespace cswinrt
         write_event_params(w, evt, write_params);
     }
         
-    void write_throw_not_impl(writer& w)
-    {
-        w.write("throw new NotImplementedException();\n");
-    }
-#if 0
-
-    void write_check_disposed(writer& w, TypeDef const& type)
-    {
-        w.write("if (_disposed) throw new ObjectDisposedException(\"%.%\");\n", type.TypeNamespace(), type.TypeName());
-    }
-
-    void write_class_method(writer& w, MethodDef const& method, TypeDef const& type, bool is_static)
-    {
-        if (method.Flags().SpecialName())
-        {
-            return;
-        }
-
-        method_signature signature{ method };
-        w.write("public %% %(%)\n{\n",
-            is_static ? "static " : "",
-            bind<write_method_return>(signature),
-            method.Name(),
-            bind_list<write_method_parameter>(", ", signature.params()));
-        {
-            if (!is_static)
-            {
-                write_check_disposed(w, type);
-            }
-
-            write_throw_not_impl(w);
-        }
-        w.write("}\n");
-    }
-
-    void write_class_methods(writer& w, TypeDef const& type, TypeDef const& method_container, bool is_static)
-    {
-        int offset = 5;
-        for (auto&& method : method_container.MethodList())
-        {
-            offset++;
-
-            if (method.Flags().SpecialName())
-            {
-                return;
-            }
-
-            method_signature signature{ method };
-            w.write("public %% %(%)\n{\n",
-                is_static ? "static " : "",
-                bind<write_method_return>(signature),
-                method.Name(),
-                bind_list<write_method_parameter>(", ", signature.params()));
-            {
-                if (!is_static)
-                {
-                    write_check_disposed(w, type);
-                }
-
-                auto params = signature.params();
-
-                w.write("// _%Interop.%%\n", method_container.TypeName(), method.Name(), offset);
-
-                write_throw_not_impl(w);
-            }
-            w.write("}\n");
-        }
-    }
-
-    void write_class_property(writer& w, Property const& prop, bool is_static)
-    {
-        // TODO: WinRT requires property getters and allows setters to be added via a seperate interface
-
-        auto [getter, setter] = get_property_methods(prop);
-
-        w.write("public %% %\n{\n", 
-            is_static ? "static /*prop*/ " : "",
-            bind<write_projection_type>(get_type_semantics(prop.Type().Type())),
-            prop.Name());
-
-        {
-            if (getter)
-            {
-                w.write("get\n{\n");
-                {
-                    write_throw_not_impl(w);
-                }
-                w.write("}\n");
-            }
-
-            if (setter)
-            {
-                w.write("set\n{\n");
-                {
-                    write_throw_not_impl(w);
-                }
-                w.write("}\n");
-            }
-        }
-        w.write("}\n");
-    }
-
-    void write_class_event(writer& w, Event const& event, bool is_static)
-    {
-        w.write("public %event % %\n{\n",
-            is_static ? "static " : "",
-            bind<write_projection_type>(get_type_semantics(event.EventType())),
-            event.Name());
-        {
-            w.write("add\n{\n");
-            {
-                write_throw_not_impl(w);
-            }
-            w.write("}\n");
-
-            w.write("remove\n{\n");
-            {
-                write_throw_not_impl(w);
-            }
-            w.write("}\n");
-        }
-        w.write("}\n");
-
-    }
-
-    void write_static_factory(writer& w, TypeDef const& type, static_factory const& factory)
-    {
-        XLANG_ASSERT(factory.type);
-
-        write_class_methods(w, type, factory.type, true);
-        w.write_each<write_class_property>(factory.type.PropertyList(), true);
-        w.write_each<write_class_event>(factory.type.EventList(), true);
-    }
-#endif
-
     void write_class_modifiers(writer& w, TypeDef const& type)
     {
         if (is_static(type))
@@ -698,22 +563,19 @@ public %%% %(%)
         );
     }
 
-    void write_class_property(writer& w, Property const& prop, bool is_static, std::string_view interface_member)
+    void write_class_property(writer& w, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target)
     {
-        // TODO: WinRT requires property getters and allows setters to be added via a seperate interface
-        auto [getter, setter] = get_property_methods(prop);
-
         w.write(R"(
-public %% %
+public % %
 {
 %%}
 )",
-            is_static ? "static " : "",
-            bind<write_projection_type>(get_type_semantics(prop.Type().Type())),
-            prop.Name(),
-            getter ? w.write_temp("get => %.%;\n", interface_member, prop.Name()) : "",
-            setter ? w.write_temp("set => %.% = value;\n", interface_member, prop.Name()) : "");
+            prop_type,
+            prop_name,
+            getter_target.empty() ? "" : w.write_temp("get => %.%;\n", getter_target, prop_name),
+            setter_target.empty() ? "" : w.write_temp("set => %.% = value;\n", setter_target, prop_name));
     }
+
 
     void write_class_event(writer& w, Event const& event, bool is_static, std::string_view interface_member)
     {
@@ -802,6 +664,8 @@ _default = ifc;
 _default.% = this;
 }
 
+private struct InterfaceTag<I>{};
+
 public I As<I>() => _default.As<I>();
 )",
             bind<write_class_modifiers>(type),
@@ -819,30 +683,62 @@ public I As<I>() => _default.As<I>();
             default_interface_name,
             OwnerMemberName);
 
+        std::map<std::string_view, std::tuple<std::string, std::string, std::string>> property_targets;
+
         for (auto&& ii : type.InterfaceImpl())
         {
             auto semantics = get_type_semantics(ii.Interface());
         
             auto write_interface = [&](TypeDef const& interface_type)
             {
-                if( !is_exclusive_to(interface_type) )
-                {
-                    auto interface_name = write_type_name_temp(w, interface_type);
-                    w.write(R"(
-public static implicit operator %(% obj) =>
-    new %(obj._default.AsInterface<%.Vftbl>());
+                auto interface_name = write_type_name_temp(w, interface_type);
+                w.write(R"(
+private % AsInternal(InterfaceTag<%> _) =>
+    new %(_default.AsInterface<%.Vftbl>());
 )",
                     interface_name,
-                    type_name,
+                    interface_name,
                     interface_name,
                     interface_name);
+
+                if( !is_exclusive_to(interface_type) )
+                {
+                    w.write(R"(
+public static implicit operator %(% obj) => obj.AsInternal(new InterfaceTag<%>());
+)",
+                        interface_name,
+                        type_name,
+                        interface_name);
                 }
 
                 auto is_default_interface = has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute");
-                auto target = is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "((%)this)");
+                auto target = is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())");
                 w.write_each<write_class_method>(interface_type.MethodList(), interface_type, false, target);
-                w.write_each<write_class_property>(interface_type.PropertyList(), false, target);
                 w.write_each<write_class_event>(interface_type.EventList(), false, target);
+
+                // Accumulate property getters/setters, since such may be defined across interfaces
+                for (auto&& prop : interface_type.PropertyList())
+                {
+                    auto [getter, setter] = get_property_methods(prop);
+                    auto projection_type = w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
+                    auto targets = property_targets.try_emplace(prop.Name(), std::move(projection_type), std::move(getter ? target : ""), std::move(setter ? target : ""));
+                    if (!targets.second)
+                    {
+                        auto& [property_type, getter_target, setter_target] = targets.first->second;
+                        XLANG_ASSERT(property_type == projection_type);
+                        if (getter)
+                        {
+                            XLANG_ASSERT(getter_target.empty());
+                            getter_target = std::move(target);
+                        }
+                        if (setter)
+                        {
+                            XLANG_ASSERT(setter_target.empty());
+                            setter_target = std::move(target);
+                        }
+                    }
+                }
+                //w.write_each<write_class_property>(interface_type.PropertyList(), false, target);
             };
             call(semantics,
                 [&](type_definition const& type){ write_interface(type); },
@@ -852,6 +748,12 @@ public static implicit operator %(% obj) =>
                     write_interface(type.generic_type);
                 },
                 [](auto){ throw_invalid("invalid type"); });
+        }
+
+        for (auto& [property_name, property_data] : property_targets)
+        {
+            auto& [property_type, getter_target, setter_target] = property_data;
+            write_class_property(w, property_name, property_type, getter_target, setter_target);
         }
 
         w.write(R"(}
@@ -1010,7 +912,7 @@ private EventSource% _%;)",
             }
             case category::struct_type:
             {
-                w.write("/*todo: struct_type %*/%", bind<write_type_name>(type), name);
+                w.write("%", name);
                 return;
             }
             default:
@@ -1796,7 +1698,7 @@ public static WinRT.ObjectReference<Vftbl> FromNative(IntPtr ^@this) => WinRT.Ob
 public static implicit operator %(WinRT.IObjectReference obj) => new %(obj);
 public static implicit operator %(WinRT.ObjectReference<Vftbl> obj) => new %(obj);
 public WinRT.ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-public T As<T>() => _obj.AsType<T>();
+public A As<A>() => _obj.AsType<A>();
 public @(WinRT.IObjectReference obj) : this(obj.As<Vftbl>()) {}
 public @(WinRT.ObjectReference<Vftbl> obj)
 {
