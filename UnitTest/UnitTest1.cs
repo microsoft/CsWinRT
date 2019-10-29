@@ -110,9 +110,9 @@ namespace UnitTest
         [Fact]
         public void TestStaticClass()
         {
-            var instance = new IStaticClassStatics(ActivationFactory<StaticClass>.ActivateInstance<IStaticClassStatics.Vftbl>());
-            var c = instance.MakeClass();
-            var num = instance.NumClasses;
+            Assert.Equal(0, StaticClass.NumClasses);
+            var obj = StaticClass.MakeClass();
+            Assert.Equal(1, StaticClass.NumClasses);
         }
 
         [Fact]

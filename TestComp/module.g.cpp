@@ -23,8 +23,7 @@ void* __stdcall winrt_get_activation_factory([[maybe_unused]] std::wstring_view 
         return std::equal(left.rbegin(), left.rend(), right.rbegin(), right.rend());
     };
 
-    if (requal(name, L"TestComp.Class") ||
-        requal(name, L"TestComp.Manual.Class"))
+    if (requal(name, L"TestComp.Class"))
     {
         return winrt_make_TestComp_Class();
     }
