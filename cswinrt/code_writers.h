@@ -590,16 +590,14 @@ remove => %.% -= value;
             event.Name());
     }
 
-//TODO: rationalize writing of members of default interfaces, non-default interfaces, 
-//activatable classes, static classes.  
-    void write_factory_members(writer& w, TypeDef const& factory_type, TypeDef const& type)
+    void write_factory_members(writer& /*w*/, TypeDef const& factory_type, TypeDef const& /*type*/)
     {
         // todo: support factory props/events (are these possible with midl 3.0? do we care?)
         if (factory_type)
         {
             for (auto&& method : factory_type.MethodList())
             {
-                //method_signature signature{ method };
+                method_signature signature{ method };
                 //w.write("/*1*/ public %(%)\n{\n", type.TypeName(), bind_list<write_method_parameter>(", ", signature.params()));
                 //{
                 //    write_throw_not_impl(w);
@@ -622,12 +620,16 @@ remove => %.% -= value;
         w.write_each<write_class_method>(static_type.MethodList(), true, "instance");
         for (auto&& prop : static_type.PropertyList())
         {
+            auto [getter, setter] = get_property_methods(prop);
             w.write(R"(
-public static % % => instance.%;
+public static % %
+{
+%%}
 )",
                 bind<write_projection_type>(get_type_semantics(prop.Type().Type())),
                 prop.Name(),
-                prop.Name());
+                getter ? w.write_temp("get => instance.%;\n", prop.Name()) : "",
+                setter ? w.write_temp("set => instance.% = value;\n", prop.Name()) : "");
         }
         // todo: events
     }
@@ -726,9 +728,7 @@ static WeakLazy<Factory> _factory = new WeakLazy<Factory>();
 public static ObjectReference<I> As<I>() => _factory.Value._As<I>();
 }
 private static % instance = Factory.As<%.Vftbl>();
-
-%
-}
+%}
 )",
             type_name,
             type.TypeNamespace(),
@@ -1938,7 +1938,8 @@ Native_Invoke nativeInvoke = (%) =>
 %;
 return new WinRT.Delegate(nativeInvoke, managedDelegate).ThisPtr;
 }
-};
+}
+
 )",
             // delegate
             bind<write_method_return>(signature),
