@@ -561,17 +561,33 @@ public %%% %(%) => %.%(%);
 
     void write_class_property(writer& w, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target)
     {
+        if (setter_target.empty())
+        {
         w.write(R"(
-public % %
-{
-%%}
+public % % => %.%;
 )",
             prop_type,
             prop_name,
-            getter_target.empty() ? "" : w.write_temp("get => %.%;\n", getter_target, prop_name),
-            setter_target.empty() ? "" : w.write_temp("set => %.% = value;\n", setter_target, prop_name));
+            getter_target,
+            prop_name);
+        }
+        else
+        {
+            w.write(R"(
+public % %
+{
+get => %.%;
+set => %.% = value;
+}
+)",
+                prop_type,
+                prop_name,
+                getter_target, 
+                prop_name,
+                setter_target, 
+                prop_name);
+        }
     }
-
 
     void write_class_event(writer& w, Event const& event, std::string_view interface_member)
     {
@@ -615,9 +631,9 @@ remove => %.% -= value;
         }
     }
 
-    void write_static_members(writer& w, TypeDef const& static_type)
+    void write_static_members(writer& w, TypeDef const& static_type, std::string_view target)
     {
-        w.write_each<write_class_method>(static_type.MethodList(), true, "instance");
+        w.write_each<write_class_method>(static_type.MethodList(), true, target);
         for (auto&& prop : static_type.PropertyList())
         {
             auto [getter, setter] = get_property_methods(prop);
@@ -628,8 +644,8 @@ public static % %
 )",
                 bind<write_projection_type>(get_type_semantics(prop.Type().Type())),
                 prop.Name(),
-                getter ? w.write_temp("get => instance.%;\n", prop.Name()) : "",
-                setter ? w.write_temp("set => instance.% = value;\n", prop.Name()) : "");
+                getter ? w.write_temp("get => %.%;\n", target, prop.Name()) : "",
+                setter ? w.write_temp("set => %.% = value;\n", target, prop.Name()) : "");
         }
         // todo: events
     }
@@ -665,7 +681,7 @@ public static implicit operator %(% obj) => %;
 )",
                     interface_name,
                     type.TypeName(),
-                    is_default_interface ? "_default" : w.write_temp("obj.AsInternal(new InterfaceTag<%>())", interface_name));
+                    is_default_interface ? "obj._default" : w.write_temp("obj.AsInternal(new InterfaceTag<%>())", interface_name));
                 }
 
                 w.write_each<write_class_method>(interface_type.MethodList(), false, target);
@@ -676,21 +692,22 @@ public static implicit operator %(% obj) => %;
                 {
                     auto [getter, setter] = get_property_methods(prop);
                     auto projection_type = w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
-                    auto targets = properties.try_emplace(prop.Name(), std::move(projection_type), std::move(getter ? target : ""), std::move(setter ? target : ""));
-                    if (!targets.second)
+                    auto [prop_targets, inserted]  = properties.try_emplace(prop.Name(), std::move(projection_type), std::move(getter ? target : ""), std::move(setter ? target : ""));
+                    if (!inserted)
                     {
-                        auto& [property_type, getter_target, setter_target] = targets.first->second;
+                        auto& [property_type, getter_target, setter_target] = prop_targets->second;
                         XLANG_ASSERT(property_type == projection_type);
                         if (getter)
                         {
                             XLANG_ASSERT(getter_target.empty());
-                            getter_target = std::move(target);
+                            getter_target = target;
                         }
                         if (setter)
                         {
                             XLANG_ASSERT(setter_target.empty());
-                            setter_target = std::move(target);
+                            setter_target = target;
                         }
+                        XLANG_ASSERT(!getter_target.empty() || !setter_target.empty());
                     }
                 }
             };
@@ -716,8 +733,6 @@ public static implicit operator %(% obj) => %;
     {
         auto type_name = write_type_name_temp(w, type);
         auto statics = get_attribute_types(type, "StaticAttribute");
-        XLANG_ASSERT(statics.size() == 1);
-        auto& statics0 = statics[0];
 
         w.write(R"(public static class %
 {
@@ -727,15 +742,22 @@ public Factory() : base("%", "%.%"){}
 static WeakLazy<Factory> _factory = new WeakLazy<Factory>();
 public static ObjectReference<I> As<I>() => _factory.Value._As<I>();
 }
-private static % instance = Factory.As<%.Vftbl>();
 %}
 )",
             type_name,
             type.TypeNamespace(),
             type.TypeNamespace(), type.TypeName(),
-            statics0.TypeName(),
-            statics0.TypeName(),
-            bind<write_static_members>(statics0)
+            bind([&](writer& w) {
+                for(int i = 0; i < statics.size(); ++i)
+                {
+                    auto target = w.write_temp("instance%", i);
+                    w.write("private static % % = Factory.As<%.Vftbl>();\n",
+                        statics[i].TypeName(),
+                        target,
+                        statics[i].TypeName());
+                    write_static_members(w, statics[i], target);
+                }
+            })
         );
     }
 
