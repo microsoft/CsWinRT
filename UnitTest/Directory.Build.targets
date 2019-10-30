@@ -11,7 +11,7 @@
   </Target>
 
   <Target Name="ProjectTestComponent" BeforeTargets="CoreCompile" Condition="'$(BuildTestProjection)' == 'true'">
-    <Exec Command="$(CsWinrtExe) -verbose -in $(OutDir)TestComp\TestComp.winmd 10.0.18362.0 -out &quot;$(ProjectDir)Generated Files&quot; -include TestComp -include Windows.Foundation -exclude Windows.Foundation.Diagnostics -exclude Windows.Foundation.Metadata" />
+    <Exec Command="$(CsWinrtExe) -verbose -in 10.0.18362.0 $(OutDir)TestComp\TestComp.winmd -out &quot;$(ProjectDir)Generated Files&quot; -include TestComp -include Windows.Foundation -exclude Windows.Foundation.Diagnostics -exclude Windows.Foundation.Metadata" />
     <ItemGroup>
       <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
     </ItemGroup>    

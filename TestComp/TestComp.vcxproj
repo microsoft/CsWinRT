@@ -10,6 +10,8 @@
     <AppContainerApplication>true</AppContainerApplication>
     <ApplicationType>Windows Store</ApplicationType>
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+    <CppWinRTVerbosity>
+    </CppWinRTVerbosity>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <ItemGroup Label="ProjectConfigurations">
@@ -72,6 +74,7 @@
     <ClInclude Include="Class.h">
       <DependentUpon>Class.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="StaticClass.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -81,6 +84,7 @@
       <DependentUpon>Class.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="module.g.cpp" />
+    <ClCompile Include="StaticClass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Class.idl" />

@@ -410,21 +410,7 @@ namespace cswinrt
         return std::make_tuple(add_method, remove_method);
     }
 
-    struct activation_factory
-    {
-        TypeDef type;
-    };
-
-    struct static_factory
-    {
-        TypeDef type;
-    };
-
-    // TODO: composable factory
-
-    using factory_info = std::variant<activation_factory, static_factory>;
-
-    auto get_factories(TypeDef const& type)
+    auto get_attribute_types(TypeDef const& type, std::string_view attribute_name)
     {
         auto get_system_type = [&](FixedArgSig const& fixed_arg, bool optional = false) -> TypeDef
         {
@@ -438,39 +424,31 @@ namespace cswinrt
                 return {};
             }
 
-            throw_invalid("Invalid factory argument");
+            throw_invalid("Invalid argument");
         };
 
-        std::vector<factory_info> result;
-
+        std::vector<TypeDef> result;
         for (auto&& attribute : type.CustomAttribute())
         {
-            auto attribute_name = attribute.TypeNamespaceAndName();
+            auto attribute_type = attribute.TypeNamespaceAndName();
 
-            if (attribute_name.first != "Windows.Foundation.Metadata")
+            if (attribute_type.first != "Windows.Foundation.Metadata")
             {
                 continue;
             }
 
             auto fixed_args = attribute.Value().FixedArgs();
 
-            if (attribute_name.second == "ActivatableAttribute")
+            if (attribute_type.second == attribute_name)
             {
-                activation_factory info{ get_system_type(fixed_args[0], true) };
-                result.push_back(std::move(info));
+                auto activatable_class{ get_system_type(fixed_args[0], true) };
+                result.push_back(std::move(activatable_class));
             }
-            else if (attribute_name.second == "StaticAttribute")
+            
             {
-                static_factory info{ get_system_type(fixed_args[0], true) };
-                XLANG_ASSERT((bool)info.type);
-                result.push_back(std::move(info));
-            }
-            else if (attribute_name.second == "ComposableAttribute")
-            {
-                throw_invalid("ComposableAttribute not implemented");
+                //throw_invalid("ComposableAttribute not implemented");
                 //info.type = get_system_type(fixed_args[0]);
                 //info.composable = true;
-
                 //auto compositionType = std::get<ElemSig::EnumValue>(std::get<ElemSig>(fixed_args[1].value).value);
                 //info.visible = std::get<int32_t>(compositionType.value) == 2;
             }

@@ -139,11 +139,6 @@ namespace WinRT
 
     public static class DelegateExtensions
     {
-        public static Interop._get_PropertyAsObject ToGetPropertyAsObject<T>(this Interop._get_PropertyAs<T> getPropertyAsT)
-        {
-            return Marshal.GetDelegateForFunctionPointer<Interop._get_PropertyAsObject>(
-                Marshal.GetFunctionPointerForDelegate(getPropertyAsT));
-        }
         public static T AsDelegate<T>(this MulticastDelegate del)
         {
             return Marshal.GetDelegateForFunctionPointer<T>(
@@ -387,6 +382,7 @@ namespace WinRT
 
         public HStringReference(String value)
         {
+            // todo: does value need to be pinned?
             _gchandle = GCHandle.Alloc(value);
             unsafe
             {
@@ -433,6 +429,16 @@ namespace WinRT
             IntPtr thatPtr;
             unsafe { Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out thatPtr)); }
             return ObjectReference<T>.Attach(Module, ref thatPtr);
+        }
+
+        public T AsType<T>()
+        {
+            var ctor = typeof(T).GetConstructor(new[] { typeof(IObjectReference) });
+            if (ctor != null)
+            {
+                return (T)ctor.Invoke(new[] { this });
+            }
+            throw new InvalidOperationException("Target type is not a projected interface.");
         }
 
         ~IObjectReference()
@@ -564,6 +570,13 @@ namespace WinRT
             _GetActivationFactory = Platform.GetProcAddress<DllGetActivationFactory>(_moduleHandle);
         }
 
+        public ObjectReference<I> GetStaticClass<I>(HString runtimeClassId)
+        {
+            IntPtr instancePtr;
+            unsafe { Marshal.ThrowExceptionForHR(_GetActivationFactory(runtimeClassId.Handle, out instancePtr)); }
+            return ObjectReference<I>.Attach(this, ref instancePtr);
+        }
+
         public ObjectReference<Interop.IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
         {
             IntPtr instancePtr;
@@ -633,15 +646,15 @@ namespace WinRT
         }
     }
 
-    internal class ActivationFactory<T>
+    internal class BaseActivationFactory
     {
-        ObjectReference<Interop.IActivationFactoryVftbl> _IActivationFactory;
+        private ObjectReference<Interop.IActivationFactoryVftbl> _IActivationFactory;
 
-        public ActivationFactory()
+        protected BaseActivationFactory(string typeNamespace, string typeFullName)
         {
-            string moduleName = typeof(T).Namespace;
+            string moduleName = typeNamespace;
 
-            using (HString runtimeClassId = new HString(typeof(T).FullName.Replace("WinRT", "Windows")))
+            using (HString runtimeClassId = new HString(typeFullName.Replace("WinRT", "Windows")))
             {
                 do
                 {
@@ -670,33 +683,26 @@ namespace WinRT
             }
         }
 
-        ObjectReference<I> _ActivateInstance<I>()
+        protected ObjectReference<I> _ActivateInstance<I>()
         {
             IntPtr instancePtr = IntPtr.Zero;
             unsafe { Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, out instancePtr)); }
             return ObjectReference<WinRT.IInspectable.Vftbl>.Attach(_IActivationFactory.Module, ref instancePtr).As<I>();
         }
 
-        ObjectReference<I> _As<I>()
+        protected ObjectReference<I> _As<I>()
         {
             return _IActivationFactory.As<I>();
         }
+    }
+
+    internal class ActivationFactory<T> : BaseActivationFactory
+    {
+        public ActivationFactory() : base(typeof(T).Namespace, typeof(T).FullName) { }
 
         static WeakLazy<ActivationFactory<T>> _factory = new WeakLazy<ActivationFactory<T>>();
         public static ObjectReference<I> As<I>() => _factory.Value._As<I>();
         public static ObjectReference<I> ActivateInstance<I>() => _factory.Value._ActivateInstance<I>();
-    }
-
-    public class RuntimeClass<C, I>
-    {
-        private protected static WeakLazy<WinRT.ActivationFactory<C>> _factory = new WeakLazy<ActivationFactory<C>>();
-        private protected readonly ObjectReference<I> _obj;
-        internal IObjectReference Obj => _obj;
-
-        private protected RuntimeClass(ObjectReference<I> obj)
-        {
-            _obj = obj;
-        }
     }
 
     public class Delegate
@@ -1230,11 +1236,11 @@ namespace WinRT
                 if (type.IsGenericType)
                 {
                     var backtick = type_name.IndexOf('`');
-                    type_name = type_name.Substring(0, backtick) + "Extensions`" + type_name.Substring(backtick + 1);
+                    type_name = type_name.Substring(0, backtick) + "Helper`" + type_name.Substring(backtick + 1);
                 }
                 else
                 {
-                    type_name += "Extensions";
+                    type_name += "Helper";
                 }
                 return Type.GetType(type_name);
             }

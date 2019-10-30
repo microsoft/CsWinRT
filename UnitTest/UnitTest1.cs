@@ -15,7 +15,6 @@ using Windows.Foundation.Collections;
 using Windows.Foundation.Numerics;
 
 using TestComp;
-//using TestComp.Manual;
 
 namespace UnitTest
 {
@@ -98,6 +97,7 @@ namespace UnitTest
         }
     }
 
+    
     public class TestComponent
     {
         public Class TestObject { get; private set; }
@@ -108,13 +108,31 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestStaticClass()
+        {
+            Assert.Equal(0, StaticClass.NumClasses);
+            var obj = StaticClass.MakeClass();
+            Assert.Equal(1, StaticClass.NumClasses);
+        }
+
+        [Fact]
         public void TestInterfaces()
         {
-            var stringProperty = "hello";
-            TestObject.StringProperty = stringProperty;
-            var stringable = (Windows.Foundation.IStringable)TestObject;
-            var toString = stringable.ToString();
-            Assert.Equal(stringProperty, toString);
+            var expected = "hello";
+            TestObject.StringProperty = expected;
+
+            // projected wrapper
+            Assert.Equal(expected, TestObject.ToString());
+
+            // implicit cast 
+            var str = (IStringable)TestObject;
+            Assert.Equal(expected, str.ToString());
+
+            // explicit cast
+            IStringable str2 = TestObject.As<IStringable>();
+            Assert.Equal(expected, str2.ToString());
+
+            // TODO: 'is' and 'as' operators - reconsider interface inheritance
         }
 
         [Fact]
@@ -145,12 +163,12 @@ namespace UnitTest
             Assert.Equal(sp, test_string);
 
             // Out hstring from managed->native always creates HString from System.String
-            TestObject.SetString(() => test_string2);
+            TestObject.CallForString(() => test_string2);
             Assert.Equal(TestObject.StringProperty, test_string2);
 
             // In hstring from native->managed only creates System.String on demand
             TestObject.StringPropertyChanged += (Class sender, WinRT.HString value) => sender.StringProperty2 = value;
-            TestObject.GetString();
+            TestObject.RaiseStringChanged();
             Assert.Equal(TestObject.StringProperty2, test_string2);
         }
     }
