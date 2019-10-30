@@ -12,8 +12,8 @@
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Class.cpp" />
-    <ClCompile Include="module.g.cpp" />
     <ClCompile Include="StaticClass.cpp" />
+    <ClCompile Include="Generated Files\module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
