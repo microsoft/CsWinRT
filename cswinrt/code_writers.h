@@ -606,7 +606,7 @@ remove => %.% -= value;
             event.Name());
     }
 
-    void write_factory_members(writer& /*w*/, TypeDef const& factory_type, TypeDef const& /*type*/)
+    void write_factory_members(writer& w, TypeDef const& factory_type, TypeDef const& type)
     {
         // todo: support factory props/events (are these possible with midl 3.0? do we care?)
         if (factory_type)
@@ -614,20 +614,31 @@ remove => %.% -= value;
             for (auto&& method : factory_type.MethodList())
             {
                 method_signature signature{ method };
-                //w.write("/*1*/ public %(%)\n{\n", type.TypeName(), bind_list<write_method_parameter>(", ", signature.params()));
-                //{
-                //    write_throw_not_impl(w);
-                //}
-                //w.write("}\n");
+                w.write(
+R"(
+public %(%) => /*todo: factory caching*/ ActivationFactory<%>.As<%>().Vftbl.%(%);
+)",                 
+                    type.TypeName(), 
+                    bind_list<write_method_parameter>(", ", signature.params()),
+                    type.TypeName(),
+                    factory_type.TypeName(),
+                    method.Name(),
+                    bind_list<write_parameter_name_with_modifier>(", ", signature.params(), true));
             }
         }
         else
         {
-            //w.write("/*0*/ public %()\n{\n", type.TypeName());
-            //{
-            //    w.write("_instance = Windows.Foundation.IActivationFactory.ActivateInstance(_factory.Value);\n");
-            //}
-            //w.write("}\n");
+            auto default_interface = get_default_interface(type);
+            auto default_interface_name = write_type_name_temp(w, get_type_semantics(default_interface));
+                w.write(
+R"(
+public %() => /*todo: factory caching*/ new %(new %(ActivationFactory<%>.ActivateInstance<%.Vftbl>()));
+)",                 
+                    type.TypeName(), 
+                    type.TypeName(), 
+                    default_interface_name,
+                    type.TypeName(), 
+                    default_interface_name);
         }
     }
 
@@ -779,10 +790,8 @@ public static ObjectReference<I> As<I>() => _factory.Value._As<I>();
 public IntPtr NativePtr { get => _default.NativePtr; }
 
 private % _default;
-
-public %() : this(ActivationFactory<%>.ActivateInstance<%.Vftbl>()){}
-
-%%public static % FromNative(IntPtr ^@this) => new %(WinRT.ObjectReference<%.Vftbl>.FromNative(^@this));
+%%
+public static % FromNative(IntPtr ^@this) => new %(new %(WinRT.ObjectReference<%.Vftbl>.FromNative(^@this)));
 
 internal %(% ifc)
 {
@@ -799,13 +808,11 @@ public I As<I>() => _default.As<I>();
             bind<write_class_modifiers>(type),
             type_name,
             default_interface_name,
-            type_name,
-            type_name,
-            default_interface_name,
-            "", //bind_each(write_factory_members, factories, type),
+            bind_each(write_factory_members, factories, type),
             "", //bind_each(write_static_members, statics),
             type_name,
             type_name,
+            default_interface_name,
             default_interface_name,
             type_name,
             default_interface_name,

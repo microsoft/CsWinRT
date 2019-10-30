@@ -108,6 +108,16 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestUri()
+        {
+            var expected = "https://github.com/microsoft/CsWinRT";
+            var uri = new Windows.Foundation.Uri(expected);
+            var actual = uri.ToString();
+            Assert.Equal(expected, actual);
+        }
+
+
+        [Fact]
         public void TestStaticClass()
         {
             Assert.Equal(0, StaticClass.NumClasses);
