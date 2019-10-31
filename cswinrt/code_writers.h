@@ -823,7 +823,7 @@ public static implicit operator %(% obj) => %;
 public IntPtr NativePtr { get => _default.NativePtr; }
 
 private % _default;
-%%
+%%%
 public static % FromNative(IntPtr ^@this) => new %(new %(WinRT.ObjectReference<%.Vftbl>.FromNative(^@this)));
 
 internal %(% ifc)
@@ -841,6 +841,15 @@ public I As<I>() => _default.As<I>();
             bind<write_class_modifiers>(type),
             type_name,
             default_interface_name,
+            bind([&](writer& w) {
+                if (factories.empty())
+                {
+                    w.write("public %() : this(ActivationFactory<%>.ActivateInstance<%.Vftbl>()) {}",
+                        type_name,
+                        type_name,
+                        default_interface_name);
+                }
+            }),
             bind_each<write_factory_members>(factories, type),
             bind_each<write_static_members>(statics, type),
             type_name,
