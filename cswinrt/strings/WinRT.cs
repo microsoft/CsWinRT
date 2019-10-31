@@ -650,7 +650,7 @@ namespace WinRT
     {
         private ObjectReference<Interop.IActivationFactoryVftbl> _IActivationFactory;
 
-        protected BaseActivationFactory(string typeNamespace, string typeFullName)
+        public BaseActivationFactory(string typeNamespace, string typeFullName)
         {
             string moduleName = typeNamespace;
 
@@ -683,17 +683,14 @@ namespace WinRT
             }
         }
 
-        protected ObjectReference<I> _ActivateInstance<I>()
+        public ObjectReference<I> _ActivateInstance<I>()
         {
             IntPtr instancePtr = IntPtr.Zero;
             unsafe { Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, out instancePtr)); }
             return ObjectReference<WinRT.IInspectable.Vftbl>.Attach(_IActivationFactory.Module, ref instancePtr).As<I>();
         }
 
-        protected ObjectReference<I> _As<I>()
-        {
-            return _IActivationFactory.As<I>();
-        }
+        public ObjectReference<I> _As<I>() => _IActivationFactory.As<I>();
     }
 
     internal class ActivationFactory<T> : BaseActivationFactory

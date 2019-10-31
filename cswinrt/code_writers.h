@@ -611,16 +611,32 @@ remove => %.% -= value;
         // todo: support factory props/events (are these possible with midl 3.0? do we care?)
         if (factory_type)
         {
+            w.write(R"(
+internal class _% : %
+{
+public _%() : base(ActivationFactory<%>.As<%.Vftbl>()) { }
+private static WeakLazy<_%> _instance = new WeakLazy<_%>();
+internal static % Instance => _instance.Value;
+}
+)",
+                factory_type.TypeName(),
+                factory_type.TypeName(),
+                factory_type.TypeName(),
+                type.TypeName(),
+                factory_type.TypeName(),
+                factory_type.TypeName(),
+                factory_type.TypeName(),
+                factory_type.TypeName()
+            );
+
             for (auto&& method : factory_type.MethodList())
             {
                 method_signature signature{ method };
-                w.write(
-R"(
-public %(%) => /*todo: factory caching*/ ActivationFactory<%>.As<%>().Vftbl.%(%);
+                w.write(R"(
+public %(%) : this(_%.Instance.%(%)._default) {}
 )",                 
                     type.TypeName(), 
                     bind_list<write_method_parameter>(", ", signature.params()),
-                    type.TypeName(),
                     factory_type.TypeName(),
                     method.Name(),
                     bind_list<write_parameter_name_with_modifier>(", ", signature.params(), true));
@@ -630,11 +646,9 @@ public %(%) => /*todo: factory caching*/ ActivationFactory<%>.As<%>().Vftbl.%(%)
         {
             auto default_interface = get_default_interface(type);
             auto default_interface_name = write_type_name_temp(w, get_type_semantics(default_interface));
-                w.write(
-R"(
-public %() => /*todo: factory caching*/ new %(new %(ActivationFactory<%>.ActivateInstance<%.Vftbl>()));
+                w.write(R"(
+public %() : this(new %(ActivationFactory<%>.ActivateInstance<%.Vftbl>())){}
 )",                 
-                    type.TypeName(), 
                     type.TypeName(), 
                     default_interface_name,
                     type.TypeName(), 
@@ -642,21 +656,60 @@ public %() => /*todo: factory caching*/ new %(new %(ActivationFactory<%>.Activat
         }
     }
 
-    void write_static_members(writer& w, TypeDef const& static_type, std::string_view target)
+    void write_static_members(writer& w, TypeDef const& static_type, TypeDef const& type)
     {
-        w.write_each<write_class_method>(static_type.MethodList(), true, target);
+        w.write(R"(
+internal class _% : %
+{
+public _%() : base((new BaseActivationFactory("%", "%.%"))._As<%.Vftbl>()){}
+private static WeakLazy<_%> _instance = new WeakLazy<_%>();
+internal static % Instance => _instance.Value;
+}
+)",
+            static_type.TypeName(),
+            static_type.TypeName(),
+            static_type.TypeName(),
+            type.TypeNamespace(),
+            type.TypeNamespace(), type.TypeName(),
+            static_type.TypeName(),
+            static_type.TypeName(),
+            static_type.TypeName(),
+            static_type.TypeName()
+        );
+
+        auto static_target = w.write_temp("_%.Instance", static_type.TypeName());
+        w.write_each<write_class_method>(static_type.MethodList(), true, static_target);
         for (auto&& prop : static_type.PropertyList())
         {
             auto [getter, setter] = get_property_methods(prop);
-            w.write(R"(
+            auto prop_type = w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
+
+            if (!setter)
+            {
+                w.write(R"(
+public static % % => %.%;
+)",
+                    prop_type,
+                    prop.Name(),
+                    static_target,
+                    prop.Name());
+            }
+            else
+            {
+                w.write(R"(
 public static % %
 {
-%%}
+get => %.%;
+set => %.% = value;
+}
 )",
-                bind<write_projection_type>(get_type_semantics(prop.Type().Type())),
-                prop.Name(),
-                getter ? w.write_temp("get => %.%;\n", target, prop.Name()) : "",
-                setter ? w.write_temp("set => %.% = value;\n", target, prop.Name()) : "");
+                    prop_type,
+                    prop.Name(),
+                    static_target,
+                    prop.Name(),
+                    static_target,
+                    prop.Name());
+            }
         }
         // todo: events
     }
@@ -744,31 +797,11 @@ public static implicit operator %(% obj) => %;
     {
         auto type_name = write_type_name_temp(w, type);
         auto statics = get_attribute_types(type, "StaticAttribute");
-
         w.write(R"(public static class %
 {
-private class Factory : BaseActivationFactory
-{
-public Factory() : base("%", "%.%"){}
-static WeakLazy<Factory> _factory = new WeakLazy<Factory>();
-public static ObjectReference<I> As<I>() => _factory.Value._As<I>();
-}
-%}
-)",
+%})",
             type_name,
-            type.TypeNamespace(),
-            type.TypeNamespace(), type.TypeName(),
-            bind([&](writer& w) {
-                for(int i = 0; i < statics.size(); ++i)
-                {
-                    auto target = w.write_temp("instance%", i);
-                    w.write("private static % % = Factory.As<%.Vftbl>();\n",
-                        statics[i].TypeName(),
-                        target,
-                        statics[i].TypeName());
-                    write_static_members(w, statics[i], target);
-                }
-            })
+            bind_each<write_static_members>(statics, type)
         );
     }
 
@@ -808,8 +841,8 @@ public I As<I>() => _default.As<I>();
             bind<write_class_modifiers>(type),
             type_name,
             default_interface_name,
-            bind_each(write_factory_members, factories, type),
-            "", //bind_each(write_static_members, statics),
+            bind_each<write_factory_members>(factories, type),
+            bind_each<write_static_members>(statics, type),
             type_name,
             type_name,
             default_interface_name,
