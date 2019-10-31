@@ -108,6 +108,47 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestUri()
+        {
+            var base_uri = "https://github.com";
+            var relative_uri = "microsoft/CsWinRT";
+            var full_uri = base_uri + "/" + relative_uri;
+
+            var uri1 = new WF.Uri(full_uri);
+            var str1 = uri1.ToString();
+            Assert.Equal(full_uri, str1);
+            
+            var uri2 = new WF.Uri(base_uri, relative_uri);
+            var str2 = uri2.ToString();
+            Assert.Equal(full_uri, str2);
+
+            Assert.True(uri1.Equals(uri2));
+        }
+
+        [Fact]
+        public void TestFactories()
+        {
+            var cls1 = new Class();
+            
+            var cls2 = new Class(42);
+            Assert.Equal(42, cls2.IntProperty);
+
+            var cls3 = new Class(42, "foo");
+            Assert.Equal(42, cls3.IntProperty);
+            Assert.Equal("foo", cls3.StringProperty);
+        }
+
+        [Fact]
+        public void TestStaticMembers()
+        {
+            Class.StaticIntProperty = 42;
+            Assert.Equal(42, Class.StaticIntProperty);
+
+            Class.StaticStringProperty = "foo";
+            Assert.Equal("foo", Class.StaticStringProperty);
+        }
+
+        [Fact]
         public void TestStaticClass()
         {
             Assert.Equal(0, StaticClass.NumClasses);
