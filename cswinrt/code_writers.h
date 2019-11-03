@@ -686,20 +686,20 @@ remove => %.% -= value;
         return result;
     }
 
-    std::string write_factory_cache(writer& w, std::string_view factory_type_name, TypeDef const& class_type, bool is_static = false)
+    std::string write_cache_object(writer& w, std::string_view cache_type_name, TypeDef const& class_type, bool is_static = false)
     {
-        auto factory_interface =
+        auto cache_interface =
             is_static ?
                 w.write_temp(
                     R"((new BaseActivationFactory("%", "%.%"))._As<%.Vftbl>)",
                     class_type.TypeNamespace(),
                     class_type.TypeNamespace(),
                     class_type.TypeName(),
-                    factory_type_name) :
+                    cache_type_name) :
                 w.write_temp(
                     R"(ActivationFactory<%>.As<%.Vftbl>)",
                     class_type.TypeName(),
-                    factory_type_name);
+                    cache_type_name);
 
         w.write(R"(
 internal class _% : %
@@ -709,15 +709,15 @@ private static WeakLazy<_%> _instance = new WeakLazy<_%>();
 internal static % Instance => _instance.Value;
 }
 )",
-            factory_type_name,
-            factory_type_name,
-            factory_type_name,
-            factory_interface,
-            factory_type_name,
-            factory_type_name,
-            factory_type_name);
+            cache_type_name,
+            cache_type_name,
+            cache_type_name,
+            cache_interface,
+            cache_type_name,
+            cache_type_name,
+            cache_type_name);
 
-        return w.write_temp("_%.Instance", factory_type_name);
+        return w.write_temp("_%.Instance", cache_type_name);
     }
 
     static std::string get_default_interface_name(writer& w, TypeDef const& type)
@@ -729,7 +729,7 @@ internal static % Instance => _instance.Value;
     {
         if (factory_type)
         {
-            auto cache_object = write_factory_cache(w, factory_type.TypeName(), class_type);
+            auto cache_object = write_cache_object(w, factory_type.TypeName(), class_type);
 
             for (auto&& method : factory_type.MethodList())
             {
@@ -759,7 +759,7 @@ public %() : this(new %(ActivationFactory<%>.ActivateInstance<%.Vftbl>())){}
 
     void write_composable_constructors(writer& w, TypeDef const& composable_type, TypeDef const& class_type)
     {
-        auto cache_object = write_factory_cache(w, composable_type.TypeName(), class_type);
+        auto cache_object = write_cache_object(w, composable_type.TypeName(), class_type);
 
         for (auto&& method : composable_type.MethodList())
         {
@@ -788,7 +788,7 @@ return %.%(%%baseInspectable, out innerInspectable)._default;
 
     void write_static_members(writer& w, TypeDef const& static_type, TypeDef const& class_type)
     {
-        auto cache_object = write_factory_cache(w, static_type.TypeName(), class_type, true);
+        auto cache_object = write_cache_object(w, static_type.TypeName(), class_type, true);
 
         w.write_each<write_class_method>(static_type.MethodList(), true, cache_object);
         for (auto&& prop : static_type.PropertyList())
