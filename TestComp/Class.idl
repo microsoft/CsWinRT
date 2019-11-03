@@ -12,7 +12,6 @@ namespace TestComp
     // structs - blittable and non
     // arrays - fill, receive, pass, of struct
     // inheritance - from generics, overload resolution
-    // statics - classes
 
     delegate Int32 ProvideInt();
     delegate String ProvideString();

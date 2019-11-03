@@ -410,53 +410,6 @@ namespace cswinrt
         return std::make_tuple(add_method, remove_method);
     }
 
-    auto get_attribute_types(TypeDef const& type, std::string_view attribute_name)
-    {
-        auto get_system_type = [&](FixedArgSig const& fixed_arg, bool optional = false) -> TypeDef
-        {
-            if (auto type_param = std::get_if<ElemSig::SystemType>(&std::get<ElemSig>(fixed_arg.value).value))
-            {
-                return type.get_cache().find_required(type_param->name);
-            }
-
-            if (optional)
-            {
-                return {};
-            }
-
-            throw_invalid("Invalid argument");
-        };
-
-        std::vector<TypeDef> result;
-        for (auto&& attribute : type.CustomAttribute())
-        {
-            auto attribute_type = attribute.TypeNamespaceAndName();
-
-            if (attribute_type.first != "Windows.Foundation.Metadata")
-            {
-                continue;
-            }
-
-            auto fixed_args = attribute.Value().FixedArgs();
-
-            if (attribute_type.second == attribute_name)
-            {
-                auto activatable_class{ get_system_type(fixed_args[0], true) };
-                result.push_back(std::move(activatable_class));
-            }
-            
-            {
-                //throw_invalid("ComposableAttribute not implemented");
-                //info.type = get_system_type(fixed_args[0]);
-                //info.composable = true;
-                //auto compositionType = std::get<ElemSig::EnumValue>(std::get<ElemSig>(fixed_args[1].value).value);
-                //info.visible = std::get<int32_t>(compositionType.value) == 2;
-            }
-        }
-
-        return std::move(result);
-    }
-
     static coded_index<TypeDefOrRef> get_default_interface(TypeDef const& type)
     {
         auto impls = type.InterfaceImpl();

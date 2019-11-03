@@ -606,79 +606,191 @@ remove => %.% -= value;
             event.Name());
     }
 
-    void write_factory_members(writer& w, TypeDef const& factory_type, TypeDef const& type)
+    struct attributed_type
     {
-        // todo: support factory props/events (are these possible with midl 3.0? do we care?)
-        if (factory_type)
+        TypeDef type;
+        bool activatable{};
+        bool statics{};
+        bool composable{};
+        bool visible{};
+    };
+
+    static auto get_attributed_types(writer& w, TypeDef const& type)
+    {
+        auto get_system_type = [&](auto&& signature) -> TypeDef
         {
-            w.write(R"(
+            for (auto&& arg : signature.FixedArgs())
+            {
+                if (auto type_param = std::get_if<ElemSig::SystemType>(&std::get<ElemSig>(arg.value).value))
+                {
+                    return type.get_cache().find_required(type_param->name);
+                }
+            }
+
+            return {};
+        };
+
+        std::map<std::string, attributed_type> result;
+
+        for (auto&& attribute : type.CustomAttribute())
+        {
+            auto attribute_name = attribute.TypeNamespaceAndName();
+
+            if (attribute_name.first != "Windows.Foundation.Metadata")
+            {
+                continue;
+            }
+
+            auto signature = attribute.Value();
+            attributed_type info;
+
+            if (attribute_name.second == "ActivatableAttribute")
+            {
+                info.type = get_system_type(signature);
+                info.activatable = true;
+            }
+            else if (attribute_name.second == "StaticAttribute")
+            {
+                info.type = get_system_type(signature);
+                info.statics = true;
+            }
+            else if (attribute_name.second == "ComposableAttribute")
+            {
+                info.type = get_system_type(signature);
+                info.composable = true;
+
+                for (auto&& arg : signature.FixedArgs())
+                {
+                    if (auto visibility = std::get_if<ElemSig::EnumValue>(&std::get<ElemSig>(arg.value).value))
+                    {
+                        info.visible = std::get<int32_t>(visibility->value) == 2;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                continue;
+            }
+
+            std::string name;
+
+            if (info.type)
+            {
+                name = w.write_temp("%", info.type.TypeName());
+            }
+
+            result[name] = std::move(info);
+        }
+
+        return result;
+    }
+
+    std::string write_factory_cache(writer& w, std::string_view factory_type_name, TypeDef const& class_type, bool is_static = false)
+    {
+        auto factory_interface =
+            is_static ?
+                w.write_temp(
+                    R"((new BaseActivationFactory("%", "%.%"))._As<%.Vftbl>)",
+                    class_type.TypeNamespace(),
+                    class_type.TypeNamespace(),
+                    class_type.TypeName(),
+                    factory_type_name) :
+                w.write_temp(
+                    R"(ActivationFactory<%>.As<%.Vftbl>)",
+                    class_type.TypeName(),
+                    factory_type_name);
+
+        w.write(R"(
 internal class _% : %
 {
-public _%() : base(ActivationFactory<%>.As<%.Vftbl>()) { }
+public _%() : base(%()) { }
 private static WeakLazy<_%> _instance = new WeakLazy<_%>();
 internal static % Instance => _instance.Value;
 }
 )",
-                factory_type.TypeName(),
-                factory_type.TypeName(),
-                factory_type.TypeName(),
-                type.TypeName(),
-                factory_type.TypeName(),
-                factory_type.TypeName(),
-                factory_type.TypeName(),
-                factory_type.TypeName()
-            );
+            factory_type_name,
+            factory_type_name,
+            factory_type_name,
+            factory_interface,
+            factory_type_name,
+            factory_type_name,
+            factory_type_name);
+
+        return w.write_temp("_%.Instance", factory_type_name);
+    }
+
+    static std::string get_default_interface_name(writer& w, TypeDef const& type)
+    {
+        return write_type_name_temp(w, get_type_semantics(get_default_interface(type)));
+    }
+
+    void write_factory_constructors(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
+    {
+        if (factory_type)
+        {
+            auto cache_object = write_factory_cache(w, factory_type.TypeName(), class_type);
 
             for (auto&& method : factory_type.MethodList())
             {
                 method_signature signature{ method };
                 w.write(R"(
-public %(%) : this(_%.Instance.%(%)._default) {}
+public %(%) : this(%.%(%)._default) {}
 )",                 
-                    type.TypeName(), 
+                    class_type.TypeName(), 
                     bind_list<write_method_parameter>(", ", signature.params()),
-                    factory_type.TypeName(),
+                    cache_object,
                     method.Name(),
                     bind_list<write_parameter_name_with_modifier>(", ", signature.params(), true));
             }
         }
         else
         {
-            auto default_interface = get_default_interface(type);
-            auto default_interface_name = write_type_name_temp(w, get_type_semantics(default_interface));
-                w.write(R"(
+            auto default_interface_name = get_default_interface_name(w, class_type);
+            w.write(R"(
 public %() : this(new %(ActivationFactory<%>.ActivateInstance<%.Vftbl>())){}
 )",                 
-                    type.TypeName(), 
-                    default_interface_name,
-                    type.TypeName(), 
-                    default_interface_name);
+                class_type.TypeName(), 
+                default_interface_name,
+                class_type.TypeName(),
+                default_interface_name);
         }
     }
 
-    void write_static_members(writer& w, TypeDef const& static_type, TypeDef const& type)
+    void write_composable_constructors(writer& w, TypeDef const& composable_type, TypeDef const& class_type)
     {
-        w.write(R"(
-internal class _% : %
-{
-public _%() : base((new BaseActivationFactory("%", "%.%"))._As<%.Vftbl>()){}
-private static WeakLazy<_%> _instance = new WeakLazy<_%>();
-internal static % Instance => _instance.Value;
-}
-)",
-            static_type.TypeName(),
-            static_type.TypeName(),
-            static_type.TypeName(),
-            type.TypeNamespace(),
-            type.TypeNamespace(), type.TypeName(),
-            static_type.TypeName(),
-            static_type.TypeName(),
-            static_type.TypeName(),
-            static_type.TypeName()
-        );
+        auto cache_object = write_factory_cache(w, composable_type.TypeName(), class_type);
 
-        auto static_target = w.write_temp("_%.Instance", static_type.TypeName());
-        w.write_each<write_class_method>(static_type.MethodList(), true, static_target);
+        for (auto&& method : composable_type.MethodList())
+        {
+            method_signature signature{ method };
+            auto default_interface_name = get_default_interface_name(w, class_type);
+            auto params_without_objects = signature.params();
+            params_without_objects.pop_back();
+            params_without_objects.pop_back();
+
+            w.write(R"(
+public %(%) : this(((Func<%>)(() => {
+IInspectable baseInspectable = null;
+IInspectable innerInspectable;
+return %.%(%%baseInspectable, out innerInspectable)._default;
+}))()){}
+)",                 
+                class_type.TypeName(), 
+                bind_list<write_method_parameter>(", ", params_without_objects),
+                default_interface_name,
+                cache_object,
+                method.Name(),
+                bind_list<write_parameter_name_with_modifier>(", ", params_without_objects, true),
+                bind([&](writer& w){w.write("%", params_without_objects.empty() ? " " : ", "); }));
+        }
+    }
+
+    void write_static_members(writer& w, TypeDef const& static_type, TypeDef const& class_type)
+    {
+        auto cache_object = write_factory_cache(w, static_type.TypeName(), class_type, true);
+
+        w.write_each<write_class_method>(static_type.MethodList(), true, cache_object);
         for (auto&& prop : static_type.PropertyList())
         {
             auto [getter, setter] = get_property_methods(prop);
@@ -691,7 +803,7 @@ public static % % => %.%;
 )",
                     prop_type,
                     prop.Name(),
-                    static_target,
+                    cache_object,
                     prop.Name());
             }
             else
@@ -705,13 +817,47 @@ set => %.% = value;
 )",
                     prop_type,
                     prop.Name(),
-                    static_target,
+                    cache_object,
                     prop.Name(),
-                    static_target,
+                    cache_object,
                     prop.Name());
             }
         }
-        // todo: events
+        for (auto&& evt : static_type.EventList())
+        {
+            w.write(R"(
+public static event WinRT.EventHandler% %
+{
+add => %.% += value;
+remove => %.% -= value;
+}
+)",
+                bind<write_event_param_types>(evt),
+                evt.Name(),
+                cache_object,
+                evt.Name(),
+                cache_object,
+                evt.Name());
+        }
+    }
+
+    void write_attributed_types(writer& w, TypeDef const& type)
+    {
+        for (auto&& [interface_name, factory] : get_attributed_types(w, type))
+        {
+            if (factory.activatable)
+            {
+                write_factory_constructors(w, factory.type, type);
+            }
+            else if (factory.composable && factory.visible)
+            {
+                write_composable_constructors(w, factory.type, type);
+            }
+            else if (factory.statics)
+            {
+                write_static_members(w, factory.type, type);
+            }
+        }
     }
 
     void write_class_members(writer& w, TypeDef const& type)
@@ -795,13 +941,11 @@ public static implicit operator %(% obj) => %;
 
     void write_static_class(writer& w, TypeDef const& type)
     {
-        auto type_name = write_type_name_temp(w, type);
-        auto statics = get_attribute_types(type, "StaticAttribute");
         w.write(R"(public static class %
 {
 %})",
-            type_name,
-            bind_each<write_static_members>(statics, type)
+            bind<write_type_name>(type),
+            bind<write_attributed_types>(type)
         );
     }
 
@@ -814,16 +958,13 @@ public static implicit operator %(% obj) => %;
         }
 
         auto type_name = write_type_name_temp(w, type);
-        auto default_interface = get_default_interface(type);
-        auto default_interface_name = write_type_name_temp(w, get_type_semantics(default_interface));
-        auto factories = get_attribute_types(type, "ActivatableAttribute");
-        auto statics = get_attribute_types(type, "StaticAttribute");
+        auto default_interface_name = get_default_interface_name(w, type);
         w.write(R"(public %class %
 {
 public IntPtr NativePtr { get => _default.NativePtr; }
 
 private % _default;
-%%%
+%
 public static % FromNative(IntPtr ^@this) => new %(new %(WinRT.ObjectReference<%.Vftbl>.FromNative(^@this)));
 
 internal %(% ifc)
@@ -841,17 +982,7 @@ public I As<I>() => _default.As<I>();
             bind<write_class_modifiers>(type),
             type_name,
             default_interface_name,
-            bind([&](writer& w) {
-                if (factories.empty())
-                {
-                    w.write("public %() : this(ActivationFactory<%>.ActivateInstance<%.Vftbl>()) {}",
-                        type_name,
-                        type_name,
-                        default_interface_name);
-                }
-            }),
-            bind_each<write_factory_members>(factories, type),
-            bind_each<write_static_members>(statics, type),
+            bind<write_attributed_types>(type),
             type_name,
             type_name,
             default_interface_name,
