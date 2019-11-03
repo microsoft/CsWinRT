@@ -15,13 +15,14 @@
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code_writers.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="settings.h" />
     <ClInclude Include="type_writers.h" />
-    <ClInclude Include="meta_reader_helpers.h" />
+    <ClInclude Include="helpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="version.rc" />

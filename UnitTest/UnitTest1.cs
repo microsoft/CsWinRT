@@ -97,7 +97,7 @@ namespace UnitTest
         }
     }
 
-    
+
     public class TestComponent
     {
         public Class TestObject { get; private set; }
@@ -117,7 +117,7 @@ namespace UnitTest
             var uri1 = new WF.Uri(full_uri);
             var str1 = uri1.ToString();
             Assert.Equal(full_uri, str1);
-            
+
             var uri2 = new WF.Uri(base_uri, relative_uri);
             var str2 = uri2.ToString();
             Assert.Equal(full_uri, str2);
@@ -129,7 +129,7 @@ namespace UnitTest
         public void TestFactories()
         {
             var cls1 = new Class();
-            
+
             var cls2 = new Class(42);
             Assert.Equal(42, cls2.IntProperty);
 
