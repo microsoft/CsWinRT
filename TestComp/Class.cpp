@@ -2,6 +2,8 @@
 #include "Class.h"
 #include "Class.g.cpp"
 
+using namespace std::chrono;
+
 namespace winrt::TestComp::implementation
 {
     namespace statics
@@ -243,6 +245,11 @@ namespace winrt::TestComp::implementation
     void Class::ObjectPropertyChanged(winrt::event_token const& token) noexcept
     {
         _objectChanged.remove(token);
+    }
+    Windows::Foundation::IAsyncOperation<int32_t> Class::GetIntAsync()
+    {
+        co_await 500ms;
+        co_return _int;
     }
 
     // IStringable

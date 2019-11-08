@@ -1347,7 +1347,7 @@ namespace WinRT
                 // encode rfc clock/reserved field
                 data[8] = (byte)((data[8] & 0x3f) | 0x80);
             }
-            return new Guid(new ReadOnlySpan<byte>(data, 0, 16));
+            return new Guid(data.Take(16).ToArray());
         }
 
         private static Guid wrt_pinterface_namespace = new Guid("d57af411-737b-c042-abae-878b1e16adee");

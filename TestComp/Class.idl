@@ -109,5 +109,7 @@ namespace TestComp
         void RaiseObjectChanged();
         void CallForObject(ProvideObject provideObject);
         event Windows.Foundation.EventHandler<Object> ObjectPropertyChanged;
+
+        Windows.Foundation.IAsyncOperation<Int32> GetIntAsync();
     }
 }

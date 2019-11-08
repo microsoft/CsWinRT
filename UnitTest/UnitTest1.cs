@@ -9,10 +9,8 @@ using WinRT;
 
 using WF = Windows.Foundation;
 using WFC = Windows.Foundation.Collections;
-using WFN = Windows.Foundation.Numerics;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Windows.Foundation.Numerics;
 
 using TestComp;
 
@@ -175,6 +173,14 @@ namespace UnitTest
 
             // TODO: 'is' and 'as' operators - reconsider interface inheritance
         }
+
+        [Fact]
+        public void TestAsync()
+        {
+            var async_op = TestObject.GetIntAsync();
+            async_op.Completed += (info, status) => { };
+        }
+
 
         [Fact]
         public void TestPrimitives()

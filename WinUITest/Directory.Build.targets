@@ -5,6 +5,15 @@
     <BuildTestProjection Condition="'$(BuildTestProjection)$(Configuration)' == 'Release'">true</BuildTestProjection>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Target Name="CopyTestComponent" BeforeTargets="PreBuildEvent">
+    <Exec Condition="'$(Platform)'=='x64'" Command="xcopy /D /Y &quot;$(PkgMicrosoft_UI_Xaml)\runtimes\win10-x64\native\*.dll&quot; &quot;$(TargetDir)&quot;" />
+    <Exec Condition="'$(Platform)'=='win32'" Command="xcopy /D /Y &quot;$(PkgMicrosoft_UI_Xaml)\runtimes\win10-x86\native\*.dll&quot; &quot;$(TargetDir)&quot;" />
+  </Target>
+
   <Target Name="ProjectWinUI" BeforeTargets="CoreCompile" Condition="'$(BuildTestProjection)' == 'true'">
     <ItemGroup>
       <!--PkgMicrosoft_UI_Xaml is defined by Nuget reference-->

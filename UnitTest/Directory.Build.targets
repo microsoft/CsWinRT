@@ -5,6 +5,10 @@
     <BuildTestProjection Condition="'$(BuildTestProjection)$(Configuration)' == 'Release'">true</BuildTestProjection>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  
   <Target Name="CopyTestComponent" BeforeTargets="PreBuildEvent">
     <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.dll&quot; &quot;$(TargetDir)&quot;" />
     <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.pdb&quot; &quot;$(TargetDir)&quot;" />
