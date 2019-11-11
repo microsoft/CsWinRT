@@ -98,7 +98,7 @@ namespace cswinrt
         }
         separator s{ w };
         uint32_t index = 0;
-        w.write("<%>", bind_each([&](writer& w, GenericParam const& /*gp*/) 
+        w.write("<%>", bind_each([&](writer& w, GenericParam const& /*gp*/)
             { s(); write_generic_type_name(w, index++); }, type.GenericParam()));
     }
 
@@ -131,8 +131,8 @@ namespace cswinrt
             [&](guid_type) { w.write("Guid"); },
             [&](type_definition const& type) { write_typedef_name(w, type); },
             [&](generic_type_index const& var) { write_generic_type_name(w, var.index); },
-            [&](generic_type_instance const& type) 
-            { 
+            [&](generic_type_instance const& type)
+            {
                 auto guard{ w.push_generic_args(type) };
                 write_generic_projection_type(w, type);
             },
@@ -196,12 +196,12 @@ namespace cswinrt
             [&](object_type) { w.write("IInspectable"); },
             [&](guid_type) { w.write("Guid"); },
             [&](type_definition const& type) { write_typedef_name(w, type); },
-            [&](generic_type_index const& var) 
-            { 
+            [&](generic_type_index const& var)
+            {
                 write_generic_type_name(w, var.index);
             },
-            [&](generic_type_instance const& type) 
-            { 
+            [&](generic_type_instance const& type)
+            {
                 auto guard{ w.push_generic_args(type) };
                 write_generic_projection_param_type(w, type);
             },
@@ -264,8 +264,8 @@ namespace cswinrt
         call(semantics,
             [&](object_type) { w.write("IntPtr"); },
             [&](guid_type) { w.write("Guid"); },
-            [&](type_definition const& type) 
-            { 
+            [&](type_definition const& type)
+            {
                 switch (get_category(type))
                 {
                     case category::enum_type:
@@ -285,9 +285,9 @@ namespace cswinrt
                     }
                 };
             },
-            [&](generic_type_index const& var) 
-            { 
-                write_generic_type_name(w, var.index); 
+            [&](generic_type_index const& var)
+            {
+                write_generic_type_name(w, var.index);
             },
             [&](generic_type_instance const&)
             {
@@ -306,6 +306,21 @@ namespace cswinrt
             });
     }
 
+    void write_interop_parameter_marshalas(writer& w, type_semantics const& semantics)
+    {
+        call(semantics,
+            [&](fundamental_type t)
+            {
+                if (t == fundamental_type::Boolean)
+                {
+                    w.write(", MarshalAs(UnmanagedType.U1)");
+                }
+            },
+            [](auto&&)
+            {
+            });
+    }
+
     void write_interop_parameter_type(writer& w, method_signature::param_t const& param)
     {
         auto semantics = get_type_semantics(param.second->Type());
@@ -313,10 +328,10 @@ namespace cswinrt
         switch (get_param_category(param))
         {
         case param_category::in:
-            w.write("%", bind<write_interop_type>(semantics));
+            w.write("[In%] %", bind<write_interop_parameter_marshalas>(semantics), bind<write_interop_type>(semantics));
             break;
         case param_category::out:
-            w.write("out %", bind<write_interop_type>(semantics));
+            w.write("[Out%] out %", bind<write_interop_parameter_marshalas>(semantics), bind<write_interop_type>(semantics));
             break;
         case param_category::pass_array:
             w.write("/*pass_array*/ %[]", bind<write_interop_type>(semantics));
@@ -347,7 +362,7 @@ namespace cswinrt
         if (signature.return_signature())
         {
             auto semantics = get_type_semantics(signature.return_signature().Type());
-            w.write(", out % %", bind<write_interop_type>(semantics), signature.return_param_name());
+            w.write(", [Out%] out % %", bind<write_interop_parameter_marshalas>(semantics), bind<write_interop_type>(semantics), signature.return_param_name());
         }
     }
 
@@ -458,38 +473,38 @@ namespace cswinrt
     {
         std::function<void(type_semantics const&)> write_type = [&](type_semantics const& semantics) {
         call(semantics,
-            [&](object_type) 
+            [&](object_type)
             {
                 w.write("(IntPtr value) => (obj.ThisPtr == value) ? (IInspectable)% : IInspectable.FromNative(value)", OwnerMemberName);
             },
-            [&](type_definition const& type) 
-            { 
+            [&](type_definition const& type)
+            {
                 w.write(R"((IntPtr value) => (obj.ThisPtr == value) ? (%)% : %)",
                     bind<write_projection_param_type>(semantics),
                     OwnerMemberName,
                     bind<write_object_marshal_from_native>(semantics, type, "value"sv, true));
             },
-            [&](generic_type_index const& var) 
-            { 
+            [&](generic_type_index const& var)
+            {
                 write_type(w.get_generic_arg(var.index));
             },
-            [&](generic_type_instance const& type) 
-            { 
+            [&](generic_type_instance const& type)
+            {
                 auto guard{ w.push_generic_args(type) };
                 w.write(R"((IntPtr value) => (obj.ThisPtr == value) ? (%)% : %)",
                     bind<write_projection_param_type>(semantics),
                     OwnerMemberName,
                     bind<write_object_marshal_from_native>(semantics, type.generic_type, "value"sv, true));
             },
-            [&](fundamental_type const& type) 
-            { 
+            [&](fundamental_type const& type)
+            {
                 w.write(R"((IntPtr value) => %)",
                     bind<write_fundamental_marshal_from_native>(type, "value"sv, true));
             },
             [](auto) {});
         };
         write_type(get_type_semantics(param.second->Type()));
-    }   
+    }
 
     void write_event_param_marshalers(writer& w, row_base<Event>::value_type const& evt)
     {
@@ -499,14 +514,14 @@ namespace cswinrt
         };
         write_event_params(w, evt, write_params);
     }
-        
+
     void write_class_modifiers(writer& w, TypeDef const& type)
     {
         if (is_static(type))
         {
             w.write("static ");
         }
-        
+
         if (!(is_static(type)) && type.Flags().Sealed())
         {
             w.write("sealed ");
@@ -582,9 +597,9 @@ set => %.% = value;
 )",
                 prop_type,
                 prop_name,
-                getter_target, 
+                getter_target,
                 prop_name,
-                setter_target, 
+                setter_target,
                 prop_name);
         }
     }
@@ -736,8 +751,8 @@ internal static % Instance => _instance.Value;
                 method_signature signature{ method };
                 w.write(R"(
 public %(%) : this(%.%(%)._default) {}
-)",                 
-                    class_type.TypeName(), 
+)",
+                    class_type.TypeName(),
                     bind_list<write_method_parameter>(", ", signature.params()),
                     cache_object,
                     method.Name(),
@@ -749,8 +764,8 @@ public %(%) : this(%.%(%)._default) {}
             auto default_interface_name = get_default_interface_name(w, class_type);
             w.write(R"(
 public %() : this(new %(ActivationFactory<%>.ActivateInstance<%.Vftbl>())){}
-)",                 
-                class_type.TypeName(), 
+)",
+                class_type.TypeName(),
                 default_interface_name,
                 class_type.TypeName(),
                 default_interface_name);
@@ -775,8 +790,8 @@ IInspectable baseInspectable = null;
 IInspectable innerInspectable;
 return %.%(%%baseInspectable, out innerInspectable)._default;
 }))()){}
-)",                 
-                class_type.TypeName(), 
+)",
+                class_type.TypeName(),
                 bind_list<write_method_parameter>(", ", params_without_objects),
                 default_interface_name,
                 cache_object,
@@ -1013,8 +1028,8 @@ public I As<I>() => _default.As<I>();
                     call(semantics,
                         [&](guid_type) { suffix = "Guid"; },
                         [&](fundamental_type const& type) { suffix = get_delegate_type_suffix(type); },
-                        [&](generic_type_index const& var) 
-                        { 
+                        [&](generic_type_index const& var)
+                        {
                             suffix = w.write_temp("<%>", bind<write_generic_type_name>(var.index));
                         },
                         [&](type_definition const& type)
@@ -1053,7 +1068,7 @@ public I As<I>() => _default.As<I>();
             w.write("public unsafe delegate int %([In] %);\n",
                 delegate_type,
                 bind<write_abi_parameters>(signature));
-            
+
             return delegate_type;
         };
 
@@ -1121,7 +1136,7 @@ private EventSource% _%;)",
                 {
                     write_fundamental_marshal_from_native(w, type, name);
                 },
-                [&](auto) 
+                [&](auto)
                 {
                     w.write("%", name);
                 });
@@ -1160,28 +1175,28 @@ private EventSource% _%;)",
     {
         std::function<void(type_semantics const&)> write_type = [&](type_semantics const& semantics) {
             call(semantics,
-                [&](object_type) 
-                { 
+                [&](object_type)
+                {
                     w.write("%.NativePtr", name);
                 },
-                [&](type_definition const& type) 
-                { 
+                [&](type_definition const& type)
+                {
                     write_object_marshal_to_native(w, type, name);
                 },
-                [&](generic_type_index const& var) 
-                { 
+                [&](generic_type_index const& var)
+                {
                     write_type(w.get_generic_arg(var.index));
                 },
-                [&](generic_type_instance const& type) 
-                { 
+                [&](generic_type_instance const& type)
+                {
                     auto guard{ w.push_generic_args(type) };
                     write_object_marshal_to_native(w, type.generic_type, name);
                 },
-                [&](fundamental_type const& type) 
-                { 
+                [&](fundamental_type const& type)
+                {
                     write_fundamental_marshal_to_native(w, type, name);
                 },
-                [&](auto) 
+                [&](auto)
                 {
                     w.write("%", name);
                 });
@@ -1192,12 +1207,12 @@ private EventSource% _%;)",
     bool is_type_blittable(type_semantics const& semantics)
     {
         return call(semantics,
-            [&](object_type) 
-            { 
-                return false; 
+            [&](object_type)
+            {
+                return false;
             },
-            [&](type_definition const& type) 
-            { 
+            [&](type_definition const& type)
+            {
                 switch (get_category(type))
                 {
                     case category::enum_type:
@@ -1209,17 +1224,49 @@ private EventSource% _%;)",
                         return false;
                 }
             },
-            [&](generic_type_instance const& /*type*/) 
-            { 
+            [&](generic_type_instance const& /*type*/)
+            {
                 return false;
             },
             [&](fundamental_type const& type)
             {
-                return (type != fundamental_type::String);
+                return (type != fundamental_type::String) && (type != fundamental_type::Boolean);
             },
-            [&](auto) 
-            { 
+            [&](auto&&)
+            {
                 return true;
+            });
+    }
+
+    bool marshal_as_intptr(type_semantics const& semantics)
+    {
+        return call(semantics,
+            [&](object_type)
+            {
+                return true;
+            },
+            [&](type_definition const& type)
+            {
+                switch (get_category(type))
+                {
+                    case category::enum_type:
+                    case category::struct_type:
+                        return false;
+                    default:
+                        return true;
+                }
+            },
+            [&](generic_type_instance const& /*type*/)
+            {
+                return true;
+            },
+            [&](fundamental_type const& type)
+            {
+                return (type == fundamental_type::String);
+            },
+            [&](auto&&)
+            {
+                return false;
             });
     }
 
@@ -1231,7 +1278,7 @@ private EventSource% _%;)",
         {
         case param_category::out:
         {
-            if(!is_type_blittable(get_type_semantics(param.second->Type())))
+            if (marshal_as_intptr(semantics))
             {
                 w.write("IntPtr %_value;\n", bind<write_parameter_name>(param));
             }
@@ -1309,7 +1356,7 @@ private EventSource% _%;)",
                     }
                     //write_fundamental_marshal_from_native(w, type, name);
                 },
-                [&](auto) 
+                [&](auto)
                 {
                     //w.write("%", name);
                 });
@@ -1358,10 +1405,10 @@ private EventSource% _%;)",
         switch (get_param_category(param))
         {
         case param_category::out:
-            w.write("out %%", bind<write_parameter_name>(param), 
+            w.write("out %%", bind<write_parameter_name>(param),
                 bind([&](writer& w)
                 {
-                    if (!is_type_blittable(get_type_semantics(param.second->Type())))
+                    if (marshal_as_intptr(get_type_semantics(param.second->Type())))
                     {
                         w.write("_value");
                     }
@@ -1412,14 +1459,14 @@ public %% %(%)
                 method.Name(),
                 bind_list<write_method_parameter>(", ", signature.params()),
                 bind([&](writer& w) {
-                    if (!custom.empty()) 
+                    if (!custom.empty())
                     {
                         w.write("%\nelse\n{\n", custom);
                     }
                 }),
                 bind_each(write_param_out_local_declare, signature.params()),
-                signature.return_signature() ? 
-                    w.write_temp("% __return_value__;\n", 
+                signature.return_signature() ?
+                    w.write_temp("% __return_value__;\n",
                         bind<write_interop_type>(get_type_semantics(signature.return_signature().Type()))) :
                     "",
                 method.Name(),
@@ -1430,7 +1477,7 @@ public %% %(%)
                 }, signature.params()),
                 signature.return_signature() ? ", out __return_value__" : "",
                 bind_each(write_param_out_local_marshal, signature.params()),
-                signature.return_signature() ? 
+                signature.return_signature() ?
                     w.write_temp("\nreturn %;",
                         bind<write_marshal_from_native>(get_type_semantics(signature.return_signature().Type()), "__return_value__")) :
                     "");
@@ -1448,7 +1495,7 @@ public %% %(%)
 public % %
 {
 )",
-                bind<write_projection_type>(semantics), 
+                bind<write_projection_type>(semantics),
                 prop.Name());
             auto custom = w.write_temp("%", bind([&](writer& w) {
                 if (!write_custom) return;
@@ -1464,7 +1511,7 @@ return %;
 }
 )",
                     bind([&](writer& w) {
-                        if (!custom.empty()) 
+                        if (!custom.empty())
                         {
                             w.write("%\nelse\n{\n", custom);
                         }
@@ -1482,7 +1529,7 @@ return %;
 }
 )",
                     bind([&](writer& w) {
-                        if (!custom.empty()) 
+                        if (!custom.empty())
                         {
                             w.write("%\nelse\n{\n", custom);
                         }
@@ -1541,7 +1588,7 @@ remove => _%.Event -= value;
             {
                 "IIterator`1"sv,
                 R"(public WinRT.Interop._get_PropertyAsObject get_CurrentAsObject;)"sv,
-                R"(get_CurrentAsObject = typeof(T).IsClass ? _obj.Vftbl.get_Current_0.AsDelegate<WinRT.Interop._get_PropertyAsObject>() : null;)"sv, 
+                R"(get_CurrentAsObject = typeof(T).IsClass ? _obj.Vftbl.get_Current_0.AsDelegate<WinRT.Interop._get_PropertyAsObject>() : null;)"sv,
                 [](writer& w, std::string_view name, std::string_view)
                 {
                     if (name == "Current"sv)
@@ -1550,7 +1597,7 @@ remove => _%.Event -= value;
 {
 IntPtr __return_value__;
 unsafe { Marshal.ThrowExceptionForHR(get_CurrentAsObject(NativePtr, out __return_value__)); }
-return marshaler_T.FromNative(__return_value__); 
+return marshaler_T.FromNative(__return_value__);
 })");
                     }
                 }
@@ -1560,7 +1607,7 @@ return marshaler_T.FromNative(__return_value__);
                 R"(public WinRT.Interop._get_PropertyAsObject get_KeyAsObject;
 public WinRT.Interop._get_PropertyAsObject get_ValueAsObject;)"sv,
                 R"(get_KeyAsObject = typeof(K).IsClass ? _obj.Vftbl.get_Key_0.AsDelegate<WinRT.Interop._get_PropertyAsObject>() : null;
-get_ValueAsObject = typeof(V).IsClass ? _obj.Vftbl.get_Value_1.AsDelegate<WinRT.Interop._get_PropertyAsObject>() : null;)"sv, 
+get_ValueAsObject = typeof(V).IsClass ? _obj.Vftbl.get_Value_1.AsDelegate<WinRT.Interop._get_PropertyAsObject>() : null;)"sv,
                 [](writer& w, std::string_view name, std::string_view type)
                 {
                     if (name == "Key"sv && type == "get"sv)
@@ -1591,7 +1638,7 @@ return marshaler_V.FromNative(__return_value__);
             {
                 "IMapChangedEventArgs`1"sv,
                 R"(public WinRT.Interop._get_PropertyAsObject get_KeyAsObject;)"sv,
-                R"(get_KeyAsObject = typeof(K).IsClass ? _obj.Vftbl.get_Key_1.AsDelegate<WinRT.Interop._get_PropertyAsObject>() : null;)"sv, 
+                R"(get_KeyAsObject = typeof(K).IsClass ? _obj.Vftbl.get_Key_1.AsDelegate<WinRT.Interop._get_PropertyAsObject>() : null;)"sv,
                 [](writer& w, std::string_view name, std::string_view type)
                 {
                     if (name == "Key"sv && type == "get"sv)
@@ -1634,7 +1681,7 @@ Lookup_V = _obj.Vftbl.Lookup_0.AsDelegate<_Lookup_V>();
 if (typeof(K).IsClass)
 {
 HasKey_ = _obj.Vftbl.HasKey_2.AsDelegate<_HasKey_>();
-})"sv, 
+})"sv,
                 [](writer& w, std::string_view name, std::string_view /*type*/)
                 {
                     if (name == "Lookup"sv)
@@ -1699,7 +1746,7 @@ IndexOf_ = _obj.Vftbl.IndexOf_3.AsDelegate<_IndexOf_>();
 SetAt_ = _obj.Vftbl.SetAt_4.AsDelegate<_SetAt_>();
 InsertAt_ = _obj.Vftbl.InsertAt_5.AsDelegate<_InsertAt_>();
 Append_ = _obj.Vftbl.Append_7.AsDelegate<_Append_>();
-})"sv, 
+})"sv,
                 [](writer& w, std::string_view name, std::string_view /*type*/)
                 {
                     if (name == "GetAt"sv)
@@ -1753,7 +1800,7 @@ R"(if (typeof(T).IsClass)
 {
 GetAt_ = _obj.Vftbl.GetAt_0.AsDelegate<_GetAt_>();
 IndexOf_ = _obj.Vftbl.IndexOf_2.AsDelegate<_IndexOf_>();
-})"sv, 
+})"sv,
                 [](writer& w, std::string_view name, std::string_view /*type*/)
                 {
                     if (name == "GetAt"sv)
@@ -1994,9 +2041,9 @@ R"(public static readonly Marshaler<%> marshaler_% = typeof(%).IsClass ? new Mar
             type_name,
             type.TypeName(),
             type.TypeName(),
-            bind([&](writer& w) { 
+            bind([&](writer& w) {
                 if (!is_generic) return;
-                w.write("\n%", generic_helper->init_delegate_casts); 
+                w.write("\n%", generic_helper->init_delegate_casts);
             }),
             bind<write_event_source_ctors>(type),
             OwnerMemberName,
@@ -2044,7 +2091,7 @@ return %;
         if (!return_sig)
         {
             w.write(
-R"(WinRT.Delegate.MarshalInvoke(^@this, (% invoke) =>
+R"(return WinRT.Delegate.MarshalInvoke(^@this, (% invoke) =>
 {
 invoke(%);
 }))",
@@ -2081,21 +2128,21 @@ return __hresult;
             bind_list<write_delegate_param_marshal>(", ", signature.params()),
             bind([&](writer &w){
                 call(get_type_semantics(return_sig.Type()),
-                    [&](object_type) 
-                    { 
+                    [&](object_type)
+                    {
                         w.write(".NativePtr");
                     },
-                    [&](type_definition const& type) 
-                    { 
+                    [&](type_definition const& type)
+                    {
                         write_object_marshal(w, type);
                     },
-                    [&](generic_type_instance const& type) 
-                    { 
+                    [&](generic_type_instance const& type)
+                    {
                         auto guard{ w.push_generic_args(type) };
                         write_object_marshal(w, type.generic_type);
                     },
-                    [&](fundamental_type const& type) 
-                    { 
+                    [&](fundamental_type const& type)
+                    {
                         if ((type == fundamental_type::String) && !return_sig.Type().is_szarray())
                         {
                             w.write(".Handle");
@@ -2125,7 +2172,7 @@ private unsafe delegate int Native_Invoke(%);
 public static unsafe % FromNative(IntPtr ^@this)
 {
 var nativeDelegate = ObjectReference<WinRT.Interop.IDelegateVftbl>.FromNative(^@this);
-% managedDelegate = 
+% managedDelegate =
 (%) =>
 {
 var nativeInvoke = Marshal.GetDelegateForFunctionPointer<Native_Invoke>(nativeDelegate.Vftbl.Invoke);
@@ -2136,9 +2183,12 @@ return managedDelegate;
 
 public static unsafe IntPtr ToNative(% managedDelegate)
 {
-Native_Invoke nativeInvoke = (%) => 
+return new WinRT.Delegate(new Native_Invoke(Do_Native_Invoke), managedDelegate).ThisPtr;
+}
+
+private static unsafe int Do_Native_Invoke(%)
+{
 %;
-return new WinRT.Delegate(nativeInvoke, managedDelegate).ThisPtr;
 }
 }
 
@@ -2222,7 +2272,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
         if (is_attribute_type(type)) { return false; }
 
         auto guard{ w.push_generic_params(type.GenericParam()) };
-        switch (get_category(type)) 
+        switch (get_category(type))
         {
         case category::class_type:
             write_class(w, type);
@@ -2240,7 +2290,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             write_struct(w, type);
             break;
         }
-        
+
         return true;
     }
 }
