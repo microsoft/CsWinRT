@@ -306,6 +306,21 @@ namespace cswinrt
             });
     }
 
+    void write_interop_parameter_marshalas(writer& w, type_semantics const& semantics)
+    {
+        call(semantics,
+            [&](fundamental_type t)
+            {
+                if (t == fundamental_type::Boolean)
+                {
+                    w.write(", MarshalAs(UnmanagedType.U1)");
+                }
+            },
+            [](auto&&)
+            {
+            });
+    }
+
     void write_interop_parameter_type(writer& w, method_signature::param_t const& param)
     {
         auto semantics = get_type_semantics(param.second->Type());
@@ -313,10 +328,10 @@ namespace cswinrt
         switch (get_param_category(param))
         {
         case param_category::in:
-            w.write("%", bind<write_interop_type>(semantics));
+            w.write("[In%] %", bind<write_interop_parameter_marshalas>(semantics), bind<write_interop_type>(semantics));
             break;
         case param_category::out:
-            w.write("out %", bind<write_interop_type>(semantics));
+            w.write("[Out%] out %", bind<write_interop_parameter_marshalas>(semantics), bind<write_interop_type>(semantics));
             break;
         case param_category::pass_array:
             w.write("/*pass_array*/ %[]", bind<write_interop_type>(semantics));
@@ -347,7 +362,7 @@ namespace cswinrt
         if (signature.return_signature())
         {
             auto semantics = get_type_semantics(signature.return_signature().Type());
-            w.write(", out % %", bind<write_interop_type>(semantics), signature.return_param_name());
+            w.write(", [Out%] out % %", bind<write_interop_parameter_marshalas>(semantics), bind<write_interop_type>(semantics), signature.return_param_name());
         }
     }
 
@@ -1215,11 +1230,43 @@ private EventSource% _%;)",
             },
             [&](fundamental_type const& type)
             {
-                return (type != fundamental_type::String);
+                return (type != fundamental_type::String) && (type != fundamental_type::Boolean);
             },
-            [&](auto)
+            [&](auto&&)
             {
                 return true;
+            });
+    }
+
+    bool marshal_as_intptr(type_semantics const& semantics)
+    {
+        return call(semantics,
+            [&](object_type)
+            {
+                return true;
+            },
+            [&](type_definition const& type)
+            {
+                switch (get_category(type))
+                {
+                    case category::enum_type:
+                    case category::struct_type:
+                        return false;
+                    default:
+                        return true;
+                }
+            },
+            [&](generic_type_instance const& /*type*/)
+            {
+                return true;
+            },
+            [&](fundamental_type const& type)
+            {
+                return (type == fundamental_type::String);
+            },
+            [&](auto&&)
+            {
+                return false;
             });
     }
 
@@ -1231,7 +1278,7 @@ private EventSource% _%;)",
         {
         case param_category::out:
         {
-            if(!is_type_blittable(get_type_semantics(param.second->Type())))
+            if (marshal_as_intptr(semantics))
             {
                 w.write("IntPtr %_value;\n", bind<write_parameter_name>(param));
             }
@@ -1361,7 +1408,7 @@ private EventSource% _%;)",
             w.write("out %%", bind<write_parameter_name>(param),
                 bind([&](writer& w)
                 {
-                    if (!is_type_blittable(get_type_semantics(param.second->Type())))
+                    if (marshal_as_intptr(get_type_semantics(param.second->Type())))
                     {
                         w.write("_value");
                     }
@@ -2044,7 +2091,7 @@ return %;
         if (!return_sig)
         {
             w.write(
-R"(WinRT.Delegate.MarshalInvoke(^@this, (% invoke) =>
+R"(return WinRT.Delegate.MarshalInvoke(^@this, (% invoke) =>
 {
 invoke(%);
 }))",
@@ -2136,9 +2183,12 @@ return managedDelegate;
 
 public static unsafe IntPtr ToNative(% managedDelegate)
 {
-Native_Invoke nativeInvoke = (%) =>
+return new WinRT.Delegate(new Native_Invoke(Do_Native_Invoke), managedDelegate).ThisPtr;
+}
+
+private static unsafe int Do_Native_Invoke(%)
+{
 %;
-return new WinRT.Delegate(nativeInvoke, managedDelegate).ThisPtr;
 }
 }
 
