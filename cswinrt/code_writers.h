@@ -1165,7 +1165,7 @@ private EventSource% _%;)",
             }
             default:
             {
-                w.write("%.NativePtr", name);
+                w.write("%?.NativePtr ?? IntPtr.Zero", name);
                 return;
             }
         }
@@ -1177,7 +1177,7 @@ private EventSource% _%;)",
             call(semantics,
                 [&](object_type)
                 {
-                    w.write("%.NativePtr", name);
+                    w.write("%?.NativePtr ?? IntPtr.Zero", name);
                 },
                 [&](type_definition const& type)
                 {
@@ -2107,7 +2107,7 @@ invoke(%);
             case category::interface_type:
             case category::class_type:
             {
-                w.write(".NativePtr");
+                w.write("?.NativePtr ?? IntPtr.Zero");
                 return;
             }
             }
@@ -2130,7 +2130,7 @@ return __hresult;
                 call(get_type_semantics(return_sig.Type()),
                     [&](object_type)
                     {
-                        w.write(".NativePtr");
+                        w.write("?.NativePtr ?? IntPtr.Zero");
                     },
                     [&](type_definition const& type)
                     {
