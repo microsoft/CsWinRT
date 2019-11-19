@@ -1450,10 +1450,11 @@ private EventSource% _%;)",
 
             method_signature signature{ method };
             w.write(R"(
-public %% %(%)
+public unsafe %% %(%)
 {
-%%%unsafe { Marshal.ThrowExceptionForHR(_obj.Vftbl.%_%(NativePtr%%)); }%%
-})",
+%%%Marshal.ThrowExceptionForHR(_obj.Vftbl.%_%(NativePtr%%));%%
+}
+)",
                 (method.Name() == "ToString"sv) ? "new " : "",
                 bind<write_method_return>(signature),
                 method.Name(),
@@ -1492,7 +1493,7 @@ public %% %(%)
             auto [getter, setter] = get_property_methods(prop);
             auto semantics = get_type_semantics(prop.Type().Type());
             w.write(R"(
-public % %
+public unsafe % %
 {
 )",
                 bind<write_projection_type>(semantics),
@@ -1506,7 +1507,7 @@ public % %
                 w.write(R"(get
 {
 %% __return_value__;
-unsafe { Marshal.ThrowExceptionForHR(_obj.Vftbl.get_%_%(NativePtr, out __return_value__)); }
+Marshal.ThrowExceptionForHR(_obj.Vftbl.get_%_%(NativePtr, out __return_value__));
 return %;
 }
 )",
@@ -1525,7 +1526,7 @@ return %;
             {
                 w.write(R"(set
 {
-%unsafe { Marshal.ThrowExceptionForHR(_obj.Vftbl.put_%_%(NativePtr, %)); }
+%Marshal.ThrowExceptionForHR(_obj.Vftbl.put_%_%(NativePtr, %));
 }
 )",
                     bind([&](writer& w) {
