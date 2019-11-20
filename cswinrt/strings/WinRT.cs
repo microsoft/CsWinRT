@@ -146,6 +146,26 @@ namespace WinRT
         }
     }
 
+    // TEMPORARY HACK: Until .NET 5 supports marshaling constructed generic delegates, as Mono does
+    static class GenericMarshal
+    {
+        public delegate MulticastDelegate _GetDelegateForFunctionPointerInternal(IntPtr functionPointer, Type delegateType);
+
+        static GenericMarshal()
+        {
+            var gd4fpi = typeof(Marshal).GetMethod("GetDelegateForFunctionPointerInternal",
+                BindingFlags.Static | BindingFlags.NonPublic,
+                null, new Type[] { typeof(IntPtr), typeof(Type) }, null);
+
+            GetDelegateForFunctionPointerInternal = (IntPtr functionPointer, Type delegateType) =>
+            {
+                return (MulticastDelegate)(gd4fpi.Invoke(null, new object[] { functionPointer, delegateType }));
+            };
+        }
+
+        public static _GetDelegateForFunctionPointerInternal GetDelegateForFunctionPointerInternal { get; private set; }
+    }
+
     internal class Platform
     {
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
@@ -489,13 +509,34 @@ namespace WinRT
             return new ObjectReference<T>(null, thisPtr, false);
         }
 
-        ObjectReference(object module, IntPtr thisPtr, bool owned) :
+        unsafe ObjectReference(object module, IntPtr thisPtr, bool owned) :
             base(module, thisPtr)
         {
             _owned = owned;
             var vftblPtr = Marshal.PtrToStructure<VftblPtr>(ThisPtr);
             _vftblIUnknown = Marshal.PtrToStructure<Interop.IUnknownVftbl>(vftblPtr.Vftbl);
-            Vftbl = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
+            // Following is a workaround for a bug in PtrToStructure on .NET Core (but not Mono):
+            // https://github.com/dotnet/coreclr/issues/27754
+            if (typeof(T).IsGenericType)
+            {
+                var structType = typeof(T);
+                object structVftblBoxed = Activator.CreateInstance<T>();
+                var structFields = structType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                var IInspectableVftbl = Marshal.PtrToStructure<WinRT.IInspectable.Vftbl>(vftblPtr.Vftbl);
+                structFields[0].SetValue(structVftblBoxed, IInspectableVftbl);
+                var raw = (IntPtr*)vftblPtr.Vftbl;
+                for (int i = 1; i < structFields.Length; i++)
+                {
+                    var sf = structFields[i];
+                    var del = GenericMarshal.GetDelegateForFunctionPointerInternal(raw[5 + i], sf.FieldType);
+                    sf.SetValue(structVftblBoxed, del);
+                }
+                Vftbl = (T)structVftblBoxed;
+            }
+            else
+            {
+                Vftbl = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
+            }
         }
 
         ~ObjectReference()

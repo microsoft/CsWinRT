@@ -177,10 +177,13 @@ namespace UnitTest
         [Fact]
         public void TestAsync()
         {
+            TestObject.IntProperty = 42;
             var async_op = TestObject.GetIntAsync();
-            async_op.Completed += (info, status) => { };
+            int asyncResult = 0;
+            async_op.Completed = (info, status) => asyncResult = info.GetResults();
+            async_op.GetResults();
+            Assert.Equal(42, asyncResult);
         }
-
 
         [Fact]
         public void TestPrimitives()
