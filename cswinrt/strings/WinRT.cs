@@ -9,6 +9,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Linq.Expressions;
 
+#pragma warning disable 0169 // The field 'xxx' is never used
+#pragma warning disable 0649 // Field 'xxx' is never assigned to, and will always have its default value
+
 namespace WinRT
 {
     public enum TrustLevel
@@ -409,26 +412,19 @@ namespace WinRT
     public abstract class IObjectReference
     {
         public readonly IntPtr ThisPtr;
-        public readonly object Module;
-        readonly GCHandle _moduleHandle;
         protected virtual Interop.IUnknownVftbl VftblIUnknown { get; }
 
-        protected IObjectReference(object module, IntPtr thisPtr)
+        protected IObjectReference(IntPtr thisPtr)
         {
-            Module = module;
             ThisPtr = thisPtr;
-            if (Module != null)
-            {
-                _moduleHandle = GCHandle.Alloc(module);
-            }
         }
 
         public ObjectReference<T> As<T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
-        public ObjectReference<T> As<T>(Guid iid)
+        public unsafe ObjectReference<T> As<T>(Guid iid)
         {
             IntPtr thatPtr;
-            unsafe { Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out thatPtr)); }
-            return ObjectReference<T>.Attach(Module, ref thatPtr);
+            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out thatPtr));
+            return ObjectReference<T>.Attach(ref thatPtr);
         }
 
         public T AsType<T>()
@@ -440,14 +436,6 @@ namespace WinRT
             }
             throw new InvalidOperationException("Target type is not a projected interface.");
         }
-
-        ~IObjectReference()
-        {
-            if (_moduleHandle.IsAllocated)
-            {
-                _moduleHandle.Free();
-            }
-        }
     }
 
     public class ObjectReference<T> : IObjectReference
@@ -455,44 +443,24 @@ namespace WinRT
         protected override Interop.IUnknownVftbl VftblIUnknown => _vftblIUnknown;
         readonly Interop.IUnknownVftbl _vftblIUnknown;
         public readonly T Vftbl;
-        readonly bool _owned;
 
-        public static ObjectReference<T> Attach(object module, ref IntPtr thisPtr)
+        public static ObjectReference<T> Attach(ref IntPtr thisPtr)
         {
-            var obj = new ObjectReference<T>(module, thisPtr, true);
+            var obj = new ObjectReference<T>(thisPtr);
             thisPtr = IntPtr.Zero;
-            return obj;
-        }
-
-        public static ObjectReference<T> FromNative(object module, IntPtr thisPtr)
-        {
-            var obj = new ObjectReference<T>(module, thisPtr, true);
-            obj._vftblIUnknown.AddRef(obj.ThisPtr);
             return obj;
         }
 
         public static ObjectReference<T> FromNative(IntPtr thisPtr)
         {
-            // Retrieve module handle from QueryInterface function address
-            IntPtr qi;
-            unsafe { qi = (*(IntPtr**)thisPtr.ToPointer())[0]; };
-            IntPtr moduleHandle;
-            if (!Platform.GetModuleHandleExW(4, qi, out moduleHandle))
-            {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-            }
-            return FromNative(new DllModuleHandle(moduleHandle), thisPtr);
+            var obj = new ObjectReference<T>(thisPtr);
+            obj._vftblIUnknown.AddRef(obj.ThisPtr);
+            return obj;
         }
 
-        public static ObjectReference<T> FromNativeNoRef(IntPtr thisPtr)
+        ObjectReference(IntPtr thisPtr) :
+            base(thisPtr)
         {
-            return new ObjectReference<T>(null, thisPtr, false);
-        }
-
-        ObjectReference(object module, IntPtr thisPtr, bool owned) :
-            base(module, thisPtr)
-        {
-            _owned = owned;
             var vftblPtr = Marshal.PtrToStructure<VftblPtr>(ThisPtr);
             _vftblIUnknown = Marshal.PtrToStructure<Interop.IUnknownVftbl>(vftblPtr.Vftbl);
             Vftbl = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
@@ -500,28 +468,7 @@ namespace WinRT
 
         ~ObjectReference()
         {
-            if (_owned)
-            {
-                _vftblIUnknown.Release(ThisPtr);
-            }
-        }
-    }
-
-    internal class DllModuleHandle
-    {
-        readonly IntPtr _moduleHandle;
-
-        internal DllModuleHandle(IntPtr moduleHandle)
-        {
-            _moduleHandle = moduleHandle;
-        }
-
-        ~DllModuleHandle()
-        {
-            if ((_moduleHandle != IntPtr.Zero) && !Platform.FreeLibrary(_moduleHandle))
-            {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-            }
+            _vftblIUnknown.Release(ThisPtr);
         }
     }
 
@@ -532,24 +479,27 @@ namespace WinRT
             [In] IntPtr activatableClassId,
             [Out] out IntPtr activationFactory);
 
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public unsafe delegate int DllCanUnloadNow();
+
         readonly string _fileName;
         readonly IntPtr _moduleHandle;
         readonly DllGetActivationFactory _GetActivationFactory;
+        readonly DllCanUnloadNow _CanUnloadNow;
 
         static readonly string _currentModuleDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
-        static Dictionary<string, WeakReference<DllModule>> _cache = new System.Collections.Generic.Dictionary<string, WeakReference<DllModule>>();
+        static Dictionary<string, DllModule> _cache = new System.Collections.Generic.Dictionary<string, DllModule>();
 
         public static DllModule Load(string fileName)
         {
             lock (_cache)
             {
-                WeakReference<DllModule> weakModule;
                 DllModule module;
-                if (!(_cache.TryGetValue(fileName, out weakModule) && weakModule.TryGetTarget(out module)))
+                if (!_cache.TryGetValue(fileName, out module))
                 {
                     module = new DllModule(fileName);
-                    _cache[fileName] = new WeakReference<DllModule>(module);
+                    _cache[fileName] = module;
                 }
                 return module;
             }
@@ -568,24 +518,26 @@ namespace WinRT
             }
 
             _GetActivationFactory = Platform.GetProcAddress<DllGetActivationFactory>(_moduleHandle);
+            _CanUnloadNow = Platform.GetProcAddress<DllCanUnloadNow>(_moduleHandle); // TODO: Eventually periodically call
         }
 
-        public ObjectReference<I> GetStaticClass<I>(HString runtimeClassId)
+        public unsafe ObjectReference<I> GetStaticClass<I>(HString runtimeClassId)
         {
             IntPtr instancePtr;
-            unsafe { Marshal.ThrowExceptionForHR(_GetActivationFactory(runtimeClassId.Handle, out instancePtr)); }
-            return ObjectReference<I>.Attach(this, ref instancePtr);
+            Marshal.ThrowExceptionForHR(_GetActivationFactory(runtimeClassId.Handle, out instancePtr));
+            return ObjectReference<I>.Attach(ref instancePtr);
         }
 
-        public ObjectReference<Interop.IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
+        public unsafe ObjectReference<Interop.IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
         {
             IntPtr instancePtr;
-            unsafe { Marshal.ThrowExceptionForHR(_GetActivationFactory(runtimeClassId.Handle, out instancePtr)); }
-            return ObjectReference<Interop.IActivationFactoryVftbl>.Attach(this, ref instancePtr);
+            Marshal.ThrowExceptionForHR(_GetActivationFactory(runtimeClassId.Handle, out instancePtr));
+            return ObjectReference<Interop.IActivationFactoryVftbl>.Attach(ref instancePtr);
         }
 
         ~DllModule()
         {
+            System.Diagnostics.Debug.Assert(_CanUnloadNow() == 0); // S_OK
             lock (_cache)
             {
                 _cache.Remove(_fileName);
@@ -621,23 +573,23 @@ namespace WinRT
     internal class WinrtModule
     {
         readonly IntPtr _mtaCookie;
-        static WeakLazy<WinrtModule> _instance = new WeakLazy<WinrtModule>();
+        static Lazy<WinrtModule> _instance = new Lazy<WinrtModule>();
         public static WinrtModule Instance => _instance.Value;
 
-        public WinrtModule()
+        public unsafe WinrtModule()
         {
             IntPtr mtaCookie;
-            unsafe { Marshal.ThrowExceptionForHR(Platform.CoIncrementMTAUsage(&mtaCookie)); }
+            Marshal.ThrowExceptionForHR(Platform.CoIncrementMTAUsage(&mtaCookie));
             _mtaCookie = mtaCookie;
         }
 
-        public static ObjectReference<Interop.IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
+        public static unsafe ObjectReference<Interop.IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
         {
-            var module = Instance;
+            var module = Instance; // Ensure COM is initialized
             Guid iid = typeof(Interop.IActivationFactoryVftbl).GUID;
             IntPtr instancePtr;
-            unsafe { Marshal.ThrowExceptionForHR(Platform.RoGetActivationFactory(runtimeClassId.Handle, ref iid, &instancePtr)); }
-            return ObjectReference<Interop.IActivationFactoryVftbl>.Attach(module, ref instancePtr);
+            Marshal.ThrowExceptionForHR(Platform.RoGetActivationFactory(runtimeClassId.Handle, ref iid, &instancePtr));
+            return ObjectReference<Interop.IActivationFactoryVftbl>.Attach(ref instancePtr);
         }
 
         ~WinrtModule()
@@ -652,42 +604,45 @@ namespace WinRT
 
         public BaseActivationFactory(string typeNamespace, string typeFullName)
         {
-            string moduleName = typeNamespace;
-
-            using (HString runtimeClassId = new HString(typeFullName.Replace("WinRT", "Windows")))
+            using (var runtimeClassId = new HString(typeFullName.Replace("WinRT", "Windows")))
             {
-                do
+                int hr = 0;
+                try
+                {
+                    _IActivationFactory = WinrtModule.GetActivationFactory(runtimeClassId);
+                    return;
+                }
+                catch (Exception e)
+                {
+                    // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
+                    hr = e.HResult;
+                }
+
+                var moduleName = typeNamespace;
+                while (_IActivationFactory == null)
                 {
                     try
                     {
-                        var module = DllModule.Load(moduleName + ".dll");
-                        _IActivationFactory = module.GetActivationFactory(runtimeClassId);
+                        _IActivationFactory = DllModule.Load(moduleName + ".dll").GetActivationFactory(runtimeClassId);
                     }
                     catch (Exception)
                     {
-                        // If activation factory wasn't found, trim sub-namespace off of module name and try again.
-                        int lastSegment = moduleName.LastIndexOf(".");
-                        if (lastSegment < 0)
+                        var lastSegment = moduleName.LastIndexOf(".");
+                        if (lastSegment <= 0)
                         {
-                            lastSegment = 0;
+                            Marshal.ThrowExceptionForHR(hr);
                         }
                         moduleName = moduleName.Remove(lastSegment);
                     }
-                } while (_IActivationFactory == null && moduleName.Length > 0);
-
-                // If activation factory wasn't found by namespace, fall back to WinRT activation.
-                if (_IActivationFactory == null)
-                {
-                    _IActivationFactory = WinrtModule.GetActivationFactory(runtimeClassId);
                 }
             }
         }
 
-        public ObjectReference<I> _ActivateInstance<I>()
+        public unsafe ObjectReference<I> _ActivateInstance<I>()
         {
             IntPtr instancePtr = IntPtr.Zero;
-            unsafe { Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, out instancePtr)); }
-            return ObjectReference<WinRT.IInspectable.Vftbl>.Attach(_IActivationFactory.Module, ref instancePtr).As<I>();
+            Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, out instancePtr));
+            return ObjectReference<WinRT.IInspectable.Vftbl>.Attach(ref instancePtr).As<I>();
         }
 
         public ObjectReference<I> _As<I>() => _IActivationFactory.As<I>();
@@ -740,8 +695,7 @@ namespace WinRT
         // IUnknown
         uint AddRef()
         {
-            System.Threading.Interlocked.Increment(ref _refs);
-            return (uint)_refs;
+            return (uint)System.Threading.Interlocked.Increment(ref _refs);
         }
 
         uint Release()
@@ -751,12 +705,12 @@ namespace WinRT
                 throw new InvalidOperationException("WinRT.Delegate has been over-released!");
             }
 
-            System.Threading.Interlocked.Decrement(ref _refs);
-            if (_refs == 0)
+            var refs = System.Threading.Interlocked.Decrement(ref _refs);
+            if (refs == 0)
             {
                 _Dispose();
             }
-            return (uint)_refs;
+            return (uint)refs;
         }
 
         public static int MarshalInvoke<T>(IntPtr thisPtr, Action<T> invoke)
@@ -795,8 +749,6 @@ namespace WinRT
             public IntPtr _gchandlePtr;
         }
 
-        readonly WinrtModule _module = WinrtModule.Instance;
-        readonly GCHandle _moduleHandle;
         readonly GCHandle _thisHandle;
         readonly WeakReference _weakInvoker = new WeakReference(null);
         readonly UnmanagedObject _unmanagedObj;
@@ -833,7 +785,7 @@ namespace WinRT
 
         public Delegate(IntPtr invoke_method, object target_invoker)
         {
-            _moduleHandle = GCHandle.Alloc(_module);
+            var module = WinrtModule.Instance; // Ensure COM is initialized
 
             var vftbl = _vftblTemplate;
             vftbl.Invoke = invoke_method;
@@ -863,7 +815,6 @@ namespace WinRT
 
             Marshal.FreeCoTaskMem(ThisPtr);
             _thisHandle.Free();
-            _moduleHandle.Free();
 
             GC.SuppressFinalize(this);
         }
