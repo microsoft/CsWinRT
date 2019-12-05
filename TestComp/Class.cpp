@@ -245,6 +245,156 @@ namespace winrt::TestComp::implementation
         _objectChanged.remove(token);
     }
 
+    BlittableStruct Class::BlittableStructProperty()
+    {
+        return _blittableStruct.blittable;
+    }
+
+    void Class::BlittableStructProperty(BlittableStruct const& value)
+    {
+        _blittableStruct.blittable = value;
+    }
+
+    BlittableStruct Class::GetBlittableStruct()
+    {
+        return _blittableStruct.blittable;
+    }
+
+    void Class::OutBlittableStruct(BlittableStruct& value)
+    {
+        value = _blittableStruct.blittable;
+    }
+
+    void Class::SetBlittableStruct(BlittableStruct const& value)
+    {
+        _blittableStruct.blittable = value;
+    }
+
+    ComposedBlittableStruct Class::ComposedBlittableStructProperty()
+    {
+        return _blittableStruct;
+    }
+
+    void Class::ComposedBlittableStructProperty(ComposedBlittableStruct const& value)
+    {
+        _blittableStruct = value;
+    }
+
+    ComposedBlittableStruct Class::GetComposedBlittableStruct()
+    {
+        return _blittableStruct;
+    }
+
+    void Class::OutComposedBlittableStruct(ComposedBlittableStruct& value)
+    {
+        value = _blittableStruct;
+    }
+
+    void Class::SetComposedBlittableStruct(ComposedBlittableStruct const& value)
+    {
+        _blittableStruct = value;
+    }
+
+    NonBlittableStringStruct Class::NonBlittableStringStructProperty()
+    {
+        return _nonBlittableStruct.strings;
+    }
+
+    void Class::NonBlittableStringStructProperty(NonBlittableStringStruct const& value)
+    {
+        _nonBlittableStruct.strings = value;
+    }
+
+    NonBlittableStringStruct Class::GetNonBlittableStringStruct()
+    {
+        return _nonBlittableStruct.strings;
+    }
+
+    void Class::OutNonBlittableStringStruct(NonBlittableStringStruct& value)
+    {
+        value = _nonBlittableStruct.strings;
+    }
+
+    void Class::SetNonBlittableStringStruct(NonBlittableStringStruct const& value)
+    {
+        _nonBlittableStruct.strings = value;
+    }
+
+    NonBlittableBoolStruct Class::NonBlittableBoolStructProperty()
+    {
+        return _nonBlittableStruct.bools;
+    }
+
+    void Class::NonBlittableBoolStructProperty(NonBlittableBoolStruct const& value)
+    {
+        _nonBlittableStruct.bools = value;
+    }
+
+    NonBlittableBoolStruct Class::GetNonBlittableBoolStruct()
+    {
+        return _nonBlittableStruct.bools;
+    }
+
+    void Class::OutNonBlittableBoolStruct(NonBlittableBoolStruct& value)
+    {
+        value = _nonBlittableStruct.bools;
+    }
+
+    void Class::SetNonBlittableBoolStruct(NonBlittableBoolStruct const& value)
+    {
+        _nonBlittableStruct.bools = value;
+    }
+
+    NonBlittableRefStruct Class::NonBlittableRefStructProperty()
+    {
+        return _nonBlittableStruct.refs;
+    }
+
+    void Class::NonBlittableRefStructProperty(NonBlittableRefStruct const& value)
+    {
+        _nonBlittableStruct.refs = value;
+    }
+
+    NonBlittableRefStruct Class::GetNonBlittableRefStruct()
+    {
+        return _nonBlittableStruct.refs;
+    }
+
+    void Class::OutNonBlittableRefStruct(NonBlittableRefStruct& value)
+    {
+        value = _nonBlittableStruct.refs;
+    }
+
+    void Class::SetNonBlittableRefStruct(NonBlittableRefStruct const& value)
+    {
+        _nonBlittableStruct.refs = value;
+    }
+
+    TestComp::ComposedNonBlittableStruct Class::ComposedNonBlittableStructProperty()
+    {
+        return _nonBlittableStruct;
+    }
+
+    void Class::ComposedNonBlittableStructProperty(TestComp::ComposedNonBlittableStruct const& value)
+    {
+        _nonBlittableStruct = value;
+    }
+
+    TestComp::ComposedNonBlittableStruct Class::GetComposedNonBlittableStruct()
+    {
+        return _nonBlittableStruct;
+    }
+
+    void Class::OutComposedNonBlittableStruct(TestComp::ComposedNonBlittableStruct& value)
+    {
+        value = _nonBlittableStruct;
+    }
+
+    void Class::SetComposedNonBlittableStruct(TestComp::ComposedNonBlittableStruct const& value)
+    {
+        _nonBlittableStruct = value;
+    }
+
     // IStringable
     hstring Class::ToString()
     {

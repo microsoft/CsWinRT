@@ -464,6 +464,11 @@ namespace WinRT
 
         public static ObjectReference<T> FromNative(object module, IntPtr thisPtr)
         {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
             var obj = new ObjectReference<T>(module, thisPtr, true);
             obj._vftblIUnknown.AddRef(obj.ThisPtr);
             return obj;
@@ -471,6 +476,11 @@ namespace WinRT
 
         public static ObjectReference<T> FromNative(IntPtr thisPtr)
         {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
             // Retrieve module handle from QueryInterface function address
             IntPtr qi;
             unsafe { qi = (*(IntPtr**)thisPtr.ToPointer())[0]; };
@@ -484,6 +494,11 @@ namespace WinRT
 
         public static ObjectReference<T> FromNativeNoRef(IntPtr thisPtr)
         {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
             return new ObjectReference<T>(null, thisPtr, false);
         }
 
