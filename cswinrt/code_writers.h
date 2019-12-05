@@ -1138,35 +1138,32 @@ private EventSource% _%;)",
 
     void write_marshal_from_native(writer& w, type_semantics const& semantics, std::string_view name)
     {
-        std::function<void(type_semantics const&)> write_type = [&](type_semantics const& semantics) {
-            call(semantics,
-                [&](object_type)
-                {
-                    w.write("IInspectable.FromNative(%)", name);
-                },
-                [&](type_definition const& type)
-                {
-                    write_object_marshal_from_native(w, semantics, type, name);
-                },
-                [&](generic_type_index const& /*var*/)
-                {
-                    w.write("%", name);
-                },
-                [&](generic_type_instance const& type)
-                {
-                    auto guard{ w.push_generic_args(type) };
-                    write_object_marshal_from_native(w, semantics, type.generic_type, name);
-                },
-                [&](fundamental_type type)
-                {
-                    write_fundamental_marshal_from_native(w, type, name);
-                },
-                [&](auto)
-                {
-                    w.write("%", name);
-                });
-        };
-        write_type(semantics);
+        call(semantics,
+            [&](object_type)
+            {
+                w.write("IInspectable.FromNative(%)", name);
+            },
+            [&](type_definition const& type)
+            {
+                write_object_marshal_from_native(w, semantics, type, name);
+            },
+            [&](generic_type_index const& /*var*/)
+            {
+                w.write("%", name);
+            },
+            [&](generic_type_instance const& type)
+            {
+                auto guard{ w.push_generic_args(type) };
+                write_object_marshal_from_native(w, semantics, type.generic_type, name);
+            },
+            [&](fundamental_type type)
+            {
+                write_fundamental_marshal_from_native(w, type, name);
+            },
+            [&](auto)
+            {
+                w.write("%", name);
+            });
     }
 
     void write_object_marshal_to_native(writer& w, TypeDef const& type, std::string_view name)
