@@ -162,9 +162,6 @@ namespace WinRT
         internal static extern bool FreeLibrary(IntPtr moduleHandle);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        internal static extern bool GetModuleHandleExW(UInt32 dwFlags, IntPtr moduleAddress, out IntPtr phModule);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern IntPtr GetProcAddress(IntPtr moduleHandle, [MarshalAs(UnmanagedType.LPStr)] string functionName);
 
         internal static T GetProcAddress<T>(IntPtr moduleHandle)
