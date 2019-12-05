@@ -6,7 +6,7 @@ namespace winrt::TestComp::implementation
 {
     struct Class : ClassT<Class>
     {
-        Class()
+        Class() : Class(0, L"")
         {
         }
 

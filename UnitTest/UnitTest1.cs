@@ -319,11 +319,15 @@ namespace UnitTest
             Assert.True(val.z);
         }
 
-        // [Fact]
-        // public void TestNonBlittableRefStruct()
-        // {
-        //     // TODO: Need to either support interface inheritance or project IReference
-        // }
+        /* TODO: Can't even test with a work-around until generics are fixed
+        [Fact]
+        public void TestNonBlittableRefStruct()
+        {
+            // Property getter/setter
+            TestObject.IntProperty = 42; // TODO: Need to either support interface inheritance or project IReference for setter
+            Assert.Equal(42, TestObject.NonBlittableRefStructProperty.ref32.Value);
+        }
+        */
 
         [Fact]
         public void TestComposedNonBlittableStruct()
@@ -334,6 +338,8 @@ namespace UnitTest
                 blittable = new BlittableStruct(){ i32 = 42 },
                 strings = new NonBlittableStringStruct(){ str = "I like tacos" },
                 bools = new NonBlittableBoolStruct(){ w = true, x = false, y = true, z = false }
+                // TODO: Even constructing an IReference will fail until generics are fixed
+                // refs = TestObject.NonBlittableRefStructProperty // TODO: Need to either support interface inheritance or project IReference for setter
             };
             TestObject.ComposedNonBlittableStructProperty = val;
             Assert.Equal(42, TestObject.ComposedNonBlittableStructProperty.blittable.i32);

@@ -13,14 +13,15 @@ namespace winrt::TestComp::implementation
         static int _readWrite{};
     }
 
-    Class::Class(int32_t intProperty)
+    Class::Class(int32_t intProperty) :
+        Class(intProperty, L"")
     {
-        _int = intProperty;
     }
-    Class::Class(int32_t intProperty, hstring const& stringProperty)
+    Class::Class(int32_t intProperty, hstring const& stringProperty) :
+        _int(intProperty),
+        _string(stringProperty)
     {
-        _int = intProperty;
-        _string = stringProperty;
+        _nonBlittableStruct.refs.ref32 = _int;
     }
     int32_t Class::StaticIntProperty()
     {

@@ -1012,7 +1012,7 @@ public IntPtr NativePtr { get => _default.NativePtr; }
 
 private % _default;
 %
-public static % FromNative(IntPtr ^@this) => new %(new %(WinRT.ObjectReference<%.Vftbl>.FromNative(^@this)));
+public static % FromNative(IntPtr ^@this) => (^@this != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromNative(^@this))) : null;
 
 internal %(% ifc)
 {
@@ -1933,8 +1933,8 @@ WinRT.IInspectable.Vftbl IInspectableVftbl;
 %private readonly WinRT.ObjectReference<Vftbl> _obj;
 public IntPtr NativePtr { get => _obj.ThisPtr; }
 public static WinRT.ObjectReference<Vftbl> FromNative(IntPtr ^@this) => WinRT.ObjectReference<Vftbl>.FromNative(^@this);
-public static implicit operator %(WinRT.IObjectReference obj) => new %(obj);
-public static implicit operator %(WinRT.ObjectReference<Vftbl> obj) => new %(obj);
+public static implicit operator %(WinRT.IObjectReference obj) => (obj != null) ? new %(obj) : null;
+public static implicit operator %(WinRT.ObjectReference<Vftbl> obj) => (obj != null) ? new %(obj) : null;
 public WinRT.ObjectReference<I> AsInterface<I>() => _obj.As<I>();
 public A As<A>() => _obj.AsType<A>();
 public @(WinRT.IObjectReference obj) : this(obj.As<Vftbl>()) {}
