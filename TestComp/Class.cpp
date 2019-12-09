@@ -181,6 +181,32 @@ namespace winrt::TestComp::implementation
     {
         _int = provideInt();
     }
+    bool Class::BoolProperty()
+    {
+        return _bool;
+    }
+    void Class::BoolProperty(bool value)
+    {
+        _bool = value;
+        _boolChanged(*this, _bool);
+    }
+    winrt::event_token Class::BoolPropertyChanged(Windows::Foundation::EventHandler<bool> const& handler)
+    {
+        return _boolChanged.add(handler);
+    }
+    void Class::BoolPropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _boolChanged.remove(token);
+    }
+    void Class::RaiseBoolChanged()
+    {
+        _boolChanged(*this, _bool);
+    }
+    void Class::CallForBool(TestComp::ProvideBool const& provideBool)
+    {
+        _bool = provideBool();
+        _boolChanged(*this, _bool);
+    }
     hstring Class::StringProperty()
     {
         return _string;

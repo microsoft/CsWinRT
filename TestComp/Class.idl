@@ -51,6 +51,7 @@ namespace TestComp
     };
 
     delegate Int32 ProvideInt();
+    delegate Boolean ProvideBool();
     delegate String ProvideString();
     delegate Object ProvideObject();
 
@@ -133,6 +134,11 @@ namespace TestComp
         event Windows.Foundation.EventHandler<Int32> IntPropertyChanged;
         void RaiseIntChanged();
         void CallForInt(ProvideInt provideInt);
+
+        Boolean BoolProperty;
+        event Windows.Foundation.EventHandler<Boolean> BoolPropertyChanged;
+        void RaiseBoolChanged();
+        void CallForBool(ProvideBool provideBool);
 
         String StringProperty;
         event Windows.Foundation.TypedEventHandler<Class, String> StringPropertyChanged;

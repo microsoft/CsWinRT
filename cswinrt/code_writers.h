@@ -507,11 +507,13 @@ namespace cswinrt
         call(semantics,
             [&](object_type)
             {
-                w.write("(IntPtr value) => (obj.ThisPtr == value) ? (IInspectable)% : IInspectable.FromNative(value)", OwnerMemberName);
+                w.write("(IntPtr value) => (obj.ThisPtr == value && % is IInspectable) ? (IInspectable)% : IInspectable.FromNative(value)", OwnerMemberName, OwnerMemberName);
             },
             [&](type_definition const& type)
             {
-                w.write(R"((IntPtr value) => (obj.ThisPtr == value) ? (%)% : %)",
+                w.write(R"((IntPtr value) => (obj.ThisPtr == value && % is %) ? (%)% : %)",
+                    OwnerMemberName,
+                    bind<write_projection_type>(semantics),
                     bind<write_projection_type>(semantics),
                     OwnerMemberName,
                     bind<write_object_marshal_from_native>(semantics, type, "value"sv, true));
@@ -523,7 +525,9 @@ namespace cswinrt
             [&](generic_type_instance const& type)
             {
                 auto guard{ w.push_generic_args(type) };
-                w.write(R"((IntPtr value) => (obj.ThisPtr == value) ? (%)% : %)",
+                w.write(R"((IntPtr value) => (obj.ThisPtr == value && % is %) ? (%)% : %)",
+                    OwnerMemberName,
+                    bind<write_projection_type>(semantics),
                     bind<write_projection_type>(semantics),
                     OwnerMemberName,
                     bind<write_object_marshal_from_native>(semantics, type.generic_type, "value"sv, true));

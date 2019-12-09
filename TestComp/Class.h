@@ -20,6 +20,8 @@ namespace winrt::TestComp::implementation
 
         int32_t _int = 0;
         winrt::event<Windows::Foundation::EventHandler<int32_t>> _intChanged;
+        bool _bool = false;
+        winrt::event<Windows::Foundation::EventHandler<bool>> _boolChanged;
         winrt::hstring _string;
         winrt::hstring _string2;
         winrt::event<Windows::Foundation::TypedEventHandler<TestComp::Class, hstring>> _stringChanged;
@@ -70,6 +72,12 @@ namespace winrt::TestComp::implementation
         void IntPropertyChanged(winrt::event_token const& token) noexcept;
         void RaiseIntChanged();
         void CallForInt(TestComp::ProvideInt const& provideInt);
+        bool BoolProperty();
+        void BoolProperty(bool value);
+        winrt::event_token BoolPropertyChanged(Windows::Foundation::EventHandler<bool> const& handler);
+        void BoolPropertyChanged(winrt::event_token const& token) noexcept;
+        void RaiseBoolChanged();
+        void CallForBool(TestComp::ProvideBool const& provideBool);
         hstring StringProperty();
         void StringProperty(hstring const& value);
         winrt::event_token StringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComp::Class, hstring> const& handler);
