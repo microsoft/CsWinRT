@@ -191,7 +191,7 @@ namespace UnitTest
             var test_int = 21;
             TestObject.IntPropertyChanged += (IInspectable sender, Int32 value) =>
             {
-                var c = Class.FromNative(sender.NativePtr);
+                var c = Class.FromAbi(sender.ThisPtr);
                 Assert.Equal(value, test_int);
             };
             TestObject.IntProperty = test_int;

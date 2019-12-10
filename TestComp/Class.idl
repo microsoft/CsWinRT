@@ -1,3 +1,5 @@
+// Modern IDL 3.0: https://docs.microsoft.com/en-us/uwp/midl-3/intro
+
 namespace TestComp
 {
     // Event handlers
@@ -58,7 +60,7 @@ namespace TestComp
         //, IArtist
         , IProperties1
         , IProperties2
-        //, Windows.Foundation.Collections.IVector<String>,
+        //, Windows.Foundation.Collections.IVector<String>
         //, Windows.Foundation.Collections.IMap<Int32, String>
     {
         // factory
@@ -111,5 +113,6 @@ namespace TestComp
         event Windows.Foundation.EventHandler<Object> ObjectPropertyChanged;
 
         Windows.Foundation.IAsyncOperation<Int32> GetIntAsync();
+        Windows.Foundation.IAsyncOperationWithProgress<String, Int32> GetStringAsync();
     }
 }

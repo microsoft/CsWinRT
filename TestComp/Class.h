@@ -85,6 +85,7 @@ namespace winrt::TestComp::implementation
         winrt::event_token ObjectPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::IInspectable> const& handler);
         void ObjectPropertyChanged(winrt::event_token const& token) noexcept;
         Windows::Foundation::IAsyncOperation<int32_t> GetIntAsync();
+        Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> GetStringAsync();
 
         // IStringable
         hstring ToString();

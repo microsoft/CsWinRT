@@ -11,6 +11,8 @@ using System.Linq.Expressions;
 
 namespace WinRT
 {
+    using WinRT.Interop;
+
     public enum TrustLevel
     {
         BaseTrust = 0,
@@ -89,8 +91,8 @@ namespace WinRT
         public delegate int _put_PropertyAsQuaternion([In] IntPtr thisPtr, [In] Windows.Foundation.Numerics.Quaternion value);
         public unsafe delegate int _get_PropertyAsMatrix4x4([In] IntPtr thisPtr, [Out] out Windows.Foundation.Numerics.Matrix4x4 value);
         public delegate int _put_PropertyAsMatrix4x4([In] IntPtr thisPtr, [In] Windows.Foundation.Numerics.Matrix4x4 value);
-        public unsafe delegate int _add_EventHandler([In] IntPtr thisPtr, [In] IntPtr handler, [Out] out WinRT.Interop.EventRegistrationToken token);
-        public delegate int _remove_EventHandler([In] IntPtr thisPtr, [In] WinRT.Interop.EventRegistrationToken token);
+        public unsafe delegate int _add_EventHandler([In] IntPtr thisPtr, [In] IntPtr handler, [Out] out EventRegistrationToken token);
+        public delegate int _remove_EventHandler([In] IntPtr thisPtr, [In] EventRegistrationToken token);
 
         // IDelegate
         public struct IDelegateVftbl
@@ -118,15 +120,15 @@ namespace WinRT
             public delegate int _GetRuntimeClassName([In] IntPtr pThis, [Out] IntPtr className);
             public delegate int _GetTrustLevel([In] IntPtr pThis, [Out] TrustLevel trustLevel);
 
-            public Interop.IUnknownVftbl IUnknownVftbl;
+            public IUnknownVftbl IUnknownVftbl;
             public _GetIids GetIids;
             public _GetRuntimeClassName GetRuntimeClassName;
             public _GetTrustLevel GetTrustLevel;
         }
 
         private readonly WinRT.ObjectReference<Vftbl> _obj;
-        public IntPtr NativePtr { get => _obj.ThisPtr; }
-        public static WinRT.ObjectReference<Vftbl> FromNative(IntPtr @this) => WinRT.ObjectReference<Vftbl>.FromNative(@this);
+        public IntPtr ThisPtr => _obj.ThisPtr;
+        public static WinRT.ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => WinRT.ObjectReference<Vftbl>.FromAbi(thisPtr);
         public static implicit operator IInspectable(WinRT.IObjectReference obj) => obj.As<Vftbl>();
         public static implicit operator IInspectable(WinRT.ObjectReference<Vftbl> obj) => new IInspectable(obj);
         public WinRT.ObjectReference<I> As<I>() => _obj.As<I>();
@@ -139,33 +141,17 @@ namespace WinRT
 
     public static class DelegateExtensions
     {
+        public static void DynamicInvokeAbi(this System.Delegate del, object[] invoke_params)
+        {
+            unsafe { Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params)); }
+        }
+
         public static T AsDelegate<T>(this MulticastDelegate del)
         {
             return Marshal.GetDelegateForFunctionPointer<T>(
                 Marshal.GetFunctionPointerForDelegate(del));
         }
     }
-
-    // TEMPORARY HACK: Until .NET 5 supports marshaling constructed generic delegates, as Mono does
-    static class GenericMarshal
-    {
-        public delegate MulticastDelegate _GetDelegateForFunctionPointerInternal(IntPtr functionPointer, Type delegateType);
-
-        static GenericMarshal()
-        {
-            var gd4fpi = typeof(Marshal).GetMethod("GetDelegateForFunctionPointerInternal",
-                BindingFlags.Static | BindingFlags.NonPublic,
-                null, new Type[] { typeof(IntPtr), typeof(Type) }, null);
-
-            GetDelegateForFunctionPointerInternal = (IntPtr functionPointer, Type delegateType) =>
-            {
-                return (MulticastDelegate)(gd4fpi.Invoke(null, new object[] { functionPointer, delegateType }));
-            };
-        }
-
-        public static _GetDelegateForFunctionPointerInternal GetDelegateForFunctionPointerInternal { get; private set; }
-    }
-
     internal class Platform
     {
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
@@ -364,15 +350,17 @@ namespace WinRT
             return value.ToString();
         }
 
-        public override string ToString()
+        public static string ToString(IntPtr handle)
         {
             unsafe
             {
                 uint length;
-                char* buffer = Platform.WindowsGetStringRawBuffer(Handle, &length);
+                char* buffer = Platform.WindowsGetStringRawBuffer(handle, &length);
                 return new string(buffer, 0, (int)length);
             }
         }
+
+        public override string ToString() => ToString(Handle);
 
         public object Clone()
         {
@@ -402,7 +390,6 @@ namespace WinRT
 
         public HStringReference(String value)
         {
-            // todo: does value need to be pinned?
             _gchandle = GCHandle.Alloc(value);
             unsafe
             {
@@ -431,12 +418,12 @@ namespace WinRT
         public readonly IntPtr ThisPtr;
         public readonly object Module;
         readonly GCHandle _moduleHandle;
-        protected virtual Interop.IUnknownVftbl VftblIUnknown { get; }
+        protected virtual IUnknownVftbl VftblIUnknown { get; }
 
-        protected IObjectReference(object module, IntPtr thisPtr)
+        protected IObjectReference(IntPtr thisPtr, object module)
         {
-            Module = module;
             ThisPtr = thisPtr;
+            Module = module;
             if (Module != null)
             {
                 _moduleHandle = GCHandle.Alloc(module);
@@ -472,26 +459,55 @@ namespace WinRT
 
     public class ObjectReference<T> : IObjectReference
     {
-        protected override Interop.IUnknownVftbl VftblIUnknown => _vftblIUnknown;
-        readonly Interop.IUnknownVftbl _vftblIUnknown;
+        protected override IUnknownVftbl VftblIUnknown => _vftblIUnknown;
+        readonly IUnknownVftbl _vftblIUnknown;
         public readonly T Vftbl;
         readonly bool _owned;
 
+        unsafe ObjectReference(IntPtr thisPtr, object module, bool owned, IUnknownVftbl vftblIUnknown, T vftblT) :
+            base(thisPtr, module)
+        {
+            _owned = owned;
+            _vftblIUnknown = vftblIUnknown;
+            Vftbl = vftblT;
+        }
+
         public static ObjectReference<T> Attach(object module, ref IntPtr thisPtr)
         {
-            var obj = new ObjectReference<T>(module, thisPtr, true);
+            var (vftblIUnknown, vftblT) = GetVtables(thisPtr);
+            var obj = new ObjectReference<T>(thisPtr, module, true, vftblIUnknown, vftblT);
             thisPtr = IntPtr.Zero;
             return obj;
         }
 
-        public static ObjectReference<T> FromNative(object module, IntPtr thisPtr)
+        public static ObjectReference<T> FromAbi(IntPtr thisPtr, object module, IUnknownVftbl vftblIUnknown, T vftblT)
         {
-            var obj = new ObjectReference<T>(module, thisPtr, true);
+            var obj = new ObjectReference<T>(thisPtr, module, true, vftblIUnknown, vftblT);
             obj._vftblIUnknown.AddRef(obj.ThisPtr);
             return obj;
         }
 
-        public static ObjectReference<T> FromNative(IntPtr thisPtr)
+        public static ObjectReference<T> FromAbi(IntPtr thisPtr, IUnknownVftbl vftblIUnknown, T vftblT)
+        {
+            return FromAbi(thisPtr, GetObjectModule(thisPtr), vftblIUnknown, vftblT);
+        }
+
+        public static ObjectReference<T> FromAbi(IntPtr thisPtr)
+        {
+            var (vftblIUnknown, vftblT) = GetVtables(thisPtr);
+            return FromAbi(thisPtr, GetObjectModule(thisPtr), vftblIUnknown, vftblT);
+        }
+
+        // C# doesn't allow us to express that T contains IUnknownVftbl, so we'll use a tuple
+        private static (IUnknownVftbl vftblIUnknown, T vftblT) GetVtables(IntPtr thisPtr)
+        {
+            var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
+            var vftblIUnknown = Marshal.PtrToStructure<IUnknownVftbl>(vftblPtr.Vftbl);
+            var vftblT = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
+            return (vftblIUnknown, vftblT);
+        }
+
+        private static object GetObjectModule(IntPtr thisPtr)
         {
             // Retrieve module handle from QueryInterface function address
             IntPtr qi;
@@ -501,42 +517,7 @@ namespace WinRT
             {
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
             }
-            return FromNative(new DllModuleHandle(moduleHandle), thisPtr);
-        }
-
-        public static ObjectReference<T> FromNativeNoRef(IntPtr thisPtr)
-        {
-            return new ObjectReference<T>(null, thisPtr, false);
-        }
-
-        unsafe ObjectReference(object module, IntPtr thisPtr, bool owned) :
-            base(module, thisPtr)
-        {
-            _owned = owned;
-            var vftblPtr = Marshal.PtrToStructure<VftblPtr>(ThisPtr);
-            _vftblIUnknown = Marshal.PtrToStructure<Interop.IUnknownVftbl>(vftblPtr.Vftbl);
-            // Following is a workaround for a bug in PtrToStructure on .NET Core (but not Mono):
-            // https://github.com/dotnet/coreclr/issues/27754
-            if (typeof(T).IsGenericType)
-            {
-                var structType = typeof(T);
-                object structVftblBoxed = Activator.CreateInstance<T>();
-                var structFields = structType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-                var IInspectableVftbl = Marshal.PtrToStructure<WinRT.IInspectable.Vftbl>(vftblPtr.Vftbl);
-                structFields[0].SetValue(structVftblBoxed, IInspectableVftbl);
-                var raw = (IntPtr*)vftblPtr.Vftbl;
-                for (int i = 1; i < structFields.Length; i++)
-                {
-                    var sf = structFields[i];
-                    var del = GenericMarshal.GetDelegateForFunctionPointerInternal(raw[5 + i], sf.FieldType);
-                    sf.SetValue(structVftblBoxed, del);
-                }
-                Vftbl = (T)structVftblBoxed;
-            }
-            else
-            {
-                Vftbl = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
-            }
+            return new DllModuleHandle(moduleHandle);
         }
 
         ~ObjectReference()
@@ -618,11 +599,11 @@ namespace WinRT
             return ObjectReference<I>.Attach(this, ref instancePtr);
         }
 
-        public ObjectReference<Interop.IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
+        public ObjectReference<IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
         {
             IntPtr instancePtr;
             unsafe { Marshal.ThrowExceptionForHR(_GetActivationFactory(runtimeClassId.Handle, out instancePtr)); }
-            return ObjectReference<Interop.IActivationFactoryVftbl>.Attach(this, ref instancePtr);
+            return ObjectReference<IActivationFactoryVftbl>.Attach(this, ref instancePtr);
         }
 
         ~DllModule()
@@ -672,13 +653,13 @@ namespace WinRT
             _mtaCookie = mtaCookie;
         }
 
-        public static ObjectReference<Interop.IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
+        public static ObjectReference<IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
         {
             var module = Instance;
-            Guid iid = typeof(Interop.IActivationFactoryVftbl).GUID;
+            Guid iid = typeof(IActivationFactoryVftbl).GUID;
             IntPtr instancePtr;
             unsafe { Marshal.ThrowExceptionForHR(Platform.RoGetActivationFactory(runtimeClassId.Handle, ref iid, &instancePtr)); }
-            return ObjectReference<Interop.IActivationFactoryVftbl>.Attach(module, ref instancePtr);
+            return ObjectReference<IActivationFactoryVftbl>.Attach(module, ref instancePtr);
         }
 
         ~WinrtModule()
@@ -689,7 +670,7 @@ namespace WinRT
 
     internal class BaseActivationFactory
     {
-        private ObjectReference<Interop.IActivationFactoryVftbl> _IActivationFactory;
+        private ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
 
         public BaseActivationFactory(string typeNamespace, string typeFullName)
         {
@@ -756,9 +737,9 @@ namespace WinRT
         }
 
         // IUnknown
-        static unsafe readonly Interop.IUnknownVftbl._QueryInterface _QueryInterface = new Interop.IUnknownVftbl._QueryInterface(QueryInterface);
-        static readonly Interop.IUnknownVftbl._AddRef _AddRef = new Interop.IUnknownVftbl._AddRef(AddRef);
-        static readonly Interop.IUnknownVftbl._Release _Release = new Interop.IUnknownVftbl._Release(Release);
+        static unsafe readonly IUnknownVftbl._QueryInterface _QueryInterface = new IUnknownVftbl._QueryInterface(QueryInterface);
+        static readonly IUnknownVftbl._AddRef _AddRef = new IUnknownVftbl._AddRef(AddRef);
+        static readonly IUnknownVftbl._Release _Release = new IUnknownVftbl._Release(Release);
 
         static unsafe int QueryInterface([In] IntPtr thisPtr, [In] ref Guid iid, [Out] out IntPtr obj)
         {
@@ -820,7 +801,7 @@ namespace WinRT
             }
         }
 
-        static Interop.IDelegateVftbl _vftblTemplate;
+        static IDelegateVftbl _vftblTemplate;
         static Delegate()
         {
             // lay out the vftable
@@ -868,8 +849,8 @@ namespace WinRT
             }
         }
 
-        public Delegate(MulticastDelegate nativeInvoke, MulticastDelegate managedDelegate) :
-            this(Marshal.GetFunctionPointerForDelegate(nativeInvoke), managedDelegate)
+        public Delegate(MulticastDelegate abiInvoke, MulticastDelegate managedDelegate) :
+            this(Marshal.GetFunctionPointerForDelegate(abiInvoke), managedDelegate)
         { }
 
         public Delegate(IntPtr invoke_method, object target_invoker)
@@ -924,41 +905,18 @@ namespace WinRT
         }
     }
 
-    //public static T UnmarshalValue<T>(MarshaledValue<T> value) where T : unmanaged
-    //{
-    //    return (T)value.InteropValue;
-    //}
-
-    public static class MarshaledValueExtensions
-    {
-        //public static T Unmarshal<T>(this MarshaledValue<T> value)
-        //{
-        //    throw new ArgumentException("Unmarshal extension method not specialized for: " + typeof(T).Name);
-        //}
-
-        public static T UnmarshalFromNative<T>(this MarshaledValue<T> value) //where T : unmanaged
-        {
-            return (T)(object)value.InteropValue;
-        }
-
-        public static WinRT.HString UnmarshalFromNative(this MarshaledValue<WinRT.HString> value)
-        {
-            return new WinRT.HString(value.InteropValue);
-        }
-    }
-
     internal class EventSource
     {
         delegate void Managed_Invoke();
-        delegate int Native_Invoke([In] IntPtr thisPtr);
-        static Native_Invoke native_invoke = (IntPtr thisPtr) =>
+        delegate int Abi_Invoke0([In] IntPtr thisPtr);
+        static Abi_Invoke0 Abi_Invoke = (IntPtr thisPtr) =>
             Delegate.MarshalInvoke(thisPtr, (Managed_Invoke managed_invoke) => managed_invoke());
 
         readonly IObjectReference _obj;
-        readonly Interop._add_EventHandler _addHandler;
-        readonly Interop._remove_EventHandler _removeHandler;
+        readonly _add_EventHandler _addHandler;
+        readonly _remove_EventHandler _removeHandler;
 
-        private Interop.EventRegistrationToken _token;
+        private EventRegistrationToken _token;
         private event EventHandler _event;
         public event EventHandler Event
         {
@@ -967,9 +925,9 @@ namespace WinRT
                 lock (this)
                 {
                     if (_event == null)
-                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(native_invoke), new Managed_Invoke(Invoke)))
+                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(Abi_Invoke), new Managed_Invoke(Invoke)))
                         {
-                            Interop.EventRegistrationToken token;
+                            EventRegistrationToken token;
                             unsafe { Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, reference.DelegatePtr, out token)); }
                             _token = token;
                         }
@@ -986,7 +944,7 @@ namespace WinRT
             }
         }
 
-        internal EventSource(IObjectReference obj, Interop._add_EventHandler addHandler, Interop._remove_EventHandler removeHandler)
+        internal EventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler)
         {
             _obj = obj;
             _addHandler = addHandler;
@@ -1010,21 +968,21 @@ namespace WinRT
         }
     }
 
-    delegate int Native_Invoke1([In] IntPtr thisPtr, [In] IntPtr arg1);
+    delegate int Abi_Invoke1([In] IntPtr thisPtr, [In] IntPtr arg1);
     internal class EventSource<A1>
     {
         delegate void Managed_Invoke(IntPtr arg1Ptr);
-        static Native_Invoke1 native_invoke = (IntPtr thisPtr, IntPtr arg1Ptr) =>
+        static Abi_Invoke1 Abi_Invoke = (IntPtr thisPtr, IntPtr arg1Ptr) =>
             Delegate.MarshalInvoke(thisPtr, (Managed_Invoke managed_invoke) => managed_invoke(arg1Ptr));
 
         internal delegate A1 UnmarshalArg1(IntPtr arg1Ptr);
 
         readonly IObjectReference _obj;
-        readonly Interop._add_EventHandler _addHandler;
-        readonly Interop._remove_EventHandler _removeHandler;
+        readonly _add_EventHandler _addHandler;
+        readonly _remove_EventHandler _removeHandler;
         readonly UnmarshalArg1 _unmarshalArg1;
 
-        private Interop.EventRegistrationToken _token;
+        private EventRegistrationToken _token;
         private event EventHandler<A1> _event;
         public event EventHandler<A1> Event
         {
@@ -1033,9 +991,9 @@ namespace WinRT
                 lock (this)
                 {
                     if (_event == null)
-                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(native_invoke), new Managed_Invoke(Invoke)))
+                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(Abi_Invoke), new Managed_Invoke(Invoke)))
                         {
-                            Interop.EventRegistrationToken token;
+                            EventRegistrationToken token;
                             unsafe { Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, reference.DelegatePtr, out token)); }
                             _token = token;
                         }
@@ -1052,7 +1010,7 @@ namespace WinRT
             }
         }
 
-        internal EventSource(IObjectReference obj, Interop._add_EventHandler addHandler, Interop._remove_EventHandler removeHandler, UnmarshalArg1 unmarshalArg1)
+        internal EventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler, UnmarshalArg1 unmarshalArg1)
         {
             _obj = obj;
             _addHandler = addHandler;
@@ -1077,23 +1035,23 @@ namespace WinRT
         }
     }
 
-    delegate int Native_Invoke2([In] IntPtr thisPtr, [In] IntPtr arg1, [In] IntPtr arg2);
+    delegate int Abi_Invoke2([In] IntPtr thisPtr, [In] IntPtr arg1, [In] IntPtr arg2);
     internal class EventSource<A1, A2>
     {
         delegate void Managed_Invoke(IntPtr arg1Ptr, IntPtr arg2Ptr);
-        static Native_Invoke2 native_invoke = (IntPtr thisPtr, IntPtr arg1Ptr, IntPtr arg2Ptr) =>
+        static Abi_Invoke2 Abi_Invoke = (IntPtr thisPtr, IntPtr arg1Ptr, IntPtr arg2Ptr) =>
             Delegate.MarshalInvoke(thisPtr, (Managed_Invoke managed_invoke) => managed_invoke(arg1Ptr, arg2Ptr));
 
         internal delegate A1 UnmarshalArg1(IntPtr arg1Ptr);
         internal delegate A2 UnmarshalArg2(IntPtr arg2Ptr);
 
         readonly IObjectReference _obj;
-        readonly Interop._add_EventHandler _addHandler;
-        readonly Interop._remove_EventHandler _removeHandler;
+        readonly _add_EventHandler _addHandler;
+        readonly _remove_EventHandler _removeHandler;
         readonly UnmarshalArg1 _unmarshalArg1;
         readonly UnmarshalArg2 _unmarshalArg2;
 
-        private Interop.EventRegistrationToken _token;
+        private EventRegistrationToken _token;
         private event EventHandler<A1, A2> _event;
         public event EventHandler<A1, A2> Event
         {
@@ -1102,9 +1060,9 @@ namespace WinRT
                 lock (this)
                 {
                     if (_event == null)
-                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(native_invoke), new Managed_Invoke(Invoke)))
+                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(Abi_Invoke), new Managed_Invoke(Invoke)))
                         {
-                            Interop.EventRegistrationToken token;
+                            EventRegistrationToken token;
                             unsafe { Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, reference.DelegatePtr, out token)); }
                             _token = token;
                         }
@@ -1121,7 +1079,7 @@ namespace WinRT
             }
         }
 
-        internal EventSource(IObjectReference obj, Interop._add_EventHandler addHandler, Interop._remove_EventHandler removeHandler, UnmarshalArg1 unmarshalArg1, UnmarshalArg2 unmarshalArg2)
+        internal EventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler, UnmarshalArg1 unmarshalArg1, UnmarshalArg2 unmarshalArg2)
         {
             _obj = obj;
             _addHandler = addHandler;
@@ -1138,7 +1096,6 @@ namespace WinRT
         void Invoke(IntPtr arg1Ptr, IntPtr arg2Ptr)
         {
             _event?.Invoke(_unmarshalArg1(arg1Ptr), _unmarshalArg2(arg2Ptr));
-            //_event?.Invoke(Sender, new MarshaledValue<A>(argsPtr).Unmarshal());
         }
 
         void _Unsubscribe()
@@ -1148,11 +1105,11 @@ namespace WinRT
         }
     }
 
-    delegate int Native_Invoke3([In] IntPtr thisPtr, [In] IntPtr arg1, [In] IntPtr arg2, [In] IntPtr arg3);
+    delegate int Abi_Invoke3([In] IntPtr thisPtr, [In] IntPtr arg1, [In] IntPtr arg2, [In] IntPtr arg3);
     internal class EventSource<A1, A2, A3>
     {
         delegate void Managed_Invoke(IntPtr arg1Ptr, IntPtr arg2Ptr, IntPtr arg3Ptr);
-        static Native_Invoke3 native_invoke = (IntPtr thisPtr, IntPtr arg1Ptr, IntPtr arg2Ptr, IntPtr arg3Ptr) =>
+        static Abi_Invoke3 Abi_Invoke = (IntPtr thisPtr, IntPtr arg1Ptr, IntPtr arg2Ptr, IntPtr arg3Ptr) =>
             Delegate.MarshalInvoke(thisPtr, (Managed_Invoke managed_invoke) => managed_invoke(arg1Ptr, arg2Ptr, arg3Ptr));
 
         internal delegate A1 UnmarshalArg1(IntPtr arg1Ptr);
@@ -1160,13 +1117,13 @@ namespace WinRT
         internal delegate A3 UnmarshalArg3(IntPtr arg3Ptr);
 
         readonly IObjectReference _obj;
-        readonly Interop._add_EventHandler _addHandler;
-        readonly Interop._remove_EventHandler _removeHandler;
+        readonly _add_EventHandler _addHandler;
+        readonly _remove_EventHandler _removeHandler;
         readonly UnmarshalArg1 _unmarshalArg1;
         readonly UnmarshalArg2 _unmarshalArg2;
         readonly UnmarshalArg3 _unmarshalArg3;
 
-        private Interop.EventRegistrationToken _token;
+        private EventRegistrationToken _token;
         private event EventHandler<A1, A2, A3> _event;
         public event EventHandler<A1, A2, A3> Event
         {
@@ -1175,9 +1132,9 @@ namespace WinRT
                 lock (this)
                 {
                     if (_event == null)
-                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(native_invoke), new Managed_Invoke(Invoke)))
+                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(Abi_Invoke), new Managed_Invoke(Invoke)))
                         {
-                            Interop.EventRegistrationToken token;
+                            EventRegistrationToken token;
                             unsafe { Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, reference.DelegatePtr, out token)); }
                             _token = token;
                         }
@@ -1194,7 +1151,7 @@ namespace WinRT
             }
         }
 
-        internal EventSource(IObjectReference obj, Interop._add_EventHandler addHandler, Interop._remove_EventHandler removeHandler, UnmarshalArg1 unmarshalArg1, UnmarshalArg2 unmarshalArg2, UnmarshalArg3 unmarshalArg3)
+        internal EventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler, UnmarshalArg1 unmarshalArg1, UnmarshalArg2 unmarshalArg2, UnmarshalArg3 unmarshalArg3)
         {
             _obj = obj;
             _addHandler = addHandler;
@@ -1229,39 +1186,105 @@ namespace WinRT
         }
     }
 
+    struct MarshalString
+    {
+        public static string FromAbi(IntPtr value) => HString.ToString(value);
+        public static HStringReference ToAbi(string value) => new HStringReference(value);
+    }
+
+    struct MarshalArray<T>
+    {
+        public static T FromAbi(IntPtr value)
+        {
+            // todo: convert abi to array 
+            var elem_type = typeof(T).GetElementType();
+            Array a = Array.CreateInstance(elem_type, (int)value);
+            return (T)(object)a;
+        }
+        public static IntPtr ToAbi(T value)
+        {
+            // todo: convert array to abi
+            Array a = (Array)(object)value;
+            return new IntPtr(a.Length);
+        }
+    }
+
     public class Marshaler<T>
     {
-        public Marshaler()
+        static Marshaler()
         {
             Type type = typeof(T);
-            if (!type.IsClass)
+
+            if (type.IsValueType)
             {
-                throw new InvalidOperationException("marshaling not needed for value types (todo: structs)");
+                // If type is blittable, just pass it through
+                AbiType = Type.GetType(type.Namespace + ".ABI." + type.Name);
+                if (AbiType == null)
+                {
+                    AbiType = type;
+                    FromAbi = (object value) => (T)value;
+                    ToAbi = (T value) => value;
+                }
+                else // bind to ABI counterpart's marshaling methods
+                {
+                    FromAbi = BindFromAbi(AbiType);
+                    ToAbi = BindToAbi(AbiType);
+                }
             }
-            Type factory = type.IsDelegate() ? Type.GetType(type.FullName + "Extensions") : type;
-            FromNative = MakeFromNativeCall(factory);
-            ToNative = MakeToNativeCall(factory);
+            else if (type.IsArray)
+            {
+                // If element type is blittable, pass pointer/length directly
+                var elem_type = type.GetElementType();
+                AbiType = Type.GetType(type.Namespace + ".ABI." + type.Name);
+                if (AbiType == null)
+                {
+                    AbiType = typeof(IntPtr);
+                    FromAbi = (object value) => (T)(object)MarshalArray<T>.FromAbi((IntPtr)value);
+                    ToAbi = (T value) => (object)MarshalArray<T>.ToAbi(value);
+                }
+                else // allocate array and convert elements
+                {
+                    AbiType = typeof(IntPtr);
+                    FromAbi = (object value) => (T)(object)MarshalArray<T>.FromAbi((IntPtr)value);
+                    ToAbi = (T value) => (object)MarshalArray<T>.ToAbi(value);
+                }
+            }
+            else if (type == typeof(String))
+            {
+                AbiType = typeof(IntPtr);
+                FromAbi = (object value) => (T)(object)MarshalString.FromAbi((IntPtr)value);
+                ToAbi = (T value) => MarshalString.ToAbi((string)(object)value);
+            }
+            else // IInspectables (rcs, interfaces, delegates)
+            {
+                AbiType = typeof(IntPtr);
+                FromAbi = (object value) => (T)value;
+                ToAbi = (T value) => (object)value;
+            }
+            RefAbiType = AbiType.MakeByRefType();
         }
-        public readonly Func<IntPtr, T> FromNative;
-        public readonly Func<T, IntPtr> ToNative;
 
-        private static Func<IntPtr, T> MakeFromNativeCall(Type type)
+        private static Func<object, T> BindFromAbi(Type AbiType)
         {
-            var method = type.GetMethod("FromNative");
-            var methodParams = new[] { Expression.Parameter(typeof(IntPtr), "@this") };
-            var methodCall = Expression.Lambda<Func<IntPtr, T>>(
-                Expression.Call(method, methodParams), methodParams).Compile();
-            return methodCall;
+            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
+            return Expression.Lambda<Func<object, T>>(
+                Expression.Call(AbiType.GetMethod("FromAbi"),
+                    new[] { Expression.Convert(parms[0], AbiType) }),
+                parms).Compile();
         }
 
-        private static Func<T, IntPtr> MakeToNativeCall(Type type)
+        private static Func<T, object> BindToAbi(Type AbiType)
         {
-            var method = type.GetMethod("ToNative");
-            var methodParams = new[] { Expression.Parameter(typeof(T), "@this") };
-            var methodCall = Expression.Lambda<Func<T, IntPtr>>(
-                Expression.Call(method, methodParams), methodParams).Compile();
-            return methodCall;
+            var parms = new[] { Expression.Parameter(typeof(T), "arg") };
+            return Expression.Lambda<Func<T, object>>(
+                Expression.Convert(Expression.Call(AbiType.GetMethod("ToAbi"), parms),
+                typeof(object)), parms).Compile();
         }
+
+        public static readonly Type AbiType;
+        public static readonly Type RefAbiType;
+        public static readonly Func<object, T> FromAbi;
+        public static readonly Func<T, object> ToAbi;
     }
 
     public static class GuidGenerator

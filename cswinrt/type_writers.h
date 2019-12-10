@@ -30,8 +30,15 @@ namespace cswinrt
 
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
+using WinRT.Interop;
+
+
+#pragma warning disable 0169 // warning CS0169: The field '...' is never used
+#pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
 
 namespace %
 {
@@ -200,7 +207,7 @@ namespace %
         }
 
         bool in_generic_instance{ false };
-
+        
         void write_code(std::string_view const& value)
         {
             for (auto&& c : value)
