@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Class.g.h"
+#include "winrt/Windows.Foundation.Collections.h"
 
 namespace winrt::TestComp::implementation
 {
@@ -8,6 +9,7 @@ namespace winrt::TestComp::implementation
     {
         Class()
         {
+            _strings = winrt::single_threaded_vector<hstring>({ L"foo", L"bar" });
         }
 
         winrt::event<EventHandler0> _event0;

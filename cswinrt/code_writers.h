@@ -75,21 +75,6 @@ namespace cswinrt
         write_projection_type(w, semantics);
     }
 
-    using generic_type_name_write = std::function<void(writer & w, uint32_t index, bool byref)>;
-    static generic_type_name_write write_generic_type_name_custom{};
-    struct write_generic_type_name_guard
-    {
-        generic_type_name_write _current;
-        write_generic_type_name_guard(generic_type_name_write current) : _current(current)
-        {
-            std::swap(_current, write_generic_type_name_custom);
-        }
-        ~write_generic_type_name_guard()
-        {
-            std::swap(_current, write_generic_type_name_custom);
-        }
-    };
-
     void write_generic_type_name_base(writer& w, uint32_t index)
     {
         w.in_generic_instance ? write_generic_arg_name(w, index) : write_generic_param_name(w, index);
@@ -97,8 +82,8 @@ namespace cswinrt
 
     void write_generic_type_name(writer& w, uint32_t index, bool byref = false)
     {
-        write_generic_type_name_custom ? 
-            write_generic_type_name_custom(w, index, byref) :
+        w.write_generic_type_name_custom ? 
+            w.write_generic_type_name_custom(w, index, byref) :
             write_generic_type_name_base(w, index);
     }
 
@@ -830,7 +815,7 @@ set => %.% = value;
         for (auto&& evt : static_type.EventList())
         {
             w.write(R"(
-public static event EventHandler% %
+public static event WinRT.EventHandler% %
 {
 add => %.% += value;
 remove => %.% -= value;
@@ -1358,15 +1343,20 @@ private EventSource% _%;)",
         return w.write_temp("%_%", method.Name(), vtable_index);
     }
 
-    void write_interface_members(writer& w, TypeDef const& type, std::map<std::string const, bool> const& method_is_generic)
+    void write_interface_members(writer& w, TypeDef const& type, std::set<std::string> const& generic_methods)
     {
         std::vector<std::string> out_marshals;
         
+        auto is_generic_method = [&](std::string vmethod_name)
+        {
+            return (generic_methods.find(vmethod_name) != generic_methods.end());
+        };
+
         auto record_marshal_out = [&](TypeSig const& sig, int object_index, std::string marshal_target) 
         {
             bool has_generic_params{};
             auto semantics = get_type_semantics(sig);
-            write_generic_type_name_guard g([&](writer& w, uint32_t index, bool /*byref*/)
+            writer::write_generic_type_name_guard g(w, [&](writer& w, uint32_t index, bool /*byref*/)
             {
                 has_generic_params = true;
                 // todo: in_generic_instance ? 
@@ -1416,8 +1406,7 @@ private EventSource% _%;)",
             w.write(R"(
 var __invoke_params__ = new object[]{ ThisPtr% };
 _obj.Vftbl.%.DynamicInvokeAbi(__invoke_params__);
-%
-)",
+%)",
             bind([&](writer& w) { write_generic_params(w, signature); }),
             vmethod_name,
             bind_each(out_marshals));
@@ -1432,7 +1421,7 @@ _obj.Vftbl.%.DynamicInvokeAbi(__invoke_params__);
 
             method_signature signature{ method };
             auto vmethod_name = get_vmethod_name(w, type, method);
-            if (!method_is_generic.empty() && method_is_generic.at(vmethod_name))
+            if (is_generic_method(vmethod_name))
             {
                 w.write(R"(
 public %% %(%)
@@ -1451,7 +1440,8 @@ public %% %(%)
 public %% %(%)
 {
 %%unsafe { Marshal.ThrowExceptionForHR(_obj.Vftbl.%(ThisPtr%%)); }%%
-})",
+}
+)",
                     (method.Name() == "ToString"sv) ? "new " : "",
                     bind<write_method_return>(signature),
                     method.Name(),
@@ -1490,7 +1480,7 @@ public % %
                 method_signature signature{ getter };
                 auto vmethod_name = get_vmethod_name(w, type, getter);
                 w.write("get\n{");
-                if (!method_is_generic.empty() && method_is_generic.at(vmethod_name))
+                if (is_generic_method(vmethod_name))
                 {
                     write_dynamic_invoke(w, vmethod_name, signature);
                 }
@@ -1512,7 +1502,7 @@ return %;
                 method_signature signature{ setter };
                 auto vmethod_name = get_vmethod_name(w, type, setter);
                 w.write("set\n{");
-                if (!method_is_generic.empty() && method_is_generic.at(vmethod_name))
+                if (is_generic_method(vmethod_name))
                 {
                     write_dynamic_invoke(w, vmethod_name, signature);
                 }
@@ -1717,7 +1707,7 @@ remove => _%.Event -= value;
     std::pair<std::string, bool> get_generic_abi_type(writer& w, type_semantics semantics, bool byref)
     {
         bool is_generic_param{};
-        write_generic_type_name_guard g([&](writer& w, uint32_t index, bool byref)
+        writer::write_generic_type_name_guard g(w, [&](writer& w, uint32_t index, bool byref)
         {
             is_generic_param = true;
             // todo: in_generic_instance ? 
@@ -1727,7 +1717,7 @@ remove => _%.Event -= value;
                 byref ? "Ref" : "");
         });
         auto generic_abi_type = w.write_temp("%", bind<write_generic_abi_type>(semantics, byref));
-        return std::pair(generic_abi_type, is_generic_param);
+        return {generic_abi_type, is_generic_param};
     }
 
     std::pair<std::string, bool> get_generic_abi_types(writer& w, method_signature const& signature)
@@ -1736,9 +1726,9 @@ remove => _%.Event -= value;
         bool has_generic_params{};
         auto append_generic_abi_type = [&](TypeSig sig, bool byref)
         {
-            auto [generic_abi_type, is_generic_param] = get_generic_abi_type(w, get_type_semantics(sig), byref);
+            auto const [generic_abi_type, is_generic_param] = get_generic_abi_type(w, get_type_semantics(sig), byref);
             generic_abi_types += w.write_temp(is_generic_param ? ", %" : ", typeof(%)", generic_abi_type);
-            has_generic_params |= is_generic_param;
+            has_generic_params |= (bool)is_generic_param;
         };
         for (auto&& param : signature.params())
         {
@@ -1748,10 +1738,13 @@ remove => _%.Event -= value;
         {
             append_generic_abi_type(signature.return_signature().Type(), true);
         }
-        return std::pair(generic_abi_types, has_generic_params);
+        return { generic_abi_types, has_generic_params };
     }
 
-    void write_vtable(writer& w, TypeDef const& type, std::string const& type_name, std::map<std::string const, bool>& method_is_generic)
+    void write_vtable(writer& w, TypeDef const& type, std::string const& type_name, 
+        std::set<std::string>& generic_methods,
+        std::string const& nongenerics_class, 
+        std::vector<std::string>& nongeneric_delegates)
     {
         auto methods = type.MethodList();
         auto is_generic = distance(type.GenericParam()) > 0;
@@ -1770,12 +1763,12 @@ internal IInspectable.Vftbl IInspectableVftbl;
                 auto delegate_type = get_vmethod_delegate_type(w, method, vmethod_name);
                 if(delegate_type == "")
                 {
-                    delegate_type = w.write_temp("%_Delegate", vmethod_name);
-                    write_generic_type_name_guard g([&](writer& /*w*/, uint32_t /*index*/, bool /*byref*/) {
+                    delegate_type = nongenerics_class + "." + vmethod_name;
+                    writer::write_generic_type_name_guard g(w, [&](writer& /*w*/, uint32_t /*index*/, bool /*byref*/) {
                         has_generic_params = true;
                     });
                     auto delegate_definition = w.write_temp("public unsafe delegate int %([In] %);\n",
-                        delegate_type,
+                        vmethod_name,
                         bind<write_abi_parameters>(method_signature{ method }, false));
                     if (has_generic_params)
                     {
@@ -1783,13 +1776,13 @@ internal IInspectable.Vftbl IInspectableVftbl;
                     }
                     else
                     {
-                        w.write(delegate_definition);
+                        nongeneric_delegates.push_back(delegate_definition);
                     }
                 }
                 w.write("public % %;\n", delegate_type, vmethod_name);
                 if (is_generic)
                 {
-                    uint32_t const vtable_index = method.index() - methods.first.index();
+                    uint32_t const vtable_index = method.index() - methods.first.index() + 6;
                     method_marshals.emplace_back(has_generic_params ?
                         w.write_temp("% = Marshal.GetDelegateForFunctionPointer(vftbl[%], %_Type);\n",
                             vmethod_name, vtable_index, vmethod_name) :
@@ -1813,19 +1806,17 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
                     bind_each([&](writer& w, MethodDef const& method)
                     {
                         auto vmethod_name = get_vmethod_name(w, type, method);
-                        auto [generic_abi_types, has_generic_params] = get_generic_abi_types(w, method_signature(method));
+                        auto abi_type = get_generic_abi_types(w, method_signature(method));
+                        auto [generic_abi_types, has_generic_params] = abi_type; // get_generic_abi_types(w, method_signature(method));
                         if (has_generic_params)
                         {
                             w.write("private static readonly Type %_Type = Expression.GetDelegateType(new Type[]{ typeof(void*)%, typeof(int) });\n",
                                 vmethod_name,
                                 generic_abi_types);
+                            generic_methods.insert(vmethod_name);
                         }
-                        method_is_generic[vmethod_name] = has_generic_params;
                     }, methods),
-                    bind_each([&](writer& w, std::string method_marshal)
-                    {
-                        w.write(method_marshal);
-                    }, method_marshals)
+                    bind_each(method_marshals)
                 );
             })
         );
@@ -1835,8 +1826,10 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
     {
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type);
+        auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type));
         auto is_generic = distance(type.GenericParam()) > 0;
-        std::map<std::string const, bool> method_is_generic;
+        std::set<std::string> generic_methods;
+        std::vector<std::string> nongeneric_delegates;
 
         uint32_t const vtable_base = type.MethodList().first.index();
         w.write(R"(%
@@ -1858,8 +1851,7 @@ _obj = obj;%
 }
 
 public object % { get; set; }
-%%
-}
+%%}
 )",
             // Interface class
             bind<write_guid_attribute>(type),
@@ -1867,7 +1859,7 @@ public object % { get; set; }
             type_name,
             "",  //bind<write_type_inheritance>(type),
             // Vftbl
-            bind<write_vtable>(type, type_name, method_is_generic),
+            bind<write_vtable>(type, type_name, generic_methods, nongenerics_class, nongeneric_delegates),
             // Interface impl
             bind([&](writer& w) {
                 if (!is_generic)
@@ -1891,9 +1883,20 @@ public static Guid PIID = Vftbl.PIID;
             type.TypeName(),
             bind<write_event_source_ctors>(type),
             OwnerMemberName,
-            bind<write_interface_members>(type, method_is_generic),
+            bind<write_interface_members>(type, generic_methods),
             bind<write_event_sources>(type)
         );
+
+        if (!nongeneric_delegates.empty())
+        {
+            w.write(R"(public static class %
+{
+%}
+)",
+                nongenerics_class,
+                bind_each(nongeneric_delegates));
+        }
+        w.write("\n");
     }
 
     void write_delegate_param_marshal(writer& w, method_signature::param_t const& param)
@@ -2005,7 +2008,7 @@ return __hresult;
 
         auto type_name = write_type_name_temp(w, type);
         auto type_params = w.write_temp("%", bind<write_type_params>(type));
-        auto [generic_abi_types, _] = get_generic_abi_types(w, signature);
+        auto const [generic_abi_types, _] = get_generic_abi_types(w, signature);
 
         w.write(R"(public delegate % %(%);
 

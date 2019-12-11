@@ -222,6 +222,23 @@ namespace %
                 }
             }
         }
+
+        using generic_type_name_write = std::function<void(writer & w, uint32_t index, bool byref)>;
+        generic_type_name_write write_generic_type_name_custom{};
+        struct write_generic_type_name_guard
+        {
+            writer& _writer;
+            generic_type_name_write _current;
+            write_generic_type_name_guard(writer& w, generic_type_name_write current) : 
+                _writer(w), _current(current)
+            {
+                std::swap(_current, _writer.write_generic_type_name_custom);
+            }
+            ~write_generic_type_name_guard()
+            {
+                std::swap(_current, _writer.write_generic_type_name_custom);
+            }
+        };
     };
 
     struct separator
