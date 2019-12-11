@@ -184,6 +184,7 @@ namespace UnitTest
             async_get_int.Completed = (info, status) => async_int = info.GetResults();
             async_get_int.GetResults();
             Assert.Equal(42, async_int);
+            return;
 
             TestObject.StringProperty = "foo";
             var async_get_string = TestObject.GetStringAsync();

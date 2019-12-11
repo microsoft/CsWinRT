@@ -223,7 +223,7 @@ namespace %
             }
         }
 
-        using generic_type_name_write = std::function<void(writer & w, uint32_t index, bool byref)>;
+        using generic_type_name_write = std::function<void(writer & w, uint32_t index)>;
         generic_type_name_write write_generic_type_name_custom{};
         struct write_generic_type_name_guard
         {

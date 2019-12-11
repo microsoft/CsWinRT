@@ -1261,7 +1261,6 @@ namespace WinRT
                 FromAbi = (object value) => (T)value;
                 ToAbi = (T value) => (object)value;
             }
-            RefAbiType = AbiType.MakeByRefType();
         }
 
         private static Func<object, T> BindFromAbi(Type AbiType)
@@ -1282,7 +1281,6 @@ namespace WinRT
         }
 
         public static readonly Type AbiType;
-        public static readonly Type RefAbiType;
         public static readonly Func<object, T> FromAbi;
         public static readonly Func<T, object> ToAbi;
     }
