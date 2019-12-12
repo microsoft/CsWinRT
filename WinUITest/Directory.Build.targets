@@ -35,8 +35,8 @@
     <WriteLinesToFile 
         File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)"
         Overwrite="true" WriteOnlyWhenDifferent="true" />
-    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)"/>
-    <Exec Command="$(CsWinRTCommand)" />
+    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)"  Condition="'$(CsWinRTGenerateSource)' != 'false'" />
+    <Exec Command="$(CsWinRTCommand)" Condition="'$(CsWinRTGenerateSource)' != 'false'" />
     <ItemGroup>
       <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
     </ItemGroup>
