@@ -2,7 +2,7 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   
   <PropertyGroup>
-    <BuildTestProjection Condition="'$(BuildTestProjection)$(Configuration)' == 'Release'">true</BuildTestProjection>
+    <GenerateTestProjection Condition="'$(Configuration)' == 'Release'">true</GenerateTestProjection>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,7 +14,7 @@
     <Exec Condition="'$(Platform)'=='win32'" Command="xcopy /D /Y &quot;$(PkgMicrosoft_UI_Xaml)\runtimes\win10-x86\native\*.dll&quot; &quot;$(TargetDir)&quot;" />
   </Target>
 
-  <Target Name="ProjectWinUI" BeforeTargets="CoreCompile" Condition="'$(BuildTestProjection)' == 'true'">
+  <Target Name="ProjectWinUI" BeforeTargets="CoreCompile" Condition="'$(GenerateTestProjection)' == 'true'">
     <ItemGroup>
       <!--PkgMicrosoft_UI_Xaml is defined by Nuget reference-->
       <WinUIWinMDs Include="$(PkgMicrosoft_UI_Xaml)/**/*.winmd" />
@@ -35,12 +35,13 @@
     <WriteLinesToFile 
         File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)"
         Overwrite="true" WriteOnlyWhenDifferent="true" />
-    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)"  Condition="'$(CsWinRTGenerateSource)' != 'false'" />
-    <Exec Command="$(CsWinRTCommand)" Condition="'$(CsWinRTGenerateSource)' != 'false'" />
-    <ItemGroup>
-      <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
-    </ItemGroup>
+    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
+    <Exec Command="$(CsWinRTCommand)" />
   </Target>
+
+  <ItemGroup>
+    <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
+  </ItemGroup>
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
 
