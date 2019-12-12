@@ -132,6 +132,7 @@ namespace WinRT
         public static implicit operator IInspectable(WinRT.IObjectReference obj) => obj.As<Vftbl>();
         public static implicit operator IInspectable(WinRT.ObjectReference<Vftbl> obj) => new IInspectable(obj);
         public WinRT.ObjectReference<I> As<I>() => _obj.As<I>();
+        public IInspectable(WinRT.IObjectReference obj) : this(obj.As<Vftbl>()) { }
         public IInspectable(WinRT.ObjectReference<Vftbl> obj)
         {
             _obj = obj;
@@ -743,10 +744,17 @@ namespace WinRT
 
         static unsafe int QueryInterface([In] IntPtr thisPtr, [In] ref Guid iid, [Out] out IntPtr obj)
         {
-            // TODO: verify iid
-            AddRef(thisPtr);
-            obj = thisPtr;
-            return 0; // S_OK;
+            const int E_NOINTERFACE = unchecked((int)0x80040002);
+
+            if (iid == typeof(IUnknownVftbl).GUID)
+            {
+                AddRef(thisPtr);
+                obj = thisPtr;
+                return 0; // S_OK;
+            }
+
+            obj = IntPtr.Zero;
+            return E_NOINTERFACE;
         }
 
         static uint AddRef([In] IntPtr thisPtr)
