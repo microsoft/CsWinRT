@@ -441,7 +441,7 @@ namespace cswinrt
             }
             else
             {
-                w.write("%.FromNative(%)", bind<write_type_name>(param_type, true), name);
+                w.write("%.FromAbi(%)", bind<write_type_name>(param_type, true), name);
             }
             return;
         }
@@ -1187,7 +1187,7 @@ private EventSource% _%;)",
                 }
                 else
                 {
-                    w.write("%.AsNative(%)", bind<write_type_name>(type, true), name);
+                    w.write("%.ToAbi(%)", bind<write_type_name>(type, true), name);
                 }
                 return;
             default:
@@ -1301,7 +1301,7 @@ private EventSource% _%;)",
         case category::struct_type:
             if (!is_type_blittable(param_type))
             {
-                w.write("%.FromNative(%)", bind<write_type_name>(param_type, true), name);
+                w.write("%.FromAbi(%)", bind<write_type_name>(param_type, true), name);
             }
             return;
         case category::interface_type:
@@ -2218,7 +2218,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 
             if (w._in_abi_namespace)
             {
-                w.write("\npublic static % FromNative(% value)\n{\n% result;\n",
+                w.write("\npublic static % FromAbi(% value)\n{\n% result;\n",
                     bind<write_projection_type>(type),
                     bind<write_type_name>(type, true),
                     bind<write_projection_type>(type));
@@ -2226,7 +2226,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                 {
                     w.write("result.% = %;\n", field.Name(), bind<write_marshal_from_native>(get_type_semantics(field.Signature().Type()), "value." + std::string{field.Name()}));
                 }
-                w.write("return result;\n}\n\npublic static % AsNative(% value)\n{\n% result;\n",
+                w.write("return result;\n}\n\npublic static % ToAbi(% value)\n{\n% result;\n",
                     bind<write_type_name>(type, true),
                     bind<write_projection_type>(type),
                     bind<write_type_name>(type, true));

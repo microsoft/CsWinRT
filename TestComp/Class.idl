@@ -9,7 +9,6 @@ namespace TestComp
 
     // todo:
     // params - in, out, ref
-    // structs - blittable and non
     // arrays - fill, receive, pass, of struct
     // inheritance - from generics, overload resolution
 
