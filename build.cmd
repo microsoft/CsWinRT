@@ -32,7 +32,7 @@ if "%cswinrt_configuration%"=="" (
 )
 
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-msbuild cswinrt.sln /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;BuildTestProjection=true
+msbuild cswinrt.sln /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;GenerateTestProjection=true
 
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
 echo Running cswinrt unit tests for %cswinrt_platform% %cswinrt_configuration%

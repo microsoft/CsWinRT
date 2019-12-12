@@ -1745,7 +1745,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
                         bind<write_abi_parameters>(method_signature{ method }, false));
                     if (has_generic_params)
                     {
-                        delegate_type = "System.Delegate";
+                        delegate_type = "global::System.Delegate";
                     }
                     else
                     {
@@ -2007,7 +2007,7 @@ public static unsafe IntPtr ToAbi(% managedDelegate)
 {
 var self = typeof(@Helper%);
 var invoke = self.GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic);
-var func = Marshal.GetFunctionPointerForDelegate(System.Delegate.CreateDelegate(Abi_Invoke_Type, invoke));
+var func = Marshal.GetFunctionPointerForDelegate(global::System.Delegate.CreateDelegate(Abi_Invoke_Type, invoke));
 return new WinRT.Delegate(func, managedDelegate).ThisPtr;
 }
 
