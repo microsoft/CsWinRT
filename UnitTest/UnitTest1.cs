@@ -35,7 +35,7 @@ namespace UnitTest
             // Ensure every generic instance has a unique PIID
             Assert.NotEqual(IMap<bool, string>.Vftbl.PIID, IMap<string, bool>.Vftbl.PIID);
 
-            AssertGuid<IStringable>("96369f54-8eb6-48f0-abce-c1b211e627c3"); 
+            AssertGuid<IStringable>("96369f54-8eb6-48f0-abce-c1b211e627c3");
 
             // Generated Windows.Foundation GUIDs
             AssertGuid<IAsyncActionWithProgress<A>>("dd725452-2da3-5103-9c7d-22ee9bb14ad3");
@@ -165,7 +165,7 @@ namespace UnitTest
             // projected wrapper
             Assert.Equal(expected, TestObject.ToString());
 
-            // implicit cast 
+            // implicit cast
             var str = (IStringable)TestObject;
             Assert.Equal(expected, str.ToString());
 
@@ -176,6 +176,7 @@ namespace UnitTest
             // TODO: 'is' and 'as' operators - reconsider interface inheritance
         }
 
+        /* TODO: Events are currently broken for value types
         [Fact]
         public void TestPrimitives()
         {
@@ -186,7 +187,26 @@ namespace UnitTest
                 Assert.Equal(value, test_int);
             };
             TestObject.IntProperty = test_int;
+
+            var expectedVal = true;
+            var hits = 0;
+            TestObject.BoolPropertyChanged += (IInspectable sender, bool value) =>
+            {
+                Assert.Equal(expectedVal, value);
+                ++hits;
+            };
+
+            TestObject.BoolProperty = true;
+            Assert.Equal(1, hits);
+
+            expectedVal = false;
+            TestObject.CallForBool(() => false);
+            Assert.Equal(2, hits);
+
+            TestObject.RaiseBoolChanged();
+            Assert.Equal(3, hits);
         }
+        */
 
         [Fact]
         public void TestStrings()
@@ -196,7 +216,7 @@ namespace UnitTest
 
             var href = new WinRT.HStringReference(test_string);
 
-            // In hstring from managed->native implicitly creates hstring reference 
+            // In hstring from managed->native implicitly creates hstring reference
             TestObject.StringProperty = test_string;
 
             // Out hstring from native->managed only creates System.String on demand
@@ -211,6 +231,173 @@ namespace UnitTest
             TestObject.StringPropertyChanged += (Class sender, WinRT.HString value) => sender.StringProperty2 = value;
             TestObject.RaiseStringChanged();
             Assert.Equal(TestObject.StringProperty2, test_string2);
+        }
+
+        [Fact]
+        public void TestBlittableStruct()
+        {
+            // Property setter/getter
+            var val = new BlittableStruct(){ i32 = 42 };
+            TestObject.BlittableStructProperty = val;
+            Assert.Equal(42, TestObject.BlittableStructProperty.i32);
+
+            // Manual getter
+            Assert.Equal(42, TestObject.GetBlittableStruct().i32);
+
+            // Manual setter
+            val.i32 = 8;
+            TestObject.SetBlittableStruct(val);
+            Assert.Equal(8, TestObject.BlittableStructProperty.i32);
+
+            // Output argument
+            val = default;
+            TestObject.OutBlittableStruct(out val);
+            Assert.Equal(8, val.i32);
+        }
+
+        [Fact]
+        public void TestComposedBlittableStruct()
+        {
+            // Property setter/getter
+            var val = new ComposedBlittableStruct(){ blittable = new BlittableStruct(){ i32 = 42 } };
+            TestObject.ComposedBlittableStructProperty = val;
+            Assert.Equal(42, TestObject.ComposedBlittableStructProperty.blittable.i32);
+
+            // Manual getter
+            Assert.Equal(42, TestObject.GetComposedBlittableStruct().blittable.i32);
+
+            // Manual setter
+            val.blittable.i32 = 8;
+            TestObject.SetComposedBlittableStruct(val);
+            Assert.Equal(8, TestObject.ComposedBlittableStructProperty.blittable.i32);
+
+            // Output argument
+            val = default;
+            TestObject.OutComposedBlittableStruct(out val);
+            Assert.Equal(8, val.blittable.i32);
+        }
+
+        [Fact]
+        public void TestNonBlittableStringStruct()
+        {
+            // Property getter/setter
+            var val = new NonBlittableStringStruct(){ str = "I like tacos" };
+            TestObject.NonBlittableStringStructProperty = val;
+            Assert.Equal("I like tacos", TestObject.NonBlittableStringStructProperty.str.ToString());
+
+            // Manual getter
+            Assert.Equal("I like tacos", TestObject.GetNonBlittableStringStruct().str.ToString());
+
+            // Manual setter
+            val.str = "Hello, world";
+            TestObject.SetNonBlittableStringStruct(val);
+            Assert.Equal("Hello, world", TestObject.NonBlittableStringStructProperty.str.ToString());
+
+            // Output argument
+            val = default;
+            TestObject.OutNonBlittableStringStruct(out val);
+            Assert.Equal("Hello, world", val.str.ToString());
+        }
+
+        [Fact]
+        public void TestNonBlittableBoolStruct()
+        {
+            // Property getter/setter
+            var val = new NonBlittableBoolStruct() { w = true, x = false, y = true, z = false };
+            TestObject.NonBlittableBoolStructProperty = val;
+            Assert.True(TestObject.NonBlittableBoolStructProperty.w);
+            Assert.False(TestObject.NonBlittableBoolStructProperty.x);
+            Assert.True(TestObject.NonBlittableBoolStructProperty.y);
+            Assert.False(TestObject.NonBlittableBoolStructProperty.z);
+
+            // Manual getter
+            Assert.True(TestObject.GetNonBlittableBoolStruct().w);
+            Assert.False(TestObject.GetNonBlittableBoolStruct().x);
+            Assert.True(TestObject.GetNonBlittableBoolStruct().y);
+            Assert.False(TestObject.GetNonBlittableBoolStruct().z);
+
+            // Manual setter
+            val.w = false;
+            val.x = true;
+            val.y = false;
+            val.z = true;
+            TestObject.SetNonBlittableBoolStruct(val);
+            Assert.False(TestObject.NonBlittableBoolStructProperty.w);
+            Assert.True(TestObject.NonBlittableBoolStructProperty.x);
+            Assert.False(TestObject.NonBlittableBoolStructProperty.y);
+            Assert.True(TestObject.NonBlittableBoolStructProperty.z);
+
+            // Output argument
+            val = default;
+            TestObject.OutNonBlittableBoolStruct(out val);
+            Assert.False(val.w);
+            Assert.True(val.x);
+            Assert.False(val.y);
+            Assert.True(val.z);
+        }
+
+        /* TODO: Can't even test with a work-around until generics are fixed
+        [Fact]
+        public void TestNonBlittableRefStruct()
+        {
+            // Property getter/setter
+            TestObject.IntProperty = 42; // TODO: Need to either support interface inheritance or project IReference for setter
+            Assert.Equal(42, TestObject.NonBlittableRefStructProperty.ref32.Value);
+        }
+        */
+
+        [Fact]
+        public void TestComposedNonBlittableStruct()
+        {
+            // Property getter/setter
+            var val = new ComposedNonBlittableStruct()
+            {
+                blittable = new BlittableStruct(){ i32 = 42 },
+                strings = new NonBlittableStringStruct(){ str = "I like tacos" },
+                bools = new NonBlittableBoolStruct(){ w = true, x = false, y = true, z = false }
+                // TODO: Even constructing an IReference will fail until generics are fixed
+                // refs = TestObject.NonBlittableRefStructProperty // TODO: Need to either support interface inheritance or project IReference for setter
+            };
+            TestObject.ComposedNonBlittableStructProperty = val;
+            Assert.Equal(42, TestObject.ComposedNonBlittableStructProperty.blittable.i32);
+            Assert.Equal("I like tacos", TestObject.ComposedNonBlittableStructProperty.strings.str);
+            Assert.True(TestObject.ComposedNonBlittableStructProperty.bools.w);
+            Assert.False(TestObject.ComposedNonBlittableStructProperty.bools.x);
+            Assert.True(TestObject.ComposedNonBlittableStructProperty.bools.y);
+            Assert.False(TestObject.ComposedNonBlittableStructProperty.bools.z);
+
+            // Manual getter
+            Assert.Equal(42, TestObject.GetComposedNonBlittableStruct().blittable.i32);
+            Assert.Equal("I like tacos", TestObject.GetComposedNonBlittableStruct().strings.str);
+            Assert.True(TestObject.GetComposedNonBlittableStruct().bools.w);
+            Assert.False(TestObject.GetComposedNonBlittableStruct().bools.x);
+            Assert.True(TestObject.GetComposedNonBlittableStruct().bools.y);
+            Assert.False(TestObject.GetComposedNonBlittableStruct().bools.z);
+
+            // Manual setter
+            val.blittable.i32 = 8;
+            val.strings.str = "Hello, world";
+            val.bools.w = false;
+            val.bools.x = true;
+            val.bools.y = false;
+            val.bools.z = true;
+            TestObject.SetComposedNonBlittableStruct(val);
+            Assert.Equal(8, TestObject.ComposedNonBlittableStructProperty.blittable.i32);
+            Assert.Equal("Hello, world", TestObject.ComposedNonBlittableStructProperty.strings.str);
+            Assert.False(TestObject.ComposedNonBlittableStructProperty.bools.w);
+            Assert.True(TestObject.ComposedNonBlittableStructProperty.bools.x);
+            Assert.False(TestObject.ComposedNonBlittableStructProperty.bools.y);
+            Assert.True(TestObject.ComposedNonBlittableStructProperty.bools.z);
+
+            // Output argument
+            val = default;
+            TestObject.OutComposedNonBlittableStruct(out val);
+            Assert.Equal(8, val.blittable.i32);
+            Assert.Equal("Hello, world", val.strings.str);
+            Assert.False(val.bools.w);
+            Assert.True(val.bools.x);
+            Assert.False(val.bools.y);
+            Assert.True(val.bools.z);
         }
     }
 }
