@@ -485,7 +485,7 @@ namespace WinRT
         readonly string _fileName;
         readonly IntPtr _moduleHandle;
         readonly DllGetActivationFactory _GetActivationFactory;
-        readonly DllCanUnloadNow _CanUnloadNow;
+        readonly DllCanUnloadNow _CanUnloadNow; // TODO: Eventually periodically call
 
         static readonly string _currentModuleDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
@@ -518,7 +518,12 @@ namespace WinRT
             }
 
             _GetActivationFactory = Platform.GetProcAddress<DllGetActivationFactory>(_moduleHandle);
-            _CanUnloadNow = Platform.GetProcAddress<DllCanUnloadNow>(_moduleHandle); // TODO: Eventually periodically call
+
+            var canUnloadNow = Platform.GetProcAddress(_moduleHandle, "DllCanUnloadNow");
+            if (canUnloadNow != IntPtr.Zero)
+            {
+                _CanUnloadNow = Marshal.GetDelegateForFunctionPointer<DllCanUnloadNow>(canUnloadNow);
+            }
         }
 
         public unsafe ObjectReference<I> GetStaticClass<I>(HString runtimeClassId)
@@ -537,7 +542,7 @@ namespace WinRT
 
         ~DllModule()
         {
-            System.Diagnostics.Debug.Assert(_CanUnloadNow() == 0); // S_OK
+            System.Diagnostics.Debug.Assert(_CanUnloadNow == null || _CanUnloadNow() == 0); // S_OK
             lock (_cache)
             {
                 _cache.Remove(_fileName);
