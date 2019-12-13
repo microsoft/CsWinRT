@@ -6,14 +6,51 @@ namespace TestComp
     delegate void EventHandler2(Class sender, Int32 arg0);
     delegate void EventHandler3(Class sender, Int32 arg0, String arg1);
     delegate void EventHandlerCollection(Class sender, Windows.Foundation.Collections.IVector<Int32> arg0, Windows.Foundation.Collections.IMap<Int32, String> arg1);
-     
-    // todo:  
+
+    // todo:
     // params - in, out, ref
-    // structs - blittable and non
     // arrays - fill, receive, pass, of struct
     // inheritance - from generics, overload resolution
 
+    struct BlittableStruct
+    {
+        Int32 i32;
+    };
+
+    struct ComposedBlittableStruct
+    {
+        BlittableStruct blittable;
+    };
+
+    struct NonBlittableStringStruct
+    {
+        String str;
+    };
+
+    struct NonBlittableBoolStruct
+    {
+        // Default C# behavior is to marshal as 32-bits, hence multiple values
+        Boolean w;
+        Boolean x;
+        Boolean y;
+        Boolean z;
+    };
+
+    struct NonBlittableRefStruct
+    {
+        Windows.Foundation.IReference<Int32> ref32;
+    };
+
+    struct ComposedNonBlittableStruct
+    {
+        BlittableStruct blittable;
+        NonBlittableStringStruct strings;
+        NonBlittableBoolStruct bools;
+        NonBlittableRefStruct refs;
+    };
+
     delegate Int32 ProvideInt();
+    delegate Boolean ProvideBool();
     delegate String ProvideString();
     delegate Object ProvideObject();
 
@@ -52,7 +89,7 @@ namespace TestComp
     }
 
     [default_interface]
-    runtimeclass Class : 
+    runtimeclass Class :
         Windows.Foundation.IStringable
         //, ICowboy
         //, IArtist
@@ -97,6 +134,11 @@ namespace TestComp
         void RaiseIntChanged();
         void CallForInt(ProvideInt provideInt);
 
+        Boolean BoolProperty;
+        event Windows.Foundation.EventHandler<Boolean> BoolPropertyChanged;
+        void RaiseBoolChanged();
+        void CallForBool(ProvideBool provideBool);
+
         String StringProperty;
         event Windows.Foundation.TypedEventHandler<Class, String> StringPropertyChanged;
         void RaiseStringChanged();
@@ -109,5 +151,36 @@ namespace TestComp
         void RaiseObjectChanged();
         void CallForObject(ProvideObject provideObject);
         event Windows.Foundation.EventHandler<Object> ObjectPropertyChanged;
+
+        // Structs
+        BlittableStruct BlittableStructProperty;
+        BlittableStruct GetBlittableStruct();
+        void OutBlittableStruct(out BlittableStruct value);
+        void SetBlittableStruct(BlittableStruct value);
+
+        ComposedBlittableStruct ComposedBlittableStructProperty;
+        ComposedBlittableStruct GetComposedBlittableStruct();
+        void OutComposedBlittableStruct(out ComposedBlittableStruct value);
+        void SetComposedBlittableStruct(ComposedBlittableStruct value);
+
+        NonBlittableStringStruct NonBlittableStringStructProperty;
+        NonBlittableStringStruct GetNonBlittableStringStruct();
+        void OutNonBlittableStringStruct(out NonBlittableStringStruct value);
+        void SetNonBlittableStringStruct(NonBlittableStringStruct value);
+
+        NonBlittableBoolStruct NonBlittableBoolStructProperty;
+        NonBlittableBoolStruct GetNonBlittableBoolStruct();
+        void OutNonBlittableBoolStruct(out NonBlittableBoolStruct value);
+        void SetNonBlittableBoolStruct(NonBlittableBoolStruct value);
+
+        NonBlittableRefStruct NonBlittableRefStructProperty;
+        NonBlittableRefStruct GetNonBlittableRefStruct();
+        void OutNonBlittableRefStruct(out NonBlittableRefStruct value);
+        void SetNonBlittableRefStruct(NonBlittableRefStruct value);
+
+        ComposedNonBlittableStruct ComposedNonBlittableStructProperty;
+        ComposedNonBlittableStruct GetComposedNonBlittableStruct();
+        void OutComposedNonBlittableStruct(out ComposedNonBlittableStruct value);
+        void SetComposedNonBlittableStruct(ComposedNonBlittableStruct value);
     }
 }

@@ -6,7 +6,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
   </PropertyGroup>
- 
+
   <PropertyGroup Condition="'$(VisualStudioVersion)' == '15.0'">
     <PlatformToolset>v141</PlatformToolset>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
@@ -63,6 +63,9 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
+    <Link>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+    </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>VERSION_STRING="$(BuildVersion)";VERSION_COMMAS=$(BuildVersion.Replace('.', ','));%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>

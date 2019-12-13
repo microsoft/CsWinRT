@@ -99,6 +99,7 @@ namespace cswinrt
     struct guid_type {};
     using type_definition = TypeDef;
     using generic_type_index = GenericTypeIndex;
+    using generic_type_param = GenericParam;
 
     using type_semantics = std::variant<
         fundamental_type,
@@ -106,7 +107,8 @@ namespace cswinrt
         guid_type,
         type_definition,
         generic_type_instance,
-        generic_type_index>;
+        generic_type_index,
+        generic_type_param>;
 
     struct generic_type_instance
     {

@@ -6,7 +6,7 @@ namespace winrt::TestComp::implementation
 {
     struct Class : ClassT<Class>
     {
-        Class()
+        Class() : Class(0, L"")
         {
         }
 
@@ -20,12 +20,16 @@ namespace winrt::TestComp::implementation
 
         int32_t _int = 0;
         winrt::event<Windows::Foundation::EventHandler<int32_t>> _intChanged;
+        bool _bool = false;
+        winrt::event<Windows::Foundation::EventHandler<bool>> _boolChanged;
         winrt::hstring _string;
         winrt::hstring _string2;
         winrt::event<Windows::Foundation::TypedEventHandler<TestComp::Class, hstring>> _stringChanged;
         Windows::Foundation::Collections::IVector<hstring> _strings;
         Windows::Foundation::IInspectable _object;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::IInspectable>> _objectChanged;
+        ComposedBlittableStruct _blittableStruct{};
+        ComposedNonBlittableStruct _nonBlittableStruct{};
 
         Class(int32_t intProperty);
         Class(int32_t intProperty, hstring const& stringProperty);
@@ -68,6 +72,12 @@ namespace winrt::TestComp::implementation
         void IntPropertyChanged(winrt::event_token const& token) noexcept;
         void RaiseIntChanged();
         void CallForInt(TestComp::ProvideInt const& provideInt);
+        bool BoolProperty();
+        void BoolProperty(bool value);
+        winrt::event_token BoolPropertyChanged(Windows::Foundation::EventHandler<bool> const& handler);
+        void BoolPropertyChanged(winrt::event_token const& token) noexcept;
+        void RaiseBoolChanged();
+        void CallForBool(TestComp::ProvideBool const& provideBool);
         hstring StringProperty();
         void StringProperty(hstring const& value);
         winrt::event_token StringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComp::Class, hstring> const& handler);
@@ -84,7 +94,37 @@ namespace winrt::TestComp::implementation
         void CallForObject(TestComp::ProvideObject const& provideObject);
         winrt::event_token ObjectPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::IInspectable> const& handler);
         void ObjectPropertyChanged(winrt::event_token const& token) noexcept;
-        
+        BlittableStruct BlittableStructProperty();
+        void BlittableStructProperty(BlittableStruct const& value);
+        BlittableStruct GetBlittableStruct();
+        void OutBlittableStruct(BlittableStruct& value);
+        void SetBlittableStruct(BlittableStruct const& value);
+        ComposedBlittableStruct ComposedBlittableStructProperty();
+        void ComposedBlittableStructProperty(ComposedBlittableStruct const& value);
+        ComposedBlittableStruct GetComposedBlittableStruct();
+        void OutComposedBlittableStruct(ComposedBlittableStruct& value);
+        void SetComposedBlittableStruct(ComposedBlittableStruct const& value);
+        NonBlittableStringStruct NonBlittableStringStructProperty();
+        void NonBlittableStringStructProperty(NonBlittableStringStruct const& value);
+        NonBlittableStringStruct GetNonBlittableStringStruct();
+        void OutNonBlittableStringStruct(NonBlittableStringStruct& value);
+        void SetNonBlittableStringStruct(NonBlittableStringStruct const& value);
+        NonBlittableBoolStruct NonBlittableBoolStructProperty();
+        void NonBlittableBoolStructProperty(NonBlittableBoolStruct const& value);
+        NonBlittableBoolStruct GetNonBlittableBoolStruct();
+        void OutNonBlittableBoolStruct(NonBlittableBoolStruct& value);
+        void SetNonBlittableBoolStruct(NonBlittableBoolStruct const& value);
+        NonBlittableRefStruct NonBlittableRefStructProperty();
+        void NonBlittableRefStructProperty(NonBlittableRefStruct const& value);
+        NonBlittableRefStruct GetNonBlittableRefStruct();
+        void OutNonBlittableRefStruct(NonBlittableRefStruct& value);
+        void SetNonBlittableRefStruct(NonBlittableRefStruct const& value);
+        ComposedNonBlittableStruct ComposedNonBlittableStructProperty();
+        void ComposedNonBlittableStructProperty(ComposedNonBlittableStruct const& value);
+        ComposedNonBlittableStruct GetComposedNonBlittableStruct();
+        void OutComposedNonBlittableStruct(ComposedNonBlittableStruct& value);
+        void SetComposedNonBlittableStruct(ComposedNonBlittableStruct const& value);
+
         // IStringable
         hstring ToString();
 

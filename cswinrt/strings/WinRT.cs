@@ -49,10 +49,8 @@ namespace WinRT
         }
 
         // standard accessors/mutators
-        public unsafe delegate int _get_PropertyAs<T>([In] IntPtr thisPtr, [Out] out T value);
-        public delegate int _put_PropertyAs<T>([In] IntPtr thisPtr, [In] T value);
-        public unsafe delegate int _get_PropertyAsBoolean([In] IntPtr thisPtr, [Out, MarshalAs(UnmanagedType.U1)] out bool value);
-        public delegate int _put_PropertyAsBoolean([In] IntPtr thisPtr, [In, MarshalAs(UnmanagedType.U1)] bool value);
+        public unsafe delegate int _get_PropertyAsBoolean([In] IntPtr thisPtr, [Out] out byte value);
+        public delegate int _put_PropertyAsBoolean([In] IntPtr thisPtr, [In] byte value);
         public unsafe delegate int _get_PropertyAsChar([In] IntPtr thisPtr, [Out] out char value);
         public delegate int _put_PropertyAsChar([In] IntPtr thisPtr, [In] char value);
         public unsafe delegate int _get_PropertyAsSByte([In] IntPtr thisPtr, [Out] out sbyte value);
@@ -466,6 +464,11 @@ namespace WinRT
 
         public static ObjectReference<T> FromNative(object module, IntPtr thisPtr)
         {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
             var obj = new ObjectReference<T>(module, thisPtr, true);
             obj._vftblIUnknown.AddRef(obj.ThisPtr);
             return obj;
@@ -473,6 +476,11 @@ namespace WinRT
 
         public static ObjectReference<T> FromNative(IntPtr thisPtr)
         {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
             // Retrieve module handle from QueryInterface function address
             IntPtr qi;
             unsafe { qi = (*(IntPtr**)thisPtr.ToPointer())[0]; };
@@ -486,6 +494,11 @@ namespace WinRT
 
         public static ObjectReference<T> FromNativeNoRef(IntPtr thisPtr)
         {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+
             return new ObjectReference<T>(null, thisPtr, false);
         }
 
