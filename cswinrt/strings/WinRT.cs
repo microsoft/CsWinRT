@@ -1163,6 +1163,13 @@ namespace WinRT
         }
     }
 
+    struct MarshalInterface
+    {
+        public static T FromAbi<T>(IntPtr ptr) => throw new NotImplementedException();
+        public static IntPtr ToAbi<T>(T value) => throw new NotImplementedException();
+    }
+
+
     struct MarshalString
     {
         public static string FromAbi(IntPtr value) => HString.ToString(value);

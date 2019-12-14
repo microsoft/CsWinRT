@@ -33,6 +33,9 @@ namespace cswinrt
         {"WinRT.HString", "WinRT.HString"},
     };
 
+    static const std::string InterfaceImplementationSubTypeName = "_Native";
+
+
     auto to_csharp_type(fundamental_type type)
     {
         return type_mappings[(int)type].csharp;
@@ -443,6 +446,15 @@ namespace cswinrt
             return;
         }
         case category::interface_type:
+        {
+            w.write("new %.%(%.%.FromAbi(%))",
+                bind<write_projection_type>(param_type),
+                InterfaceImplementationSubTypeName,
+                bind<write_projection_type>(param_type),
+                InterfaceImplementationSubTypeName,
+                name);
+            return;
+        }
         case category::class_type:
         {
             w.write("%.FromAbi(%)",
@@ -569,10 +581,12 @@ namespace cswinrt
         }
 
         method_signature signature{ method };
+        bool write_explicit_implementation{ false };
         auto override_or_new = "";
-        auto return_type = w.write_temp("%", bind([&](writer& w) {
+        auto raw_return_type = w.write_temp("%", bind([&](writer& w) {
             write_method_return_type(w, signature);
         }));
+        auto return_type = raw_return_type;
         if (method.Name() == "ToString")
         {
             override_or_new = "new ";
@@ -587,6 +601,7 @@ namespace cswinrt
                         {
                             override_or_new = "override ";
                             return_type = "string";
+                            write_explicit_implementation = true;
                         }
                     }
                 }
@@ -605,6 +620,22 @@ public %%% %(%) => %.%(%);
             method.Name(),
             bind_list<write_parameter_name_with_modifier>(", ", signature.params(), true)
         );
+
+        if (write_explicit_implementation)
+        {
+            w.write(R"(
+%% %.%(%) => %.%(%);
+)",
+                is_static ? "static " : "",
+                raw_return_type,
+                bind<write_type_name>(method.Parent(), false),
+                method.Name(),
+                bind_list<write_projection_method_parameter>(", ", signature.params()),
+                interface_member,
+                method.Name(),
+                bind_list<write_parameter_name_with_modifier>(", ", signature.params(), true)
+            );
+        }
     }
 
     void write_class_property(writer& w, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target)
@@ -739,18 +770,18 @@ remove => %.% -= value;
         auto cache_interface =
             is_static ?
                 w.write_temp(
-                    R"((new BaseActivationFactory("%", "%.%"))._As<%.Vftbl>)",
+                    R"((new BaseActivationFactory("%", "%.%"))._As<%._Native.Vftbl>)",
                     class_type.TypeNamespace(),
                     class_type.TypeNamespace(),
                     class_type.TypeName(),
                     cache_type_name) :
                 w.write_temp(
-                    R"(ActivationFactory<%>.As<%.Vftbl>)",
+                    R"(ActivationFactory<%>.As<%._Native.Vftbl>)",
                     class_type.TypeName(),
                     cache_type_name);
 
         w.write(R"(
-internal class _% : %
+internal class _% : %._Native
 {
 public _%() : base(%()) { }
 private static WeakLazy<_%> _instance = new WeakLazy<_%>();
@@ -770,7 +801,7 @@ internal static % Instance => _instance.Value;
 
     static std::string get_default_interface_name(writer& w, TypeDef const& type)
     {
-        return write_type_name_temp(w, get_type_semantics(get_default_interface(type)));
+        return write_type_name_temp(w, get_type_semantics(get_default_interface(type))) + "._Native";
     }
 
     void write_factory_constructors(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
@@ -924,22 +955,12 @@ remove => %.% -= value;
                 if (!is_default_interface)
                 {
                     w.write(R"(
-private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>());
+private % AsInternal(InterfaceTag<%> _) => new %._Native(_default.AsInterface<%._Native.Vftbl>());
 )",
                         interface_name,
                         interface_name,
                         interface_name,
                         interface_name);
-                }
-
-                if (!is_exclusive_to(interface_type))
-                {
-                    w.write(R"(
-public static implicit operator %(% obj) => %;
-)",
-                    interface_name,
-                    type.TypeName(),
-                    is_default_interface ? "obj._default" : w.write_temp("obj.AsInternal(new InterfaceTag<%>())", interface_name));
                 }
 
                 w.write_each<write_class_method>(interface_type.MethodList(), false, target);
@@ -995,50 +1016,6 @@ public static implicit operator %(% obj) => %;
             bind<write_type_name>(type, false),
             bind<write_attributed_types>(type)
         );
-    }
-
-    void write_class(writer& w, TypeDef const& type)
-    {
-        if (is_static(type))
-        {
-            write_static_class(w, type);
-            return;
-        }
-
-        auto type_name = write_type_name_temp(w, type);
-        auto default_interface_name = get_default_interface_name(w, type);
-        w.write(R"(public %class %
-{
-public IntPtr ThisPtr => _default.ThisPtr;
-
-private % _default;
-%
-public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
-
-internal %(% ifc)
-{
-_default = ifc;
-_default.% = this;
-}
-
-private struct InterfaceTag<I>{};
-
-public I As<I>() => _default.As<I>();
-%
-}
-)",
-            bind<write_class_modifiers>(type),
-            type_name,
-            default_interface_name,
-            bind<write_attributed_types>(type),
-            type_name,
-            type_name,
-            default_interface_name,
-            default_interface_name,
-            type_name,
-            default_interface_name,
-            OwnerMemberName,
-            bind<write_class_members>(type));
     }
 
     void write_event_source_ctors(writer& w, TypeDef const& type)
@@ -1118,6 +1095,7 @@ private EventSource% _%;)",
                 write_delegate_helper_call(w, type, "ToAbi", name);
                 return;
             case category::struct_type:
+            {
                 if (is_type_blittable(type))
                 {
                     w.write("%", name);
@@ -1127,6 +1105,12 @@ private EventSource% _%;)",
                     w.write("%.ToAbi(%)", bind<write_type_name>(type, true), name);
                 }
                 return;
+            }
+            case category::interface_type:
+            {
+                w.write("MarshalInterface.ToAbi(%)", name);
+                return;
+            }
             default:
                 w.write("%?.ThisPtr ?? IntPtr.Zero", name);
                 return;
@@ -1309,6 +1293,55 @@ private EventSource% _%;)",
         uint32_t const vtable_base = type.MethodList().first.index();
         uint32_t const vtable_index = method.index() - vtable_base;
         return w.write_temp("%_%", method.Name(), vtable_index);
+    }
+
+    void write_interface_member_signatures(writer& w, TypeDef const& type)
+    {
+        for (auto&& method : type.MethodList())
+        {
+            if (is_special(method))
+            {
+                continue;
+            }
+
+            method_signature signature{ method };
+            w.write(R"(
+%% %(%);)",
+(method.Name() == "ToString"sv) ? "new " : "",
+                bind<write_method_return_type>(signature),
+                method.Name(),
+                bind_list<write_projection_method_parameter>(", ", signature.params())
+            );
+        }
+
+        for (auto&& prop : type.PropertyList())
+        {
+            auto [getter, setter] = get_property_methods(prop);
+            auto semantics = get_type_semantics(prop.Type().Type());
+            w.write(R"(
+% % {)",
+                bind<write_projection_type>(semantics),
+                prop.Name());
+            if (getter)
+            {
+                w.write(" get;");
+            }
+            if (setter)
+            {
+                w.write(" set;");
+            }
+            w.write(" }\n");
+        }
+
+        for (auto&& evt : type.EventList())
+        {
+            auto semantics = get_type_semantics(evt.EventType());
+            w.write(R"(
+event WinRT.EventHandler% %;
+)",
+bind<write_event_param_types>(evt),
+evt.Name());
+        }
     }
 
     void write_interface_members(writer& w, TypeDef const& type, std::set<std::string> const& generic_methods)
@@ -1545,6 +1578,7 @@ remove => _%.Event -= value;
 
     void write_type_inheritance(writer& w, TypeDef const& type)
     {
+        bool writeBaseClass{ false };
         bool first{ true };
         bool colon_written{ false };
         auto s = [&]()
@@ -1565,7 +1599,7 @@ remove => _%.Event -= value;
             }
         };
 
-        if (get_category(type) == category::class_type && !is_static(type))
+        if (get_category(type) == category::class_type && !is_static(type) && writeBaseClass)
         {
             auto base_semantics = get_type_semantics(type.Extends());
 
@@ -1587,7 +1621,7 @@ remove => _%.Event -= value;
                     if (!is_exclusive_to(type))
                     {
                         s();
-                        w.write("%", bind<write_projection_type>(type));
+                        w.write("%", bind<write_type_name>(type, false));
                     }
                 },
                 [&](generic_type_instance const& type)
@@ -1595,7 +1629,7 @@ remove => _%.Event -= value;
                     if (!is_exclusive_to(type.generic_type))
                     {
                         s();
-                        w.write("%", bind<write_projection_type>(type));
+                        w.write("%", bind<write_type_name>(type, false));
                     }
                 },
                 [](auto) { throw_invalid("invalid interface impl type"); });
@@ -1782,7 +1816,20 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
 
         uint32_t const vtable_base = type.MethodList().first.index();
         w.write(R"(%
-% class %%
+% interface %%
+{
+%
+)",
+            // Interface
+            bind<write_guid_attribute>(type),
+            is_exclusive_to(type) ? "internal" : "public",
+            type_name,
+            "", //bind<write_type_inheritance>(type),
+            bind<write_interface_member_signatures>(type)
+            );
+
+        w.write(R"(%
+internal class % : %
 {
 %
 
@@ -1802,11 +1849,10 @@ _obj = obj;%
 public object % { get; set; }
 %%}
 )",
-            // Interface class
+            // Interface native implementation
             bind<write_guid_attribute>(type),
-            is_exclusive_to(type) ? "internal" : "public",
+            InterfaceImplementationSubTypeName,
             type_name,
-            "",  //bind<write_type_inheritance>(type),
             // Vftbl
             bind<write_vtable>(type, type_name, generic_methods, nongenerics_class, nongeneric_delegates),
             // Interface impl
@@ -1828,17 +1874,19 @@ return ObjectReference<Vftbl>.FromAbi(thisPtr, vftblT.IInspectableVftbl.IUnknown
 public static Guid PIID = Vftbl.PIID;
 )");
             }),
-            type_name,
-            type_name,
-            type_name,
-            type_name,
-            type.TypeName(),
-            type.TypeName(),
+            InterfaceImplementationSubTypeName,
+            InterfaceImplementationSubTypeName,
+            InterfaceImplementationSubTypeName,
+            InterfaceImplementationSubTypeName,
+            InterfaceImplementationSubTypeName,
+            InterfaceImplementationSubTypeName,
             bind<write_event_source_ctors>(type),
             OwnerMemberName,
             bind<write_interface_members>(type, generic_methods),
             bind<write_event_sources>(type)
         );
+
+        w.write("}\n");
 
         if (!nongeneric_delegates.empty())
         {
@@ -1849,8 +1897,55 @@ public static Guid PIID = Vftbl.PIID;
                 nongenerics_class,
                 bind_each(nongeneric_delegates));
         }
+
         w.write("\n");
     }
+
+    void write_class(writer& w, TypeDef const& type)
+    {
+        if (is_static(type))
+        {
+            write_static_class(w, type);
+            return;
+        }
+
+        auto type_name = write_type_name_temp(w, type);
+        auto default_interface_name = get_default_interface_name(w, type);
+        w.write(R"(public %class %%
+{
+public IntPtr ThisPtr => _default.ThisPtr;
+
+private % _default;
+%
+public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
+
+internal %(% ifc)
+{
+_default = ifc;
+_default.% = this;
+}
+
+private struct InterfaceTag<I>{};
+
+public I As<I>() => _default.As<I>();
+%
+}
+)",
+            bind<write_class_modifiers>(type),
+            type_name,
+            bind<write_type_inheritance>(type),
+            default_interface_name,
+            bind<write_attributed_types>(type),
+            type_name,
+            type_name,
+            default_interface_name,
+            default_interface_name,
+            type_name,
+            default_interface_name,
+            OwnerMemberName,
+            bind<write_class_members>(type));
+    }
+
 
     void write_delegate_param_marshal(writer& w, method_signature::param_t const& param)
     {
