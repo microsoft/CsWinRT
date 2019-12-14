@@ -2,6 +2,8 @@
 #include "Class.h"
 #include "Class.g.cpp"
 
+using namespace std::chrono;
+
 namespace winrt::TestComp::implementation
 {
     namespace statics
@@ -270,6 +272,14 @@ namespace winrt::TestComp::implementation
     void Class::ObjectPropertyChanged(winrt::event_token const& token) noexcept
     {
         _objectChanged.remove(token);
+    }
+    Windows::Foundation::IAsyncOperation<int32_t> Class::GetIntAsync()
+    {
+        co_return _int;
+    }
+    Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> Class::GetStringAsync()
+    {
+        co_return _string;
     }
 
     BlittableStruct Class::BlittableStructProperty()

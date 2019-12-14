@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Class.g.h"
+#include "winrt/Windows.Foundation.Collections.h"
 
 namespace winrt::TestComp::implementation
 {
@@ -8,6 +9,7 @@ namespace winrt::TestComp::implementation
     {
         Class() : Class(0, L"")
         {
+            _strings = winrt::single_threaded_vector<hstring>({ L"foo", L"bar" });
         }
 
         winrt::event<EventHandler0> _event0;
@@ -124,6 +126,9 @@ namespace winrt::TestComp::implementation
         ComposedNonBlittableStruct GetComposedNonBlittableStruct();
         void OutComposedNonBlittableStruct(ComposedNonBlittableStruct& value);
         void SetComposedNonBlittableStruct(ComposedNonBlittableStruct const& value);
+
+        Windows::Foundation::IAsyncOperation<int32_t> GetIntAsync();
+        Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> GetStringAsync();
 
         // IStringable
         hstring ToString();

@@ -21,6 +21,10 @@ namespace WinUITest
         [Fact]
         public void TestSomeWinUI()
         {
+            WinrtModule module = new WinrtModule();
+
+            Microsoft.UI.Xaml.Controls.Frame frame = new Microsoft.UI.Xaml.Controls.Frame();
+
             // TODO: load up some MUX!
             //Assert.Equal(true, true);
         }

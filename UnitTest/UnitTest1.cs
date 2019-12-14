@@ -9,10 +9,8 @@ using WinRT;
 
 using WF = Windows.Foundation;
 using WFC = Windows.Foundation.Collections;
-using WFN = Windows.Foundation.Numerics;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Windows.Foundation.Numerics;
 
 using TestComp;
 
@@ -176,6 +174,39 @@ namespace UnitTest
             // TODO: 'is' and 'as' operators - reconsider interface inheritance
         }
 
+        // TODO: project asyncs as awaitable tasks 
+        [Fact]
+        public void TestAsync()
+        {
+            // BUG : Managed to ABI delegate marshaling is broken (ref count not stable causing premature GC).
+            // Should return Delegate.InitialReference from ToAbi, within a using statement to enforce Dispose.
+            return;
+
+            TestObject.IntProperty = 42;
+            var async_get_int = TestObject.GetIntAsync();
+            int async_int = 0;
+            async_get_int.Completed = (info, status) => async_int = info.GetResults();
+            async_get_int.GetResults();
+            Assert.Equal(42, async_int);
+
+            TestObject.StringProperty = "foo";
+            var async_get_string = TestObject.GetStringAsync();
+            string async_string = "";
+            async_get_string.Completed = (info, status) => async_string = info.GetResults();
+            int async_progress;
+            async_get_string.Progress = (info, progress) => async_progress = progress;
+            async_get_string.GetResults();
+            Assert.Equal("foo", async_string);
+        }
+
+        [Fact]
+        public void TestCollections()
+        {
+            // TODO: need more - currently just a smoke test for generics
+            var strings = TestObject.StringsProperty;
+            Assert.Equal(2u, strings.Size);
+        }
+
         /* TODO: Events are currently broken for value types
         [Fact]
         public void TestPrimitives()
@@ -183,7 +214,7 @@ namespace UnitTest
             var test_int = 21;
             TestObject.IntPropertyChanged += (IInspectable sender, Int32 value) =>
             {
-                var c = Class.FromNative(sender.NativePtr);
+                var c = Class.FromAbi(sender.ThisPtr);
                 Assert.Equal(value, test_int);
             };
             TestObject.IntProperty = test_int;

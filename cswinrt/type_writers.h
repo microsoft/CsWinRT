@@ -31,8 +31,15 @@ namespace cswinrt
 
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
+using WinRT.Interop;
+
+
+#pragma warning disable 0169 // warning CS0169: The field '...' is never used
+#pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
 
 namespace %
 {
@@ -161,7 +168,7 @@ namespace %
         }
 
         bool in_generic_instance{ false };
-
+        
         void write_code(std::string_view const& value)
         {
             for (auto&& c : value)
@@ -176,6 +183,23 @@ namespace %
                 }
             }
         }
+
+        using generic_type_name_write = std::function<void(writer & w, uint32_t index)>;
+        generic_type_name_write write_generic_type_name_custom{};
+        struct write_generic_type_name_guard
+        {
+            writer& _writer;
+            generic_type_name_write _current;
+            write_generic_type_name_guard(writer& w, generic_type_name_write current) : 
+                _writer(w), _current(current)
+            {
+                std::swap(_current, _writer.write_generic_type_name_custom);
+            }
+            ~write_generic_type_name_guard()
+            {
+                std::swap(_current, _writer.write_generic_type_name_custom);
+            }
+        };
     };
 
     struct separator
