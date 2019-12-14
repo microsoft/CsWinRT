@@ -275,12 +275,10 @@ namespace winrt::TestComp::implementation
     }
     Windows::Foundation::IAsyncOperation<int32_t> Class::GetIntAsync()
     {
-        co_await 500ms;
         co_return _int;
     }
     Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> Class::GetStringAsync()
     {
-        co_await 500ms;
         co_return _string;
     }
 

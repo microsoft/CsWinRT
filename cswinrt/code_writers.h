@@ -1228,28 +1228,6 @@ private EventSource% _%;)",
         }
     }
 
-    void write_object_out_marshal_from_abi(writer& w, type_semantics const& param_type, TypeDef const& type, std::string_view name, bool /*is_boxed*/ = false)
-    {
-        switch (get_category(type))
-        {
-        case category::delegate_type:
-            write_delegate_helper_call(w, type, "FromAbi", name);
-            return;
-        case category::struct_type:
-            if (!is_type_blittable(param_type))
-            {
-                w.write("%.FromAbi(%)", bind<write_type_name>(param_type, true), name);
-            }
-            return;
-        case category::interface_type:
-        case category::class_type:
-            w.write("%.FromAbi(%)",
-                bind<write_projection_type>(param_type),
-                name);
-            return;
-        }
-    }
-
     void write_out_marshal_from_abi(writer& w, type_semantics const& semantics, std::string_view name)
     {
         if (!is_type_blittable(semantics))
@@ -1778,8 +1756,7 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
                     bind_each([&](writer& w, MethodDef const& method)
                     {
                         auto vmethod_name = get_vmethod_name(w, type, method);
-                        auto abi_type = get_generic_abi_types(w, method_signature(method));
-                        auto [generic_abi_types, has_generic_params] = abi_type; // get_generic_abi_types(w, method_signature(method));
+                        auto [generic_abi_types, has_generic_params] = get_generic_abi_types(w, method_signature(method));
                         if (has_generic_params)
                         {
                             w.write("private static readonly Type %_Type = Expression.GetDelegateType(new Type[]{ typeof(void*)%, typeof(int) });\n",
@@ -1994,6 +1971,7 @@ var func = Marshal.GetFunctionPointerForDelegate(global::System.Delegate.CreateD
 return new WinRT.Delegate(func, managedDelegate).ThisPtr;
 }
 
+// TODO: fix generic delegate invocations (T != Marshaler<T>.AbiType)
 private static unsafe int Do_Abi_Invoke(%)
 {
 %;

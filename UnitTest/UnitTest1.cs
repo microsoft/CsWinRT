@@ -178,7 +178,8 @@ namespace UnitTest
         [Fact]
         public void TestAsync()
         {
-            // BUG : Delegate.FindObject is returning null, unless code is stepped through
+            // BUG : Managed to ABI delegate marshaling is broken (ref count not stable causing premature GC).
+            // Should return Delegate.InitialReference from ToAbi, within a using statement to enforce Dispose.
             return;
 
             TestObject.IntProperty = 42;

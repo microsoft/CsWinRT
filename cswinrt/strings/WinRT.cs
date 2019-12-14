@@ -127,14 +127,14 @@ namespace WinRT
             public _GetTrustLevel GetTrustLevel;
         }
 
-        private readonly WinRT.ObjectReference<Vftbl> _obj;
+        private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public static WinRT.ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => WinRT.ObjectReference<Vftbl>.FromAbi(thisPtr);
-        public static implicit operator IInspectable(WinRT.IObjectReference obj) => obj.As<Vftbl>();
-        public static implicit operator IInspectable(WinRT.ObjectReference<Vftbl> obj) => new IInspectable(obj);
-        public WinRT.ObjectReference<I> As<I>() => _obj.As<I>();
-        public IInspectable(WinRT.IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public IInspectable(WinRT.ObjectReference<Vftbl> obj)
+        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        public static implicit operator IInspectable(IObjectReference obj) => obj.As<Vftbl>();
+        public static implicit operator IInspectable(ObjectReference<Vftbl> obj) => new IInspectable(obj);
+        public ObjectReference<I> As<I>() => _obj.As<I>();
+        public IInspectable(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public IInspectable(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
         }
@@ -394,7 +394,7 @@ namespace WinRT
             {
                 fixed (void* chars = value, pHeader = &_header, pHandle = &Handle)
                 {
-                    Marshal.ThrowExceptionForHR(WinRT.Platform.WindowsCreateStringReference(
+                    Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
                         (char*)chars, value.Length, (IntPtr*)pHeader, (IntPtr*)pHandle));
                 }
             }
@@ -454,6 +454,23 @@ namespace WinRT
             return obj;
         }
 
+        ObjectReference(IntPtr thisPtr, IUnknownVftbl vftblIUnknown, T vftblT) :
+            base(thisPtr)
+        {
+            _vftblIUnknown = vftblIUnknown;
+            Vftbl = vftblT;
+        }
+
+        ObjectReference(IntPtr thisPtr) :
+            this(thisPtr, GetVtables(thisPtr))
+        {
+        }
+
+        ObjectReference(IntPtr thisPtr, (IUnknownVftbl vftblIUnknown, T vftblT) vtables) :
+            this(thisPtr, vtables.vftblIUnknown, vtables.vftblT)
+        {
+        }
+
         public static ObjectReference<T> FromAbi(IntPtr thisPtr, IUnknownVftbl vftblIUnknown, T vftblT)
         {
             if (thisPtr == IntPtr.Zero)
@@ -475,17 +492,12 @@ namespace WinRT
             return FromAbi(thisPtr, vftblIUnknown, vftblT);
         }
 
-        ObjectReference(IntPtr thisPtr) :
-            base(thisPtr)
-        {
-            return FromAbi(thisPtr);
-        }
-
         // C# doesn't allow us to express that T contains IUnknownVftbl, so we'll use a tuple
         private static (IUnknownVftbl vftblIUnknown, T vftblT) GetVtables(IntPtr thisPtr)
         {
             var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
             var vftblIUnknown = Marshal.PtrToStructure<IUnknownVftbl>(vftblPtr.Vftbl);
+            // TODO: need to delegate back to the T implementation for generics ...
             var vftblT = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
             return (vftblIUnknown, vftblT);
         }
@@ -614,11 +626,11 @@ namespace WinRT
 
         public static unsafe ObjectReference<IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
         {
-            var module = Instance;
+            var module = Instance; // Ensure COM is initialized
             Guid iid = typeof(IActivationFactoryVftbl).GUID;
             IntPtr instancePtr;
             Marshal.ThrowExceptionForHR(Platform.RoGetActivationFactory(runtimeClassId.Handle, ref iid, &instancePtr));
-            return ObjectReference<IActivationFactoryVftbl>.Attach(module, ref instancePtr);
+            return ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr);
         }
 
         ~WinrtModule()
@@ -671,7 +683,7 @@ namespace WinRT
         {
             IntPtr instancePtr = IntPtr.Zero;
             Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, out instancePtr));
-            return ObjectReference<WinRT.IInspectable.Vftbl>.Attach(ref instancePtr).As<I>();
+            return ObjectReference<IInspectable.Vftbl>.Attach(ref instancePtr).As<I>();
         }
 
         public ObjectReference<I> _As<I>() => _IActivationFactory.As<I>();
@@ -1196,7 +1208,7 @@ namespace WinRT
                     ToAbi = BindToAbi(AbiType);
                 }
             }
-            else if (type.IsArray)
+            else if (type.IsArray) // TODO
             {
                 // If element type is blittable, pass pointer/length directly
                 var elem_type = type.GetElementType();
@@ -1220,7 +1232,14 @@ namespace WinRT
                 FromAbi = (object value) => (T)(object)MarshalString.FromAbi((IntPtr)value);
                 ToAbi = (T value) => MarshalString.ToAbi((string)(object)value);
             }
-            else // IInspectables (rcs, interfaces, delegates)
+            // TODO: string projection
+            else if (type == typeof(HString))
+            {
+                AbiType = typeof(IntPtr);
+                FromAbi = (object value) => (T)(object)new HString((IntPtr)value);
+                ToAbi = (T value) => ((HString)(object)value).Handle;
+            }
+            else // TODO: IInspectables (rcs, interfaces, delegates)
             {
                 AbiType = typeof(IntPtr);
                 FromAbi = (object value) => (T)value;
