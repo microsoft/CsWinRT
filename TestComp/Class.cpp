@@ -15,14 +15,15 @@ namespace winrt::TestComp::implementation
         static int _readWrite{};
     }
 
-    Class::Class(int32_t intProperty)
+    Class::Class(int32_t intProperty) :
+        Class(intProperty, L"")
     {
-        _int = intProperty;
     }
-    Class::Class(int32_t intProperty, hstring const& stringProperty)
+    Class::Class(int32_t intProperty, hstring const& stringProperty) :
+        _int(intProperty),
+        _string(stringProperty)
     {
-        _int = intProperty;
-        _string = stringProperty;
+        _nonBlittableStruct.refs.ref32 = _int;
     }
     int32_t Class::StaticIntProperty()
     {
@@ -182,6 +183,32 @@ namespace winrt::TestComp::implementation
     {
         _int = provideInt();
     }
+    bool Class::BoolProperty()
+    {
+        return _bool;
+    }
+    void Class::BoolProperty(bool value)
+    {
+        _bool = value;
+        _boolChanged(*this, _bool);
+    }
+    winrt::event_token Class::BoolPropertyChanged(Windows::Foundation::EventHandler<bool> const& handler)
+    {
+        return _boolChanged.add(handler);
+    }
+    void Class::BoolPropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _boolChanged.remove(token);
+    }
+    void Class::RaiseBoolChanged()
+    {
+        _boolChanged(*this, _bool);
+    }
+    void Class::CallForBool(TestComp::ProvideBool const& provideBool)
+    {
+        _bool = provideBool();
+        _boolChanged(*this, _bool);
+    }
     hstring Class::StringProperty()
     {
         return _string;
@@ -255,6 +282,156 @@ namespace winrt::TestComp::implementation
     {
         co_await 500ms;
         co_return _string;
+    }
+
+    BlittableStruct Class::BlittableStructProperty()
+    {
+        return _blittableStruct.blittable;
+    }
+
+    void Class::BlittableStructProperty(BlittableStruct const& value)
+    {
+        _blittableStruct.blittable = value;
+    }
+
+    BlittableStruct Class::GetBlittableStruct()
+    {
+        return _blittableStruct.blittable;
+    }
+
+    void Class::OutBlittableStruct(BlittableStruct& value)
+    {
+        value = _blittableStruct.blittable;
+    }
+
+    void Class::SetBlittableStruct(BlittableStruct const& value)
+    {
+        _blittableStruct.blittable = value;
+    }
+
+    ComposedBlittableStruct Class::ComposedBlittableStructProperty()
+    {
+        return _blittableStruct;
+    }
+
+    void Class::ComposedBlittableStructProperty(ComposedBlittableStruct const& value)
+    {
+        _blittableStruct = value;
+    }
+
+    ComposedBlittableStruct Class::GetComposedBlittableStruct()
+    {
+        return _blittableStruct;
+    }
+
+    void Class::OutComposedBlittableStruct(ComposedBlittableStruct& value)
+    {
+        value = _blittableStruct;
+    }
+
+    void Class::SetComposedBlittableStruct(ComposedBlittableStruct const& value)
+    {
+        _blittableStruct = value;
+    }
+
+    NonBlittableStringStruct Class::NonBlittableStringStructProperty()
+    {
+        return _nonBlittableStruct.strings;
+    }
+
+    void Class::NonBlittableStringStructProperty(NonBlittableStringStruct const& value)
+    {
+        _nonBlittableStruct.strings = value;
+    }
+
+    NonBlittableStringStruct Class::GetNonBlittableStringStruct()
+    {
+        return _nonBlittableStruct.strings;
+    }
+
+    void Class::OutNonBlittableStringStruct(NonBlittableStringStruct& value)
+    {
+        value = _nonBlittableStruct.strings;
+    }
+
+    void Class::SetNonBlittableStringStruct(NonBlittableStringStruct const& value)
+    {
+        _nonBlittableStruct.strings = value;
+    }
+
+    NonBlittableBoolStruct Class::NonBlittableBoolStructProperty()
+    {
+        return _nonBlittableStruct.bools;
+    }
+
+    void Class::NonBlittableBoolStructProperty(NonBlittableBoolStruct const& value)
+    {
+        _nonBlittableStruct.bools = value;
+    }
+
+    NonBlittableBoolStruct Class::GetNonBlittableBoolStruct()
+    {
+        return _nonBlittableStruct.bools;
+    }
+
+    void Class::OutNonBlittableBoolStruct(NonBlittableBoolStruct& value)
+    {
+        value = _nonBlittableStruct.bools;
+    }
+
+    void Class::SetNonBlittableBoolStruct(NonBlittableBoolStruct const& value)
+    {
+        _nonBlittableStruct.bools = value;
+    }
+
+    NonBlittableRefStruct Class::NonBlittableRefStructProperty()
+    {
+        return _nonBlittableStruct.refs;
+    }
+
+    void Class::NonBlittableRefStructProperty(NonBlittableRefStruct const& value)
+    {
+        _nonBlittableStruct.refs = value;
+    }
+
+    NonBlittableRefStruct Class::GetNonBlittableRefStruct()
+    {
+        return _nonBlittableStruct.refs;
+    }
+
+    void Class::OutNonBlittableRefStruct(NonBlittableRefStruct& value)
+    {
+        value = _nonBlittableStruct.refs;
+    }
+
+    void Class::SetNonBlittableRefStruct(NonBlittableRefStruct const& value)
+    {
+        _nonBlittableStruct.refs = value;
+    }
+
+    TestComp::ComposedNonBlittableStruct Class::ComposedNonBlittableStructProperty()
+    {
+        return _nonBlittableStruct;
+    }
+
+    void Class::ComposedNonBlittableStructProperty(TestComp::ComposedNonBlittableStruct const& value)
+    {
+        _nonBlittableStruct = value;
+    }
+
+    TestComp::ComposedNonBlittableStruct Class::GetComposedNonBlittableStruct()
+    {
+        return _nonBlittableStruct;
+    }
+
+    void Class::OutComposedNonBlittableStruct(TestComp::ComposedNonBlittableStruct& value)
+    {
+        value = _nonBlittableStruct;
+    }
+
+    void Class::SetComposedNonBlittableStruct(TestComp::ComposedNonBlittableStruct const& value)
+    {
+        _nonBlittableStruct = value;
     }
 
     // IStringable

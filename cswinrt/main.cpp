@@ -145,17 +145,32 @@ Where <spec> is one or more of:
                     auto&& [ns, members] = ns_members;
                     writer w(ns);
                     w.write_begin();
-                    bool written{};
+                    bool written = false;
+                    bool requiresAbi = false;
                     for (auto&& [name, type] : members.types)
                     {
                         if (settings.filter.includes(type))
                         {
                             written |= write_type(type, w);
+                            requiresAbi = requiresAbi || ((get_category(type) == category::struct_type) && !is_type_blittable(type));
                         };
                     }
                     if (written)
                     {
                         w.write_end();
+                        if (requiresAbi)
+                        {
+                            w.write_begin_abi();
+                            for (auto&& [name, type] : members.types)
+                            {
+                                if (settings.filter.includes(type) && (get_category(type) == category::struct_type) && !is_type_blittable(type))
+                                {
+                                    write_struct(w, type);
+                                };
+                            }
+                            w.write_end_abi();
+                        }
+
                         auto filename = w.write_temp("%.cs", ns);
                         w.flush_to_file(settings.output_folder / filename);
                     }

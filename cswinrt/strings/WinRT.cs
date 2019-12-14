@@ -51,10 +51,8 @@ namespace WinRT
         }
 
         // standard accessors/mutators
-        public unsafe delegate int _get_PropertyAs<T>([In] IntPtr thisPtr, [Out] out T value);
-        public delegate int _put_PropertyAs<T>([In] IntPtr thisPtr, [In] T value);
-        public unsafe delegate int _get_PropertyAsBoolean([In] IntPtr thisPtr, [Out, MarshalAs(UnmanagedType.U1)] out bool value);
-        public delegate int _put_PropertyAsBoolean([In] IntPtr thisPtr, [In, MarshalAs(UnmanagedType.U1)] bool value);
+        public unsafe delegate int _get_PropertyAsBoolean([In] IntPtr thisPtr, [Out] out byte value);
+        public delegate int _put_PropertyAsBoolean([In] IntPtr thisPtr, [In] byte value);
         public unsafe delegate int _get_PropertyAsChar([In] IntPtr thisPtr, [Out] out char value);
         public delegate int _put_PropertyAsChar([In] IntPtr thisPtr, [In] char value);
         public unsafe delegate int _get_PropertyAsSByte([In] IntPtr thisPtr, [Out] out sbyte value);
@@ -483,6 +481,10 @@ namespace WinRT
 
         public static ObjectReference<T> FromAbi(IntPtr thisPtr, object module, IUnknownVftbl vftblIUnknown, T vftblT)
         {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
             var obj = new ObjectReference<T>(thisPtr, module, true, vftblIUnknown, vftblT);
             obj._vftblIUnknown.AddRef(obj.ThisPtr);
             return obj;
@@ -490,11 +492,19 @@ namespace WinRT
 
         public static ObjectReference<T> FromAbi(IntPtr thisPtr, IUnknownVftbl vftblIUnknown, T vftblT)
         {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
             return FromAbi(thisPtr, GetObjectModule(thisPtr), vftblIUnknown, vftblT);
         }
 
         public static ObjectReference<T> FromAbi(IntPtr thisPtr)
         {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
             var (vftblIUnknown, vftblT) = GetVtables(thisPtr);
             return FromAbi(thisPtr, GetObjectModule(thisPtr), vftblIUnknown, vftblT);
         }
@@ -510,6 +520,10 @@ namespace WinRT
 
         private static object GetObjectModule(IntPtr thisPtr)
         {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
             // Retrieve module handle from QueryInterface function address
             IntPtr qi;
             unsafe { qi = (*(IntPtr**)thisPtr.ToPointer())[0]; };

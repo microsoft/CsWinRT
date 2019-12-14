@@ -18,6 +18,7 @@ namespace cswinrt
         using indented_writer_base::indented_writer_base;
 
         std::string_view _current_namespace{};
+        bool _in_abi_namespace = false;
 
         writer(std::string_view current_namespace) :
             _current_namespace(current_namespace)
@@ -50,67 +51,19 @@ namespace %
             write("}\n");
         }
 
-        using indented_writer_base<writer>::write;
-
-        struct generic_params
+        void write_begin_abi()
         {
-            std::vector<std::vector<GenericParam>> stack;
+            write("\nnamespace ABI.%\n{\n", _current_namespace);
+            _in_abi_namespace = true;
+        }
 
-            struct guard
-            {
-                explicit guard(writer* arg = nullptr)
-                    : owner(arg)
-                {}
+        void write_end_abi()
+        {
+            write("}\n");
+            _in_abi_namespace = false;
+        }
 
-                ~guard()
-                {
-                    if (owner)
-                    {
-                        owner->generic_params.pop();
-                    }
-                }
-
-                guard(guard&& other)
-                    : owner(other.owner)
-                {
-                    owner = nullptr;
-                }
-
-                guard& operator=(guard&& other)
-                {
-                    owner = std::exchange(other.owner, nullptr);
-                    return *this;
-                }
-
-                guard& operator=(guard&) = delete;
-                writer* owner;
-            };
-
-            [[nodiscard]] auto push(std::pair<GenericParam, GenericParam> const& range, writer& owner)
-            {
-                if (empty(range))
-                {
-                    return guard{ nullptr };
-                }
-                std::vector<GenericParam> params;
-                for (auto&& param : range)
-                {
-                    params.push_back(param);
-                }
-                stack.push_back(std::move(params));
-                return guard{ &owner };
-            }
-
-            auto get(uint32_t index)
-            {
-                return stack.back()[index];
-            }
-
-            void pop()
-            {
-                stack.pop_back();
-            }
-        };
+        using indented_writer_base<writer>::write;
 
         struct generic_args
         {
@@ -153,6 +106,17 @@ namespace %
                 bool in_generic_instance;
             };
 
+            [[nodiscard]] auto push(std::pair<GenericParam, GenericParam> const& range, writer& owner)
+            {
+                if (empty(range))
+                {
+                    return guard{ nullptr };
+                }
+
+                stack.emplace_back(begin(range), end(range));
+                return guard{ &owner };
+            }
+
             [[nodiscard]] auto push(generic_type_instance const& type, writer& owner)
             {
                 XLANG_ASSERT(!type.generic_args.empty());
@@ -162,10 +126,14 @@ namespace %
 
             auto get(uint32_t index)
             {
-                type_semantics semantics{};
                 for (auto&& args = rbegin(stack); args != rend(stack); ++args)
                 {
-                    semantics = (*args)[index];
+                    if (index >= args->size())
+                    {
+                        throw_invalid("Generic index out of range");
+                    }
+
+                    auto& semantics = (*args)[index];
                     auto gti = std::get_if<generic_type_index>(&semantics);
                     if(!gti)
                     {
@@ -173,7 +141,7 @@ namespace %
                     }
                     index = gti->index;
                 }
-                return semantics;
+                throw_invalid("No generic arguments");
             }
 
             void pop()
@@ -182,19 +150,12 @@ namespace %
             }
         };
 
-        generic_params generic_params;
+        generic_args generic_args;
 
         [[nodiscard]] auto push_generic_params(std::pair<GenericParam, GenericParam> const& range)
         {
-            return generic_params.push(range, *this);
+            return generic_args.push(range, *this);
         }
-        
-        auto get_generic_param(uint32_t index)
-        {
-            return generic_params.get(index);
-        }
-
-        generic_args generic_args;
 
         [[nodiscard]] auto push_generic_args(generic_type_instance const& type)
         {
