@@ -635,13 +635,14 @@ public %%% %(%) => %.%(%);
         }
     }
 
-    void write_class_property(writer& w, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target)
+    void write_class_property(writer& w, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target, std::string_view visibility = "public")
     {
         if (setter_target.empty())
         {
         w.write(R"(
-public % % => %.%;
+% % % => %.%;
 )",
+            visibility,
             prop_type,
             prop_name,
             getter_target,
@@ -650,12 +651,13 @@ public % % => %.%;
         else
         {
             w.write(R"(
-public % %
+% % %
 {
 get => %.%;
 set => %.% = value;
 }
 )",
+                visibility,
                 prop_type,
                 prop_name,
                 getter_target,
@@ -665,15 +667,16 @@ set => %.% = value;
         }
     }
 
-    void write_class_event(writer& w, Event const& event, std::string_view interface_member)
+    void write_class_event(writer& w, Event const& event, std::string_view interface_member, std::string_view visibility = "public")
     {
         w.write(R"(
-public event WinRT.EventHandler% %
+% event WinRT.EventHandler% %
 {
 add => %.% += value;
 remove => %.% -= value;
 }
 )",
+            visibility,
             bind<write_event_param_types>(event),
             event.Name(),
             interface_member,
@@ -965,7 +968,7 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                 }
 
                 w.write_each<write_class_method>(interface_type.MethodList(), false, target);
-                w.write_each<write_class_event>(interface_type.EventList(), target);
+                w.write_each<write_class_event>(interface_type.EventList(), target, "public");
 
                 // Merge property getters/setters, since such may be defined across interfaces
                 for (auto&& prop : interface_type.PropertyList())
@@ -1578,7 +1581,8 @@ remove => _%.Event -= value;
                 prop.Name(),
                 propertyType,
                 propertyTarget,
-                propertyTarget));
+                propertyTarget,
+                ""));
         };
 
         auto write_event = [&](TypeDef const& required_interface, Event const& evt)
@@ -1586,7 +1590,8 @@ remove => _%.Event -= value;
             auto eventTarget = w.write_temp("As<%>()", bind<write_type_name>(required_interface, true, false));
             w.write(bind<write_class_event>(
                 evt,
-                eventTarget));
+                eventTarget,
+                ""));
         };
 
         auto write_interface = [&](TypeDef const& iface)
@@ -1977,7 +1982,7 @@ public static Guid PIID = Vftbl.PIID;
 
         if (!nongeneric_delegates.empty())
         {
-            w.write(R"(public static class %
+            w.write(R"(internal static class %
 {
 %}
 )",
