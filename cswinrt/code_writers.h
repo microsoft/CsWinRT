@@ -33,9 +33,6 @@ namespace cswinrt
         {"WinRT.HString", "WinRT.HString"},
     };
 
-    static const std::string InterfaceImplementationSubTypeName = "_Native";
-
-
     auto to_csharp_type(fundamental_type type)
     {
         return type_mappings[(int)type].csharp;
