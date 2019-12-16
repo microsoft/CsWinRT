@@ -31,7 +31,7 @@ namespace UnitTest
         public void TestGenerics()
         {
             // Ensure every generic instance has a unique PIID
-            Assert.NotEqual(IMap<bool, string>.Vftbl.PIID, IMap<string, bool>.Vftbl.PIID);
+            Assert.NotEqual(ABI.Windows.Foundation.Collections.IMap<bool, string>.Vftbl.PIID, ABI.Windows.Foundation.Collections.IMap<string, bool>.Vftbl.PIID);
 
             AssertGuid<IStringable>("96369f54-8eb6-48f0-abce-c1b211e627c3");
 
