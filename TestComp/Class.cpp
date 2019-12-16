@@ -23,7 +23,7 @@ namespace winrt::TestComp::implementation
         _int(intProperty),
         _string(stringProperty)
     {
-        _nonBlittableStruct.refs.ref32 = _int;
+        _nonBlittableStruct.refs.ref32 = 42;
     }
     int32_t Class::StaticIntProperty()
     {
@@ -280,6 +280,11 @@ namespace winrt::TestComp::implementation
     Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> Class::GetStringAsync()
     {
         co_return _string;
+    }
+
+    Windows::Foundation::IReference<TestComp::ComposedNonBlittableStruct> Class::GetComposedNonBlittableStructReference()
+    {
+        return _nonBlittableStruct;
     }
 
     BlittableStruct Class::BlittableStructProperty()

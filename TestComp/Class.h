@@ -130,6 +130,8 @@ namespace winrt::TestComp::implementation
         Windows::Foundation::IAsyncOperation<int32_t> GetIntAsync();
         Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> GetStringAsync();
 
+        Windows::Foundation::IReference<TestComp::ComposedNonBlittableStruct> GetComposedNonBlittableStructReference();
+
         // IStringable
         hstring ToString();
 
