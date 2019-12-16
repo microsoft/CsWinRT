@@ -672,7 +672,7 @@ set => %.% = value;
     void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view interface_member, std::string_view visibility = "public ")
     {
         w.write(R"(
-% event WinRT.EventHandler% %
+%event WinRT.EventHandler% %
 {
 add => %.% += value;
 remove => %.% -= value;
