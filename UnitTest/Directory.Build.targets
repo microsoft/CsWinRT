@@ -14,13 +14,15 @@
     <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.pdb&quot; &quot;$(TargetDir)&quot;" />
   </Target>
 
-  <Target Name="ProjectTestComponent" BeforeTargets="CoreCompile" Condition="'$(GenerateTestProjection)' == 'true'">
+  <Target Name="GenerateTestComponentProjection" BeforeTargets="CoreCompile" Condition="'$(GenerateTestProjection)' == 'true'">
     <Exec Command="$(CsWinrtExe) -verbose -in 10.0.18362.0 $(OutDir)TestComp\TestComp.winmd -out &quot;$(ProjectDir)Generated Files&quot; -include TestComp -include Windows.Foundation -exclude Windows.Foundation.Diagnostics -exclude Windows.Foundation.Metadata" />
   </Target>
 
-  <ItemGroup>
-    <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
-  </ItemGroup>
+  <Target Name="IncludeTestComponentProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateTestComponentProjection">
+    <ItemGroup>
+      <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
+    </ItemGroup>
+  </Target>
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
 
