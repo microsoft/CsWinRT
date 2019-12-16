@@ -635,23 +635,23 @@ public %%% %(%) => %.%(%);
         }
     }
 
-    void write_class_property(writer& w, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target, std::string_view visibility = "public")
+    void write_property(writer& w, std::string_view external_prop_name, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target, std::string_view visibility = "public ")
     {
         if (setter_target.empty())
         {
-        w.write(R"(
-% % % => %.%;
+            w.write(R"(
+%% % => %.%;
 )",
-            visibility,
-            prop_type,
-            prop_name,
-            getter_target,
-            prop_name);
+                visibility,
+                prop_type,
+                external_prop_name,
+                getter_target,
+                prop_name);
         }
         else
         {
             w.write(R"(
-% % %
+%% %
 {
 get => %.%;
 set => %.% = value;
@@ -659,7 +659,7 @@ set => %.% = value;
 )",
                 visibility,
                 prop_type,
-                prop_name,
+                external_prop_name,
                 getter_target,
                 prop_name,
                 setter_target,
@@ -667,7 +667,12 @@ set => %.% = value;
         }
     }
 
-    void write_class_event(writer& w, Event const& event, std::string_view interface_member, std::string_view visibility = "public")
+    void write_class_property(writer& w, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target)
+    {
+        write_property(w, prop_name, prop_name, prop_type, getter_target, setter_target);
+    }
+
+    void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view interface_member, std::string_view visibility = "public ")
     {
         w.write(R"(
 % event WinRT.EventHandler% %
@@ -678,11 +683,16 @@ remove => %.% -= value;
 )",
             visibility,
             bind<write_event_param_types>(event),
-            event.Name(),
+            external_event_name,
             interface_member,
             event.Name(),
             interface_member,
             event.Name());
+    }
+
+    void write_class_event(writer& w, Event const& event, std::string_view interface_member)
+    {
+        write_event(w, event.Name(), event, interface_member);
     }
 
     struct attributed_type
@@ -968,7 +978,7 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                 }
 
                 w.write_each<write_class_method>(interface_type.MethodList(), false, target);
-                w.write_each<write_class_event>(interface_type.EventList(), target, "public");
+                w.write_each<write_class_event>(interface_type.EventList(), target);
 
                 // Merge property getters/setters, since such may be defined across interfaces
                 for (auto&& prop : interface_type.PropertyList())
@@ -1573,22 +1583,30 @@ remove => _%.Event -= value;
             );
         };
 
-        auto write_property = [&](TypeDef const& required_interface, Property const& prop)
+        auto write_property_shim = [&](TypeDef const& required_interface, Property const& prop)
         {
             auto propertyType = w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
-            auto propertyTarget = w.write_temp("As<%>()", bind<write_type_name>(required_interface, true, false));
-            w.write(bind<write_class_property>(
+            auto declaringTypeName = write_type_name_temp(w, required_interface);
+            auto definingTypeName = write_type_name_temp(w, required_interface, "%", true);
+            auto propertyTarget = w.write_temp("As<%>()", definingTypeName);
+
+            auto [getter, setter] = get_property_methods(prop);
+
+            w.write(bind<write_property>(
+                w.write_temp("%.%", declaringTypeName, prop.Name()),
                 prop.Name(),
                 propertyType,
-                propertyTarget,
-                propertyTarget,
+                getter ? propertyTarget : "",
+                setter ? propertyTarget : "",
                 ""));
         };
 
-        auto write_event = [&](TypeDef const& required_interface, Event const& evt)
+        auto write_event_shim = [&](TypeDef const& required_interface, Event const& evt)
         {
+            auto declaringTypeName = write_type_name_temp(w, required_interface);
             auto eventTarget = w.write_temp("As<%>()", bind<write_type_name>(required_interface, true, false));
-            w.write(bind<write_class_event>(
+            w.write(bind<write_event>(
+                w.write_temp("%.%", declaringTypeName, evt.Name()),
                 evt,
                 eventTarget,
                 ""));
@@ -1602,11 +1620,11 @@ remove => _%.Event -= value;
             }
             for (auto&& prop : iface.PropertyList())
             {
-                write_property(iface, prop);
+                write_property_shim(iface, prop);
             }
             for (auto&& evt : iface.EventList())
             {
-                write_event(iface, evt);
+                write_event_shim(iface, evt);
             }
         };
 
@@ -1901,7 +1919,7 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
             bind<write_guid_attribute>(type),
             is_exclusive_to(type) ? "internal" : "public",
             type_name,
-            "", //bind<write_type_inheritance>(type),
+            bind<write_type_inheritance>(type),
             bind<write_interface_member_signatures>(type)
             );
     }
@@ -1977,7 +1995,7 @@ public static Guid PIID = Vftbl.PIID;
             OwnerMemberName,
             bind<write_interface_members>(type, generic_methods),
             bind<write_event_sources>(type),
-            "" // bind<write_required_interface_members_for_native_type>(type)
+            bind<write_required_interface_members_for_native_type>(type)
         );
 
         if (!nongeneric_delegates.empty())
