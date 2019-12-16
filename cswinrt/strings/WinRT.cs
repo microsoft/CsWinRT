@@ -1173,7 +1173,7 @@ namespace WinRT
     {
         public static T FromAbi(IntPtr value)
         {
-            // todo: convert abi to array 
+            // todo: convert abi to array
             var elem_type = typeof(T).GetElementType();
             Array a = Array.CreateInstance(elem_type, (int)value);
             return (T)(object)a;
@@ -1195,7 +1195,7 @@ namespace WinRT
             if (type.IsValueType)
             {
                 // If type is blittable, just pass it through
-                AbiType = Type.GetType(type.Namespace + ".ABI." + type.Name);
+                AbiType = Type.GetType("ABI." + type.FullName);
                 if (AbiType == null)
                 {
                     AbiType = type;
@@ -1212,7 +1212,7 @@ namespace WinRT
             {
                 // If element type is blittable, pass pointer/length directly
                 var elem_type = type.GetElementType();
-                AbiType = Type.GetType(type.Namespace + ".ABI." + type.Name);
+                AbiType = Type.GetType("ABI." + type.FullName);
                 if (AbiType == null)
                 {
                     AbiType = typeof(IntPtr);
