@@ -568,7 +568,7 @@ namespace cswinrt
         }
     }
 
-    void write_class_method(writer& w, MethodDef const& method, bool is_static, std::string_view interface_member)
+    void write_class_method(writer& w, MethodDef const& method, bool is_static, bool is_overridable, std::string_view interface_member)
     {
         if (method.Flags().SpecialName())
         {
@@ -577,13 +577,13 @@ namespace cswinrt
 
         method_signature signature{ method };
         bool write_explicit_implementation{ false };
-        auto visibility_specifier = "public ";
+        auto visibility_specifier = "public";
         std::string inheritance_specifier = "";
 
-        if (method.Flags().Virtual() && !method.Flags().Final())
+        if (is_overridable)
         {
             // All overridable methods in the WinRT type system have protected visibility.
-            visibility_specifier = "protected ";
+            visibility_specifier = "protected";
             inheritance_specifier = "virtual ";
         }
 
@@ -697,16 +697,11 @@ remove => %.% -= value;
             event.Name());
     }
 
-    void write_class_event(writer& w, Event const& event, std::string_view interface_member)
+    void write_class_event(writer& w, Event const& event, bool isOverridable, std::string_view interface_member)
     {
         auto visibility = "public ";
 
-        auto eventAccessorFlags = event.MethodSemantic().first.Method().Flags();
-
-        // If one method for an event is virtual and not final, then the event itself must be virtual.
-        // Additionally, all of the overridable methods in the WinRT type system are protected, so emit
-        // the event as protected.
-        if (eventAccessorFlags.Virtual() && !eventAccessorFlags.Final())
+        if (isOverridable)
         {
             visibility = "protected virtual ";
         }
@@ -900,7 +895,7 @@ return %.%(%%baseInspectable, out innerInspectable)._default;
     {
         auto cache_object = write_cache_object(w, static_type.TypeName(), class_type, true);
 
-        w.write_each<write_class_method>(static_type.MethodList(), true, cache_object);
+        w.write_each<write_class_method>(static_type.MethodList(), true, false, cache_object);
         for (auto&& prop : static_type.PropertyList())
         {
             auto [getter, setter] = get_property_methods(prop);
@@ -1002,8 +997,10 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                         interface_native_name);
                 }
 
-                w.write_each<write_class_method>(interface_type.MethodList(), false, target);
-                w.write_each<write_class_event>(interface_type.EventList(), target);
+                auto is_overridable_interface = has_attribute(ii, "Windows.Foundation.Metadata", "OverridableAttribute");
+
+                w.write_each<write_class_method>(interface_type.MethodList(), false, is_overridable_interface, target);
+                w.write_each<write_class_event>(interface_type.EventList(), is_overridable_interface, target);
 
                 // Merge property getters/setters, since such may be defined across interfaces
                 // Since a property has to either be overridable or not, 
@@ -1011,12 +1008,11 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                 {
                     auto [getter, setter] = get_property_methods(prop);
                     auto projection_type = w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
-                    bool propertyOverridable = (getter && getter.Flags().Virtual() && !getter.Flags().Final()) || (setter && setter.Flags().Virtual() && !setter.Flags().Final());
-                    auto propertyOverrideStatus = propertyOverridable ? PropertyOverrideStatus::AlwaysOverridable : PropertyOverrideStatus::None;
-                    auto [prop_targets, inserted]  = properties.try_emplace(prop.Name(), std::move(projection_type), std::move(getter ? target : ""), std::move(setter ? target : ""), propertyOverrideStatus);
+                    auto property_override_status = is_overridable_interface ? PropertyOverrideStatus::AlwaysOverridable : PropertyOverrideStatus::None;
+                    auto [prop_targets, inserted]  = properties.try_emplace(prop.Name(), std::move(projection_type), std::move(getter ? target : ""), std::move(setter ? target : ""), property_override_status);
                     if (!inserted)
                     {
-                        auto& [property_type, getter_target, setter_target, overrideStatus] = prop_targets->second;
+                        auto& [property_type, getter_target, setter_target, override_status] = prop_targets->second;
                         XLANG_ASSERT(property_type == projection_type);
                         if (getter)
                         {
@@ -1028,13 +1024,13 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                             XLANG_ASSERT(setter_target.empty());
                             setter_target = target;
                         }
-                        if (propertyOverridable && overrideStatus == PropertyOverrideStatus::None)
+                        if (is_overridable_interface && override_status == PropertyOverrideStatus::None)
                         {
-                            overrideStatus = PropertyOverrideStatus::SometimesOverridable;
+                            override_status = PropertyOverrideStatus::SometimesOverridable;
                         }
-                        else if (!propertyOverridable && overrideStatus == PropertyOverrideStatus::AlwaysOverridable)
+                        else if (!is_overridable_interface && override_status == PropertyOverrideStatus::AlwaysOverridable)
                         {
-                            overrideStatus = PropertyOverrideStatus::SometimesOverridable;
+                            override_status = PropertyOverrideStatus::SometimesOverridable;
                         }
                         XLANG_ASSERT(!getter_target.empty() || !setter_target.empty());
                     }
