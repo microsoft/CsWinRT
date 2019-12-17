@@ -366,15 +366,23 @@ namespace UnitTest
             Assert.True(val.z);
         }
 
-        /* TODO: Can't even test with a work-around until generics are fixed
         [Fact]
         public void TestNonBlittableRefStruct()
         {
             // Property getter/setter
-            TestObject.IntProperty = 42; // TODO: Need to either support interface inheritance or project IReference for setter
+            // TODO: Need to either support interface inheritance or project IReference/INullable for setter
             Assert.Equal(42, TestObject.NonBlittableRefStructProperty.ref32.Value);
+
+            // Manual getter
+            Assert.Equal(42, TestObject.GetNonBlittableRefStruct().ref32.Value);
+
+            // TODO: Manual setter
+
+            // Output argument
+            NonBlittableRefStruct val;
+            TestObject.OutNonBlittableRefStruct(out val);
+            Assert.Equal(42, val.ref32.Value);
         }
-        */
 
         [Fact]
         public void TestComposedNonBlittableStruct()
@@ -384,9 +392,8 @@ namespace UnitTest
             {
                 blittable = new BlittableStruct(){ i32 = 42 },
                 strings = new NonBlittableStringStruct(){ str = "I like tacos" },
-                bools = new NonBlittableBoolStruct(){ w = true, x = false, y = true, z = false }
-                // TODO: Even constructing an IReference will fail until generics are fixed
-                // refs = TestObject.NonBlittableRefStructProperty // TODO: Need to either support interface inheritance or project IReference for setter
+                bools = new NonBlittableBoolStruct(){ w = true, x = false, y = true, z = false },
+                refs = TestObject.NonBlittableRefStructProperty // TODO: Need to either support interface inheritance or project IReference/INullable for setter
             };
             TestObject.ComposedNonBlittableStructProperty = val;
             Assert.Equal(42, TestObject.ComposedNonBlittableStructProperty.blittable.i32);
@@ -428,6 +435,26 @@ namespace UnitTest
             Assert.True(val.bools.x);
             Assert.False(val.bools.y);
             Assert.True(val.bools.z);
+        }
+
+        [Fact]
+        public void TestNonBlittableStructGeneric()
+        {
+            TestObject.ComposedNonBlittableStructProperty = new ComposedNonBlittableStruct()
+            {
+                blittable = new BlittableStruct(){ i32 = 42 },
+                strings = new NonBlittableStringStruct(){ str = "I like tacos" },
+                bools = new NonBlittableBoolStruct(){ w = true, x = false, y = true, z = false },
+                refs = TestObject.NonBlittableRefStructProperty // TODO: Need to either support interface inheritance or project IReference/INullable for setter
+            };
+
+            var val = TestObject.GetComposedNonBlittableStructReference().Value;
+            Assert.Equal(42, val.blittable.i32);
+            Assert.Equal("I like tacos", val.strings.str);
+            Assert.True(val.bools.w);
+            Assert.False(val.bools.x);
+            Assert.True(val.bools.y);
+            Assert.False(val.bools.z);
         }
     }
 }
