@@ -2035,7 +2035,7 @@ _default.% = this;
 
 private struct InterfaceTag<I>{};
 
-public I As<I>() => _default.As<I>();
+internal I As<I>() => _default.As<I>();
 %
 }
 )",
