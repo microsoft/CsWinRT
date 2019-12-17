@@ -152,7 +152,7 @@ Where <spec> is one or more of:
                         if (settings.filter.includes(type))
                         {
                             written |= write_type(type, w);
-                            requiresAbi = requiresAbi || ((get_category(type) == category::struct_type) && !is_type_blittable(type));
+                            requiresAbi = requiresAbi || (get_category(type) == category::interface_type) || ((get_category(type) == category::struct_type) && !is_type_blittable(type));
                         };
                     }
                     if (written)
@@ -163,9 +163,16 @@ Where <spec> is one or more of:
                             w.write_begin_abi();
                             for (auto&& [name, type] : members.types)
                             {
-                                if (settings.filter.includes(type) && (get_category(type) == category::struct_type) && !is_type_blittable(type))
+                                if (settings.filter.includes(type))
                                 {
-                                    write_struct(w, type);
+                                    if ((get_category(type) == category::struct_type) && !is_type_blittable(type))
+                                    {
+                                        write_struct(w, type);
+                                    }
+                                    if (get_category(type) == category::interface_type)
+                                    {
+                                        write_native_interface_implementation(w, type);
+                                    }
                                 };
                             }
                             w.write_end_abi();
