@@ -568,7 +568,7 @@ namespace cswinrt
         }
     }
 
-    void write_class_method(writer& w, MethodDef const& method, bool is_static, bool is_overridable, std::string_view interface_member)
+    void write_class_method(writer& w, MethodDef const& method, bool is_static, bool is_overridable, bool is_protected, std::string_view interface_member)
     {
         if (method.Flags().SpecialName())
         {
@@ -577,7 +577,7 @@ namespace cswinrt
 
         method_signature signature{ method };
         bool write_explicit_implementation{ false };
-        auto visibility_specifier = "public";
+        auto visibility_specifier = is_protected ? "protected" : "public";
         std::string inheritance_specifier = "";
 
         if (is_overridable)
@@ -697,11 +697,16 @@ remove => %.% -= value;
             event.Name());
     }
 
-    void write_class_event(writer& w, Event const& event, bool isOverridable, std::string_view interface_member)
+    void write_class_event(writer& w, Event const& event, bool is_overridable, bool is_protected, std::string_view interface_member)
     {
         auto visibility = "public ";
 
-        if (isOverridable)
+        if (is_protected)
+        {
+            visibility = "protected ";
+        }
+
+        if (is_overridable)
         {
             visibility = "protected virtual ";
         }
@@ -895,7 +900,7 @@ return %.%(%%baseInspectable, out innerInspectable)._default;
     {
         auto cache_object = write_cache_object(w, static_type.TypeName(), class_type, true);
 
-        w.write_each<write_class_method>(static_type.MethodList(), true, false, cache_object);
+        w.write_each<write_class_method>(static_type.MethodList(), true, false, false, cache_object);
         for (auto&& prop : static_type.PropertyList())
         {
             auto [getter, setter] = get_property_methods(prop);
@@ -967,14 +972,7 @@ remove => %.% -= value;
 
     void write_class_members(writer& w, TypeDef const& type)
     {
-        enum class PropertyOverrideStatus
-        {
-            None,
-            SometimesOverridable,
-            AlwaysOverridable
-        };
-
-        std::map<std::string_view, std::tuple<std::string, std::string, std::string, PropertyOverrideStatus>> properties;
+        std::map<std::string_view, std::tuple<std::string, std::string, std::string, bool, bool>> properties;
         for (auto&& ii : type.InterfaceImpl())
         {
             auto semantics = get_type_semantics(ii.Interface());
@@ -998,9 +996,10 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                 }
 
                 auto is_overridable_interface = has_attribute(ii, "Windows.Foundation.Metadata", "OverridableAttribute");
+                auto is_protected_interface = has_attribute(ii, "Windows.Foundation.Metadata", "ProtectedAttribute");
 
-                w.write_each<write_class_method>(interface_type.MethodList(), false, is_overridable_interface, target);
-                w.write_each<write_class_event>(interface_type.EventList(), is_overridable_interface, target);
+                w.write_each<write_class_method>(interface_type.MethodList(), false, is_overridable_interface, is_protected_interface, target);
+                w.write_each<write_class_event>(interface_type.EventList(), is_overridable_interface, is_protected_interface, target);
 
                 // Merge property getters/setters, since such may be defined across interfaces
                 // Since a property has to either be overridable or not, 
@@ -1008,11 +1007,15 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                 {
                     auto [getter, setter] = get_property_methods(prop);
                     auto projection_type = w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
-                    auto property_override_status = is_overridable_interface ? PropertyOverrideStatus::AlwaysOverridable : PropertyOverrideStatus::None;
-                    auto [prop_targets, inserted]  = properties.try_emplace(prop.Name(), std::move(projection_type), std::move(getter ? target : ""), std::move(setter ? target : ""), property_override_status);
+                    auto [prop_targets, inserted]  = properties.try_emplace(prop.Name(),
+                        std::move(projection_type),
+                        std::move(getter ? target : ""),
+                        std::move(setter ? target : ""),
+                        !is_protected_interface && !is_overridable_interface, // By default, an overridable member is protected.
+                        is_overridable_interface);
                     if (!inserted)
                     {
-                        auto& [property_type, getter_target, setter_target, override_status] = prop_targets->second;
+                        auto& [property_type, getter_target, setter_target, is_public, is_overridable] = prop_targets->second;
                         XLANG_ASSERT(property_type == projection_type);
                         if (getter)
                         {
@@ -1024,14 +1027,8 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                             XLANG_ASSERT(setter_target.empty());
                             setter_target = target;
                         }
-                        if (is_overridable_interface && override_status == PropertyOverrideStatus::None)
-                        {
-                            override_status = PropertyOverrideStatus::SometimesOverridable;
-                        }
-                        else if (!is_overridable_interface && override_status == PropertyOverrideStatus::AlwaysOverridable)
-                        {
-                            override_status = PropertyOverrideStatus::SometimesOverridable;
-                        }
+                        is_public |= !is_overridable_interface && !is_protected_interface;
+                        is_overridable |= is_overridable_interface;
                         XLANG_ASSERT(!getter_target.empty() || !setter_target.empty());
                     }
                 }
@@ -1049,19 +1046,19 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
         // Write properties with merged accessors
         for (auto& [property_name, property_data] : properties)
         {
-            auto& [property_type, getter_target, setter_target, overrideStatus] = property_data;
-            std::string_view visibility;
-            switch (overrideStatus)
+            auto& [property_type, getter_target, setter_target, is_public, is_overridable] = property_data;
+            std::string visibility;
+            if (is_public)
             {
-            case PropertyOverrideStatus::None:
                 visibility = "public ";
-                break;
-            case PropertyOverrideStatus::SometimesOverridable:
-                visibility = "public virtual ";
-                break;
-            case PropertyOverrideStatus::AlwaysOverridable:
-                visibility = "protected virtual ";
-                break;
+            }
+            else
+            {
+                visibility = "protected ";
+            }
+            if (is_overridable)
+            {
+                visibility += "virtual ";
             }
             write_class_property(w, property_name, property_type, getter_target, setter_target, visibility);
         }
