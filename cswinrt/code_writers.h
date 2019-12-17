@@ -1673,7 +1673,6 @@ remove => _%.Event -= value;
 
     void write_type_inheritance(writer& w, TypeDef const& type)
     {
-        bool writeBaseClass{ false };
         bool first{ true };
         bool colon_written{ false };
         auto s = [&]()
@@ -1694,7 +1693,7 @@ remove => _%.Event -= value;
             }
         };
 
-        if (get_category(type) == category::class_type && !is_static(type) && writeBaseClass)
+        if (get_category(type) == category::class_type && !is_static(type))
         {
             auto base_semantics = get_type_semantics(type.Extends());
 
@@ -1703,9 +1702,6 @@ remove => _%.Event -= value;
                 s();
                 w.write(bind<write_projection_type>(base_semantics));
             }
-
-            s();
-            w.write("IDisposable");
         }
 
         for (auto&& iface : type.InterfaceImpl())
@@ -1900,6 +1896,34 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
         );
     }
 
+    void write_base_constructor_dispatch(writer& w, type_semantics type)
+    {
+        std::string base_default_interface_name;
+        call(type,
+            [&](object_type) {},
+            [&](type_definition const& def)
+            {
+                base_default_interface_name = get_default_interface_name(w, def);
+            },
+            [&](generic_type_instance const& inst)
+            {
+                auto guard{ w.push_generic_args(inst) };
+                base_default_interface_name = get_default_interface_name(w, inst.generic_type);
+            },
+            [](auto)
+            {
+                throw_invalid("Invalid base class type.");
+            });
+
+        if (!std::holds_alternative<object_type>(type))
+        {
+            w.write(R"(
+    : base(ifc.As<%>())
+)",
+                base_default_interface_name);
+        }
+    }
+
     void write_interface(writer& w, TypeDef const& type)
     {
         XLANG_ASSERT(get_category(type) == category::interface_type);
@@ -2021,13 +2045,13 @@ public static Guid PIID = Vftbl.PIID;
         auto default_interface_name = get_default_interface_name(w, type);
         w.write(R"(public %class %%
 {
-public IntPtr ThisPtr => _default.ThisPtr;
+public new IntPtr ThisPtr => _default.ThisPtr;
 
 private % _default;
 %
-public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
+public static new % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
 
-internal %(% ifc)
+internal %(% ifc)%
 {
 _default = ifc;
 _default.% = this;
@@ -2035,7 +2059,7 @@ _default.% = this;
 
 private struct InterfaceTag<I>{};
 
-internal I As<I>() => _default.As<I>();
+internal new I As<I>() => _default.As<I>();
 %
 }
 )",
@@ -2050,6 +2074,7 @@ internal I As<I>() => _default.As<I>();
             default_interface_name,
             type_name,
             default_interface_name,
+            bind<write_base_constructor_dispatch>(get_type_semantics(type.Extends())),
             OwnerMemberName,
             bind<write_class_members>(type));
     }
