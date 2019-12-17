@@ -167,11 +167,10 @@ namespace UnitTest
             var str = (IStringable)TestObject;
             Assert.Equal(expected, str.ToString());
 
-            // explicit cast
-            IStringable str2 = TestObject.As<IStringable>();
+            var str2 = TestObject as IStringable;
             Assert.Equal(expected, str2.ToString());
 
-            // TODO: 'is' and 'as' operators - reconsider interface inheritance
+            Assert.IsAssignableFrom<IStringable>(TestObject);
         }
 
         // TODO: project asyncs as awaitable tasks 
