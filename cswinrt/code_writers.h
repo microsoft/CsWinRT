@@ -1565,7 +1565,7 @@ remove => _%.Event -= value;
                 return;
             }
 
-            auto requiredInterfaceName = w.write_temp("%", bind<write_type_name>(required_interface, true, false));
+            auto requiredInterfaceName = write_type_name_temp(w, required_interface);
             method_signature signature{ method };
         w.write(R"(
 % %.%(%) => As<%>().%(%);
