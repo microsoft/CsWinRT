@@ -809,9 +809,9 @@ internal static % Instance => _instance.Value;
         return w.write_temp("_%.Instance", cache_type_name);
     }
 
-    static std::string get_default_interface_name(writer& w, TypeDef const& type)
+    static std::string get_default_interface_name(writer& w, TypeDef const& type, bool abiNamespace = true)
     {
-        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), true, false));
+        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), abiNamespace, false));
     }
 
     void write_factory_constructors(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
@@ -2042,7 +2042,8 @@ public static Guid PIID = Vftbl.PIID;
         }
 
         auto type_name = write_type_name_temp(w, type);
-        auto default_interface_name = get_default_interface_name(w, type);
+        auto default_interface_name = get_default_interface_name(w, type, false);
+        auto default_interface_abi_name = get_default_interface_name(w, type, true);
         w.write(R"(public %class %%
 {
 public new IntPtr ThisPtr => _default.ThisPtr;
@@ -2059,23 +2060,25 @@ _default.% = this;
 
 private struct InterfaceTag<I>{};
 
-internal new I As<I>() => _default.As<I>();
+private % AsInternal(InterfaceTag<%> _) => _default;
 %
 }
 )",
             bind<write_class_modifiers>(type),
             type_name,
             bind<write_type_inheritance>(type),
-            default_interface_name,
+            default_interface_abi_name,
             bind<write_attributed_types>(type),
             type_name,
             type_name,
-            default_interface_name,
-            default_interface_name,
+            default_interface_abi_name,
+            default_interface_abi_name,
             type_name,
-            default_interface_name,
+            default_interface_abi_name,
             bind<write_base_constructor_dispatch>(get_type_semantics(type.Extends())),
             OwnerMemberName,
+            default_interface_name,
+            default_interface_name,
             bind<write_class_members>(type));
     }
 
