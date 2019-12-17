@@ -444,9 +444,9 @@ namespace cswinrt
         }
         case category::interface_type:
         {
-            w.write("new %(%.FromAbi(%))",
-                bind<write_type_name>(param_type, true, false),
-                bind<write_type_name>(param_type, true, false),
+            w.write("MarshalInterface<%, %>.FromAbi(%)",
+                bind<write_type_name>(type, false, false),
+                bind<write_type_name>(type, true, false),
                 name);
             return;
         }
@@ -1119,7 +1119,7 @@ private EventSource% _%;)",
             }
             case category::interface_type:
             {
-                w.write("MarshalInterface.ToAbi(%)", name);
+                w.write("MarshalInterface<%, %>.ToAbi(%)", bind<write_type_name>(type, false, false), bind<write_type_name>(type, true, false), name);
                 return;
             }
             default:

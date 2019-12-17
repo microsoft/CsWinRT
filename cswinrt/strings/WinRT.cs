@@ -1163,10 +1163,88 @@ namespace WinRT
         }
     }
 
-    struct MarshalInterface
+    struct MarshalInterface<TInterface, TNative>
+        where TNative : TInterface
     {
-        public static T FromAbi<T>(IntPtr ptr) => throw new NotImplementedException();
-        public static IntPtr ToAbi<T>(T value) => throw new NotImplementedException();
+        private static Func<TNative, IntPtr> NativeRcwToAbi;
+        private static Func<IntPtr, TNative> NativeRcwFromAbi;
+
+        public static TInterface FromAbi(IntPtr ptr)
+        {
+            // TODO: Check if the value is a CCW and return the underlying object.
+            if (NativeRcwFromAbi == null)
+            {
+                NativeRcwFromAbi = BindFromAbi();
+            }
+            return NativeRcwFromAbi(ptr);
+        }
+
+        public static IntPtr ToAbi(TInterface value)
+        {
+            // If the value passed in is the native implementation of the interface
+            // use the NativeRcwToAbi delegate since it will be faster than reflection.
+            if (value is TNative native)
+            {
+                if (NativeRcwToAbi == null)
+                {
+                    NativeRcwToAbi = BindToAbi();
+                }
+                return NativeRcwToAbi(native);
+            }
+
+            Type type = value.GetType();
+            MethodInfo asInterfaceMethod = type.GetMethod("AsInterface`1");
+            // If the type has an AsInterface<A> method, then it is an interface.
+            if (asInterfaceMethod != null)
+            {
+                IObjectReference objReference = (IObjectReference)asInterfaceMethod.MakeGenericMethod(typeof(TInterface)).Invoke(value, null);
+                return objReference.ThisPtr;
+            }
+
+            // The type is a class. We need to determine if it's an RCW or a managed class.
+            Type interfaceTagType = type.GetNestedType("InterfaceTag`1", BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.MakeGenericType(typeof(TInterface));
+            // If the type declares a nested InterfaceTag<I> type, then it is a generated RCW.
+            if (interfaceTagType != null)
+            {
+                Type interfaceType = typeof(TInterface);
+                Type interfaceTag = interfaceTagType.MakeGenericType(interfaceType);
+                MethodInfo asInternalMethod = type.GetMethod("AsInternal", BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance, null, new[] { interfaceTag }, null);
+
+                if (asInternalMethod == null)
+                {
+                    throw new InvalidCastException($"Unable to convert object of type '{type}' to interface type '{interfaceType}'.");
+                }
+
+                TNative iface = (TNative)asInternalMethod.Invoke(value, new[] { Activator.CreateInstance(interfaceTag) });
+                if (NativeRcwToAbi == null)
+                {
+                    NativeRcwToAbi = BindToAbi();
+                }
+                return NativeRcwToAbi(iface);
+            }
+
+            // TODO: Create a CCW for user-defined implementations of interfaces.
+            throw new NotImplementedException("Generating a CCW for a user-defined class is not currently implemented");
+        }
+
+        private static Func<IntPtr, TNative> BindFromAbi()
+        {
+            var fromAbiMethod = typeof(TNative).GetMethod("FromAbi");
+            var objReferenceConstructor = typeof(TNative).GetConstructor(new[] { fromAbiMethod.ReturnType });
+            var parms = new[] { Expression.Parameter(typeof(IntPtr), "arg") };
+            return Expression.Lambda<Func<IntPtr, TNative>>(
+                    Expression.New(objReferenceConstructor,
+                        Expression.Call(fromAbiMethod, parms[0]))).Compile();
+        }
+
+        private static Func<TNative, IntPtr> BindToAbi()
+        {
+            var parms = new[] { Expression.Parameter(typeof(TNative), "arg") };
+            return Expression.Lambda<Func<TNative, IntPtr>>(
+                Expression.MakeMemberAccess(
+                    Expression.Convert(parms[0], typeof(TNative)),
+                    typeof(TNative).GetProperty("ThisPtr"))).Compile();
+        }
     }
 
 
