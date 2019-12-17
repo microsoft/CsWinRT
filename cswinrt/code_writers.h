@@ -568,7 +568,7 @@ namespace cswinrt
         }
     }
 
-    void write_class_method(writer& w, MethodDef const& method, bool is_static, std::string_view interface_member)
+    void write_class_method(writer& w, MethodDef const& method, bool is_static, bool is_overridable, bool is_protected, std::string_view interface_member)
     {
         if (method.Flags().SpecialName())
         {
@@ -577,14 +577,23 @@ namespace cswinrt
 
         method_signature signature{ method };
         bool write_explicit_implementation{ false };
-        auto override_or_new = "";
+        auto visibility_specifier = is_protected ? "protected" : "public";
+        std::string inheritance_specifier = "";
+
+        if (is_overridable)
+        {
+            // All overridable methods in the WinRT type system have protected visibility.
+            visibility_specifier = "protected";
+            inheritance_specifier = "virtual ";
+        }
+
         auto raw_return_type = w.write_temp("%", bind([&](writer& w) {
             write_method_return_type(w, signature);
         }));
         auto return_type = raw_return_type;
         if (method.Name() == "ToString")
         {
-            override_or_new = "new ";
+            inheritance_specifier += "new ";
             if (signature.params().empty())
             {
                 if (auto ret = signature.return_signature())
@@ -594,7 +603,7 @@ namespace cswinrt
                     {
                         if (*ft == fundamental_type::String)
                         {
-                            override_or_new = "override ";
+                            inheritance_specifier = "override ";
                             return_type = "string";
                             write_explicit_implementation = true;
                         }
@@ -604,10 +613,11 @@ namespace cswinrt
         }
 
         w.write(R"(
-public %%% %(%) => %.%(%);
+% %%% %(%) => %.%(%);
 )",
+            visibility_specifier,
             is_static ? "static " : "",
-            override_or_new,
+            inheritance_specifier,
             return_type,
             method.Name(),
             bind_list<write_projection_method_parameter>(", ", signature.params()),
@@ -632,7 +642,7 @@ public %%% %(%) => %.%(%);
         }
     }
 
-    void write_property(writer& w, std::string_view external_prop_name, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target, std::string_view visibility = "public ")
+    void write_property(writer& w, std::string_view external_prop_name, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target, std::string_view visibility)
     {
         if (setter_target.empty())
         {
@@ -664,12 +674,12 @@ set => %.% = value;
         }
     }
 
-    void write_class_property(writer& w, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target)
+    void write_class_property(writer& w, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target, std::string_view visibility)
     {
-        write_property(w, prop_name, prop_name, prop_type, getter_target, setter_target);
+        write_property(w, prop_name, prop_name, prop_type, getter_target, setter_target, visibility);
     }
 
-    void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view interface_member, std::string_view visibility = "public ")
+    void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view interface_member, std::string_view visibility)
     {
         w.write(R"(
 %event WinRT.EventHandler% %
@@ -687,9 +697,20 @@ remove => %.% -= value;
             event.Name());
     }
 
-    void write_class_event(writer& w, Event const& event, std::string_view interface_member)
+    void write_class_event(writer& w, Event const& event, bool is_overridable, bool is_protected, std::string_view interface_member)
     {
-        write_event(w, event.Name(), event, interface_member);
+        auto visibility = "public ";
+
+        if (is_protected)
+        {
+            visibility = "protected ";
+        }
+
+        if (is_overridable)
+        {
+            visibility = "protected virtual ";
+        }
+        write_event(w, event.Name(), event, interface_member, visibility);
     }
 
     struct attributed_type
@@ -809,9 +830,9 @@ internal static % Instance => _instance.Value;
         return w.write_temp("_%.Instance", cache_type_name);
     }
 
-    static std::string get_default_interface_name(writer& w, TypeDef const& type)
+    static std::string get_default_interface_name(writer& w, TypeDef const& type, bool abiNamespace = true)
     {
-        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), true, false));
+        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), abiNamespace, false));
     }
 
     void write_factory_constructors(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
@@ -879,7 +900,7 @@ return %.%(%%baseInspectable, out innerInspectable)._default;
     {
         auto cache_object = write_cache_object(w, static_type.TypeName(), class_type, true);
 
-        w.write_each<write_class_method>(static_type.MethodList(), true, cache_object);
+        w.write_each<write_class_method>(static_type.MethodList(), true, false, false, cache_object);
         for (auto&& prop : static_type.PropertyList())
         {
             auto [getter, setter] = get_property_methods(prop);
@@ -951,7 +972,7 @@ remove => %.% -= value;
 
     void write_class_members(writer& w, TypeDef const& type)
     {
-        std::map<std::string_view, std::tuple<std::string, std::string, std::string>> properties;
+        std::map<std::string_view, std::tuple<std::string, std::string, std::string, bool, bool>> properties;
         for (auto&& ii : type.InterfaceImpl())
         {
             auto semantics = get_type_semantics(ii.Interface());
@@ -974,18 +995,27 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                         interface_native_name);
                 }
 
-                w.write_each<write_class_method>(interface_type.MethodList(), false, target);
-                w.write_each<write_class_event>(interface_type.EventList(), target);
+                auto is_overridable_interface = has_attribute(ii, "Windows.Foundation.Metadata", "OverridableAttribute");
+                auto is_protected_interface = has_attribute(ii, "Windows.Foundation.Metadata", "ProtectedAttribute");
+
+                w.write_each<write_class_method>(interface_type.MethodList(), false, is_overridable_interface, is_protected_interface, target);
+                w.write_each<write_class_event>(interface_type.EventList(), is_overridable_interface, is_protected_interface, target);
 
                 // Merge property getters/setters, since such may be defined across interfaces
+                // Since a property has to either be overridable or not, 
                 for (auto&& prop : interface_type.PropertyList())
                 {
                     auto [getter, setter] = get_property_methods(prop);
                     auto projection_type = w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
-                    auto [prop_targets, inserted]  = properties.try_emplace(prop.Name(), std::move(projection_type), std::move(getter ? target : ""), std::move(setter ? target : ""));
+                    auto [prop_targets, inserted]  = properties.try_emplace(prop.Name(),
+                        std::move(projection_type),
+                        std::move(getter ? target : ""),
+                        std::move(setter ? target : ""),
+                        !is_protected_interface && !is_overridable_interface, // By default, an overridable member is protected.
+                        is_overridable_interface);
                     if (!inserted)
                     {
-                        auto& [property_type, getter_target, setter_target] = prop_targets->second;
+                        auto& [property_type, getter_target, setter_target, is_public, is_overridable] = prop_targets->second;
                         XLANG_ASSERT(property_type == projection_type);
                         if (getter)
                         {
@@ -997,6 +1027,8 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                             XLANG_ASSERT(setter_target.empty());
                             setter_target = target;
                         }
+                        is_public |= !is_overridable_interface && !is_protected_interface;
+                        is_overridable |= is_overridable_interface;
                         XLANG_ASSERT(!getter_target.empty() || !setter_target.empty());
                     }
                 }
@@ -1014,8 +1046,21 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
         // Write properties with merged accessors
         for (auto& [property_name, property_data] : properties)
         {
-            auto& [property_type, getter_target, setter_target] = property_data;
-            write_class_property(w, property_name, property_type, getter_target, setter_target);
+            auto& [property_type, getter_target, setter_target, is_public, is_overridable] = property_data;
+            std::string visibility;
+            if (is_public)
+            {
+                visibility = "public ";
+            }
+            else
+            {
+                visibility = "protected ";
+            }
+            if (is_overridable)
+            {
+                visibility += "virtual ";
+            }
+            write_class_property(w, property_name, property_type, getter_target, setter_target, visibility);
         }
     }
 
@@ -1673,7 +1718,6 @@ remove => _%.Event -= value;
 
     void write_type_inheritance(writer& w, TypeDef const& type)
     {
-        bool writeBaseClass{ false };
         bool first{ true };
         bool colon_written{ false };
         auto s = [&]()
@@ -1694,7 +1738,7 @@ remove => _%.Event -= value;
             }
         };
 
-        if (get_category(type) == category::class_type && !is_static(type) && writeBaseClass)
+        if (get_category(type) == category::class_type && !is_static(type))
         {
             auto base_semantics = get_type_semantics(type.Extends());
 
@@ -1703,9 +1747,6 @@ remove => _%.Event -= value;
                 s();
                 w.write(bind<write_projection_type>(base_semantics));
             }
-
-            s();
-            w.write("IDisposable");
         }
 
         for (auto&& iface : type.InterfaceImpl())
@@ -1900,6 +1941,34 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
         );
     }
 
+    void write_base_constructor_dispatch(writer& w, type_semantics type)
+    {
+        std::string base_default_interface_name;
+        call(type,
+            [&](object_type) {},
+            [&](type_definition const& def)
+            {
+                base_default_interface_name = get_default_interface_name(w, def);
+            },
+            [&](generic_type_instance const& inst)
+            {
+                auto guard{ w.push_generic_args(inst) };
+                base_default_interface_name = get_default_interface_name(w, inst.generic_type);
+            },
+            [](auto)
+            {
+                throw_invalid("Invalid base class type.");
+            });
+
+        if (!std::holds_alternative<object_type>(type))
+        {
+            w.write(R"(
+    : base(ifc.As<%>())
+)",
+                base_default_interface_name);
+        }
+    }
+
     void write_interface(writer& w, TypeDef const& type)
     {
         XLANG_ASSERT(get_category(type) == category::interface_type);
@@ -2018,16 +2087,17 @@ public static Guid PIID = Vftbl.PIID;
         }
 
         auto type_name = write_type_name_temp(w, type);
-        auto default_interface_name = get_default_interface_name(w, type);
+        auto default_interface_name = get_default_interface_name(w, type, false);
+        auto default_interface_abi_name = get_default_interface_name(w, type, true);
         w.write(R"(public %class %%
 {
-public IntPtr ThisPtr => _default.ThisPtr;
+public new IntPtr ThisPtr => _default.ThisPtr;
 
 private % _default;
 %
-public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
+public static new % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
 
-internal %(% ifc)
+internal %(% ifc)%
 {
 _default = ifc;
 _default.% = this;
@@ -2035,22 +2105,25 @@ _default.% = this;
 
 private struct InterfaceTag<I>{};
 
-internal I As<I>() => _default.As<I>();
+private % AsInternal(InterfaceTag<%> _) => _default;
 %
 }
 )",
             bind<write_class_modifiers>(type),
             type_name,
             bind<write_type_inheritance>(type),
-            default_interface_name,
+            default_interface_abi_name,
             bind<write_attributed_types>(type),
             type_name,
             type_name,
-            default_interface_name,
-            default_interface_name,
+            default_interface_abi_name,
+            default_interface_abi_name,
             type_name,
-            default_interface_name,
+            default_interface_abi_name,
+            bind<write_base_constructor_dispatch>(get_type_semantics(type.Extends())),
             OwnerMemberName,
+            default_interface_name,
+            default_interface_name,
             bind<write_class_members>(type));
     }
 

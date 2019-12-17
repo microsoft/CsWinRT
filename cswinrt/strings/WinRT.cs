@@ -1164,7 +1164,7 @@ namespace WinRT
     }
 
     struct MarshalInterface<TInterface, TNative>
-        where TNative : TInterface
+        where TNative : TInterface, class
     {
         private static Func<TNative, IntPtr> NativeRcwToAbi;
         private static Func<IntPtr, TNative> NativeRcwFromAbi;
@@ -1207,15 +1207,30 @@ namespace WinRT
             if (interfaceTagType != null)
             {
                 Type interfaceType = typeof(TInterface);
-                Type interfaceTag = interfaceTagType.MakeGenericType(interfaceType);
-                MethodInfo asInternalMethod = type.GetMethod("AsInternal", BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance, null, new[] { interfaceTag }, null);
+                TNative iface = null;
 
-                if (asInternalMethod == null)
+                for (Type currentRcwType = type; currentRcwType != typeof(object); currentRcwType = interfaceType.BaseType)
                 {
-                    throw new InvalidCastException($"Unable to convert object of type '{type}' to interface type '{interfaceType}'.");
+                    interfaceTagType = type.GetNestedType("InterfaceTag`1", BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.MakeGenericType(typeof(TInterface));
+                    if (interfaceTagType == null)
+                    {
+                        throw new InvalidOperationException($"Found a non-RCW type '{currentRcwType}' that is a base class of a generated RCW type '{type}'.");
+                    }
+
+                    Type interfaceTag = interfaceTagType.MakeGenericType(interfaceType);
+                    MethodInfo asInternalMethod = type.GetMethod("AsInternal", BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance, null, new[] { interfaceTag }, null);
+                    if (asInternalMethod != null)
+                    {
+                        iface = (TNative)asInternalMethod.Invoke(value, new[] { Activator.CreateInstance(interfaceTag) });
+                        break;
+                    }
                 }
 
-                TNative iface = (TNative)asInternalMethod.Invoke(value, new[] { Activator.CreateInstance(interfaceTag) });
+                if (iface == null)
+                {
+                    throw new InvalidCastException($"Unable to get native interface of type '{interfaceType}' for object of type '{type}'.");
+                }
+
                 if (NativeRcwToAbi == null)
                 {
                     NativeRcwToAbi = BindToAbi();
