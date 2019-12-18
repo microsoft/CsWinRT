@@ -71,42 +71,36 @@ namespace %
 
             struct guard
             {
-                explicit guard(writer* arg = nullptr)
-                    : owner(arg)
+                explicit guard(generic_args* owner = nullptr)
+                    : _owner(owner)
                 {
-                    if (owner)
-                    {
-                        in_generic_instance = std::exchange(owner->in_generic_instance, true);
-                    }
                 }
 
                 ~guard()
                 {
-                    if (owner)
+                    if (_owner)
                     {
-                        owner->generic_args.pop();
-                        std::exchange(owner->in_generic_instance, in_generic_instance);
+                        _owner->pop();
                     }
                 }
 
                 guard(guard&& other)
-                    : owner(other.owner)
+                    : _owner(other._owner)
                 {
-                    owner = nullptr;
+                    _owner = nullptr;
                 }
 
                 guard& operator=(guard&& other)
                 {
-                    owner = std::exchange(other.owner, nullptr);
+                    _owner = std::exchange(other._owner, nullptr);
                     return *this;
                 }
 
                 guard& operator=(guard const&) = delete;
-                writer* owner;
-                bool in_generic_instance;
+                generic_args* _owner;
             };
 
-            [[nodiscard]] auto push(std::pair<GenericParam, GenericParam> const& range, writer& owner)
+            [[nodiscard]] auto push(std::pair<GenericParam, GenericParam> const& range)
             {
                 if (empty(range))
                 {
@@ -114,34 +108,53 @@ namespace %
                 }
 
                 stack.emplace_back(begin(range), end(range));
-                return guard{ &owner };
+                return guard{ this };
             }
 
-            [[nodiscard]] auto push(generic_type_instance const& type, writer& owner)
+            [[nodiscard]] auto push(generic_type_instance const& type)
             {
                 XLANG_ASSERT(!type.generic_args.empty());
                 stack.push_back(type.generic_args);
-                return guard{ &owner };
+                return guard{ this };
             }
 
             auto get(uint32_t index)
             {
+                bool is_index{};
                 for (auto&& args = rbegin(stack); args != rend(stack); ++args)
                 {
                     if (index >= args->size())
                     {
-                        throw_invalid("Generic index out of range");
+                        continue;
                     }
-
                     auto& semantics = (*args)[index];
-                    auto gti = std::get_if<generic_type_index>(&semantics);
-                    if(!gti)
+                    auto gt_index = std::get_if<generic_type_index>(&semantics);
+                    if (gt_index)
                     {
-                        return semantics;
+                        is_index = true;
+                        index = gt_index->index;
+                        continue;
                     }
-                    index = gti->index;
+                    // Temporary: skip over nested generic type instances 
+                    // (e.g, IMapView<K,V> : IIterable<IKeyValuePair<!0,!1>)
+                    if (is_index)
+                    {
+                        auto gt_instance = std::get_if<generic_type_instance>(&semantics);
+                        if (gt_instance)
+                        {
+                            if (index < gt_instance->generic_args.size())
+                            {
+                                auto nested = gt_instance->generic_args[index];
+                                if (std::get_if<generic_type_index>(&nested))
+                                {
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                    return semantics;
                 }
-                throw_invalid("No generic arguments");
+                throw_invalid("Could not find generic argument");
             }
 
             void pop()
@@ -154,12 +167,12 @@ namespace %
 
         [[nodiscard]] auto push_generic_params(std::pair<GenericParam, GenericParam> const& range)
         {
-            return generic_args.push(range, *this);
+            return generic_args.push(range);
         }
 
         [[nodiscard]] auto push_generic_args(generic_type_instance const& type)
         {
-            return generic_args.push(type, *this);
+            return generic_args.push(type);
         }
 
         auto get_generic_arg(uint32_t index)
@@ -167,8 +180,6 @@ namespace %
             return generic_args.get(index);
         }
 
-        bool in_generic_instance{ false };
-        
         void write_code(std::string_view const& value)
         {
             for (auto&& c : value)

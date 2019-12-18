@@ -566,17 +566,20 @@ namespace cswinrt
             }
         }
 
-        template <typename Character>
-        static void parse_command_line(Character* cmdstart, std::vector<std::string>& argv, size_t* argument_count)
+        static void parse_command_line(char* cmdstart, std::vector<std::string>& argv, size_t* argument_count)
         {
-
             std::string arg;
             bool copy_character;
             unsigned backslash_count;
             bool in_quotes;
             bool first_arg;
 
-            Character* p = cmdstart;
+            char* p = cmdstart;
+            if (*p == '#')
+            {
+                return;
+            }
+
             in_quotes = false;
             first_arg = true;
             *argument_count = 0;
