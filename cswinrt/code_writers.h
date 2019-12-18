@@ -1400,49 +1400,42 @@ evt.Name());
         }
     }
 
-    void write_interface_members(writer& w, TypeDef const& type, std::set<std::string> const& generic_methods)
+    void write_dynamic_invoke(writer& w, std::string vmethod_name, std::string_view thisPtrArg, method_signature signature)
     {
         std::vector<std::string> out_marshals;
-        
-        auto is_generic_method = [&](std::string vmethod_name)
-        {
-            return (generic_methods.find(vmethod_name) != generic_methods.end());
-        };
-
-        auto record_marshal_out = [&](TypeSig const& sig, int object_index, std::string marshal_target) 
+        auto record_marshal_out = [&](TypeSig const& sig, int object_index, std::string marshal_target)
         {
             bool has_generic_params{};
             auto semantics = get_type_semantics(sig);
             writer::write_generic_type_name_guard g(w, [&](writer& w, uint32_t index)
-            {
-                has_generic_params = true;
-                w.write("Marshaler<%>.FromAbi",
-                    bind<write_generic_type_name_base>(index));
-            });
+                {
+                    has_generic_params = true;
+                    w.write("Marshaler<%>.FromAbi",
+                        bind<write_generic_type_name_base>(index));
+                });
             auto param_type = w.write_temp("%", bind<write_abi_type>(semantics));
             auto marshal_out = w.write_temp("% %;\n",
                 marshal_target,
                 bind([&](writer& w) {
-                auto param_element = w.write_temp("__invoke_params__[%]", object_index);
-                if (has_generic_params)
-                {
-                    w.write("%(%)", param_type, param_element);
-                }
-                else
-                {
-                    w.write("(%)%", param_type, param_element);
-                    if (param_type == "byte")
+                    auto param_element = w.write_temp("__invoke_params__[%]", object_index);
+                    if (has_generic_params)
                     {
-                        w.write(" != 0");
+                        w.write("%(%)", param_type, param_element);
                     }
-                }
-            }));
+                    else
+                    {
+                        w.write("(%)%", param_type, param_element);
+                        if (param_type == "byte")
+                        {
+                            w.write(" != 0");
+                        }
+                    }
+                    }));
             out_marshals.push_back(marshal_out);
         };
 
         auto write_generic_params = [&](writer& w, method_signature signature)
         {
-            out_marshals.clear();
             int object_index = 1;
             for (auto& param : signature.params())
             {
@@ -1466,15 +1459,43 @@ evt.Name());
             }
         };
 
-        auto write_dynamic_invoke = [&](writer& w, std::string vmethod_name, method_signature signature)
-        {
-            w.write(R"(
-var __invoke_params__ = new object[]{ ThisPtr% };
-_obj.Vftbl.%.DynamicInvokeAbi(__invoke_params__);
+        w.write(R"(
+var __invoke_params__ = new object[]{ %% };
+%.DynamicInvokeAbi(__invoke_params__);
 %)",
+            thisPtrArg,
             bind([&](writer& w) { write_generic_params(w, signature); }),
             vmethod_name,
             bind_each(out_marshals));
+    }
+
+    void write_static_invoke(writer& w, std::string vmethod_name, std::string_view thisPtrArg, method_signature signature)
+    {
+        w.write("%%unsafe { Marshal.ThrowExceptionForHR(%(%%%)); }%%",
+            bind_each(write_param_out_local_declare, signature.params()),
+            signature.return_signature() ?
+            w.write_temp("% __return_value__;\n",
+                bind<write_abi_type>(get_type_semantics(signature.return_signature().Type()))) :
+            "",
+            vmethod_name,
+            thisPtrArg,
+            bind_each([](writer& w, auto const& param)
+                {
+                    w.write(", %", bind<write_param_marshal_to_abi>(param));
+                }, signature.params()),
+            signature.return_signature() ? ", out __return_value__" : "",
+                    bind_each(write_param_out_local_marshal, signature.params()),
+                    signature.return_signature() ?
+                    w.write_temp("\nreturn %;",
+                        bind<write_marshal_from_abi>(get_type_semantics(signature.return_signature().Type()), "__return_value__")) :
+                    "");
+    }
+
+    void write_interface_members(writer& w, TypeDef const& type, std::set<std::string> const& generic_methods)
+    {
+        auto is_generic_method = [&](std::string vmethod_name)
+        {
+            return (generic_methods.find(vmethod_name) != generic_methods.end());
         };
 
         for (auto&& method : type.MethodList())
@@ -1486,48 +1507,18 @@ _obj.Vftbl.%.DynamicInvokeAbi(__invoke_params__);
 
             method_signature signature{ method };
             auto vmethod_name = get_vmethod_name(w, type, method);
-            if (is_generic_method(vmethod_name))
-            {
-                w.write(R"(
+            w.write(R"(
 public %% %(%)
 {%}
 )",
-                    (method.Name() == "ToString"sv) ? "new " : "",
-                    bind<write_method_return_type>(signature),
-                    method.Name(),
-                    bind_list<write_projection_method_parameter>(", ", signature.params()),
-                    bind([&](writer& w){ write_dynamic_invoke(w, vmethod_name, signature); })
+                (method.Name() == "ToString"sv) ? "new " : "",
+                bind<write_method_return_type>(signature),
+                method.Name(),
+                bind_list<write_projection_method_parameter>(", ", signature.params()),
+                bind([&](writer& w){ is_generic_method(vmethod_name) ? 
+                    write_dynamic_invoke(w, w.write_temp("_obj.Vftbl.%", vmethod_name), "ThisPtr", signature)
+                    : write_static_invoke(w, w.write_temp("_obj.Vftbl.%", vmethod_name), "ThisPtr", signature); })
                 );
-            }
-            else
-            {
-                w.write(R"(
-public %% %(%)
-{
-%%unsafe { Marshal.ThrowExceptionForHR(_obj.Vftbl.%(ThisPtr%%)); }%%
-}
-)",
-                    (method.Name() == "ToString"sv) ? "new " : "",
-                    bind<write_method_return_type>(signature),
-                    method.Name(),
-                    bind_list<write_projection_method_parameter>(", ", signature.params()),
-                    bind_each(write_param_out_local_declare, signature.params()),
-                    signature.return_signature() ?
-                        w.write_temp("% __return_value__;\n",
-                            bind<write_abi_type>(get_type_semantics(signature.return_signature().Type()))) :
-                        "",
-                    vmethod_name,
-                    bind_each([](writer& w, auto const& param)
-                    {
-                        w.write(", %", bind<write_param_marshal_to_abi>(param));
-                    }, signature.params()),
-                    signature.return_signature() ? ", out __return_value__" : "",
-                    bind_each(write_param_out_local_marshal, signature.params()),
-                    signature.return_signature() ?
-                        w.write_temp("\nreturn %;",
-                            bind<write_marshal_from_abi>(get_type_semantics(signature.return_signature().Type()), "__return_value__")) :
-                        "");
-            }
         }
 
         for (auto&& prop : type.PropertyList())
@@ -1547,7 +1538,7 @@ public unsafe % %
                 w.write("get\n{");
                 if (is_generic_method(vmethod_name))
                 {
-                    write_dynamic_invoke(w, vmethod_name, signature);
+                    write_dynamic_invoke(w, w.write_temp("_obj.Vftbl.%", vmethod_name), "ThisPtr", signature);
                 }
                 else
                 {
@@ -1569,7 +1560,7 @@ return %;
                 w.write("set\n{");
                 if (is_generic_method(vmethod_name))
                 {
-                    write_dynamic_invoke(w, vmethod_name, signature);
+                    write_dynamic_invoke(w, w.write_temp("_obj.Vftbl.%", vmethod_name), "ThisPtr", signature);
                 }
                 else
                 {
@@ -1772,6 +1763,209 @@ remove => _%.Event -= value;
         }
     }
 
+    void write_delegate_param_marshal(writer& w, method_signature::param_t const& param)
+    {
+        auto param_name = w.write_temp("%", bind<write_parameter_name>(param));
+        write_marshal_from_abi(w, get_type_semantics(param.second->Type()), param_name);
+    }
+
+    void write_method_abi_invoke(writer& w, MethodDef const& method)
+    {
+        if (method.SpecialName()) return;
+
+        method_signature signature{ method };
+        auto return_sig = signature.return_signature();
+        auto type_name = write_type_name_temp(w, method.Parent());
+        if (!return_sig)
+        {
+            w.write(
+                R"(
+// TODO: fix generic CCW invocations (T != Marshaler<T>.AbiType)
+private static unsafe int Do_Abi_%(%)
+{
+    try
+    {
+        WinRT.UnmanagedObject.FindObject<%>(new IntPtr(thisPtr)).%(%);
+        return 0;
+    }
+    catch (Exception __ex)
+    {
+        return __ex.HResult;
+    }
+}
+)",
+                method.Name(),
+                bind<write_abi_parameters>(signature, true),
+                type_name,
+                method.Name(),
+                bind_list<write_delegate_param_marshal>(", ", signature.params()));
+            return;
+        }
+
+        w.write(
+            R"(
+// TODO: fix generic CCW invocations (T != Marshaler<T>.AbiType)
+private static unsafe int Do_Abi_%(%)
+{
+    try
+    {
+        % = %;
+        return 0;
+    }
+    catch (Exception __ex)
+    {
+        % = default;
+        return __ex.HResult;
+    }
+})",
+            method.Name(),
+            bind<write_abi_parameters>(signature, true),
+            signature.return_param_name(),
+            bind([&](writer& w)
+                {
+                    auto invokeCall = w.write_temp("WinRT.UnmanagedObject.FindObject<%>(new IntPtr(thisPtr)).%(%)",
+                        type_name,
+                        method.Name(),
+                        bind_list<write_delegate_param_marshal>(", ", signature.params()));
+                    write_marshal_to_abi(w, get_type_semantics(return_sig.Type()), invokeCall);
+                }),
+            signature.return_param_name());
+    }
+
+    void write_property_abi_invoke(writer& w, Property const& prop)
+    {
+        MethodDef getter, setter;
+        std::tie(getter, setter) = get_property_methods(prop);
+        auto type_name = write_type_name_temp(w, prop.Parent());
+        if (setter)
+        {
+            method_signature setter_sig{ setter };
+
+            // WinRT properties can't be indexers.
+            XLANG_ASSERT(setter_sig.params().size() == 1);
+
+            w.write(
+                R"(
+// TODO: fix generic CCW invocations (T != Marshaler<T>.AbiType)
+private static unsafe int Do_Abi_put_%(%)
+{
+    try
+    {
+        WinRT.UnmanagedObject.FindObject<%>(new IntPtr(thisPtr)).% = %;
+        return 0;
+    }
+    catch (Exception __ex)
+    {
+        return __ex.HResult;
+    }
+}
+)",
+                prop.Name(),
+                bind<write_abi_parameters>(setter_sig, true),
+                type_name,
+                prop.Name(),
+                bind<write_delegate_param_marshal>(setter_sig.params()[0]));
+        }
+
+        if (getter)
+        {
+            method_signature getter_sig{ getter };
+
+            // WinRT properties can't be indexers.
+            XLANG_ASSERT(getter_sig.params().size() == 0);
+            w.write(
+                R"(
+// TODO: fix generic CCW invocations (T != Marshaler<T>.AbiType)
+private static unsafe int Do_Abi_get_%(%)
+{
+    try
+    {
+        % = %;
+        return 0;
+    }
+    catch (Exception __ex)
+    {
+        % = default;
+        return __ex.HResult;
+    }
+})",
+                prop.Name(),
+                bind<write_abi_parameters>(getter_sig, true),
+                getter_sig.return_param_name(),
+                bind([&](writer& w)
+                {
+                    auto invokeGetter = w.write_temp("WinRT.UnmanagedObject.FindObject<%>(new IntPtr(thisPtr)).%",
+                        type_name,
+                        prop.Name());
+                    write_marshal_to_abi(w, get_type_semantics(prop.Type().Type()), invokeGetter);
+                }),
+                getter_sig.return_param_name());
+        }
+
+    }
+
+    void write_event_abi_invoke(writer& w, Event const& evt)
+    {
+        auto type_name = write_type_name_temp(w, evt.Parent());
+        auto semantics = get_type_semantics(evt.EventType());
+
+        w.write(
+                R"(
+private static unsafe int Do_Abi_add_%([In] IntPtr thisPtr, [In] IntPtr handler, [Out] out EventRegistrationToken token)
+{
+    token = default;
+    if (handler == IntPtr.Zero)
+    {
+        return 0;
+    }
+
+    try
+    {
+        var managedWrapper = new WinRT.EventHandler%(%);
+        token = new EventRegistrationToken { Value = (long)GCHandle.ToIntPtr(GCHandle.Alloc(managedWrapper)) };
+        var _this = WinRT.UnmanagedObject.FindObject<%>(thisPtr);
+        _this.% += managedWrapper;
+        return 0;
+    }
+    catch (Exception __ex)
+    {
+        return __ex.HResult;
+    }
+}
+)",
+            evt.Name(),
+            bind<write_event_param_types>(evt),
+            bind<write_marshal_from_abi>(semantics, "handler"),
+            type_name,
+            evt.Name());
+
+        w.write(
+                R"(
+private static unsafe int Do_Abi_remove_%([In] IntPtr thisPtr, [In] EventRegistrationToken token)
+{
+    if (token.Value == default)
+    {
+        return 0;
+    }
+
+    try
+    {
+        var handler = (WinRT.EventHandler%)GCHandle.FromIntPtr((IntPtr)token.Value).Target;
+        var _this = WinRT.UnmanagedObject.FindObject<%>(thisPtr);
+        _this.% -= handler;
+        return 0;
+    }
+    catch (Exception __ex)
+    {
+        return __ex.HResult;
+    }
+})",
+            evt.Name(),
+            bind<write_event_param_types>(evt),
+            type_name,
+            evt.Name());
+    }
+
     std::string get_vmethod_delegate_type(writer& w, MethodDef const& method, std::string vmethod_name)
     {
         method_signature signature{ method };
@@ -1874,7 +2068,7 @@ remove => _%.Event -= value;
 public struct Vftbl
 {
 internal IInspectable.Vftbl IInspectableVftbl;
-%%})", 
+%%%%%})", 
             bind<write_guid_attribute>(type),
             bind_each([&](writer& w, MethodDef const& method)
             {
@@ -1937,7 +2131,10 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
                     }, methods),
                     bind_each(method_marshals)
                 );
-            })
+            }),
+            bind_each<write_method_abi_invoke>(methods),
+            bind_each<write_property_abi_invoke>(type.PropertyList()),
+            bind_each<write_event_abi_invoke>(type.EventList())
         );
     }
 
@@ -2127,13 +2324,6 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             bind<write_class_members>(type));
     }
 
-
-    void write_delegate_param_marshal(writer& w, method_signature::param_t const& param)
-    {
-        auto param_name = w.write_temp("%", bind<write_parameter_name>(param));
-        write_marshal_from_abi(w, get_type_semantics(param.second->Type()), param_name);
-    }
-
     void write_delegate_managed_invoke(writer& w, method_signature const& signature)
     {
         auto return_sig = signature.return_signature();
@@ -2175,19 +2365,6 @@ invoke(%);
                 bind_list<write_delegate_param_marshal>(", ", signature.params()));
             return;
         }
-
-        static auto write_object_marshal = [&](writer& w, TypeDef const& type)
-        {
-            switch (get_category(type))
-            {
-            case category::interface_type:
-            case category::class_type:
-            {
-                w.write("?.ThisPtr ?? IntPtr.Zero");
-                return;
-            }
-            }
-        };
 
         w.write(
 R"({

@@ -703,12 +703,7 @@ namespace WinRT
         int _refs = 0;
         public readonly IntPtr ThisPtr;
 
-        protected static Delegate FindObject(IntPtr thisPtr)
-        {
-            UnmanagedObject unmanagedObject = Marshal.PtrToStructure<UnmanagedObject>(thisPtr);
-            GCHandle thisHandle = GCHandle.FromIntPtr(unmanagedObject._gchandlePtr);
-            return (Delegate)thisHandle.Target;
-        }
+        protected static Delegate FindObject(IntPtr thisPtr) => UnmanagedObject.FindObject<Delegate>(thisPtr);
 
         // IUnknown
         static unsafe readonly IUnknownVftbl._QueryInterface _QueryInterface = new IUnknownVftbl._QueryInterface(QueryInterface);
@@ -791,12 +786,6 @@ namespace WinRT
             _vftblTemplate.Invoke = IntPtr.Zero;
         }
 
-        struct UnmanagedObject
-        {
-            public IntPtr _vftblPtr;
-            public IntPtr _gchandlePtr;
-        }
-
         readonly GCHandle _thisHandle;
         readonly WeakReference _weakInvoker = new WeakReference(null);
         readonly UnmanagedObject _unmanagedObj;
@@ -865,6 +854,19 @@ namespace WinRT
             _thisHandle.Free();
 
             GC.SuppressFinalize(this);
+        }
+    }
+
+    struct UnmanagedObject
+    {
+        public IntPtr _vftblPtr;
+        public IntPtr _gchandlePtr;
+
+        internal static T FindObject<T>(IntPtr thisPtr)
+        {
+            UnmanagedObject unmanagedObject = Marshal.PtrToStructure<UnmanagedObject>(thisPtr);
+            GCHandle thisHandle = GCHandle.FromIntPtr(unmanagedObject._gchandlePtr);
+            return (T)thisHandle.Target;
         }
     }
 
