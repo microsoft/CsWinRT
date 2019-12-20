@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Linq.Expressions;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
@@ -41,6 +43,73 @@ namespace WinRT
             public _QueryInterface QueryInterface;
             public _AddRef AddRef;
             public _Release Release;
+
+            public static IUnknownVftbl GetVftbl()
+            {
+                // TODO: Use runtime-provided IUnknown vftbl when available.
+
+                return new IUnknownVftbl
+                {
+                    QueryInterface = Do_Abi_QueryInterface,
+                    AddRef = Do_Abi_AddRef,
+                    Release = Do_Abi_Release
+                };
+            }
+
+            private class CCWData
+            {
+                private uint _refCount = 1;
+                public uint AddRef() => Interlocked.Increment(ref _refCount);
+                public uint Release() => Interlocked.Decrement(ref _refCount);
+
+                public Dictionary<Guid, IntPtr> InterfacePointers { get; } = new Dictionary<Guid, IntPtr>();
+            }
+
+            private static ConcurrentDictionary<object, CCWData> _ccwInfo = new ConcurrentDictionary<object, CCWData>();
+
+            private static int Do_Abi_QueryInterface(IntPtr pThis, ref Guid iid, out IntPtr vftbl)
+            {
+                const int E_NOINTERFACE = unchecked((int)0x80040002);
+
+                vftbl = IntPtr.Zero;
+
+                object ccw = UnmanagedObject.FindObject<object>(pThis);
+
+                if (_ccwInfo.TryGetValue(ccw, out var data))
+                {
+                    if (data.InterfacePointers.TryGetValue(iid, out vftbl))
+                    {
+                        return 0;
+                    }
+                    return E_NOINTERFACE;
+                }
+
+                return -1;
+            }
+
+            private static uint Do_Abi_AddRef(IntPtr pThis)
+            {
+                if (_ccwInfo.TryGetValue(UnmanagedObject.FindObject<object>(pThis), out var refCount))
+                {
+                    return refCount.AddRef();
+                }
+                return -1;
+            }
+
+            private static uint Do_Abi_Release(IntPtr pThis)
+            {
+                var obj = UnmanagedObject.FindObject<object>(pThis);
+                if (_ccwInfo.TryGetValue(obj, out var data))
+                {
+                    uint retVal = data.Release();
+                    if (retVal == 0u)
+                    {
+                        _ccwInfo.TryRemove(obj, out var _);
+                    }
+                    return retVal;
+                }
+                return -1;
+            }
         }
 
         // IActivationFactory
@@ -117,14 +186,76 @@ namespace WinRT
         [Guid("AF86E2E0-B12D-4c6a-9C5A-D7AA65101E90")]
         public struct Vftbl
         {
-            public delegate int _GetIids([In] IntPtr pThis, [Out] uint iidCount, [Out] Guid[] iids);
-            public delegate int _GetRuntimeClassName([In] IntPtr pThis, [Out] IntPtr className);
-            public delegate int _GetTrustLevel([In] IntPtr pThis, [Out] TrustLevel trustLevel);
+            public delegate int _GetIids([In] IntPtr pThis, out uint iidCount, out Guid[] iids);
+            public delegate int _GetRuntimeClassName([In] IntPtr pThis, IntPtr className);
+            public delegate int _GetTrustLevel([In] IntPtr pThis, out TrustLevel trustLevel);
 
             public IUnknownVftbl IUnknownVftbl;
             public _GetIids GetIids;
             public _GetRuntimeClassName GetRuntimeClassName;
             public _GetTrustLevel GetTrustLevel;
+
+            public static readonly Vftbl AbiToProjectionVftable;
+
+            static Vftbl()
+            {
+                AbiToProjectionVftable = new Vftbl
+                {
+                    IUnknownVftbl = IUnknownVftbl.GetVftbl(),
+                    GetIids = Do_Abi_GetIids,
+                    GetRuntimeClassName = Do_Abi_GetRuntimeClassName,
+                    GetTrustLevel = Do_Abi_GetTrustLevel
+                };
+            }
+
+            private static int Do_Abi_GetIids(IntPtr pThis, out uint iidCount, out Guid[] iids)
+            {
+                // TODO: Add any manually supplied WinRT interface implementations to the output.
+                // TODO: Replace any projected interface implementations with the WinRT type's GUID.
+                iidCount = 0u;
+                iids = null;
+                try
+                {
+                    var objType = UnmanagedObject.FindObject<object>(pThis).GetType();
+                    var interfaces = objType.GetInterfaces();
+                    iids = new Guid[interfaces.Length];
+                    iidCount = (uint)iids.Length;
+                    for (int i = 0; i < iids.Length; i++)
+                    {
+                        iids[i] = interfaces[i].GUID;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return ex.HResult;
+                }
+                return 0;
+            }
+
+            private unsafe static int Do_Abi_GetRuntimeClassName(IntPtr pThis, IntPtr className)
+            {
+                try
+                {
+                    var objType = UnmanagedObject.FindObject<object>(pThis).GetType();
+                    string typeName = objType.FullName;
+                    if (typeName.StartsWith("ABI.")) // If our type is an ABI type, get the real type name
+                    {
+                        typeName = typeName.Substring("ABI.".Length);
+                    }
+                    *(IntPtr*)className = new HString(typeName).Handle;
+                }
+                catch (Exception ex)
+                {
+                    return ex.HResult;
+                }
+                return 0;
+            }
+
+            private static int Do_Abi_GetTrustLevel(IntPtr pThis, out TrustLevel trustLevel)
+            {
+                trustLevel = TrustLevel.BaseTrust;
+                return 0;
+            }
         }
 
         private readonly ObjectReference<Vftbl> _obj;

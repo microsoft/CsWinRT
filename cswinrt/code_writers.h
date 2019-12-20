@@ -2126,9 +2126,9 @@ internal IInspectable.Vftbl IInspectableVftbl;
                             vmethod_name, delegate_type, vtable_index)
                     );
                     method_marshals_to_projection.emplace_back(has_generic_params ?
-                        w.write_temp("nativeVftbl[%] = Marshal.GetFunctionPointerForDelegate(vftbl.%);\n",
+                        w.write_temp("nativeVftbl[%] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.%);\n",
                             vtable_index, vmethod_name) :
-                        w.write_temp("nativeVftbl[%] = Marshal.GetFunctionPointerForDelegate<%>(vftbl.%);\n",
+                        w.write_temp("nativeVftbl[%] = Marshal.GetFunctionPointerForDelegate<%>(AbiToProjectionVftable.%);\n",
                             vtable_index, delegate_type, vmethod_name)
                     );
                     method_create_delegates_to_projection.emplace_back(has_generic_params ?
@@ -2176,18 +2176,19 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
             bind([&](writer& w)
                 {
                     w.write(R"(
-public static readonly IntPtr AbiToProjectionVftable;
+private static readonly Vftbl AbiToProjectionVftable;
+public static readonly IntPtr AbiToProjectionVftablePtr;
 
 static unsafe Vftbl()
 {
-    // TODO: Generate IInspectable vtable.
-    var vftbl = new Vftbl
+    AbiToProjectionVftable = new Vftbl
     {
+        IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable, 
         %
     };
     var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<Vftbl>());
     %
-    AbiToProjectionVftable = (IntPtr)nativeVftbl;
+    AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
 }
 )",
                         bind_list(",\n", method_create_delegates_to_projection),
@@ -2195,10 +2196,11 @@ static unsafe Vftbl()
                         {
                             if (!is_generic)
                             {
-                                w.write("Marshal.StructureToPtr(vftbl, (IntPtr)nativeVftbl, false);");
+                                w.write("Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);");
                             }
                             else
                             {
+                                w.write("Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);\n");
                                 w.write("%", bind_each(method_marshals_to_projection));
                             }
                         }));
