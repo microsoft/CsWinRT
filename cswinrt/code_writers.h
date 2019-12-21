@@ -1164,7 +1164,7 @@ private EventSource% _%;)",
             }
             case category::interface_type:
             {
-                w.write("MarshalInterface<%, %>.ToAbi(%)", bind<write_type_name>(type, false, false), bind<write_type_name>(type, true, false), name);
+                w.write("MarshalInterface<%, %>.ToAbi(%).ThisPtr", bind<write_type_name>(type, false, false), bind<write_type_name>(type, true, false), name);
                 return;
             }
             default:
@@ -1745,19 +1745,13 @@ remove => _%.Event -= value;
             call(get_type_semantics(iface.Interface()),
                 [&](type_definition const& type)
                 {
-                    if (!is_exclusive_to(type))
-                    {
-                        s();
-                        w.write("%", bind<write_type_name>(type, false, false));
-                    }
+                    s();
+                    w.write("%", bind<write_type_name>(type, false, false));
                 },
                 [&](generic_type_instance const& type)
                 {
-                    if (!is_exclusive_to(type.generic_type))
-                    {
-                        s();
-                        w.write("%", bind<write_type_name>(type, false, false));
-                    }
+                    s();
+                    w.write("%", bind<write_type_name>(type, false, false));
                 },
                 [](auto) { throw_invalid("invalid interface impl type"); });
         }
@@ -1785,7 +1779,7 @@ private static unsafe int Do_Abi_%(%)
 {
     try
     {
-        WinRT.UnmanagedObject.FindObject<%>(thisPtr).%(%);
+        WinRT.ComCallableWrapper.FindObject<%>(thisPtr).%(%);
         return 0;
     }
     catch (Exception __ex)
@@ -1829,7 +1823,7 @@ private static unsafe int Do_Abi_%(%)
             signature.return_param_name(),
             bind([&](writer& w)
             {
-                auto invokeCall = w.write_temp("WinRT.UnmanagedObject.FindObject<%>(thisPtr).%(%)",
+                auto invokeCall = w.write_temp("WinRT.ComCallableWrapper.FindObject<%>(thisPtr).%(%)",
                     type_name,
                     method.Name(),
                     bind_list<write_delegate_param_marshal>(", ", signature.params()));
@@ -1857,7 +1851,7 @@ private static unsafe int Do_Abi_%(%)
 {
     try
     {
-        WinRT.UnmanagedObject.FindObject<%>(thisPtr).% = %;
+        WinRT.ComCallableWrapper.FindObject<%>(thisPtr).% = %;
         return 0;
     }
     catch (Exception __ex)
@@ -1906,7 +1900,7 @@ private static unsafe int Do_Abi_%(%)
                 getter_sig.return_param_name(),
                 bind([&](writer& w)
                 {
-                    auto invokeGetter = w.write_temp("WinRT.UnmanagedObject.FindObject<%>(thisPtr).%",
+                    auto invokeGetter = w.write_temp("WinRT.ComCallableWrapper.FindObject<%>(thisPtr).%",
                         type_name,
                         prop.Name());
                     write_marshal_to_abi(w, get_type_semantics(prop.Type().Type()), invokeGetter);
@@ -1937,7 +1931,7 @@ private static unsafe int Do_Abi_%([In] IntPtr thisPtr, [In] IntPtr handler, [Ou
     {
         var managedWrapper = new WinRT.EventHandler%(%);
         token = new EventRegistrationToken { Value = (long)GCHandle.ToIntPtr(GCHandle.Alloc(managedWrapper)) };
-        var _this = WinRT.UnmanagedObject.FindObject<%>(thisPtr);
+        var _this = WinRT.ComCallableWrapper.FindObject<%>(thisPtr);
         _this.% += managedWrapper;
         return 0;
     }
@@ -1968,7 +1962,7 @@ private static unsafe int Do_Abi_%([In] IntPtr thisPtr, [In] EventRegistrationTo
     try
     {
         var handler = (WinRT.EventHandler%)GCHandle.FromIntPtr((IntPtr)token.Value).Target;
-        var _this = WinRT.UnmanagedObject.FindObject<%>(thisPtr);
+        var _this = WinRT.ComCallableWrapper.FindObject<%>(thisPtr);
         _this.% -= handler;
         return 0;
     }

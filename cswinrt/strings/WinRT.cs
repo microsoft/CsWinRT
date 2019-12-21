@@ -16,6 +16,7 @@ using System.Linq.Expressions;
 
 namespace WinRT
 {
+    using System.Runtime.Remoting;
     using WinRT.Interop;
 
     public enum TrustLevel
@@ -36,7 +37,7 @@ namespace WinRT
         [Guid("00000000-0000-0000-C000-000000000046")]
         public struct IUnknownVftbl
         {
-            public unsafe delegate int _QueryInterface([In] IntPtr pThis, [In] ref Guid iid, [Out] out IntPtr vftbl);
+            public unsafe delegate int _QueryInterface([In] IntPtr pThis, [In] ref Guid iid, [Out] out IntPtr ptr);
             public delegate uint _AddRef([In] IntPtr pThis);
             public delegate uint _Release([In] IntPtr pThis);
 
@@ -47,69 +48,13 @@ namespace WinRT
             public static IUnknownVftbl GetVftbl()
             {
                 // TODO: Use runtime-provided IUnknown vftbl when available.
-
-                return new IUnknownVftbl
-                {
-                    QueryInterface = Do_Abi_QueryInterface,
-                    AddRef = Do_Abi_AddRef,
-                    Release = Do_Abi_Release
-                };
+#if MANUAL_IUNKNOWN
+                return ComCallableWrapper.ManualRefCountingVftbl;
+#else
+                throw new NotImplementedException();
+#endif
             }
 
-            private class CCWData
-            {
-                private uint _refCount = 1;
-                public uint AddRef() => Interlocked.Increment(ref _refCount);
-                public uint Release() => Interlocked.Decrement(ref _refCount);
-
-                public Dictionary<Guid, IntPtr> InterfacePointers { get; } = new Dictionary<Guid, IntPtr>();
-            }
-
-            private static ConcurrentDictionary<object, CCWData> _ccwInfo = new ConcurrentDictionary<object, CCWData>();
-
-            private static int Do_Abi_QueryInterface(IntPtr pThis, ref Guid iid, out IntPtr vftbl)
-            {
-                const int E_NOINTERFACE = unchecked((int)0x80040002);
-
-                vftbl = IntPtr.Zero;
-
-                object ccw = UnmanagedObject.FindObject<object>(pThis);
-
-                if (_ccwInfo.TryGetValue(ccw, out var data))
-                {
-                    if (data.InterfacePointers.TryGetValue(iid, out vftbl))
-                    {
-                        return 0;
-                    }
-                    return E_NOINTERFACE;
-                }
-
-                return -1;
-            }
-
-            private static uint Do_Abi_AddRef(IntPtr pThis)
-            {
-                if (_ccwInfo.TryGetValue(UnmanagedObject.FindObject<object>(pThis), out var refCount))
-                {
-                    return refCount.AddRef();
-                }
-                return -1;
-            }
-
-            private static uint Do_Abi_Release(IntPtr pThis)
-            {
-                var obj = UnmanagedObject.FindObject<object>(pThis);
-                if (_ccwInfo.TryGetValue(obj, out var data))
-                {
-                    uint retVal = data.Release();
-                    if (retVal == 0u)
-                    {
-                        _ccwInfo.TryRemove(obj, out var _);
-                    }
-                    return retVal;
-                }
-                return -1;
-            }
         }
 
         // IActivationFactory
@@ -210,20 +155,12 @@ namespace WinRT
 
             private static int Do_Abi_GetIids(IntPtr pThis, out uint iidCount, out Guid[] iids)
             {
-                // TODO: Add any manually supplied WinRT interface implementations to the output.
-                // TODO: Replace any projected interface implementations with the WinRT type's GUID.
                 iidCount = 0u;
                 iids = null;
                 try
                 {
-                    var objType = UnmanagedObject.FindObject<object>(pThis).GetType();
-                    var interfaces = objType.GetInterfaces();
-                    iids = new Guid[interfaces.Length];
+                    iids = UnmanagedObject.FindObject<ComCallableWrapper>(pThis).IIDs;
                     iidCount = (uint)iids.Length;
-                    for (int i = 0; i < iids.Length; i++)
-                    {
-                        iids[i] = interfaces[i].GUID;
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -236,13 +173,7 @@ namespace WinRT
             {
                 try
                 {
-                    var objType = UnmanagedObject.FindObject<object>(pThis).GetType();
-                    string typeName = objType.FullName;
-                    if (typeName.StartsWith("ABI.")) // If our type is an ABI type, get the real type name
-                    {
-                        typeName = typeName.Substring("ABI.".Length);
-                    }
-                    *(IntPtr*)className = new HString(typeName).Handle;
+                    *(IntPtr*)className = UnmanagedObject.FindObject<ComCallableWrapper>(pThis).RuntimeClassName.Handle;
                 }
                 catch (Exception ex)
                 {
@@ -988,6 +919,170 @@ namespace WinRT
         }
     }
 
+    internal struct Entry
+    {
+        public Guid IID;
+        public IntPtr Vtable;
+    }
+
+    public class ComCallableWrapper : IDisposable
+    {
+        private IntPtr _handle;
+        private object ManagedObject { get; }
+        internal HString RuntimeClassName { get; }
+        internal Guid[] IIDs { get; }
+
+        private ComCallableWrapper(object obj)
+        {
+            ManagedObject = obj;
+            _handle = GCHandle.ToIntPtr(GCHandle.Alloc(this));
+            Entry[] interfaceTableEntries = GetInterfaceTableEntries();
+
+            string typeName = ManagedObject.GetType().FullName;
+            if (typeName.StartsWith("ABI.")) // If our type is an ABI type, get the real type name
+            {
+                typeName = typeName.Substring("ABI.".Length);
+            }
+            RuntimeClassName = typeName;
+            IIDs = new Guid[interfaceTableEntries.Length];
+            for (int i = 0; i < interfaceTableEntries.Length; i++)
+            {
+                IIDs[i] = interfaceTableEntries[i].IID;
+            }
+
+#if MANUAL_IUNKNOWN
+            InitializeManagedQITable(interfaceTableEntries);
+#endif
+        }
+
+        private Entry[] GetInterfaceTableEntries()
+        {
+            var entries = new List<Entry>();
+            var interfaces = ManagedObject.GetType().GetInterfaces();
+            foreach (var iface in interfaces)
+            {
+                var ifaceAbiType = iface.Assembly.GetType("ABI." + iface.FullName);
+                if (ifaceAbiType == null)
+                {
+                    // This interface isn't a WinRT interface.
+                    // TODO: Handle WinRT -> .NET projected interfaces.
+                    continue;
+                }
+
+                entries.Add(new Entry
+                {
+                    IID = GuidGenerator.GetIID(ifaceAbiType),
+                    Vtable = (IntPtr)ifaceAbiType.GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                });
+            }
+            return entries.ToArray();
+        }
+
+        public static IObjectReference CreateCCWForObject(object obj)
+        {
+            var wrapper = new ComCallableWrapper(obj);
+#if MANUAL_IUNKNOWN
+            var objPtr = wrapper._managedQUITable.Values[0];
+            return ObjectReference<IUnknownVftbl>.Attach(ref objPtr);
+#else
+            throw new NotImplementedException();
+#endif
+        }
+
+        public static T FindObject<T>(IntPtr thisPtr) => (T)UnmanagedObject.FindObject<ComCallableWrapper>(thisPtr).ManagedObject;
+
+#if MANUAL_IUNKNOWN
+        private uint _refs = 1;
+        private Dictionary<Guid, IntPtr> _managedQITable;
+
+        private void InitializeManagedQITable(Entry[] entries)
+        {
+            _managedQITable = new Dictionary<Guid, IntPtr>();
+            foreach (var entry in entries)
+            {
+                unsafe
+                {
+                    UnmanagedObject* ifaceTearOff = (UnmanagedObject*)Marshal.AllocCoTaskMem(sizeof(UnmanagedObject));
+                    ifaceTearOff->_vftblPtr = entry.Vtable;
+                    ifaceTearOff->_gchandlePtr = _handle;
+                    _managedQITable.Add(entry.IID, (IntPtr)ifaceTearOff);
+                }
+            }
+        }
+
+        public static IUnknownVftbl ManualRefCountingVftbl { get; } = new IUnknownVftbl
+        {
+            QueryInterface = Do_Abi_QueryInterface,
+            AddRef = Do_Abi_AddRef,
+            Release = Do_Abi_Release
+        };
+
+        private static int Do_Abi_QueryInterface(IntPtr pThis, ref Guid iid, out IntPtr ptr)
+        {
+            const int E_NOINTERFACE = unchecked((int)0x80040002);
+
+            ptr = IntPtr.Zero;
+
+            var ccw = UnmanagedObject.FindObject<ComCallableWrapper>(pThis);
+
+            return ccw.QueryInterface(iid, out ptr);
+        }
+
+        private static uint Do_Abi_AddRef(IntPtr pThis)
+        {
+            return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).AddRef();
+        }
+
+        private static uint Do_Abi_Release(IntPtr pThis)
+        {
+            return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).Release();
+        }
+
+        internal uint AddRef()
+        {
+            return System.Threading.Interlocked.Increment(ref _refs);
+        }
+
+        internal uint Release()
+        {
+            if (_refs == 0)
+            {
+                throw new InvalidOperationException("WinRT.Delegate has been over-released!");
+            }
+
+            var refs = System.Threading.Interlocked.Decrement(ref _refs);
+            if (refs == 0)
+            {
+                Dispose();
+            }
+            return refs;
+        }
+
+        internal int QueryInterface(Guid iid, out IntPtr ptr)
+        {
+            const int E_NOINTERFACE = unchecked((int)0x80040002);
+            if (_managedQITable.TryGetValue(iid, out ptr))
+            {
+                return 0;
+            }
+            return E_NOINTERFACE;
+        }
+#endif
+
+        public void Dispose()
+        {
+#if MANUAL_IUNKNOWN
+            foreach (var obj in _managedQITable.Values)
+            {
+                Marshal.FreeCoTaskMem(obj);
+            }
+            _managedQITable.Clear();
+#endif
+            GCHandle.FromIntPtr(_handle).Free();
+            RuntimeClassName.Dispose();
+        }
+    }
+
     struct UnmanagedObject
     {
         public IntPtr _vftblPtr;
@@ -1299,7 +1394,7 @@ namespace WinRT
     struct MarshalInterface<TInterface, TNative>
         where TNative : TInterface, class
     {
-        private static Func<TNative, IntPtr> NativeRcwToAbi;
+        private static Func<TNative, IObjectReference> NativeRcwToAbi;
         private static Func<IntPtr, TNative> NativeRcwFromAbi;
 
         public static TInterface FromAbi(IntPtr ptr)
@@ -1312,7 +1407,7 @@ namespace WinRT
             return NativeRcwFromAbi(ptr);
         }
 
-        public static IntPtr ToAbi(TInterface value)
+        public static IObjectReference ToAbi(TInterface value)
         {
             // If the value passed in is the native implementation of the interface
             // use the NativeRcwToAbi delegate since it will be faster than reflection.
@@ -1330,8 +1425,7 @@ namespace WinRT
             // If the type has an AsInterface<A> method, then it is an interface.
             if (asInterfaceMethod != null)
             {
-                IObjectReference objReference = (IObjectReference)asInterfaceMethod.MakeGenericMethod(typeof(TInterface)).Invoke(value, null);
-                return objReference.ThisPtr;
+                return (IObjectReference)asInterfaceMethod.MakeGenericMethod(typeof(TInterface)).Invoke(value, null);
             }
 
             // The type is a class. We need to determine if it's an RCW or a managed class.
@@ -1371,8 +1465,14 @@ namespace WinRT
                 return NativeRcwToAbi(iface);
             }
 
-            // TODO: Create a CCW for user-defined implementations of interfaces.
-            throw new NotImplementedException("Generating a CCW for a user-defined class is not currently implemented");
+            if (NativeRcwToAbi == null)
+            {
+                NativeRcwToAbi = BindToAbi();
+            }
+
+            var objReference = ComCallableWrapper.CreateCCWForObject(obj);
+
+            return NativeRcwToAbi(objReference.AsType<TNative>());
         }
 
         private static Func<IntPtr, TNative> BindFromAbi()
@@ -1385,13 +1485,13 @@ namespace WinRT
                         Expression.Call(fromAbiMethod, parms[0]))).Compile();
         }
 
-        private static Func<TNative, IntPtr> BindToAbi()
+        private static Func<TNative, IObjectReference> BindToAbi()
         {
             var parms = new[] { Expression.Parameter(typeof(TNative), "arg") };
-            return Expression.Lambda<Func<TNative, IntPtr>>(
+            return Expression.Lambda<Func<TNative, IObjectReference>>(
                 Expression.MakeMemberAccess(
                     Expression.Convert(parms[0], typeof(TNative)),
-                    typeof(TNative).GetProperty("ThisPtr"))).Compile();
+                    typeof(TNative).GetField("_obj", BindingFlags.Instance | BindingFlags.NonPublic))).Compile();
         }
     }
 
