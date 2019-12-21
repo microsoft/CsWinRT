@@ -576,7 +576,7 @@ namespace cswinrt
         }
 
         method_signature signature{ method };
-        bool write_explicit_implementation{ false };
+        bool write_explicit_implementation = is_protected || is_overridable;
         auto visibility_specifier = is_protected ? "protected" : "public";
         std::string inheritance_specifier = "";
 
@@ -674,6 +674,23 @@ set => %.% = value;
         }
     }
 
+    void write_explicitly_implemented_property(writer& w, TypeDef const& iface, Property const& prop, std::string_view property_target)
+    {
+        auto propertyType = w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
+        auto declaringTypeName = write_type_name_temp(w, iface);
+        auto definingTypeName = write_type_name_temp(w, iface, "%", true);
+
+        auto [getter, setter] = get_property_methods(prop);
+
+        w.write(bind<write_property>(
+            w.write_temp("%.%", declaringTypeName, prop.Name()),
+            prop.Name(),
+            propertyType,
+            getter ? property_target : "",
+            setter ? property_target : "",
+            ""));
+    }
+
     void write_class_property(writer& w, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target, std::string_view visibility)
     {
         write_property(w, prop_name, prop_name, prop_type, getter_target, setter_target, visibility);
@@ -697,6 +714,16 @@ remove => %.% -= value;
             event.Name());
     }
 
+    void write_explicitly_implemented_event(writer& w, TypeDef const& iface, Event const& evt, std::string_view event_target)
+    {
+        auto declaringTypeName = write_type_name_temp(w, iface);
+        w.write(bind<write_event>(
+            w.write_temp("%.%", declaringTypeName, evt.Name()),
+            evt,
+            event_target,
+            ""));
+    }
+
     void write_class_event(writer& w, Event const& event, bool is_overridable, bool is_protected, std::string_view interface_member)
     {
         auto visibility = "public ";
@@ -711,6 +738,11 @@ remove => %.% -= value;
             visibility = "protected virtual ";
         }
         write_event(w, event.Name(), event, interface_member, visibility);
+
+        if (is_protected || is_overridable)
+        {
+            write_explicitly_implemented_event(w, event.Parent(), event, w.write_temp("AsInternal<%>()", bind<write_type_name>(event.Parent(), true, false)));
+        }
     }
 
     struct attributed_type
@@ -1001,6 +1033,15 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                 w.write_each<write_class_method>(interface_type.MethodList(), false, is_overridable_interface, is_protected_interface, target);
                 w.write_each<write_class_event>(interface_type.EventList(), is_overridable_interface, is_protected_interface, target);
 
+
+                // If this interface is overidable but the type is sealed, make the interface act as though it is protected.
+                // If we don't do this, then the C# compiler errors out about declaring a virtual member in a sealed class.
+                if (is_overridable_interface && type.Flags().Sealed())
+                {
+                    is_overridable_interface = false;
+                    is_protected_interface = true;
+                }
+
                 // Merge property getters/setters, since such may be defined across interfaces
                 // Since a property has to either be overridable or not, 
                 for (auto&& prop : interface_type.PropertyList())
@@ -1030,6 +1071,12 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                         is_public |= !is_overridable_interface && !is_protected_interface;
                         is_overridable |= is_overridable_interface;
                         XLANG_ASSERT(!getter_target.empty() || !setter_target.empty());
+                    }
+
+                    // If this interface is overidable or protected then we need to emit an explicit implementation of the property for that interface.
+                    if (is_overridable_interface || is_protected_interface)
+                    {
+                        write_explicitly_implemented_property(w, interface_type, prop, w.write_temp("AsInternal<%>()", bind<write_type_name>(interface_type, true, false)));
                     }
                 }
             };
@@ -1625,35 +1672,6 @@ remove => _%.Event -= value;
             );
         };
 
-        auto write_property_shim = [&](TypeDef const& required_interface, Property const& prop)
-        {
-            auto propertyType = w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
-            auto declaringTypeName = write_type_name_temp(w, required_interface);
-            auto definingTypeName = write_type_name_temp(w, required_interface, "%", true);
-            auto propertyTarget = w.write_temp("As<%>()", definingTypeName);
-
-            auto [getter, setter] = get_property_methods(prop);
-
-            w.write(bind<write_property>(
-                w.write_temp("%.%", declaringTypeName, prop.Name()),
-                prop.Name(),
-                propertyType,
-                getter ? propertyTarget : "",
-                setter ? propertyTarget : "",
-                ""));
-        };
-
-        auto write_event_shim = [&](TypeDef const& required_interface, Event const& evt)
-        {
-            auto declaringTypeName = write_type_name_temp(w, required_interface);
-            auto eventTarget = w.write_temp("As<%>()", bind<write_type_name>(required_interface, true, false));
-            w.write(bind<write_event>(
-                w.write_temp("%.%", declaringTypeName, evt.Name()),
-                evt,
-                eventTarget,
-                ""));
-        };
-
         auto write_interface = [&](TypeDef const& iface)
         {
             for (auto&& method : iface.MethodList())
@@ -1662,11 +1680,11 @@ remove => _%.Event -= value;
             }
             for (auto&& prop : iface.PropertyList())
             {
-                write_property_shim(iface, prop);
+                write_explicitly_implemented_property(w, iface, prop, w.write_temp("As<%>()", bind<write_type_name>(iface, true, false)));
             }
             for (auto&& evt : iface.EventList())
             {
-                write_event_shim(iface, evt);
+                write_explicitly_implemented_event(w, iface, evt, w.write_temp("As<%>()", bind<write_type_name>(iface, true, false)));
             }
         };
 
@@ -1754,19 +1772,13 @@ remove => _%.Event -= value;
             call(get_type_semantics(iface.Interface()),
                 [&](type_definition const& type)
                 {
-                    if (!is_exclusive_to(type))
-                    {
-                        s();
-                        w.write("%", bind<write_type_name>(type, false, false));
-                    }
+                    s();
+                    w.write("%", bind<write_type_name>(type, false, false));
                 },
                 [&](generic_type_instance const& type)
                 {
-                    if (!is_exclusive_to(type.generic_type))
-                    {
-                        s();
-                        w.write("%", bind<write_type_name>(type, false, false));
-                    }
+                    s();
+                    w.write("%", bind<write_type_name>(type, false, false));
                 },
                 [](auto) { throw_invalid("invalid interface impl type"); });
         }
