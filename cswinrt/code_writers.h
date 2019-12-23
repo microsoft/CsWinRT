@@ -1206,7 +1206,7 @@ private EventSource% _%;)",
         write_type(semantics);
     }
 
-    void write_param_out_local_declare(writer& w, method_signature::param_t const& param)
+    void write_param_out_to_abi_local_declare(writer& w, method_signature::param_t const& param)
     {
         auto semantics = get_type_semantics(param.second->Type());
 
@@ -1222,17 +1222,17 @@ private EventSource% _%;)",
                 {
                     switch (get_category(type))
                     {
-                        case category::enum_type:
-                            break;
-                        case category::struct_type:
-                            if (!is_type_blittable(type))
-                            {
-                                w.write("% %_value;\n", bind<write_type_name>(semantics, true, false), bind<write_parameter_name>(param));
-                            }
-                            break;
-                        default:
-                            w.write("IntPtr %_value;\n", bind<write_parameter_name>(param));
-                            break;
+                    case category::enum_type:
+                        break;
+                    case category::struct_type:
+                        if (!is_type_blittable(type))
+                        {
+                            w.write("% %_value;\n", bind<write_type_name>(semantics, true, false), bind<write_parameter_name>(param));
+                        }
+                        break;
+                    default:
+                        w.write("IntPtr %_value;\n", bind<write_parameter_name>(param));
+                        break;
                     }
                 },
                 [&](generic_type_instance const&)
@@ -1255,7 +1255,59 @@ private EventSource% _%;)",
         case param_category::in:
             //auto param_name = w.write_temp("%", bind<write_parameter_name>(param));
             //write_marshal_to_abi(w, get_type_semantics(param.second->Type()), param_name);
-        break;
+            break;
+        case param_category::pass_array:
+            //w.write("/*pass_array*/ null");
+            break;
+        case param_category::fill_array:
+            //w.write("/*fill_array*/ null");
+            break;
+        case param_category::receive_array:
+            //w.write("/*receive_array*/ null");
+            break;
+        }
+    }
+
+    void write_param_out_to_projection_local_declare(writer& w, method_signature::param_t const& param)
+    {
+        auto semantics = get_type_semantics(param.second->Type());
+
+        switch (get_param_category(param))
+        {
+        case param_category::out:
+            call(semantics,
+                [&](object_type)
+                {
+                    w.write("WinRT.IInspectable %_value;\n", bind<write_parameter_name>(param));
+                },
+                [&](type_definition const& type)
+                {
+                    if (!is_type_blittable(type))
+                    {
+                        w.write("% %_value;\n", bind<write_type_name>(type, false, false), bind<write_parameter_name>(param));
+                    }
+                },
+                [&](generic_type_instance const& generic_type)
+                {
+                    w.write("% %_value;\n", bind<write_type_name>(generic_type, false, false), bind<write_parameter_name>(param));
+                },
+                [&](fundamental_type type)
+                {
+                    if (type == fundamental_type::String)
+                    {
+                        w.write("string %_value;\n", bind<write_parameter_name>(param));
+                    }
+                    else if (type == fundamental_type::Boolean)
+                    {
+                        w.write("bool %_value;\n", bind<write_parameter_name>(param));
+                    }
+                },
+                [&](auto const&) {});
+            break;
+        case param_category::in:
+            //auto param_name = w.write_temp("%", bind<write_parameter_name>(param));
+            //write_marshal_to_abi(w, get_type_semantics(param.second->Type()), param_name);
+            break;
         case param_category::pass_array:
             //w.write("/*pass_array*/ null");
             break;
@@ -1276,7 +1328,15 @@ private EventSource% _%;)",
         }
     }
 
-    void write_param_out_local_marshal(writer& w, method_signature::param_t const& param)
+    void write_out_marshal_to_abi(writer& w, type_semantics const& semantics, std::string_view name)
+    {
+        if (!is_type_blittable(semantics))
+        {
+            write_marshal_to_abi(w, semantics, name);
+        }
+    }
+
+    void write_param_out_local_marshal_from_abi(writer& w, method_signature::param_t const& param)
     {
         auto semantics = get_type_semantics(param.second->Type());
 
@@ -1286,6 +1346,40 @@ private EventSource% _%;)",
         {
             auto param_name = w.write_temp("%", bind<write_parameter_name>(param));
             auto out_marshal = w.write_temp("%", bind<write_out_marshal_from_abi>(get_type_semantics(param.second->Type()), param_name + "_value"));
+            if (!out_marshal.empty())
+            {
+                w.write("\n% = %;", param_name, out_marshal);
+            }
+        }
+        break;
+        case param_category::in:
+        {
+            //auto param_name = w.write_temp("%", bind<write_parameter_name>(param));
+            //write_marshal_to_abi(w, get_type_semantics(param.second->Type()), param_name);
+        }
+        break;
+        case param_category::pass_array:
+            //w.write("/*pass_array*/ null");
+            break;
+        case param_category::fill_array:
+            //w.write("/*fill_array*/ null");
+            break;
+        case param_category::receive_array:
+            //w.write("/*receive_array*/ null");
+            break;
+        }
+    }
+
+    void write_param_out_local_marshal_to_abi(writer& w, method_signature::param_t const& param)
+    {
+        auto semantics = get_type_semantics(param.second->Type());
+
+        switch (get_param_category(param))
+        {
+        case param_category::out:
+        {
+            auto param_name = w.write_temp("%", bind<write_parameter_name>(param));
+            auto out_marshal = w.write_temp("%", bind<write_out_marshal_to_abi>(get_type_semantics(param.second->Type()), param_name + "_value"));
             if (!out_marshal.empty())
             {
                 w.write("\n% = %;", param_name, out_marshal);
@@ -1469,10 +1563,10 @@ var __invoke_params__ = new object[]{ %% };
             bind_each(out_marshals));
     }
 
-    void write_static_invoke(writer& w, std::string vmethod_name, std::string_view thisPtrArg, method_signature signature)
+    void write_static_abi_invoke(writer& w, std::string vmethod_name, std::string_view thisPtrArg, method_signature signature)
     {
         w.write("%%unsafe { Marshal.ThrowExceptionForHR(%(%%%)); }%%",
-            bind_each(write_param_out_local_declare, signature.params()),
+            bind_each(write_param_out_to_abi_local_declare, signature.params()),
             signature.return_signature() ?
             w.write_temp("% __return_value__;\n",
                 bind<write_abi_type>(get_type_semantics(signature.return_signature().Type()))) :
@@ -1484,11 +1578,11 @@ var __invoke_params__ = new object[]{ %% };
                     w.write(", %", bind<write_param_marshal_to_abi>(param));
                 }, signature.params()),
             signature.return_signature() ? ", out __return_value__" : "",
-                    bind_each(write_param_out_local_marshal, signature.params()),
-                    signature.return_signature() ?
-                    w.write_temp("\nreturn %;",
-                        bind<write_marshal_from_abi>(get_type_semantics(signature.return_signature().Type()), "__return_value__")) :
-                    "");
+            bind_each(write_param_out_local_marshal_from_abi, signature.params()),
+            signature.return_signature() ?
+            w.write_temp("\nreturn %;",
+                bind<write_marshal_from_abi>(get_type_semantics(signature.return_signature().Type()), "__return_value__")) :
+            "");
     }
 
     void write_interface_members(writer& w, TypeDef const& type, std::set<std::string> const& generic_methods)
@@ -1509,7 +1603,9 @@ var __invoke_params__ = new object[]{ %% };
             auto vmethod_name = get_vmethod_name(w, type, method);
             w.write(R"(
 public %% %(%)
-{%}
+{
+%
+}
 )",
                 (method.Name() == "ToString"sv) ? "new " : "",
                 bind<write_method_return_type>(signature),
@@ -1517,7 +1613,7 @@ public %% %(%)
                 bind_list<write_projection_method_parameter>(", ", signature.params()),
                 bind([&](writer& w){ is_generic_method(vmethod_name) ? 
                     write_dynamic_invoke(w, w.write_temp("_obj.Vftbl.%", vmethod_name), "ThisPtr", signature)
-                    : write_static_invoke(w, w.write_temp("_obj.Vftbl.%", vmethod_name), "ThisPtr", signature); })
+                    : write_static_abi_invoke(w, w.write_temp("_obj.Vftbl.%", vmethod_name), "ThisPtr", signature); })
                 );
         }
 
@@ -1763,6 +1859,35 @@ remove => _%.Event -= value;
         write_marshal_from_abi(w, get_type_semantics(param.second->Type()), param_name);
     }
 
+    void write_projection_param_marshal(writer& w, method_signature::param_t const& param)
+    {
+        if (is_type_blittable(get_type_semantics(param.second->Type())))
+        {
+            write_parameter_name_with_modifier(w, param);
+        }
+        else
+        {
+            switch (get_param_category(param))
+            {
+            case param_category::in:
+                write_delegate_param_marshal(w, param);
+                break;
+            case param_category::out:
+                w.write("%_value", bind<write_parameter_name_with_modifier>(param, true));
+                break;
+            case param_category::fill_array:
+                w.write("/* fill_array */ null");
+                break;
+            case param_category::pass_array:
+                w.write("/* pass_array */ null");
+                break;
+            case param_category::receive_array:
+                w.write("/* receive_array */ null");
+                break;
+            }
+        }
+    }
+
     void write_method_abi_invoke(writer& w, MethodDef const& method)
     {
         if (method.SpecialName()) return;
@@ -1779,11 +1904,14 @@ private static unsafe int Do_Abi_%(%)
 {
     try
     {
+        %
         WinRT.ComCallableWrapper.FindObject<%>(thisPtr).%(%);
+        %
         return 0;
     }
     catch (Exception __ex)
     {
+        %
         return __ex.HResult;
     }
 }
@@ -1793,9 +1921,18 @@ private static unsafe int Do_Abi_%(%)
                     w.write(get_vmethod_name(w, method.Parent(), method));
                 }),
                 bind<write_abi_parameters>(signature, false),
+                bind_each<write_param_out_to_projection_local_declare>(signature.params()),
                 type_name,
                 method.Name(),
-                bind_list<write_delegate_param_marshal>(", ", signature.params()));
+                bind_list<write_projection_param_marshal>(", ", signature.params()),
+                bind_each<write_param_out_local_marshal_to_abi>(signature.params()),
+                bind_each([&](writer& w, method_signature::param_t const& param)
+                {
+                    if (get_param_category(param) == param_category::out)
+                    {
+                        w.write("% = default;\n", bind<write_parameter_name>(param));
+                    }
+                }, signature.params()));
             return;
         }
 
@@ -1806,29 +1943,41 @@ private static unsafe int Do_Abi_%(%)
 {
     try
     {
+        %
         % = %;
+        %
         return 0;
     }
     catch (Exception __ex)
     {
+        %
         % = default;
         return __ex.HResult;
     }
 })",
             bind([&](writer& w)
-{
-    w.write(get_vmethod_name(w, method.Parent(), method));
-}),
+            {
+                w.write(get_vmethod_name(w, method.Parent(), method));
+            }),
             bind<write_abi_parameters>(signature, false),
+            bind_each<write_param_out_to_projection_local_declare>(signature.params()),
             signature.return_param_name(),
             bind([&](writer& w)
             {
                 auto invokeCall = w.write_temp("WinRT.ComCallableWrapper.FindObject<%>(thisPtr).%(%)",
                     type_name,
                     method.Name(),
-                    bind_list<write_delegate_param_marshal>(", ", signature.params()));
+                    bind_list<write_projection_param_marshal>(", ", signature.params()));
                 write_marshal_to_abi(w, get_type_semantics(return_sig.Type()), invokeCall);
             }),
+            bind_each<write_param_out_local_marshal_to_abi>(signature.params()),
+            bind_each([&](writer& w, method_signature::param_t const& param)
+            {
+                if (get_param_category(param) == param_category::out)
+                {
+                    w.write("% = default;\n", bind<write_parameter_name>(param));
+                }
+            }, signature.params()),
             signature.return_param_name());
     }
 
