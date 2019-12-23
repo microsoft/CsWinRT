@@ -1014,7 +1014,12 @@ namespace WinRT
 #endif
         }
 
-        public static T FindObject<T>(IntPtr thisPtr) => (T)UnmanagedObject.FindObject<ComCallableWrapper>(thisPtr).ManagedObject;
+        public static T FindObject<T>(IntPtr thisPtr) =>
+#if MANUAL_IUNKNOWN
+            (T)UnmanagedObject.FindObject<ComCallableWrapper>(thisPtr).ManagedObject;
+#else
+            throw new NotImplementedException();
+#endif
 
 #if MANUAL_IUNKNOWN
         private IntPtr _handle;
