@@ -1961,9 +1961,11 @@ private static unsafe int Do_Abi_%([In] IntPtr thisPtr, [In] EventRegistrationTo
 
     try
     {
-        var handler = (WinRT.EventHandler%)GCHandle.FromIntPtr((IntPtr)token.Value).Target;
+        var handle = GCHandle.FromIntPtr((IntPtr)token.Value);
+        var handler = (WinRT.EventHandler%)handle.Target;
         var _this = WinRT.ComCallableWrapper.FindObject<%>(thisPtr);
         _this.% -= handler;
+        handle.Free();
         return 0;
     }
     catch (Exception __ex)
