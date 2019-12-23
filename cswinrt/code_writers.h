@@ -1,6 +1,8 @@
 #pragma once
 
 #include <functional>
+#include <set>
+#include <unordered_set>
 
 namespace cswinrt
 {
@@ -1648,7 +1650,7 @@ remove => _%.Event -= value;
         }
     }
 
-    void write_required_interface_members_for_native_type(writer& w, TypeDef const& type)
+    void write_required_interface_members_for_native_type(writer& w, TypeDef const& type, std::set<std::string>& written_required_interfaces)
     {
         auto write_method = [&](TypeDef const& required_interface, MethodDef const& method)
         {
@@ -1674,6 +1676,13 @@ remove => _%.Event -= value;
 
         auto write_interface = [&](TypeDef const& iface)
         {
+            auto interface_name = write_type_name_temp(w, iface);
+            if (written_required_interfaces.find(interface_name) != written_required_interfaces.end())
+            {
+                // We've already written this required interface, so don't write it again.
+                return;
+            }
+
             for (auto&& method : iface.MethodList())
             {
                 write_method(iface, method);
@@ -1686,18 +1695,24 @@ remove => _%.Event -= value;
             {
                 write_explicitly_implemented_event(w, iface, evt, w.write_temp("As<%>()", bind<write_type_name>(iface, true, false)));
             }
+
+            written_required_interfaces.insert(std::move(interface_name));
         };
 
         for (auto&& iface : type.InterfaceImpl())
         {
             auto semantics = get_type_semantics(iface.Interface());
-
             call(semantics,
-                [&](type_definition const& type) { write_interface(type); },
+                [&](type_definition const& type)
+                {
+                    write_interface(type);
+                    write_required_interface_members_for_native_type(w, type, written_required_interfaces);
+                },
                 [&](generic_type_instance const& type)
                 {
                     auto guard{ w.push_generic_args(type) };
                     write_interface(type.generic_type);
+                    write_required_interface_members_for_native_type(w, type.generic_type, written_required_interfaces);
                 },
                 [](auto) { throw_invalid("invalid type"); });
         }
@@ -2013,6 +2028,7 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
         auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type, true, false));
         auto is_generic = distance(type.GenericParam()) > 0;
         std::set<std::string> generic_methods;
+        std::set<std::string> written_required_interfaces;
         std::vector<std::string> nongeneric_delegates;
 
         uint32_t const vtable_base = type.MethodList().first.index();
@@ -2073,7 +2089,7 @@ public static Guid PIID = Vftbl.PIID;
             OwnerMemberName,
             bind<write_interface_members>(type, generic_methods),
             bind<write_event_sources>(type),
-            bind<write_required_interface_members_for_native_type>(type)
+            bind<write_required_interface_members_for_native_type>(type, written_required_interfaces)
         );
 
         if (!nongeneric_delegates.empty())
