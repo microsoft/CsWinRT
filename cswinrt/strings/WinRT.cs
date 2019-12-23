@@ -1092,6 +1092,7 @@ namespace WinRT
             const int E_NOINTERFACE = unchecked((int)0x80040002);
             if (_managedQITable.TryGetValue(iid, out ptr))
             {
+                AddRef();
                 return 0;
             }
             return E_NOINTERFACE;
