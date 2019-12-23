@@ -1419,7 +1419,7 @@ namespace WinRT
     }
 
     struct MarshalInterface<TInterface, TNative>
-        where TNative : TInterface, class
+        where TNative : class, TInterface
     {
         private static Func<TNative, IObjectReference> NativeRcwToAbi;
         private static Func<IntPtr, TNative> NativeRcwFromAbi;
