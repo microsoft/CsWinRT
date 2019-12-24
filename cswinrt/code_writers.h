@@ -1894,6 +1894,57 @@ remove => _%.Event -= value;
         }
     }
 
+    void write_method_abi_name(writer& w, MethodDef const& method)
+    {
+        method_signature method_sig{ method };
+        w.write(get_vmethod_name(w, method.Parent(), method));
+        bool has_generic_params = false;
+        writer::write_generic_type_name_guard g(w, [&](writer& w, uint32_t index)
+        {
+            has_generic_params = true;
+            w.write("%_Native", bind<write_generic_type_name_base>(index));
+        });
+
+        separator s{ w };
+
+        auto generic_list = w.write_temp("%", bind([&](writer& w)
+        {
+            for (auto&& param : method_sig.params())
+            {
+                auto paramType = get_type_semantics(param.second->Type());
+                if (std::holds_alternative<generic_type_index>(paramType))
+                {
+                    s();
+                    w.write(bind<write_generic_type_name>(std::get<generic_type_index>(paramType).index));
+                }
+            }
+
+            auto return_sig = method_sig.return_signature();
+            if (return_sig)
+            {
+                auto returnType = get_type_semantics(return_sig.Type());
+                if (std::holds_alternative<generic_type_index>(returnType))
+                {
+                    s();
+                    w.write(bind<write_generic_type_name>(std::get<generic_type_index>(returnType).index));
+                }
+            }
+        }));
+
+        if (has_generic_params)
+        {
+            w.write("<%>", generic_list);
+        }
+    }
+
+    [[nodiscard]] writer::write_generic_type_name_guard get_abi_invoke_generic_name_guard(writer& w)
+    {
+        return { w, [&](writer& w, uint32_t index)
+        {
+            w.write("%_Native", bind<write_generic_type_name_base>(index));
+        } };
+    }
+
     void write_method_abi_invoke(writer& w, MethodDef const& method)
     {
         if (method.SpecialName()) return;
@@ -1906,7 +1957,6 @@ remove => _%.Event -= value;
         {
             w.write(
                 R"(
-// TODO: fix generic CCW invocations (T != Marshaler<T>.AbiType)
 private static unsafe int Do_Abi_%(%)
 {
     try
@@ -1923,11 +1973,12 @@ private static unsafe int Do_Abi_%(%)
     }
 }
 )",
+                bind<write_method_abi_name>(method),
                 bind([&](writer& w)
                 {
-                    w.write(vmethod_name);
+                    writer::write_generic_type_name_guard _ = get_abi_invoke_generic_name_guard(w);
+                    w.write(bind<write_abi_parameters>(signature, false));
                 }),
-                bind<write_abi_parameters>(signature, false),
                 bind_each<write_param_out_to_projection_local_declare>(signature.params()),
                 type_name,
                 method.Name(),
@@ -1945,7 +1996,6 @@ private static unsafe int Do_Abi_%(%)
 
         w.write(
             R"(
-// TODO: fix generic CCW invocations (T != Marshaler<T>.AbiType)
 private static unsafe int Do_Abi_%(%)
 {
     try
@@ -1962,11 +2012,12 @@ private static unsafe int Do_Abi_%(%)
         return __ex.HResult;
     }
 })",
+            bind<write_method_abi_name>(method),
             bind([&](writer& w)
             {
-                w.write(get_vmethod_name(w, method.Parent(), method));
+                writer::write_generic_type_name_guard _ = get_abi_invoke_generic_name_guard(w);
+                w.write(bind<write_abi_parameters>(signature, false));
             }),
-            bind<write_abi_parameters>(signature, false),
             bind_each<write_param_out_to_projection_local_declare>(signature.params()),
             signature.return_param_name(),
             bind([&](writer& w)
@@ -2016,11 +2067,12 @@ private static unsafe int Do_Abi_%(%)
     }
 }
 )",
+                bind<write_method_abi_name>(setter),
                 bind([&](writer& w)
                 {
-                    w.write(get_vmethod_name(w, prop.Parent(), setter));
+                    writer::write_generic_type_name_guard _ = get_abi_invoke_generic_name_guard(w);
+                    w.write(bind<write_abi_parameters>(setter_sig, false));
                 }),
-                bind<write_abi_parameters>(setter_sig, false),
                 type_name,
                 prop.Name(),
                 bind<write_delegate_param_marshal>(setter_sig.params()[0]));
@@ -2048,49 +2100,10 @@ private static unsafe int Do_Abi_%(%)
         return __ex.HResult;
     }
 })",
+                bind<write_method_abi_name>(getter),
                 bind([&](writer& w)
                 {
-                    w.write(get_vmethod_name(w, prop.Parent(), getter));
-                    bool has_generic_params = false;
-                    writer::write_generic_type_name_guard g(w, [&](writer& w, uint32_t index)
-                    {
-                        has_generic_params = true;
-                        w.write("%_Native", bind<write_generic_type_name_base>(index));
-                    });
-
-                    separator s{ w };
-
-                    auto generic_list = w.write_temp("%", bind([&](writer& w)
-                    {
-                        for (auto&& param : getter_sig.params())
-                        {
-                            auto paramType = get_type_semantics(param.second->Type());
-                            if (std::holds_alternative<generic_type_index>(paramType))
-                            {
-                                s();
-                                w.write(bind<write_generic_type_name>(std::get<generic_type_index>(paramType).index));
-                            }
-                        }
-
-                        auto returnType = get_type_semantics(getter_sig.return_signature().Type());
-                        if (std::holds_alternative<generic_type_index>(returnType))
-                        {
-                            s();
-                            w.write(bind<write_generic_type_name>(std::get<generic_type_index>(returnType).index));
-                        }
-                    }));
-
-                    if (has_generic_params)
-                    {
-                        w.write("<%>", generic_list);
-                    }
-                }),
-                bind([&](writer& w)
-                {
-                    writer::write_generic_type_name_guard g(w, [&](writer& w, uint32_t index)
-                    {
-                        w.write("%_Native", bind<write_generic_type_name_base>(index));
-                    });
+                    writer::write_generic_type_name_guard _ = get_abi_invoke_generic_name_guard(w);
                     w.write(bind<write_abi_parameters>(getter_sig, false));
                 }),
                 getter_sig.return_param_name(),
