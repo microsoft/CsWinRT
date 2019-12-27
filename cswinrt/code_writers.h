@@ -103,7 +103,7 @@ namespace cswinrt
 
     void write_generic_type_name_base(writer& w, uint32_t index)
     {
-        write_projection_type(w, w.get_generic_arg(index));
+        write_projection_type(w, w.get_generic_arg_scope(index).first);
     }
 
     void write_generic_type_name(writer& w, uint32_t index)

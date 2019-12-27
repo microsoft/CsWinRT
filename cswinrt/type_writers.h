@@ -67,16 +67,17 @@ namespace %
 
         struct generic_args
         {
-            std::vector<std::vector<type_semantics>> stack;
+            std::vector<std::vector<type_semantics>> _stack;
+            size_t _scope = 0;
 
-            struct guard
+            struct args_guard
             {
-                explicit guard(generic_args* owner = nullptr)
+                explicit args_guard(generic_args* owner = nullptr)
                     : _owner(owner)
                 {
                 }
 
-                ~guard()
+                ~args_guard()
                 {
                     if (_owner)
                     {
@@ -84,19 +85,38 @@ namespace %
                     }
                 }
 
-                guard(guard&& other)
-                    : _owner(other._owner)
+                args_guard(args_guard&& other) = delete;
+                args_guard& operator=(args_guard const&) = delete;
+                args_guard& operator=(args_guard&& other) = delete;
+                generic_args* _owner;
+            };
+
+            struct scope_guard
+            {
+                size_t _scope;
+
+                explicit scope_guard(generic_args& owner, size_t scope)
+                    : _owner(&owner), _scope(scope)
                 {
-                    _owner = nullptr;
+                    _scope = std::exchange(_owner->_scope, _scope);
                 }
 
-                guard& operator=(guard&& other)
+                ~scope_guard()
                 {
-                    _owner = std::exchange(other._owner, nullptr);
-                    return *this;
+                    if (_owner)
+                    {
+                        _scope = std::exchange(_owner->_scope, _scope);
+                    }
                 }
 
-                guard& operator=(guard const&) = delete;
+                scope_guard(scope_guard&& other)
+                    : _owner(other._owner), _scope(other._scope)
+                {
+                    other._owner = nullptr;
+                }
+
+                scope_guard& operator=(scope_guard const&) = delete;
+                scope_guard& operator=(scope_guard&& other) = delete;
                 generic_args* _owner;
             };
 
@@ -104,80 +124,68 @@ namespace %
             {
                 if (empty(range))
                 {
-                    return guard{ nullptr };
+                    return args_guard{ nullptr };
                 }
 
-                stack.emplace_back(begin(range), end(range));
-                return guard{ this };
+                _stack.emplace_back(begin(range), end(range));
+                return args_guard{ this };
             }
 
             [[nodiscard]] auto push(generic_type_instance const& type)
             {
                 XLANG_ASSERT(!type.generic_args.empty());
-                stack.push_back(type.generic_args);
-                return guard{ this };
+                _stack.push_back(type.generic_args);
+                return args_guard{ this };
             }
 
             auto get(uint32_t index)
             {
-                bool is_index{};
-                for (auto&& args = rbegin(stack); args != rend(stack); ++args)
+                size_t scope = _scope > 0 ? _scope - 1 : _stack.size();
+                for(size_t i = scope; i > 0; --i)
                 {
+                    auto&& args = &_stack[i-1];
                     if (index >= args->size())
                     {
-                        continue;
+                        throw_invalid("Generic index out of range");
                     }
+                    
                     auto& semantics = (*args)[index];
-                    auto gt_index = std::get_if<generic_type_index>(&semantics);
-                    if (gt_index)
+                    if(auto gti = std::get_if<generic_type_index>(&semantics))
                     {
-                        is_index = true;
-                        index = gt_index->index;
+                        index = gti->index;
                         continue;
                     }
-                    // Temporary: skip over nested generic type instances 
-                    // (e.g, IMapView<K,V> : IIterable<IKeyValuePair<!0,!1>)
-                    if (is_index)
-                    {
-                        auto gt_instance = std::get_if<generic_type_instance>(&semantics);
-                        if (gt_instance)
-                        {
-                            if (index < gt_instance->generic_args.size())
-                            {
-                                auto nested = gt_instance->generic_args[index];
-                                if (std::get_if<generic_type_index>(&nested))
-                                {
-                                    continue;
-                                }
-                            }
-                        }
-                    }
-                    return semantics;
+                    return std::pair{ semantics, scope_guard(*this, i) };
                 }
-                throw_invalid("Could not find generic argument");
+                throw_invalid("No generic arguments");
             }
 
             void pop()
             {
-                stack.pop_back();
+                _stack.pop_back();
             }
         };
 
-        generic_args generic_args;
+        generic_args _generic_args;
 
         [[nodiscard]] auto push_generic_params(std::pair<GenericParam, GenericParam> const& range)
         {
-            return generic_args.push(range);
+            return _generic_args.push(range);
         }
 
         [[nodiscard]] auto push_generic_args(generic_type_instance const& type)
         {
-            return generic_args.push(type);
+            return _generic_args.push(type);
+        }
+
+        auto get_generic_arg_scope(uint32_t index)
+        {
+            return _generic_args.get(index);
         }
 
         auto get_generic_arg(uint32_t index)
         {
-            return generic_args.get(index);
+            return get_generic_arg_scope(index).first;
         }
 
         void write_code(std::string_view const& value)
