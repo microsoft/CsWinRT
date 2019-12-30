@@ -2,9 +2,37 @@
 
 # The C#/WinRT Language Projection
 
-C#/WinRT provides packaged WinRT projection support for the C# language.  It is compatible with .NET Standard 2.0 and later and does not require any built-in knowledge of WinRT by the C# compiler.  
+C#/WinRT provides packaged WinRT projection support for the C# language.  It is compatible with .NET Standard 2.0 and later and does not require any built-in knowledge of WinRT by the CLR or C# compiler.  
 
 C#/WinRT is part of the [xlang](https://github.com/microsoft/xlang) family of projects that help developers create APIs that can run on multiple platforms and be used with a variety of languages.
+
+# Structure
+
+The C#/WinRT compiler and unit tests are all contained within the Visual Studio 2019 solution file, \cswinrt\cswinrt.sln.  
+
+## /cswinrt
+
+The **/cswinrt** folder contains the sources and cswinrt.vcxproj project file for building the C#/WinRT compiler, cswinrt.exe.  The projection's base library is contained in /cswinrt/strings/WinRT.cs, which is processed by /strings.props to generate string literals contained in the compiler.
+
+The compiler uses the [WinMD NuGet package](http://aka.ms/winmd/nuget) for parsing [ECMA-335 metadata](http://www.ecma-international.org/publications/standards/Ecma-335.htm) files.  The WinMD github repo includes a [winmd.natvis](https://github.com/microsoft/winmd/blob/master/vs/winmd.natvis) script for debugging metadata parsing.  A symlink can be used to install the script:
+  > mklink "%USERPROFILE%\Documents\Visual Studio 2019\Visualizers\winmd.natvis" c:\git\winmd\vs\winmd.natvis 
+  
+The cswinrt project also contains a cswinrt.natvis script for debugging the C# projection writing, which can also be installed with a symlink:
+> mklink "%USERPROFILE%\Documents\Visual Studio 2019\Visualizers\cswinrt.natvis" c:\git\cswinrt\cswinrt\cswinrt.natvis
+
+See also [Deploying .natvis files](https://docs.microsoft.com/en-us/visualstudio/debugger/create-custom-views-of-native-objects?view=vs-2015#BKMK_natvis_location).
+
+## /nuget
+
+The **/nuget** folder contains source files for producing a C#/WinRT NuGet package, which is regularly built, signed, and published to nuget.org by Microsoft.
+
+## /testcomp
+
+The **/testcomp** folder contains an implementation of a WinRT test component, defined in class.idl and used by the UnitTest project.
+
+## /unittest
+
+The **/unittest** folder contains unit tests for validating the projection generated for the test component and for the Windows SDK.
 
 # Contributing
 
