@@ -1809,7 +1809,7 @@ remove => _%.Event -= value;
             get<uint8_t>(get_arg(10)));
     }
 
-    void write_type_inheritance(writer& w, TypeDef const& type)
+    void write_type_inheritance(writer& w, TypeDef const& type, type_semantics base_semantics)
     {
         auto delimiter{ " : " };
         auto write_delimiter = [&]()
@@ -1818,14 +1818,10 @@ remove => _%.Event -= value;
             delimiter = ", ";
         };
 
-        if (get_category(type) == category::class_type && !is_static(type))
+        if (!std::holds_alternative<object_type>(base_semantics))
         {
-            auto base_semantics = get_type_semantics(type.Extends());
-            if (!std::holds_alternative<object_type>(base_semantics))
-            {
-                write_delimiter();
-                write_projection_type(w, base_semantics);
-            }
+            write_delimiter();
+            write_projection_type(w, base_semantics);
         }
 
         for (auto&& iface : type.InterfaceImpl())
@@ -2050,7 +2046,7 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
             bind<write_guid_attribute>(type),
             is_exclusive_to(type) ? "internal" : "public",
             type_name,
-            bind<write_type_inheritance>(type),
+            bind<write_type_inheritance>(type, object_type{}),
             bind<write_interface_member_signatures>(type)
         );
     }
@@ -2155,13 +2151,16 @@ public static Guid PIID = Vftbl.PIID;
         auto type_name = write_type_name_temp(w, type);
         auto default_interface_name = get_default_interface_name(w, type, false);
         auto default_interface_abi_name = get_default_interface_name(w, type, true);
+        auto base_semantics = get_type_semantics(type.Extends());
+        auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
+        
         w.write(R"(public %class %%
 {
-public IntPtr ThisPtr => _default.ThisPtr;
+public %IntPtr ThisPtr => _default.ThisPtr;
 
 private % _default;
 %
-public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
+public static %% FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
 
 internal %(% ifc)%
 {
@@ -2177,16 +2176,18 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 )",
             bind<write_class_modifiers>(type),
             type_name,
-            bind<write_type_inheritance>(type),
+            bind<write_type_inheritance>(type, base_semantics),
+            derived_new,
             default_interface_abi_name,
             bind<write_attributed_types>(type),
+            derived_new,
             type_name,
             type_name,
             default_interface_abi_name,
             default_interface_abi_name,
             type_name,
             default_interface_abi_name,
-            bind<write_base_constructor_dispatch>(get_type_semantics(type.Extends())),
+            bind<write_base_constructor_dispatch>(base_semantics),
             OwnerMemberName,
             default_interface_name,
             default_interface_name,
