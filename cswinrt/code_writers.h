@@ -111,7 +111,27 @@ namespace cswinrt
             w.write_generic_type_name_custom(w, index) :
             write_generic_type_name_base(w, index);
     }
-
+    
+    template<typename TAction, typename TResult = std::invoke_result_t<TAction, type_definition>>
+    TResult for_typedef(writer& w, type_semantics const& semantics, TAction action)
+    {
+        return call(semantics,
+            [&](type_definition const& type)
+            {
+                return action(type);
+            },
+            [&](generic_type_instance const& type)
+            {
+                auto guard{ w.push_generic_args(type) };
+                return action(type.generic_type);
+            },
+            [](auto) 
+            { 
+                throw_invalid("type definition expected");
+                #pragma warning(disable:4702)
+                return TResult();
+            });
+    }
 
     void write_typedef_name(writer& w, type_definition const& type, bool abiNamespace = false, bool forceWriteNamespace = false)
     {
@@ -146,19 +166,11 @@ namespace cswinrt
 
     void write_type_name(writer& w, type_semantics const& semantics, bool abiNamespace = false, bool forceWriteNamespace = false)
     {
-        auto write_name = [&](TypeDef const& type)
+        for_typedef(w, semantics, [&](TypeDef const& type)
         {
             write_typedef_name(w, type, abiNamespace, forceWriteNamespace);
             write_type_params(w, type);
-        };
-        call(semantics,
-            [&](type_definition const& type){ write_name(type); },
-            [&](generic_type_instance const& type)
-            {
-                auto guard{ w.push_generic_args(type) };
-                write_name(type.generic_type);
-            },
-            [](auto){ throw_invalid("invalid type"); });
+        });
     }
 
     auto write_type_name_temp(writer& w, type_semantics const& type, char const* format = "%", bool abiNamespace = false)
@@ -683,13 +695,13 @@ set => %.% = value;
 
         auto [getter, setter] = get_property_methods(prop);
 
-        w.write(bind<write_property>(
+        write_property(w, 
             w.write_temp("%.%", declaringTypeName, prop.Name()),
             prop.Name(),
             propertyType,
             getter ? property_target : "",
             setter ? property_target : "",
-            ""));
+            "");
     }
 
     void write_class_property(writer& w, std::string_view prop_name, std::string_view prop_type, std::string_view getter_target, std::string_view setter_target, std::string_view visibility)
@@ -718,11 +730,11 @@ remove => %.% -= value;
     void write_explicitly_implemented_event(writer& w, TypeDef const& iface, Event const& evt, std::string_view event_target)
     {
         auto declaringTypeName = write_type_name_temp(w, iface);
-        w.write(bind<write_event>(
+        write_event(w, 
             w.write_temp("%.%", declaringTypeName, evt.Name()),
             evt,
             event_target,
-            ""));
+            "");
     }
 
     void write_class_event(writer& w, Event const& event, bool is_overridable, bool is_protected, std::string_view interface_member)
@@ -1010,7 +1022,7 @@ remove => %.% -= value;
         {
             auto semantics = get_type_semantics(ii.Interface());
 
-            auto write_interface = [&](TypeDef const& interface_type)
+            auto write_class_interface = [&](TypeDef const& interface_type)
             {
                 auto interface_name = write_type_name_temp(w, interface_type);
                 auto interface_abi_name = write_type_name_temp(w, interface_type, "%", true);
@@ -1081,14 +1093,10 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                     }
                 }
             };
-            call(semantics,
-                [&](type_definition const& type) { write_interface(type); },
-                [&](generic_type_instance const& type)
-                {
-                    auto guard{ w.push_generic_args(type) };
-                    write_interface(type.generic_type);
-                },
-                [](auto) { throw_invalid("invalid type"); });
+            for_typedef(w, semantics, [&](TypeDef const& type)
+            {
+                write_class_interface(type);
+            });
         }
 
         // Write properties with merged accessors
@@ -1399,6 +1407,61 @@ private EventSource% _%;)",
         return w.write_temp("%_%", method.Name(), vtable_index);
     }
 
+    std::pair<std::string, bool> find_property_interface(writer& w, TypeDef const& setter_iface, std::string_view prop_name)
+    {
+        std::string getter_iface;
+
+        auto search_interface = [&](TypeDef const& type)
+        {
+            for (auto&& prop : type.PropertyList())
+            {
+                if (prop.Name() == prop_name)
+                {
+                    getter_iface = write_type_name_temp(w, type, "%", true);
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        std::function<bool(TypeDef const&)> search_interfaces = [&](TypeDef const& type) 
+        {
+            for (auto&& iface : type.InterfaceImpl())
+            {
+                auto semantics = get_type_semantics(iface.Interface());
+                if (for_typedef(w, semantics, [&](TypeDef const& type)
+                {
+                    return (setter_iface != type) && (search_interface(type) || search_interfaces(type));
+                })){
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // first search base interfaces for property getter
+        if (search_interfaces(setter_iface))
+        {
+            return { getter_iface, true };
+        }
+
+        // then search peer exclusive-to interfaces and their bases
+        if (auto exclusive_to_attr = get_attribute(setter_iface, "Windows.Foundation.Metadata", "ExclusiveToAttribute"))
+        {
+            auto sig = exclusive_to_attr.Value();
+            auto const& fixed_args = sig.FixedArgs();
+            XLANG_ASSERT(fixed_args.size() == 1);
+            auto sys_type = std::get<ElemSig::SystemType>(std::get<ElemSig>(fixed_args[0].value).value);
+            auto exclusive_to_type = setter_iface.get_cache().find_required(sys_type.name);
+            if (search_interfaces(exclusive_to_type))
+            {
+                return { getter_iface, false };
+            }
+        }
+
+        throw_invalid("Could not find property getter interface");
+    }
+
     void write_interface_member_signatures(writer& w, TypeDef const& type)
     {
         for (auto&& method : type.MethodList())
@@ -1420,10 +1483,18 @@ private EventSource% _%;)",
         for (auto&& prop : type.PropertyList())
         {
             auto [getter, setter] = get_property_methods(prop);
+            auto setter_only = !getter && setter;
             auto semantics = get_type_semantics(prop.Type().Type());
             w.write(R"(
 %% % {%% })",
-                !getter && setter ? "new " : "",
+                bind([&](writer& w) 
+                {
+                    // "new" required if overriding a getter in a base interface
+                    if (setter_only && find_property_interface(w, type, prop.Name()).second)
+                    {
+                        w.write("new ");
+                    }
+                }),
                 bind<write_projection_type>(semantics),
                 prop.Name(),
                 getter || setter ? " get;" : "",
@@ -1441,41 +1512,6 @@ event WinRT.EventHandler% %;)",
         }
     }
 
-    std::string find_property_interface(writer& w, TypeDef const& type, std::string_view prop_name)
-    {
-        auto find_property = [&](TypeDef const& type)
-        {
-            for (auto&& prop : type.PropertyList())
-            {
-                if (prop.Name() == prop_name)
-                {
-                    return write_type_name_temp(w, type, "%", true);
-                }
-            }
-            return find_property_interface(w, type, prop_name);
-        };
-
-        for (auto&& iface : type.InterfaceImpl())
-        {
-            auto semantics = get_type_semantics(iface.Interface());
-            auto prop_iface = call(semantics,
-                [&](type_definition const& type)
-                {
-                    return find_property(type);
-                },
-                [&](generic_type_instance const& type)
-                {
-                    auto guard{ w.push_generic_args(type) };
-                    return find_property(type.generic_type);
-                },
-                [](auto) { return std::string(); });
-            if (!prop_iface.empty())
-            {
-                return prop_iface;
-            }
-        }
-        return {};
-    }
 
     void write_interface_members(writer& w, TypeDef const& type, std::set<std::string> const& generic_methods)
     {
@@ -1643,12 +1679,8 @@ return %;
             {
                 if (!getter)
                 {
-                    auto base_interface = find_property_interface(w, type, prop.Name());
-                    if (base_interface.empty())
-                    {
-                        throw_invalid("Could not find property getter interface");
-                    }
-                    w.write("get{ return As<%>().%; }\n", base_interface, prop.Name());
+                    auto getter_interface = find_property_interface(w, type, prop.Name());
+                    w.write("get{ return As<%>().%; }\n", getter_interface.first, prop.Name());
                 }
                 method_signature signature{ setter };
                 auto vmethod_name = get_vmethod_name(w, type, setter);
@@ -1711,7 +1743,7 @@ remove => _%.Event -= value;
             );
         };
 
-        auto write_interface = [&](TypeDef const& iface)
+        auto write_required_interface = [&](TypeDef const& iface)
         {
             auto interface_name = write_type_name_temp(w, iface);
             if (written_required_interfaces.find(interface_name) != written_required_interfaces.end())
@@ -1738,20 +1770,11 @@ remove => _%.Event -= value;
 
         for (auto&& iface : type.InterfaceImpl())
         {
-            auto semantics = get_type_semantics(iface.Interface());
-            call(semantics,
-                [&](type_definition const& type)
-                {
-                    write_interface(type);
-                    write_required_interface_members_for_abi_type(w, type, written_required_interfaces);
-                },
-                [&](generic_type_instance const& type)
-                {
-                    auto guard{ w.push_generic_args(type) };
-                    write_interface(type.generic_type);
-                    write_required_interface_members_for_abi_type(w, type.generic_type, written_required_interfaces);
-                },
-                [](auto) { throw_invalid("invalid type"); });
+            for_typedef(w, get_type_semantics(iface.Interface()), [&](TypeDef const& type)
+            {
+                write_required_interface(type);
+                write_required_interface_members_for_abi_type(w, type, written_required_interfaces);
+            });
         }
     }
 
@@ -1788,51 +1811,30 @@ remove => _%.Event -= value;
 
     void write_type_inheritance(writer& w, TypeDef const& type)
     {
-        bool first{ true };
-        bool colon_written{ false };
-        auto s = [&]()
+        auto delimiter{ " : " };
+        auto write_delimiter = [&]()
         {
-            if (!colon_written)
-            {
-                w.write(" : ");
-                colon_written = true;
-            }
-
-            if (first)
-            {
-                first = false;
-            }
-            else
-            {
-                w.write(", ");
-            }
+            w.write(delimiter);
+            delimiter = ", ";
         };
 
         if (get_category(type) == category::class_type && !is_static(type))
         {
             auto base_semantics = get_type_semantics(type.Extends());
-
             if (!std::holds_alternative<object_type>(base_semantics))
             {
-                s();
-                w.write(bind<write_projection_type>(base_semantics));
+                write_delimiter();
+                write_projection_type(w, base_semantics);
             }
         }
 
         for (auto&& iface : type.InterfaceImpl())
         {
-            call(get_type_semantics(iface.Interface()),
-                [&](type_definition const& type)
-                {
-                    s();
-                    w.write("%", bind<write_type_name>(type, false, false));
-                },
-                [&](generic_type_instance const& type)
-                {
-                    s();
-                    w.write("%", bind<write_type_name>(type, false, false));
-                },
-                [](auto) { throw_invalid("invalid interface impl type"); });
+            for_typedef(w, get_type_semantics(iface.Interface()), [&](TypeDef const& type)
+            {
+                write_delimiter();
+                w.write("%", bind<write_type_name>(type, false, false));
+            });
         }
     }
 
