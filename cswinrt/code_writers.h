@@ -2,7 +2,6 @@
 
 #include <functional>
 #include <set>
-#include <unordered_set>
 
 namespace cswinrt
 {
@@ -1014,7 +1013,7 @@ remove => %.% -= value;
             auto write_interface = [&](TypeDef const& interface_type)
             {
                 auto interface_name = write_type_name_temp(w, interface_type);
-                auto interface_native_name = write_type_name_temp(w, interface_type, "%", true);
+                auto interface_abi_name = write_type_name_temp(w, interface_type, "%", true);
 
                 auto is_default_interface = has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute");
                 auto target = is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())");
@@ -1025,8 +1024,8 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
 )",
                         interface_name,
                         interface_name,
-                        interface_native_name,
-                        interface_native_name);
+                        interface_abi_name,
+                        interface_abi_name);
                 }
 
                 auto is_overridable_interface = has_attribute(ii, "Windows.Foundation.Metadata", "OverridableAttribute");
@@ -1411,8 +1410,7 @@ private EventSource% _%;)",
 
             method_signature signature{ method };
             w.write(R"(
-%% %(%);)",
-(method.Name() == "ToString"sv) ? "new " : "",
+% %(%);)",
                 bind<write_method_return_type>(signature),
                 method.Name(),
                 bind_list<write_projection_method_parameter>(", ", signature.params())
@@ -1424,29 +1422,59 @@ private EventSource% _%;)",
             auto [getter, setter] = get_property_methods(prop);
             auto semantics = get_type_semantics(prop.Type().Type());
             w.write(R"(
-% % {)",
+%% % {%% })",
+                !getter && setter ? "new " : "",
                 bind<write_projection_type>(semantics),
-                prop.Name());
-            if (getter)
-            {
-                w.write(" get;");
-            }
-            if (setter)
-            {
-                w.write(" set;");
-            }
-            w.write(" }\n");
+                prop.Name(),
+                getter || setter ? " get;" : "",
+                setter ? " set;" : ""
+            );
         }
 
         for (auto&& evt : type.EventList())
         {
             auto semantics = get_type_semantics(evt.EventType());
             w.write(R"(
-event WinRT.EventHandler% %;
-)",
-bind<write_event_param_types>(evt),
-evt.Name());
+event WinRT.EventHandler% %;)",
+                bind<write_event_param_types>(evt),
+                evt.Name());
         }
+    }
+
+    std::string find_property_interface(writer& w, TypeDef const& type, std::string_view prop_name)
+    {
+        auto find_property = [&](TypeDef const& type)
+        {
+            for (auto&& prop : type.PropertyList())
+            {
+                if (prop.Name() == prop_name)
+                {
+                    return write_type_name_temp(w, type, "%", true);
+                }
+            }
+            return find_property_interface(w, type, prop_name);
+        };
+
+        for (auto&& iface : type.InterfaceImpl())
+        {
+            auto semantics = get_type_semantics(iface.Interface());
+            auto prop_iface = call(semantics,
+                [&](type_definition const& type)
+                {
+                    return find_property(type);
+                },
+                [&](generic_type_instance const& type)
+                {
+                    auto guard{ w.push_generic_args(type) };
+                    return find_property(type.generic_type);
+                },
+                [](auto) { return std::string(); });
+            if (!prop_iface.empty())
+            {
+                return prop_iface;
+            }
+        }
+        return {};
     }
 
     void write_interface_members(writer& w, TypeDef const& type, std::set<std::string> const& generic_methods)
@@ -1613,6 +1641,15 @@ return %;
             }
             if (setter)
             {
+                if (!getter)
+                {
+                    auto base_interface = find_property_interface(w, type, prop.Name());
+                    if (base_interface.empty())
+                    {
+                        throw_invalid("Could not find property getter interface");
+                    }
+                    w.write("get{ return As<%>().%; }\n", base_interface, prop.Name());
+                }
                 method_signature signature{ setter };
                 auto vmethod_name = get_vmethod_name(w, type, setter);
                 w.write("set\n{");
@@ -1650,7 +1687,7 @@ remove => _%.Event -= value;
         }
     }
 
-    void write_required_interface_members_for_native_type(writer& w, TypeDef const& type, std::set<std::string>& written_required_interfaces)
+    void write_required_interface_members_for_abi_type(writer& w, TypeDef const& type, std::set<std::string>& written_required_interfaces)
     {
         auto write_method = [&](TypeDef const& required_interface, MethodDef const& method)
         {
@@ -1706,13 +1743,13 @@ remove => _%.Event -= value;
                 [&](type_definition const& type)
                 {
                     write_interface(type);
-                    write_required_interface_members_for_native_type(w, type, written_required_interfaces);
+                    write_required_interface_members_for_abi_type(w, type, written_required_interfaces);
                 },
                 [&](generic_type_instance const& type)
                 {
                     auto guard{ w.push_generic_args(type) };
                     write_interface(type.generic_type);
-                    write_required_interface_members_for_native_type(w, type.generic_type, written_required_interfaces);
+                    write_required_interface_members_for_abi_type(w, type.generic_type, written_required_interfaces);
                 },
                 [](auto) { throw_invalid("invalid type"); });
         }
@@ -2004,8 +2041,7 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
         uint32_t const vtable_base = type.MethodList().first.index();
         w.write(R"(%
 % interface %%
-{
-%
+{%
 }
 )",
             // Interface
@@ -2014,10 +2050,10 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
             type_name,
             bind<write_type_inheritance>(type),
             bind<write_interface_member_signatures>(type)
-            );
+        );
     }
 
-    bool write_native_interface_implementation(writer& w, TypeDef const& type)
+    bool write_abi_interface_implementation(writer& w, TypeDef const& type)
     {
         if (is_api_contract_type(type)) { return false; }
 
@@ -2054,7 +2090,7 @@ _obj = obj;%
 public object % { get; set; }
 %%%}
 )",
-            // Interface native implementation
+            // Interface abi implementation
             bind<write_guid_attribute>(type),
             type_name,
             bind<write_type_name>(type, false, false),
@@ -2089,7 +2125,7 @@ public static Guid PIID = Vftbl.PIID;
             OwnerMemberName,
             bind<write_interface_members>(type, generic_methods),
             bind<write_event_sources>(type),
-            bind<write_required_interface_members_for_native_type>(type, written_required_interfaces)
+            bind<write_required_interface_members_for_abi_type>(type, written_required_interfaces)
         );
 
         if (!nongeneric_delegates.empty())
@@ -2119,11 +2155,11 @@ public static Guid PIID = Vftbl.PIID;
         auto default_interface_abi_name = get_default_interface_name(w, type, true);
         w.write(R"(public %class %%
 {
-public new IntPtr ThisPtr => _default.ThisPtr;
+public IntPtr ThisPtr => _default.ThisPtr;
 
 private % _default;
 %
-public static new % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
+public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
 
 internal %(% ifc)%
 {
