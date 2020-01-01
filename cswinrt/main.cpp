@@ -171,7 +171,7 @@ Where <spec> is one or more of:
                                     }
                                     if (get_category(type) == category::interface_type)
                                     {
-                                        write_native_interface_implementation(w, type);
+                                        write_abi_interface_implementation(w, type);
                                     }
                                 };
                             }

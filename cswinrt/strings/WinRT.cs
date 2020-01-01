@@ -1163,33 +1163,33 @@ namespace WinRT
         }
     }
 
-    struct MarshalInterface<TInterface, TNative>
-        where TNative : TInterface, class
+    struct MarshalInterface<TInterface, TAbi>
+        where TAbi : class, TInterface
     {
-        private static Func<TNative, IntPtr> NativeRcwToAbi;
-        private static Func<IntPtr, TNative> NativeRcwFromAbi;
+        private static Func<TAbi, IntPtr> _ToAbi;
+        private static Func<IntPtr, TAbi> _FromAbi;
 
         public static TInterface FromAbi(IntPtr ptr)
         {
             // TODO: Check if the value is a CCW and return the underlying object.
-            if (NativeRcwFromAbi == null)
+            if (_FromAbi == null)
             {
-                NativeRcwFromAbi = BindFromAbi();
+                _FromAbi = BindFromAbi();
             }
-            return NativeRcwFromAbi(ptr);
+            return _FromAbi(ptr);
         }
 
         public static IntPtr ToAbi(TInterface value)
         {
             // If the value passed in is the native implementation of the interface
-            // use the NativeRcwToAbi delegate since it will be faster than reflection.
-            if (value is TNative native)
+            // use the ToAbi delegate since it will be faster than reflection.
+            if (value is TAbi native)
             {
-                if (NativeRcwToAbi == null)
+                if (_ToAbi == null)
                 {
-                    NativeRcwToAbi = BindToAbi();
+                    _ToAbi = BindToAbi();
                 }
-                return NativeRcwToAbi(native);
+                return _ToAbi(native);
             }
 
             Type type = value.GetType();
@@ -1207,7 +1207,7 @@ namespace WinRT
             if (interfaceTagType != null)
             {
                 Type interfaceType = typeof(TInterface);
-                TNative iface = null;
+                TAbi iface = null;
 
                 for (Type currentRcwType = type; currentRcwType != typeof(object); currentRcwType = interfaceType.BaseType)
                 {
@@ -1221,7 +1221,7 @@ namespace WinRT
                     MethodInfo asInternalMethod = type.GetMethod("AsInternal", BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance, null, new[] { interfaceTag }, null);
                     if (asInternalMethod != null)
                     {
-                        iface = (TNative)asInternalMethod.Invoke(value, new[] { Activator.CreateInstance(interfaceTag) });
+                        iface = (TAbi)asInternalMethod.Invoke(value, new[] { Activator.CreateInstance(interfaceTag) });
                         break;
                     }
                 }
@@ -1231,34 +1231,34 @@ namespace WinRT
                     throw new InvalidCastException($"Unable to get native interface of type '{interfaceType}' for object of type '{type}'.");
                 }
 
-                if (NativeRcwToAbi == null)
+                if (_ToAbi == null)
                 {
-                    NativeRcwToAbi = BindToAbi();
+                    _ToAbi = BindToAbi();
                 }
-                return NativeRcwToAbi(iface);
+                return _ToAbi(iface);
             }
 
             // TODO: Create a CCW for user-defined implementations of interfaces.
             throw new NotImplementedException("Generating a CCW for a user-defined class is not currently implemented");
         }
 
-        private static Func<IntPtr, TNative> BindFromAbi()
+        private static Func<IntPtr, TAbi> BindFromAbi()
         {
-            var fromAbiMethod = typeof(TNative).GetMethod("FromAbi");
-            var objReferenceConstructor = typeof(TNative).GetConstructor(new[] { fromAbiMethod.ReturnType });
+            var fromAbiMethod = typeof(TAbi).GetMethod("FromAbi");
+            var objReferenceConstructor = typeof(TAbi).GetConstructor(new[] { fromAbiMethod.ReturnType });
             var parms = new[] { Expression.Parameter(typeof(IntPtr), "arg") };
-            return Expression.Lambda<Func<IntPtr, TNative>>(
+            return Expression.Lambda<Func<IntPtr, TAbi>>(
                     Expression.New(objReferenceConstructor,
-                        Expression.Call(fromAbiMethod, parms[0]))).Compile();
+                        Expression.Call(fromAbiMethod, parms[0])), parms).Compile();
         }
 
-        private static Func<TNative, IntPtr> BindToAbi()
+        private static Func<TAbi, IntPtr> BindToAbi()
         {
-            var parms = new[] { Expression.Parameter(typeof(TNative), "arg") };
-            return Expression.Lambda<Func<TNative, IntPtr>>(
+            var parms = new[] { Expression.Parameter(typeof(TAbi), "arg") };
+            return Expression.Lambda<Func<TAbi, IntPtr>>(
                 Expression.MakeMemberAccess(
-                    Expression.Convert(parms[0], typeof(TNative)),
-                    typeof(TNative).GetProperty("ThisPtr"))).Compile();
+                    Expression.Convert(parms[0], typeof(TAbi)),
+                    typeof(TAbi).GetProperty("ThisPtr")), parms).Compile();
         }
     }
 

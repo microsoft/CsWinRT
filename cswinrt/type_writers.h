@@ -67,108 +67,127 @@ namespace %
 
         struct generic_args
         {
-            std::vector<std::vector<type_semantics>> stack;
+            std::vector<std::vector<type_semantics>> _stack;
+            size_t _scope = 0;
 
-            struct guard
+            struct args_guard
             {
-                explicit guard(writer* arg = nullptr)
-                    : owner(arg)
+                explicit args_guard(generic_args* owner = nullptr)
+                    : _owner(owner)
                 {
-                    if (owner)
+                }
+
+                ~args_guard()
+                {
+                    if (_owner)
                     {
-                        in_generic_instance = std::exchange(owner->in_generic_instance, true);
+                        _owner->pop();
                     }
                 }
 
-                ~guard()
-                {
-                    if (owner)
-                    {
-                        owner->generic_args.pop();
-                        std::exchange(owner->in_generic_instance, in_generic_instance);
-                    }
-                }
-
-                guard(guard&& other)
-                    : owner(other.owner)
-                {
-                    owner = nullptr;
-                }
-
-                guard& operator=(guard&& other)
-                {
-                    owner = std::exchange(other.owner, nullptr);
-                    return *this;
-                }
-
-                guard& operator=(guard const&) = delete;
-                writer* owner;
-                bool in_generic_instance;
+                args_guard(args_guard&& other) = delete;
+                args_guard& operator=(args_guard const&) = delete;
+                args_guard& operator=(args_guard&& other) = delete;
+                generic_args* _owner;
             };
 
-            [[nodiscard]] auto push(std::pair<GenericParam, GenericParam> const& range, writer& owner)
+            struct scope_guard
+            {
+                size_t _scope;
+
+                explicit scope_guard(generic_args& owner, size_t scope)
+                    : _owner(&owner), _scope(scope)
+                {
+                    _scope = std::exchange(_owner->_scope, _scope);
+                }
+
+                ~scope_guard()
+                {
+                    if (_owner)
+                    {
+                        _scope = std::exchange(_owner->_scope, _scope);
+                    }
+                }
+
+                scope_guard(scope_guard&& other)
+                    : _owner(other._owner), _scope(other._scope)
+                {
+                    other._owner = nullptr;
+                }
+
+                scope_guard& operator=(scope_guard const&) = delete;
+                scope_guard& operator=(scope_guard&& other) = delete;
+                generic_args* _owner;
+            };
+
+            [[nodiscard]] auto push(std::pair<GenericParam, GenericParam> const& range)
             {
                 if (empty(range))
                 {
-                    return guard{ nullptr };
+                    return args_guard{ nullptr };
                 }
 
-                stack.emplace_back(begin(range), end(range));
-                return guard{ &owner };
+                _stack.emplace_back(begin(range), end(range));
+                return args_guard{ this };
             }
 
-            [[nodiscard]] auto push(generic_type_instance const& type, writer& owner)
+            [[nodiscard]] auto push(generic_type_instance const& type)
             {
                 XLANG_ASSERT(!type.generic_args.empty());
-                stack.push_back(type.generic_args);
-                return guard{ &owner };
+                _stack.push_back(type.generic_args);
+                return args_guard{ this };
             }
 
             auto get(uint32_t index)
             {
-                for (auto&& args = rbegin(stack); args != rend(stack); ++args)
+                size_t scope = _scope > 0 ? _scope - 1 : _stack.size();
+                for(size_t i = scope; i > 0; --i)
                 {
+                    auto&& args = &_stack[i-1];
                     if (index >= args->size())
                     {
                         throw_invalid("Generic index out of range");
                     }
-
+                    
                     auto& semantics = (*args)[index];
-                    auto gti = std::get_if<generic_type_index>(&semantics);
-                    if(!gti)
+                    if(auto gti = std::get_if<generic_type_index>(&semantics))
                     {
-                        return semantics;
+                        index = gti->index;
+                        continue;
                     }
-                    index = gti->index;
+                    return std::pair{ semantics, scope_guard(*this, i) };
                 }
                 throw_invalid("No generic arguments");
             }
 
             void pop()
             {
-                stack.pop_back();
+                _stack.pop_back();
             }
         };
 
-        generic_args generic_args;
+        generic_args _generic_args;
 
         [[nodiscard]] auto push_generic_params(std::pair<GenericParam, GenericParam> const& range)
         {
-            return generic_args.push(range, *this);
+            return _generic_args.push(range);
         }
 
         [[nodiscard]] auto push_generic_args(generic_type_instance const& type)
         {
-            return generic_args.push(type, *this);
+            return _generic_args.push(type);
+        }
+
+        auto get_generic_arg_scope(uint32_t index)
+        {
+            return _generic_args.get(index);
         }
 
         auto get_generic_arg(uint32_t index)
         {
-            return generic_args.get(index);
+            return get_generic_arg_scope(index).first;
         }
 
-        bool in_generic_instance{ false };
-        
         void write_code(std::string_view const& value)
         {
             for (auto&& c : value)
