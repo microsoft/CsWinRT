@@ -706,15 +706,30 @@ set => %.% = value;
         }
     }
 
-    void write_explicitly_implemented_property(writer& w, Property const& prop, TypeDef const& iface, std::string_view property_target_format)
+    std::string write_as_cast(writer& w, TypeDef const& iface, bool as_abi)
     {
-        auto external_prop_name = w.write_temp("%.%", write_type_name_temp(w, iface), prop.Name());
-        auto prop_type = w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
-        auto prop_target = w.write_temp(property_target_format, bind<write_type_name>(iface, true, false));
+        return w.write_temp(as_abi ? "As<%>()" : "AsInternal(new InterfaceTag<%>())",
+            bind<write_type_name>(iface, as_abi, false));
+    }
+
+    std::string write_explicit_name(writer& w, TypeDef const& iface, std::string_view name)
+    {
+        return w.write_temp("%.%", write_type_name_temp(w, iface), name);
+    }
+
+    std::string write_prop_type(writer& w, Property const& prop)
+    {
+        return w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
+    }
+
+    void write_explicitly_implemented_property(writer& w, Property const& prop, TypeDef const& iface, bool as_abi)
+    {
+        auto prop_target = write_as_cast(w, iface, as_abi);
         auto [getter, setter] = get_property_methods(prop);
         auto getter_target = getter ? prop_target : "";
         auto setter_target = setter ? prop_target : "";
-        write_property(w, external_prop_name, prop.Name(), prop_type, getter_target, setter_target);
+        write_property(w, write_explicit_name(w, iface, prop.Name()), prop.Name(), 
+            write_prop_type(w, prop), getter_target, setter_target);
     }
 
     void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view event_target, 
@@ -737,13 +752,9 @@ remove => %.% -= value;
             event.Name());
     }
 
-    void write_explicitly_implemented_event(writer& w, Event const& evt, TypeDef const& iface, 
-        std::string_view event_target_format)
+    void write_explicitly_implemented_event(writer& w, Event const& evt, TypeDef const& iface, bool as_abi)
     {
-        write_event(w,
-            w.write_temp("%.%", write_type_name_temp(w, iface), evt.Name()),
-            evt,
-            w.write_temp(event_target_format, bind<write_type_name>(iface, true, false)));
+        write_event(w, write_explicit_name(w, iface, evt.Name()), evt, write_as_cast(w, iface, as_abi));
     }
 
     void write_class_event(writer& w, Event const& event, bool is_overridable, bool is_protected, std::string_view interface_member)
@@ -763,7 +774,7 @@ remove => %.% -= value;
 
         if (is_protected || is_overridable)
         {
-            write_explicitly_implemented_event(w, event, event.Parent(), "AsInternal<%>()");
+            write_explicitly_implemented_event(w, event, event.Parent(), false);
         }
     }
 
@@ -965,11 +976,11 @@ return %.%(%%baseInspectable, out innerInspectable)._default;
 
     void write_static_property(writer& w, Property const& prop, std::string_view prop_target)
     {
-        auto prop_type = w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
         auto [getter, setter] = get_property_methods(prop);
         auto getter_target = getter ? prop_target : "";
         auto setter_target = setter ? prop_target : "";
-        write_property(w, prop.Name(), prop.Name(), prop_type, getter_target, setter_target, "public "sv, "static "sv);
+        write_property(w, prop.Name(), prop.Name(), write_prop_type(w, prop), 
+            getter_target, setter_target, "public "sv, "static "sv);
     }
 
     void write_static_event(writer& w, Event const& event, std::string_view event_target)
@@ -1055,9 +1066,9 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                 for (auto&& prop : interface_type.PropertyList())
                 {
                     auto [getter, setter] = get_property_methods(prop);
-                    auto projection_type = w.write_temp("%", bind<write_projection_type>(get_type_semantics(prop.Type().Type())));
+                    auto prop_type = write_prop_type(w, prop);
                     auto [prop_targets, inserted]  = properties.try_emplace(prop.Name(),
-                        std::move(projection_type),
+                        std::move(prop_type),
                         std::move(getter ? target : ""),
                         std::move(setter ? target : ""),
                         is_overridable_interface,
@@ -1066,7 +1077,7 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                     if (!inserted)
                     {
                         auto& [property_type, getter_target, setter_target, is_overridable, is_public] = prop_targets->second;
-                        XLANG_ASSERT(property_type == projection_type);
+                        XLANG_ASSERT(property_type == prop_type);
                         if (getter)
                         {
                             XLANG_ASSERT(getter_target.empty());
@@ -1085,7 +1096,7 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                     // If this interface is overridable or protected then we need to emit an explicit implementation of the property for that interface.
                     if (is_overridable_interface || is_protected_interface)
                     {
-                        write_explicitly_implemented_property(w, prop, interface_type, "AsInternal<%>()");
+                        write_explicitly_implemented_property(w, prop, interface_type, false);
                     }
                 }
             };
@@ -1468,19 +1479,12 @@ private EventSource% _%;)",
         for (auto&& prop : type.PropertyList())
         {
             auto [getter, setter] = get_property_methods(prop);
-            auto setter_only = !getter && setter;
-            auto semantics = get_type_semantics(prop.Type().Type());
+            // "new" required if overriding a getter in a base interface
+            auto new_keyword = (!getter && setter && find_property_interface(w, type, prop.Name()).second) ? "new " : "";
             w.write(R"(
 %% % {%% })",
-                bind([&](writer& w) 
-                {
-                    // "new" required if overriding a getter in a base interface
-                    if (setter_only && find_property_interface(w, type, prop.Name()).second)
-                    {
-                        w.write("new ");
-                    }
-                }),
-                bind<write_projection_type>(semantics),
+                new_keyword,
+                write_prop_type(w, prop),
                 prop.Name(),
                 getter || setter ? " get;" : "",
                 setter ? " set;" : ""
@@ -1489,7 +1493,6 @@ private EventSource% _%;)",
 
         for (auto&& evt : type.EventList())
         {
-            auto semantics = get_type_semantics(evt.EventType());
             w.write(R"(
 event WinRT.EventHandler% %;)",
                 bind<write_event_param_types>(evt),
@@ -1724,8 +1727,8 @@ remove => _%.Event -= value;
                     write_explicitly_implemented_method(w, method, return_type, iface, method_target);
                 }
             }
-            w.write_each<write_explicitly_implemented_property>(iface.PropertyList(), iface, "As<%>()");
-            w.write_each<write_explicitly_implemented_event>(iface.EventList(), iface, "As<%>()");
+            w.write_each<write_explicitly_implemented_property>(iface.PropertyList(), iface, true);
+            w.write_each<write_explicitly_implemented_event>(iface.EventList(), iface, true);
             written_required_interfaces.insert(std::move(interface_name));
         };
 
