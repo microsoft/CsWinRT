@@ -32,7 +32,11 @@ The **/testcomp** folder contains an implementation of a WinRT test component, d
 
 ## /unittest
 
-The **/unittest** folder contains unit tests for validating the projection generated for the test component and for the Windows SDK.
+The **/unittest** folder contains unit tests for validating the projection generated for the test component and for the Windows SDK.  All pull requests should ensure that this project executes without errors.
+
+## /winuitest
+
+The **/winuitest** folder contains a smoke test for generating and building a complete Windows SDK and WinUI projection, ensuring that most edge cases are validated.  All pull requests should ensure that this project builds without errors.
 
 # Contributing
 
