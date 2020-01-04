@@ -562,18 +562,11 @@ namespace WinRT
             }
         }
 
-        public unsafe ObjectReference<I> GetStaticClass<I>(HString runtimeClassId)
+        public unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(HString runtimeClassId)
         {
             IntPtr instancePtr;
-            Marshal.ThrowExceptionForHR(_GetActivationFactory(runtimeClassId.Handle, out instancePtr));
-            return ObjectReference<I>.Attach(ref instancePtr);
-        }
-
-        public unsafe ObjectReference<IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
-        {
-            IntPtr instancePtr;
-            Marshal.ThrowExceptionForHR(_GetActivationFactory(runtimeClassId.Handle, out instancePtr));
-            return ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr);
+            int hr = _GetActivationFactory(runtimeClassId.Handle, out instancePtr);
+            return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
         }
 
         ~DllModule()
@@ -624,13 +617,13 @@ namespace WinRT
             _mtaCookie = mtaCookie;
         }
 
-        public static unsafe ObjectReference<IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
+        public static unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(HString runtimeClassId)
         {
             var module = Instance; // Ensure COM is initialized
             Guid iid = typeof(IActivationFactoryVftbl).GUID;
             IntPtr instancePtr;
-            Marshal.ThrowExceptionForHR(Platform.RoGetActivationFactory(runtimeClassId.Handle, ref iid, &instancePtr));
-            return ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr);
+            int hr = Platform.RoGetActivationFactory(runtimeClassId.Handle, ref iid, &instancePtr);
+            return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
         }
 
         ~WinrtModule()
@@ -647,34 +640,27 @@ namespace WinRT
         {
             using (var runtimeClassId = new HString(typeFullName.Replace("WinRT", "Windows")))
             {
-                int hr = 0;
-                try
-                {
-                    _IActivationFactory = WinrtModule.GetActivationFactory(runtimeClassId);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
-                    hr = e.HResult;
-                }
+                // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
+                int hr;
+                (_IActivationFactory, hr) = WinrtModule.GetActivationFactory(runtimeClassId);
+                if (_IActivationFactory != null) { return; }
 
                 var moduleName = typeNamespace;
-                while (_IActivationFactory == null)
+                while (true)
                 {
                     try
                     {
-                        _IActivationFactory = DllModule.Load(moduleName + ".dll").GetActivationFactory(runtimeClassId);
+                        (_IActivationFactory, _) = DllModule.Load(moduleName + ".dll").GetActivationFactory(runtimeClassId);
+                        if (_IActivationFactory != null) { return; }
                     }
-                    catch (Exception)
+                    catch (Exception) { }
+
+                    var lastSegment = moduleName.LastIndexOf(".");
+                    if (lastSegment <= 0)
                     {
-                        var lastSegment = moduleName.LastIndexOf(".");
-                        if (lastSegment <= 0)
-                        {
-                            Marshal.ThrowExceptionForHR(hr);
-                        }
-                        moduleName = moduleName.Remove(lastSegment);
+                        Marshal.ThrowExceptionForHR(hr);
                     }
+                    moduleName = moduleName.Remove(lastSegment);
                 }
             }
         }
