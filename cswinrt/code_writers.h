@@ -1163,6 +1163,35 @@ private EventSource% _%;)",
         }
     }
 
+    void write_generic_type_marshal_from_abi_base(writer& w, std::string_view generic_type, std::string_view name)
+    {
+        w.write("WinRT.Marshaler<%>.FromAbi(%)",
+            generic_type,
+            name);
+    }
+
+    void write_generic_type_marshal_from_abi(writer& w, std::string_view generic_type, std::string_view name)
+    {
+        return w.write_generic_type_marshal_from_abi_custom ?
+            w.write_generic_type_marshal_from_abi_custom(w, generic_type, name)
+            : write_generic_type_marshal_from_abi_base(w, generic_type, name);
+    }
+
+    void write_generic_type_marshal_to_abi_base(writer& w, std::string_view generic_type, std::string_view name)
+    {
+        w.write("(%_Native)WinRT.Marshaler<%>.ToAbi(%)",
+            generic_type,
+            generic_type,
+            name);
+    }
+
+    void write_generic_type_marshal_to_abi(writer& w, std::string_view generic_type, std::string_view name)
+    {
+        return w.write_generic_type_marshal_to_abi_custom ?
+            w.write_generic_type_marshal_to_abi_custom(w, generic_type, name)
+            : write_generic_type_marshal_to_abi_base(w, generic_type, name);
+    }
+
     void write_marshal_from_abi(writer& w, type_semantics const& semantics, std::string_view name)
     {
         std::function<void(type_semantics const&)> write_type = [&](type_semantics const& semantics) {
@@ -1177,8 +1206,8 @@ private EventSource% _%;)",
                 },
                 [&](generic_type_index const& var)
                 {
-                    w.write("WinRT.Marshaler<%>.FromAbi(%)",
-                        bind<write_generic_type_name>(var.index),
+                    write_generic_type_marshal_from_abi(w,
+                        w.write_temp("%", bind<write_generic_type_name>(var.index)),
                         name);
                 },
                 [&](generic_type_instance const& type)
@@ -1251,9 +1280,8 @@ private EventSource% _%;)",
                 },
                 [&](generic_type_index const& var)
                 {
-                    w.write("(%_Native)WinRT.Marshaler<%>.ToAbi(%)",
-                        bind<write_generic_type_name>(var.index),
-                        bind<write_generic_type_name>(var.index),
+                    write_generic_type_marshal_to_abi(w,
+                        w.write_temp("%", bind<write_generic_type_name>(var.index)),
                         name);
                 },
                 [&](generic_type_instance const& type)
@@ -1644,6 +1672,14 @@ event WinRT.EventHandler% %;)",
 
         auto write_generic_params = [&](writer& w, method_signature signature)
         {
+            auto _ = writer::write_generic_type_marshal_to_abi_guard(w,
+                [&](writer& w, std::string_view generic_type, std::string_view name)
+                {
+                    w.write("Marshaler<%>.ToAbi(%)",
+                        generic_type,
+                        name);
+                });
+
             int object_index = 1;
             for (auto& param : signature.params())
             {
