@@ -1352,7 +1352,7 @@ private EventSource% _%;)",
                 {
                     if (type == fundamental_type::String)
                     {
-                        w.write("string %_value;\n", bind<write_parameter_name>(param));
+                        w.write("WinRT.HString %_value;\n", bind<write_parameter_name>(param));
                     }
                     else if (type == fundamental_type::Boolean)
                     {
