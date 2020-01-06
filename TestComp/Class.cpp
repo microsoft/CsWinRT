@@ -282,11 +282,6 @@ namespace winrt::TestComp::implementation
         co_return _string;
     }
 
-    Windows::Foundation::IReference<TestComp::ComposedNonBlittableStruct> Class::GetComposedNonBlittableStructReference()
-    {
-        return _nonBlittableStruct;
-    }
-
     BlittableStruct Class::BlittableStructProperty()
     {
         return _blittableStruct.blittable;
@@ -435,6 +430,52 @@ namespace winrt::TestComp::implementation
     void Class::SetComposedNonBlittableStruct(TestComp::ComposedNonBlittableStruct const& value)
     {
         _nonBlittableStruct = value;
+    }
+
+    Windows::Foundation::Collections::IVectorView<int32_t> Class::GetIntVector()
+    {
+        return winrt::single_threaded_vector(std::vector{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }).GetView();
+    }
+
+    Windows::Foundation::Collections::IVectorView<bool> Class::GetBoolVector()
+    {
+        return winrt::single_threaded_vector(std::vector{ true, false, true, false }).GetView();
+    }
+
+    Windows::Foundation::Collections::IVectorView<hstring> Class::GetStringVector()
+    {
+        return winrt::single_threaded_vector(std::vector<hstring>{ L"String0", L"String1", L"String2", L"String3", L"String4" }).GetView();
+    }
+
+    Windows::Foundation::Collections::IVectorView<TestComp::ComposedBlittableStruct> Class::GetBlittableStructVector()
+    {
+        return winrt::single_threaded_vector(std::vector{ ComposedBlittableStruct{0}, ComposedBlittableStruct{1},
+            ComposedBlittableStruct{2}, ComposedBlittableStruct{3}, ComposedBlittableStruct{4} }).GetView();
+    }
+
+    Windows::Foundation::Collections::IVectorView<TestComp::ComposedNonBlittableStruct> Class::GetNonBlittableStructVector()
+    {
+        return winrt::single_threaded_vector(std::vector
+        {
+            ComposedNonBlittableStruct{ { 0 }, { L"String0" }, { true, false, true, false }, { 0 } },
+            ComposedNonBlittableStruct{ { 1 }, { L"String1" }, { false, true, false, true }, { 1 } },
+            ComposedNonBlittableStruct{ { 2 }, { L"String2" }, { true, false, true, false }, { 2 } },
+        }).GetView();
+    }
+
+    Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> Class::GetObjectVector()
+    {
+        return winrt::single_threaded_vector(std::vector<IInspectable>{ winrt::box_value(0), winrt::box_value(1), winrt::box_value(2) }).GetView();
+    }
+
+    Windows::Foundation::Collections::IVectorView<TestComp::IProperties1> Class::GetInterfaceVector()
+    {
+        return winrt::single_threaded_vector(std::vector<IProperties1>{ *this, *this, *this }).GetView();
+    }
+
+    Windows::Foundation::Collections::IVectorView<TestComp::Class> Class::GetClassVector()
+    {
+        return winrt::single_threaded_vector(std::vector<TestComp::Class>{ *this, *this, *this }).GetView();
     }
 
     // IStringable

@@ -130,7 +130,14 @@ namespace winrt::TestComp::implementation
         Windows::Foundation::IAsyncOperation<int32_t> GetIntAsync();
         Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> GetStringAsync();
 
-        Windows::Foundation::IReference<TestComp::ComposedNonBlittableStruct> GetComposedNonBlittableStructReference();
+        Windows::Foundation::Collections::IVectorView<int32_t> GetIntVector();
+        Windows::Foundation::Collections::IVectorView<bool> GetBoolVector();
+        Windows::Foundation::Collections::IVectorView<hstring> GetStringVector();
+        Windows::Foundation::Collections::IVectorView<TestComp::ComposedBlittableStruct> GetBlittableStructVector();
+        Windows::Foundation::Collections::IVectorView<TestComp::ComposedNonBlittableStruct> GetNonBlittableStructVector();
+        Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> GetObjectVector();
+        Windows::Foundation::Collections::IVectorView<TestComp::IProperties1> GetInterfaceVector();
+        Windows::Foundation::Collections::IVectorView<TestComp::Class> GetClassVector();
 
         // IStringable
         hstring ToString();
