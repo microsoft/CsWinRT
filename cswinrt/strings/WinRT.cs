@@ -638,18 +638,11 @@ namespace WinRT
             }
         }
 
-        public unsafe ObjectReference<I> GetStaticClass<I>(HString runtimeClassId)
+        public unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(HString runtimeClassId)
         {
             IntPtr instancePtr;
-            Marshal.ThrowExceptionForHR(_GetActivationFactory(runtimeClassId.Handle, out instancePtr));
-            return ObjectReference<I>.Attach(ref instancePtr);
-        }
-
-        public unsafe ObjectReference<IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
-        {
-            IntPtr instancePtr;
-            Marshal.ThrowExceptionForHR(_GetActivationFactory(runtimeClassId.Handle, out instancePtr));
-            return ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr);
+            int hr = _GetActivationFactory(runtimeClassId.Handle, out instancePtr);
+            return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
         }
 
         ~DllModule()
@@ -700,13 +693,13 @@ namespace WinRT
             _mtaCookie = mtaCookie;
         }
 
-        public static unsafe ObjectReference<IActivationFactoryVftbl> GetActivationFactory(HString runtimeClassId)
+        public static unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(HString runtimeClassId)
         {
             var module = Instance; // Ensure COM is initialized
             Guid iid = typeof(IActivationFactoryVftbl).GUID;
             IntPtr instancePtr;
-            Marshal.ThrowExceptionForHR(Platform.RoGetActivationFactory(runtimeClassId.Handle, ref iid, &instancePtr));
-            return ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr);
+            int hr = Platform.RoGetActivationFactory(runtimeClassId.Handle, ref iid, &instancePtr);
+            return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
         }
 
         ~WinrtModule()
@@ -723,34 +716,27 @@ namespace WinRT
         {
             using (var runtimeClassId = new HString(typeFullName.Replace("WinRT", "Windows")))
             {
-                int hr = 0;
-                try
-                {
-                    _IActivationFactory = WinrtModule.GetActivationFactory(runtimeClassId);
-                    return;
-                }
-                catch (Exception e)
-                {
-                    // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
-                    hr = e.HResult;
-                }
+                // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
+                int hr;
+                (_IActivationFactory, hr) = WinrtModule.GetActivationFactory(runtimeClassId);
+                if (_IActivationFactory != null) { return; }
 
                 var moduleName = typeNamespace;
-                while (_IActivationFactory == null)
+                while (true)
                 {
                     try
                     {
-                        _IActivationFactory = DllModule.Load(moduleName + ".dll").GetActivationFactory(runtimeClassId);
+                        (_IActivationFactory, _) = DllModule.Load(moduleName + ".dll").GetActivationFactory(runtimeClassId);
+                        if (_IActivationFactory != null) { return; }
                     }
-                    catch (Exception)
+                    catch (Exception) { }
+
+                    var lastSegment = moduleName.LastIndexOf(".");
+                    if (lastSegment <= 0)
                     {
-                        var lastSegment = moduleName.LastIndexOf(".");
-                        if (lastSegment <= 0)
-                        {
-                            Marshal.ThrowExceptionForHR(hr);
-                        }
-                        moduleName = moduleName.Remove(lastSegment);
+                        Marshal.ThrowExceptionForHR(hr);
                     }
+                    moduleName = moduleName.Remove(lastSegment);
                 }
             }
         }
@@ -1418,33 +1404,33 @@ namespace WinRT
         }
     }
 
-    struct MarshalInterface<TInterface, TNative>
-        where TNative : class, TInterface
+    struct MarshalInterface<TInterface, TAbi>
+        where TAbi : class, TInterface
     {
-        private static Func<TNative, IObjectReference> NativeRcwToAbi;
-        private static Func<IntPtr, TNative> NativeRcwFromAbi;
+        private static Func<TAbi, IObjectReference> _ToAbi;
+        private static Func<IntPtr, TAbi> _FromAbi;
 
         public static TInterface FromAbi(IntPtr ptr)
         {
             // TODO: Check if the value is a CCW and return the underlying object.
-            if (NativeRcwFromAbi == null)
+            if (_FromAbi == null)
             {
-                NativeRcwFromAbi = BindFromAbi();
+                _FromAbi = BindFromAbi();
             }
-            return NativeRcwFromAbi(ptr);
+            return _FromAbi(ptr);
         }
 
         public static IObjectReference ToAbi(TInterface value)
         {
             // If the value passed in is the native implementation of the interface
-            // use the NativeRcwToAbi delegate since it will be faster than reflection.
-            if (value is TNative native)
+            // use the ToAbi delegate since it will be faster than reflection.
+            if (value is TAbi native)
             {
-                if (NativeRcwToAbi == null)
+                if (_ToAbi == null)
                 {
-                    NativeRcwToAbi = BindToAbi();
+                    _ToAbi = BindToAbi();
                 }
-                return NativeRcwToAbi(native);
+                return _ToAbi(native);
             }
 
             Type type = value.GetType();
@@ -1461,7 +1447,7 @@ namespace WinRT
             if (interfaceTagType != null)
             {
                 Type interfaceType = typeof(TInterface);
-                TNative iface = null;
+                TAbi iface = null;
 
                 for (Type currentRcwType = type; currentRcwType != typeof(object); currentRcwType = interfaceType.BaseType)
                 {
@@ -1475,7 +1461,7 @@ namespace WinRT
                     MethodInfo asInternalMethod = type.GetMethod("AsInternal", BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance, null, new[] { interfaceTag }, null);
                     if (asInternalMethod != null)
                     {
-                        iface = (TNative)asInternalMethod.Invoke(value, new[] { Activator.CreateInstance(interfaceTag) });
+                        iface = (TAbi)asInternalMethod.Invoke(value, new[] { Activator.CreateInstance(interfaceTag) });
                         break;
                     }
                 }
@@ -1485,40 +1471,40 @@ namespace WinRT
                     throw new InvalidCastException($"Unable to get native interface of type '{interfaceType}' for object of type '{type}'.");
                 }
 
-                if (NativeRcwToAbi == null)
+                if (_ToAbi == null)
                 {
-                    NativeRcwToAbi = BindToAbi();
+                    _ToAbi = BindToAbi();
                 }
-                return NativeRcwToAbi(iface);
+                return _ToAbi(iface);
             }
 
-            if (NativeRcwToAbi == null)
+            if (_ToAbi == null)
             {
-                NativeRcwToAbi = BindToAbi();
+                _ToAbi = BindToAbi();
             }
 
             var objReference = ComCallableWrapper.CreateCCWForObject(value);
 
-            return NativeRcwToAbi(objReference.AsType<TNative>());
+            return _ToAbi(objReference.AsType<TAbi>());
         }
 
-        private static Func<IntPtr, TNative> BindFromAbi()
+        private static Func<IntPtr, TAbi> BindFromAbi()
         {
-            var fromAbiMethod = typeof(TNative).GetMethod("FromAbi");
-            var objReferenceConstructor = typeof(TNative).GetConstructor(new[] { fromAbiMethod.ReturnType });
+            var fromAbiMethod = typeof(TAbi).GetMethod("FromAbi");
+            var objReferenceConstructor = typeof(TAbi).GetConstructor(new[] { fromAbiMethod.ReturnType });
             var parms = new[] { Expression.Parameter(typeof(IntPtr), "arg") };
-            return Expression.Lambda<Func<IntPtr, TNative>>(
+            return Expression.Lambda<Func<IntPtr, TAbi>>(
                     Expression.New(objReferenceConstructor,
-                        Expression.Call(fromAbiMethod, parms[0]))).Compile();
+                        Expression.Call(fromAbiMethod, parms[0])), parms).Compile();
         }
 
-        private static Func<TNative, IObjectReference> BindToAbi()
+        private static Func<TAbi, IObjectReference> BindToAbi()
         {
-            var parms = new[] { Expression.Parameter(typeof(TNative), "arg") };
-            return Expression.Lambda<Func<TNative, IObjectReference>>(
+            var parms = new[] { Expression.Parameter(typeof(TAbi), "arg") };
+            return Expression.Lambda<Func<TAbi, IObjectReference>>(
                 Expression.MakeMemberAccess(
-                    Expression.Convert(parms[0], typeof(TNative)),
-                    typeof(TNative).GetField("_obj", BindingFlags.Instance | BindingFlags.NonPublic))).Compile();
+                    Expression.Convert(parms[0], typeof(TAbi)),
+                    typeof(TAbi).GetField("_obj", BindingFlags.Instance | BindingFlags.NonPublic))).Compile();
         }
     }
 
