@@ -83,6 +83,10 @@ namespace cswinrt
             {
                 return false;
             },
+            [&](generic_type_index const& /*type*/)
+            {
+                return false;
+            },
             [&](fundamental_type const& type)
             {
                 return (type != fundamental_type::String) && (type != fundamental_type::Boolean);
@@ -1173,8 +1177,7 @@ private EventSource% _%;)",
                 },
                 [&](generic_type_index const& var)
                 {
-                    w.write("(%_Native)WinRT.Marshaler<%>.FromAbi(%)",
-                        bind<write_generic_type_name>(var.index),
+                    w.write("WinRT.Marshaler<%>.FromAbi(%)",
                         bind<write_generic_type_name>(var.index),
                         name);
                 },
@@ -2388,8 +2391,11 @@ internal IInspectable.Vftbl IInspectableVftbl;
                                     s();
                                     write_abi_type(w, get_type_semantics(param.second->Type()));
                                 }
-                                s();
-                                write_abi_type(w, get_type_semantics(sig.return_signature().Type()));
+                                if (sig.return_signature())
+                                {
+                                    s();
+                                    write_abi_type(w, get_type_semantics(sig.return_signature().Type()));
+                                }
                             }, method_signature{ method })) :
                         w.write_temp("% = new %(Do_Abi_%)",
                             vmethod_name, delegate_type, vmethod_name)
