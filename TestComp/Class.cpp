@@ -452,6 +452,11 @@ namespace winrt::TestComp::implementation
         _int = value;
     }
 
+    void Class::CopyProperties(winrt::TestComp::IProperties1 const& src)
+    {
+        ReadWriteProperty(src.ReadWriteProperty());
+    }
+
     // IVector<String>
     //Windows::Foundation::Collections::IIterator<hstring> Class::First()
     //{

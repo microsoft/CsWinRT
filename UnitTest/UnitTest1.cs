@@ -456,5 +456,24 @@ namespace UnitTest
             Assert.True(val.bools.y);
             Assert.False(val.bools.z);
         }
+
+        [Fact]
+        public void TestSimpleCCWs()
+        {
+            var managedProperties = new ManagedProperties(42);
+            TestObject.CopyProperties(managedProperties);
+            Assert.Equal(managedProperties.ReadWriteProperty, TestObject.ReadWriteProperty);
+        }
+
+        class ManagedProperties : IProperties1
+        {
+            private readonly int _value;
+
+            public ManagedProperties(int value)
+            {
+                _value = value;
+            }
+            public int ReadWriteProperty => _value;
+        }
     }
 }

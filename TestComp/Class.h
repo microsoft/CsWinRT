@@ -132,6 +132,8 @@ namespace winrt::TestComp::implementation
 
         Windows::Foundation::IReference<TestComp::ComposedNonBlittableStruct> GetComposedNonBlittableStructReference();
 
+        void CopyProperties(TestComp::IProperties1 const& src);
+
         // IStringable
         hstring ToString();
 

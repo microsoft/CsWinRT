@@ -190,5 +190,7 @@ namespace TestComp
         Windows.Foundation.IAsyncOperationWithProgress<String, Int32> GetStringAsync();
 
         Windows.Foundation.IReference<ComposedNonBlittableStruct> GetComposedNonBlittableStructReference();
+
+        void CopyProperties(IProperties1 src);
     }
 }

@@ -1192,36 +1192,42 @@ private EventSource% _%;)",
         write_type(semantics);
     }
 
+    void write_marshal_to_abi(writer& w, type_semantics const& semantics, std::string_view name);
+
     void write_object_marshal_to_abi(writer& w, TypeDef const& type, std::string_view name)
     {
         switch (get_category(type))
         {
-            case category::enum_type:
+        case category::enum_type:
+            w.write("%", name);
+            return;
+        case category::delegate_type:
+            write_delegate_helper_call(w, type, "ToAbi", name);
+            return;
+        case category::struct_type:
+        {
+            if (is_type_blittable(type))
+            {
                 w.write("%", name);
-                return;
-            case category::delegate_type:
-                write_delegate_helper_call(w, type, "ToAbi", name);
-                return;
-            case category::struct_type:
-            {
-                if (is_type_blittable(type))
-                {
-                    w.write("%", name);
-                }
-                else
-                {
-                    w.write("%.ToAbi(%)", bind<write_type_name>(type, true, true), name);
-                }
-                return;
             }
-            case category::interface_type:
+            else
             {
-                w.write("MarshalInterface<%, %>.ToAbi(%).ThisPtr", bind<write_type_name>(type, false, false), bind<write_type_name>(type, true, false), name);
-                return;
+                w.write("%.ToAbi(%)", bind<write_type_name>(type, true, true), name);
             }
-            default:
-                w.write("%?.ThisPtr ?? IntPtr.Zero", name);
-                return;
+            return;
+        }
+        case category::interface_type:
+        {
+            w.write("MarshalInterface<%, %>.ToAbi(%).ThisPtr", bind<write_type_name>(type, false, false), bind<write_type_name>(type, true, false), name);
+            return;
+        }
+        case category::class_type:
+        {
+            write_marshal_to_abi(w, get_type_semantics(get_default_interface(type)), name);
+            return;
+        }
+        default:
+            throw_invalid("Unknown type category.");
         }
     }
 
@@ -1257,7 +1263,6 @@ private EventSource% _%;)",
         };
         write_type(semantics);
     }
-
     void write_param_out_to_abi_local_declare(writer& w, method_signature::param_t const& param)
     {
         auto semantics = get_type_semantics(param.second->Type());
@@ -1713,7 +1718,7 @@ public %% %(%)
                 bind_list<write_projection_method_parameter>(", ", signature.params()),
                 bind([&](writer& w){ is_generic_method(vmethod_name) ? 
                     write_dynamic_invoke(w, w.write_temp("_obj.Vftbl.%", vmethod_name), "ThisPtr", signature)
-                    : write_static_abi_invoke(w, w.write_temp("_obj.Vftbl.%", vmethod_name), "ThisPtr", signature); })
+                    : write_static_abi_invoke(w, w.write_temp("_obj.Vftbl.%", vmethod_name), "ThisPtr.ToPointer()", signature); })
                 );
         }
 
@@ -1740,7 +1745,7 @@ public unsafe % %
                 {
                     w.write(R"(
 % __return_value__;
-Marshal.ThrowExceptionForHR(_obj.Vftbl.%(ThisPtr, out __return_value__));
+Marshal.ThrowExceptionForHR(_obj.Vftbl.%(ThisPtr.ToPointer(), out __return_value__));
 return %;
 )",
                         bind<write_abi_type>(semantics),
@@ -1766,7 +1771,7 @@ return %;
                 else
                 {
                     w.write(R"(
-Marshal.ThrowExceptionForHR(_obj.Vftbl.%(ThisPtr, %));
+Marshal.ThrowExceptionForHR(_obj.Vftbl.%(ThisPtr.ToPointer(), %));
 )",
                         vmethod_name, 
                         bind<write_marshal_to_abi>(semantics, "value"));
@@ -1936,7 +1941,7 @@ private static unsafe int Do_Abi_%(%)
     try
     {
         %
-        WinRT.ComCallableWrapper.FindObject<%>(thisPtr).%(%);
+        WinRT.ComCallableWrapper.FindObject<%>(new IntPtr(thisPtr)).%(%);
         %
         return 0;
     }
@@ -1951,7 +1956,7 @@ private static unsafe int Do_Abi_%(%)
                 {
                     w.write(get_vmethod_name(w, method.Parent(), method));
                 }),
-                bind<write_abi_parameters>(signature, false),
+                bind<write_abi_parameters>(signature, true),
                 bind_each<write_param_out_to_projection_local_declare>(signature.params()),
                 type_name,
                 method.Name(),
@@ -1990,12 +1995,12 @@ private static unsafe int Do_Abi_%(%)
             {
                 w.write(get_vmethod_name(w, method.Parent(), method));
             }),
-            bind<write_abi_parameters>(signature, false),
+            bind<write_abi_parameters>(signature, true),
             bind_each<write_param_out_to_projection_local_declare>(signature.params()),
             signature.return_param_name(),
             bind([&](writer& w)
             {
-                auto invokeCall = w.write_temp("WinRT.ComCallableWrapper.FindObject<%>(thisPtr).%(%)",
+                auto invokeCall = w.write_temp("WinRT.ComCallableWrapper.FindObject<%>(new IntPtr(thisPtr)).%(%)",
                     type_name,
                     method.Name(),
                     bind_list<write_projection_param_marshal>(", ", signature.params()));
@@ -2031,7 +2036,7 @@ private static unsafe int Do_Abi_%(%)
 {
     try
     {
-        WinRT.ComCallableWrapper.FindObject<%>(thisPtr).% = %;
+        WinRT.ComCallableWrapper.FindObject<%>(new IntPtr(thisPtr)).% = %;
         return 0;
     }
     catch (Exception __ex)
@@ -2044,7 +2049,7 @@ private static unsafe int Do_Abi_%(%)
                 {
                     w.write(get_vmethod_name(w, prop.Parent(), setter));
                 }),
-                bind<write_abi_parameters>(setter_sig, false),
+                bind<write_abi_parameters>(setter_sig, true),
                 type_name,
                 prop.Name(),
                 bind<write_delegate_param_marshal>(setter_sig.params()[0]));
@@ -2076,11 +2081,11 @@ private static unsafe int Do_Abi_%(%)
                 {
                     w.write(get_vmethod_name(w, prop.Parent(), getter));
                 }),
-                bind<write_abi_parameters>(getter_sig, false),
+                bind<write_abi_parameters>(getter_sig, true),
                 getter_sig.return_param_name(),
                 bind([&](writer& w)
                 {
-                    auto invokeGetter = w.write_temp("WinRT.ComCallableWrapper.FindObject<%>(thisPtr).%",
+                    auto invokeGetter = w.write_temp("WinRT.ComCallableWrapper.FindObject<%>(new IntPtr(thisPtr)).%",
                         type_name,
                         prop.Name());
                     write_marshal_to_abi(w, get_type_semantics(prop.Type().Type()), invokeGetter);
@@ -2099,7 +2104,7 @@ private static unsafe int Do_Abi_%(%)
 
         w.write(
                 R"(
-private static unsafe int Do_Abi_%([In] IntPtr thisPtr, [In] IntPtr handler, [Out] out EventRegistrationToken token)
+private static unsafe int Do_Abi_%([In] void* thisPtr, [In] IntPtr handler, [Out] out EventRegistrationToken token)
 {
     token = default;
     if (handler == IntPtr.Zero)
@@ -2111,7 +2116,7 @@ private static unsafe int Do_Abi_%([In] IntPtr thisPtr, [In] IntPtr handler, [Ou
     {
         var managedWrapper = new WinRT.EventHandler%(%);
         token = new EventRegistrationToken { Value = (long)GCHandle.ToIntPtr(GCHandle.Alloc(managedWrapper)) };
-        var _this = WinRT.ComCallableWrapper.FindObject<%>(thisPtr);
+        var _this = WinRT.ComCallableWrapper.FindObject<%>(new IntPtr(thisPtr));
         _this.% += managedWrapper;
         return 0;
     }
@@ -2132,7 +2137,7 @@ private static unsafe int Do_Abi_%([In] IntPtr thisPtr, [In] IntPtr handler, [Ou
 
         w.write(
                 R"(
-private static unsafe int Do_Abi_%([In] IntPtr thisPtr, [In] EventRegistrationToken token)
+private static unsafe int Do_Abi_%([In] void* thisPtr, [In] EventRegistrationToken token)
 {
     if (token.Value == default)
     {
@@ -2143,7 +2148,7 @@ private static unsafe int Do_Abi_%([In] IntPtr thisPtr, [In] EventRegistrationTo
     {
         var handle = GCHandle.FromIntPtr((IntPtr)token.Value);
         var handler = (WinRT.EventHandler%)handle.Target;
-        var _this = WinRT.ComCallableWrapper.FindObject<%>(thisPtr);
+        var _this = WinRT.ComCallableWrapper.FindObject<%>(new IntPtr(thisPtr));
         _this.% -= handler;
         handle.Free();
         return 0;
@@ -2281,7 +2286,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
                     });
                     auto delegate_definition = w.write_temp("public unsafe delegate int %([In] %);\n",
                         vmethod_name,
-                        bind<write_abi_parameters>(method_signature{ method }, false));
+                        bind<write_abi_parameters>(method_signature{ method }, true));
                     if (has_generic_params)
                     {
                         delegate_type = "global::System.Delegate";
@@ -2308,7 +2313,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
                             vtable_index, delegate_type, vmethod_name)
                     );
                     method_create_delegates_to_projection.emplace_back(has_generic_params ?
-                        w.write_temp(R"(% = global::System.Delegate.CreateDelegate(%_Type, typeof(Vftbl).GetMethod("Do_Abi_%")))",
+                        w.write_temp(R"(% = global::System.Delegate.CreateDelegate(%_Type, typeof(Vftbl).GetMethod("Do_Abi_%", BindingFlags.NonPublic | BindingFlags.Static)))",
                             vmethod_name, vmethod_name, vmethod_name) :
                         w.write_temp("% = new %(Do_Abi_%)",
                             vmethod_name, delegate_type, vmethod_name)
@@ -2362,12 +2367,13 @@ static unsafe Vftbl()
         IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable, 
         %
     };
-    var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<Vftbl>());
+    var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * %);
     %
     AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
 }
 )",
                         bind_list(",\n", method_create_delegates_to_projection),
+                        std::to_string(distance(methods)),
                         bind([&](writer& w)
                         {
                             if (!is_generic)
