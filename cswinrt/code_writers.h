@@ -2416,20 +2416,22 @@ internal IInspectable.Vftbl IInspectableVftbl;
                             vmethod_name, vmethod_name, vmethod_name,
                             bind([&](writer& w, method_signature const& sig)
                             {
+                                    separator s{ w };
                                 auto write_abi_type = [&](writer& w, type_semantics type)
                                 {
                                     auto const [generic_abi_type, is_generic_param] = get_generic_abi_type(w, type);
-                                    w.write(is_generic_param ? "%" : "typeof(%)", generic_abi_type);
+                                    if (is_generic_param)
+                                    {
+                                        s();
+                                        w.write(generic_abi_type);
+                                    }
                                 };
-                                separator s{ w };
                                 for (auto&& param : sig.params())
                                 {
-                                    s();
                                     write_abi_type(w, get_type_semantics(param.second->Type()));
                                 }
                                 if (sig.return_signature())
                                 {
-                                    s();
                                     write_abi_type(w, get_type_semantics(sig.return_signature().Type()));
                                 }
                             }, method_signature{ method })) :
@@ -2772,7 +2774,9 @@ return __hresult;
 
         auto type_name = write_type_name_temp(w, type);
         auto type_params = w.write_temp("%", bind<write_type_params>(type));
-        auto const [generic_abi_types, _] = get_generic_abi_types(w, signature);
+        std::string generic_abi_types;
+        bool is_generic_delegate;
+        std::tie(generic_abi_types, is_generic_delegate) = get_generic_abi_types(w, signature);
 
         w.write(R"(public delegate % %(%);
 
@@ -2788,8 +2792,7 @@ var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(thisPtr);
 % managedDelegate =
 (%) =>
 {
-var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(abiDelegate.Vftbl.Invoke);
-%
+    %
 };
 return managedDelegate;
 }
@@ -2831,7 +2834,25 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             type_name,
             type_name,
             bind_list<write_projection_method_parameter>(", ", signature.params()),
-            bind<write_delegate_managed_invoke>(signature),
+            bind([&](writer& w)
+            {
+                if (is_generic_delegate)
+                {
+                    w.write(R"(
+var abiInvoke = Marshal.GetDelegateForFunctionPointer(abiDelegate.Vftbl.Invoke, Abi_Invoke_Type);
+%
+)",
+                        bind<write_dynamic_invoke>("abiInvoke", "thisPtr", signature));
+                }
+                else
+                {
+                    w.write(R"(
+var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(abiDelegate.Vftbl.Invoke);
+%
+)",
+                        bind<write_delegate_managed_invoke>(signature));
+                }
+            }),
             // ToAbi
             type_name,
             type.TypeName(),
