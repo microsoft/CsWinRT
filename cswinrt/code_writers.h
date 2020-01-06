@@ -1171,9 +1171,12 @@ private EventSource% _%;)",
                 {
                     write_object_marshal_from_abi(w, semantics, type, name);
                 },
-                [&](generic_type_index const& /*var*/)
+                [&](generic_type_index const& var)
                 {
-                    w.write("%", name);
+                    w.write("(%_Native)WinRT.Marshaler<%>.FromAbi(%)",
+                        bind<write_generic_type_name>(var.index),
+                        bind<write_generic_type_name>(var.index),
+                        name);
                 },
                 [&](generic_type_instance const& type)
                 {
@@ -1245,7 +1248,10 @@ private EventSource% _%;)",
                 },
                 [&](generic_type_index const& var)
                 {
-                    write_type(w.get_generic_arg(var.index));
+                    w.write("(%_Native)WinRT.Marshaler<%>.ToAbi(%)",
+                        bind<write_generic_type_name>(var.index),
+                        bind<write_generic_type_name>(var.index),
+                        name);
                 },
                 [&](generic_type_instance const& type)
                 {
@@ -1924,6 +1930,57 @@ remove => _%.Event -= value;
         }
     }
 
+    void write_method_abi_name(writer& w, MethodDef const& method)
+    {
+        method_signature method_sig{ method };
+        w.write(get_vmethod_name(w, method.Parent(), method));
+        bool has_generic_params = false;
+        writer::write_generic_type_name_guard g(w, [&](writer& w, uint32_t index)
+        {
+            has_generic_params = true;
+            w.write("%_Native", bind<write_generic_type_name_base>(index));
+        });
+
+        separator s{ w };
+
+        auto generic_list = w.write_temp("%", bind([&](writer& w)
+        {
+            for (auto&& param : method_sig.params())
+            {
+                auto paramType = get_type_semantics(param.second->Type());
+                if (std::holds_alternative<generic_type_index>(paramType))
+                {
+                    s();
+                    w.write(bind<write_generic_type_name>(std::get<generic_type_index>(paramType).index));
+                }
+            }
+
+            auto return_sig = method_sig.return_signature();
+            if (return_sig)
+            {
+                auto returnType = get_type_semantics(return_sig.Type());
+                if (std::holds_alternative<generic_type_index>(returnType))
+                {
+                    s();
+                    w.write(bind<write_generic_type_name>(std::get<generic_type_index>(returnType).index));
+                }
+            }
+        }));
+
+        if (has_generic_params)
+        {
+            w.write("<%>", generic_list);
+        }
+    }
+
+    [[nodiscard]] writer::write_generic_type_name_guard get_abi_invoke_generic_name_guard(writer& w)
+    {
+        return { w, [&](writer& w, uint32_t index)
+        {
+            w.write("%_Native", bind<write_generic_type_name_base>(index));
+        } };
+    }
+
     void write_method_abi_invoke(writer& w, MethodDef const& method)
     {
         if (method.SpecialName()) return;
@@ -1931,11 +1988,11 @@ remove => _%.Event -= value;
         method_signature signature{ method };
         auto return_sig = signature.return_signature();
         auto type_name = write_type_name_temp(w, method.Parent());
+        auto vmethod_name = get_vmethod_name(w, method.Parent(), method);
         if (!return_sig)
         {
             w.write(
                 R"(
-// TODO: fix generic CCW invocations (T != Marshaler<T>.AbiType)
 private static unsafe int Do_Abi_%(%)
 {
     try
@@ -1952,11 +2009,12 @@ private static unsafe int Do_Abi_%(%)
     }
 }
 )",
+                bind<write_method_abi_name>(method),
                 bind([&](writer& w)
                 {
-                    w.write(get_vmethod_name(w, method.Parent(), method));
+                    writer::write_generic_type_name_guard _ = get_abi_invoke_generic_name_guard(w);
+                    w.write(bind<write_abi_parameters>(signature, true));
                 }),
-                bind<write_abi_parameters>(signature, true),
                 bind_each<write_param_out_to_projection_local_declare>(signature.params()),
                 type_name,
                 method.Name(),
@@ -1974,7 +2032,6 @@ private static unsafe int Do_Abi_%(%)
 
         w.write(
             R"(
-// TODO: fix generic CCW invocations (T != Marshaler<T>.AbiType)
 private static unsafe int Do_Abi_%(%)
 {
     try
@@ -1991,11 +2048,12 @@ private static unsafe int Do_Abi_%(%)
         return __ex.HResult;
     }
 })",
+            bind<write_method_abi_name>(method),
             bind([&](writer& w)
             {
-                w.write(get_vmethod_name(w, method.Parent(), method));
+                writer::write_generic_type_name_guard _ = get_abi_invoke_generic_name_guard(w);
+                w.write(bind<write_abi_parameters>(signature, true));
             }),
-            bind<write_abi_parameters>(signature, true),
             bind_each<write_param_out_to_projection_local_declare>(signature.params()),
             signature.return_param_name(),
             bind([&](writer& w)
@@ -2045,11 +2103,12 @@ private static unsafe int Do_Abi_%(%)
     }
 }
 )",
+                bind<write_method_abi_name>(setter),
                 bind([&](writer& w)
                 {
-                    w.write(get_vmethod_name(w, prop.Parent(), setter));
+                    writer::write_generic_type_name_guard _ = get_abi_invoke_generic_name_guard(w);
+                    w.write(bind<write_abi_parameters>(setter_sig, true));
                 }),
-                bind<write_abi_parameters>(setter_sig, true),
                 type_name,
                 prop.Name(),
                 bind<write_delegate_param_marshal>(setter_sig.params()[0]));
@@ -2077,11 +2136,12 @@ private static unsafe int Do_Abi_%(%)
         return __ex.HResult;
     }
 })",
+                bind<write_method_abi_name>(getter),
                 bind([&](writer& w)
                 {
-                    w.write(get_vmethod_name(w, prop.Parent(), getter));
+                    writer::write_generic_type_name_guard _ = get_abi_invoke_generic_name_guard(w);
+                    w.write(bind<write_abi_parameters>(getter_sig, true));
                 }),
-                bind<write_abi_parameters>(getter_sig, true),
                 getter_sig.return_param_name(),
                 bind([&](writer& w)
                 {
@@ -2313,8 +2373,24 @@ internal IInspectable.Vftbl IInspectableVftbl;
                             vtable_index, delegate_type, vmethod_name)
                     );
                     method_create_delegates_to_projection.emplace_back(has_generic_params ?
-                        w.write_temp(R"(% = global::System.Delegate.CreateDelegate(%_Type, typeof(Vftbl).GetMethod("Do_Abi_%", BindingFlags.NonPublic | BindingFlags.Static)))",
-                            vmethod_name, vmethod_name, vmethod_name) :
+                        w.write_temp(R"(% = global::System.Delegate.CreateDelegate(%_Type, typeof(Vftbl).GetMethod("Do_Abi_%", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(%)))",
+                            vmethod_name, vmethod_name, vmethod_name,
+                            bind([&](writer& w, method_signature const& sig)
+                            {
+                                auto write_abi_type = [&](writer& w, type_semantics type)
+                                {
+                                    auto const [generic_abi_type, is_generic_param] = get_generic_abi_type(w, type);
+                                    w.write(is_generic_param ? "%" : "typeof(%)", generic_abi_type);
+                                };
+                                separator s{ w };
+                                for (auto&& param : sig.params())
+                                {
+                                    s();
+                                    write_abi_type(w, get_type_semantics(param.second->Type()));
+                                }
+                                s();
+                                write_abi_type(w, get_type_semantics(sig.return_signature().Type()));
+                            }, method_signature{ method })) :
                         w.write_temp("% = new %(Do_Abi_%)",
                             vmethod_name, delegate_type, vmethod_name)
                     );

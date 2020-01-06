@@ -464,6 +464,29 @@ namespace cswinrt
         };
     }
 
+    template <typename F, typename T, typename... Args>
+    auto bind_list(F fwrite, std::string_view const& delimiter, T const& list, Args const&... args)
+    {
+        return [&](auto& writer)
+        {
+            bool first{ true };
+
+            for (auto&& item : list)
+            {
+                if (first)
+                {
+                    first = false;
+                }
+                else
+                {
+                    writer.write(delimiter);
+                }
+
+                fwrite(writer, item, args...);
+            }
+        };
+    }
+
     template <typename T>
     auto bind_list(std::string_view const& delimiter, T const& list)
     {
