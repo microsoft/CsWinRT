@@ -166,7 +166,7 @@ namespace cswinrt
 
     void write_type_name(writer& w, type_semantics const& semantics, bool abiNamespace = false, bool forceWriteNamespace = false)
     {
-        for_typedef(w, semantics, [&](TypeDef const& type)
+        for_typedef(w, semantics, [&](auto type)
         {
             write_typedef_name(w, type, abiNamespace, forceWriteNamespace);
             write_type_params(w, type);
@@ -1100,7 +1100,7 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                     }
                 }
             };
-            for_typedef(w, semantics, [&](TypeDef const& type)
+            for_typedef(w, semantics, [&](auto type)
             {
                 write_class_interface(type);
             });
@@ -1425,7 +1425,7 @@ private EventSource% _%;)",
             for (auto&& iface : type.InterfaceImpl())
             {
                 auto semantics = get_type_semantics(iface.Interface());
-                if (for_typedef(w, semantics, [&](TypeDef const& type)
+                if (for_typedef(w, semantics, [&](auto type)
                 {
                     return (setter_iface != type) && (search_interface(type) || search_interfaces(type));
                 })){
@@ -1679,11 +1679,37 @@ return %;
                 }
                 else
                 {
-                    w.write(R"(
+                    // TODO: implement generalized invoke pattern ...
+                    auto is_delegate = call(semantics,
+                        [&](type_definition const& type)
+                        {
+                            return get_category(type) == category::delegate_type;
+                        },
+                        [&](generic_type_instance const& type)
+                        {
+                            auto guard{ w.push_generic_args(type) };
+                            return get_category(type.generic_type) == category::delegate_type;
+                        },
+                        [](auto) {return false; });
+                    if (is_delegate)
+                    {
+                        w.write(R"(
+using (var reference = %)
+{
+Marshal.ThrowExceptionForHR(_obj.Vftbl.%(ThisPtr, reference.DelegatePtr));
+}
+)",
+                            bind<write_marshal_to_abi>(semantics, "value"),
+                            vmethod_name);
+                    }
+                    else
+                    {
+                        w.write(R"(
 Marshal.ThrowExceptionForHR(_obj.Vftbl.%(ThisPtr, %));
 )",
-                        vmethod_name,
-                        bind<write_marshal_to_abi>(semantics, "value"));
+                            vmethod_name, 
+                            bind<write_marshal_to_abi>(semantics, "value"));
+                    }
                 }
                 w.write("}\n");
             }
@@ -1734,7 +1760,7 @@ remove => _%.Event -= value;
 
         for (auto&& iface : type.InterfaceImpl())
         {
-            for_typedef(w, get_type_semantics(iface.Interface()), [&](TypeDef const& type)
+            for_typedef(w, get_type_semantics(iface.Interface()), [&](auto type)
             {
                 write_required_interface(type);
                 write_required_interface_members_for_abi_type(w, type, written_required_interfaces);
@@ -1790,7 +1816,7 @@ remove => _%.Event -= value;
 
         for (auto&& iface : type.InterfaceImpl())
         {
-            for_typedef(w, get_type_semantics(iface.Interface()), [&](TypeDef const& type)
+            for_typedef(w, get_type_semantics(iface.Interface()), [&](auto type)
             {
                 write_delimiter();
                 w.write("%", bind<write_type_name>(type, false, false));
@@ -2270,12 +2296,12 @@ var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(abiDelegate.Vf
 return managedDelegate;
 }
 
-public static unsafe IntPtr ToAbi(% managedDelegate)
+public static unsafe WinRT.Delegate.InitialReference ToAbi(% managedDelegate)
 {
 var self = typeof(@Helper%);
 var invoke = self.GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic);
 var func = Marshal.GetFunctionPointerForDelegate(global::System.Delegate.CreateDelegate(Abi_Invoke_Type, invoke));
-return new WinRT.Delegate(func, managedDelegate).ThisPtr;
+return new WinRT.Delegate.InitialReference(func, managedDelegate);
 }
 
 // TODO: fix generic delegate invocations (T != Marshaler<T>.AbiType)
