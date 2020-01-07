@@ -327,7 +327,7 @@ namespace cswinrt
             },
             [&](generic_type_param const& param)
             {
-                w.write(param.Name()); 
+                w.write(param.Name());
             },
             [&](fundamental_type type)
             {
@@ -1504,13 +1504,13 @@ event WinRT.EventHandler% %;)",
     void write_interface_members(writer& w, TypeDef const& type, std::set<std::string> const& generic_methods)
     {
         std::vector<std::string> out_marshals;
-        
+
         auto is_generic_method = [&](std::string vmethod_name)
         {
             return (generic_methods.find(vmethod_name) != generic_methods.end());
         };
 
-        auto record_marshal_out = [&](TypeSig const& sig, int object_index, std::string marshal_target) 
+        auto record_marshal_out = [&](TypeSig const& sig, int object_index, std::string marshal_target)
         {
             bool has_generic_params{};
             auto semantics = get_type_semantics(sig);
@@ -1603,9 +1603,9 @@ public %% %(%)
             else
             {
                 w.write(R"(
-public %% %(%)
+public unsafe %% %(%)
 {
-%%unsafe { Marshal.ThrowExceptionForHR(_obj.Vftbl.%(ThisPtr%%)); }%%
+%%Marshal.ThrowExceptionForHR(_obj.Vftbl.%(ThisPtr%%));%%
 }
 )",
                     (method.Name() == "ToString"sv) ? "new " : "",
@@ -1682,7 +1682,7 @@ return %;
                     w.write(R"(
 Marshal.ThrowExceptionForHR(_obj.Vftbl.%(ThisPtr, %));
 )",
-                        vmethod_name, 
+                        vmethod_name,
                         bind<write_marshal_to_abi>(semantics, "value"));
                 }
                 w.write("}\n");
@@ -1872,7 +1872,7 @@ remove => _%.Event -= value;
         auto append_generic_abi_type = [&](TypeSig sig, bool byref)
         {
             auto const [generic_abi_type, is_generic_param] = get_generic_abi_type(w, get_type_semantics(sig));
-            generic_abi_types += w.write_temp(is_generic_param ? ", %%" : ", typeof(%)%", 
+            generic_abi_types += w.write_temp(is_generic_param ? ", %%" : ", typeof(%)%",
                 generic_abi_type, byref ? ".MakeByRefType()" : "");
             has_generic_params |= (bool)is_generic_param;
         };
@@ -1887,9 +1887,9 @@ remove => _%.Event -= value;
         return { generic_abi_types, has_generic_params };
     }
 
-    void write_vtable(writer& w, TypeDef const& type, std::string const& type_name, 
+    void write_vtable(writer& w, TypeDef const& type, std::string const& type_name,
         std::set<std::string>& generic_methods,
-        std::string const& nongenerics_class, 
+        std::string const& nongenerics_class,
         std::vector<std::string>& nongeneric_delegates)
     {
         auto methods = type.MethodList();
@@ -1900,7 +1900,7 @@ remove => _%.Event -= value;
 public struct Vftbl
 {
 internal IInspectable.Vftbl IInspectableVftbl;
-%%})", 
+%%})",
             bind<write_guid_attribute>(type),
             bind_each([&](writer& w, MethodDef const& method)
             {
@@ -1937,7 +1937,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
                     );
                 }
             }, methods),
-            bind([&](writer& w) 
+            bind([&](writer& w)
             {
                 if (!is_generic) return;
                 w.write("public static Guid PIID = GuidGenerator.CreateIID(typeof(%));\n", type_name);

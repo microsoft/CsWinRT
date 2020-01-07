@@ -189,6 +189,13 @@ namespace TestComp
         Windows.Foundation.IAsyncOperation<Int32> GetIntAsync();
         Windows.Foundation.IAsyncOperationWithProgress<String, Int32> GetStringAsync();
 
-        Windows.Foundation.IReference<ComposedNonBlittableStruct> GetComposedNonBlittableStructReference();
+        Windows.Foundation.Collections.IVectorView<Int32> GetIntVector();
+        Windows.Foundation.Collections.IVectorView<Boolean> GetBoolVector();
+        Windows.Foundation.Collections.IVectorView<String> GetStringVector();
+        Windows.Foundation.Collections.IVectorView<ComposedBlittableStruct> GetBlittableStructVector();
+        Windows.Foundation.Collections.IVectorView<ComposedNonBlittableStruct> GetNonBlittableStructVector();
+        Windows.Foundation.Collections.IVectorView<Object> GetObjectVector();
+        Windows.Foundation.Collections.IVectorView<IProperties1> GetInterfaceVector();
+        Windows.Foundation.Collections.IVectorView<Class> GetClassVector();
     }
 }
