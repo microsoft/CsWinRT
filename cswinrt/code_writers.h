@@ -2168,7 +2168,6 @@ private static unsafe int Do_Abi_%(%)
 
             w.write(
                 R"(
-// TODO: fix generic CCW invocations (T != Marshaler<T>.AbiType)
 private static unsafe int Do_Abi_%(%)
 {
     try
@@ -2201,7 +2200,6 @@ private static unsafe int Do_Abi_%(%)
             XLANG_ASSERT(getter_sig.params().size() == 0);
             w.write(
                 R"(
-// TODO: fix generic CCW invocations (T != Marshaler<T>.AbiType)
 private static unsafe int Do_Abi_%(%)
 {
     try
