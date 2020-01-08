@@ -2378,7 +2378,7 @@ private static unsafe int Do_Abi_%([In] void* thisPtr, [In] EventRegistrationTok
         auto append_generic_abi_type = [&](TypeSig sig, bool byref)
         {
             auto const [generic_abi_type, is_generic_param] = get_generic_abi_type(w, get_type_semantics(sig));
-            generic_abi_types += w.write_temp(is_generic_param ? ", %%%" : ", typeof(%)%",
+            generic_abi_types += w.write_temp(is_generic_param ? ", %%%" : ", typeof(%)%%",
                 generic_abi_type, sig.is_szarray() ? ".MakeArrayType()" : "", byref ? ".MakeByRefType()" : "");
             has_generic_params |= (bool)is_generic_param;
         };
