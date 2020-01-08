@@ -173,7 +173,7 @@ namespace UnitTest
             Assert.IsAssignableFrom<IStringable>(TestObject);
         }
 
-        // TODO: project asyncs as awaitable tasks 
+        // TODO: project asyncs as awaitable tasks
         [Fact]
         public void TestAsync()
         {
@@ -438,24 +438,101 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestNonBlittableStructGeneric()
+        public void TestFundamentalGeneric()
         {
-            TestObject.ComposedNonBlittableStructProperty = new ComposedNonBlittableStruct()
+            var ints = TestObject.GetIntVector();
+            Assert.Equal(10u, ints.Size);
+            for (int i = 0; i < 10; ++i)
             {
-                blittable = new BlittableStruct(){ i32 = 42 },
-                strings = new NonBlittableStringStruct(){ str = "I like tacos" },
-                bools = new NonBlittableBoolStruct(){ w = true, x = false, y = true, z = false },
-                refs = TestObject.NonBlittableRefStructProperty // TODO: Need to either support interface inheritance or project IReference/INullable for setter
-            };
+                Assert.Equal(i, ints.GetAt((uint)i));
+            }
 
-            var val = TestObject.GetComposedNonBlittableStructReference().Value;
-            Assert.Equal(42, val.blittable.i32);
-            Assert.Equal("I like tacos", val.strings.str);
-            Assert.True(val.bools.w);
-            Assert.False(val.bools.x);
-            Assert.True(val.bools.y);
-            Assert.False(val.bools.z);
+            var bools = TestObject.GetBoolVector();
+            Assert.Equal(4u, bools.Size);
+            for (uint i = 0; i < 4u; ++i)
+            {
+                Assert.Equal(i % 2 == 0, bools.GetAt(i));
+            }
         }
+
+        [Fact]
+        public void TestStringGeneric()
+        {
+            var strings = TestObject.GetStringVector();
+            Assert.Equal(5u, strings.Size);
+            for (uint i = 0; i < 5u; ++i)
+            {
+                Assert.Equal("String" + i, strings.GetAt(i));
+            }
+        }
+
+        [Fact]
+        public void TestStructGeneric()
+        {
+            var blittable = TestObject.GetBlittableStructVector();
+            Assert.Equal(5u, blittable.Size);
+            for (int i = 0; i < 5; ++i)
+            {
+                Assert.Equal(i, blittable.GetAt((uint)i).blittable.i32);
+            }
+
+            var nonblittable = TestObject.GetNonBlittableStructVector();
+            Assert.Equal(3u, nonblittable.Size);
+            for (int i = 0; i < 3; ++i)
+            {
+                var val = nonblittable.GetAt((uint)i);
+                Assert.Equal(i, val.blittable.i32);
+                Assert.Equal("String" + i, val.strings.str);
+                Assert.Equal(i % 2 == 0, val.bools.w);
+                Assert.Equal(i % 2 == 1, val.bools.x);
+                Assert.Equal(i % 2 == 0, val.bools.y);
+                Assert.Equal(i % 2 == 1, val.bools.z);
+                Assert.Equal(i, val.refs.ref32.Value);
+            }
+        }
+
+        /* TODO: Object types are currently not handled by generics
+        [Fact]
+        public void TestObjectGeneric()
+        {
+            var objs = TestObject.GetObjectVector();
+            Assert.Equal(3u, objs.Size);
+            for (int i = 0; i < 3; ++i)
+            {
+                IPropertyValue propVal = new ABI.Windows.Foundation.IPropertyValue(objs.GetAt((uint)i).As<ABI.Windows.Foundation.IPropertyValue>());
+                Assert.Equal(i, propVal.GetInt32());
+            }
+        }
+        */
+
+        /* TODO: Interface types are currently not handled by generics
+        [Fact]
+        void TestInterfaceGeneric()
+        {
+            var objs = TestObject.GetInterfaceVector();
+            Assert.Equal(3u, objs.Size);
+            TestObject.ReadWriteProperty = 42;
+            for (uint i = 0; i < 3; ++i)
+            {
+                // TODO: Validate that each item 'is' TestObject
+                Assert.Equal(42, objs.GetAt(i).ReadWriteProperty);
+            }
+        }
+        */
+
+        /* TODO: Class types are currently not handled by generics
+        [Fact]
+        void TestClassGeneric()
+        {
+            var objs = TestObject.GetClassVector();
+            Assert.Equal(3u, objs.Size);
+            for (uint i = 0; i < 3; ++i)
+            {
+                // TODO: Assert.Equal(TestObject, objs.GetAt(i));
+                Assert.Equal(TestObject.ThisPtr, objs.GetAt(i).ThisPtr);
+            }
+        }
+        */
 
         [Fact]
         public void TestSimpleCCWs()

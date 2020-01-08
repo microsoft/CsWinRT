@@ -344,7 +344,7 @@ namespace cswinrt
             },
             [&](generic_type_param const& param)
             {
-                w.write(param.Name()); 
+                w.write(param.Name());
             },
             [&](fundamental_type type)
             {
@@ -1775,8 +1775,23 @@ var __invoke_params__ = new object[]{ %% };
 
             method_signature signature{ method };
             auto vmethod_name = get_vmethod_name(w, type, method);
-            w.write(R"(
+            if (is_generic_method(vmethod_name))
+            {
+                w.write(R"(
 public %% %(%)
+{%}
+)",
+                    (method.Name() == "ToString"sv) ? "new " : "",
+                    bind<write_method_return_type>(signature),
+                    method.Name(),
+                    bind_list<write_projection_method_parameter>(", ", signature.params()),
+                    bind([&](writer& w){ write_dynamic_invoke(w, w.write_temp("_obj.Vftbl.%", vmethod_name), "ThisPtr", signature); })
+                );
+            }
+            else
+            {
+                w.write(R"(
+public unsafe %% %(%)
 {
 %
 }
@@ -1789,6 +1804,7 @@ public %% %(%)
                     write_dynamic_invoke(w, w.write_temp("_obj.Vftbl.%", vmethod_name), "ThisPtr", signature)
                     : write_static_abi_invoke(w, w.write_temp("_obj.Vftbl.%", vmethod_name), "ThisPtr.ToPointer()", signature); })
                 );
+            }
         }
 
         for (auto&& prop : type.PropertyList())
@@ -1842,7 +1858,7 @@ return %;
                     w.write(R"(
 Marshal.ThrowExceptionForHR(_obj.Vftbl.%(ThisPtr.ToPointer(), %));
 )",
-                        vmethod_name, 
+                        vmethod_name,
                         bind<write_marshal_to_abi>(semantics, "value"));
                 }
                 w.write("}\n");
@@ -2379,9 +2395,9 @@ private static unsafe int Do_Abi_%([In] void* thisPtr, [In] EventRegistrationTok
         return { generic_abi_types, has_generic_params };
     }
 
-    void write_vtable(writer& w, TypeDef const& type, std::string const& type_name, 
+    void write_vtable(writer& w, TypeDef const& type, std::string const& type_name,
         std::set<std::string>& generic_methods,
-        std::string const& nongenerics_class, 
+        std::string const& nongenerics_class,
         std::vector<std::string>& nongeneric_delegates)
     {
         auto methods = type.MethodList();
@@ -2471,7 +2487,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
                     );
                 }
             }, methods),
-            bind([&](writer& w) 
+            bind([&](writer& w)
             {
                 if (!is_generic) return;
                 w.write("public static Guid PIID = GuidGenerator.CreateIID(typeof(%));\n", type_name);

@@ -1516,23 +1516,6 @@ namespace WinRT
         public static HStringReference ToAbi(string value) => new HStringReference(value);
     }
 
-    struct MarshalArray<T>
-    {
-        public static T FromAbi(IntPtr value)
-        {
-            // todo: convert abi to array
-            var elem_type = typeof(T).GetElementType();
-            Array a = Array.CreateInstance(elem_type, (int)value);
-            return (T)(object)a;
-        }
-        public static IntPtr ToAbi(T value)
-        {
-            // todo: convert array to abi
-            Array a = (Array)(object)value;
-            return new IntPtr(a.Length);
-        }
-    }
-
     public class Marshaler<T>
     {
         static Marshaler()
@@ -1553,24 +1536,6 @@ namespace WinRT
                 {
                     FromAbi = BindFromAbi(AbiType);
                     ToAbi = BindToAbi(AbiType);
-                }
-            }
-            else if (type.IsArray) // TODO
-            {
-                // If element type is blittable, pass pointer/length directly
-                var elem_type = type.GetElementType();
-                AbiType = Type.GetType("ABI." + type.FullName);
-                if (AbiType == null)
-                {
-                    AbiType = typeof(IntPtr);
-                    FromAbi = (object value) => (T)(object)MarshalArray<T>.FromAbi((IntPtr)value);
-                    ToAbi = (T value) => (object)MarshalArray<T>.ToAbi(value);
-                }
-                else // allocate array and convert elements
-                {
-                    AbiType = typeof(IntPtr);
-                    FromAbi = (object value) => (T)(object)MarshalArray<T>.FromAbi((IntPtr)value);
-                    ToAbi = (T value) => (object)MarshalArray<T>.ToAbi(value);
                 }
             }
             else if (type == typeof(String))
