@@ -170,6 +170,19 @@ namespace cswinrt
 
     void write_type_name(writer& w, type_semantics const& semantics, bool abiNamespace = false, bool forceWriteNamespace = false)
     {
+        if (std::holds_alternative<object_type>(semantics))
+        {
+            if (abiNamespace)
+            {
+                w.write("WinRT.IInspectable");
+            }
+            else
+            {
+                w.write("object");
+            }
+            return;
+        }
+
         for_typedef(w, semantics, [&](TypeDef const& type)
         {
             write_typedef_name(w, type, abiNamespace, forceWriteNamespace);
@@ -185,7 +198,7 @@ namespace cswinrt
     void write_projection_type(writer& w, type_semantics const& semantics)
     {
         call(semantics,
-            [&](object_type) { w.write("IInspectable"); },
+            [&](object_type) { w.write("object"); },
             [&](guid_type) { w.write("Guid"); },
             [&](type_definition const& type) { write_typedef_name(w, type); },
             [&](generic_type_index const& var) { write_generic_type_name(w, var.index); },
@@ -528,7 +541,12 @@ namespace cswinrt
         call(semantics,
             [&](object_type)
             {
-                w.write("(IntPtr value) => (obj.ThisPtr == value && % is IInspectable) ? (IInspectable)% : IInspectable.FromAbi(value)", OwnerMemberName, OwnerMemberName);
+                w.write("(IntPtr value) => (obj.ThisPtr == value && % is IInspectable) ? (IInspectable)% : MarshalInterface<%, %>.FromAbi(%)",
+                    OwnerMemberName,
+                    OwnerMemberName,
+                    bind<write_type_name>(object_type{}, false, false),
+                    bind<write_type_name>(object_type{}, true, false),
+                    "value");
             },
             [&](type_definition const& type)
             {
@@ -950,8 +968,8 @@ public %() : this(new %(ActivationFactory<%>.ActivateInstance<%.Vftbl>())){}
 
             w.write(R"(
 public %(%) : this(((Func<%>)(() => {
-IInspectable baseInspectable = null;
-IInspectable innerInspectable;
+object baseInspectable = null;
+object innerInspectable;
 return %.%(%%baseInspectable, out innerInspectable)._default;
 }))()){}
 )",
@@ -1198,7 +1216,10 @@ private EventSource% _%;)",
             call(semantics,
                 [&](object_type)
                 {
-                    w.write("IInspectable.FromAbi(%)", name);
+                    w.write("MarshalInterface<%, %>.FromAbi(%)",
+                        bind<write_type_name>(object_type{}, false, false),
+                        bind<write_type_name>(object_type{}, true, false),
+                        name);
                 },
                 [&](type_definition const& type)
                 {
@@ -1272,7 +1293,10 @@ private EventSource% _%;)",
             call(semantics,
                 [&](object_type)
                 {
-                    w.write("%?.ThisPtr ?? IntPtr.Zero", name);
+                    w.write("MarshalInterface<%, %>.ToAbi(%).ThisPtr",
+                        bind<write_type_name>(object_type{}, false, false),
+                        bind<write_type_name>(object_type{}, true, false),
+                        name);
                 },
                 [&](type_definition const& type)
                 {
@@ -1372,7 +1396,7 @@ private EventSource% _%;)",
             call(semantics,
                 [&](object_type)
                 {
-                    w.write("WinRT.IInspectable %_value;\n", bind<write_parameter_name>(param));
+                    w.write("object %_value;\n", bind<write_parameter_name>(param));
                 },
                 [&](type_definition const& type)
                 {

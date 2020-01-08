@@ -211,7 +211,7 @@ namespace UnitTest
         public void TestPrimitives()
         {
             var test_int = 21;
-            TestObject.IntPropertyChanged += (IInspectable sender, Int32 value) =>
+            TestObject.IntPropertyChanged += (object sender, Int32 value) =>
             {
                 var c = Class.FromAbi(sender.ThisPtr);
                 Assert.Equal(value, test_int);
@@ -220,7 +220,7 @@ namespace UnitTest
 
             var expectedVal = true;
             var hits = 0;
-            TestObject.BoolPropertyChanged += (IInspectable sender, bool value) =>
+            TestObject.BoolPropertyChanged += (object sender, bool value) =>
             {
                 Assert.Equal(expectedVal, value);
                 ++hits;
