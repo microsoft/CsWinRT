@@ -2420,7 +2420,6 @@ return __hresult;
 %
 public static class @Helper%
 {%
-private unsafe delegate int Abi_Invoke(%);
 %
 
 public static unsafe % FromAbi(IntPtr thisPtr)
@@ -2459,13 +2458,17 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                     type_name
                 );
             }),
-            bind<write_abi_parameters>(signature, false),
             bind([&](writer& w)
             {
                 if (is_generic_delegate)
                 {
                     w.write("private static readonly Type Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*)%, typeof(int) });",
                         generic_abi_types);
+                }
+                else
+                {
+                    w.write("private unsafe delegate int Abi_Invoke(%);",
+                        bind<write_abi_parameters>(signature, false));
                 }
             }),
             // FromAbi
