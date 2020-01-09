@@ -2350,16 +2350,17 @@ return %;
             bind<write_marshal_from_abi>(get_type_semantics(signature.return_signature().Type()), signature.return_param_name()));
     };
 
-    void write_delegate_abi_invoke(writer &w, method_signature const& signature, std::string_view type_name)
+    void write_delegate_abi_invoke(writer &w, method_signature const& signature, std::string_view type_name, bool voidThisPtr)
     {
         auto return_sig = signature.return_signature();
         if (!return_sig)
         {
             w.write(
-R"(return WinRT.Delegate.MarshalInvoke(new IntPtr(thisPtr), (% invoke) =>
+R"(return WinRT.Delegate.MarshalInvoke(%, (% invoke) =>
 {
 invoke(%);
 }))",
+                voidThisPtr ? "new IntPtr(thisPtr)" : "thisPtr",
                 type_name,
                 bind_list<write_delegate_param_marshal>(", ", signature.params()));
             return;
@@ -2381,7 +2382,7 @@ invoke(%);
         w.write(
 R"({
 % __result = default;
-var __hresult = WinRT.Delegate.MarshalInvoke(new IntPtr(thisPtr), (% invoke) =>
+var __hresult = WinRT.Delegate.MarshalInvoke(%, (% invoke) =>
 {
 __result = %;
 });
@@ -2389,6 +2390,7 @@ __result = %;
 return __hresult;
 })",
             bind<write_abi_type>(get_type_semantics(return_sig.Type())),
+            voidThisPtr ? "new IntPtr(thisPtr)" : "thisPtr",
             type_name,
             bind([&](writer& w)
             {
@@ -2409,13 +2411,17 @@ return __hresult;
         auto type_params = w.write_temp("%", bind<write_type_params>(type));
         auto const [generic_abi_types, _] = get_generic_abi_types(w, signature);
 
-        w.write(R"(public delegate % %(%);
+        w.write("public delegate % %(%);\n",
+            bind<write_method_return_type>(signature),
+            type_name,
+            bind_list<write_projection_method_parameter>(", ", signature.params()));
 
+        w.write(R"(
 %
 public static class @Helper%
 {%
 private unsafe delegate int Abi_Invoke(%);
-private static readonly Type Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*)%, typeof(int) });
+%
 
 public static unsafe % FromAbi(IntPtr thisPtr)
 {
@@ -2431,9 +2437,7 @@ return managedDelegate;
 
 public static unsafe IntPtr ToAbi(% managedDelegate)
 {
-var self = typeof(@Helper%);
-var invoke = self.GetMethod(nameof(Do_Abi_Invoke_1), BindingFlags.Static | BindingFlags.NonPublic)%;
-var func = Marshal.GetFunctionPointerForDelegate(global::System.Delegate.CreateDelegate(Abi_Invoke_Type, invoke));
+%
 return new WinRT.Delegate(func, managedDelegate).ThisPtr;
 }
 
@@ -2444,10 +2448,6 @@ private static unsafe int Do_Abi_%(%)
 }
 
 )",
-            // delegate
-            bind<write_method_return_type>(signature),
-            type_name,
-            bind_list<write_projection_method_parameter>(", ", signature.params()),
             // Helper
             bind<write_guid_attribute>(type),
             type.TypeName(),
@@ -2460,7 +2460,14 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                 );
             }),
             bind<write_abi_parameters>(signature, false),
-            generic_abi_types,
+            bind([&](writer& w)
+            {
+                if (is_generic_delegate)
+                {
+                    w.write("private static readonly Type Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*)%, typeof(int) });",
+                        generic_abi_types);
+                }
+            }),
             // FromAbi
             type_name,
             type_name,
@@ -2468,13 +2475,22 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             bind<write_delegate_managed_invoke>(signature),
             // ToAbi
             type_name,
-            type.TypeName(),
-            type_params,
             bind([&](writer& w)
             {
                 if (is_generic_delegate)
                 {
-                    w.write(".MakeGenericMethod(%)", bind<write_generic_abi_instantiation_types>(signature));
+                    w.write(R"(
+var self = typeof(@Helper%);
+var invoke = self.GetMethod(nameof(Do_Abi_Invoke_1), BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(%);
+var func = Marshal.GetFunctionPointerForDelegate(global::System.Delegate.CreateDelegate(Abi_Invoke_Type, invoke));
+)",
+                        type.TypeName(),
+                        type_params,
+                        bind<write_generic_abi_instantiation_types>(signature));
+                }
+                else
+                {
+                    w.write("var func = Marshal.GetFunctionPointerForDelegate<Abi_Invoke>(Do_Abi_Invoke_1);");
                 }
             }),
             // Do_Abi_Invoke
@@ -2482,9 +2498,9 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             bind([&](writer& w)
             {
                 writer::write_generic_type_name_guard _ = get_abi_invoke_generic_name_guard(w);
-                w.write(bind<write_abi_parameters>(signature, true));
+                w.write(bind<write_abi_parameters>(signature, is_generic_delegate));
             }),
-            bind<write_delegate_abi_invoke>(signature, type_name));
+            bind<write_delegate_abi_invoke>(signature, type_name, is_generic_delegate));
     }
 
     void write_constant(writer& w, Constant const& value)
