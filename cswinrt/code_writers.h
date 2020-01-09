@@ -2432,7 +2432,7 @@ return managedDelegate;
 public static unsafe IntPtr ToAbi(% managedDelegate)
 {
 var self = typeof(@Helper%);
-var invoke = self.GetMethod(nameof(Do_Abi_Invoke_1), BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(%);
+var invoke = self.GetMethod(nameof(Do_Abi_Invoke_1), BindingFlags.Static | BindingFlags.NonPublic)%;
 var func = Marshal.GetFunctionPointerForDelegate(global::System.Delegate.CreateDelegate(Abi_Invoke_Type, invoke));
 return new WinRT.Delegate(func, managedDelegate).ThisPtr;
 }
@@ -2470,7 +2470,13 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             type_name,
             type.TypeName(),
             type_params,
-            bind<write_generic_abi_instantiation_types>(signature),
+            bind([&](writer& w)
+            {
+                if (is_generic_delegate)
+                {
+                    w.write(".MakeGenericMethod(%)", bind<write_generic_abi_instantiation_types>(signature));
+                }
+            }),
             // Do_Abi_Invoke
             bind<write_method_abi_name>(delegate_invoke_method),
             bind([&](writer& w)
