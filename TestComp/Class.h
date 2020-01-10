@@ -32,6 +32,7 @@ namespace winrt::TestComp::implementation
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::IInspectable>> _objectChanged;
         ComposedBlittableStruct _blittableStruct{};
         ComposedNonBlittableStruct _nonBlittableStruct{};
+        std::vector<int32_t> _ints{ 1, 2, 3 };
 
         Class(int32_t intProperty);
         Class(int32_t intProperty, hstring const& stringProperty);
@@ -126,6 +127,9 @@ namespace winrt::TestComp::implementation
         ComposedNonBlittableStruct GetComposedNonBlittableStruct();
         void OutComposedNonBlittableStruct(ComposedNonBlittableStruct& value);
         void SetComposedNonBlittableStruct(ComposedNonBlittableStruct const& value);
+        void SetInts(array_view<int32_t const> ints);
+        com_array<int32_t> GetInts();
+        void FillInts(array_view<int32_t> ints);
 
         Windows::Foundation::IAsyncOperation<int32_t> GetIntAsync();
         Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> GetStringAsync();

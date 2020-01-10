@@ -16,6 +16,7 @@
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code_writers.h" />
@@ -37,5 +38,11 @@
       <Filter>strings</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="strings\WinRT_Guid.cs">
+      <Filter>strings</Filter>
+    </None>
+    <None Include="strings\WinRT_Marshal.cs">
+      <Filter>strings</Filter>
+    </None>
   </ItemGroup>
 </Project>

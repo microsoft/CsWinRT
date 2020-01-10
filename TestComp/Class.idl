@@ -185,6 +185,14 @@ namespace TestComp
         void OutComposedNonBlittableStruct(out ComposedNonBlittableStruct value);
         void SetComposedNonBlittableStruct(ComposedNonBlittableStruct value);
 
+        // Arrays
+        void SetInts(int[] ints);
+        int[] GetInts();
+        void FillInts(ref int[] ints);
+        //void SetStrings(string[] strings);
+        //string[] GetStrings();
+        //void FillStrings(ref string[] strings);
+
         // Generics
         Windows.Foundation.IAsyncOperation<Int32> GetIntAsync();
         Windows.Foundation.IAsyncOperationWithProgress<String, Int32> GetStringAsync();
