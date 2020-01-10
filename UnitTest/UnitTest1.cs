@@ -438,6 +438,14 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestGenericCast()
+        {
+            var ints = TestObject.GetIntVector();
+            var abiView = (ABI.Windows.Foundation.Collections.IVectorView<int>)ints;
+            Assert.Equal(abiView.ThisPtr, abiView.As<WinRT.IInspectable>().As<ABI.Windows.Foundation.Collections.IVectorView<int>.Vftbl>().ThisPtr);
+        }
+
+        [Fact]
         public void TestFundamentalGeneric()
         {
             var ints = TestObject.GetIntVector();

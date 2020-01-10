@@ -498,7 +498,15 @@ namespace WinRT
             var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
             var vftblIUnknown = Marshal.PtrToStructure<IUnknownVftbl>(vftblPtr.Vftbl);
             // TODO: need to delegate back to the T implementation for generics ...
-            var vftblT = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
+            T vftblT;
+            if (typeof(T).IsGenericType)
+            {
+                vftblT = (T)typeof(T).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance, null, new[] { typeof(IntPtr) }, null).Invoke(new object[] { thisPtr });
+            }
+            else
+            {
+                vftblT = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
+            }
             return (vftblIUnknown, vftblT);
         }
 
