@@ -25,58 +25,55 @@ namespace WinRT
         }
     }
 
-    struct MarshalString
+    // TODO: optimization - MarshalString struct, boxed for nested marshalings
+    // to avoid heap allocations for top-level hstrings
+    /*struct*/class MarshalString
     {
-        // TODO: optimization - box Cache struct for nested marshalings, 
-        // to avoid heap allocations for top-level hstrings
-        public class Cache
+        public unsafe struct HStringHeader // sizeof(HSTRING_HEADER)
         {
-            public bool Dispose()
-            {
-                _gchandle.Dispose();
-                return false;
-            }
+            public fixed byte Reserved[24];
+        };
+        public HStringHeader _header;
+        public GCHandle _gchandle;
+        public IntPtr _handle;
 
-            public unsafe struct HStringHeader // sizeof(HSTRING_HEADER)
-            {
-                public fixed byte Reserved[24];
-            };
-            public HStringHeader _header;
-            public GCHandle _gchandle;
-            public IntPtr _handle;
+        public bool Dispose()
+        {
+            _gchandle.Dispose();
+            return false;
         }
 
-        public static unsafe Cache CreateCache(string value)
+        public static unsafe MarshalString Create(string value)
         {
-            Cache cache = new Cache();
+            var m = new MarshalString();
             try
             {
-                cache._gchandle = GCHandle.Alloc(value, GCHandleType.Pinned);
-                fixed (void* chars = value, header = &cache._header, handle = &cache._handle)
+                m._gchandle = GCHandle.Alloc(value, GCHandleType.Pinned);
+                fixed (void* chars = value, header = &m._header, handle = &m._handle)
                 {
                     Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
                         (char*)chars, value.Length, (IntPtr*)header, (IntPtr*)handle));
                 };
-                return cache;
+                return m;
             }
-            catch (Exception) when (cache.Dispose())
+            catch (Exception) when (m.Dispose())
             {
                 // Will never execute 
                 return default;
             }
         }
 
-        public static IntPtr GetAbi(Cache cache) => cache._handle;
+        public static IntPtr GetAbi(MarshalString m) => m._handle;
         
-        public static IntPtr GetAbi(object box) => ((Cache)box)._handle;
+        public static IntPtr GetAbi(object box) => ((MarshalString)box)._handle;
 
-        public static void DisposeCache(Cache cache) => cache.Dispose();
+        public static void DisposeMarshaler(MarshalString m) => m.Dispose();
         // no need to delete hstring reference
         
-        public static void DisposeCache(object box)
+        public static void DisposeMarshaler(object box)
         {
             if (box != null)
-                DisposeCache(((Cache)box));
+                DisposeMarshaler(((MarshalString)box));
         }
 
         public static void DisposeAbi(IntPtr hstring)
@@ -100,7 +97,7 @@ namespace WinRT
             }
         }
 
-        public struct CacheArray
+        public struct Array
         {
             public bool Dispose()
             {
@@ -113,26 +110,26 @@ namespace WinRT
             }
 
             public GCHandle _gchandle;
-            public Cache[] _abi_strings;
+            public MarshalString[] _abi_strings;
         }
 
-        public static CacheArray CreateCacheArray(string[] array)
+        public static Array CreateArray(string[] array)
         {
-            CacheArray cache = new CacheArray();
+            var m = new Array();
             try
             {
                 var length = array.Length;
                 var abi_array = new IntPtr[length];
-                cache._abi_strings = new MarshalString.Cache[length];
+                m._abi_strings = new MarshalString[length];
                 for (int i = 0; i < length; i++)
                 {
-                    cache._abi_strings[i] = MarshalString.CreateCache(array[i]);
-                    abi_array[i] = MarshalString.GetAbi(cache._abi_strings[i]);
+                    m._abi_strings[i] = MarshalString.Create(array[i]);
+                    abi_array[i] = MarshalString.GetAbi(m._abi_strings[i]);
                 };
-                cache._gchandle = GCHandle.Alloc(abi_array, GCHandleType.Pinned);
-                return cache;
+                m._gchandle = GCHandle.Alloc(abi_array, GCHandleType.Pinned);
+                return m;
             }
-            catch (Exception) when (cache.Dispose())
+            catch (Exception) when (m.Dispose())
             {
                 // Will never execute 
                 return default;
@@ -141,8 +138,8 @@ namespace WinRT
         
         public static (IntPtr data, int length) GetAbiArray(object box)
         {
-            var cache = (Cache)box;
-            return (cache._gchandle.AddrOfPinnedObject(), ((Array)cache._gchandle.Target).Length);
+            var m = (Array)box;
+            return (m._gchandle.AddrOfPinnedObject(), ((Array)m._gchandle.Target).Length);
         }
 
         public static unsafe string[] FromAbiArray(object box)
@@ -157,7 +154,7 @@ namespace WinRT
             return array;
         }
 
-        public static void DisposeCacheArray(object box) => ((CacheArray)box).Dispose();
+        public static void DisposeMarshalerArray(object box) => ((Array)box).Dispose();
         
         public static void DisposeAbiArray(object box)
         {
@@ -168,26 +165,26 @@ namespace WinRT
 
     struct MarshalBlittable
     {
-        public struct CacheArray
+        public struct Array
         {
-            public CacheArray(Array array) => _gchandle = GCHandle.Alloc(array, GCHandleType.Pinned);
+            public Array(System.Array array) => _gchandle = GCHandle.Alloc(array, GCHandleType.Pinned);
             public void Dispose() => _gchandle.Dispose();
 
             public GCHandle _gchandle;
         };
 
-        public static CacheArray CreateCacheArray(Array array) => new CacheArray(array);
+        public static Array CreateArray(System.Array array) => new Array(array);
         
         public static (IntPtr data, int length) GetAbiArray(object box)
         {
-            var cache = (CacheArray)box;
-            return (cache._gchandle.AddrOfPinnedObject(), ((Array)cache._gchandle.Target).Length);
+            var m = (Array)box;
+            return (m._gchandle.AddrOfPinnedObject(), ((System.Array)m._gchandle.Target).Length);
         }
         
         public static unsafe T[] FromAbiArray<T>(object box)
         {
             var abi = ((IntPtr data, int length))box;
-            Array array = Array.CreateInstance(typeof(T), abi.length);
+            System.Array array = System.Array.CreateInstance(typeof(T), abi.length);
             var array_handle = GCHandle.Alloc(array, GCHandleType.Pinned);
             var array_data = array_handle.AddrOfPinnedObject();
             var byte_length = abi.length * Marshal.SizeOf<T>();
@@ -195,7 +192,7 @@ namespace WinRT
             return (T[])array;
         }
 
-        public static void DisposeCacheArray(object box) => ((CacheArray)box).Dispose();
+        public static void DisposeMarshalerArray(object box) => ((Array)box).Dispose();
 
         public static void DisposeAbiArray(object box)
         {
@@ -206,14 +203,14 @@ namespace WinRT
 
     struct MarshalNonBlittable<T>
     {
-        public struct CacheArray
+        public struct Array
         {
             public bool Dispose()
             {
                 _gchandle.Dispose();
                 foreach (var abi_element in _abi_elements)
                 {
-                    Marshaler<T>.DisposeCache(abi_element);
+                    Marshaler<T>.DisposeMarshaler(abi_element);
                 }
                 return false;
             }
@@ -222,23 +219,56 @@ namespace WinRT
             public object[] _abi_elements;
         }
 
-        public static CacheArray CreateCacheArray(T[] array, Type abiType)
+        public static Func<T, object> BindCreate(Type AbiType)
         {
-            CacheArray cache = new CacheArray();
+            var parms = new[] { Expression.Parameter(typeof(T), "arg") };
+            return Expression.Lambda<Func<T, object>>(
+                Expression.Convert(Expression.Call(AbiType.GetMethod("Create"), parms),
+                    typeof(object)), parms).Compile();
+        }
+
+        public static Func<object, object> BindGetAbi(Type AbiType)
+        {
+            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
+            return Expression.Lambda<Func<object, object>>(
+                Expression.Convert(Expression.Call(AbiType.GetMethod("GetAbi"),
+                    new[] { Expression.Convert(parms[0], AbiType) }),
+                        typeof(object)), parms).Compile();
+        }
+
+        public static Func<object, T> BindFromAbi(Type AbiType)
+        {
+            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
+            return Expression.Lambda<Func<object, T>>(
+                Expression.Call(AbiType.GetMethod("FromAbi"),
+                    new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
+        }
+
+        public static Action<object> BindDisposeMarshaler(Type AbiType)
+        {
+            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
+            return Expression.Lambda<Action<object>>(
+                Expression.Call(AbiType.GetMethod("DisposeMarshaler"),
+                    new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
+        }
+
+        public static Array CreateArray(T[] array, Type abiType)
+        {
+            Array m = new Array();
             try
             {
                 var length = array.Length;
-                var abi_array = Array.CreateInstance(abiType, length);
-                cache._abi_elements = new object[length];
+                var abi_array = System.Array.CreateInstance(abiType, length);
+                m._abi_elements = new object[length];
                 for (int i = 0; i < length; i++)
                 {
-                    cache._abi_elements[i] = Marshaler<T>.CreateCache(array[i]);
-                    abi_array.SetValue(Marshaler<T>.GetAbi(cache._abi_elements[i]), i);
+                    m._abi_elements[i] = Marshaler<T>.Create(array[i]);
+                    abi_array.SetValue(Marshaler<T>.GetAbi(m._abi_elements[i]), i);
                 }
-                cache._gchandle = GCHandle.Alloc(abi_array, GCHandleType.Pinned);
-                return cache;
+                m._gchandle = GCHandle.Alloc(abi_array, GCHandleType.Pinned);
+                return m;
             }
-            catch (Exception) when (cache.Dispose())
+            catch (Exception) when (m.Dispose())
             {
                 // Will never execute 
                 return default;
@@ -247,8 +277,8 @@ namespace WinRT
 
         public static (IntPtr data, int length) GetAbiArray(object box)
         {
-            var cache = (CacheArray)box;
-            return (cache._gchandle.AddrOfPinnedObject(), ((Array)cache._gchandle.Target).Length);
+            var m = (Array)box;
+            return (m._gchandle.AddrOfPinnedObject(), ((System.Array)m._gchandle.Target).Length);
         }
 
         public static unsafe T[] FromAbiArray(object box, Type abiType)
@@ -266,7 +296,7 @@ namespace WinRT
             return array;
         }
 
-        public static void DisposeCacheArray(object box) => ((CacheArray)box).Dispose();
+        public static void DisposeMarshalerArray(object box) => ((Array)box).Dispose();
         
         public static void DisposeAbiArray(object box)
         {
@@ -290,6 +320,7 @@ namespace WinRT
             return _FromAbi(ptr);
         }
 
+        // todo: Create/GetAbi pattern
         public static IntPtr ToAbi(TInterface value)
         {
             // If the value passed in is the native implementation of the interface
@@ -363,6 +394,7 @@ namespace WinRT
                         Expression.Call(fromAbiMethod, parms[0])), parms).Compile();
         }
 
+        // todo: Create/GetAbi pattern
         private static Func<TAbi, IntPtr> BindToAbi()
         {
             var parms = new[] { Expression.Parameter(typeof(TAbi), "arg") };
@@ -370,6 +402,25 @@ namespace WinRT
                 Expression.MakeMemberAccess(
                     Expression.Convert(parms[0], typeof(TAbi)),
                     typeof(TAbi).GetProperty("ThisPtr")), parms).Compile();
+        }
+    }
+
+    public class MarshalClass<T>
+    {
+        public static T FromAbi(IntPtr value)
+        {
+            // todo: BindFromAbi ...
+            return default;
+        }
+
+        public static void DisposeAbi(IntPtr abi)
+        {
+            // todo: ObjectReference release
+        }
+        public static void DisposeAbi(object abi)
+        {
+            if (abi != null)
+                DisposeAbi(((IntPtr)abi));
         }
     }
 
@@ -392,44 +443,43 @@ namespace WinRT
                 if (AbiType == null)
                 {
                     AbiType = type;
-                    FromAbi = (object value) => (T)value;
-                    CreateCache = (T value) => value;
+                    Create = (T value) => value;
                     GetAbi = (object box) => box;
-                    DisposeCache = (object box) => { };
+                    FromAbi = (object value) => (T)value;
+                    DisposeMarshaler = (object box) => { };
                     DisposeAbi = (object box) => { };
-                    CreateCacheArray = (T[] array) => MarshalBlittable.CreateCacheArray(array);
+                    CreateArray = (T[] array) => MarshalBlittable.CreateArray(array);
                     GetAbiArray = (object box) => MarshalBlittable.GetAbiArray(box);
                     FromAbiArray = (object box) => MarshalBlittable.FromAbiArray<T>(box);
-                    DisposeCacheArray = (object box) => MarshalBlittable.DisposeCacheArray(box);
+                    DisposeMarshalerArray = (object box) => MarshalBlittable.DisposeMarshalerArray(box);
                     DisposeAbiArray = (object box) => MarshalBlittable.DisposeAbiArray(box);
                 }
-                else // bind to ABI counterpart's marshalers
+                else // bind to marshaler
                 {
-                    var CacheType = Type.GetType($"{type.Namespace}.ABI.{type.Name}+Cache");
-                    CreateCache = BindCreateCache(AbiType);
-                    GetAbi = BindGetAbi(AbiType, CacheType);
-                    FromAbi = BindFromAbi(AbiType);
-                    DisposeCache = BindDisposeCache(AbiType, CacheType);
+                    Create = MarshalNonBlittable<T>.BindCreate(AbiType);
+                    GetAbi = MarshalNonBlittable<T>.BindGetAbi(AbiType);
+                    FromAbi = MarshalNonBlittable<T>.BindFromAbi(AbiType);
+                    DisposeMarshaler = MarshalNonBlittable<T>.BindDisposeMarshaler(AbiType);
                     DisposeAbi = (object box) => { };
-                    CreateCacheArray = (T[] array) => MarshalNonBlittable<T>.CreateCacheArray(array, AbiType);
+                    CreateArray = (T[] array) => MarshalNonBlittable<T>.CreateArray(array, AbiType);
                     GetAbiArray = (object box) => MarshalNonBlittable<T>.GetAbiArray(box);
                     FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box, AbiType);
-                    DisposeCacheArray = (object box) => MarshalNonBlittable<T>.DisposeCacheArray(box);
+                    DisposeMarshalerArray = (object box) => MarshalNonBlittable<T>.DisposeMarshalerArray(box);
                     DisposeAbiArray = (object box) => MarshalNonBlittable<T>.DisposeAbiArray(box);
                 }
             }
             else if (type == typeof(String))
             {
                 AbiType = typeof(IntPtr);
-                FromAbi = (object value) => (T)(object)MarshalString.FromAbi((IntPtr)value);
-                CreateCache = (T value) => MarshalString.CreateCache((string)(object)value);
+                Create = (T value) => MarshalString.Create((string)(object)value);
                 GetAbi = (object box) => MarshalString.GetAbi(box);
-                DisposeCache = (object box) => MarshalString.DisposeCache(box);
+                FromAbi = (object value) => (T)(object)MarshalString.FromAbi((IntPtr)value);
+                DisposeMarshaler = (object box) => MarshalString.DisposeMarshaler(box);
                 DisposeAbi = (object box) => MarshalString.DisposeAbi(box);
-                CreateCacheArray = (T[] array) => MarshalString.CreateCacheArray((string[])(object)array);
+                CreateArray = (T[] array) => MarshalString.CreateArray((string[])(object)array);
                 GetAbiArray = (object box) => MarshalString.GetAbiArray(box);
                 FromAbiArray = (object box) => (T[])(object)MarshalString.FromAbiArray(box);
-                DisposeCacheArray = (object box) => MarshalString.DisposeCacheArray(box);
+                DisposeMarshalerArray = (object box) => MarshalString.DisposeMarshalerArray(box);
                 DisposeAbiArray = (object box) => MarshalString.DisposeAbiArray(box);
             }
             else 
@@ -439,51 +489,17 @@ namespace WinRT
             RefAbiType = AbiType.MakeByRefType();
         }
 
-        private static Func<T, object> BindCreateCache(Type AbiType)
-        {
-            var parms = new[] { Expression.Parameter(typeof(T), "arg") };
-            return Expression.Lambda<Func<T, object>>(
-                Expression.Convert(Expression.Call(AbiType.GetMethod("CreateCache"), parms),
-                    typeof(object)), parms).Compile();
-        }
-
-        private static Func<object, object> BindGetAbi(Type AbiType, Type CacheType)
-        {
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Func<object, object>>(
-                Expression.Convert(Expression.Call(AbiType.GetMethod("GetAbi"),
-                    new[] { Expression.Convert(parms[0], CacheType) }),
-                        typeof(object)), parms).Compile();
-        }
-
-        private static Func<object, T> BindFromAbi(Type AbiType)
-        {
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Func<object, T>>(
-                Expression.Call(AbiType.GetMethod("FromAbi"),
-                    new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
-        }
-
-        private static Action<object> BindDisposeCache(Type AbiType, Type CacheType)
-        {
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Action<object>>(
-                Expression.Call(AbiType.GetMethod("DisposeCache"),
-                    new[] { Expression.Convert(parms[0], CacheType) }), parms).Compile();
-        }
-
         public static readonly Type AbiType;
         public static readonly Type RefAbiType;
-        public static readonly Func<object, T> FromAbi;
-        public static readonly Func<T, object> CreateCache;
+        public static readonly Func<T, object> Create;
         public static readonly Func<object, object> GetAbi;
-        public static readonly Action<object> DisposeCache;
+        public static readonly Func<object, T> FromAbi;
+        public static readonly Action<object> DisposeMarshaler;
         public static readonly Action<object> DisposeAbi;
-
-        public static readonly Func<object, T[]> FromAbiArray;
-        public static readonly Func<T[], object> CreateCacheArray;
+        public static readonly Func<T[], object> CreateArray;
         public static readonly Func<object, (IntPtr, int)> GetAbiArray;
-        public static readonly Action<object> DisposeCacheArray;
+        public static readonly Func<object, T[]> FromAbiArray;
+        public static readonly Action<object> DisposeMarshalerArray;
         public static readonly Action<object> DisposeAbiArray;
     }
 }

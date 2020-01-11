@@ -31,7 +31,7 @@ namespace cswinrt
         {"ulong", "UInt64"},
         {"float", "Float"},
         {"double", "Double"},
-        {"string", "string"},
+        {"string", "String"},
     };
 
     auto to_csharp_type(fundamental_type type)
@@ -1200,7 +1200,7 @@ private EventSource% _%;)",
         {
             if (is_out() || local_type.empty())
                 return;
-            w.write("__%_in__ = %.CreateCache%(%);\n",
+            w.write("__%_in__ = %.Create%(%);\n",
                 param_name,
                 marshaler_type, 
                 is_array() ? "Array" : "",
@@ -1255,7 +1255,7 @@ private EventSource% _%;)",
                 return;
             w.write("%.Dispose%%(__%_%__);\n",
                 marshaler_type, 
-                is_out() ? "Abi" : "Cache", 
+                is_out() ? "Abi" : "Marshaler", 
                 is_array() ? "Array" : "",
                 param_name,
                 is_out() ? "out" : "in");
@@ -1285,12 +1285,17 @@ private EventSource% _%;)",
                             if (!is_type_blittable(type))
                             {
                                 m.marshaler_type = w.write_temp("%", bind<write_type_name>(semantics, true, false));
-                                m.local_type = m.marshaler_type + ".Cache";
+                                m.local_type = m.marshaler_type;
                             }
+                            break;
+                        //case category::interface_type:
+                        case category::class_type:
+                            m.marshaler_type = m.param_type;
+                            m.local_type = "IntPtr";
                             break;
                         default:
                             m.marshaler_type = w.write_temp("%", bind<write_type_name>(semantics, true, false));
-                            m.local_type = m.marshaler_type + ".Cache";
+                            m.local_type = m.marshaler_type;
                             break;
                     }
                 },
@@ -1304,7 +1309,7 @@ private EventSource% _%;)",
                     if (type == fundamental_type::String)
                     {
                         m.marshaler_type = "MarshalString";
-                        m.local_type = m.is_out() ? "IntPtr" : "MarshalString.Cache";
+                        m.local_type = m.is_out() ? "IntPtr" : "MarshalString";
                     }
                     else if (type == fundamental_type::Boolean)
                     {
@@ -2522,6 +2527,68 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 
             if (w._in_abi_namespace)
             {
+                auto projected_type = w.write_temp("%", bind<write_projection_type>(type));
+                auto abi_type = w.write_temp("%", bind<write_type_name>(type, true, false));
+
+                w.write(R"(public struct Marshaler
+{
+// todo
+public % abi;
+//public MarshalString s1;
+public bool Dispose()
+{
+// todo
+//MarshalString.DisposeMarshaler(s1);
+return false;
+}
+})",
+                    abi_type
+                );
+
+                w.write(R"(public static Marshaler Create(% arg)   
+{
+var m = new Marshaler();
+try 
+{
+//todo
+//cache.s1 = MarshalString.CreateCache(arg.s1);
+m.abi = new %()
+{
+//b = arg.b,
+//s1 = MarshalString.GetAbi(cache.s1),
+};
+return m;
+}
+catch (Exception) when (m.Dispose())
+{
+// Will never execute 
+return default;
+}
+}
+
+public static % GetAbi(Marshaler m) => m.abi;
+
+public static % FromAbi(% arg)
+{
+return new %() 
+{
+//todo
+//b = arg.b,
+//s1 = MarshalString.FromAbi(arg.s1),
+};
+}
+
+public static void DisposeMarshaler(Marshaler m) => m.Dispose();
+)",
+                    projected_type,
+                    abi_type,
+                    abi_type,
+                    projected_type,
+                    abi_type,
+                    projected_type
+                );
+
+#if 0
                 w.write("\npublic static % FromAbi(% value)\n{\n% result;\n",
                     bind<write_projection_type>(type),
                     bind<write_type_name>(type, true, false),
@@ -2539,6 +2606,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                     w.write("result.% = %;\n", field.Name(), bind<write_marshal_to_abi>(get_type_semantics(field.Signature().Type()), "value." + std::string{field.Name()}));
                 }
                 w.write("return result;\n}\n");
+#endif
             }
         }
         w.write("}\n");
