@@ -1403,7 +1403,7 @@ namespace WinRT
                 }
             }
 
-            if (type == typeof(String))
+            if (type == typeof(String) || type == typeof(WinRT.HString))
             {
                 return "string";
             }
