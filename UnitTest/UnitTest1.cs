@@ -94,6 +94,7 @@ namespace UnitTest
             AssertGuid<IVector<IInspectable>>("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a");
             AssertGuid<IVector<WF.Uri>>("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e");
             AssertGuid<IVector<AsyncActionCompletedHandler>>("5dafe591-86dc-59aa-bfda-07f5d59fc708");
+            AssertGuid<IVector<ComposedNonBlittableStruct>>("DBD7880D-AC4C-57EA-A1D8-9BDDEA102376");
         }
     }
 
