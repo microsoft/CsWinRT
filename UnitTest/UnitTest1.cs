@@ -565,6 +565,7 @@ namespace UnitTest
             src.Cancel();
             e = Assert.Throws<AggregateException>(() => task.Wait(1000));
             Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
         }
 
         async Task InvokeDoitAsyncWithProgress()
@@ -606,6 +607,7 @@ namespace UnitTest
             src.Cancel();
             e = Assert.Throws<AggregateException>(() => task.Wait(1000));
             Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
         }
 
         async Task<int> InvokeAddAsync(int lhs, int rhs)
@@ -636,6 +638,7 @@ namespace UnitTest
             src.Cancel();
             e = Assert.Throws<AggregateException>(() => task.Wait(1000));
             Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
         }
 
         async Task<int> InvokeAddAsyncWithProgress(int lhs, int rhs)
@@ -678,6 +681,7 @@ namespace UnitTest
             src.Cancel();
             e = Assert.Throws<AggregateException>(() => task.Wait(1000));
             Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
         }
     }
 }
