@@ -148,6 +148,7 @@ namespace winrt::TestComp::implementation
         Windows::Foundation::IAsyncAction DoitAsync();
         Windows::Foundation::IAsyncActionWithProgress<int32_t> DoitAsyncWithProgress();
         Windows::Foundation::IAsyncOperation<int32_t> AddAsync(int32_t lhs, int32_t rhs);
+        Windows::Foundation::IAsyncOperationWithProgress<int32_t, int32_t> AddAsyncWithProgress(int32_t lhs, int32_t rhs);
 
         // IStringable
         hstring ToString();

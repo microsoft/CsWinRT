@@ -506,7 +506,12 @@ namespace winrt::TestComp::implementation
     {
         _asyncResult = E_PENDING;
         co_await winrt::resume_background();
+
+        auto cancel = co_await winrt::get_cancellation_token();
+        cancel.callback([this]() { ::SetEvent(_syncHandle.get()); });
+
         co_await winrt::resume_on_signal(_syncHandle.get());
+        if (cancel()) co_return;
         winrt::check_hresult(_asyncResult);
     }
 
@@ -516,10 +521,14 @@ namespace winrt::TestComp::implementation
         _asyncProgress = 0;
         co_await winrt::resume_background();
 
+        auto cancel = co_await winrt::get_cancellation_token();
+        cancel.callback([this]() { ::SetEvent(_syncHandle.get()); });
+
         auto progress = co_await winrt::get_progress_token();
         while (true)
         {
             co_await winrt::resume_on_signal(_syncHandle.get());
+            if (cancel()) co_return;
             if (_asyncResult != E_PENDING) break;
             progress(_asyncProgress);
         }
@@ -531,7 +540,34 @@ namespace winrt::TestComp::implementation
     {
         _asyncResult = E_PENDING;
         co_await winrt::resume_background();
+
+        auto cancel = co_await winrt::get_cancellation_token();
+        cancel.callback([this]() { ::SetEvent(_syncHandle.get()); });
+
         co_await winrt::resume_on_signal(_syncHandle.get());
+        if (cancel()) co_return lhs + rhs; // TODO: Why do I need to provide a value
+        winrt::check_hresult(_asyncResult);
+        co_return lhs + rhs;
+    }
+
+    Windows::Foundation::IAsyncOperationWithProgress<int32_t, int32_t> Class::AddAsyncWithProgress(int32_t lhs, int32_t rhs)
+    {
+        _asyncResult = E_PENDING;
+        _asyncProgress = 0;
+        co_await winrt::resume_background();
+
+        auto cancel = co_await winrt::get_cancellation_token();
+        cancel.callback([this]() { ::SetEvent(_syncHandle.get()); });
+
+        auto progress = co_await winrt::get_progress_token();
+        while (true)
+        {
+            co_await winrt::resume_on_signal(_syncHandle.get());
+            if (cancel()) co_return lhs + rhs; // TODO: Why do I need to provide a value
+            if (_asyncResult != E_PENDING) break;
+            progress(_asyncProgress);
+        }
+
         winrt::check_hresult(_asyncResult);
         co_return lhs + rhs;
     }

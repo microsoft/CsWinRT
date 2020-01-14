@@ -246,7 +246,6 @@ namespace System
 
                     if (disposeOfCtr)
                     {
-                        // TODO(BETTER ALTERNATIVE?): ctr.Unregister();
                         ctr.Dispose();
                     }
                 }
@@ -307,7 +306,6 @@ namespace System
                     ctr = _ctr;
                     _ctr = default;
                 }
-                // TODO(BETTER ALTERNATIVE?): ctr.Unregister(); // It's ok if we end up unregistering a not-initialized registration; it'll just be a nop.
                 ctr.Dispose();
 
                 try
@@ -332,8 +330,7 @@ namespace System
                         }
                         else
                         {
-                            // error = ExceptionSupport.AttachRestrictedErrorInfo(asyncInfo.ErrorCode);
-                            error = new Exception(); // TODO: HRESULT
+                            error = Marshal.GetExceptionForHR(hr.Value); // TODO: Restricted error info
                         }
                     }
                     else if (asyncStatus == AsyncStatus.Completed && getResultsFunction != null)

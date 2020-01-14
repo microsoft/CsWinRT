@@ -536,6 +536,8 @@ namespace UnitTest
         }
         */
 
+        readonly int E_FAIL = -2147467259;
+
         async Task InvokeDoitAsync()
         {
             await TestObject.DoitAsync();
@@ -545,44 +547,66 @@ namespace UnitTest
         public void TestAsyncAction()
         {
             var task = InvokeDoitAsync();
-            Assert.False(task.Wait(100));
+            Assert.False(task.Wait(25));
             TestObject.CompleteAsync();
             Assert.True(task.Wait(1000));
             Assert.Equal(TaskStatus.RanToCompletion, task.Status);
 
             task = InvokeDoitAsync();
-            Assert.False(task.Wait(100));
-            TestObject.CompleteAsync(-2147467259); // E_FAIL
-            Assert.ThrowsAny<Exception>(() => task.Wait(1000));
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
             Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = TestObject.DoitAsync().AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
         }
 
-        async Task InvokeDoitAsyncWithProgress(IProgress<int> progress)
+        async Task InvokeDoitAsyncWithProgress()
         {
-            await TestObject.DoitAsyncWithProgress().AsTask(progress);
+            await TestObject.DoitAsyncWithProgress();
         }
 
-        // [Fact]
-        // public void TestAsyncActionWithProgress()
-        // {
-        //     int progress = 0;
-        //     var evt = new AutoResetEvent(false);
-        //     var task = InvokeDoitAsyncWithProgress(new Progress<int>((v) =>
-        //     {
-        //         progress = v;
-        //         evt.Set();
-        //     }));
+        [Fact]
+        public void TestAsyncActionWithProgress()
+        {
+            int progress = 0;
+            var evt = new AutoResetEvent(false);
+            var task = TestObject.DoitAsyncWithProgress().AsTask(new Progress<int>((v) =>
+            {
+                progress = v;
+                evt.Set();
+            }));
 
-        //     for (int i = 1; i <= 10; ++i)
-        //     {
-        //         TestObject.AdvanceAsync(10);
-        //         Assert.True(evt.WaitOne(1000));
-        //         Assert.Equal(10 * i, progress);
-        //     }
+            for (int i = 1; i <= 10; ++i)
+            {
+                TestObject.AdvanceAsync(10);
+                Assert.True(evt.WaitOne(1000));
+                Assert.Equal(10 * i, progress);
+            }
 
-        //     TestObject.CompleteAsync();
-        //     Assert.True(task.Wait(1000));
-        // }
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+
+            task = InvokeDoitAsyncWithProgress();
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = TestObject.DoitAsyncWithProgress().AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
+        }
 
         async Task<int> InvokeAddAsync(int lhs, int rhs)
         {
@@ -593,17 +617,67 @@ namespace UnitTest
         public void TestAsyncOperation()
         {
             var task = InvokeAddAsync(42, 8);
-            Assert.False(task.Wait(100));
+            Assert.False(task.Wait(25));
             TestObject.CompleteAsync();
             Assert.True(task.Wait(1000));
             Assert.Equal(TaskStatus.RanToCompletion, task.Status);
             Assert.Equal(50, task.Result);
 
             task = InvokeAddAsync(0, 0);
-            Assert.False(task.Wait(100));
-            TestObject.CompleteAsync(-2147467259); // E_FAIL
-            Assert.ThrowsAny<Exception>(() => task.Wait(1000));
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
             Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = TestObject.AddAsync(0, 0).AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
+        }
+
+        async Task<int> InvokeAddAsyncWithProgress(int lhs, int rhs)
+        {
+            return await TestObject.AddAsyncWithProgress(lhs, rhs);
+        }
+
+        [Fact]
+        public void TestAsyncOperationWithProgress()
+        {
+            int progress = 0;
+            var evt = new AutoResetEvent(false);
+            var task = TestObject.AddAsyncWithProgress(42, 8).AsTask(new Progress<int>((v) =>
+            {
+                progress = v;
+                evt.Set();
+            }));
+
+            for (int i = 1; i <= 10; ++i)
+            {
+                TestObject.AdvanceAsync(10);
+                Assert.True(evt.WaitOne(1000));
+                Assert.Equal(10 * i, progress);
+            }
+
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+            Assert.Equal(50, task.Result);
+
+            task = InvokeAddAsyncWithProgress(0, 0);
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = TestObject.AddAsyncWithProgress(0, 0).AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
         }
     }
 }
