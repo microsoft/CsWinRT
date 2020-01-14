@@ -1043,16 +1043,6 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                 auto is_overridable_interface = has_attribute(ii, "Windows.Foundation.Metadata", "OverridableAttribute");
                 auto is_protected_interface = has_attribute(ii, "Windows.Foundation.Metadata", "ProtectedAttribute");
 
-                // temporary, to fix ToggleSwitch.OnToggled, etc - overridable/protected logic needs review
-                if (type.Flags().Sealed())
-                {
-                    is_overridable_interface = false;
-                    is_protected_interface = false;
-                }
-
-                w.write_each<write_class_method>(interface_type.MethodList(), is_overridable_interface, is_protected_interface, target);
-                w.write_each<write_class_event>(interface_type.EventList(), is_overridable_interface, is_protected_interface, target);
-
                 // If this interface is overidable but the type is sealed, make the interface act as though it is protected.
                 // If we don't do this, then the C# compiler errors out about declaring a virtual member in a sealed class.
                 if (is_overridable_interface && type.Flags().Sealed())
@@ -1060,6 +1050,9 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                     is_overridable_interface = false;
                     is_protected_interface = true;
                 }
+
+                w.write_each<write_class_method>(interface_type.MethodList(), is_overridable_interface, is_protected_interface, target);
+                w.write_each<write_class_event>(interface_type.EventList(), is_overridable_interface, is_protected_interface, target);
 
                 // Merge property getters/setters, since such may be defined across interfaces
                 // Since a property has to either be overridable or not, 
