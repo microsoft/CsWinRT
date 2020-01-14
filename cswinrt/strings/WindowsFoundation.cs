@@ -3,6 +3,7 @@ namespace System
 {
     using global::System.Diagnostics;
     using global::System.Runtime.CompilerServices;
+    using global::System.Runtime.InteropServices;
     using global::System.Threading;
     using global::System.Threading.Tasks;
     using global::Windows.Foundation;
@@ -25,8 +26,7 @@ namespace System
                     return Task.CompletedTask;
 
                 case AsyncStatus.Error:
-                    // TODO return Task.FromException(ExceptionSupport.AttachRestrictedErrorInfo(source.ErrorCode));
-                    return Task.FromException(new Exception()); // source.ErrorCode.Value
+                    return Task.FromException(Marshal.GetExceptionForHR(source.ErrorCode.Value)); // TODO: Restricted error info
 
                 case AsyncStatus.Canceled:
                     return Task.FromCanceled(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
@@ -64,8 +64,7 @@ namespace System
                     return Task.FromResult(source.GetResults());
 
                 case AsyncStatus.Error:
-                    // TODO: return Task.FromException<TResult>(ExceptionSupport.AttachRestrictedErrorInfo(source.ErrorCode));
-                    return Task.FromException<TResult>(new Exception()); // source.ErrorCode.Value
+                    return Task.FromException<TResult>(Marshal.GetExceptionForHR(source.ErrorCode.Value)); // TODO: Restricted error info
 
                 case AsyncStatus.Canceled:
                     return Task.FromCanceled<TResult>(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
@@ -103,8 +102,7 @@ namespace System
                     return Task.CompletedTask;
 
                 case AsyncStatus.Error:
-                    // TODO: return Task.FromException(ExceptionSupport.AttachRestrictedErrorInfo(source.ErrorCode));
-                    return Task.FromException(new Exception()); // source.ErrorCode.Value
+                    return Task.FromException(Marshal.GetExceptionForHR(source.ErrorCode.Value)); // TODO: Restricted error info
 
                 case AsyncStatus.Canceled:
                     return Task.FromCanceled(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
@@ -163,8 +161,7 @@ namespace System
                     return Task.FromResult(source.GetResults());
 
                 case AsyncStatus.Error:
-                    // TODO return Task.FromException<TResult>(ExceptionSupport.AttachRestrictedErrorInfo(source.ErrorCode));
-                    return Task.FromException<TResult>(new Exception()); // source.ErrorCode.Value
+                    return Task.FromException<TResult>(Marshal.GetExceptionForHR(source.ErrorCode.Value)); // TODO: Restricted error info
 
                 case AsyncStatus.Canceled:
                     return Task.FromCanceled<TResult>(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));

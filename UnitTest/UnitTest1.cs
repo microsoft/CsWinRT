@@ -4,6 +4,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using WinRT;
 
@@ -533,5 +535,61 @@ namespace UnitTest
             }
         }
         */
+
+        async Task InvokeDoitAsync()
+        {
+            await TestObject.DoitAsync();
+        }
+
+        [Fact]
+        public void TestAsyncAction()
+        {
+            var task = InvokeDoitAsync();
+            Assert.False(task.Wait(100));
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+        }
+
+        async Task InvokeDoitAsyncWithProgress(IProgress<int> progress)
+        {
+            await TestObject.DoitAsyncWithProgress().AsTask(progress);
+        }
+
+        [Fact]
+        public void TestAsyncActionWithProgress()
+        {
+            int progress = 0;
+            var evt = new AutoResetEvent(false);
+            var task = InvokeDoitAsyncWithProgress(new Progress<int>((v) =>
+            {
+                progress = v;
+                evt.Set();
+            }));
+
+            for (int i = 1; i <= 10; ++i)
+            {
+                TestObject.AdvanceAsync(10);
+                Assert.True(evt.WaitOne(1000));
+                Assert.Equal(10 * i, progress);
+            }
+
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+        }
+
+        async Task<int> InvokeAddAsync(int lhs, int rhs)
+        {
+            return await TestObject.AddAsync(lhs, rhs);
+        }
+
+        [Fact]
+        public void TestAsyncOperation()
+        {
+            var task = InvokeAddAsync(42, 8);
+            Assert.False(task.Wait(100));
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+            Assert.Equal(50, task.Result);
+        }
     }
 }
