@@ -548,6 +548,13 @@ namespace UnitTest
             Assert.False(task.Wait(100));
             TestObject.CompleteAsync();
             Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+
+            task = InvokeDoitAsync();
+            Assert.False(task.Wait(100));
+            TestObject.CompleteAsync(-2147467259); // E_FAIL
+            Assert.ThrowsAny<Exception>(() => task.Wait(1000));
+            Assert.Equal(TaskStatus.Faulted, task.Status);
         }
 
         async Task InvokeDoitAsyncWithProgress(IProgress<int> progress)
@@ -555,27 +562,27 @@ namespace UnitTest
             await TestObject.DoitAsyncWithProgress().AsTask(progress);
         }
 
-        [Fact]
-        public void TestAsyncActionWithProgress()
-        {
-            int progress = 0;
-            var evt = new AutoResetEvent(false);
-            var task = InvokeDoitAsyncWithProgress(new Progress<int>((v) =>
-            {
-                progress = v;
-                evt.Set();
-            }));
+        // [Fact]
+        // public void TestAsyncActionWithProgress()
+        // {
+        //     int progress = 0;
+        //     var evt = new AutoResetEvent(false);
+        //     var task = InvokeDoitAsyncWithProgress(new Progress<int>((v) =>
+        //     {
+        //         progress = v;
+        //         evt.Set();
+        //     }));
 
-            for (int i = 1; i <= 10; ++i)
-            {
-                TestObject.AdvanceAsync(10);
-                Assert.True(evt.WaitOne(1000));
-                Assert.Equal(10 * i, progress);
-            }
+        //     for (int i = 1; i <= 10; ++i)
+        //     {
+        //         TestObject.AdvanceAsync(10);
+        //         Assert.True(evt.WaitOne(1000));
+        //         Assert.Equal(10 * i, progress);
+        //     }
 
-            TestObject.CompleteAsync();
-            Assert.True(task.Wait(1000));
-        }
+        //     TestObject.CompleteAsync();
+        //     Assert.True(task.Wait(1000));
+        // }
 
         async Task<int> InvokeAddAsync(int lhs, int rhs)
         {
@@ -589,7 +596,14 @@ namespace UnitTest
             Assert.False(task.Wait(100));
             TestObject.CompleteAsync();
             Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
             Assert.Equal(50, task.Result);
+
+            task = InvokeAddAsync(0, 0);
+            Assert.False(task.Wait(100));
+            TestObject.CompleteAsync(-2147467259); // E_FAIL
+            Assert.ThrowsAny<Exception>(() => task.Wait(1000));
+            Assert.Equal(TaskStatus.Faulted, task.Status);
         }
     }
 }
