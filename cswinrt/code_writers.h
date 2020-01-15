@@ -2483,7 +2483,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             type_name,
             bind([&](writer& w)
             {
-                if (is_generic_delegate)
+                if (delegate_has_generic_abi)
                 {
                     w.write(R"(
 var self = typeof(@Helper%);
@@ -2493,6 +2493,16 @@ var func = Marshal.GetFunctionPointerForDelegate(global::System.Delegate.CreateD
                         type.TypeName(),
                         type_params,
                         bind<write_generic_abi_instantiation_types>(signature));
+                }
+                else if (is_generic_delegate)
+                {
+                    w.write(R"(
+var self = typeof(@Helper%);
+var invoke = self.GetMethod(nameof(Do_Abi_Invoke_1), BindingFlags.Static | BindingFlags.NonPublic);
+var func = Marshal.GetFunctionPointerForDelegate(global::System.Delegate.CreateDelegate(Abi_Invoke_Type, invoke));
+)",
+                        type.TypeName(),
+                        type_params);
                 }
                 else
                 {
