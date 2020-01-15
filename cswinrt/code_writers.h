@@ -2409,7 +2409,10 @@ return __hresult;
 
         auto type_name = write_type_name_temp(w, type);
         auto type_params = w.write_temp("%", bind<write_type_params>(type));
-        auto const [generic_abi_types, _] = get_generic_abi_types(w, signature);
+        std::string generic_abi_types;
+        bool is_generic_delegate = distance(type.GenericParam()) > 0;
+        bool delegate_has_generic_abi;
+        std::tie(generic_abi_types, delegate_has_generic_abi) = get_generic_abi_types(w, signature);
 
         w.write("public delegate % %(%);\n",
             bind<write_method_return_type>(signature),
