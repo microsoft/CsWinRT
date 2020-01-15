@@ -207,7 +207,6 @@ namespace UnitTest
             Assert.Equal(2u, strings.Size);
         }
 
-        /* TODO: Events are currently broken for value types
         [Fact]
         public void TestPrimitives()
         {
@@ -237,7 +236,6 @@ namespace UnitTest
             TestObject.RaiseBoolChanged();
             Assert.Equal(3, hits);
         }
-        */
 
         [Fact]
         public void TestStrings()

@@ -53,6 +53,13 @@ namespace cswinrt
         return type_mappings[(int)type].dotnet;
     }
 
+    static std::string get_vmethod_name(writer& w, TypeDef const& type, MethodDef const& method)
+    {
+        uint32_t const vtable_base = type.MethodList().first.index();
+        uint32_t const vtable_index = method.index() - vtable_base;
+        return w.write_temp("%_%", method.Name(), vtable_index);
+    }
+
     bool is_type_blittable(type_semantics const& semantics)
     {
         return call(semantics,
@@ -516,58 +523,6 @@ namespace cswinrt
         }
     }
 
-    std::string_view const OwnerMemberName = "_WinRT_Owner";
-
-    void write_event_param_marshaler(writer& w, method_signature::param_t const& param)
-    {
-        std::function<void(type_semantics const&)> write_type = [&](type_semantics const& semantics) {
-        call(semantics,
-            [&](object_type)
-            {
-                w.write("(IntPtr value) => (obj.ThisPtr == value && % is IInspectable) ? (IInspectable)% : IInspectable.FromAbi(value)", OwnerMemberName, OwnerMemberName);
-            },
-            [&](type_definition const& type)
-            {
-                w.write(R"((IntPtr value) => (obj.ThisPtr == value && % is %) ? (%)% : %)",
-                    OwnerMemberName,
-                    bind<write_projection_type>(semantics),
-                    bind<write_projection_type>(semantics),
-                    OwnerMemberName,
-                    bind<write_object_marshal_from_abi>(semantics, type, "value"sv, true));
-            },
-            [&](generic_type_index const& var)
-            {
-                write_type(w.get_generic_arg(var.index));
-            },
-            [&](generic_type_instance const& type)
-            {
-                auto guard{ w.push_generic_args(type) };
-                w.write(R"((IntPtr value) => (obj.ThisPtr == value && % is %) ? (%)% : %)",
-                    OwnerMemberName,
-                    bind<write_projection_type>(semantics),
-                    bind<write_projection_type>(semantics),
-                    OwnerMemberName,
-                    bind<write_object_marshal_from_abi>(semantics, type.generic_type, "value"sv, true));
-            },
-            [&](fundamental_type type)
-            {
-                w.write(R"((IntPtr value) => %)",
-                    bind<write_fundamental_marshal_from_abi>(type, "value"sv, true));
-            },
-            [](auto) {});
-        };
-        write_type(get_type_semantics(param.second->Type()));
-    }
-
-    void write_event_param_marshalers(writer& w, row_base<Event>::value_type const& evt)
-    {
-        auto write_params = [&](writer& w, method_signature const& invoke_sig)
-        {
-            w.write(",\n    %", bind_list<write_event_param_marshaler>(",\n    ", invoke_sig.params()));
-        };
-        write_event_params(w, evt, write_params);
-    }
-
     void write_class_modifiers(writer& w, TypeDef const& type)
     {
         if (is_static(type))
@@ -736,7 +691,7 @@ set => %.% = value;
         std::string_view access_spec = ""sv, std::string_view method_spec = ""sv)
     {
         w.write(R"(
-%%event WinRT.EventHandler% %
+%%event % %
 {
 add => %.% += value;
 remove => %.% -= value;
@@ -744,7 +699,7 @@ remove => %.% -= value;
 )",
             access_spec,
             method_spec,
-            bind<write_event_param_types>(event),
+            bind<write_type_name>(get_type_semantics(event.EventType()), false, false),
             external_event_name,
             event_target,
             event.Name(),
@@ -1128,16 +1083,13 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
             w.write(R"(
 
 _% =
-    new EventSource%(_obj,
-    _obj.Vftbl.add_%_%,
-    _obj.Vftbl.remove_%_%%);)",
+    new EventSource<%>(_obj,
+    _obj.Vftbl.%,
+    _obj.Vftbl.%);)",
                 evt.Name(),
-                bind<write_event_param_types>(evt),
-                evt.Name(),
-                add.index() - vtable_base,
-                evt.Name(),
-                remove.index() - vtable_base,
-                bind<write_event_param_marshalers>(evt));
+                bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
+                get_vmethod_name(w, type, add),
+                get_vmethod_name(w, type, remove));
         }
     }
 
@@ -1146,8 +1098,8 @@ _% =
         for (auto&& evt : type.EventList())
         {
             w.write(R"(
-private EventSource% _%;)",
-                bind<write_event_param_types>(evt),
+private EventSource<%> _%;)",
+                bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
                 evt.Name());
         }
     }
@@ -1389,13 +1341,6 @@ private EventSource% _%;)",
         }
     }
 
-    static std::string get_vmethod_name(writer& w, TypeDef const& type, MethodDef const& method)
-    {
-        uint32_t const vtable_base = type.MethodList().first.index();
-        uint32_t const vtable_index = method.index() - vtable_base;
-        return w.write_temp("%_%", method.Name(), vtable_index);
-    }
-
     std::pair<std::string, bool> find_property_interface(writer& w, TypeDef const& setter_iface, std::string_view prop_name)
     {
         std::string getter_iface;
@@ -1487,8 +1432,8 @@ private EventSource% _%;)",
         for (auto&& evt : type.EventList())
         {
             w.write(R"(
-event WinRT.EventHandler% %;)",
-                bind<write_event_param_types>(evt),
+event % %;)",
+                bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
                 evt.Name());
         }
     }
@@ -1687,13 +1632,13 @@ Marshal.ThrowExceptionForHR(_obj.Vftbl.%(ThisPtr, %));
         {
             auto semantics = get_type_semantics(evt.EventType());
             w.write(R"(
-public event WinRT.EventHandler% %
+public event % %
 {
-add => _%.Event += value;
-remove => _%.Event -= value;
+add => _%.Subscribe(value);
+remove => _%.Unsubscribe(value);
 }
 )",
-                bind<write_event_param_types>(evt),
+                bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
                 evt.Name(),
                 evt.Name(),
                 evt.Name());
@@ -2042,7 +1987,6 @@ public @(ObjectReference<Vftbl> obj)
 _obj = obj;%
 }
 
-public object % { get; set; }
 %%%}
 )",
             // Interface abi implementation
@@ -2077,7 +2021,6 @@ public static Guid PIID = Vftbl.PIID;
             type.TypeName(),
             type.TypeName(),
             bind<write_event_source_ctors>(type),
-            OwnerMemberName,
             bind<write_interface_members>(type, generic_methods),
             bind<write_event_sources>(type),
             bind<write_required_interface_members_for_abi_type>(type, written_required_interfaces)
@@ -2122,7 +2065,6 @@ public static %% FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new
 internal %(% ifc)%
 {
 _default = ifc;
-_default.% = this;
 }
 
 private struct InterfaceTag<I>{};
@@ -2145,7 +2087,6 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             type_name,
             default_interface_abi_name,
             bind<write_base_constructor_dispatch>(base_semantics),
-            OwnerMemberName,
             default_interface_name,
             default_interface_name,
             bind<write_class_members>(type));
