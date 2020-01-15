@@ -685,7 +685,7 @@ namespace WinRT
         int _refs = 1;
         public readonly IntPtr ThisPtr;
 
-        protected static Delegate FindObject(IntPtr thisPtr)
+        public static Delegate FindObject(IntPtr thisPtr)
         {
             UnmanagedObject unmanagedObject = Marshal.PtrToStructure<UnmanagedObject>(thisPtr);
             GCHandle thisHandle = GCHandle.FromIntPtr(unmanagedObject._gchandlePtr);
@@ -728,7 +728,8 @@ namespace WinRT
             return (uint)System.Threading.Interlocked.Increment(ref _refs);
         }
 
-        uint Release()
+        // Release is public to enable users of this instance to release the managed reference.
+        public uint Release()
         {
             if (_refs == 0)
             {
@@ -782,36 +783,6 @@ namespace WinRT
         readonly GCHandle _thisHandle;
         readonly WeakReference _weakInvoker = new WeakReference(null);
         readonly UnmanagedObject _unmanagedObj;
-
-        public class InitialReference : IDisposable
-        {
-            Delegate _delegate;
-            public IntPtr DelegatePtr => _delegate.ThisPtr;
-            public InitialReference(IntPtr invoke, object invoker)
-            {
-                _delegate = new Delegate(invoke, invoker);
-                _delegate.AddRef();
-            }
-
-            ~InitialReference()
-            {
-                Dispose();
-            }
-
-            public void Dispose()
-            {
-                if (_delegate != null)
-                {
-                    _delegate.Release();
-                    _delegate = null;
-                }
-                GC.SuppressFinalize(this);
-            }
-        }
-
-        public Delegate(MulticastDelegate abiInvoke, MulticastDelegate managedDelegate) :
-            this(Marshal.GetFunctionPointerForDelegate(abiInvoke), managedDelegate)
-        { }
 
         public Delegate(IntPtr invoke_method, object target_invoker)
         {
@@ -882,8 +853,17 @@ namespace WinRT
                 {
                     Type helperType = typeof(TDelegate).GetHelperType();
                     IntPtr nativeDelegate = (IntPtr)helperType.GetMethod("ToAbi").Invoke(null, new object[] { EventInvoke });
-                    Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out EventRegistrationToken token));
-                    _token = token;
+                    try
+                    {
+                        Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out EventRegistrationToken token));
+                        _token = token;
+                    }
+                    finally
+                    {
+                        // Dispose our managed reference to the delegate's CCW.
+                        // The either native event holds a reference now or the _addHandler call failed.
+                        Delegate.FindObject(nativeDelegate).Release();
+                    }
                 }
                 _event = (TDelegate)global::System.Delegate.Combine(_event, del);
             }
