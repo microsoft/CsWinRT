@@ -387,9 +387,9 @@ namespace WinRT
         private HStringHeader _header;
         private GCHandle _gchandle;
 
-        public HStringReference(String value)
+        public HStringReference(string value)
         {
-            _gchandle = GCHandle.Alloc(value);
+            _gchandle = GCHandle.Alloc(value, GCHandleType.Pinned);
             unsafe
             {
                 fixed (void* chars = value, pHeader = &_header, pHandle = &Handle)
