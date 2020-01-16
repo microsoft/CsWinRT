@@ -110,7 +110,7 @@ namespace System
 
             if (progress != null)
             {
-                ConcatenateProgress(source, progress);
+                SetProgress(source, progress);
             }
 
             var bridge = new AsyncInfoToTaskBridge<VoidValueTypeParameter, TProgress>(cancellationToken);
@@ -119,7 +119,7 @@ namespace System
             return bridge.Task;
         }
 
-        private static void ConcatenateProgress<TProgress>(IAsyncActionWithProgress<TProgress> source, IProgress<TProgress> sink)
+        private static void SetProgress<TProgress>(IAsyncActionWithProgress<TProgress> source, IProgress<TProgress> sink)
         {
             // This is separated out into a separate method so that we only pay the costs of compiler-generated closure if progress is non-null.
             source.Progress = new AsyncActionProgressHandler<TProgress>((_, info) => sink.Report(info));
@@ -169,7 +169,7 @@ namespace System
 
             if (progress != null)
             {
-                ConcatenateProgress(source, progress);
+                SetProgress(source, progress);
             }
 
             var bridge = new AsyncInfoToTaskBridge<TResult, TProgress>(cancellationToken);
@@ -178,7 +178,7 @@ namespace System
             return bridge.Task;
         }
 
-        private static void ConcatenateProgress<TResult, TProgress>(IAsyncOperationWithProgress<TResult, TProgress> source, IProgress<TProgress> sink)
+        private static void SetProgress<TResult, TProgress>(IAsyncOperationWithProgress<TResult, TProgress> source, IProgress<TProgress> sink)
         {
             // This is separated out into a separate method so that we only pay the costs of compiler-generated closure if progress is non-null.
             source.Progress = new AsyncOperationProgressHandler<TResult, TProgress>((_, info) => sink.Report(info));
@@ -209,7 +209,6 @@ namespace System
     // Marker type since generic parameters cannot be 'void'
     struct VoidValueTypeParameter { }
 
-    // TODO: System.Threading.Tasks namespace? Does it matter? Was internal
     sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletionSource<TResult>
     {
         private readonly CancellationToken _ct;
