@@ -14,6 +14,7 @@ using System.Linq.Expressions;
 
 namespace WinRT
 {
+    using System.Diagnostics;
     using WinRT.Interop;
 
     public enum TrustLevel
@@ -22,11 +23,6 @@ namespace WinRT
         PartialTrust = BaseTrust + 1,
         FullTrust = PartialTrust + 1
     };
-
-    public delegate void EventHandler();
-    public delegate void EventHandler<A1>(A1 arg1);
-    public delegate void EventHandler<A1, A2>(A1 arg1, A2 arg2);
-    public delegate void EventHandler<A1, A2, A3>(A1 arg1, A2 arg2, A3 arg3);
 
     namespace Interop
     {
@@ -694,10 +690,10 @@ namespace WinRT
 
     public class Delegate
     {
-        int _refs = 0;
+        int _refs = 1;
         public readonly IntPtr ThisPtr;
 
-        protected static Delegate FindObject(IntPtr thisPtr)
+        public static Delegate FindObject(IntPtr thisPtr)
         {
             UnmanagedObject unmanagedObject = Marshal.PtrToStructure<UnmanagedObject>(thisPtr);
             GCHandle thisHandle = GCHandle.FromIntPtr(unmanagedObject._gchandlePtr);
@@ -740,7 +736,8 @@ namespace WinRT
             return (uint)System.Threading.Interlocked.Increment(ref _refs);
         }
 
-        uint Release()
+        // Release is public to enable users of this instance to release the managed reference.
+        public uint Release()
         {
             if (_refs == 0)
             {
@@ -795,36 +792,6 @@ namespace WinRT
         readonly WeakReference _weakInvoker = new WeakReference(null);
         readonly UnmanagedObject _unmanagedObj;
 
-        public class InitialReference : IDisposable
-        {
-            Delegate _delegate;
-            public IntPtr DelegatePtr => _delegate.ThisPtr;
-            public InitialReference(IntPtr invoke, object invoker)
-            {
-                _delegate = new Delegate(invoke, invoker);
-                _delegate.AddRef();
-            }
-
-            ~InitialReference()
-            {
-                Dispose();
-            }
-
-            public void Dispose()
-            {
-                if (_delegate != null)
-                {
-                    _delegate.Release();
-                    _delegate = null;
-                }
-                GC.SuppressFinalize(this);
-            }
-        }
-
-        public Delegate(MulticastDelegate abiInvoke, MulticastDelegate managedDelegate) :
-            this(Marshal.GetFunctionPointerForDelegate(abiInvoke), managedDelegate)
-        { }
-
         public Delegate(IntPtr invoke_method, object target_invoker)
         {
             var module = WinrtModule.Instance; // Ensure COM is initialized
@@ -876,42 +843,81 @@ namespace WinRT
         }
     }
 
-    internal class EventSource
+    internal class EventSource<TDelegate>
+        where TDelegate : class, MulticastDelegate
     {
-        delegate void Managed_Invoke();
-        delegate int Abi_Invoke0([In] IntPtr thisPtr);
-        static Abi_Invoke0 Abi_Invoke = (IntPtr thisPtr) =>
-            Delegate.MarshalInvoke(thisPtr, (Managed_Invoke managed_invoke) => managed_invoke());
-
         readonly IObjectReference _obj;
         readonly _add_EventHandler _addHandler;
         readonly _remove_EventHandler _removeHandler;
 
         private EventRegistrationToken _token;
-        private event EventHandler _event;
-        public event EventHandler Event
+        private TDelegate _event;
+
+        public void Subscribe(TDelegate del)
         {
-            add
+            lock (this)
             {
-                lock (this)
-                {
-                    if (_event == null)
-                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(Abi_Invoke), new Managed_Invoke(Invoke)))
-                        {
-                            EventRegistrationToken token;
-                            unsafe { Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, reference.DelegatePtr, out token)); }
-                            _token = token;
-                        }
-                    _event += value;
-                }
-            }
-            remove
-            {
-                _event -= value;
                 if (_event == null)
                 {
-                    _Unsubscribe();
+                    Type helperType = typeof(TDelegate).GetHelperType();
+                    IntPtr nativeDelegate = (IntPtr)helperType.GetMethod("ToAbi").Invoke(null, new object[] { EventInvoke });
+                    try
+                    {
+                        Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out EventRegistrationToken token));
+                        _token = token;
+                    }
+                    finally
+                    {
+                        // Dispose our managed reference to the delegate's CCW.
+                        // The either native event holds a reference now or the _addHandler call failed.
+                        Delegate.FindObject(nativeDelegate).Release();
+                    }
                 }
+                _event = (TDelegate)global::System.Delegate.Combine(_event, del);
+            }
+        }
+
+        public void Unsubscribe(TDelegate del)
+        {
+            lock (this)
+            {
+                _event = (TDelegate)global::System.Delegate.Remove(_event, del);
+            }
+            if (_event == null)
+            {
+                _UnsubscribeFromNative();
+            }
+        }
+
+        private System.Delegate _eventInvoke;
+        private System.Delegate EventInvoke
+        {
+            get
+            {
+                if (_eventInvoke is object)
+                {
+                    return _eventInvoke;
+                }
+
+                MethodInfo invoke = typeof(TDelegate).GetMethod("Invoke");
+                ParameterInfo[] invokeParameters = invoke.GetParameters();
+                ParameterExpression[] parameters = new ParameterExpression[invokeParameters.Length];
+                for (int i = 0; i < invokeParameters.Length; i++)
+                {
+                    parameters[i] = Expression.Parameter(invokeParameters[i].ParameterType, invokeParameters[i].Name);
+                }
+
+                ParameterExpression delegateLocal = Expression.Parameter(typeof(TDelegate), "event");
+
+                _eventInvoke = Expression.Lambda(typeof(TDelegate),
+                    Expression.Block(
+                        new [] { delegateLocal },
+                        Expression.Assign(delegateLocal, Expression.Field(Expression.Constant(this), typeof(EventSource<TDelegate>).GetField(nameof(_event), BindingFlags.Instance | BindingFlags.NonPublic))),
+                        Expression.IfThen(
+                            Expression.ReferenceNotEqual(delegateLocal, Expression.Constant(null, typeof(TDelegate))), Expression.Call(delegateLocal, invoke, parameters))),
+                    parameters).Compile();
+
+                return _eventInvoke;
             }
         }
 
@@ -924,225 +930,10 @@ namespace WinRT
 
         ~EventSource()
         {
-            _Unsubscribe();
+            _UnsubscribeFromNative();
         }
 
-        void Invoke()
-        {
-            _event?.Invoke();
-        }
-
-        void _Unsubscribe()
-        {
-            Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
-            _token.Value = 0;
-        }
-    }
-
-    delegate int Abi_Invoke1([In] IntPtr thisPtr, [In] IntPtr arg1);
-    internal class EventSource<A1>
-    {
-        delegate void Managed_Invoke(IntPtr arg1Ptr);
-        static Abi_Invoke1 Abi_Invoke = (IntPtr thisPtr, IntPtr arg1Ptr) =>
-            Delegate.MarshalInvoke(thisPtr, (Managed_Invoke managed_invoke) => managed_invoke(arg1Ptr));
-
-        internal delegate A1 UnmarshalArg1(IntPtr arg1Ptr);
-
-        readonly IObjectReference _obj;
-        readonly _add_EventHandler _addHandler;
-        readonly _remove_EventHandler _removeHandler;
-        readonly UnmarshalArg1 _unmarshalArg1;
-
-        private EventRegistrationToken _token;
-        private event EventHandler<A1> _event;
-        public event EventHandler<A1> Event
-        {
-            add
-            {
-                lock (this)
-                {
-                    if (_event == null)
-                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(Abi_Invoke), new Managed_Invoke(Invoke)))
-                        {
-                            EventRegistrationToken token;
-                            unsafe { Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, reference.DelegatePtr, out token)); }
-                            _token = token;
-                        }
-                    _event += value;
-                }
-            }
-            remove
-            {
-                _event -= value;
-                if (_event == null)
-                {
-                    _Unsubscribe();
-                }
-            }
-        }
-
-        internal EventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler, UnmarshalArg1 unmarshalArg1)
-        {
-            _obj = obj;
-            _addHandler = addHandler;
-            _removeHandler = removeHandler;
-            _unmarshalArg1 = unmarshalArg1;
-        }
-
-        ~EventSource()
-        {
-            _Unsubscribe();
-        }
-
-        void Invoke(IntPtr arg1Ptr)
-        {
-            _event?.Invoke(_unmarshalArg1(arg1Ptr));
-        }
-
-        void _Unsubscribe()
-        {
-            Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
-            _token.Value = 0;
-        }
-    }
-
-    delegate int Abi_Invoke2([In] IntPtr thisPtr, [In] IntPtr arg1, [In] IntPtr arg2);
-    internal class EventSource<A1, A2>
-    {
-        delegate void Managed_Invoke(IntPtr arg1Ptr, IntPtr arg2Ptr);
-        static Abi_Invoke2 Abi_Invoke = (IntPtr thisPtr, IntPtr arg1Ptr, IntPtr arg2Ptr) =>
-            Delegate.MarshalInvoke(thisPtr, (Managed_Invoke managed_invoke) => managed_invoke(arg1Ptr, arg2Ptr));
-
-        internal delegate A1 UnmarshalArg1(IntPtr arg1Ptr);
-        internal delegate A2 UnmarshalArg2(IntPtr arg2Ptr);
-
-        readonly IObjectReference _obj;
-        readonly _add_EventHandler _addHandler;
-        readonly _remove_EventHandler _removeHandler;
-        readonly UnmarshalArg1 _unmarshalArg1;
-        readonly UnmarshalArg2 _unmarshalArg2;
-
-        private EventRegistrationToken _token;
-        private event EventHandler<A1, A2> _event;
-        public event EventHandler<A1, A2> Event
-        {
-            add
-            {
-                lock (this)
-                {
-                    if (_event == null)
-                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(Abi_Invoke), new Managed_Invoke(Invoke)))
-                        {
-                            EventRegistrationToken token;
-                            unsafe { Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, reference.DelegatePtr, out token)); }
-                            _token = token;
-                        }
-                    _event += value;
-                }
-            }
-            remove
-            {
-                _event -= value;
-                if (_event == null)
-                {
-                    _Unsubscribe();
-                }
-            }
-        }
-
-        internal EventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler, UnmarshalArg1 unmarshalArg1, UnmarshalArg2 unmarshalArg2)
-        {
-            _obj = obj;
-            _addHandler = addHandler;
-            _removeHandler = removeHandler;
-            _unmarshalArg1 = unmarshalArg1;
-            _unmarshalArg2 = unmarshalArg2;
-        }
-
-        ~EventSource()
-        {
-            _Unsubscribe();
-        }
-
-        void Invoke(IntPtr arg1Ptr, IntPtr arg2Ptr)
-        {
-            _event?.Invoke(_unmarshalArg1(arg1Ptr), _unmarshalArg2(arg2Ptr));
-        }
-
-        void _Unsubscribe()
-        {
-            Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
-            _token.Value = 0;
-        }
-    }
-
-    delegate int Abi_Invoke3([In] IntPtr thisPtr, [In] IntPtr arg1, [In] IntPtr arg2, [In] IntPtr arg3);
-    internal class EventSource<A1, A2, A3>
-    {
-        delegate void Managed_Invoke(IntPtr arg1Ptr, IntPtr arg2Ptr, IntPtr arg3Ptr);
-        static Abi_Invoke3 Abi_Invoke = (IntPtr thisPtr, IntPtr arg1Ptr, IntPtr arg2Ptr, IntPtr arg3Ptr) =>
-            Delegate.MarshalInvoke(thisPtr, (Managed_Invoke managed_invoke) => managed_invoke(arg1Ptr, arg2Ptr, arg3Ptr));
-
-        internal delegate A1 UnmarshalArg1(IntPtr arg1Ptr);
-        internal delegate A2 UnmarshalArg2(IntPtr arg2Ptr);
-        internal delegate A3 UnmarshalArg3(IntPtr arg3Ptr);
-
-        readonly IObjectReference _obj;
-        readonly _add_EventHandler _addHandler;
-        readonly _remove_EventHandler _removeHandler;
-        readonly UnmarshalArg1 _unmarshalArg1;
-        readonly UnmarshalArg2 _unmarshalArg2;
-        readonly UnmarshalArg3 _unmarshalArg3;
-
-        private EventRegistrationToken _token;
-        private event EventHandler<A1, A2, A3> _event;
-        public event EventHandler<A1, A2, A3> Event
-        {
-            add
-            {
-                lock (this)
-                {
-                    if (_event == null)
-                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(Abi_Invoke), new Managed_Invoke(Invoke)))
-                        {
-                            EventRegistrationToken token;
-                            unsafe { Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, reference.DelegatePtr, out token)); }
-                            _token = token;
-                        }
-                    _event += value;
-                }
-            }
-            remove
-            {
-                _event -= value;
-                if (_event == null)
-                {
-                    _Unsubscribe();
-                }
-            }
-        }
-
-        internal EventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler, UnmarshalArg1 unmarshalArg1, UnmarshalArg2 unmarshalArg2, UnmarshalArg3 unmarshalArg3)
-        {
-            _obj = obj;
-            _addHandler = addHandler;
-            _removeHandler = removeHandler;
-            _unmarshalArg1 = unmarshalArg1;
-            _unmarshalArg2 = unmarshalArg2;
-            _unmarshalArg3 = unmarshalArg3;
-        }
-
-        ~EventSource()
-        {
-            _Unsubscribe();
-        }
-
-        void Invoke(IntPtr arg1Ptr, IntPtr arg2Ptr, IntPtr arg3Ptr)
-        {
-            _event?.Invoke(_unmarshalArg1(arg1Ptr), _unmarshalArg2(arg2Ptr), _unmarshalArg3(arg2Ptr));
-        }
-
-        void _Unsubscribe()
+        void _UnsubscribeFromNative()
         {
             Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
             _token.Value = 0;
@@ -1154,6 +945,21 @@ namespace WinRT
         public static bool IsDelegate(this Type type)
         {
             return typeof(MulticastDelegate).IsAssignableFrom(type.BaseType);
+        }
+
+        public static Type GetHelperType(this Type type)
+        {
+            var type_name = type.FullName;
+            if (type.IsGenericType)
+            {
+                var backtick = type_name.IndexOf('`');
+                type_name = type_name.Substring(0, backtick) + "Helper`" + type_name.Substring(backtick + 1);
+            }
+            else
+            {
+                type_name += "Helper";
+            }
+            return Type.GetType(type_name);
         }
     }
 
@@ -1334,17 +1140,7 @@ namespace WinRT
         {
             if (type.IsDelegate())
             {
-                var type_name = type.FullName;
-                if (type.IsGenericType)
-                {
-                    var backtick = type_name.IndexOf('`');
-                    type_name = type_name.Substring(0, backtick) + "Helper`" + type_name.Substring(backtick + 1);
-                }
-                else
-                {
-                    type_name += "Helper";
-                }
-                return Type.GetType(type_name);
+                return type.GetHelperType();
             }
             return type;
         }
