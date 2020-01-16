@@ -1149,9 +1149,11 @@ private EventSource<%> _%;)",
                 {
                     write_object_marshal_from_abi(w, semantics, type, name);
                 },
-                [&](generic_type_index const& /*var*/)
+                [&](generic_type_index const& var)
                 {
-                    w.write("%", name);
+                    write_generic_type_marshal_from_abi(w,
+                        w.write_temp("%", bind<write_generic_type_name>(var.index)),
+                        name);
                 },
                 [&](generic_type_instance const& type)
                 {
@@ -2431,7 +2433,6 @@ var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(thisPtr);
 % managedDelegate =
 (%) =>
 {
-var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(abiDelegate.Vftbl.Invoke);
 %
 };
 return managedDelegate;
@@ -2478,7 +2479,25 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             type_name,
             type_name,
             bind_list<write_projection_method_parameter>(", ", signature.params()),
-            bind<write_delegate_managed_invoke>(signature),
+            bind([&](writer& w)
+            {
+                if (is_generic_delegate)
+                {
+                    w.write(R"(
+var abiInvoke = Marshal.GetDelegateForFunctionPointer(abiDelegate.Vftbl.Invoke, Abi_Invoke_Type);
+%
+)",
+                        bind<write_dynamic_invoke>("abiInvoke", "thisPtr", signature));
+                }
+                else
+                {
+                    w.write(R"(
+var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(abiDelegate.Vftbl.Invoke);
+%
+)",
+                        bind<write_delegate_managed_invoke>(signature));
+                    }
+                }),
             // ToAbi
             type_name,
             bind([&](writer& w)
