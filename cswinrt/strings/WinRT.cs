@@ -127,9 +127,13 @@ namespace WinRT
             public _GetTrustLevel GetTrustLevel;
         }
 
+        // Factor IInspectable as 'object' projection, and move out to ABI.WinRT.IInspectable:
+        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        public static void DisposeAbi(IntPtr thisPtr) => ObjectReference<IInspectable>.Attach(ref thisPtr);
+        public static IntPtr FromManaged(IInspectable value) => value._obj.GetRef();
+
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
         public static implicit operator IInspectable(IObjectReference obj) => obj.As<Vftbl>();
         public static implicit operator IInspectable(ObjectReference<Vftbl> obj) => new IInspectable(obj);
         public ObjectReference<I> As<I>() => _obj.As<I>();
@@ -387,6 +391,12 @@ namespace WinRT
         {
         }
 
+        public IntPtr GetRef()
+        {
+            _vftblIUnknown.AddRef(ThisPtr);
+            return ThisPtr;
+        }
+
         public static ObjectReference<T> FromAbi(IntPtr thisPtr, IUnknownVftbl vftblIUnknown, T vftblT)
         {
             if (thisPtr == IntPtr.Zero)
@@ -481,8 +491,8 @@ namespace WinRT
         public unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
             IntPtr instancePtr;
-            IntPtr hstringRuntimeClassId = MarshalString.CreateCache(runtimeClassId);
-            int hr = _GetActivationFactory(MarshalString.GetAbi(hstringRuntimeClassId), out instancePtr);
+            var hstrRuntimeClassId = MarshalString.Create(runtimeClassId);
+            int hr = _GetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), out instancePtr);
             return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
         }
 
@@ -539,8 +549,8 @@ namespace WinRT
             var module = Instance; // Ensure COM is initialized
             Guid iid = typeof(IActivationFactoryVftbl).GUID;
             IntPtr instancePtr;
-            var runtimeClassIdHString = MarshalString.CreateCache();
-            int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(runtimeClassIdHString), ref iid, &instancePtr);
+            var hstrRuntimeClassId = MarshalString.Create(runtimeClassId);
+            int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), ref iid, &instancePtr);
             return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
         }
 
@@ -556,30 +566,29 @@ namespace WinRT
 
         public BaseActivationFactory(string typeNamespace, string typeFullName)
         {
-            using (var runtimeClassId = typeFullName.Replace("WinRT", "Windows"))
+            var runtimeClassId = typeFullName.Replace("WinRT", "Windows");
+
+            // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
+            int hr;
+            (_IActivationFactory, hr) = WinrtModule.GetActivationFactory(runtimeClassId);
+            if (_IActivationFactory != null) { return; }
+
+            var moduleName = typeNamespace;
+            while (true)
             {
-                // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
-                int hr;
-                (_IActivationFactory, hr) = WinrtModule.GetActivationFactory(runtimeClassId);
-                if (_IActivationFactory != null) { return; }
-
-                var moduleName = typeNamespace;
-                while (true)
+                try
                 {
-                    try
-                    {
-                        (_IActivationFactory, _) = DllModule.Load(moduleName + ".dll").GetActivationFactory(runtimeClassId);
-                        if (_IActivationFactory != null) { return; }
-                    }
-                    catch (Exception) { }
-
-                    var lastSegment = moduleName.LastIndexOf(".");
-                    if (lastSegment <= 0)
-                    {
-                        Marshal.ThrowExceptionForHR(hr);
-                    }
-                    moduleName = moduleName.Remove(lastSegment);
+                    (_IActivationFactory, _) = DllModule.Load(moduleName + ".dll").GetActivationFactory(runtimeClassId);
+                    if (_IActivationFactory != null) { return; }
                 }
+                catch (Exception) { }
+
+                var lastSegment = moduleName.LastIndexOf(".");
+                if (lastSegment <= 0)
+                {
+                    Marshal.ThrowExceptionForHR(hr);
+                }
+                moduleName = moduleName.Remove(lastSegment);
             }
         }
 

@@ -27,7 +27,8 @@ namespace WinRT
 
     // TODO: optimization - MarshalString struct, boxed for nested marshalings
     // to avoid heap allocations for top-level hstrings
-    /*struct*/class MarshalString
+    /*struct*/
+    class MarshalString
     {
         public unsafe struct HStringHeader // sizeof(HSTRING_HEADER)
         {
@@ -64,12 +65,12 @@ namespace WinRT
         }
 
         public static IntPtr GetAbi(MarshalString m) => m._handle;
-        
+
         public static IntPtr GetAbi(object box) => ((MarshalString)box)._handle;
 
         public static void DisposeMarshaler(MarshalString m) => m.Dispose();
         // no need to delete hstring reference
-        
+
         public static void DisposeMarshaler(object box)
         {
             if (box != null)
@@ -97,7 +98,15 @@ namespace WinRT
             }
         }
 
-        public struct Array
+        public static unsafe IntPtr FromManaged(string value)
+        {
+            IntPtr handle;
+            Marshal.ThrowExceptionForHR(
+                Platform.WindowsCreateString(value, value.Length, &handle));
+            return handle;
+        }
+
+        public struct MarshalerArray
         {
             public bool Dispose()
             {
@@ -113,9 +122,9 @@ namespace WinRT
             public MarshalString[] _abi_strings;
         }
 
-        public static Array CreateArray(string[] array)
+        public static MarshalerArray CreateArray(string[] array)
         {
-            var m = new Array();
+            var m = new MarshalerArray();
             try
             {
                 var length = array.Length;
@@ -135,16 +144,16 @@ namespace WinRT
                 return default;
             }
         }
-        
-        public static (IntPtr data, int length) GetAbiArray(object box)
+
+        public static (int length, IntPtr data) GetAbiArray(object box)
         {
-            var m = (Array)box;
-            return (m._gchandle.AddrOfPinnedObject(), ((Array)m._gchandle.Target).Length);
+            var m = (MarshalerArray)box;
+            return (((Array)m._gchandle.Target).Length, m._gchandle.AddrOfPinnedObject());
         }
 
         public static unsafe string[] FromAbiArray(object box)
         {
-            var abi = ((IntPtr data, int length))box;
+            var abi = ((int length, IntPtr data))box;
             string[] array = new string[abi.length];
             var data = (IntPtr*)abi.data.ToPointer();
             for (int i = 0; i < abi.length; i++)
@@ -154,37 +163,37 @@ namespace WinRT
             return array;
         }
 
-        public static void DisposeMarshalerArray(object box) => ((Array)box).Dispose();
-        
+        public static void DisposeMarshalerArray(object box) => ((MarshalerArray)box).Dispose();
+
         public static void DisposeAbiArray(object box)
         {
-            var abi = ((IntPtr data, int length))box;
+            var abi = ((int length, IntPtr data))box;
             Marshal.FreeCoTaskMem(abi.data);
         }
     }
 
-    struct MarshalBlittable
+    struct MarshalBlittable<T>
     {
-        public struct Array
+        public struct MarshalerArray
         {
-            public Array(System.Array array) => _gchandle = GCHandle.Alloc(array, GCHandleType.Pinned);
+            public MarshalerArray(Array array) => _gchandle = GCHandle.Alloc(array, GCHandleType.Pinned);
             public void Dispose() => _gchandle.Dispose();
 
             public GCHandle _gchandle;
         };
 
-        public static Array CreateArray(System.Array array) => new Array(array);
-        
-        public static (IntPtr data, int length) GetAbiArray(object box)
+        public static MarshalerArray CreateArray(Array array) => new MarshalerArray(array);
+
+        public static (int length, IntPtr data) GetAbiArray(object box)
         {
-            var m = (Array)box;
-            return (m._gchandle.AddrOfPinnedObject(), ((System.Array)m._gchandle.Target).Length);
+            var m = (MarshalerArray)box;
+            return (((Array)m._gchandle.Target).Length, m._gchandle.AddrOfPinnedObject());
         }
-        
-        public static unsafe T[] FromAbiArray<T>(object box)
+
+        public static unsafe T[] FromAbiArray(object box)
         {
-            var abi = ((IntPtr data, int length))box;
-            System.Array array = System.Array.CreateInstance(typeof(T), abi.length);
+            var abi = ((int length, IntPtr data))box;
+            Array array = Array.CreateInstance(typeof(T), abi.length);
             var array_handle = GCHandle.Alloc(array, GCHandleType.Pinned);
             var array_data = array_handle.AddrOfPinnedObject();
             var byte_length = abi.length * Marshal.SizeOf<T>();
@@ -192,18 +201,29 @@ namespace WinRT
             return (T[])array;
         }
 
-        public static void DisposeMarshalerArray(object box) => ((Array)box).Dispose();
+        public static void DisposeMarshalerArray(object box) => ((MarshalerArray)box).Dispose();
 
         public static void DisposeAbiArray(object box)
         {
-            var abi = ((IntPtr data, int length))box;
+            var abi = ((int length, IntPtr data))box;
             Marshal.FreeCoTaskMem(abi.data);
         }
     }
 
     struct MarshalNonBlittable<T>
     {
-        public struct Array
+        private static Type AbiType;
+
+        static MarshalNonBlittable()
+        {
+            AbiType = Type.GetType($"{typeof(T).Namespace}.ABI.{typeof(T).FullName}");
+            Create = BindCreate();
+            GetAbi = BindGetAbi();
+            FromAbi = BindFromAbi();
+            DisposeMarshaler = BindDisposeMarshaler();
+        }
+
+        public struct MarshalerArray
         {
             public bool Dispose()
             {
@@ -219,7 +239,8 @@ namespace WinRT
             public object[] _abi_elements;
         }
 
-        public static Func<T, object> BindCreate(Type AbiType)
+        public static readonly Func<T, object> Create;
+        private static Func<T, object> BindCreate()
         {
             var parms = new[] { Expression.Parameter(typeof(T), "arg") };
             return Expression.Lambda<Func<T, object>>(
@@ -227,7 +248,8 @@ namespace WinRT
                     typeof(object)), parms).Compile();
         }
 
-        public static Func<object, object> BindGetAbi(Type AbiType)
+        public static readonly Func<object, object> GetAbi;
+        private static Func<object, object> BindGetAbi()
         {
             var parms = new[] { Expression.Parameter(typeof(object), "arg") };
             return Expression.Lambda<Func<object, object>>(
@@ -236,7 +258,8 @@ namespace WinRT
                         typeof(object)), parms).Compile();
         }
 
-        public static Func<object, T> BindFromAbi(Type AbiType)
+        public static readonly Func<object, T> FromAbi;
+        private static Func<object, T> BindFromAbi()
         {
             var parms = new[] { Expression.Parameter(typeof(object), "arg") };
             return Expression.Lambda<Func<object, T>>(
@@ -244,7 +267,8 @@ namespace WinRT
                     new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
         }
 
-        public static Action<object> BindDisposeMarshaler(Type AbiType)
+        public static readonly Action<object> DisposeMarshaler;
+        private static Action<object> BindDisposeMarshaler()
         {
             var parms = new[] { Expression.Parameter(typeof(object), "arg") };
             return Expression.Lambda<Action<object>>(
@@ -252,13 +276,13 @@ namespace WinRT
                     new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
         }
 
-        public static Array CreateArray(T[] array, Type abiType)
+        public static MarshalerArray CreateArray(T[] array)
         {
-            Array m = new Array();
+            MarshalerArray m = new MarshalerArray();
             try
             {
                 var length = array.Length;
-                var abi_array = System.Array.CreateInstance(abiType, length);
+                var abi_array = Array.CreateInstance(AbiType, length);
                 m._abi_elements = new object[length];
                 for (int i = 0; i < length; i++)
                 {
@@ -275,32 +299,32 @@ namespace WinRT
             }
         }
 
-        public static (IntPtr data, int length) GetAbiArray(object box)
+        public static (int length, IntPtr data) GetAbiArray(object box)
         {
-            var m = (Array)box;
-            return (m._gchandle.AddrOfPinnedObject(), ((System.Array)m._gchandle.Target).Length);
+            var m = (MarshalerArray)box;
+            return (((Array)m._gchandle.Target).Length, m._gchandle.AddrOfPinnedObject());
         }
 
-        public static unsafe T[] FromAbiArray(object box, Type abiType)
+        public static unsafe T[] FromAbiArray(object box)
         {
-            var abi = ((IntPtr data, int length))box;
+            var abi = ((int length, IntPtr data))box;
             var array = new T[abi.length];
             var data = (byte*)abi.data.ToPointer();
-            var abi_element_size = Marshal.SizeOf(abiType);
+            var abi_element_size = Marshal.SizeOf(AbiType);
             for (int i = 0; i < abi.length; i++)
             {
-                var abi_element = Marshal.PtrToStructure((IntPtr)data, abiType);
+                var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
                 array[i] = Marshaler<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
             return array;
         }
 
-        public static void DisposeMarshalerArray(object box) => ((Array)box).Dispose();
-        
+        public static void DisposeMarshalerArray(object box) => ((MarshalerArray)box).Dispose();
+
         public static void DisposeAbiArray(object box)
         {
-            var abi = ((IntPtr data, int length))box;
+            var abi = ((int length, IntPtr data))box;
             Marshal.FreeCoTaskMem(abi.data);
         }
     }
@@ -320,7 +344,16 @@ namespace WinRT
             return _FromAbi(ptr);
         }
 
-        // todo: Create/GetAbi pattern
+        // todo: define Marshaler struct to stabilize temporary CCW for abi call
+        public static IntPtr Create(TInterface value) => ToAbi(value);
+
+        public static IntPtr GetAbi(object value) => (IntPtr)value;
+
+        public static void DisposeAbi(IntPtr thisPtr) =>
+            ObjectReference<IInspectable>.Attach(ref thisPtr);
+
+        public static void DisposeMarshaler(object value) { }
+
         public static IntPtr ToAbi(TInterface value)
         {
             // If the value passed in is the native implementation of the interface
@@ -394,7 +427,6 @@ namespace WinRT
                         Expression.Call(fromAbiMethod, parms[0])), parms).Compile();
         }
 
-        // todo: Create/GetAbi pattern
         private static Func<TAbi, IntPtr> BindToAbi()
         {
             var parms = new[] { Expression.Parameter(typeof(TAbi), "arg") };
@@ -448,22 +480,22 @@ namespace WinRT
                     FromAbi = (object value) => (T)value;
                     DisposeMarshaler = (object box) => { };
                     DisposeAbi = (object box) => { };
-                    CreateArray = (T[] array) => MarshalBlittable.CreateArray(array);
-                    GetAbiArray = (object box) => MarshalBlittable.GetAbiArray(box);
-                    FromAbiArray = (object box) => MarshalBlittable.FromAbiArray<T>(box);
-                    DisposeMarshalerArray = (object box) => MarshalBlittable.DisposeMarshalerArray(box);
-                    DisposeAbiArray = (object box) => MarshalBlittable.DisposeAbiArray(box);
+                    CreateArray = (T[] array) => MarshalBlittable<T>.CreateArray(array);
+                    GetAbiArray = (object box) => MarshalBlittable<T>.GetAbiArray(box);
+                    FromAbiArray = (object box) => MarshalBlittable<T>.FromAbiArray(box);
+                    DisposeMarshalerArray = (object box) => MarshalBlittable<T>.DisposeMarshalerArray(box);
+                    DisposeAbiArray = (object box) => MarshalBlittable<T>.DisposeAbiArray(box);
                 }
                 else // bind to marshaler
                 {
-                    Create = MarshalNonBlittable<T>.BindCreate(AbiType);
-                    GetAbi = MarshalNonBlittable<T>.BindGetAbi(AbiType);
-                    FromAbi = MarshalNonBlittable<T>.BindFromAbi(AbiType);
-                    DisposeMarshaler = MarshalNonBlittable<T>.BindDisposeMarshaler(AbiType);
+                    Create = MarshalNonBlittable<T>.Create;
+                    GetAbi = MarshalNonBlittable<T>.GetAbi;
+                    FromAbi = MarshalNonBlittable<T>.FromAbi;
+                    DisposeMarshaler = MarshalNonBlittable<T>.DisposeMarshaler;
                     DisposeAbi = (object box) => { };
-                    CreateArray = (T[] array) => MarshalNonBlittable<T>.CreateArray(array, AbiType);
+                    CreateArray = (T[] array) => MarshalNonBlittable<T>.CreateArray(array);
                     GetAbiArray = (object box) => MarshalNonBlittable<T>.GetAbiArray(box);
-                    FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box, AbiType);
+                    FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box);
                     DisposeMarshalerArray = (object box) => MarshalNonBlittable<T>.DisposeMarshalerArray(box);
                     DisposeAbiArray = (object box) => MarshalNonBlittable<T>.DisposeAbiArray(box);
                 }
@@ -482,7 +514,21 @@ namespace WinRT
                 DisposeMarshalerArray = (object box) => MarshalString.DisposeMarshalerArray(box);
                 DisposeAbiArray = (object box) => MarshalString.DisposeAbiArray(box);
             }
-            else 
+            else if (type.IsDelegate())
+            {
+                AbiType = typeof(IntPtr);
+                //Create = (T value) => MarshalString.Create((string)(object)value);
+                //GetAbi = (object box) => MarshalString.GetAbi(box);
+                //FromAbi = (object value) => (T)(object)MarshalString.FromAbi((IntPtr)value);
+                //DisposeMarshaler = (object box) => MarshalString.DisposeMarshaler(box);
+                //DisposeAbi = (object box) => MarshalString.DisposeAbi(box);
+                //CreateArray = (T[] array) => MarshalString.CreateArray((string[])(object)array);
+                //GetAbiArray = (object box) => MarshalString.GetAbiArray(box);
+                //FromAbiArray = (object box) => (T[])(object)MarshalString.FromAbiArray(box);
+                //DisposeMarshalerArray = (object box) => MarshalString.DisposeMarshalerArray(box);
+                //DisposeAbiArray = (object box) => MarshalString.DisposeAbiArray(box);
+            }
+            else
             {
                 // TODO: MarshalInterface
             }
@@ -497,7 +543,7 @@ namespace WinRT
         public static readonly Action<object> DisposeMarshaler;
         public static readonly Action<object> DisposeAbi;
         public static readonly Func<T[], object> CreateArray;
-        public static readonly Func<object, (IntPtr, int)> GetAbiArray;
+        public static readonly Func<object, (int, IntPtr)> GetAbiArray;
         public static readonly Func<object, T[]> FromAbiArray;
         public static readonly Action<object> DisposeMarshalerArray;
         public static readonly Action<object> DisposeAbiArray;
