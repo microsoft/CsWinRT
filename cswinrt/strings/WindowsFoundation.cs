@@ -122,7 +122,7 @@ namespace System
         private static void ConcatenateProgress<TProgress>(IAsyncActionWithProgress<TProgress> source, IProgress<TProgress> sink)
         {
             // This is separated out into a separate method so that we only pay the costs of compiler-generated closure if progress is non-null.
-            source.Progress += new AsyncActionProgressHandler<TProgress>((_, info) => sink.Report(info));
+            source.Progress = new AsyncActionProgressHandler<TProgress>((_, info) => sink.Report(info));
         }
 
         public static Task AsTask<TProgress>(this IAsyncActionWithProgress<TProgress> source)
@@ -181,7 +181,7 @@ namespace System
         private static void ConcatenateProgress<TResult, TProgress>(IAsyncOperationWithProgress<TResult, TProgress> source, IProgress<TProgress> sink)
         {
             // This is separated out into a separate method so that we only pay the costs of compiler-generated closure if progress is non-null.
-            source.Progress += new AsyncOperationProgressHandler<TResult, TProgress>((_, info) => sink.Report(info));
+            source.Progress = new AsyncOperationProgressHandler<TResult, TProgress>((_, info) => sink.Report(info));
         }
 
         public static Task<TResult> AsTask<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source)
