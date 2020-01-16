@@ -354,6 +354,17 @@ namespace WinRT
 
         public static void DisposeMarshaler(object value) { }
 
+        public static IntPtr FromManaged(TInterface value)
+        {
+            Type type = value.GetType();
+            var objRef = GetObjectReference(value, type);
+            if (objRef != null)
+            {
+                return objRef.GetRef();
+            }
+            throw new InvalidCastException($"Unable to get native interface of type '{typeof(TInterface)}' for object of type '{type}'.");
+        }
+
         public static IntPtr ToAbi(TInterface value)
         {
             // If the value passed in is the native implementation of the interface
@@ -368,12 +379,10 @@ namespace WinRT
             }
 
             Type type = value.GetType();
-            MethodInfo asInterfaceMethod = type.GetMethod("AsInterface`1");
-            // If the type has an AsInterface<A> method, then it is an interface.
-            if (asInterfaceMethod != null)
-            {
-                IObjectReference objReference = (IObjectReference)asInterfaceMethod.MakeGenericMethod(typeof(TInterface)).Invoke(value, null);
-                return objReference.ThisPtr;
+            var objRef = GetObjectReference(value, type);
+            if (objRef != null)
+            { 
+                return objRef.ThisPtr;
             }
 
             // The type is a class. We need to determine if it's an RCW or a managed class.
@@ -415,6 +424,18 @@ namespace WinRT
 
             // TODO: Create a CCW for user-defined implementations of interfaces.
             throw new NotImplementedException("Generating a CCW for a user-defined class is not currently implemented");
+        }
+
+        private static IObjectReference GetObjectReference(TInterface value, Type type)
+        {
+            MethodInfo asInterfaceMethod = type.GetMethod("AsInterface`1");
+            // If the type has an AsInterface<A> method, then it is an interface.
+            if (asInterfaceMethod != null)
+            {
+                var objRef = (IObjectReference)asInterfaceMethod.MakeGenericMethod(typeof(TInterface)).Invoke(value, null);
+                return objRef;
+            }
+            return null;
         }
 
         private static Func<IntPtr, TAbi> BindFromAbi()

@@ -359,6 +359,12 @@ namespace WinRT
             }
             throw new InvalidOperationException("Target type is not a projected interface.");
         }
+
+        public IntPtr GetRef()
+        {
+            VftblIUnknown.AddRef(ThisPtr);
+            return ThisPtr;
+        }
     }
 
     public class ObjectReference<T> : IObjectReference
@@ -389,12 +395,6 @@ namespace WinRT
         ObjectReference(IntPtr thisPtr, (IUnknownVftbl vftblIUnknown, T vftblT) vtables) :
             this(thisPtr, vtables.vftblIUnknown, vtables.vftblT)
         {
-        }
-
-        public IntPtr GetRef()
-        {
-            _vftblIUnknown.AddRef(ThisPtr);
-            return ThisPtr;
         }
 
         public static ObjectReference<T> FromAbi(IntPtr thisPtr, IUnknownVftbl vftblIUnknown, T vftblT)
