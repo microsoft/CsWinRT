@@ -154,7 +154,7 @@ namespace WinRT
 
         public static void DynamicInvokeAbi(this System.Delegate del, object[] invoke_params)
         {
-            unsafe { Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params)); }
+            Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params));
         }
 
         public static T AsDelegate<T>(this MulticastDelegate del)

@@ -25,9 +25,8 @@ namespace WinRT
         }
     }
 
-    // TODO: optimization - MarshalString struct, boxed for nested marshalings
-    // to avoid heap allocations for top-level hstrings
-    /*struct*/
+    // TODO: minimize heap allocations for marshalers by eliminating explicit try/finally
+    // and adopting ref structs with non-IDisposable Dispose and 'using var ...' pattern
     class MarshalString
     {
         public unsafe struct HStringHeader // sizeof(HSTRING_HEADER)
@@ -88,14 +87,11 @@ namespace WinRT
                 DisposeAbi(((IntPtr)abi));
         }
 
-        public static string FromAbi(IntPtr value)
+        public static unsafe string FromAbi(IntPtr value)
         {
-            unsafe
-            {
-                uint length;
-                var buffer = Platform.WindowsGetStringRawBuffer(value, &length);
-                return new string(buffer, 0, (int)length);
-            }
+            uint length;
+            var buffer = Platform.WindowsGetStringRawBuffer(value, &length);
+            return new string(buffer, 0, (int)length);
         }
 
         public static unsafe IntPtr FromManaged(string value)
@@ -458,25 +454,6 @@ namespace WinRT
         }
     }
 
-    public class MarshalClass<T>
-    {
-        public static T FromAbi(IntPtr value)
-        {
-            // todo: BindFromAbi ...
-            return default;
-        }
-
-        public static void DisposeAbi(IntPtr abi)
-        {
-            // todo: ObjectReference release
-        }
-        public static void DisposeAbi(object abi)
-        {
-            if (abi != null)
-                DisposeAbi(((IntPtr)abi));
-        }
-    }
-
     public class Marshaler<T>
     {
         static Marshaler()
@@ -552,6 +529,7 @@ namespace WinRT
             else
             {
                 // TODO: MarshalInterface
+                AbiType = typeof(IntPtr);
             }
             RefAbiType = AbiType.MakeByRefType();
         }
