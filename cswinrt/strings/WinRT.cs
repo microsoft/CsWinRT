@@ -1087,8 +1087,8 @@ namespace WinRT
                 }
                 else // bind to ABI counterpart's marshaling methods
                 {
-                    FromAbi = BindFromAbi(AbiType);
-                    ToAbi = BindToAbi(AbiType);
+                    FromAbi = BindStructFromAbi(AbiType);
+                    ToAbi = BindStructToAbi(AbiType);
                 }
             }
             else if (type == typeof(String))
@@ -1104,7 +1104,26 @@ namespace WinRT
                 FromAbi = (object value) => (T)(object)new HString((IntPtr)value);
                 ToAbi = (T value) => ((HString)(object)value).Handle;
             }
-            else // TODO: IInspectables (rcs, interfaces, delegates)
+            else if (type.IsInterface)
+            {
+                AbiType = typeof(IntPtr);
+                var interfaceAbiType = Type.GetType("ABI." + type.FullName);
+                FromAbi = BindInterfaceFromAbi(interfaceAbiType);
+                ToAbi = BindInterfaceToAbi(interfaceAbiType);
+            }
+            else if (!type.IsDelegate())
+            {
+                AbiType = typeof(IntPtr);
+                var interfaceAbiType = type.GetField("_default", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.FieldType;
+
+                if (interfaceAbiType is null)
+                {
+                    throw new ArgumentException($"Unable to marshal non-WinRT class: '{type.FullName}'");
+                }
+                FromAbi = BindClassFromAbi(interfaceAbiType);
+                ToAbi = BindClassToAbi();
+            }
+            else // TODO: Delegates
             {
                 AbiType = typeof(IntPtr);
                 FromAbi = (object value) => (T)value;
@@ -1112,7 +1131,7 @@ namespace WinRT
             }
         }
 
-        private static Func<object, T> BindFromAbi(Type AbiType)
+        private static Func<object, T> BindStructFromAbi(Type AbiType)
         {
             var parms = new[] { Expression.Parameter(typeof(object), "arg") };
             return Expression.Lambda<Func<object, T>>(
@@ -1121,12 +1140,41 @@ namespace WinRT
                 parms).Compile();
         }
 
-        private static Func<T, object> BindToAbi(Type AbiType)
+        private static Func<T, object> BindStructToAbi(Type AbiType)
         {
             var parms = new[] { Expression.Parameter(typeof(T), "arg") };
             return Expression.Lambda<Func<T, object>>(
                 Expression.Convert(Expression.Call(AbiType.GetMethod("ToAbi"), parms),
                 typeof(object)), parms).Compile();
+        }
+        private static Func<object, T> BindInterfaceFromAbi(Type AbiType)
+        {
+            var fromAbiBase = (Func<IntPtr, T>)typeof(MarshalInterface<,>).MakeGenericType(typeof(T), AbiType).GetMethod("FromAbi").CreateDelegate(typeof(Func<IntPtr, T>));
+            return (object value) => fromAbiBase((IntPtr)value);
+        }
+
+        private static Func<T, object> BindInterfaceToAbi(Type AbiType)
+        {
+            var toAbiBase = (Func<T, IntPtr>)typeof(MarshalInterface<,>).MakeGenericType(typeof(T), AbiType).GetMethod("FromAbi").CreateDelegate(typeof(Func<T, IntPtr>));
+            return (T value) => (object)toAbiBase(value);
+        }
+
+        private static Func<object, T> BindClassFromAbi(Type AbiType)
+        {
+            var fromAbiMethod = AbiType.GetMethod("FromAbi");
+            var objReferenceConstructor = AbiType.GetConstructor(new[] { fromAbiMethod.ReturnType });
+            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
+            return Expression.Lambda<Func<object, T>>(
+                Expression.New(
+                    typeof(T).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance, null, new[] { AbiType }, null),
+                    Expression.New(objReferenceConstructor,
+                        Expression.Call(fromAbiMethod, Expression.Convert(parms[0], typeof(IntPtr))))), parms).Compile();
+        }
+
+        private static Func<T, object> BindClassToAbi()
+        {
+            var thisPtrField = (Func<T, IntPtr>)typeof(T).GetProperty("ThisPtr").GetMethod.CreateDelegate(typeof(Func<T, IntPtr>));
+            return (T value) => (object)thisPtrField(value);
         }
 
         public static readonly Type AbiType;
