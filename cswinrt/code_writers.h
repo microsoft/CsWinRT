@@ -1408,7 +1408,7 @@ event WinRT.EventHandler% %;)",
                             is_out() ? "out " : "", param_name, get_dir());
                     return;
                 }
-
+            
                 if (is_out())
                 {
                     w.write("out __%_out", param_name);
@@ -1429,7 +1429,21 @@ event WinRT.EventHandler% %;)",
                     return;
                 }
             }
-            
+
+            if (is_array())
+            {
+                w.write("__%_length_%, __%_data_%",
+                    param_name, get_dir(),
+                    param_name, get_dir());
+                return;
+            }
+
+            if (marshaler_type.empty())
+            {
+                write_escaped_identifier(w, param_name);
+                return;
+            }
+
             w.write("%.GetAbi%(%)",
                 marshaler_type, 
                 is_array() ? "Array" : "",
@@ -1572,7 +1586,7 @@ event WinRT.EventHandler% %;)",
                 break;
             case category::delegate_type:
                 m.marshaler_type = get_abi_type();
-                m.local_type = m.is_out() ? "IntPtr" : "WinRT.Delegate.InitialReference";
+                m.local_type = m.is_out() ? "IntPtr" : "WinRT.Delegate";
                 break;
             }
         };
@@ -1680,7 +1694,10 @@ event WinRT.EventHandler% %;)",
             w.write("var __params = new object[]{ ThisPtr");
             for (auto&& m : marshalers)
             {
-                w.write(m.is_array() ? ", null, null" : ", null");
+                w.write(", ");
+                if (m.is_array()) w.write("null, null");
+                else if (m.is_out()) w.write("null");
+                else m.write_marshal_to_abi(w);
             }
             w.write(" };\n");
         }
@@ -2482,7 +2499,7 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
         auto return_sig = signature.return_signature();
         
         w.write(
-R"(%%var hr = WinRT.Delegate.MarshalInvoke(thisPtr, (% invoke) =>
+R"(%%var hr = WinRT.Delegate.MarshalInvoke(%, (% invoke) =>
 {
 %
 });
@@ -2508,6 +2525,7 @@ R"(%%var hr = WinRT.Delegate.MarshalInvoke(thisPtr, (% invoke) =>
                     m.write_local(w);
                 }, marshalers);
             },
+            is_generic ? "new IntPtr(thisPtr)" : "thisPtr",
             is_generic ? "global::System.Delegate" : type_name,
             [&](writer& w)
             {
@@ -2557,10 +2575,8 @@ R"(%%var hr = WinRT.Delegate.MarshalInvoke(thisPtr, (% invoke) =>
         method_signature signature{ method };
         auto type_name = write_type_name_temp(w, type);
         auto type_params = w.write_temp("%", bind<write_type_params>(type));
-        // note: lambdas cannot capture structured bindings
-        auto const generics = get_generic_abi_types(w, signature);
-        auto generic_abi_types = generics.first;
-        auto has_generic_params = generics.second;
+        auto generic_abi_types = get_generic_abi_types(w, signature).first;
+        auto is_generic = distance(type.GenericParam()) > 0;
 
         w.write(R"(%
 public static class @%
@@ -2576,14 +2592,14 @@ var abiInvoke = Marshal.GetDelegateForFunctionPointer%(abiDelegate.Vftbl.Invoke%
 return managedDelegate;
 }
 
-public static unsafe WinRT.Delegate.InitialReference Create(% managedDelegate)
+public static unsafe WinRT.Delegate Create(% managedDelegate)
 {
 %
 }
 
-public static IntPtr GetAbi(WinRT.Delegate.InitialReference value) => value.DelegatePtr;
+public static IntPtr GetAbi(WinRT.Delegate value) => value.ThisPtr;
 
-public static void DisposeMarshaler(WinRT.Delegate.InitialReference value) => value.Dispose();
+public static void DisposeMarshaler(WinRT.Delegate value) => value.Release();
 
 public static void DisposeAbi(IntPtr abi) => IInspectable.DisposeAbi(abi);
 
@@ -2606,7 +2622,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             },
             bind<write_abi_parameters>(signature, false),
             [&](writer& w) {
-                if (!has_generic_params) return;
+                if (!is_generic) return;
                 w.write(R"(private static readonly Type Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*)%, typeof(int) });
 )",
                     generic_abi_types);
@@ -2615,27 +2631,27 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             type_name,
             type_name,
             bind_list<write_projection_parameter>(", ", signature.params()),
-            has_generic_params ? "" : "<Abi_Invoke>",
-            has_generic_params ? ", Abi_Invoke_Type" : "",
-            bind<write_abi_method_call>(signature, "abiInvoke", has_generic_params),
+            is_generic ? "" : "<Abi_Invoke>",
+            is_generic ? ", Abi_Invoke_Type" : "",
+            bind<write_abi_method_call>(signature, "abiInvoke", is_generic),
             // ToAbi
             type_name,
             [&](writer& w) {
-                if (!has_generic_params)
+                if (!is_generic)
                 {
                     w.write(R"(var func = Marshal.GetFunctionPointerForDelegate(new Abi_Invoke(Do_Abi_Invoke));
-return new WinRT.Delegate.InitialReference(func, managedDelegate);)");
+return new WinRT.Delegate(func, managedDelegate);)");
                     return;
                 }
                 w.write(R"(var self = typeof(@%);
 var invoke = self.GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic);
 var func = Marshal.GetFunctionPointerForDelegate(global::System.Delegate.CreateDelegate(Abi_Invoke_Type, invoke));
-return new WinRT.Delegate.InitialReference(func, managedDelegate);)",
+return new WinRT.Delegate(func, managedDelegate);)",
                     type.TypeName(),
                     type_params);
             },
-            bind<write_abi_parameters>(signature, false),
-            bind<write_managed_method_call>(signature, type_name, has_generic_params));
+            bind<write_abi_parameters>(signature, is_generic),
+            bind<write_managed_method_call>(signature, type_name, is_generic));
     }
 
     void write_constant(writer& w, Constant const& value)
@@ -2830,10 +2846,18 @@ public static void DisposeAbi(% abi){ /*todo*/ }
                 int count = 0;
                 for (auto&& m : marshalers)
                 {
-                    if (m.marshaler_type.empty()) continue;
                     w.write(count++ == 0 ? "" : ", ");
+                    if (m.marshaler_type.empty())
+                    {
+                        w.write("% = arg.%\n",
+                            m.get_escaped_param_name(w),
+                            m.get_escaped_param_name(w));
+                        continue;
+                    }
                     w.write("% = %.GetAbi(m.%)\n",
-                        m.get_escaped_param_name(w), m.marshaler_type, m.get_escaped_param_name(w));
+                        m.get_escaped_param_name(w),
+                        m.marshaler_type,
+                        m.get_escaped_param_name(w));
                 }
             },
             abi_type,
@@ -2845,8 +2869,14 @@ public static void DisposeAbi(% abi){ /*todo*/ }
                 int count = 0;
                 for (auto&& m : marshalers)
                 {
-                    if (m.marshaler_type.empty()) continue;
                     w.write(count++ == 0 ? "" : ", ");
+                    if (m.marshaler_type.empty()) 
+                    {
+                        w.write("% = arg.%\n",
+                            m.get_escaped_param_name(w),
+                            m.get_escaped_param_name(w));
+                        continue;
+                    }
                     w.write("% = %\n",
                         m.get_escaped_param_name(w),
                         [&](writer& w) {m.write_from_abi(w, "arg." + m.get_escaped_param_name(w)); });

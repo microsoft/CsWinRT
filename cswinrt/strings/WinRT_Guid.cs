@@ -18,21 +18,7 @@ namespace WinRT
     {
         private static Type GetGuidType(Type type)
         {
-            if (type.IsDelegate())
-            {
-                var type_name = type.FullName;
-                if (type.IsGenericType)
-                {
-                    var backtick = type_name.IndexOf('`');
-                    type_name = type_name.Substring(0, backtick) + "Helper`" + type_name.Substring(backtick + 1);
-                }
-                else
-                {
-                    type_name += "Helper";
-                }
-                return Type.GetType(type_name);
-            }
-            return type;
+            return type.IsDelegate() ? type.GetAbiType() : type;
         }
 
         public static Guid GetGUID(Type type)

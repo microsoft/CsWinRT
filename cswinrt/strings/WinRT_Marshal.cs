@@ -209,10 +209,14 @@ namespace WinRT
     struct MarshalNonBlittable<T>
     {
         private static Type AbiType;
+        private static Type MarshalerType;
 
         static MarshalNonBlittable()
         {
-            AbiType = Type.GetType($"{typeof(T).Namespace}.ABI.{typeof(T).FullName}");
+            AbiType = typeof(T).GetAbiType();
+            MarshalerType = Type.GetType($"{AbiType.FullName}+Marshaler");
+            MarshalerType = MarshalerType ?? AbiType;
+
             Create = BindCreate();
             GetAbi = BindGetAbi();
             FromAbi = BindFromAbi();
@@ -250,7 +254,7 @@ namespace WinRT
             var parms = new[] { Expression.Parameter(typeof(object), "arg") };
             return Expression.Lambda<Func<object, object>>(
                 Expression.Convert(Expression.Call(AbiType.GetMethod("GetAbi"),
-                    new[] { Expression.Convert(parms[0], AbiType) }),
+                    new[] { Expression.Convert(parms[0], MarshalerType) }),
                         typeof(object)), parms).Compile();
         }
 
@@ -269,7 +273,7 @@ namespace WinRT
             var parms = new[] { Expression.Parameter(typeof(object), "arg") };
             return Expression.Lambda<Action<object>>(
                 Expression.Call(AbiType.GetMethod("DisposeMarshaler"),
-                    new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
+                    new[] { Expression.Convert(parms[0], MarshalerType) }), parms).Compile();
         }
 
         public static MarshalerArray CreateArray(T[] array)
@@ -345,8 +349,7 @@ namespace WinRT
 
         public static IntPtr GetAbi(object value) => (IntPtr)value;
 
-        public static void DisposeAbi(IntPtr thisPtr) =>
-            ObjectReference<IInspectable>.Attach(ref thisPtr);
+        public static void DisposeAbi(IntPtr thisPtr) => IInspectable.DisposeAbi(thisPtr);
 
         public static void DisposeMarshaler(object value) { }
 
@@ -377,7 +380,7 @@ namespace WinRT
             Type type = value.GetType();
             var objRef = GetObjectReference(value, type);
             if (objRef != null)
-            { 
+            {
                 return objRef.ThisPtr;
             }
 
@@ -469,7 +472,7 @@ namespace WinRT
             if (type.IsValueType)
             {
                 // If type is blittable just pass through
-                AbiType = Type.GetType($"{type.Namespace}.ABI.{type.FullName}");
+                AbiType = type.FindAbiType();
                 if (AbiType == null)
                 {
                     AbiType = type;

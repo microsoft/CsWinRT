@@ -28,6 +28,19 @@ namespace WinRT
     public delegate void EventHandler<A1, A2>(A1 arg1, A2 arg2);
     public delegate void EventHandler<A1, A2, A3>(A1 arg1, A2 arg2, A3 arg3);
 
+    public static class TypeExtensions
+    {
+        public static Type FindAbiType(this Type type)
+        {
+            return Type.GetType($"ABI.{type.FullName}");
+        }
+
+        public static Type GetAbiType(this Type type)
+        {
+            return type.FindAbiType() ?? throw new InvalidOperationException("Target type is not a projected type.");
+        }
+    }
+
     namespace Interop
     {
         // IUnknown
@@ -129,7 +142,12 @@ namespace WinRT
 
         // Factor IInspectable as 'object' projection, and move out to ABI.WinRT.IInspectable:
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
-        public static void DisposeAbi(IntPtr thisPtr) => ObjectReference<IInspectable>.Attach(ref thisPtr);
+        public static void DisposeAbi(IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero) return;
+            ObjectReference<IInspectable.Vftbl>.Attach(ref thisPtr);
+            thisPtr = IntPtr.Zero;
+        }
         public static IntPtr FromManaged(IInspectable value) => value._obj.GetRef();
 
         private readonly ObjectReference<Vftbl> _obj;
@@ -613,7 +631,7 @@ namespace WinRT
 
     public class Delegate
     {
-        int _refs = 0;
+        int _refs = 1;
         public readonly IntPtr ThisPtr;
 
         protected static Delegate FindObject(IntPtr thisPtr)
@@ -659,7 +677,7 @@ namespace WinRT
             return (uint)System.Threading.Interlocked.Increment(ref _refs);
         }
 
-        uint Release()
+        public uint Release()
         {
             if (_refs == 0)
             {
