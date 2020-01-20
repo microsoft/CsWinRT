@@ -1308,14 +1308,9 @@ event WinRT.EventHandler% %;)",
                 marshaler_type.empty() && local_type == "IntPtr";
         }
 
-        auto get_dir() const
-        {
-            return is_out() ? "out" : "in";
-        }
-
         std::string get_marshaler_local(writer& w) const
         {
-            return w.write_temp("__%_%", param_name, get_dir());
+            return w.write_temp("__%", param_name);
         }
 
         std::string get_param_local(writer& w) const
@@ -1323,8 +1318,8 @@ event WinRT.EventHandler% %;)",
             if (!is_generic())
             {
                 return is_array() ?
-                    w.write_temp("(__%_length_%, __%_data_%)",
-                        param_name, get_dir(), param_name, get_dir()) :
+                    w.write_temp("(__%_length, __%_data)",
+                        param_name, param_name) :
                     get_marshaler_local(w);
             }
             return is_array() ?
@@ -1339,7 +1334,7 @@ event WinRT.EventHandler% %;)",
             {
                 if (!is_out() && !marshaler_type.empty())
                 {
-                    w.write("object __%_in = default;\n", param_name);
+                    w.write("object __% = default;\n", param_name);
                 }
                 return;
             }
@@ -1349,16 +1344,15 @@ event WinRT.EventHandler% %;)",
 
             if(!is_array() || !is_out())
             {
-                w.write("% __%_% = default;\n",
+                w.write("% __% = default;\n",
                     local_type,
-                    param_name,
-                    get_dir());
+                    param_name);
             }
             
             if (is_array())
             {
-                w.write("int __%_length_% = default;\n", param_name, get_dir());
-                w.write("IntPtr __%_data_% = default;\n", param_name, get_dir());
+                w.write("int __%_length = default;\n", param_name);
+                w.write("IntPtr __%_data = default;\n", param_name);
             }
         }
 
@@ -1402,16 +1396,16 @@ event WinRT.EventHandler% %;)",
             {
                 if (is_array())
                 {
-                    w.write("%__%_length_%, %__%_data_%",
-                        is_out() ? "out " : "", param_name, get_dir(),
+                    w.write("%__%_length, %__%_data",
+                        is_out() ? "out " : "", param_name,
                         (category == param_category::fill_array) ? "ref " :
-                            is_out() ? "out " : "", param_name, get_dir());
+                            is_out() ? "out " : "", param_name);
                     return;
                 }
             
                 if (is_out())
                 {
-                    w.write("out __%_out", param_name);
+                    w.write("out __%", param_name);
                     return;
                 }
 
@@ -1432,9 +1426,9 @@ event WinRT.EventHandler% %;)",
 
             if (is_array())
             {
-                w.write("__%_length_%, __%_data_%",
-                    param_name, get_dir(),
-                    param_name, get_dir());
+                w.write("__%_length, __%_data",
+                    param_name,
+                    param_name);
                 return;
             }
 
@@ -2300,16 +2294,11 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
             return category >= param_category::pass_array;
         }
 
-        auto get_dir() const
-        {
-            return is_out() ? "out" : "in";
-        }
-
         std::string get_param_local(writer& w) const
         {
             return is_generic() ?
                 w.write_temp("__params[%]", param_index) :
-                w.write_temp("__%_%", param_name, get_dir());
+                w.write_temp("__%", param_name);
         }
 
         void write_local(writer& w) const
@@ -2317,10 +2306,9 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
             XLANG_ASSERT(!is_generic());
             if((category == param_category::in) && local_type.empty())
                 return;
-            w.write("% __%_% = default;\n",
+            w.write("% __% = default;\n",
                 param_type == "bool" ? "bool" : local_type,
-                param_name,
-                get_dir());
+                param_name);
         }
 
         void write_marshal_to_managed(writer& w) const
@@ -2329,7 +2317,7 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
             {
                 is_generic() ?
                     w.write("null") :
-                    w.write("out __%_out", param_name);
+                    w.write("out __%", param_name);
             }
             else if (marshaler_type.empty())
             {
@@ -2531,7 +2519,7 @@ R"(%%var hr = WinRT.Delegate.MarshalInvoke(%, (% invoke) =>
             {
                 if (return_sig)
                 {
-                    w.write("__%_out = ", return_marshaler.param_name);
+                    w.write("__% = ", return_marshaler.param_name);
                     if (is_generic)
                     {
                         w.write("(%)", 
