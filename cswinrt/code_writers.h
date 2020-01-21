@@ -118,7 +118,7 @@ namespace cswinrt
             w.write_generic_type_name_custom(w, index) :
             write_generic_type_name_base(w, index);
     }
-    
+
     template<typename TAction, typename TResult = std::invoke_result_t<TAction, type_definition>>
     TResult for_typedef(writer& w, type_semantics const& semantics, TAction action)
     {
@@ -132,8 +132,8 @@ namespace cswinrt
                 auto guard{ w.push_generic_args(type) };
                 return action(type.generic_type);
             },
-            [](auto) 
-            { 
+            [](auto)
+            {
                 throw_invalid("type definition expected");
                 #pragma warning(disable:4702)
                 return TResult();
@@ -530,14 +530,14 @@ namespace cswinrt
             w.write("static ");
             return;
         }
-        
+
         if (type.Flags().Sealed())
         {
             w.write("sealed ");
         }
     }
 
-    void write_method(writer& w, method_signature signature, std::string_view method_name, 
+    void write_method(writer& w, method_signature signature, std::string_view method_name,
         std::string_view return_type, std::string_view method_target,
         std::string_view access_spec = ""sv, std::string_view method_spec = ""sv)
     {
@@ -555,7 +555,7 @@ namespace cswinrt
         );
     }
 
-    void write_explicitly_implemented_method(writer& w, MethodDef const& method, 
+    void write_explicitly_implemented_method(writer& w, MethodDef const& method,
         std::string_view return_type, TypeDef const& method_interface, std::string_view method_target)
     {
         method_signature signature{ method };
@@ -591,7 +591,7 @@ namespace cswinrt
         }
 
         method_signature signature{ method };
-        
+
         auto raw_return_type = w.write_temp("%", bind([&](writer& w) {
             write_method_return_type(w, signature);
         }));
@@ -625,8 +625,8 @@ namespace cswinrt
         }
     }
 
-    void write_property(writer& w, std::string_view external_prop_name, std::string_view prop_name, 
-        std::string_view prop_type, std::string_view getter_target, std::string_view setter_target, 
+    void write_property(writer& w, std::string_view external_prop_name, std::string_view prop_name,
+        std::string_view prop_type, std::string_view getter_target, std::string_view setter_target,
         std::string_view access_spec = ""sv, std::string_view method_spec = ""sv)
     {
         if (setter_target.empty())
@@ -683,11 +683,11 @@ set => %.% = value;
         auto [getter, setter] = get_property_methods(prop);
         auto getter_target = getter ? prop_target : "";
         auto setter_target = setter ? prop_target : "";
-        write_property(w, write_explicit_name(w, iface, prop.Name()), prop.Name(), 
+        write_property(w, write_explicit_name(w, iface, prop.Name()), prop.Name(),
             write_prop_type(w, prop), getter_target, setter_target);
     }
 
-    void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view event_target, 
+    void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view event_target,
         std::string_view access_spec = ""sv, std::string_view method_spec = ""sv)
     {
         w.write(R"(
@@ -934,7 +934,7 @@ return %.%(%%baseInspectable, out innerInspectable)._default;
         auto [getter, setter] = get_property_methods(prop);
         auto getter_target = getter ? prop_target : "";
         auto setter_target = setter ? prop_target : "";
-        write_property(w, prop.Name(), prop.Name(), write_prop_type(w, prop), 
+        write_property(w, prop.Name(), prop.Name(), write_prop_type(w, prop),
             getter_target, setter_target, "public "sv, "static "sv);
     }
 
@@ -1010,7 +1010,7 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                 w.write_each<write_class_event>(interface_type.EventList(), is_overridable_interface, is_protected_interface, target);
 
                 // Merge property getters/setters, since such may be defined across interfaces
-                // Since a property has to either be overridable or not, 
+                // Since a property has to either be overridable or not,
                 for (auto&& prop : interface_type.PropertyList())
                 {
                     auto [getter, setter] = get_property_methods(prop);
@@ -1358,7 +1358,7 @@ private EventSource<%> _%;)",
             return false;
         };
 
-        std::function<bool(TypeDef const&)> search_interfaces = [&](TypeDef const& type) 
+        std::function<bool(TypeDef const&)> search_interfaces = [&](TypeDef const& type)
         {
             for (auto&& iface : type.InterfaceImpl())
             {
@@ -2053,7 +2053,7 @@ public static Guid PIID = Vftbl.PIID;
         auto default_interface_abi_name = get_default_interface_name(w, type, true);
         auto base_semantics = get_type_semantics(type.Extends());
         auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
-        
+
         w.write(R"(public %class %%
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
@@ -2195,6 +2195,10 @@ private static readonly Type Abi_Invoke_Type = Expression.GetDelegateType(new Ty
 public static unsafe % FromAbi(IntPtr thisPtr)
 {
 var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(thisPtr);
+if (abiDelegate == null)
+{
+return null;
+}
 % managedDelegate =
 (%) =>
 {
