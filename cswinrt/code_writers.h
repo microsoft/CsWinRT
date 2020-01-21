@@ -1117,13 +1117,6 @@ private EventSource<%> _%;)",
         }
     }
 
-    static std::string get_vmethod_name(writer& w, TypeDef const& type, MethodDef const& method)
-    {
-        uint32_t const vtable_base = type.MethodList().first.index();
-        uint32_t const vtable_index = method.index() - vtable_base;
-        return w.write_temp("%_%", method.Name(), vtable_index);
-    }
-
     std::pair<std::string, bool> find_property_interface(writer& w, TypeDef const& setter_iface, std::string_view prop_name)
     {
         std::string getter_iface;
@@ -1215,8 +1208,8 @@ private EventSource<%> _%;)",
         for (auto&& evt : type.EventList())
         {
             w.write(R"(
-event WinRT.EventHandler% %;)",
-                bind<write_event_param_types>(evt),
+event % %;)",
+                bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
                 evt.Name());
         }
     }
@@ -2510,7 +2503,6 @@ R"(%%var hr = WinRT.Delegate.MarshalInvoke(%, (% invoke) =>
         w.write(R"(%
 public static class @%
 {%
-private unsafe delegate int Abi_Invoke(%);
 %
 public static unsafe % FromAbi(IntPtr ThisPtr)
 {
@@ -2532,6 +2524,7 @@ public static void DisposeMarshaler(WinRT.Delegate value) => value.Release();
 
 public static void DisposeAbi(IntPtr abi) => IInspectable.DisposeAbi(abi);
 
+// TODO: fix generic delegate invocations (T != Marshaler<T>.AbiType)
 private static unsafe int Do_Abi_Invoke(%)
 {
 %
@@ -2549,9 +2542,13 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                     type_name
                 );
             },
-            bind<write_abi_parameters>(signature, false),
             [&](writer& w) {
-                if (!is_generic) return;
+                if (!is_generic)
+                {
+                    w.write("private unsafe delegate int Abi_Invoke(%);\n",
+                        bind<write_abi_parameters>(signature, false));
+                    return;
+                }
                 w.write(R"(private static readonly Type Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*)%, typeof(int) });
 )",
                     generic_abi_types);

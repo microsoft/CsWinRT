@@ -27,14 +27,33 @@ namespace WinRT
 
     public static class TypeExtensions
     {
-        public static Type FindAbiType(this Type type)
+        public static Type FindHelperType(this Type type)
         {
             return Type.GetType($"ABI.{type.FullName}");
         }
 
-        public static Type GetAbiType(this Type type)
+        public static Type GetHelperType(this Type type)
         {
-            return type.FindAbiType() ?? throw new InvalidOperationException("Target type is not a projected type.");
+            return type.FindHelperType() ?? throw new InvalidOperationException("Target type is not a projected type.");
+        }
+    }
+
+    public static class DelegateExtensions
+    {
+        public static bool IsDelegate(this Type type)
+        {
+            return typeof(MulticastDelegate).IsAssignableFrom(type.BaseType);
+        }
+
+        public static void DynamicInvokeAbi(this System.Delegate del, object[] invoke_params)
+        {
+            Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params));
+        }
+
+        public static T AsDelegate<T>(this MulticastDelegate del)
+        {
+            return Marshal.GetDelegateForFunctionPointer<T>(
+                Marshal.GetFunctionPointerForDelegate(del));
         }
     }
 
@@ -92,8 +111,6 @@ namespace WinRT
         public delegate int _put_PropertyAsObject(IntPtr thisPtr, IntPtr value);
         public unsafe delegate int _get_PropertyAsGuid(IntPtr thisPtr, out Guid value);
         public delegate int _put_PropertyAsGuid(IntPtr thisPtr, Guid value);
-        //public unsafe delegate int _get_PropertyAsString(IntPtr thisPtr, [Out, MarshalAs(UnmanagedType.HString)] out string value);
-        //public delegate int _put_PropertyAsString(IntPtr thisPtr, [In, MarshalAs(UnmanagedType.HString)] string value);
         public unsafe delegate int _get_PropertyAsString(IntPtr thisPtr, out IntPtr value);
         public delegate int _put_PropertyAsString(IntPtr thisPtr, IntPtr value);
         public unsafe delegate int _get_PropertyAsVector3(IntPtr thisPtr, out Windows.Foundation.Numerics.Vector3 value);
@@ -158,25 +175,6 @@ namespace WinRT
             _obj = obj;
         }
         public object _WinRT_Owner { get; set; }
-    }
-
-    public static class DelegateExtensions
-    {
-        public static bool IsDelegate(this Type type)
-        {
-            return typeof(MulticastDelegate).IsAssignableFrom(type.BaseType);
-        }
-
-        public static void DynamicInvokeAbi(this System.Delegate del, object[] invoke_params)
-        {
-            Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params));
-        }
-
-        public static T AsDelegate<T>(this MulticastDelegate del)
-        {
-            return Marshal.GetDelegateForFunctionPointer<T>(
-                Marshal.GetFunctionPointerForDelegate(del));
-        }
     }
 
     internal class Platform
@@ -805,10 +803,10 @@ namespace WinRT
             {
                 if (_event == null)
                 {
-                    Type helperType = typeof(TDelegate).GetHelperType();
-                    IntPtr nativeDelegate = (IntPtr)helperType.GetMethod("ToAbi").Invoke(null, new object[] { EventInvoke });
+                    var marshaler = Marshaler<TDelegate>.Create((TDelegate)EventInvoke);
                     try
                     {
+                        var nativeDelegate = (IntPtr)Marshaler<TDelegate>.GetAbi(marshaler);
                         Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out EventRegistrationToken token));
                         _token = token;
                     }
@@ -816,7 +814,7 @@ namespace WinRT
                     {
                         // Dispose our managed reference to the delegate's CCW.
                         // The either native event holds a reference now or the _addHandler call failed.
-                        Delegate.FindObject(nativeDelegate).Release();
+                        Marshaler<TDelegate>.DisposeMarshaler(marshaler);
                     }
                 }
                 _event = (TDelegate)global::System.Delegate.Combine(_event, del);
@@ -857,7 +855,7 @@ namespace WinRT
 
                 _eventInvoke = Expression.Lambda(typeof(TDelegate),
                     Expression.Block(
-                        new [] { delegateLocal },
+                        new[] { delegateLocal },
                         Expression.Assign(delegateLocal, Expression.Field(Expression.Constant(this), typeof(EventSource<TDelegate>).GetField(nameof(_event), BindingFlags.Instance | BindingFlags.NonPublic))),
                         Expression.IfThen(
                             Expression.ReferenceNotEqual(delegateLocal, Expression.Constant(null, typeof(TDelegate))), Expression.Call(delegateLocal, invoke, parameters))),
@@ -880,30 +878,6 @@ namespace WinRT
         }
 
         void _UnsubscribeFromNative()
-        {
-            Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
-            _token.Value = 0;
-        }
-    }
-
-    public static class TypeExtensions
-    {
-        public static bool IsDelegate(this Type type)
-        {
-            return typeof(MulticastDelegate).IsAssignableFrom(type.BaseType);
-        }
-
-        ~EventSource()
-        {
-            _Unsubscribe();
-        }
-
-        void Invoke(IntPtr arg1Ptr, IntPtr arg2Ptr, IntPtr arg3Ptr)
-        {
-            _event?.Invoke(_unmarshalArg1(arg1Ptr), _unmarshalArg2(arg2Ptr), _unmarshalArg3(arg2Ptr));
-        }
-
-        void _Unsubscribe()
         {
             Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
             _token.Value = 0;

@@ -206,23 +206,60 @@ namespace WinRT
         }
     }
 
-    struct MarshalNonBlittable<T>
+    class MarshalGeneric<T>
     {
-        private static Type AbiType;
-        private static Type MarshalerType;
+        protected static Type HelperType = typeof(T).GetHelperType();
+        protected static Type AbiType = typeof(T).GetHelperType().GetMethod("GetAbi").ReturnType;
+        protected static Type MarshalerType = typeof(T).GetHelperType().GetMethod("Create").ReturnType;
 
-        static MarshalNonBlittable()
+        static MarshalGeneric()
         {
-            AbiType = typeof(T).GetAbiType();
-            MarshalerType = Type.GetType($"{AbiType.FullName}+Marshaler");
-            MarshalerType = MarshalerType ?? AbiType;
-
             Create = BindCreate();
             GetAbi = BindGetAbi();
             FromAbi = BindFromAbi();
             DisposeMarshaler = BindDisposeMarshaler();
         }
 
+        public static readonly Func<T, object> Create;
+        private static Func<T, object> BindCreate()
+        {
+            var parms = new[] { Expression.Parameter(typeof(T), "arg") };
+            return Expression.Lambda<Func<T, object>>(
+                Expression.Convert(Expression.Call(HelperType.GetMethod("Create"), parms),
+                    typeof(object)), parms).Compile();
+        }
+
+        public static readonly Func<object, object> GetAbi;
+        private static Func<object, object> BindGetAbi()
+        {
+            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
+            return Expression.Lambda<Func<object, object>>(
+                Expression.Convert(Expression.Call(HelperType.GetMethod("GetAbi"),
+                    new[] { Expression.Convert(parms[0], MarshalerType) }),
+                        typeof(object)), parms).Compile();
+        }
+
+        public static readonly Func<object, T> FromAbi;
+        private static Func<object, T> BindFromAbi()
+        {
+            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
+            return Expression.Lambda<Func<object, T>>(
+                Expression.Call(HelperType.GetMethod("FromAbi"),
+                    new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
+        }
+
+        public static readonly Action<object> DisposeMarshaler;
+        private static Action<object> BindDisposeMarshaler()
+        {
+            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
+            return Expression.Lambda<Action<object>>(
+                Expression.Call(HelperType.GetMethod("DisposeMarshaler"),
+                    new[] { Expression.Convert(parms[0], MarshalerType) }), parms).Compile();
+        }
+    }
+
+    class MarshalNonBlittable<T> : MarshalGeneric<T>
+    {
         public struct MarshalerArray
         {
             public bool Dispose()
@@ -239,50 +276,13 @@ namespace WinRT
             public object[] _abi_elements;
         }
 
-        public static readonly Func<T, object> Create;
-        private static Func<T, object> BindCreate()
-        {
-            var parms = new[] { Expression.Parameter(typeof(T), "arg") };
-            return Expression.Lambda<Func<T, object>>(
-                Expression.Convert(Expression.Call(AbiType.GetMethod("Create"), parms),
-                    typeof(object)), parms).Compile();
-        }
-
-        public static readonly Func<object, object> GetAbi;
-        private static Func<object, object> BindGetAbi()
-        {
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Func<object, object>>(
-                Expression.Convert(Expression.Call(AbiType.GetMethod("GetAbi"),
-                    new[] { Expression.Convert(parms[0], MarshalerType) }),
-                        typeof(object)), parms).Compile();
-        }
-
-        public static readonly Func<object, T> FromAbi;
-        private static Func<object, T> BindFromAbi()
-        {
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Func<object, T>>(
-                Expression.Call(AbiType.GetMethod("FromAbi"),
-                    new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
-        }
-
-        public static readonly Action<object> DisposeMarshaler;
-        private static Action<object> BindDisposeMarshaler()
-        {
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Action<object>>(
-                Expression.Call(AbiType.GetMethod("DisposeMarshaler"),
-                    new[] { Expression.Convert(parms[0], MarshalerType) }), parms).Compile();
-        }
-
         public static MarshalerArray CreateArray(T[] array)
         {
             MarshalerArray m = new MarshalerArray();
             try
             {
                 var length = array.Length;
-                var abi_array = Array.CreateInstance(AbiType, length);
+                var abi_array = Array.CreateInstance(HelperType, length);
                 m._abi_elements = new object[length];
                 for (int i = 0; i < length; i++)
                 {
@@ -310,10 +310,10 @@ namespace WinRT
             var abi = ((int length, IntPtr data))box;
             var array = new T[abi.length];
             var data = (byte*)abi.data.ToPointer();
-            var abi_element_size = Marshal.SizeOf(AbiType);
+            var abi_element_size = Marshal.SizeOf(HelperType);
             for (int i = 0; i < abi.length; i++)
             {
-                var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
+                var abi_element = Marshal.PtrToStructure((IntPtr)data, HelperType);
                 array[i] = Marshaler<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
@@ -472,7 +472,7 @@ namespace WinRT
             if (type.IsValueType)
             {
                 // If type is blittable just pass through
-                AbiType = type.FindAbiType();
+                AbiType = type.FindHelperType();
                 if (AbiType == null)
                 {
                     AbiType = type;
@@ -518,16 +518,11 @@ namespace WinRT
             else if (type.IsDelegate())
             {
                 AbiType = typeof(IntPtr);
-                //Create = (T value) => MarshalString.Create((string)(object)value);
-                //GetAbi = (object box) => MarshalString.GetAbi(box);
-                //FromAbi = (object value) => (T)(object)MarshalString.FromAbi((IntPtr)value);
-                //DisposeMarshaler = (object box) => MarshalString.DisposeMarshaler(box);
-                //DisposeAbi = (object box) => MarshalString.DisposeAbi(box);
-                //CreateArray = (T[] array) => MarshalString.CreateArray((string[])(object)array);
-                //GetAbiArray = (object box) => MarshalString.GetAbiArray(box);
-                //FromAbiArray = (object box) => (T[])(object)MarshalString.FromAbiArray(box);
-                //DisposeMarshalerArray = (object box) => MarshalString.DisposeMarshalerArray(box);
-                //DisposeAbiArray = (object box) => MarshalString.DisposeAbiArray(box);
+                Create = MarshalGeneric<T>.Create;
+                GetAbi = MarshalGeneric<T>.GetAbi;
+                FromAbi = MarshalGeneric<T>.FromAbi;
+                DisposeMarshaler = MarshalGeneric<T>.DisposeMarshaler;
+                DisposeAbi = (object box) => { };
             }
             else
             {
