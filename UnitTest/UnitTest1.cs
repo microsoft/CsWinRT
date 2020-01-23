@@ -98,7 +98,6 @@ namespace UnitTest
         }
     }
 
-
     public class TestComponent
     {
         public Class TestObject { get; private set; }
@@ -180,10 +179,6 @@ namespace UnitTest
         [Fact]
         public void TestAsync()
         {
-            // BUG : Managed to ABI delegate marshaling is broken (ref count not stable causing premature GC).
-            // Should return Delegate.InitialReference from ToAbi, within a using statement to enforce Dispose.
-            return;
-
             TestObject.IntProperty = 42;
             var async_get_int = TestObject.GetIntAsync();
             int async_int = 0;
@@ -207,6 +202,12 @@ namespace UnitTest
             // TODO: need more - currently just a smoke test for generics
             var strings = TestObject.StringsProperty;
             Assert.Equal(2u, strings.Size);
+        }
+
+        [Fact]
+        public void TestArrays()
+        {
+            // TODO
         }
 
         [Fact]
@@ -239,13 +240,11 @@ namespace UnitTest
             Assert.Equal(3, hits);
         }
 
-        [Fact(Skip = "Test broken by lack of support for generic delegates after moving to new EventSource implementation.")]
+        [Fact]
         public void TestStrings()
         {
             string test_string = "x";
             string test_string2 = "y";
-
-            var href = new WinRT.HStringReference(test_string);
 
             // In hstring from managed->native implicitly creates hstring reference
             TestObject.StringProperty = test_string;
@@ -259,7 +258,7 @@ namespace UnitTest
             Assert.Equal(TestObject.StringProperty, test_string2);
 
             // In hstring from native->managed only creates System.String on demand
-            TestObject.StringPropertyChanged += (Class sender, WinRT.HString value) => sender.StringProperty2 = value;
+            TestObject.StringPropertyChanged += (Class sender, string value) => sender.StringProperty2 = value;
             TestObject.RaiseStringChanged();
             Assert.Equal(TestObject.StringProperty2, test_string2);
         }
@@ -500,7 +499,6 @@ namespace UnitTest
             }
         }
 
-        /* TODO: Object types are currently not handled by generics
         [Fact]
         public void TestObjectGeneric()
         {
@@ -508,13 +506,12 @@ namespace UnitTest
             Assert.Equal(3u, objs.Size);
             for (int i = 0; i < 3; ++i)
             {
-                IPropertyValue propVal = new ABI.Windows.Foundation.IPropertyValue(objs.GetAt((uint)i).As<ABI.Windows.Foundation.IPropertyValue>());
+                // TOOD: casting projection needs some work
+                IPropertyValue propVal = new ABI.Windows.Foundation.IPropertyValue(objs.GetAt((uint)i).As<ABI.Windows.Foundation.IPropertyValue.Vftbl>());
                 Assert.Equal(i, propVal.GetInt32());
             }
         }
-        */
 
-        /* TODO: Interface types are currently not handled by generics
         [Fact]
         void TestInterfaceGeneric()
         {
@@ -523,13 +520,13 @@ namespace UnitTest
             TestObject.ReadWriteProperty = 42;
             for (uint i = 0; i < 3; ++i)
             {
-                // TODO: Validate that each item 'is' TestObject
-                Assert.Equal(42, objs.GetAt(i).ReadWriteProperty);
+                var obj = objs.GetAt(i);
+                // TODO: Validate that each item 'is' TestObject (RCW caching)
+                //Assert.Same(obj, TestObject);
+                Assert.Equal(42, obj.ReadWriteProperty);
             }
         }
-        */
 
-        /* TODO: Class types are currently not handled by generics
         [Fact]
         void TestClassGeneric()
         {
@@ -537,11 +534,12 @@ namespace UnitTest
             Assert.Equal(3u, objs.Size);
             for (uint i = 0; i < 3; ++i)
             {
-                // TODO: Assert.Equal(TestObject, objs.GetAt(i));
+                var obj = objs.GetAt(i);
+                // TODO: Validate that each item 'is' TestObject (RCW caching)
+                //Assert.Same(obj, TestObject);
                 Assert.Equal(TestObject.ThisPtr, objs.GetAt(i).ThisPtr);
             }
         }
-        */
 
         readonly int E_FAIL = -2147467259;
 

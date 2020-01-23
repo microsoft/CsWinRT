@@ -37,8 +37,4 @@
     <ProjectReference Include="..\TestComp\TestComp.vcxproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Generated Files\" />
-  </ItemGroup>
-
 </Project>

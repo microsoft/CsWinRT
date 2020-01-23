@@ -437,6 +437,21 @@ namespace winrt::TestComp::implementation
         _nonBlittableStruct = value;
     }
 
+    void Class::SetInts(array_view<int32_t const> ints)
+    {
+        _ints.assign( ints.begin(), ints.end() );
+    }
+    
+    com_array<int32_t> Class::GetInts()
+    {
+        return { _ints.begin(), _ints.end() };
+    }
+    
+    void Class::FillInts(array_view<int32_t> ints)
+    {
+        std::copy(_ints.begin(), _ints.end(), ints.begin());
+    }
+
     Windows::Foundation::Collections::IVectorView<int32_t> Class::GetIntVector()
     {
         return winrt::single_threaded_vector(std::vector{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }).GetView();
