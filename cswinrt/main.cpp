@@ -219,12 +219,6 @@ Where <spec> is one or more of:
                             w.write_end_abi();
                         }
 
-                        // Custom additions to namespaces
-                        if (ns == "Windows.Foundation"sv)
-                        {
-                            w.write(strings::windowsfoundation);
-                        }
-
                         auto filename = w.write_temp("%.cs", ns);
                         w.flush_to_file(settings.output_folder / filename);
                     }

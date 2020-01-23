@@ -540,7 +540,6 @@ namespace UnitTest
                 Assert.Equal(TestObject.ThisPtr, objs.GetAt(i).ThisPtr);
             }
         }
-        */
 
         readonly int E_FAIL = -2147467259;
 
