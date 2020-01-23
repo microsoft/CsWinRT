@@ -43,6 +43,9 @@
     <None Include="strings\WinRT.cs">
       <Filter>strings</Filter>
     </None>
+    <None Include="strings\WindowsFoundation.cs">
+      <Filter>strings</Filter>
+    </None>
     <None Include="packages.config" />
     <None Include="strings\WinRT_Guid.cs">
       <Filter>strings</Filter>

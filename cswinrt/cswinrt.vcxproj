@@ -70,6 +70,7 @@
     <None Include="strings\WinRT.cs" />
     <None Include="strings\WinRT_Guid.cs" />
     <None Include="strings\WinRT_Marshal.cs" />
+    <None Include="strings\WindowsFoundation.cs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

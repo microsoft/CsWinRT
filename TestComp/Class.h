@@ -33,6 +33,9 @@ namespace winrt::TestComp::implementation
         ComposedBlittableStruct _blittableStruct{};
         ComposedNonBlittableStruct _nonBlittableStruct{};
         std::vector<int32_t> _ints{ 1, 2, 3 };
+        winrt::handle _syncHandle;
+        int32_t _asyncResult;
+        int32_t _asyncProgress;
 
         Class(int32_t intProperty);
         Class(int32_t intProperty, hstring const& stringProperty);
@@ -142,6 +145,14 @@ namespace winrt::TestComp::implementation
         Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> GetObjectVector();
         Windows::Foundation::Collections::IVectorView<TestComp::IProperties1> GetInterfaceVector();
         Windows::Foundation::Collections::IVectorView<TestComp::Class> GetClassVector();
+
+        void CompleteAsync();
+        void CompleteAsync(int32_t hr);
+        void AdvanceAsync(int32_t delta);
+        Windows::Foundation::IAsyncAction DoitAsync();
+        Windows::Foundation::IAsyncActionWithProgress<int32_t> DoitAsyncWithProgress();
+        Windows::Foundation::IAsyncOperation<int32_t> AddAsync(int32_t lhs, int32_t rhs);
+        Windows::Foundation::IAsyncOperationWithProgress<int32_t, int32_t> AddAsyncWithProgress(int32_t lhs, int32_t rhs);
 
         // IStringable
         hstring ToString();
