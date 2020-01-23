@@ -203,6 +203,12 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestArrays()
+        {
+            // TODO
+        }
+
+        [Fact]
         public void TestPrimitives()
         {
             var test_int = 21;

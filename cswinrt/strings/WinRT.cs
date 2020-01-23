@@ -27,14 +27,14 @@ namespace WinRT
 
     public static class TypeExtensions
     {
-        public static Type FindHelperType(this Type type)
+        public static Type TryGetHelperType(this Type type)
         {
             return Type.GetType($"ABI.{type.FullName}");
         }
 
         public static Type GetHelperType(this Type type)
         {
-            return type.FindHelperType() ?? throw new InvalidOperationException("Target type is not a projected type.");
+            return type.TryGetHelperType() ?? throw new InvalidOperationException("Target type is not a projected type.");
         }
     }
 
@@ -160,6 +160,7 @@ namespace WinRT
         public static void DisposeAbi(IntPtr thisPtr)
         {
             if (thisPtr == IntPtr.Zero) return;
+            // TODO: this should be a direct v-table call when function pointers are a thing
             ObjectReference<IInspectable.Vftbl>.Attach(ref thisPtr);
             thisPtr = IntPtr.Zero;
         }
@@ -513,7 +514,7 @@ namespace WinRT
         public unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
             IntPtr instancePtr;
-            var hstrRuntimeClassId = MarshalString.Create(runtimeClassId);
+            var hstrRuntimeClassId = MarshalString.CreateMarshaler(runtimeClassId);
             int hr = _GetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), out instancePtr);
             return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
         }
@@ -571,7 +572,7 @@ namespace WinRT
             var module = Instance; // Ensure COM is initialized
             Guid iid = typeof(IActivationFactoryVftbl).GUID;
             IntPtr instancePtr;
-            var hstrRuntimeClassId = MarshalString.Create(runtimeClassId);
+            var hstrRuntimeClassId = MarshalString.CreateMarshaler(runtimeClassId);
             int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), ref iid, &instancePtr);
             return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
         }
@@ -804,7 +805,7 @@ namespace WinRT
             {
                 if (_event == null)
                 {
-                    var marshaler = Marshaler<TDelegate>.Create((TDelegate)EventInvoke);
+                    var marshaler = Marshaler<TDelegate>.CreateMarshaler((TDelegate)EventInvoke);
                     try
                     {
                         var nativeDelegate = (IntPtr)Marshaler<TDelegate>.GetAbi(marshaler);

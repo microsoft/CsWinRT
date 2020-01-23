@@ -377,13 +377,13 @@ namespace cswinrt
             w.write(", out % %", bind<write_abi_type>(semantics), param_name);
             break;
         case param_category::pass_array:
-            w.write(", int %_size, IntPtr %_data", param_name, param_name);
+            w.write(", int __%Size, IntPtr %", param_name, param_name);
             break;
         case param_category::fill_array:
-            w.write(", int %_size, ref IntPtr %_data", param_name, param_name);
+            w.write(", int __%Size, ref IntPtr %", param_name, param_name);
             break;
         case param_category::receive_array:
-            w.write(", out int %_size, out IntPtr %_data", param_name, param_name);
+            w.write(", out int __%Size, out IntPtr %", param_name, param_name);
             break;
         }
     }
@@ -394,7 +394,7 @@ namespace cswinrt
         {
             auto semantics = get_type_semantics(return_sig.Type());
             return_sig.Type().is_szarray() ?
-                w.write(", out int %_size, out IntPtr %_data", signature.return_param_name(), signature.return_param_name()) :
+                w.write(", out int __%Size, out IntPtr %", signature.return_param_name(), signature.return_param_name()) :
                 w.write(", out % %", bind<write_abi_type>(semantics), signature.return_param_name());
         }
     }
@@ -1141,10 +1141,10 @@ private EventSource<%> _%;)",
             for (auto&& iface : type.InterfaceImpl())
             {
                 auto semantics = get_type_semantics(iface.Interface());
-                if (for_typedef(w, semantics, [&](auto type)
+                if (for_typedef(w, semantics, [&](auto&& type)
                 {
                     return (setter_iface != type) && (search_interface(type) || search_interfaces(type));
-                })){
+                })) {
                     return true;
                 }
             }
@@ -1232,6 +1232,11 @@ event % %;)",
                 (category == param_category::receive_array);
         }
 
+        bool is_ref() const
+        {
+            return (category == param_category::fill_array);
+        }
+
         bool is_generic() const
         {
             return param_index > -1;
@@ -1298,7 +1303,7 @@ event % %;)",
 
         void write_create(writer& w, std::string_view source) const
         {
-            w.write("%.Create%(%)",
+            w.write("%.CreateMarshaler%(%)",
                 marshaler_type,
                 is_array() ? "Array" : "",
                 source);
@@ -1314,7 +1319,7 @@ event % %;)",
             if (is_object_in() || is_out() || local_type.empty())
                 return;
 
-            w.write("% = %.Create%(%);\n",
+            w.write("% = %.CreateMarshaler%(%);\n",
                 get_marshaler_local(w),
                 marshaler_type,
                 is_array() ? "Array" : "",
@@ -1338,8 +1343,7 @@ event % %;)",
                 {
                     w.write("%__%_length, %__%_data",
                         is_out() ? "out " : "", param_name,
-                        (category == param_category::fill_array) ? "ref " :
-                            is_out() ? "out " : "", param_name);
+                        is_ref() ? "ref " : is_out() ? "out " : "", param_name);
                     return;
                 }
             
@@ -1398,7 +1402,7 @@ event % %;)",
                 }
 
                 param_type == "bool" ?
-                    w.write("(byte)% != 0", source) :
+                    w.write(is_generic() ? "(byte)% != 0" : "% != 0", source) :
                     w.write("%%", param_cast, source);
                 return;
             }
@@ -1411,7 +1415,7 @@ event % %;)",
 
         void write_marshal_from_abi(writer& w) const
         {
-            if (!is_out() || local_type.empty())
+            if (!is_ref() && (!is_out() || local_type.empty()))
                 return;
             is_return ?
                 w.write("return ") :
@@ -1630,8 +1634,8 @@ event % %;)",
             {
                 w.write(", ");
                 if (m.is_array()) w.write("null, null");
-                else if (m.is_out()) w.write("null");
-                else m.write_marshal_to_abi(w);
+                else if (!m.is_out() && m.marshaler_type.empty()) m.write_marshal_to_abi(w);
+                else w.write("null");
             }
             w.write(" };\n");
         }
@@ -2231,6 +2235,11 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
                 (category == param_category::receive_array);
         }
 
+        bool is_ref() const
+        {
+            return (category == param_category::fill_array);
+        }
+
         bool is_generic() const
         {
             return param_index > -1;
@@ -2260,15 +2269,15 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
 
         void write_marshal_to_managed(writer& w) const
         {
-            if (is_out())
+            if (is_out() || is_ref())
             {
                 is_generic() ?
                     w.write("null") :
-                    w.write("out __%", param_name);
+                    w.write("% __%", is_out() ? "out" : "ref", param_name);
             }
             else if (marshaler_type.empty())
             {
-                w.write(param_type == "bool" ? "% != 0" : "%", 
+                w.write(param_type == "bool" ? (is_generic() ? "(byte)% != 0" : "% != 0") : "%",
                     bind<write_escaped_identifier>(param_name));
             }
             else
@@ -2282,7 +2291,7 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
 
         void write_marshal_from_managed(writer& w) const
         {
-            if (!is_out() || local_type.empty())
+            if (!is_ref() && (!is_out() || local_type.empty()))
                 return;
             w.write("% = ", bind<write_escaped_identifier>(param_name));
             auto param_local = get_param_local(w);
@@ -2527,7 +2536,7 @@ var abiInvoke = Marshal.GetDelegateForFunctionPointer%(abiDelegate.Vftbl.Invoke%
 return managedDelegate;
 }
 
-public static unsafe WinRT.Delegate Create(% managedDelegate)
+public static unsafe WinRT.Delegate CreateMarshaler(% managedDelegate)
 {
 %
 }
@@ -2760,7 +2769,7 @@ internal struct Marshaler
         if (!have_disposers)
         {
             w.write(R"(
-public static Marshaler Create(% arg)   
+public static Marshaler CreateMarshaler(% arg)   
 {
 return new Marshaler()
 {
@@ -2806,7 +2815,7 @@ public static void DisposeAbi(% abi){ /*todo*/ }
         }
 
         w.write(R"(
-public static Marshaler Create(% arg)   
+public static Marshaler CreateMarshaler(% arg)   
 {
 var m = new Marshaler();
 try 
@@ -2853,7 +2862,7 @@ public static void DisposeAbi(% abi){ /*todo*/ }
                     w.write(count++ == 0 ? "" : ", ");
                     if (m.marshaler_type.empty())
                     {
-                        w.write("% = arg.%\n",
+                        w.write(m.param_type == "bool" ? "% = (byte)(arg.% ? 1 : 0)\n" : "% = arg.%\n",
                             m.get_escaped_param_name(w),
                             m.get_escaped_param_name(w));
                         continue;
@@ -2876,7 +2885,7 @@ public static void DisposeAbi(% abi){ /*todo*/ }
                     w.write(count++ == 0 ? "" : ", ");
                     if (m.marshaler_type.empty()) 
                     {
-                        w.write("% = arg.%\n",
+                        w.write(m.param_type == "bool" ? "% = arg.% != 0\n" : "% = arg.%\n",
                             m.get_escaped_param_name(w),
                             m.get_escaped_param_name(w));
                         continue;

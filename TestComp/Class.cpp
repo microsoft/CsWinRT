@@ -434,7 +434,7 @@ namespace winrt::TestComp::implementation
 
     void Class::SetInts(array_view<int32_t const> ints)
     {
-        _ints = std::vector( ints.begin(), ints.end() );
+        _ints.assign( ints.begin(), ints.end() );
     }
     
     com_array<int32_t> Class::GetInts()
@@ -444,8 +444,7 @@ namespace winrt::TestComp::implementation
     
     void Class::FillInts(array_view<int32_t> ints)
     {
-        _ints.resize(ints.size());
-        std::copy(ints.begin(), ints.end(), _ints.begin());
+        std::copy(_ints.begin(), _ints.end(), ints.begin());
     }
 
     Windows::Foundation::Collections::IVectorView<int32_t> Class::GetIntVector()
