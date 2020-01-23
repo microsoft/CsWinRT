@@ -491,7 +491,6 @@ namespace UnitTest
             }
         }
 
-        /* TODO: Object types are currently not handled by generics
         [Fact]
         public void TestObjectGeneric()
         {
@@ -499,13 +498,12 @@ namespace UnitTest
             Assert.Equal(3u, objs.Size);
             for (int i = 0; i < 3; ++i)
             {
-                IPropertyValue propVal = new ABI.Windows.Foundation.IPropertyValue(objs.GetAt((uint)i).As<ABI.Windows.Foundation.IPropertyValue>());
+                // TOOD: casting projection needs some work
+                IPropertyValue propVal = new ABI.Windows.Foundation.IPropertyValue(objs.GetAt((uint)i).As<ABI.Windows.Foundation.IPropertyValue.Vftbl>());
                 Assert.Equal(i, propVal.GetInt32());
             }
         }
-        */
 
-        /* TODO: Interface types are currently not handled by generics
         [Fact]
         void TestInterfaceGeneric()
         {
@@ -514,13 +512,13 @@ namespace UnitTest
             TestObject.ReadWriteProperty = 42;
             for (uint i = 0; i < 3; ++i)
             {
-                // TODO: Validate that each item 'is' TestObject
-                Assert.Equal(42, objs.GetAt(i).ReadWriteProperty);
+                var obj = objs.GetAt(i);
+                // TODO: Validate that each item 'is' TestObject (RCW caching)
+                //Assert.Same(obj, TestObject);
+                Assert.Equal(42, obj.ReadWriteProperty);
             }
         }
-        */
 
-        /* TODO: Class types are currently not handled by generics
         [Fact]
         void TestClassGeneric()
         {
@@ -528,10 +526,11 @@ namespace UnitTest
             Assert.Equal(3u, objs.Size);
             for (uint i = 0; i < 3; ++i)
             {
-                // TODO: Assert.Equal(TestObject, objs.GetAt(i));
+                var obj = objs.GetAt(i);
+                // TODO: Validate that each item 'is' TestObject (RCW caching)
+                //Assert.Same(obj, TestObject);
                 Assert.Equal(TestObject.ThisPtr, objs.GetAt(i).ThisPtr);
             }
         }
-        */
     }
 }

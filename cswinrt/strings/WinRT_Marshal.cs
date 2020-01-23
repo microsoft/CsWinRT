@@ -208,9 +208,9 @@ namespace WinRT
 
     class MarshalGeneric<T>
     {
-        protected static Type HelperType = typeof(T).GetHelperType();
-        protected static Type AbiType = typeof(T).GetHelperType().GetMethod("GetAbi").ReturnType;
-        protected static Type MarshalerType = typeof(T).GetHelperType().GetMethod("Create").ReturnType;
+        protected static readonly Type HelperType = typeof(T).GetHelperType();
+        protected static readonly Type AbiType = typeof(T).GetHelperType().GetMethod("GetAbi").ReturnType;
+        protected static readonly Type MarshalerType = typeof(T).GetHelperType().GetMethod("Create").ReturnType;
 
         static MarshalGeneric()
         {
@@ -329,12 +329,13 @@ namespace WinRT
         }
     }
 
-    struct MarshalInterface<TInterface, TAbi> where TAbi : class, TInterface
+    struct MarshalInterface<T>
     {
-        private static Func<TAbi, IntPtr> _ToAbi;
-        private static Func<IntPtr, TAbi> _FromAbi;
+        private static readonly Type HelperType = typeof(T).GetHelperType();
+        private static Func<T, IntPtr> _ToAbi;
+        private static Func<IntPtr, T> _FromAbi;
 
-        public static TInterface FromAbi(IntPtr ptr)
+        public static T FromAbi(IntPtr ptr)
         {
             // TODO: Check if the value is a CCW and return the underlying object.
             if (_FromAbi == null)
@@ -344,8 +345,7 @@ namespace WinRT
             return _FromAbi(ptr);
         }
 
-        // todo: define Marshaler struct to stabilize temporary CCW for abi call
-        public static IntPtr Create(TInterface value) => ToAbi(value);
+        public static IntPtr Create(T value) => ToAbi(value);
 
         public static IntPtr GetAbi(object value) => (IntPtr)value;
 
@@ -353,7 +353,7 @@ namespace WinRT
 
         public static void DisposeMarshaler(object value) { }
 
-        public static IntPtr FromManaged(TInterface value)
+        public static IntPtr FromManaged(T value)
         {
             Type type = value.GetType();
             var objRef = GetObjectReference(value, type);
@@ -361,20 +361,20 @@ namespace WinRT
             {
                 return objRef.GetRef();
             }
-            throw new InvalidCastException($"Unable to get native interface of type '{typeof(TInterface)}' for object of type '{type}'.");
+            throw new InvalidCastException($"Unable to get native interface of type '{typeof(T)}' for object of type '{type}'.");
         }
 
-        public static IntPtr ToAbi(TInterface value)
+        public static IntPtr ToAbi(T value)
         {
             // If the value passed in is the native implementation of the interface
             // use the ToAbi delegate since it will be faster than reflection.
-            if (value is TAbi native)
+            if (value.GetType() == HelperType)
             {
                 if (_ToAbi == null)
                 {
                     _ToAbi = BindToAbi();
                 }
-                return _ToAbi(native);
+                return _ToAbi(value);
             }
 
             Type type = value.GetType();
@@ -385,16 +385,16 @@ namespace WinRT
             }
 
             // The type is a class. We need to determine if it's an RCW or a managed class.
-            Type interfaceTagType = type.GetNestedType("InterfaceTag`1", BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.MakeGenericType(typeof(TInterface));
+            Type interfaceTagType = type.GetNestedType("InterfaceTag`1", BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.MakeGenericType(typeof(T));
             // If the type declares a nested InterfaceTag<I> type, then it is a generated RCW.
             if (interfaceTagType != null)
             {
-                Type interfaceType = typeof(TInterface);
-                TAbi iface = null;
+                Type interfaceType = typeof(T);
+                T iface = default;
 
                 for (Type currentRcwType = type; currentRcwType != typeof(object); currentRcwType = interfaceType.BaseType)
                 {
-                    interfaceTagType = type.GetNestedType("InterfaceTag`1", BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.MakeGenericType(typeof(TInterface));
+                    interfaceTagType = type.GetNestedType("InterfaceTag`1", BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.MakeGenericType(typeof(T));
                     if (interfaceTagType == null)
                     {
                         throw new InvalidOperationException($"Found a non-RCW type '{currentRcwType}' that is a base class of a generated RCW type '{type}'.");
@@ -404,7 +404,7 @@ namespace WinRT
                     MethodInfo asInternalMethod = type.GetMethod("AsInternal", BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance, null, new[] { interfaceTag }, null);
                     if (asInternalMethod != null)
                     {
-                        iface = (TAbi)asInternalMethod.Invoke(value, new[] { Activator.CreateInstance(interfaceTag) });
+                        iface = (T)asInternalMethod.Invoke(value, new[] { Activator.CreateInstance(interfaceTag) });
                         break;
                     }
                 }
@@ -425,35 +425,35 @@ namespace WinRT
             throw new NotImplementedException("Generating a CCW for a user-defined class is not currently implemented");
         }
 
-        private static IObjectReference GetObjectReference(TInterface value, Type type)
+        private static IObjectReference GetObjectReference(T value, Type type)
         {
             MethodInfo asInterfaceMethod = type.GetMethod("AsInterface`1");
             // If the type has an AsInterface<A> method, then it is an interface.
             if (asInterfaceMethod != null)
             {
-                var objRef = (IObjectReference)asInterfaceMethod.MakeGenericMethod(typeof(TInterface)).Invoke(value, null);
+                var objRef = (IObjectReference)asInterfaceMethod.MakeGenericMethod(typeof(T)).Invoke(value, null);
                 return objRef;
             }
             return null;
         }
 
-        private static Func<IntPtr, TAbi> BindFromAbi()
+        private static Func<IntPtr, T> BindFromAbi()
         {
-            var fromAbiMethod = typeof(TAbi).GetMethod("FromAbi");
-            var objReferenceConstructor = typeof(TAbi).GetConstructor(new[] { fromAbiMethod.ReturnType });
+            var fromAbiMethod = HelperType.GetMethod("FromAbi");
+            var objReferenceConstructor = HelperType.GetConstructor(new[] { fromAbiMethod.ReturnType });
             var parms = new[] { Expression.Parameter(typeof(IntPtr), "arg") };
-            return Expression.Lambda<Func<IntPtr, TAbi>>(
+            return Expression.Lambda<Func<IntPtr, T>>(
                     Expression.New(objReferenceConstructor,
                         Expression.Call(fromAbiMethod, parms[0])), parms).Compile();
         }
 
-        private static Func<TAbi, IntPtr> BindToAbi()
+        private static Func<T, IntPtr> BindToAbi()
         {
-            var parms = new[] { Expression.Parameter(typeof(TAbi), "arg") };
-            return Expression.Lambda<Func<TAbi, IntPtr>>(
+            var parms = new[] { Expression.Parameter(typeof(T), "arg") };
+            return Expression.Lambda<Func<T, IntPtr>>(
                 Expression.MakeMemberAccess(
-                    Expression.Convert(parms[0], typeof(TAbi)),
-                    typeof(TAbi).GetProperty("ThisPtr")), parms).Compile();
+                    Expression.Convert(parms[0], HelperType),
+                    HelperType.GetProperty("ThisPtr")), parms).Compile();
         }
     }
 
@@ -524,12 +524,57 @@ namespace WinRT
                 DisposeMarshaler = MarshalGeneric<T>.DisposeMarshaler;
                 DisposeAbi = (object box) => { };
             }
-            else
+            else if (type.IsInterface)
             {
-                // TODO: MarshalInterface
                 AbiType = typeof(IntPtr);
+                Create = (T value) => MarshalInterface<T>.Create(value);
+                GetAbi = (object box) => MarshalInterface<T>.GetAbi((IntPtr)box);
+                FromAbi = (object value) => (T)(object)MarshalInterface<T>.FromAbi((IntPtr)value);
+                DisposeMarshaler = (object box) => { };
+                DisposeAbi = (object box) => { };
+            }
+            else if (typeof(T) == typeof(WinRT.IInspectable))
+            {
+                AbiType = typeof(IntPtr);
+                Create = (T abi) => abi;
+                GetAbi = (object abi) => ((WinRT.IInspectable)abi).ThisPtr;
+                FromAbi = (object abi) => (T)(object)IInspectable.FromAbi((IntPtr)abi);
+                DisposeMarshaler = (object box) => { };
+                DisposeAbi = (object box) => { };
+            }
+            else // class type
+            {
+                AbiType = typeof(IntPtr);
+                var interfaceAbiType = type.GetField("_default", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.FieldType;
+                if (interfaceAbiType is null)
+                {
+                    throw new ArgumentException($"Unable to marshal non-WinRT class: '{type.FullName}'");
+                }
+                Create = (T value) => value;
+                GetAbi = BindClassGetAbi();
+                FromAbi = BindClassFromAbi(interfaceAbiType);
+                DisposeMarshaler = (object value) => { };
+                DisposeAbi = (object value) => { };
             }
             RefAbiType = AbiType.MakeByRefType();
+        }
+
+        private static Func<object, T> BindClassFromAbi(Type AbiType)
+        {
+            var fromAbiMethod = AbiType.GetMethod("FromAbi");
+            var objReferenceConstructor = AbiType.GetConstructor(new[] { fromAbiMethod.ReturnType });
+            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
+            return Expression.Lambda<Func<object, T>>(
+                Expression.New(
+                    typeof(T).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance, null, new[] { AbiType }, null),
+                    Expression.New(objReferenceConstructor,
+                        Expression.Call(fromAbiMethod, Expression.Convert(parms[0], typeof(IntPtr))))), parms).Compile();
+        }
+
+        private static Func<object, object> BindClassGetAbi()
+        {
+            var thisPtrField = (Func<T, IntPtr>)typeof(T).GetProperty("ThisPtr").GetMethod.CreateDelegate(typeof(Func<T, IntPtr>));
+            return (object value) => (object)thisPtrField((T)value);
         }
 
         public static readonly Type AbiType;

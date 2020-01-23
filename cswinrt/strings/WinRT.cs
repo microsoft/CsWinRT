@@ -155,7 +155,8 @@ namespace WinRT
         }
 
         // Factor IInspectable as 'object' projection, and move out to ABI.WinRT.IInspectable:
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+        public static IInspectable FromAbi(IntPtr thisPtr) =>
+            new IInspectable(ObjectReference<Vftbl>.FromAbi(thisPtr));
         public static void DisposeAbi(IntPtr thisPtr)
         {
             if (thisPtr == IntPtr.Zero) return;
