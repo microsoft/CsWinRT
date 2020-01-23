@@ -535,7 +535,7 @@ namespace WinRT
             else if (type.IsValueType)
             {
                 // If type is blittable just pass through
-                AbiType = type.TryGetHelperType();
+                AbiType = type.FindHelperType();
                 if (AbiType == null)
                 {
                     AbiType = type;

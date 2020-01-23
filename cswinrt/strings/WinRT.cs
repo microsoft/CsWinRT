@@ -27,14 +27,14 @@ namespace WinRT
 
     public static class TypeExtensions
     {
-        public static Type TryGetHelperType(this Type type)
+        public static Type FindHelperType(this Type type)
         {
             return Type.GetType($"ABI.{type.FullName}");
         }
 
         public static Type GetHelperType(this Type type)
         {
-            return type.TryGetHelperType() ?? throw new InvalidOperationException("Target type is not a projected type.");
+            return type.FindHelperType() ?? throw new InvalidOperationException("Target type is not a projected type.");
         }
     }
 
