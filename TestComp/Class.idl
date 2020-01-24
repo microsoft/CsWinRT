@@ -185,6 +185,11 @@ namespace TestComp
         void OutComposedNonBlittableStruct(out ComposedNonBlittableStruct value);
         void SetComposedNonBlittableStruct(ComposedNonBlittableStruct value);
 
+        // Arrays
+        void SetInts(Int32[] ints);
+        Int32[] GetInts();
+        void FillInts(ref Int32[] ints);
+
         // Generics
         Windows.Foundation.IAsyncOperation<Int32> GetIntAsync();
         Windows.Foundation.IAsyncOperationWithProgress<String, Int32> GetStringAsync();
@@ -198,5 +203,13 @@ namespace TestComp
         Windows.Foundation.Collections.IVectorView<Class> GetClassVector();
 
         void CopyProperties(IProperties1 src);
+        // Async
+        void CompleteAsync(); // Completes the in-flight async operation successfully
+        void CompleteAsync(Int32 hr); // Completes the in-flight async operation with a failed HRESULT
+        void AdvanceAsync(Int32 delta); // "Advances" the progress of an in-flight IAsync*WithProgress by an amount
+        Windows.Foundation.IAsyncAction DoitAsync();
+        Windows.Foundation.IAsyncActionWithProgress<Int32> DoitAsyncWithProgress();
+        Windows.Foundation.IAsyncOperation<Int32> AddAsync(Int32 lhs, Int32 rhs);
+        Windows.Foundation.IAsyncOperationWithProgress<Int32, Int32> AddAsyncWithProgress(Int32 lhs, Int32 rhs);
     }
 }

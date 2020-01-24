@@ -4,6 +4,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using WinRT;
 
@@ -92,9 +94,9 @@ namespace UnitTest
             AssertGuid<IVector<IInspectable>>("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a");
             AssertGuid<IVector<WF.Uri>>("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e");
             AssertGuid<IVector<AsyncActionCompletedHandler>>("5dafe591-86dc-59aa-bfda-07f5d59fc708");
+            AssertGuid<IVector<ComposedNonBlittableStruct>>("DBD7880D-AC4C-57EA-A1D8-9BDDEA102376");
         }
     }
-
 
     public class TestComponent
     {
@@ -177,10 +179,6 @@ namespace UnitTest
         [Fact]
         public void TestAsync()
         {
-            // BUG : Managed to ABI delegate marshaling is broken (ref count not stable causing premature GC).
-            // Should return Delegate.InitialReference from ToAbi, within a using statement to enforce Dispose.
-            return;
-
             TestObject.IntProperty = 42;
             var async_get_int = TestObject.GetIntAsync();
             int async_int = 0;
@@ -206,7 +204,12 @@ namespace UnitTest
             Assert.Equal(2u, strings.Size);
         }
 
-        /* TODO: Events are currently broken for value types
+        [Fact]
+        public void TestArrays()
+        {
+            // TODO
+        }
+
         [Fact]
         public void TestPrimitives()
         {
@@ -236,15 +239,12 @@ namespace UnitTest
             TestObject.RaiseBoolChanged();
             Assert.Equal(3, hits);
         }
-        */
 
         [Fact]
         public void TestStrings()
         {
             string test_string = "x";
             string test_string2 = "y";
-
-            var href = new WinRT.HStringReference(test_string);
 
             // In hstring from managed->native implicitly creates hstring reference
             TestObject.StringProperty = test_string;
@@ -258,7 +258,7 @@ namespace UnitTest
             Assert.Equal(TestObject.StringProperty, test_string2);
 
             // In hstring from native->managed only creates System.String on demand
-            TestObject.StringPropertyChanged += (Class sender, WinRT.HString value) => sender.StringProperty2 = value;
+            TestObject.StringPropertyChanged += (Class sender, string value) => sender.StringProperty2 = value;
             TestObject.RaiseStringChanged();
             Assert.Equal(TestObject.StringProperty2, test_string2);
         }
@@ -438,6 +438,14 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestGenericCast()
+        {
+            var ints = TestObject.GetIntVector();
+            var abiView = (ABI.Windows.Foundation.Collections.IVectorView<int>)ints;
+            Assert.Equal(abiView.ThisPtr, abiView.As<WinRT.IInspectable>().As<ABI.Windows.Foundation.Collections.IVectorView<int>.Vftbl>().ThisPtr);
+        }
+
+        [Fact]
         public void TestFundamentalGeneric()
         {
             var ints = TestObject.GetIntVector();
@@ -491,7 +499,6 @@ namespace UnitTest
             }
         }
 
-        /* TODO: Object types are currently not handled by generics
         [Fact]
         public void TestObjectGeneric()
         {
@@ -499,13 +506,12 @@ namespace UnitTest
             Assert.Equal(3u, objs.Size);
             for (int i = 0; i < 3; ++i)
             {
-                IPropertyValue propVal = new ABI.Windows.Foundation.IPropertyValue(objs.GetAt((uint)i).As<ABI.Windows.Foundation.IPropertyValue>());
+                // TOOD: casting projection needs some work
+                IPropertyValue propVal = new ABI.Windows.Foundation.IPropertyValue(objs.GetAt((uint)i).As<ABI.Windows.Foundation.IPropertyValue.Vftbl>());
                 Assert.Equal(i, propVal.GetInt32());
             }
         }
-        */
 
-        /* TODO: Interface types are currently not handled by generics
         [Fact]
         void TestInterfaceGeneric()
         {
@@ -514,13 +520,13 @@ namespace UnitTest
             TestObject.ReadWriteProperty = 42;
             for (uint i = 0; i < 3; ++i)
             {
-                // TODO: Validate that each item 'is' TestObject
-                Assert.Equal(42, objs.GetAt(i).ReadWriteProperty);
+                var obj = objs.GetAt(i);
+                // TODO: Validate that each item 'is' TestObject (RCW caching)
+                //Assert.Same(obj, TestObject);
+                Assert.Equal(42, obj.ReadWriteProperty);
             }
         }
-        */
 
-        /* TODO: Class types are currently not handled by generics
         [Fact]
         void TestClassGeneric()
         {
@@ -528,11 +534,12 @@ namespace UnitTest
             Assert.Equal(3u, objs.Size);
             for (uint i = 0; i < 3; ++i)
             {
-                // TODO: Assert.Equal(TestObject, objs.GetAt(i));
+                var obj = objs.GetAt(i);
+                // TODO: Validate that each item 'is' TestObject (RCW caching)
+                //Assert.Same(obj, TestObject);
                 Assert.Equal(TestObject.ThisPtr, objs.GetAt(i).ThisPtr);
             }
         }
-        */
 
         [Fact]
         public void TestSimpleCCWs()
@@ -551,6 +558,154 @@ namespace UnitTest
                 _value = value;
             }
             public int ReadWriteProperty => _value;
+        }
+
+        readonly int E_FAIL = -2147467259;
+
+        async Task InvokeDoitAsync()
+        {
+            await TestObject.DoitAsync();
+        }
+
+        [Fact]
+        public void TestAsyncAction()
+        {
+            var task = InvokeDoitAsync();
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+
+            task = InvokeDoitAsync();
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = TestObject.DoitAsync().AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        async Task InvokeDoitAsyncWithProgress()
+        {
+            await TestObject.DoitAsyncWithProgress();
+        }
+
+        [Fact]
+        public void TestAsyncActionWithProgress()
+        {
+            int progress = 0;
+            var evt = new AutoResetEvent(false);
+            var task = TestObject.DoitAsyncWithProgress().AsTask(new Progress<int>((v) =>
+            {
+                progress = v;
+                evt.Set();
+            }));
+
+            for (int i = 1; i <= 10; ++i)
+            {
+                TestObject.AdvanceAsync(10);
+                Assert.True(evt.WaitOne(1000));
+                Assert.Equal(10 * i, progress);
+            }
+
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+
+            task = InvokeDoitAsyncWithProgress();
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = TestObject.DoitAsyncWithProgress().AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        async Task<int> InvokeAddAsync(int lhs, int rhs)
+        {
+            return await TestObject.AddAsync(lhs, rhs);
+        }
+
+        [Fact]
+        public void TestAsyncOperation()
+        {
+            var task = InvokeAddAsync(42, 8);
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+            Assert.Equal(50, task.Result);
+
+            task = InvokeAddAsync(0, 0);
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = TestObject.AddAsync(0, 0).AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        async Task<int> InvokeAddAsyncWithProgress(int lhs, int rhs)
+        {
+            return await TestObject.AddAsyncWithProgress(lhs, rhs);
+        }
+
+        [Fact]
+        public void TestAsyncOperationWithProgress()
+        {
+            int progress = 0;
+            var evt = new AutoResetEvent(false);
+            var task = TestObject.AddAsyncWithProgress(42, 8).AsTask(new Progress<int>((v) =>
+            {
+                progress = v;
+                evt.Set();
+            }));
+
+            for (int i = 1; i <= 10; ++i)
+            {
+                TestObject.AdvanceAsync(10);
+                Assert.True(evt.WaitOne(1000));
+                Assert.Equal(10 * i, progress);
+            }
+
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+            Assert.Equal(50, task.Result);
+
+            task = InvokeAddAsyncWithProgress(0, 0);
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = TestObject.AddAsyncWithProgress(0, 0).AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
         }
     }
 }

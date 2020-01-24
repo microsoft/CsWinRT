@@ -32,6 +32,10 @@ namespace winrt::TestComp::implementation
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::IInspectable>> _objectChanged;
         ComposedBlittableStruct _blittableStruct{};
         ComposedNonBlittableStruct _nonBlittableStruct{};
+        std::vector<int32_t> _ints{ 1, 2, 3 };
+        winrt::handle _syncHandle;
+        int32_t _asyncResult;
+        int32_t _asyncProgress;
 
         Class(int32_t intProperty);
         Class(int32_t intProperty, hstring const& stringProperty);
@@ -126,6 +130,9 @@ namespace winrt::TestComp::implementation
         ComposedNonBlittableStruct GetComposedNonBlittableStruct();
         void OutComposedNonBlittableStruct(ComposedNonBlittableStruct& value);
         void SetComposedNonBlittableStruct(ComposedNonBlittableStruct const& value);
+        void SetInts(array_view<int32_t const> ints);
+        com_array<int32_t> GetInts();
+        void FillInts(array_view<int32_t> ints);
 
         Windows::Foundation::IAsyncOperation<int32_t> GetIntAsync();
         Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> GetStringAsync();
@@ -140,6 +147,13 @@ namespace winrt::TestComp::implementation
         Windows::Foundation::Collections::IVectorView<TestComp::Class> GetClassVector();
 
         void CopyProperties(TestComp::IProperties1 const& src);
+        void CompleteAsync();
+        void CompleteAsync(int32_t hr);
+        void AdvanceAsync(int32_t delta);
+        Windows::Foundation::IAsyncAction DoitAsync();
+        Windows::Foundation::IAsyncActionWithProgress<int32_t> DoitAsyncWithProgress();
+        Windows::Foundation::IAsyncOperation<int32_t> AddAsync(int32_t lhs, int32_t rhs);
+        Windows::Foundation::IAsyncOperationWithProgress<int32_t, int32_t> AddAsyncWithProgress(int32_t lhs, int32_t rhs);
 
         // IStringable
         hstring ToString();

@@ -47,10 +47,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="cmd_reader.h" />
     <ClInclude Include="code_writers.h" />
     <ClInclude Include="helpers.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="settings.h" />
+    <ClInclude Include="task_group.h" />
+    <ClInclude Include="text_writer.h" />
     <ClInclude Include="type_writers.h" />
   </ItemGroup>
   <ItemGroup>
@@ -65,6 +68,9 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="strings\WinRT.cs" />
+    <None Include="strings\WinRT_Guid.cs" />
+    <None Include="strings\WinRT_Marshal.cs" />
+    <None Include="strings\WindowsFoundation.cs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

@@ -77,7 +77,20 @@
           var global = item.GetMetadata("Global");
           var fileSize = new FileInfo(content).Length;
           lines.Add("    extern char const " + global + "[" + fileSize + "];");
+        } 
+        lines.Add("    static const struct");
+        lines.Add("    {");
+        lines.Add("        char const* name;");
+        lines.Add("        char const* value;");
+        lines.Add("    } index[] = {");
+        var delimeter = "";
+        foreach(ITaskItem item in Input)  
+        {  
+          var global = item.GetMetadata("Global");
+          lines.Add("        " + delimeter + "{\"" + global + "\", " + global + "}");
+          delimeter = ", ";
         }  
+        lines.Add("    };");
         lines.Add("}");
         if (File.Exists(Header))
         {
@@ -101,8 +114,8 @@
     <StaticStringDirs Include="@(StaticStringSpec->'%(RootDir)%(Directory)'->Distinct())" />
     <StaticStrings Include="@(StaticStringSpec->'%(FullPath)'->Distinct())">
       <Content>%(Identity)</Content>
-      <Source>$([System.String]::Copy('$(IntDir)strings\%(RecursiveDir)%(Filename).cpp').ToLower())</Source>
-      <Global>$([System.String]::Copy('%(Filename)').ToLower())</Global>
+      <Source>$([System.String]::Copy('$(IntDir)strings\%(RecursiveDir)%(Filename).cpp'))</Source>
+      <Global>$([System.String]::Copy('%(Filename)'))</Global>
     </StaticStrings>
     <Filter Include="strings" />
     <ClCompile Include="@(StaticStrings->'%(Source)')">

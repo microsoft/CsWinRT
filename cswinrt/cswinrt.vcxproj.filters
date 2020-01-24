@@ -16,6 +16,10 @@
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code_writers.h" />
@@ -23,6 +27,9 @@
     <ClInclude Include="settings.h" />
     <ClInclude Include="type_writers.h" />
     <ClInclude Include="helpers.h" />
+    <ClInclude Include="text_writer.h" />
+    <ClInclude Include="cmd_reader.h" />
+    <ClInclude Include="task_group.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="version.rc" />
@@ -36,6 +43,15 @@
     <None Include="strings\WinRT.cs">
       <Filter>strings</Filter>
     </None>
+    <None Include="strings\WindowsFoundation.cs">
+      <Filter>strings</Filter>
+    </None>
     <None Include="packages.config" />
+    <None Include="strings\WinRT_Guid.cs">
+      <Filter>strings</Filter>
+    </None>
+    <None Include="strings\WinRT_Marshal.cs">
+      <Filter>strings</Filter>
+    </None>
   </ItemGroup>
 </Project>

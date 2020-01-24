@@ -16,6 +16,7 @@ using System.Linq.Expressions;
 
 namespace WinRT
 {
+    using System.Diagnostics;
     using WinRT.Interop;
 
     public enum TrustLevel
@@ -25,10 +26,38 @@ namespace WinRT
         FullTrust = PartialTrust + 1
     };
 
-    public delegate void EventHandler();
-    public delegate void EventHandler<A1>(A1 arg1);
-    public delegate void EventHandler<A1, A2>(A1 arg1, A2 arg2);
-    public delegate void EventHandler<A1, A2, A3>(A1 arg1, A2 arg2, A3 arg3);
+
+    public static class TypeExtensions
+    {
+        public static Type FindHelperType(this Type type)
+        {
+            return Type.GetType($"ABI.{type.FullName}");
+        }
+
+        public static Type GetHelperType(this Type type)
+        {
+            return type.FindHelperType() ?? throw new InvalidOperationException("Target type is not a projected type.");
+        }
+    }
+
+    public static class DelegateExtensions
+    {
+        public static bool IsDelegate(this Type type)
+        {
+            return typeof(MulticastDelegate).IsAssignableFrom(type.BaseType);
+        }
+
+        public static void DynamicInvokeAbi(this System.Delegate del, object[] invoke_params)
+        {
+            Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params));
+        }
+
+        public static T AsDelegate<T>(this MulticastDelegate del)
+        {
+            return Marshal.GetDelegateForFunctionPointer<T>(
+                Marshal.GetFunctionPointerForDelegate(del));
+        }
+    }
 
     namespace Interop
     {
@@ -36,9 +65,9 @@ namespace WinRT
         [Guid("00000000-0000-0000-C000-000000000046")]
         public struct IUnknownVftbl
         {
-            public unsafe delegate int _QueryInterface([In] IntPtr pThis, [In] ref Guid iid, [Out] out IntPtr ptr);
-            public delegate uint _AddRef([In] IntPtr pThis);
-            public delegate uint _Release([In] IntPtr pThis);
+            public unsafe delegate int _QueryInterface(IntPtr pThis, ref Guid iid, out IntPtr vftbl);
+            public delegate uint _AddRef(IntPtr pThis);
+            public delegate uint _Release(IntPtr pThis);
 
             public _QueryInterface QueryInterface;
             public _AddRef AddRef;
@@ -70,53 +99,51 @@ namespace WinRT
         [Guid("00000035-0000-0000-C000-000000000046")]
         public struct IActivationFactoryVftbl
         {
-            public unsafe delegate int _ActivateInstance([In] IntPtr pThis, [Out] out IntPtr instance);
+            public unsafe delegate int _ActivateInstance(IntPtr pThis, out IntPtr instance);
 
             public IInspectable.Vftbl IInspectableVftbl;
             public _ActivateInstance ActivateInstance;
         }
 
         // standard accessors/mutators
-        public unsafe delegate int _get_PropertyAsBoolean([In] void* thisPtr, [Out] out byte value);
-        public unsafe delegate int _put_PropertyAsBoolean([In] void* thisPtr, [In] byte value);
-        public unsafe delegate int _get_PropertyAsChar([In] void* thisPtr, [Out] out char value);
-        public unsafe delegate int _put_PropertyAsChar([In] void* thisPtr, [In] char value);
-        public unsafe delegate int _get_PropertyAsSByte([In] void* thisPtr, [Out] out sbyte value);
-        public unsafe delegate int _put_PropertyAsSByte([In] void* thisPtr, [In] sbyte value);
-        public unsafe delegate int _get_PropertyAsByte([In] void* thisPtr, [Out] out byte value);
-        public unsafe delegate int _put_PropertyAsByte([In] void* thisPtr, [In] byte value);
-        public unsafe delegate int _get_PropertyAsInt16([In] void* thisPtr, [Out] out short value);
-        public unsafe delegate int _put_PropertyAsInt16([In] void* thisPtr, [In] short value);
-        public unsafe delegate int _get_PropertyAsUInt16([In] void* thisPtr, [Out] out ushort value);
-        public unsafe delegate int _put_PropertyAsUInt16([In] void* thisPtr, [In] ushort value);
-        public unsafe delegate int _get_PropertyAsInt32([In] void* thisPtr, [Out] out int value);
-        public unsafe delegate int _put_PropertyAsInt32([In] void* thisPtr, [In] int value);
-        public unsafe delegate int _get_PropertyAsUInt32([In] void* thisPtr, [Out] out uint value);
-        public unsafe delegate int _put_PropertyAsUInt32([In] void* thisPtr, [In] uint value);
-        public unsafe delegate int _get_PropertyAsInt64([In] void* thisPtr, [Out] out long value);
-        public unsafe delegate int _put_PropertyAsInt64([In] void* thisPtr, [In] long value);
-        public unsafe delegate int _get_PropertyAsUInt64([In] void* thisPtr, [Out] out ulong value);
-        public unsafe delegate int _put_PropertyAsUInt64([In] void* thisPtr, [In] ulong value);
-        public unsafe delegate int _get_PropertyAsFloat([In] void* thisPtr, [Out] out float value);
-        public unsafe delegate int _put_PropertyAsFloat([In] void* thisPtr, [In] float value);
-        public unsafe delegate int _get_PropertyAsDouble([In] void* thisPtr, [Out] out double value);
-        public unsafe delegate int _put_PropertyAsDouble([In] void* thisPtr, [In] double value);
-        public unsafe delegate int _get_PropertyAsObject([In] void* thisPtr, [Out] out IntPtr value);
-        public unsafe delegate int _put_PropertyAsObject([In] void* thisPtr, [In] IntPtr value);
-        public unsafe delegate int _get_PropertyAsGuid([In] void* thisPtr, [Out] out Guid value);
-        public unsafe delegate int _put_PropertyAsGuid([In] void* thisPtr, [In] Guid value);
-        //public unsafe delegate int _get_PropertyAsString([In] void* thisPtr, [Out, MarshalAs(UnmanagedType.HString)] out string value);
-        //public delegate int _put_PropertyAsString([In] void* thisPtr, [In, MarshalAs(UnmanagedType.HString)] string value);
-        public unsafe delegate int _get_PropertyAsString([In] void* thisPtr, [Out] out IntPtr value);
-        public unsafe delegate int _put_PropertyAsString([In] void* thisPtr, [In] IntPtr value);
-        public unsafe delegate int _get_PropertyAsVector3([In] void* thisPtr, [Out] out Windows.Foundation.Numerics.Vector3 value);
-        public unsafe delegate int _put_PropertyAsVector3([In] void* thisPtr, [In] Windows.Foundation.Numerics.Vector3 value);
-        public unsafe delegate int _get_PropertyAsQuaternion([In] void* thisPtr, [Out] out Windows.Foundation.Numerics.Quaternion value);
-        public unsafe delegate int _put_PropertyAsQuaternion([In] void* thisPtr, [In] Windows.Foundation.Numerics.Quaternion value);
-        public unsafe delegate int _get_PropertyAsMatrix4x4([In] void* thisPtr, [Out] out Windows.Foundation.Numerics.Matrix4x4 value);
-        public unsafe delegate int _put_PropertyAsMatrix4x4([In] void* thisPtr, [In] Windows.Foundation.Numerics.Matrix4x4 value);
-        public unsafe delegate int _add_EventHandler([In] void* thisPtr, [In] IntPtr handler, [Out] out EventRegistrationToken token);
-        public unsafe delegate int _remove_EventHandler([In] void* thisPtr, [In] EventRegistrationToken token);
+        public unsafe delegate int _get_PropertyAsBoolean(void* thisPtr, out byte value);
+        public unsafe delegate int _put_PropertyAsBoolean(void* thisPtr, byte value);
+        public unsafe delegate int _get_PropertyAsChar(void* thisPtr, out char value);
+        public unsafe delegate int _put_PropertyAsChar(void* thisPtr, char value);
+        public unsafe delegate int _get_PropertyAsSByte(void* thisPtr, out sbyte value);
+        public unsafe delegate int _put_PropertyAsSByte(void* thisPtr, sbyte value);
+        public unsafe delegate int _get_PropertyAsByte(void* thisPtr, out byte value);
+        public unsafe delegate int _put_PropertyAsByte(void* thisPtr, byte value);
+        public unsafe delegate int _get_PropertyAsInt16(void* thisPtr, out short value);
+        public unsafe delegate int _put_PropertyAsInt16(void* thisPtr, short value);
+        public unsafe delegate int _get_PropertyAsUInt16(void* thisPtr, out ushort value);
+        public unsafe delegate int _put_PropertyAsUInt16(void* thisPtr, ushort value);
+        public unsafe delegate int _get_PropertyAsInt32(void* thisPtr, out int value);
+        public unsafe delegate int _put_PropertyAsInt32(void* thisPtr, int value);
+        public unsafe delegate int _get_PropertyAsUInt32(void* thisPtr, out uint value);
+        public unsafe delegate int _put_PropertyAsUInt32(void* thisPtr, uint value);
+        public unsafe delegate int _get_PropertyAsInt64(void* thisPtr, out long value);
+        public unsafe delegate int _put_PropertyAsInt64(void* thisPtr, long value);
+        public unsafe delegate int _get_PropertyAsUInt64(void* thisPtr, out ulong value);
+        public unsafe delegate int _put_PropertyAsUInt64(void* thisPtr, ulong value);
+        public unsafe delegate int _get_PropertyAsFloat(void* thisPtr, out float value);
+        public unsafe delegate int _put_PropertyAsFloat(void* thisPtr, float value);
+        public unsafe delegate int _get_PropertyAsDouble(void* thisPtr, out double value);
+        public unsafe delegate int _put_PropertyAsDouble(void* thisPtr, double value);
+        public unsafe delegate int _get_PropertyAsObject(void* thisPtr, out void* value);
+        public unsafe delegate int _put_PropertyAsObject(void* thisPtr, void* value);
+        public unsafe delegate int _get_PropertyAsGuid(void* thisPtr, out Guid value);
+        public unsafe delegate int _put_PropertyAsGuid(void* thisPtr, Guid value);
+        public unsafe delegate int _get_PropertyAsString(void* thisPtr, out void* value);
+        public unsafe delegate int _put_PropertyAsString(void* thisPtr, void* value);
+        public unsafe delegate int _get_PropertyAsVector3(void* thisPtr, out Windows.Foundation.Numerics.Vector3 value);
+        public unsafe delegate int _put_PropertyAsVector3(void* thisPtr, Windows.Foundation.Numerics.Vector3 value);
+        public unsafe delegate int _get_PropertyAsQuaternion(void* thisPtr, out Windows.Foundation.Numerics.Quaternion value);
+        public unsafe delegate int _put_PropertyAsQuaternion(void* thisPtr, Windows.Foundation.Numerics.Quaternion value);
+        public unsafe delegate int _get_PropertyAsMatrix4x4(void* thisPtr, out Windows.Foundation.Numerics.Matrix4x4 value);
+        public unsafe delegate int _put_PropertyAsMatrix4x4(void* thisPtr, Windows.Foundation.Numerics.Matrix4x4 value);
+        public unsafe delegate int _add_EventHandler(void* thisPtr, void* handler, out EventRegistrationToken token);
+        public unsafe delegate int _remove_EventHandler(void* thisPtr, EventRegistrationToken token);
 
         // IDelegate
         public struct IDelegateVftbl
@@ -140,9 +167,9 @@ namespace WinRT
         [Guid("AF86E2E0-B12D-4c6a-9C5A-D7AA65101E90")]
         public struct Vftbl
         {
-            public delegate int _GetIids([In] IntPtr pThis, out uint iidCount, out Guid[] iids);
-            public delegate int _GetRuntimeClassName([In] IntPtr pThis, IntPtr className);
-            public delegate int _GetTrustLevel([In] IntPtr pThis, out TrustLevel trustLevel);
+            public delegate int _GetIids(IntPtr pThis, out uint iidCount, out Guid[] iids);
+            public delegate int _GetRuntimeClassName(IntPtr pThis, IntPtr className);
+            public delegate int _GetTrustLevel(IntPtr pThis, out TrustLevel trustLevel);
 
             public IUnknownVftbl IUnknownVftbl;
             public _GetIids GetIids;
@@ -201,9 +228,20 @@ namespace WinRT
             }
         }
 
+        // Factor IInspectable as 'object' projection, and move out to ABI.WinRT.IInspectable:
+        public static IInspectable FromAbi(IntPtr thisPtr) =>
+            new IInspectable(ObjectReference<Vftbl>.FromAbi(thisPtr));
+        public static void DisposeAbi(IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero) return;
+            // TODO: this should be a direct v-table call when function pointers are a thing
+            ObjectReference<IInspectable.Vftbl>.Attach(ref thisPtr);
+            thisPtr = IntPtr.Zero;
+        }
+        public static IntPtr FromManaged(IInspectable value) => value._obj.GetRef();
+
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
         public static implicit operator IInspectable(IObjectReference obj) => obj.As<Vftbl>();
         public static implicit operator IInspectable(ObjectReference<Vftbl> obj) => new IInspectable(obj);
         public ObjectReference<I> As<I>() => _obj.As<I>();
@@ -215,26 +253,13 @@ namespace WinRT
         public object _WinRT_Owner { get; set; }
     }
 
-    public static class DelegateExtensions
-    {
-        public static void DynamicInvokeAbi(this System.Delegate del, object[] invoke_params)
-        {
-            unsafe { Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params)); }
-        }
-
-        public static T AsDelegate<T>(this MulticastDelegate del)
-        {
-            return Marshal.GetDelegateForFunctionPointer<T>(
-                Marshal.GetFunctionPointerForDelegate(del));
-        }
-    }
     internal class Platform
     {
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        internal static extern int CoDecrementMTAUsage([In] IntPtr cookie);
+        internal static extern int CoDecrementMTAUsage(IntPtr cookie);
 
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        internal static extern unsafe int CoIncrementMTAUsage([Out] IntPtr* cookie);
+        internal static extern unsafe int CoIncrementMTAUsage(IntPtr* cookie);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -262,23 +287,23 @@ namespace WinRT
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
         internal static extern unsafe int WindowsCreateString([MarshalAs(UnmanagedType.LPWStr)] string sourceString,
                                                   int length,
-                                                  [Out] IntPtr* hstring);
+                                                  IntPtr* hstring);
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
         internal static extern unsafe int WindowsCreateStringReference(char* sourceString,
                                                   int length,
-                                                  [Out] IntPtr* hstring_header,
-                                                  [Out] IntPtr* hstring);
+                                                  IntPtr* hstring_header,
+                                                  IntPtr* hstring);
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
         internal static extern int WindowsDeleteString(IntPtr hstring);
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
-        internal static extern unsafe int WindowsDuplicateString([In] IntPtr sourceString,
-                                                  [Out] IntPtr* hstring);
+        internal static extern unsafe int WindowsDuplicateString(IntPtr sourceString,
+                                                  IntPtr* hstring);
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
-        internal static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, [Out] uint* length);
+        internal static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* length);
     }
 
     internal class Mono
@@ -391,96 +416,6 @@ namespace WinRT
         }
     }
 
-    public class HString : ICloneable, IDisposable
-    {
-        public readonly IntPtr Handle;
-
-        public HString()
-        { }
-
-        public HString(IntPtr handle)
-        {
-            Handle = handle;
-        }
-
-        public HString(string value)
-        {
-            unsafe
-            {
-                IntPtr handle;
-                Marshal.ThrowExceptionForHR(Platform.WindowsCreateString(value, value.Length, &handle));
-                Handle = handle;
-            }
-        }
-
-        public static implicit operator HString(String value)
-        {
-            return new HStringReference(value);
-        }
-
-        public static implicit operator String(HString value)
-        {
-            return value.ToString();
-        }
-
-        public static string ToString(IntPtr handle)
-        {
-            unsafe
-            {
-                uint length;
-                char* buffer = Platform.WindowsGetStringRawBuffer(handle, &length);
-                return new string(buffer, 0, (int)length);
-            }
-        }
-
-        public override string ToString() => ToString(Handle);
-
-        public object Clone()
-        {
-            unsafe
-            {
-                IntPtr handle;
-                Marshal.ThrowExceptionForHR(Platform.WindowsDuplicateString(Handle, &handle));
-                return new HString(handle);
-            }
-        }
-
-        public virtual void Dispose()
-        {
-            Marshal.ThrowExceptionForHR(Platform.WindowsDeleteString(Handle));
-        }
-    }
-
-    public class HStringReference : HString
-    {
-        // sizeof(HSTRING_HEADER)
-        private unsafe struct HStringHeader
-        {
-            public fixed byte Reserved[24];
-        };
-        private HStringHeader _header;
-        private GCHandle _gchandle;
-
-        public HStringReference(String value)
-        {
-            _gchandle = GCHandle.Alloc(value);
-            unsafe
-            {
-                fixed (void* chars = value, pHeader = &_header, pHandle = &Handle)
-                {
-                    Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
-                        (char*)chars, value.Length, (IntPtr*)pHeader, (IntPtr*)pHandle));
-                }
-            }
-        }
-
-        public override void Dispose()
-        {
-            // no need to delete hstring reference
-            _gchandle.Free();
-        }
-    }
-
     internal struct VftblPtr
     {
         public IntPtr Vftbl;
@@ -512,6 +447,12 @@ namespace WinRT
                 return (T)ctor.Invoke(new[] { this });
             }
             throw new InvalidOperationException("Target type is not a projected interface.");
+        }
+
+        public IntPtr GetRef()
+        {
+            VftblIUnknown.AddRef(ThisPtr);
+            return ThisPtr;
         }
     }
 
@@ -572,7 +513,15 @@ namespace WinRT
             var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
             var vftblIUnknown = Marshal.PtrToStructure<IUnknownVftbl>(vftblPtr.Vftbl);
             // TODO: need to delegate back to the T implementation for generics ...
-            var vftblT = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
+            T vftblT;
+            if (typeof(T).IsGenericType)
+            {
+                vftblT = (T)typeof(T).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance, null, new[] { typeof(IntPtr) }, null).Invoke(new object[] { thisPtr });
+            }
+            else
+            {
+                vftblT = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
+            }
             return (vftblIUnknown, vftblT);
         }
 
@@ -586,8 +535,8 @@ namespace WinRT
     {
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public unsafe delegate int DllGetActivationFactory(
-            [In] IntPtr activatableClassId,
-            [Out] out IntPtr activationFactory);
+            IntPtr activatableClassId,
+            out IntPtr activationFactory);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public unsafe delegate int DllCanUnloadNow();
@@ -636,10 +585,11 @@ namespace WinRT
             }
         }
 
-        public unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(HString runtimeClassId)
+        public unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
             IntPtr instancePtr;
-            int hr = _GetActivationFactory(runtimeClassId.Handle, out instancePtr);
+            var hstrRuntimeClassId = MarshalString.CreateMarshaler(runtimeClassId);
+            int hr = _GetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), out instancePtr);
             return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
         }
 
@@ -691,12 +641,13 @@ namespace WinRT
             _mtaCookie = mtaCookie;
         }
 
-        public static unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(HString runtimeClassId)
+        public static unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
             var module = Instance; // Ensure COM is initialized
             Guid iid = typeof(IActivationFactoryVftbl).GUID;
             IntPtr instancePtr;
-            int hr = Platform.RoGetActivationFactory(runtimeClassId.Handle, ref iid, &instancePtr);
+            var hstrRuntimeClassId = MarshalString.CreateMarshaler(runtimeClassId);
+            int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), ref iid, &instancePtr);
             return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
         }
 
@@ -712,30 +663,29 @@ namespace WinRT
 
         public BaseActivationFactory(string typeNamespace, string typeFullName)
         {
-            using (var runtimeClassId = new HString(typeFullName.Replace("WinRT", "Windows")))
+            var runtimeClassId = typeFullName.Replace("WinRT", "Windows");
+
+            // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
+            int hr;
+            (_IActivationFactory, hr) = WinrtModule.GetActivationFactory(runtimeClassId);
+            if (_IActivationFactory != null) { return; }
+
+            var moduleName = typeNamespace;
+            while (true)
             {
-                // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
-                int hr;
-                (_IActivationFactory, hr) = WinrtModule.GetActivationFactory(runtimeClassId);
-                if (_IActivationFactory != null) { return; }
-
-                var moduleName = typeNamespace;
-                while (true)
+                try
                 {
-                    try
-                    {
-                        (_IActivationFactory, _) = DllModule.Load(moduleName + ".dll").GetActivationFactory(runtimeClassId);
-                        if (_IActivationFactory != null) { return; }
-                    }
-                    catch (Exception) { }
-
-                    var lastSegment = moduleName.LastIndexOf(".");
-                    if (lastSegment <= 0)
-                    {
-                        Marshal.ThrowExceptionForHR(hr);
-                    }
-                    moduleName = moduleName.Remove(lastSegment);
+                    (_IActivationFactory, _) = DllModule.Load(moduleName + ".dll").GetActivationFactory(runtimeClassId);
+                    if (_IActivationFactory != null) { return; }
                 }
+                catch (Exception) { }
+
+                var lastSegment = moduleName.LastIndexOf(".");
+                if (lastSegment <= 0)
+                {
+                    Marshal.ThrowExceptionForHR(hr);
+                }
+                moduleName = moduleName.Remove(lastSegment);
             }
         }
 
@@ -760,7 +710,7 @@ namespace WinRT
 
     public class Delegate
     {
-        int _refs = 0;
+        int _refs = 1;
         public readonly IntPtr ThisPtr;
 
         protected static Delegate FindObject(IntPtr thisPtr) => UnmanagedObject.FindObject<Delegate>(thisPtr);
@@ -770,7 +720,7 @@ namespace WinRT
         static readonly IUnknownVftbl._AddRef _AddRef = new IUnknownVftbl._AddRef(AddRef);
         static readonly IUnknownVftbl._Release _Release = new IUnknownVftbl._Release(Release);
 
-        static unsafe int QueryInterface([In] IntPtr thisPtr, [In] ref Guid iid, [Out] out IntPtr obj)
+        static unsafe int QueryInterface(IntPtr thisPtr, ref Guid iid, out IntPtr obj)
         {
             const int E_NOINTERFACE = unchecked((int)0x80040002);
 
@@ -785,12 +735,12 @@ namespace WinRT
             return E_NOINTERFACE;
         }
 
-        static uint AddRef([In] IntPtr thisPtr)
+        static uint AddRef(IntPtr thisPtr)
         {
             return FindObject(thisPtr).AddRef();
         }
 
-        static uint Release([In] IntPtr thisPtr)
+        static uint Release(IntPtr thisPtr)
         {
             return FindObject(thisPtr).Release();
         }
@@ -801,7 +751,8 @@ namespace WinRT
             return (uint)System.Threading.Interlocked.Increment(ref _refs);
         }
 
-        uint Release()
+        // Release is public to enable users of this instance to release the managed reference.
+        public uint Release()
         {
             if (_refs == 0)
             {
@@ -849,36 +800,6 @@ namespace WinRT
         readonly GCHandle _thisHandle;
         readonly WeakReference _weakInvoker = new WeakReference(null);
         readonly UnmanagedObject _unmanagedObj;
-
-        public class InitialReference : IDisposable
-        {
-            Delegate _delegate;
-            public IntPtr DelegatePtr => _delegate.ThisPtr;
-            public InitialReference(IntPtr invoke, object invoker)
-            {
-                _delegate = new Delegate(invoke, invoker);
-                _delegate.AddRef();
-            }
-
-            ~InitialReference()
-            {
-                Dispose();
-            }
-
-            public void Dispose()
-            {
-                if (_delegate != null)
-                {
-                    _delegate.Release();
-                    _delegate = null;
-                }
-                GC.SuppressFinalize(this);
-            }
-        }
-
-        public Delegate(MulticastDelegate abiInvoke, MulticastDelegate managedDelegate) :
-            this(Marshal.GetFunctionPointerForDelegate(abiInvoke), managedDelegate)
-        { }
 
         public Delegate(IntPtr invoke_method, object target_invoker)
         {
@@ -1107,56 +1028,81 @@ namespace WinRT
         }
     }
 
-    public struct MarshaledValue<T>
+    internal class EventSource<TDelegate>
+        where TDelegate : class, MulticastDelegate
     {
-        public MarshaledValue(IntPtr interopValue)
-        {
-            this.InteropValue = interopValue;
-        }
-
-        public IntPtr InteropValue
-        {
-            get;
-            private set;
-        }
-    }
-
-    internal class EventSource
-    {
-        delegate void Managed_Invoke();
-        delegate int Abi_Invoke0([In] IntPtr thisPtr);
-        static Abi_Invoke0 Abi_Invoke = (IntPtr thisPtr) =>
-            Delegate.MarshalInvoke(thisPtr, (Managed_Invoke managed_invoke) => managed_invoke());
-
         readonly IObjectReference _obj;
         readonly _add_EventHandler _addHandler;
         readonly _remove_EventHandler _removeHandler;
 
         private EventRegistrationToken _token;
-        private event EventHandler _event;
-        public event EventHandler Event
+        private TDelegate _event;
+
+        public void Subscribe(TDelegate del)
         {
-            add
+            lock (this)
             {
-                lock (this)
-                {
-                    if (_event == null)
-                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(Abi_Invoke), new Managed_Invoke(Invoke)))
-                        {
-                            EventRegistrationToken token;
-                            unsafe { Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr.ToPointer(), reference.DelegatePtr, out token)); }
-                            _token = token;
-                        }
-                    _event += value;
-                }
-            }
-            remove
-            {
-                _event -= value;
                 if (_event == null)
                 {
-                    _Unsubscribe();
+                    var marshaler = Marshaler<TDelegate>.CreateMarshaler((TDelegate)EventInvoke);
+                    try
+                    {
+                        var nativeDelegate = (IntPtr)Marshaler<TDelegate>.GetAbi(marshaler);
+                        Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out EventRegistrationToken token));
+                        _token = token;
+                    }
+                    finally
+                    {
+                        // Dispose our managed reference to the delegate's CCW.
+                        // The either native event holds a reference now or the _addHandler call failed.
+                        Marshaler<TDelegate>.DisposeMarshaler(marshaler);
+                    }
                 }
+                _event = (TDelegate)global::System.Delegate.Combine(_event, del);
+            }
+        }
+
+        public void Unsubscribe(TDelegate del)
+        {
+            lock (this)
+            {
+                _event = (TDelegate)global::System.Delegate.Remove(_event, del);
+            }
+            if (_event == null)
+            {
+                _UnsubscribeFromNative();
+            }
+        }
+
+        private System.Delegate _eventInvoke;
+        private System.Delegate EventInvoke
+        {
+            get
+            {
+                if (_eventInvoke is object)
+                {
+                    return _eventInvoke;
+                }
+
+                MethodInfo invoke = typeof(TDelegate).GetMethod("Invoke");
+                ParameterInfo[] invokeParameters = invoke.GetParameters();
+                ParameterExpression[] parameters = new ParameterExpression[invokeParameters.Length];
+                for (int i = 0; i < invokeParameters.Length; i++)
+                {
+                    parameters[i] = Expression.Parameter(invokeParameters[i].ParameterType, invokeParameters[i].Name);
+                }
+
+                ParameterExpression delegateLocal = Expression.Parameter(typeof(TDelegate), "event");
+
+                _eventInvoke = Expression.Lambda(typeof(TDelegate),
+                    Expression.Block(
+                        new[] { delegateLocal },
+                        Expression.Assign(delegateLocal, Expression.Field(Expression.Constant(this), typeof(EventSource<TDelegate>).GetField(nameof(_event), BindingFlags.Instance | BindingFlags.NonPublic))),
+                        Expression.IfThen(
+                            Expression.ReferenceNotEqual(delegateLocal, Expression.Constant(null, typeof(TDelegate))), Expression.Call(delegateLocal, invoke, parameters))),
+                    parameters).Compile();
+
+                return _eventInvoke;
             }
         }
 
@@ -1169,556 +1115,13 @@ namespace WinRT
 
         ~EventSource()
         {
-            _Unsubscribe();
+            _UnsubscribeFromNative();
         }
 
-        void Invoke()
-        {
-            _event?.Invoke();
-        }
-
-        unsafe void _Unsubscribe()
+        void _UnsubscribeFromNative()
         {
             Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr.ToPointer(), _token));
             _token.Value = 0;
-        }
-    }
-
-    delegate int Abi_Invoke1([In] IntPtr thisPtr, [In] IntPtr arg1);
-    internal class EventSource<A1>
-    {
-        delegate void Managed_Invoke(IntPtr arg1Ptr);
-        static Abi_Invoke1 Abi_Invoke = (IntPtr thisPtr, IntPtr arg1Ptr) =>
-            Delegate.MarshalInvoke(thisPtr, (Managed_Invoke managed_invoke) => managed_invoke(arg1Ptr));
-
-        internal delegate A1 UnmarshalArg1(IntPtr arg1Ptr);
-
-        readonly IObjectReference _obj;
-        readonly _add_EventHandler _addHandler;
-        readonly _remove_EventHandler _removeHandler;
-        readonly UnmarshalArg1 _unmarshalArg1;
-
-        private EventRegistrationToken _token;
-        private event EventHandler<A1> _event;
-        public event EventHandler<A1> Event
-        {
-            add
-            {
-                lock (this)
-                {
-                    if (_event == null)
-                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(Abi_Invoke), new Managed_Invoke(Invoke)))
-                        {
-                            EventRegistrationToken token;
-                            unsafe { Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr.ToPointer(), reference.DelegatePtr, out token)); }
-                            _token = token;
-                        }
-                    _event += value;
-                }
-            }
-            remove
-            {
-                _event -= value;
-                if (_event == null)
-                {
-                    _Unsubscribe();
-                }
-            }
-        }
-
-        internal EventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler, UnmarshalArg1 unmarshalArg1)
-        {
-            _obj = obj;
-            _addHandler = addHandler;
-            _removeHandler = removeHandler;
-            _unmarshalArg1 = unmarshalArg1;
-        }
-
-        ~EventSource()
-        {
-            _Unsubscribe();
-        }
-
-        void Invoke(IntPtr arg1Ptr)
-        {
-            _event?.Invoke(_unmarshalArg1(arg1Ptr));
-        }
-
-        unsafe void _Unsubscribe()
-        {
-            Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr.ToPointer(), _token));
-            _token.Value = 0;
-        }
-    }
-
-    delegate int Abi_Invoke2([In] IntPtr thisPtr, [In] IntPtr arg1, [In] IntPtr arg2);
-    internal class EventSource<A1, A2>
-    {
-        delegate void Managed_Invoke(IntPtr arg1Ptr, IntPtr arg2Ptr);
-        static Abi_Invoke2 Abi_Invoke = (IntPtr thisPtr, IntPtr arg1Ptr, IntPtr arg2Ptr) =>
-            Delegate.MarshalInvoke(thisPtr, (Managed_Invoke managed_invoke) => managed_invoke(arg1Ptr, arg2Ptr));
-
-        internal delegate A1 UnmarshalArg1(IntPtr arg1Ptr);
-        internal delegate A2 UnmarshalArg2(IntPtr arg2Ptr);
-
-        readonly IObjectReference _obj;
-        readonly _add_EventHandler _addHandler;
-        readonly _remove_EventHandler _removeHandler;
-        readonly UnmarshalArg1 _unmarshalArg1;
-        readonly UnmarshalArg2 _unmarshalArg2;
-
-        private EventRegistrationToken _token;
-        private event EventHandler<A1, A2> _event;
-        public event EventHandler<A1, A2> Event
-        {
-            add
-            {
-                lock (this)
-                {
-                    if (_event == null)
-                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(Abi_Invoke), new Managed_Invoke(Invoke)))
-                        {
-                            EventRegistrationToken token;
-                            unsafe { Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr.ToPointer(), reference.DelegatePtr, out token)); }
-                            _token = token;
-                        }
-                    _event += value;
-                }
-            }
-            remove
-            {
-                _event -= value;
-                if (_event == null)
-                {
-                    _Unsubscribe();
-                }
-            }
-        }
-
-        internal EventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler, UnmarshalArg1 unmarshalArg1, UnmarshalArg2 unmarshalArg2)
-        {
-            _obj = obj;
-            _addHandler = addHandler;
-            _removeHandler = removeHandler;
-            _unmarshalArg1 = unmarshalArg1;
-            _unmarshalArg2 = unmarshalArg2;
-        }
-
-        ~EventSource()
-        {
-            _Unsubscribe();
-        }
-
-        void Invoke(IntPtr arg1Ptr, IntPtr arg2Ptr)
-        {
-            _event?.Invoke(_unmarshalArg1(arg1Ptr), _unmarshalArg2(arg2Ptr));
-        }
-
-        unsafe void _Unsubscribe()
-        {
-            Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr.ToPointer(), _token));
-            _token.Value = 0;
-        }
-    }
-
-    delegate int Abi_Invoke3([In] IntPtr thisPtr, [In] IntPtr arg1, [In] IntPtr arg2, [In] IntPtr arg3);
-    internal class EventSource<A1, A2, A3>
-    {
-        delegate void Managed_Invoke(IntPtr arg1Ptr, IntPtr arg2Ptr, IntPtr arg3Ptr);
-        static Abi_Invoke3 Abi_Invoke = (IntPtr thisPtr, IntPtr arg1Ptr, IntPtr arg2Ptr, IntPtr arg3Ptr) =>
-            Delegate.MarshalInvoke(thisPtr, (Managed_Invoke managed_invoke) => managed_invoke(arg1Ptr, arg2Ptr, arg3Ptr));
-
-        internal delegate A1 UnmarshalArg1(IntPtr arg1Ptr);
-        internal delegate A2 UnmarshalArg2(IntPtr arg2Ptr);
-        internal delegate A3 UnmarshalArg3(IntPtr arg3Ptr);
-
-        readonly IObjectReference _obj;
-        readonly _add_EventHandler _addHandler;
-        readonly _remove_EventHandler _removeHandler;
-        readonly UnmarshalArg1 _unmarshalArg1;
-        readonly UnmarshalArg2 _unmarshalArg2;
-        readonly UnmarshalArg3 _unmarshalArg3;
-
-        private EventRegistrationToken _token;
-        private event EventHandler<A1, A2, A3> _event;
-        public event EventHandler<A1, A2, A3> Event
-        {
-            add
-            {
-                lock (this)
-                {
-                    if (_event == null)
-                        using (var reference = new Delegate.InitialReference(Marshal.GetFunctionPointerForDelegate(Abi_Invoke), new Managed_Invoke(Invoke)))
-                        {
-                            EventRegistrationToken token;
-                            unsafe { Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr.ToPointer(), reference.DelegatePtr, out token)); }
-                            _token = token;
-                        }
-                    _event += value;
-                }
-            }
-            remove
-            {
-                _event -= value;
-                if (_event == null)
-                {
-                    _Unsubscribe();
-                }
-            }
-        }
-
-        internal EventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler, UnmarshalArg1 unmarshalArg1, UnmarshalArg2 unmarshalArg2, UnmarshalArg3 unmarshalArg3)
-        {
-            _obj = obj;
-            _addHandler = addHandler;
-            _removeHandler = removeHandler;
-            _unmarshalArg1 = unmarshalArg1;
-            _unmarshalArg2 = unmarshalArg2;
-            _unmarshalArg3 = unmarshalArg3;
-        }
-
-        ~EventSource()
-        {
-            _Unsubscribe();
-        }
-
-        void Invoke(IntPtr arg1Ptr, IntPtr arg2Ptr, IntPtr arg3Ptr)
-        {
-            _event?.Invoke(_unmarshalArg1(arg1Ptr), _unmarshalArg2(arg2Ptr), _unmarshalArg3(arg2Ptr));
-        }
-
-        unsafe void _Unsubscribe()
-        {
-            Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr.ToPointer(), _token));
-            _token.Value = 0;
-        }
-    }
-
-    public static class TypeExtensions
-    {
-        public static bool IsDelegate(this Type type)
-        {
-            return typeof(MulticastDelegate).IsAssignableFrom(type.BaseType);
-        }
-    }
-
-    struct MarshalInterface<TInterface, TAbi>
-        where TAbi : class, TInterface
-    {
-        private static Func<TAbi, IObjectReference> _ToAbi;
-        private static Func<IntPtr, TAbi> _FromAbi;
-
-        public static TInterface FromAbi(IntPtr ptr)
-        {
-            // TODO: Check if the value is a CCW and return the underlying object.
-            if (_FromAbi == null)
-            {
-                _FromAbi = BindFromAbi();
-            }
-            return _FromAbi(ptr);
-        }
-
-        public static IObjectReference ToAbi(TInterface value)
-        {
-            // If the value passed in is the native implementation of the interface
-            // use the ToAbi delegate since it will be faster than reflection.
-            if (value is TAbi native)
-            {
-                if (_ToAbi == null)
-                {
-                    _ToAbi = BindToAbi();
-                }
-                return _ToAbi(native);
-            }
-
-            Type type = value.GetType();
-            MethodInfo asInterfaceMethod = type.GetMethod("AsInterface`1");
-            // If the type has an AsInterface<A> method, then it is an interface.
-            if (asInterfaceMethod != null)
-            {
-                return (IObjectReference)asInterfaceMethod.MakeGenericMethod(typeof(TInterface)).Invoke(value, null);
-            }
-
-            // The type is a class. We need to determine if it's an RCW or a managed class.
-            Type interfaceTagType = type.GetNestedType("InterfaceTag`1", BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.MakeGenericType(typeof(TInterface));
-            // If the type declares a nested InterfaceTag<I> type, then it is a generated RCW.
-            if (interfaceTagType != null)
-            {
-                Type interfaceType = typeof(TInterface);
-                TAbi iface = null;
-
-                for (Type currentRcwType = type; currentRcwType != typeof(object); currentRcwType = interfaceType.BaseType)
-                {
-                    interfaceTagType = type.GetNestedType("InterfaceTag`1", BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.MakeGenericType(typeof(TInterface));
-                    if (interfaceTagType == null)
-                    {
-                        throw new InvalidOperationException($"Found a non-RCW type '{currentRcwType}' that is a base class of a generated RCW type '{type}'.");
-                    }
-
-                    MethodInfo asInternalMethod = type.GetMethod("AsInternal", BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance, null, new[] { interfaceTagType }, null);
-                    if (asInternalMethod != null)
-                    {
-                        iface = (TAbi)asInternalMethod.Invoke(value, new[] { Activator.CreateInstance(interfaceTagType) });
-                        break;
-                    }
-                }
-
-                if (iface == null)
-                {
-                    throw new InvalidCastException($"Unable to get native interface of type '{interfaceType}' for object of type '{type}'.");
-                }
-
-                if (_ToAbi == null)
-                {
-                    _ToAbi = BindToAbi();
-                }
-                return _ToAbi(iface);
-            }
-
-            if (_ToAbi == null)
-            {
-                _ToAbi = BindToAbi();
-            }
-
-            var objReference = ComCallableWrapper.CreateCCWForObject(value);
-
-            return _ToAbi(objReference.AsType<TAbi>());
-        }
-
-        private static Func<IntPtr, TAbi> BindFromAbi()
-        {
-            var fromAbiMethod = typeof(TAbi).GetMethod("FromAbi");
-            var objReferenceConstructor = typeof(TAbi).GetConstructor(new[] { fromAbiMethod.ReturnType });
-            var parms = new[] { Expression.Parameter(typeof(IntPtr), "arg") };
-            return Expression.Lambda<Func<IntPtr, TAbi>>(
-                    Expression.New(objReferenceConstructor,
-                        Expression.Call(fromAbiMethod, parms[0])), parms).Compile();
-        }
-
-        private static Func<TAbi, IObjectReference> BindToAbi()
-        {
-            var parms = new[] { Expression.Parameter(typeof(TAbi), "arg") };
-            return Expression.Lambda<Func<TAbi, IObjectReference>>(
-                Expression.MakeMemberAccess(
-                    parms[0],
-                    typeof(TAbi).GetField("_obj", BindingFlags.Instance | BindingFlags.NonPublic)), parms).Compile();
-        }
-    }
-
-
-    struct MarshalString
-    {
-        public static string FromAbi(IntPtr value) => HString.ToString(value);
-        public static HStringReference ToAbi(string value) => new HStringReference(value);
-    }
-
-    public class Marshaler<T>
-    {
-        static Marshaler()
-        {
-            Type type = typeof(T);
-
-            if (type.IsValueType)
-            {
-                // If type is blittable, just pass it through
-                AbiType = Type.GetType("ABI." + type.FullName);
-                if (AbiType == null)
-                {
-                    AbiType = type;
-                    FromAbi = (object value) => (T)value;
-                    ToAbi = (T value) => value;
-                }
-                else // bind to ABI counterpart's marshaling methods
-                {
-                    FromAbi = BindFromAbi(AbiType);
-                    ToAbi = BindToAbi(AbiType);
-                }
-            }
-            else if (type == typeof(String))
-            {
-                AbiType = typeof(IntPtr);
-                FromAbi = (object value) => (T)(object)MarshalString.FromAbi((IntPtr)value);
-                ToAbi = (T value) => MarshalString.ToAbi((string)(object)value);
-            }
-            // TODO: string projection
-            else if (type == typeof(HString))
-            {
-                AbiType = typeof(IntPtr);
-                FromAbi = (object value) => (T)(object)new HString((IntPtr)value);
-                ToAbi = (T value) => ((HString)(object)value).Handle;
-            }
-            else // TODO: IInspectables (rcs, interfaces, delegates)
-            {
-                AbiType = typeof(IntPtr);
-                FromAbi = (object value) => (T)value;
-                ToAbi = (T value) => (object)value;
-            }
-        }
-
-        private static Func<object, T> BindFromAbi(Type AbiType)
-        {
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Func<object, T>>(
-                Expression.Call(AbiType.GetMethod("FromAbi"),
-                    new[] { Expression.Convert(parms[0], AbiType) }),
-                parms).Compile();
-        }
-
-        private static Func<T, object> BindToAbi(Type AbiType)
-        {
-            var parms = new[] { Expression.Parameter(typeof(T), "arg") };
-            return Expression.Lambda<Func<T, object>>(
-                Expression.Convert(Expression.Call(AbiType.GetMethod("ToAbi"), parms),
-                typeof(object)), parms).Compile();
-        }
-
-        public static readonly Type AbiType;
-        public static readonly Func<object, T> FromAbi;
-        public static readonly Func<T, object> ToAbi;
-    }
-
-    public static class GuidGenerator
-    {
-        private static Type GetGuidType(Type type)
-        {
-            if (type.IsDelegate())
-            {
-                var type_name = type.FullName;
-                if (type.IsGenericType)
-                {
-                    var backtick = type_name.IndexOf('`');
-                    type_name = type_name.Substring(0, backtick) + "Helper`" + type_name.Substring(backtick + 1);
-                }
-                else
-                {
-                    type_name += "Helper";
-                }
-                return Type.GetType(type_name);
-            }
-            return type;
-        }
-
-        public static Guid GetGUID(Type type)
-        {
-            return GetGuidType(type).GUID;
-        }
-
-        public static Guid GetIID(Type type)
-        {
-            type = GetGuidType(type);
-            if (!type.IsGenericType)
-            {
-                return type.GUID;
-            }
-            return (Guid)type.GetField("PIID").GetValue(null);
-        }
-
-        public static string GetSignature(Type type)
-        {
-            if (type == typeof(IInspectable))
-            {
-                return "cinterface(IInspectable)";
-            }
-
-            if (type.IsGenericType)
-            {
-                var args = type.GetGenericArguments().Select(t => GetSignature(t));
-                return "pinterface({" + GetGUID(type) + "};" + String.Join(";", args) + ")";
-            }
-
-            if (type.IsValueType)
-            {
-                switch (type.Name)
-                {
-                    case "SByte": return "i1";
-                    case "Byte": return "u1";
-                    case "Int16": return "i2";
-                    case "UInt16": return "u2";
-                    case "Int32": return "i4";
-                    case "UInt32": return "u4";
-                    case "Int64": return "i8";
-                    case "UInt64": return "u8";
-                    case "Single": return "f4";
-                    case "Double": return "f8";
-                    case "Boolean": return "b1";
-                    case "Char": return "c2";
-                    case "Guid": return "g16";
-                    default:
-                        {
-                            if (type.IsEnum)
-                            {
-                                var isFlags = type.CustomAttributes.Any(cad => cad.AttributeType == typeof(FlagsAttribute));
-                                return "enum(" + type.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
-                            }
-                            if (!type.IsPrimitive)
-                            {
-                                var args = type.GetFields().Select(fi => GetSignature(fi.FieldType));
-                                return "struct(" + type.FullName + ";" + String.Join(";", args) + ")";
-                            }
-                            throw new InvalidOperationException("unsupported value type");
-                        }
-                }
-            }
-
-            if (type == typeof(String))
-            {
-                return "string";
-            }
-
-            var _default = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault((FieldInfo fi) => fi.Name == "_default");
-            if (_default != null)
-            {
-                return "rc(" + type.FullName + ";" + GetSignature(_default.FieldType) + ")";
-            }
-
-            if (type.IsDelegate())
-            {
-                return "delegate({" + GetGUID(type) + "})";
-            }
-
-            return "{" + type.GUID.ToString() + "}";
-        }
-
-        private static Guid encode_guid(byte[] data)
-        {
-            if (BitConverter.IsLittleEndian)
-            {
-                // swap bytes of int a
-                byte t = data[0];
-                data[0] = data[3];
-                data[3] = t;
-                t = data[1];
-                data[1] = data[2];
-                data[2] = t;
-                // swap bytes of short b
-                t = data[4];
-                data[4] = data[5];
-                data[5] = t;
-                // swap bytes of short c and encode rfc time/version field
-                t = data[6];
-                data[6] = data[7];
-                data[7] = (byte)((t & 0x0f) | (5 << 4));
-                // encode rfc clock/reserved field
-                data[8] = (byte)((data[8] & 0x3f) | 0x80);
-            }
-            return new Guid(data.Take(16).ToArray());
-        }
-
-        private static Guid wrt_pinterface_namespace = new Guid("d57af411-737b-c042-abae-878b1e16adee");
-
-        public static Guid CreateIID(Type type)
-        {
-            var sig = GetSignature(type);
-            if (!type.IsGenericType)
-            {
-                return new Guid(sig);
-            }
-            var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(sig)).ToArray();
-            using (SHA1 sha = new SHA1CryptoServiceProvider())
-            {
-                var hash = sha.ComputeHash(data);
-                return encode_guid(hash);
-            }
         }
     }
 }

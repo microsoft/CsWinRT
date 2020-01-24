@@ -24,6 +24,11 @@ namespace winrt::TestComp::implementation
         _string(stringProperty)
     {
         _nonBlittableStruct.refs.ref32 = 42;
+        _syncHandle.attach(::CreateEventW(nullptr, false, false, nullptr));
+        if (!_syncHandle)
+        {
+            winrt::throw_last_error();
+        }
     }
     int32_t Class::StaticIntProperty()
     {
@@ -432,6 +437,21 @@ namespace winrt::TestComp::implementation
         _nonBlittableStruct = value;
     }
 
+    void Class::SetInts(array_view<int32_t const> ints)
+    {
+        _ints.assign( ints.begin(), ints.end() );
+    }
+    
+    com_array<int32_t> Class::GetInts()
+    {
+        return { _ints.begin(), _ints.end() };
+    }
+    
+    void Class::FillInts(array_view<int32_t> ints)
+    {
+        std::copy(_ints.begin(), _ints.end(), ints.begin());
+    }
+
     Windows::Foundation::Collections::IVectorView<int32_t> Class::GetIntVector()
     {
         return winrt::single_threaded_vector(std::vector{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }).GetView();
@@ -476,6 +496,95 @@ namespace winrt::TestComp::implementation
     Windows::Foundation::Collections::IVectorView<TestComp::Class> Class::GetClassVector()
     {
         return winrt::single_threaded_vector(std::vector<TestComp::Class>{ *this, *this, *this }).GetView();
+    }
+
+    void Class::CompleteAsync()
+    {
+        CompleteAsync(S_OK);
+    }
+
+    void Class::CompleteAsync(int32_t hr)
+    {
+        assert(_asyncResult == E_PENDING);
+        _asyncResult = hr;
+        winrt::check_bool(::SetEvent(_syncHandle.get()));
+    }
+
+    void Class::AdvanceAsync(int32_t delta)
+    {
+        assert(_asyncResult == E_PENDING);
+        _asyncProgress += delta;
+        winrt::check_bool(::SetEvent(_syncHandle.get()));
+    }
+
+    Windows::Foundation::IAsyncAction Class::DoitAsync()
+    {
+        _asyncResult = E_PENDING;
+        co_await winrt::resume_background();
+
+        auto cancel = co_await winrt::get_cancellation_token();
+        cancel.callback([this]() { ::SetEvent(_syncHandle.get()); });
+
+        co_await winrt::resume_on_signal(_syncHandle.get());
+        if (cancel()) co_return;
+        winrt::check_hresult(_asyncResult);
+    }
+
+    Windows::Foundation::IAsyncActionWithProgress<int32_t> Class::DoitAsyncWithProgress()
+    {
+        _asyncResult = E_PENDING;
+        _asyncProgress = 0;
+        co_await winrt::resume_background();
+
+        auto cancel = co_await winrt::get_cancellation_token();
+        cancel.callback([this]() { ::SetEvent(_syncHandle.get()); });
+
+        auto progress = co_await winrt::get_progress_token();
+        while (true)
+        {
+            co_await winrt::resume_on_signal(_syncHandle.get());
+            if (cancel()) co_return;
+            if (_asyncResult != E_PENDING) break;
+            progress(_asyncProgress);
+        }
+
+        winrt::check_hresult(_asyncResult);
+    }
+
+    Windows::Foundation::IAsyncOperation<int32_t> Class::AddAsync(int32_t lhs, int32_t rhs)
+    {
+        _asyncResult = E_PENDING;
+        co_await winrt::resume_background();
+
+        auto cancel = co_await winrt::get_cancellation_token();
+        cancel.callback([this]() { ::SetEvent(_syncHandle.get()); });
+
+        co_await winrt::resume_on_signal(_syncHandle.get());
+        if (cancel()) co_return lhs + rhs; // TODO: Why do I need to provide a value
+        winrt::check_hresult(_asyncResult);
+        co_return lhs + rhs;
+    }
+
+    Windows::Foundation::IAsyncOperationWithProgress<int32_t, int32_t> Class::AddAsyncWithProgress(int32_t lhs, int32_t rhs)
+    {
+        _asyncResult = E_PENDING;
+        _asyncProgress = 0;
+        co_await winrt::resume_background();
+
+        auto cancel = co_await winrt::get_cancellation_token();
+        cancel.callback([this]() { ::SetEvent(_syncHandle.get()); });
+
+        auto progress = co_await winrt::get_progress_token();
+        while (true)
+        {
+            co_await winrt::resume_on_signal(_syncHandle.get());
+            if (cancel()) co_return lhs + rhs; // TODO: Why do I need to provide a value
+            if (_asyncResult != E_PENDING) break;
+            progress(_asyncProgress);
+        }
+
+        winrt::check_hresult(_asyncResult);
+        co_return lhs + rhs;
     }
 
     // IStringable
