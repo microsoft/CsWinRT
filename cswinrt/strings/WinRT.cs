@@ -106,44 +106,44 @@ namespace WinRT
         }
 
         // standard accessors/mutators
-        public unsafe delegate int _get_PropertyAsBoolean(void* thisPtr, out byte value);
-        public unsafe delegate int _put_PropertyAsBoolean(void* thisPtr, byte value);
-        public unsafe delegate int _get_PropertyAsChar(void* thisPtr, out char value);
-        public unsafe delegate int _put_PropertyAsChar(void* thisPtr, char value);
-        public unsafe delegate int _get_PropertyAsSByte(void* thisPtr, out sbyte value);
-        public unsafe delegate int _put_PropertyAsSByte(void* thisPtr, sbyte value);
-        public unsafe delegate int _get_PropertyAsByte(void* thisPtr, out byte value);
-        public unsafe delegate int _put_PropertyAsByte(void* thisPtr, byte value);
-        public unsafe delegate int _get_PropertyAsInt16(void* thisPtr, out short value);
-        public unsafe delegate int _put_PropertyAsInt16(void* thisPtr, short value);
-        public unsafe delegate int _get_PropertyAsUInt16(void* thisPtr, out ushort value);
-        public unsafe delegate int _put_PropertyAsUInt16(void* thisPtr, ushort value);
-        public unsafe delegate int _get_PropertyAsInt32(void* thisPtr, out int value);
-        public unsafe delegate int _put_PropertyAsInt32(void* thisPtr, int value);
-        public unsafe delegate int _get_PropertyAsUInt32(void* thisPtr, out uint value);
-        public unsafe delegate int _put_PropertyAsUInt32(void* thisPtr, uint value);
-        public unsafe delegate int _get_PropertyAsInt64(void* thisPtr, out long value);
-        public unsafe delegate int _put_PropertyAsInt64(void* thisPtr, long value);
-        public unsafe delegate int _get_PropertyAsUInt64(void* thisPtr, out ulong value);
-        public unsafe delegate int _put_PropertyAsUInt64(void* thisPtr, ulong value);
-        public unsafe delegate int _get_PropertyAsFloat(void* thisPtr, out float value);
-        public unsafe delegate int _put_PropertyAsFloat(void* thisPtr, float value);
-        public unsafe delegate int _get_PropertyAsDouble(void* thisPtr, out double value);
-        public unsafe delegate int _put_PropertyAsDouble(void* thisPtr, double value);
-        public unsafe delegate int _get_PropertyAsObject(void* thisPtr, out void* value);
-        public unsafe delegate int _put_PropertyAsObject(void* thisPtr, void* value);
-        public unsafe delegate int _get_PropertyAsGuid(void* thisPtr, out Guid value);
-        public unsafe delegate int _put_PropertyAsGuid(void* thisPtr, Guid value);
-        public unsafe delegate int _get_PropertyAsString(void* thisPtr, out void* value);
-        public unsafe delegate int _put_PropertyAsString(void* thisPtr, void* value);
-        public unsafe delegate int _get_PropertyAsVector3(void* thisPtr, out Windows.Foundation.Numerics.Vector3 value);
-        public unsafe delegate int _put_PropertyAsVector3(void* thisPtr, Windows.Foundation.Numerics.Vector3 value);
-        public unsafe delegate int _get_PropertyAsQuaternion(void* thisPtr, out Windows.Foundation.Numerics.Quaternion value);
-        public unsafe delegate int _put_PropertyAsQuaternion(void* thisPtr, Windows.Foundation.Numerics.Quaternion value);
-        public unsafe delegate int _get_PropertyAsMatrix4x4(void* thisPtr, out Windows.Foundation.Numerics.Matrix4x4 value);
-        public unsafe delegate int _put_PropertyAsMatrix4x4(void* thisPtr, Windows.Foundation.Numerics.Matrix4x4 value);
-        public unsafe delegate int _add_EventHandler(void* thisPtr, void* handler, out EventRegistrationToken token);
-        public unsafe delegate int _remove_EventHandler(void* thisPtr, EventRegistrationToken token);
+        public unsafe delegate int _get_PropertyAsBoolean(IntPtr thisPtr, out byte value);
+        public unsafe delegate int _put_PropertyAsBoolean(IntPtr thisPtr, byte value);
+        public unsafe delegate int _get_PropertyAsChar(IntPtr thisPtr, out char value);
+        public unsafe delegate int _put_PropertyAsChar(IntPtr thisPtr, char value);
+        public unsafe delegate int _get_PropertyAsSByte(IntPtr thisPtr, out sbyte value);
+        public unsafe delegate int _put_PropertyAsSByte(IntPtr thisPtr, sbyte value);
+        public unsafe delegate int _get_PropertyAsByte(IntPtr thisPtr, out byte value);
+        public unsafe delegate int _put_PropertyAsByte(IntPtr thisPtr, byte value);
+        public unsafe delegate int _get_PropertyAsInt16(IntPtr thisPtr, out short value);
+        public unsafe delegate int _put_PropertyAsInt16(IntPtr thisPtr, short value);
+        public unsafe delegate int _get_PropertyAsUInt16(IntPtr thisPtr, out ushort value);
+        public unsafe delegate int _put_PropertyAsUInt16(IntPtr thisPtr, ushort value);
+        public unsafe delegate int _get_PropertyAsInt32(IntPtr thisPtr, out int value);
+        public unsafe delegate int _put_PropertyAsInt32(IntPtr thisPtr, int value);
+        public unsafe delegate int _get_PropertyAsUInt32(IntPtr thisPtr, out uint value);
+        public unsafe delegate int _put_PropertyAsUInt32(IntPtr thisPtr, uint value);
+        public unsafe delegate int _get_PropertyAsInt64(IntPtr thisPtr, out long value);
+        public unsafe delegate int _put_PropertyAsInt64(IntPtr thisPtr, long value);
+        public unsafe delegate int _get_PropertyAsUInt64(IntPtr thisPtr, out ulong value);
+        public unsafe delegate int _put_PropertyAsUInt64(IntPtr thisPtr, ulong value);
+        public unsafe delegate int _get_PropertyAsFloat(IntPtr thisPtr, out float value);
+        public unsafe delegate int _put_PropertyAsFloat(IntPtr thisPtr, float value);
+        public unsafe delegate int _get_PropertyAsDouble(IntPtr thisPtr, out double value);
+        public unsafe delegate int _put_PropertyAsDouble(IntPtr thisPtr, double value);
+        public unsafe delegate int _get_PropertyAsObject(IntPtr thisPtr, out IntPtr value);
+        public unsafe delegate int _put_PropertyAsObject(IntPtr thisPtr, IntPtr value);
+        public unsafe delegate int _get_PropertyAsGuid(IntPtr thisPtr, out Guid value);
+        public unsafe delegate int _put_PropertyAsGuid(IntPtr thisPtr, Guid value);
+        public unsafe delegate int _get_PropertyAsString(IntPtr thisPtr, out IntPtr value);
+        public unsafe delegate int _put_PropertyAsString(IntPtr thisPtr, IntPtr value);
+        public unsafe delegate int _get_PropertyAsVector3(IntPtr thisPtr, out Windows.Foundation.Numerics.Vector3 value);
+        public unsafe delegate int _put_PropertyAsVector3(IntPtr thisPtr, Windows.Foundation.Numerics.Vector3 value);
+        public unsafe delegate int _get_PropertyAsQuaternion(IntPtr thisPtr, out Windows.Foundation.Numerics.Quaternion value);
+        public unsafe delegate int _put_PropertyAsQuaternion(IntPtr thisPtr, Windows.Foundation.Numerics.Quaternion value);
+        public unsafe delegate int _get_PropertyAsMatrix4x4(IntPtr thisPtr, out Windows.Foundation.Numerics.Matrix4x4 value);
+        public unsafe delegate int _put_PropertyAsMatrix4x4(IntPtr thisPtr, Windows.Foundation.Numerics.Matrix4x4 value);
+        public unsafe delegate int _add_EventHandler(IntPtr thisPtr, IntPtr handler, out EventRegistrationToken token);
+        public unsafe delegate int _remove_EventHandler(IntPtr thisPtr, EventRegistrationToken token);
 
         // IDelegate
         public struct IDelegateVftbl
@@ -1120,7 +1120,7 @@ namespace WinRT
 
         void _UnsubscribeFromNative()
         {
-            Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr.ToPointer(), _token));
+            Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
             _token.Value = 0;
         }
     }
