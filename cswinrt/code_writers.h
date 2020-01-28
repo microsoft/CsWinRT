@@ -188,7 +188,7 @@ namespace cswinrt
     void write_projection_type(writer& w, type_semantics const& semantics)
     {
         call(semantics,
-            [&](object_type) { w.write("IInspectable"); },
+            [&](object_type) { w.write("object"); },
             [&](guid_type) { w.write("Guid"); },
             [&](type_definition const& type) { write_typedef_name(w, type); },
             [&](generic_type_index const& var) { write_generic_type_name(w, var.index); },
@@ -916,8 +916,8 @@ public %() : this(new %(ActivationFactory<%>.ActivateInstance<%.Vftbl>())){}
 
             w.write(R"(
 public %(%) : this(((Func<%>)(() => {
-IInspectable baseInspectable = null;
-IInspectable innerInspectable;
+object baseInspectable = null;
+object innerInspectable;
 return %.%(%%baseInspectable, out innerInspectable)._default;
 }))()){}
 )",
@@ -1279,7 +1279,7 @@ event % %;)",
             {
                 if (!is_out() && !marshaler_type.empty())
                 {
-                    w.write("object __% = default;\n", param_name);
+                    w.write("% __% = default;\n", local_type, param_name);
                 }
                 return;
             }
@@ -1287,13 +1287,13 @@ event % %;)",
             if (is_object_in() || local_type.empty())
                 return;
 
-            if(!is_array() || !is_out())
+            if (!is_array() || !is_out())
             {
                 w.write("% __% = default;\n",
                     local_type,
                     param_name);
             }
-            
+
             if (is_array())
             {
                 w.write("int __%_length = default;\n", param_name);
@@ -1517,7 +1517,7 @@ event % %;)",
                 break;
             case category::interface_type:
                 m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
-                m.local_type = "IntPtr";
+                m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
                 break;
             case category::class_type:
                 m.local_type = "IntPtr";
@@ -1532,7 +1532,8 @@ event % %;)",
         call(semantics,
             [&](object_type)
             {
-                m.local_type = "IntPtr";
+                m.marshaler_type = "MarshalInspectable";
+                m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
             },
             [&](type_definition const& type)
             {
@@ -2369,10 +2370,10 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
             };
 
             call(semantics,
-                [&](object_type)
+                [&](object_type const&)
                 {
-                    m.marshaler_type = "IInspectable";
-                    m.local_type = m.marshaler_type;
+                    m.marshaler_type = "MarshalInspectable";
+                    m.local_type = "object";
                 },
                 [&](type_definition const& type)
                 {

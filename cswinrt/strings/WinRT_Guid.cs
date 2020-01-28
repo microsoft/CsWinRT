@@ -38,7 +38,7 @@ namespace WinRT
 
         public static string GetSignature(Type type)
         {
-            if (type == typeof(IInspectable))
+            if (type == typeof(object))
             {
                 return "cinterface(IInspectable)";
             }

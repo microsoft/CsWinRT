@@ -144,9 +144,9 @@ namespace WinRT
         [Guid("AF86E2E0-B12D-4c6a-9C5A-D7AA65101E90")]
         public struct Vftbl
         {
-            public delegate int _GetIids(IntPtr pThis, uint iidCount, Guid[] iids);
-            public delegate int _GetRuntimeClassName(IntPtr pThis, IntPtr className);
-            public delegate int _GetTrustLevel(IntPtr pThis, TrustLevel trustLevel);
+            public delegate int _GetIids(IntPtr pThis, out uint iidCount, out Guid[] iids);
+            public delegate int _GetRuntimeClassName(IntPtr pThis, out IntPtr className);
+            public delegate int _GetTrustLevel(IntPtr pThis, out TrustLevel trustLevel);
 
             public IUnknownVftbl IUnknownVftbl;
             public _GetIids GetIids;
@@ -154,7 +154,6 @@ namespace WinRT
             public _GetTrustLevel GetTrustLevel;
         }
 
-        // Factor IInspectable as 'object' projection, and move out to ABI.WinRT.IInspectable:
         public static IInspectable FromAbi(IntPtr thisPtr) =>
             new IInspectable(ObjectReference<Vftbl>.FromAbi(thisPtr));
         public static void DisposeAbi(IntPtr thisPtr)
@@ -176,7 +175,20 @@ namespace WinRT
         {
             _obj = obj;
         }
-        public object _WinRT_Owner { get; set; }
+
+        public string GetRuntimeClassName()
+        {
+            IntPtr __retval = default;
+            try
+            {
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetRuntimeClassName(ThisPtr, out __retval));
+                return MarshalString.FromAbi(__retval);
+            }
+            finally
+            {
+                MarshalString.DisposeAbi(__retval);
+            }
+        }
     }
 
     internal class Platform
