@@ -156,14 +156,6 @@ namespace WinRT
 
         public static IInspectable FromAbi(IntPtr thisPtr) =>
             new IInspectable(ObjectReference<Vftbl>.FromAbi(thisPtr));
-        public static void DisposeAbi(IntPtr thisPtr)
-        {
-            if (thisPtr == IntPtr.Zero) return;
-            // TODO: this should be a direct v-table call when function pointers are a thing
-            ObjectReference<IInspectable.Vftbl>.Attach(ref thisPtr);
-            thisPtr = IntPtr.Zero;
-        }
-        public static IntPtr FromManaged(IInspectable value) => value._obj.GetRef();
 
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;

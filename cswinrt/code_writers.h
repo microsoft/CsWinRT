@@ -1433,7 +1433,7 @@ event % %;)",
             {
                 if (is_out() && (local_type == "IntPtr"))
                 {
-                    w.write("IInspectable.DisposeAbi(%);\n", get_marshaler_local(w));
+                    w.write("MarshalInspectable.DisposeAbi(%);\n", get_marshaler_local(w));
                 }
                 return;
             }
@@ -2306,10 +2306,6 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
                         param_type,
                         param_local);
                 }
-                else if (local_type == "IInspectable")
-                {
-                    w.write("%.ThisPtr;", param_local);
-                }
                 else
                 {
                     param_type == "bool" ?
@@ -2546,7 +2542,7 @@ public static IntPtr GetAbi(WinRT.Delegate value) => value.ThisPtr;
 
 public static void DisposeMarshaler(WinRT.Delegate value) => value.Release();
 
-public static void DisposeAbi(IntPtr abi) => IInspectable.DisposeAbi(abi);
+public static void DisposeAbi(IntPtr abi) => MarshalInspectable.DisposeAbi(abi);
 
 private static unsafe int Do_Abi_Invoke%
 {
