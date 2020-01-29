@@ -82,8 +82,8 @@ namespace UnitTest
             AssertGuid<IReference<HResult>>("6ff27a1e-4b6a-59b7-b2c3-d1f2ee474593");
             AssertGuid<IReference<string>>("fd416dfb-2a07-52eb-aae3-dfce14116c05");
             //AssertGuid<IReference<event_token>>("a9b18291-ce2a-5dae-8a23-b7f7388416db");
-            AssertGuid<IReference<WF.TimeSpan>>("604d0c4c-91de-5c2a-935f-362f13eaf800");
-            AssertGuid<IReference<WF.DateTime>>("5541d8a7-497c-5aa4-86fc-7713adbf2a2c");
+            AssertGuid<IReference<System.TimeSpan>>("604d0c4c-91de-5c2a-935f-362f13eaf800");
+            AssertGuid<IReference<System.DateTimeOffset>>("5541d8a7-497c-5aa4-86fc-7713adbf2a2c");
             AssertGuid<IReference<Point>>("84f14c22-a00a-5272-8d3d-82112e66df00");
             AssertGuid<IReference<Rect>>("80423f11-054f-5eac-afd3-63b6ce15e77b");
             AssertGuid<IReference<Size>>("61723086-8e53-5276-9f36-2a4bb93e2b75");
@@ -687,6 +687,37 @@ namespace UnitTest
             e = Assert.Throws<AggregateException>(() => task.Wait(1000));
             Assert.True(e.InnerException is TaskCanceledException);
             Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        [Fact]
+        public void TestPointTypeMapping()
+        {
+            var pt = new Point{ X = 3.14, Y = 42 };
+            TestObject.PointProperty = pt;
+            Assert.Equal(pt.X, TestObject.PointProperty.X);
+            Assert.Equal(pt.Y, TestObject.PointProperty.Y);
+            Assert.True(TestObject.PointProperty == pt);
+            Assert.Equal(pt, TestObject.GetPointReference().Value);
+        }
+
+        [Fact]
+        public void TestTimeSpanMapping()
+        {
+            var ts = TimeSpan.FromSeconds(42);
+            TestObject.TimeSpanProperty = ts;
+            Assert.Equal(ts, TestObject.TimeSpanProperty);
+            Assert.Equal(ts, TestObject.GetTimeSpanReference().Value);
+            Assert.Equal(ts, Class.FromSeconds(42));
+        }
+
+        [Fact]
+        public void TestDateTimeMapping()
+        {
+            var now = DateTimeOffset.Now;
+            Assert.Equal(0, (Class.Now() - now).Seconds); // Unlikely to be the same, but should be within a second
+            TestObject.DateTimeProperty = now;
+            Assert.Equal(now, TestObject.DateTimeProperty);
+            Assert.Equal(now, TestObject.GetDateTimeProperty().Value);
         }
     }
 }

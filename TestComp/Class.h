@@ -36,6 +36,9 @@ namespace winrt::TestComp::implementation
         winrt::handle _syncHandle;
         int32_t _asyncResult;
         int32_t _asyncProgress;
+        Windows::Foundation::Point _point{};
+        Windows::Foundation::TimeSpan _timeSpan{};
+        Windows::Foundation::DateTime _dateTime{};
 
         Class(int32_t intProperty);
         Class(int32_t intProperty, hstring const& stringProperty);
@@ -51,6 +54,8 @@ namespace winrt::TestComp::implementation
         static void StaticSetString(TestComp::ProvideString const& provideString);
         static int32_t StaticReadWriteProperty();
         static void StaticReadWriteProperty(int32_t value);
+        static Windows::Foundation::TimeSpan FromSeconds(int32_t seconds);
+        static Windows::Foundation::DateTime Now();
         winrt::event_token Event0(TestComp::EventHandler0 const& handler);
         void Event0(winrt::event_token const& token) noexcept;
         void InvokeEvent0();
@@ -153,6 +158,16 @@ namespace winrt::TestComp::implementation
         Windows::Foundation::IAsyncActionWithProgress<int32_t> DoitAsyncWithProgress();
         Windows::Foundation::IAsyncOperation<int32_t> AddAsync(int32_t lhs, int32_t rhs);
         Windows::Foundation::IAsyncOperationWithProgress<int32_t, int32_t> AddAsyncWithProgress(int32_t lhs, int32_t rhs);
+
+        Windows::Foundation::Point PointProperty();
+        void PointProperty(Windows::Foundation::Point const& value);
+        Windows::Foundation::IReference<Windows::Foundation::Point> GetPointReference();
+        Windows::Foundation::TimeSpan TimeSpanProperty();
+        void TimeSpanProperty(Windows::Foundation::TimeSpan const& value);
+        Windows::Foundation::IReference<Windows::Foundation::TimeSpan> GetTimeSpanReference();
+        Windows::Foundation::DateTime DateTimeProperty();
+        void DateTimeProperty(Windows::Foundation::DateTime const& value);
+        Windows::Foundation::IReference<Windows::Foundation::DateTime> GetDateTimeProperty();
 
         // IStringable
         hstring ToString();

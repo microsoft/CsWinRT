@@ -1,4 +1,125 @@
 
+namespace Windows.Foundation
+{
+    using global::System;
+    using global::System.Globalization;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Point : IFormattable
+    {
+        float _x;
+        float _y;
+
+        public Point(double x, double y)
+        {
+            _x = (float)x;
+            _y = (float)y;
+        }
+
+        public double X
+        {
+            get { return _x; }
+            set { _x = (float)value; }
+        }
+
+        public double Y
+        {
+            get { return _y; }
+            set { _y = (float)value; }
+        }
+
+        public override string ToString()
+        {
+            return ConvertToString(null, null);
+        }
+
+        public string ToString(IFormatProvider provider)
+        {
+            return ConvertToString(null, provider);
+        }
+
+        string IFormattable.ToString(string format, IFormatProvider provider)
+        {
+            return ConvertToString(format, provider);
+        }
+
+        private string ConvertToString(string format, IFormatProvider provider)
+        {
+            char separator = GetNumericListSeparator(provider);
+            return string.Format(provider, "{1:" + format + "}{0}{2:" + format + "}", separator, _x, _y);
+        }
+
+        static char GetNumericListSeparator(IFormatProvider provider)
+        {
+            // If the decimal separator is a comma use ';'
+            char numericSeparator = ',';
+            var numberFormat = NumberFormatInfo.GetInstance(provider);
+            if ((numberFormat.NumberDecimalSeparator.Length > 0) && (numberFormat.NumberDecimalSeparator[0] == numericSeparator))
+            {
+                numericSeparator = ';';
+            }
+
+            return numericSeparator;
+        }
+
+        public static bool operator==(Point point1, Point point2)
+        {
+            return point1.X == point2.X && point1.Y == point2.Y;
+        }
+
+        public static bool operator!=(Point point1, Point point2)
+        {
+            return !(point1 == point2);
+        }
+
+        public override bool Equals(object o)
+        {
+            return o is Point && this == (Point)o;
+        }
+
+        public bool Equals(Point value)
+        {
+            return (this == value);
+        }
+
+        public override int GetHashCode()
+        {
+            return X.GetHashCode() ^ Y.GetHashCode();
+        }
+    }
+}
+
+namespace ABI.Windows.Foundation
+{
+    public class Point
+    {
+        public static string GetGuidSignature()
+        {
+            return "struct(Windows.Foundation.Point;f4;f4)";
+        }
+    }
+}
+
+namespace ABI.System
+{
+    // TODO: Validate that it's okay to assume binary compatability of structs in the System namespace
+    public struct TimeSpan
+    {
+        public static string GetGuidSignature()
+        {
+            return "struct(Windows.Foundation.TimeSpan;i8)";
+        }
+    }
+
+    public struct DateTimeOffset
+    {
+        public static string GetGuidSignature()
+        {
+            return "struct(Windows.Foundation.DateTime;i8)";
+        }
+    }
+}
+
 namespace System
 {
     using global::System.Diagnostics;

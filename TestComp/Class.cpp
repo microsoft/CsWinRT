@@ -79,6 +79,14 @@ namespace winrt::TestComp::implementation
     {
         statics::_readWrite = value;
     }
+    Windows::Foundation::TimeSpan Class::FromSeconds(int32_t seconds)
+    {
+        return std::chrono::seconds{seconds};
+    }
+    Windows::Foundation::DateTime Class::Now()
+    {
+        return winrt::clock::now();
+    }
     winrt::event_token Class::Event0(TestComp::EventHandler0 const& handler)
     {
         return _event0.add(handler);
@@ -441,12 +449,12 @@ namespace winrt::TestComp::implementation
     {
         _ints.assign( ints.begin(), ints.end() );
     }
-    
+
     com_array<int32_t> Class::GetInts()
     {
         return { _ints.begin(), _ints.end() };
     }
-    
+
     void Class::FillInts(array_view<int32_t> ints)
     {
         std::copy(_ints.begin(), _ints.end(), ints.begin());
@@ -585,6 +593,51 @@ namespace winrt::TestComp::implementation
 
         winrt::check_hresult(_asyncResult);
         co_return lhs + rhs;
+    }
+
+    Windows::Foundation::Point Class::PointProperty()
+    {
+        return _point;
+    }
+
+    void Class::PointProperty(Windows::Foundation::Point const& value)
+    {
+        _point = value;
+    }
+
+    Windows::Foundation::IReference<Windows::Foundation::Point> Class::GetPointReference()
+    {
+        return _point;
+    }
+
+    Windows::Foundation::TimeSpan Class::TimeSpanProperty()
+    {
+        return _timeSpan;
+    }
+
+    void Class::TimeSpanProperty(Windows::Foundation::TimeSpan const& value)
+    {
+        _timeSpan = value;
+    }
+
+    Windows::Foundation::IReference<Windows::Foundation::TimeSpan> Class::GetTimeSpanReference()
+    {
+        return _timeSpan;
+    }
+
+    Windows::Foundation::DateTime Class::DateTimeProperty()
+    {
+        return _dateTime;
+    }
+
+    void Class::DateTimeProperty(Windows::Foundation::DateTime const& value)
+    {
+        _dateTime = value;
+    }
+
+    Windows::Foundation::IReference<Windows::Foundation::DateTime> Class::GetDateTimeProperty()
+    {
+        return _dateTime;
     }
 
     // IStringable

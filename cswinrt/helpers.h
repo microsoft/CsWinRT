@@ -397,7 +397,7 @@ namespace cswinrt
         return std::make_tuple(add_method, remove_method);
     }
 
-    static coded_index<TypeDefOrRef> get_default_interface(TypeDef const& type)
+    inline coded_index<TypeDefOrRef> get_default_interface(TypeDef const& type)
     {
         auto impls = type.InterfaceImpl();
 
@@ -417,4 +417,55 @@ namespace cswinrt
         return {};
     }
 
+    struct mapped_type
+    {
+        std::string_view abi_namespace;
+        std::string_view abi_name;
+        std::string_view mapped_namespace;
+        std::string_view mapped_name;
+    };
+
+    inline const mapped_type* get_mapped_type(std::string_view typeNamespace, std::string_view typeName)
+    {
+        static const struct
+        {
+            std::string_view name_space;
+            std::initializer_list<mapped_type> types;
+        } mapped_types[] =
+        {
+            // NOTE: Must keep namespaces sorted (outer) and abi type names sorted (inner)
+            { "Windows.Foundation",
+                {
+                    { "Windows.Foundation", "DateTime", "System", "DateTimeOffset" },
+                    { "Windows.Foundation", "Point", "Windows.Foundation", "Point" },
+                    { "Windows.Foundation", "TimeSpan", "System", "TimeSpan" },
+                }
+            },
+            { "Windows.UI.Xaml",
+                {
+                    { "Windows.UI.Xaml", "Duration", "Windows.UI.Xaml", "Duration" },
+                }
+            }
+        };
+
+        auto nsItr = std::lower_bound(std::begin(mapped_types), std::end(mapped_types), typeNamespace, [](auto&& v, std::string_view ns)
+        {
+            return v.name_space < ns;
+        });
+        if ((nsItr == std::end(mapped_types)) || (nsItr->name_space != typeNamespace))
+        {
+            return nullptr;
+        }
+
+        auto nameItr = std::lower_bound(nsItr->types.begin(), nsItr->types.end(), typeName, [](auto&& v, std::string_view name)
+        {
+            return v.abi_name < name;
+        });
+        if ((nameItr == nsItr->types.end()) || (nameItr->abi_name != typeName))
+        {
+            return nullptr;
+        }
+
+        return &*nameItr;
+    }
 }
