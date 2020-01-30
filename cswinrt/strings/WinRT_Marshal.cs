@@ -519,6 +519,15 @@ namespace WinRT
 
         private static bool TryUnwrapObject(object o, out IObjectReference objRef)
         {
+            // The unwrapping here needs to be in exact type match in case the user
+            // has implemented a WinRT interface or inherited from a WinRT class
+            // in a .NET (non-projected) type.
+
+            // TODO: Define and output attributes defining that a type is a projected interface
+            // or class type to avoid accidental collisions.
+            // Also, it might be a good idea to add a property to get the IObjectReference
+            // that is marked [EditorBrowsable(EditorBrowsableState.Never)] to hide it from most IDEs
+            // to help avoid using private implementation details.
             Type type = o.GetType();
             // Projected interface types have fields name _obj that hold their object reference.
             objRef = (IObjectReference)type.GetField("_obj", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)?.GetValue(o);
