@@ -716,7 +716,7 @@ namespace UnitTest
         public void TestDateTimeMapping()
         {
             var now = DateTimeOffset.Now;
-            Assert.Equal(0, (Class.Now() - now).Seconds); // Unlikely to be the same, but should be within a second
+            Assert.InRange((Class.Now() - now).Ticks, -TimeSpan.TicksPerSecond, TimeSpan.TicksPerSecond); // Unlikely to be the same, but should be within a second
             TestObject.DateTimeProperty = now;
             Assert.Equal(now, TestObject.DateTimeProperty);
             Assert.Equal(now, TestObject.GetDateTimeProperty().Value);
