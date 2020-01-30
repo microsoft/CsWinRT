@@ -91,7 +91,7 @@ namespace UnitTest
             // Enums, structs, IInspectable, classes, and delegates
             AssertGuid<IReference<PropertyType>>("ecebde54-fac0-5aeb-9ba9-9e1fe17e31d5");
             AssertGuid<IReference<Point>>("84f14c22-a00a-5272-8d3d-82112e66df00");
-            AssertGuid<IVector<IInspectable>>("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a");
+            AssertGuid<IVector<object>>("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a");
             AssertGuid<IVector<WF.Uri>>("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e");
             AssertGuid<IVector<AsyncActionCompletedHandler>>("5dafe591-86dc-59aa-bfda-07f5d59fc708");
             AssertGuid<IVector<ComposedNonBlittableStruct>>("DBD7880D-AC4C-57EA-A1D8-9BDDEA102376");
@@ -214,16 +214,17 @@ namespace UnitTest
         public void TestPrimitives()
         {
             var test_int = 21;
-            TestObject.IntPropertyChanged += (IInspectable sender, Int32 value) =>
+            TestObject.IntPropertyChanged += (object sender, Int32 value) =>
             {
-                var c = Class.FromAbi(sender.ThisPtr);
+                Assert.IsAssignableFrom<Class>(sender);
+                var c = (Class)sender;
                 Assert.Equal(value, test_int);
             };
             TestObject.IntProperty = test_int;
 
             var expectedVal = true;
             var hits = 0;
-            TestObject.BoolPropertyChanged += (IInspectable sender, bool value) =>
+            TestObject.BoolPropertyChanged += (object sender, bool value) =>
             {
                 Assert.Equal(expectedVal, value);
                 ++hits;
@@ -506,8 +507,9 @@ namespace UnitTest
             Assert.Equal(3u, objs.Size);
             for (int i = 0; i < 3; ++i)
             {
-                // TOOD: casting projection needs some work
-                IPropertyValue propVal = new ABI.Windows.Foundation.IPropertyValue(objs.GetAt((uint)i).As<ABI.Windows.Foundation.IPropertyValue.Vftbl>());
+                var propValAsObj = objs.GetAt((uint)i);
+                Assert.IsAssignableFrom<IPropertyValue>(propValAsObj);
+                IPropertyValue propVal = (IPropertyValue)propValAsObj;
                 Assert.Equal(i, propVal.GetInt32());
             }
         }

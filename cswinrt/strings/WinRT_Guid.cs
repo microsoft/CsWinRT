@@ -48,7 +48,7 @@ namespace WinRT
                 }
             }
 
-            if (type == typeof(IInspectable))
+            if (type == typeof(object))
             {
                 return "cinterface(IInspectable)";
             }
