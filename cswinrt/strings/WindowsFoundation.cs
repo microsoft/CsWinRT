@@ -102,17 +102,65 @@ namespace ABI.Windows.Foundation
 
 namespace ABI.System
 {
-    // TODO: Validate that it's okay to assume binary compatability of structs in the System namespace
+    [StructLayout(LayoutKind.Sequential)]
     public struct TimeSpan
     {
+        // NOTE: both 'Windows.Foundation.TimeSpan.Duration' and 'System.TimeSpan.Ticks' are in units of 100ns
+        public long Duration;
+
+        public struct Marshaler
+        {
+            public TimeSpan __abi;
+        }
+
+        public static Marshaler CreateMarshaler(global::System.TimeSpan value)
+        {
+            return new Marshaler{ __abi = new TimeSpan{ Duration = value.Ticks } };
+        }
+
+        public static TimeSpan GetAbi(Marshaler m) => m.__abi;
+
+        public static global::System.TimeSpan FromAbi(TimeSpan value)
+        {
+            return global::System.TimeSpan.FromTicks(value.Duration);
+        }
+
+        public static void DisposeMarshaler(Marshaler m) {}
+        public static void DisposeAbi(TimeSpan abi) {}
+
         public static string GetGuidSignature()
         {
             return "struct(Windows.Foundation.TimeSpan;i8)";
         }
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     public struct DateTimeOffset
     {
+        // NOTE: 'Windows.Foundation.DateTime.UniversalTime' is a FILETIME value (relative to 01/01/1601), however
+        // 'System.DateTimeOffset.Ticks' is relative to 01/01/0001
+        public long UniversalTime;
+
+        public struct Marshaler
+        {
+            public DateTimeOffset __abi;
+        }
+
+        public static Marshaler CreateMarshaler(global::System.DateTimeOffset value)
+        {
+            return new Marshaler{ __abi = new DateTimeOffset{ UniversalTime = value.ToFileTime() } };
+        }
+
+        public static DateTimeOffset GetAbi(Marshaler m) => m.__abi;
+
+        public static global::System.DateTimeOffset FromAbi(DateTimeOffset value)
+        {
+            return global::System.DateTimeOffset.FromFileTime(value.UniversalTime);
+        }
+
+        public static void DisposeMarshaler(Marshaler m) {}
+        public static void DisposeAbi(DateTimeOffset abi) {}
+
         public static string GetGuidSignature()
         {
             return "struct(Windows.Foundation.DateTime;i8)";

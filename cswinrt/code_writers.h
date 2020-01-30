@@ -74,6 +74,11 @@ namespace cswinrt
                     case category::enum_type:
                         return true;
                     case category::struct_type:
+                        if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
+                        {
+                            return !mapping->requires_marshaling;
+                        }
+
                         for (auto&& field : type.FieldList())
                         {
                             if (!is_type_blittable(get_type_semantics(field.Signature().Type())))

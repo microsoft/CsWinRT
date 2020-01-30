@@ -423,6 +423,7 @@ namespace cswinrt
         std::string_view abi_name;
         std::string_view mapped_namespace;
         std::string_view mapped_name;
+        bool requires_marshaling;
     };
 
     inline const mapped_type* get_mapped_type(std::string_view typeNamespace, std::string_view typeName)
@@ -436,9 +437,9 @@ namespace cswinrt
             // NOTE: Must keep namespaces sorted (outer) and abi type names sorted (inner)
             { "Windows.Foundation",
                 {
-                    { "Windows.Foundation", "DateTime", "System", "DateTimeOffset" },
+                    { "Windows.Foundation", "DateTime", "System", "DateTimeOffset", true },
                     { "Windows.Foundation", "Point", "Windows.Foundation", "Point" },
-                    { "Windows.Foundation", "TimeSpan", "System", "TimeSpan" },
+                    { "Windows.Foundation", "TimeSpan", "System", "TimeSpan", true },
                 }
             },
             { "Windows.UI.Xaml",
