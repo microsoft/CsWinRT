@@ -9,16 +9,18 @@
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   
-  <Target Name="CopyTestComponent" BeforeTargets="PreBuildEvent">
-    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.dll&quot; &quot;$(TargetDir)&quot;" />
-    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.pdb&quot; &quot;$(TargetDir)&quot;" />
+  <Target Name="CopyBinaries" BeforeTargets="PreBuildEvent">
+    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp.dll&quot; &quot;$(TargetDir)&quot;" />
+    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp.pdb&quot; &quot;$(TargetDir)&quot;" />
+    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComponent.dll&quot; &quot;$(TargetDir)&quot;" />
+    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComponent.pdb&quot; &quot;$(TargetDir)&quot;" />
   </Target>
 
-  <Target Name="GenerateTestComponentProjection" BeforeTargets="CoreCompile" Condition="'$(GenerateTestProjection)' == 'true'">
-    <Exec Command="$(CsWinrtExe) -verbose -in 10.0.18362.0 $(OutDir)TestComp\TestComp.winmd -out &quot;$(ProjectDir)Generated Files&quot; -include TestComp -include Windows.Foundation -exclude Windows.Foundation.Diagnostics -exclude Windows.Foundation.Metadata" />
+  <Target Name="GenerateProjection" BeforeTargets="CoreCompile" Condition="'$(GenerateTestProjection)' == 'true'">
+    <Exec Command="$(CsWinrtExe) -verbose -in 10.0.18362.0 $(OutDir)TestComp.winmd $(OutDir)TestComponent.winmd -out &quot;$(ProjectDir)Generated Files&quot; -include TestComp TestComponent Windows.Foundation -exclude Windows.Foundation.Diagnostics -exclude Windows.Foundation.Metadata" />
   </Target>
 
-  <Target Name="IncludeTestComponentProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateTestComponentProjection">
+  <Target Name="IncludeProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateProjection">
     <ItemGroup>
       <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
     </ItemGroup>
