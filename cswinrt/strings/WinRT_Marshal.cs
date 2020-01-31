@@ -60,7 +60,7 @@ namespace WinRT
             }
             catch (Exception) when (m.Dispose())
             {
-                // Will never execute 
+                // Will never execute
                 return default;
             }
         }
@@ -138,7 +138,7 @@ namespace WinRT
             }
             catch (Exception) when (m.Dispose())
             {
-                // Will never execute 
+                // Will never execute
                 return default;
             }
         }
@@ -308,7 +308,7 @@ namespace WinRT
             {
                 var length = array.Length;
                 // TODO: consider Marshal.AllocCoTaskMem based on sizeof(HelperType)
-                // and a Marshaler<T>.CopyTo to allow blitting into array directly 
+                // and a Marshaler<T>.CopyTo to allow blitting into array directly
                 // without boxing
                 var abi_array = Array.CreateInstance(HelperType, length);
                 m._abi_elements = new object[length];
@@ -322,7 +322,7 @@ namespace WinRT
             }
             catch (Exception) when (m.Dispose())
             {
-                // Will never execute 
+                // Will never execute
                 return default;
             }
         }
@@ -470,7 +470,7 @@ namespace WinRT
             {
                 return null;
             }
-            
+
             if (unwrapObject && TryUnwrapObject(o, out var objRef))
             {
                 return objRef.As<IInspectable.Vftbl>();
@@ -739,6 +739,15 @@ namespace WinRT
             {
                 // If type is blittable just pass through
                 AbiType = type.FindHelperType();
+                if (AbiType != null)
+                {
+                    // Could still be blittable and the 'ABI.*' type exists for other reasons (e.g. it's a mapped type)
+                    if (AbiType.GetMethod("FromAbi") == null)
+                    {
+                        AbiType = null;
+                    }
+                }
+
                 if (AbiType == null)
                 {
                     AbiType = type;

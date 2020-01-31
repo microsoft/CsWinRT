@@ -74,6 +74,11 @@ namespace cswinrt
                     case category::enum_type:
                         return true;
                     case category::struct_type:
+                        if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
+                        {
+                            return !mapping->requires_marshaling;
+                        }
+
                         for (auto&& field : type.FieldList())
                         {
                             if (!is_type_blittable(get_type_semantics(field.Signature().Type())))
@@ -142,21 +147,25 @@ namespace cswinrt
 
     void write_typedef_name(writer& w, type_definition const& type, bool abiNamespace = false, bool forceWriteNamespace = false)
     {
-        if (forceWriteNamespace || ((type.TypeNamespace() != w._current_namespace) || (abiNamespace != w._in_abi_namespace)))
+        auto typeNamespace = type.TypeNamespace();
+        auto typeName = type.TypeName();
+        if (auto proj = get_mapped_type(typeNamespace, typeName))
         {
+            typeNamespace = proj->mapped_namespace;
+            typeName = proj->mapped_name;
+        }
+
+        if (forceWriteNamespace || ((typeNamespace != w._current_namespace) || (abiNamespace != w._in_abi_namespace)))
+        {
+            w.write("global::");
             if (abiNamespace)
             {
                 w.write("ABI.");
             }
-            else if (w._in_abi_namespace)
-            {
-                // E.g. disambiguate 'Foo.Bar' from 'ABI.Foo.Bar' in the 'ABI' namespace
-                w.write("global::");
-            }
 
-            w.write("%.", type.TypeNamespace());
+            w.write("%.", typeNamespace);
         }
-        w.write("@", type.TypeName());
+        w.write("@", typeName);
     }
 
     void write_type_params(writer& w, TypeDef const& type)
@@ -288,7 +297,7 @@ namespace cswinrt
         }
     }
 
-    void write_projected_signature(writer& w, TypeSig const& type_sig) 
+    void write_projected_signature(writer& w, TypeSig const& type_sig)
     {
         write_projection_type(w, get_type_semantics(type_sig));
         if(type_sig.is_szarray()) w.write("[]");
@@ -606,7 +615,7 @@ namespace cswinrt
         }
 
         method_signature signature{ method };
-        
+
         auto raw_return_type = w.write_temp("%", [&](writer& w) {
             write_projection_return_type(w, signature);
         });
@@ -1136,7 +1145,7 @@ private EventSource<%> _%;)",
             return false;
         };
 
-        std::function<bool(TypeDef const&)> search_interfaces = [&](TypeDef const& type) 
+        std::function<bool(TypeDef const&)> search_interfaces = [&](TypeDef const& type)
         {
             for (auto&& iface : type.InterfaceImpl())
             {
@@ -1249,7 +1258,7 @@ event % %;)",
 
         bool is_object_in() const
         {
-            return (category == param_category::in) && 
+            return (category == param_category::in) &&
                 marshaler_type.empty() && local_type == "IntPtr";
         }
 
@@ -1313,7 +1322,7 @@ event % %;)",
         {
             return w.write_temp("%", bind<write_escaped_identifier>(param_name));
         }
-        
+
         void write_assignments(writer& w) const
         {
             if (is_object_in() || is_out() || local_type.empty())
@@ -1324,7 +1333,7 @@ event % %;)",
                 marshaler_type,
                 is_array() ? "Array" : "",
                 bind<write_escaped_identifier>(param_name));
-            
+
             if (is_generic() || is_array())
             {
                 w.write("% = %.GetAbi%(%);\n",
@@ -1346,7 +1355,7 @@ event % %;)",
                         is_ref() ? "ref " : is_out() ? "out " : "", param_name);
                     return;
                 }
-            
+
                 if (is_out())
                 {
                     w.write("out __%", param_name);
@@ -1383,7 +1392,7 @@ event % %;)",
             }
 
             w.write("%.GetAbi%(%)",
-                marshaler_type, 
+                marshaler_type,
                 is_array() ? "Array" : "",
                 get_marshaler_local(w));
         }
@@ -1392,7 +1401,7 @@ event % %;)",
         {
             auto param_cast = is_generic() ?
                 w.write_temp("(%)", param_type) : "";
-            
+
             if (marshaler_type.empty())
             {
                 if (local_type == "IntPtr")
@@ -1408,7 +1417,7 @@ event % %;)",
             }
 
             w.write("%.FromAbi%(%)",
-                marshaler_type, 
+                marshaler_type,
                 is_array() ? "Array" : "",
                 source);
         }
@@ -1441,7 +1450,7 @@ event % %;)",
             if (is_out())
             {
                 w.write("%.DisposeAbi%(%);\n",
-                    marshaler_type, 
+                    marshaler_type,
                     is_array() ? "Array" : "",
                     get_param_local(w));
             }
@@ -1484,7 +1493,7 @@ event % %;)",
                 //m.local_type = "MarshalBoolean.MarshalerArray";
                 //}
             }
-                
+
             m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
             m.marshaler_type += "<" + m.param_type + ">";
             m.local_type = m.marshaler_type + ".MarshalerArray";
@@ -1539,8 +1548,8 @@ event % %;)",
             {
                 set_typedef_marshaler(m, type);
             },
-            [&](generic_type_index const& /*var*/) 
-            { 
+            [&](generic_type_index const& /*var*/)
+            {
                 m.param_type = w.write_temp("%", bind<write_projection_type>(semantics));
                 m.marshaler_type = w.write_temp("Marshaler<%>", m.param_type);
                 m.local_type = "object";
@@ -1601,7 +1610,7 @@ event % %;)",
 
     void write_abi_method_call_marshalers(writer& w, method_signature signature, std::string_view invoke_target, bool is_generic, std::vector<abi_marshaler> const& marshalers)
     {
-        auto write_abi_invoke = [&](writer& w) 
+        auto write_abi_invoke = [&](writer& w)
         {
             if (is_generic)
             {
@@ -1611,10 +1620,10 @@ event % %;)",
             {
                 w.write("Marshal.ThrowExceptionForHR(%(ThisPtr%));\n",
                     invoke_target,
-                    bind_each([](writer& w, abi_marshaler const& m) 
-                    { 
+                    bind_each([](writer& w, abi_marshaler const& m)
+                    {
                         w.write(", ");
-                        m.write_marshal_to_abi(w); 
+                        m.write_marshal_to_abi(w);
                     }, marshalers));
             }
             for (auto&& m : marshalers)
@@ -1655,18 +1664,18 @@ event % %;)",
         w.write(R"(try
 {
 %%}
-finally 
+finally
 {
 %}
 )",
-            bind_each([](writer& w, abi_marshaler const& m) 
-            { 
+            bind_each([](writer& w, abi_marshaler const& m)
+            {
                 m.write_assignments(w);
             }, marshalers),
             bind(write_abi_invoke),
-            bind_each([](writer& w, abi_marshaler const& m) 
-            { 
-                m.write_dispose(w); 
+            bind_each([](writer& w, abi_marshaler const& m)
+            {
+                m.write_dispose(w);
             }, marshalers)
         );
     }
@@ -2003,7 +2012,7 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
                             w.write("private static readonly Type %_Type = Expression.GetDelegateType(new Type[]{ typeof(void*), %typeof(int) });\n",
                                 vmethod_name,
                                 bind_each([&](writer& w, auto&& pair)
-                                { 
+                                {
                                     w.write("%, ", pair.first);
                                 }, generic_abi_types));
                             generic_methods.insert(vmethod_name);
@@ -2208,7 +2217,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
         auto abi_type_name = write_type_name_temp(w, type, "%", true);
         auto projected_type_name = write_type_name_temp(w, type);
         auto default_interface_abi_name = get_default_interface_name(w, type, true);
-        
+
         w.write(R"(public struct %
 {
 public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
@@ -2284,7 +2293,7 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
             else
             {
                 w.write("%.FromAbi%(%)",
-                    marshaler_type, 
+                    marshaler_type,
                     is_array() ? "Array" : "",
                     bind<write_escaped_identifier>(param_name));
             }
@@ -2316,7 +2325,7 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
             else
             {
                 w.write("%.FromManaged%(%);",
-                    marshaler_type, 
+                    marshaler_type,
                     is_array() ? "Array" : "",
                     param_local);
             }
@@ -2375,8 +2384,8 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
                 {
                     set_typedef_marshaler(type);
                 },
-                [&](generic_type_index const& /*var*/) 
-                { 
+                [&](generic_type_index const& /*var*/)
+                {
                     m.param_type = w.write_temp("%", bind<write_projection_type>(semantics));
                     m.marshaler_type = w.write_temp("Marshaler<%>", m.param_type);
                 },
@@ -2408,7 +2417,7 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
 
         for (auto&& param : signature.params())
         {
-            managed_marshaler m{ 
+            managed_marshaler m{
                 std::string(param.first.Name()),
                 is_generic ? (int)marshalers.size() : -1
             };
@@ -2421,7 +2430,7 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
         {
             managed_marshaler m{
                 std::string(signature.return_param_name()),
-                -1, 
+                -1,
                 ret.Type().is_szarray() ? param_category::receive_array : param_category::out
             };
             set_marshaler(w, get_type_semantics(ret.Type()), m);
@@ -2437,7 +2446,7 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
         auto marshalers = managed_marshalers.first;
         auto return_marshaler = managed_marshalers.second;
         auto return_sig = signature.return_signature();
-        
+
         w.write(
 R"(%%var hr = WinRT.Delegate.MarshalInvoke(%, (% invoke) =>
 {
@@ -2453,7 +2462,7 @@ R"(%%var hr = WinRT.Delegate.MarshalInvoke(%, (% invoke) =>
                 {
                     w.write("var __params = new object[]{ % };\n",
                         bind_list([](writer& w, managed_marshaler const& m)
-                        { 
+                        {
                             m.is_out() ?
                                 w.write("null") :
                                 m.write_marshal_to_managed(w);
@@ -2474,7 +2483,7 @@ R"(%%var hr = WinRT.Delegate.MarshalInvoke(%, (% invoke) =>
                     w.write("__% = ", return_marshaler.param_name);
                     if (is_generic)
                     {
-                        w.write("(%)", 
+                        w.write("(%)",
                             bind<write_projection_type>(get_type_semantics(return_sig.Type())));
                     }
                 }
@@ -2483,14 +2492,14 @@ R"(%%var hr = WinRT.Delegate.MarshalInvoke(%, (% invoke) =>
                     w.write(R"(invoke.DynamicInvoke(__params);)");
                     return;
                 }
-                w.write(R"(invoke(%);)", 
+                w.write(R"(invoke(%);)",
                     bind_list([](writer& w, managed_marshaler const& m)
-                    { 
+                    {
                         m.write_marshal_to_managed(w);
                     }, ", ", marshalers));
             },
             bind_each([](writer& w, managed_marshaler const& m)
-            { 
+            {
                 m.write_marshal_from_managed(w);
             }, marshalers),
             [&](writer& w) {
@@ -2637,9 +2646,9 @@ return new WinRT.Delegate(func, managedDelegate);)",
                     auto param_cat = get_param_category(param);
                     if (!generic_type.empty() && (param_cat <= param_category::out))
                     {
-                        w.write(", %% %", 
-                            param_cat == param_category::out ? "out " : "", 
-                            generic_type, 
+                        w.write(", %% %",
+                            param_cat == param_category::out ? "out " : "",
+                            generic_type,
                             bind<write_parameter_name>(param));
                     }
                     else
@@ -2741,8 +2750,8 @@ internal struct Marshaler
 %public % __abi;
 %}
 )",
-            bind_each([](writer& w, abi_marshaler const& m) 
-            { 
+            bind_each([](writer& w, abi_marshaler const& m)
+            {
                 if (m.marshaler_type.empty()) return;
                 w.write("public % %;\n", m.local_type, m.get_escaped_param_name(w));
             }, marshalers),
@@ -2754,8 +2763,8 @@ internal struct Marshaler
 %return false;
 }
 )",
-                bind_each([](writer& w, abi_marshaler const& m) 
-                { 
+                bind_each([](writer& w, abi_marshaler const& m)
+                {
                     if (m.marshaler_type.empty()) return;
                     w.write("%.DisposeMarshaler(%);\n",
                         m.marshaler_type,
@@ -2766,7 +2775,7 @@ internal struct Marshaler
         if (!have_disposers)
         {
             w.write(R"(
-public static Marshaler CreateMarshaler(% arg)   
+public static Marshaler CreateMarshaler(% arg)
 {
 return new Marshaler()
 {
@@ -2780,7 +2789,7 @@ public static % GetAbi(Marshaler m) => m.__abi;
 
 public static % FromAbi(% arg)
 {
-return new %() 
+return new %()
 {
 %};
 }
@@ -2812,10 +2821,10 @@ public static void DisposeAbi(% abi){ /*todo*/ }
         }
 
         w.write(R"(
-public static Marshaler CreateMarshaler(% arg)   
+public static Marshaler CreateMarshaler(% arg)
 {
 var m = new Marshaler();
-try 
+try
 {
 %m.__abi = new %()
 {
@@ -2824,7 +2833,7 @@ return m;
 }
 catch (Exception) when (m.Dispose())
 {
-// Will never execute 
+// Will never execute
 return default;
 }
 }
@@ -2833,7 +2842,7 @@ public static % GetAbi(Marshaler m) => m.__abi;
 
 public static % FromAbi(% arg)
 {
-return new %() 
+return new %()
 {
 %};
 }
@@ -2843,8 +2852,8 @@ public static void DisposeMarshaler(Marshaler m) => m.Dispose();
 public static void DisposeAbi(% abi){ /*todo*/ }
 )",
             projected_type,
-            bind_each([](writer& w, abi_marshaler const& m) 
-            { 
+            bind_each([](writer& w, abi_marshaler const& m)
+            {
                 if (m.marshaler_type.empty()) return;
                 w.write("m.% = ", m.get_escaped_param_name(w));
                 m.write_create(w, "arg." + m.get_escaped_param_name(w));
@@ -2880,7 +2889,7 @@ public static void DisposeAbi(% abi){ /*todo*/ }
                 for (auto&& m : marshalers)
                 {
                     w.write(count++ == 0 ? "" : ", ");
-                    if (m.marshaler_type.empty()) 
+                    if (m.marshaler_type.empty())
                     {
                         w.write(m.param_type == "bool" ? "% = arg.% != 0\n" : "% = arg.%\n",
                             m.get_escaped_param_name(w),
