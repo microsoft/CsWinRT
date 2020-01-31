@@ -134,16 +134,17 @@ namespace UnitTest
         public void TestPrimitives()
         {
             var test_int = 21;
-            TestObject.IntPropertyChanged += (IInspectable sender, Int32 value) =>
+            TestObject.IntPropertyChanged += (object sender, Int32 value) =>
             {
-                var c = Class.FromAbi(sender.ThisPtr);
+                Assert.IsAssignableFrom<Class>(sender);
+                var c = (Class)sender;
                 Assert.Equal(value, test_int);
             };
             TestObject.IntProperty = test_int;
 
             var expectedVal = true;
             var hits = 0;
-            TestObject.BoolPropertyChanged += (IInspectable sender, bool value) =>
+            TestObject.BoolPropertyChanged += (object sender, bool value) =>
             {
                 Assert.Equal(expectedVal, value);
                 ++hits;
@@ -426,8 +427,9 @@ namespace UnitTest
             Assert.Equal(3u, objs.Size);
             for (int i = 0; i < 3; ++i)
             {
-                // TOOD: casting projection needs some work
-                IPropertyValue propVal = new ABI.Windows.Foundation.IPropertyValue(objs.GetAt((uint)i).As<ABI.Windows.Foundation.IPropertyValue.Vftbl>());
+                var propValAsObj = objs.GetAt((uint)i);
+                Assert.IsAssignableFrom<IPropertyValue>(propValAsObj);
+                IPropertyValue propVal = (IPropertyValue)propValAsObj;
                 Assert.Equal(i, propVal.GetInt32());
             }
         }
@@ -607,6 +609,37 @@ namespace UnitTest
             e = Assert.Throws<AggregateException>(() => task.Wait(1000));
             Assert.True(e.InnerException is TaskCanceledException);
             Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        [Fact]
+        public void TestPointTypeMapping()
+        {
+            var pt = new Point{ X = 3.14, Y = 42 };
+            TestObject.PointProperty = pt;
+            Assert.Equal(pt.X, TestObject.PointProperty.X);
+            Assert.Equal(pt.Y, TestObject.PointProperty.Y);
+            Assert.True(TestObject.PointProperty == pt);
+            Assert.Equal(pt, TestObject.GetPointReference().Value);
+        }
+
+        [Fact]
+        public void TestTimeSpanMapping()
+        {
+            var ts = TimeSpan.FromSeconds(42);
+            TestObject.TimeSpanProperty = ts;
+            Assert.Equal(ts, TestObject.TimeSpanProperty);
+            Assert.Equal(ts, TestObject.GetTimeSpanReference().Value);
+            Assert.Equal(ts, Class.FromSeconds(42));
+        }
+
+        [Fact]
+        public void TestDateTimeMapping()
+        {
+            var now = DateTimeOffset.Now;
+            Assert.InRange((Class.Now() - now).Ticks, -TimeSpan.TicksPerSecond, TimeSpan.TicksPerSecond); // Unlikely to be the same, but should be within a second
+            TestObject.DateTimeProperty = now;
+            Assert.Equal(now, TestObject.DateTimeProperty);
+            Assert.Equal(now, TestObject.GetDateTimeProperty().Value);
         }
     }
 }
