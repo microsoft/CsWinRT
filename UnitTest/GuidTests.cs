@@ -82,8 +82,8 @@ namespace UnitTest
             AssertGuid<IReference<HResult>>("6ff27a1e-4b6a-59b7-b2c3-d1f2ee474593");
             AssertGuid<IReference<string>>("fd416dfb-2a07-52eb-aae3-dfce14116c05");
             //AssertGuid<IReference<event_token>>("a9b18291-ce2a-5dae-8a23-b7f7388416db");
-            AssertGuid<IReference<WF.TimeSpan>>("604d0c4c-91de-5c2a-935f-362f13eaf800");
-            AssertGuid<IReference<WF.DateTime>>("5541d8a7-497c-5aa4-86fc-7713adbf2a2c");
+            AssertGuid<IReference<System.TimeSpan>>("604d0c4c-91de-5c2a-935f-362f13eaf800");
+            AssertGuid<IReference<System.DateTimeOffset>>("5541d8a7-497c-5aa4-86fc-7713adbf2a2c");
             AssertGuid<IReference<Point>>("84f14c22-a00a-5272-8d3d-82112e66df00");
             AssertGuid<IReference<Rect>>("80423f11-054f-5eac-afd3-63b6ce15e77b");
             AssertGuid<IReference<Size>>("61723086-8e53-5276-9f36-2a4bb93e2b75");
@@ -91,7 +91,7 @@ namespace UnitTest
             // Enums, structs, IInspectable, classes, and delegates
             AssertGuid<IReference<PropertyType>>("ecebde54-fac0-5aeb-9ba9-9e1fe17e31d5");
             AssertGuid<IReference<Point>>("84f14c22-a00a-5272-8d3d-82112e66df00");
-            AssertGuid<IVector<IInspectable>>("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a");
+            AssertGuid<IVector<object>>("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a");
             AssertGuid<IVector<WF.Uri>>("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e");
             AssertGuid<IVector<AsyncActionCompletedHandler>>("5dafe591-86dc-59aa-bfda-07f5d59fc708");
             AssertGuid<IVector<ComposedNonBlittableStruct>>("DBD7880D-AC4C-57EA-A1D8-9BDDEA102376");
