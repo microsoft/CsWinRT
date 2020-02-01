@@ -12,8 +12,8 @@
   <Target Name="CopyBinaries" BeforeTargets="PreBuildEvent">
     <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.dll&quot; &quot;$(TargetDir)&quot;" />
     <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.pdb&quot; &quot;$(TargetDir)&quot;" />
-    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComponent.dll&quot; &quot;$(TargetDir)&quot;" />
-    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComponent.pdb&quot; &quot;$(TargetDir)&quot;" />
+    <!--<Exec Command="xcopy /D /Y &quot;$(OutDir)TestComponent.dll&quot; &quot;$(TargetDir)&quot;" />
+    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComponent.pdb&quot; &quot;$(TargetDir)&quot;" />-->
   </Target>
 
   <Target Name="GenerateProjection" BeforeTargets="CoreCompile" Condition="'$(GenerateTestProjection)' == 'true'">
