@@ -36,6 +36,7 @@
   <ItemGroup>
     <ProjectReference Include="..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\TestComp\TestComp.vcxproj" />
+    <ProjectReference Include="..\TestWinRT\TestComponent\TestComponent.vcxproj" />
   </ItemGroup>
 
 </Project>
