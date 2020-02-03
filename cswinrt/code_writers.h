@@ -2270,7 +2270,7 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
         void write_local(writer& w) const
         {
             XLANG_ASSERT(!is_generic());
-            if((category == param_category::in) && local_type.empty())
+            if((category == param_category::in) || (category == param_category::pass_array)) 
                 return;
             w.write("% __% = default;\n",
                 param_type == "bool" ? "bool" : local_type,
@@ -2469,10 +2469,10 @@ R"(%%var hr = WinRT.Delegate.MarshalInvoke(%, (% invoke) =>
                         }, ", ", marshalers));
                     return;
                 }
-                bind_each([](writer& w, managed_marshaler const& m)
+                for (auto&& m : marshalers)
                 {
                     m.write_local(w);
-                }, marshalers);
+                };
             },
             is_generic ? "new IntPtr(thisPtr)" : "thisPtr",
             is_generic ? "global::System.Delegate" : type_name,

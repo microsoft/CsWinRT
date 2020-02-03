@@ -40,7 +40,7 @@ The **/winuitest** folder contains a smoke test for generating and building a co
 
 ## /TestWinRT
 
-C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/TestWinRT/) repository for general language projection test coverage.  This repo should be cloned into the root of the C#/WinRT repo so that the cswinrt.sln can resolve the reference to TestComponent.vcxproj.  The resulting TestComponent.dll,winmd files are consumed by the UnitTest project above.
+C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/TestWinRT/) repository for general language projection test coverage.  This repo should be cloned into the root of the C#/WinRT repo, via get_testwinrt.cmd, so that the cswinrt.sln can resolve the reference to TestComponent.vcxproj.  The resulting TestComponent.dll,winmd files are consumed by the UnitTest project above.
 
 
 # Contributing
