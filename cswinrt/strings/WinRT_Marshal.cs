@@ -8,6 +8,7 @@ using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Linq.Expressions;
+using System.Collections.Concurrent;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
 #pragma warning disable 0649 // Field 'xxx' is never assigned to, and will always have its default value
@@ -38,15 +39,17 @@ namespace WinRT
         public GCHandle _gchandle;
         public IntPtr _handle;
 
-        public bool Dispose()
+        public void Dispose()
         {
             _gchandle.Dispose();
-            return false;
         }
 
         public static unsafe MarshalString CreateMarshaler(string value)
         {
+            if (value == null) return null;
+
             var m = new MarshalString();
+            Func<bool> dispose = () => { m.Dispose(); return false; };
             try
             {
                 m._gchandle = GCHandle.Alloc(value, GCHandleType.Pinned);
@@ -57,14 +60,14 @@ namespace WinRT
                 };
                 return m;
             }
-            catch (Exception) when (m.Dispose())
+            catch (Exception) when (dispose())
             {
-                // Will never execute 
+                // Will never execute
                 return default;
             }
         }
 
-        public static IntPtr GetAbi(MarshalString m) => m._handle;
+        public static IntPtr GetAbi(MarshalString m) => m == null ? IntPtr.Zero : m._handle;
 
         public static IntPtr GetAbi(object box) => ((MarshalString)box)._handle;
 
@@ -105,39 +108,45 @@ namespace WinRT
 
         public struct MarshalerArray
         {
-            public bool Dispose()
+            public void Dispose()
             {
-                foreach (var abi_string in _abi_strings)
+                if (_marshalers != null)
                 {
-                    abi_string.Dispose();
+                    foreach (var marshaler in _marshalers)
+                    {
+                        marshaler.Dispose();
+                    }
                 }
-                Marshal.FreeCoTaskMem(_array);
-                return false;
+                if (_array != null)
+                {
+                    Marshal.FreeCoTaskMem(_array);
+                }
             }
 
             public IntPtr _array;
-            public MarshalString[] _abi_strings;
+            public MarshalString[] _marshalers;
         }
 
         public static unsafe MarshalerArray CreateMarshalerArray(string[] array)
         {
             var m = new MarshalerArray();
+            Func<bool> dispose = () => { m.Dispose(); return false; };
             try
             {
                 var length = array.Length;
                 m._array = Marshal.AllocCoTaskMem(length * Marshal.SizeOf<IntPtr>());
-                var elements = (IntPtr*)m._array;
-                m._abi_strings = new MarshalString[length];
+                m._marshalers = new MarshalString[length];
+                var elements = (IntPtr*)m._array.ToPointer();
                 for (int i = 0; i < length; i++)
                 {
-                    m._abi_strings[i] = MarshalString.CreateMarshaler(array[i]);
-                    elements[i] = MarshalString.GetAbi(m._abi_strings[i]);
+                    m._marshalers[i] = MarshalString.CreateMarshaler(array[i]);
+                    elements[i] = MarshalString.GetAbi(m._marshalers[i]);
                 };
                 return m;
             }
-            catch (Exception) when (m.Dispose())
+            catch (Exception) when (dispose())
             {
-                // Will never execute 
+                // Will never execute
                 return default;
             }
         }
@@ -145,7 +154,7 @@ namespace WinRT
         public static (int length, IntPtr data) GetAbiArray(object box)
         {
             var m = (MarshalerArray)box;
-            return (m._abi_strings.Length, m._array);
+            return (m._marshalers.Length, m._array);
         }
 
         public static unsafe string[] FromAbiArray(object box)
@@ -158,6 +167,18 @@ namespace WinRT
                 array[i] = MarshalString.FromAbi(data[i]);
             }
             return array;
+        }
+
+        public static unsafe (int length, IntPtr data) FromManagedArray(string[] array)
+        {
+            var length = array.Length;
+            IntPtr data = Marshal.AllocCoTaskMem(length * Marshal.SizeOf<IntPtr>());
+            var elements = (IntPtr*)data;
+            for (int i = 0; i < length; i++)
+            {
+                elements[i] = MarshalString.FromManaged(array[i]);
+            };
+            return (length, data);
         }
 
         public static void DisposeMarshalerArray(object box)
@@ -202,16 +223,20 @@ namespace WinRT
         public static unsafe T[] FromAbiArray(object box)
         {
             var abi = ((int length, IntPtr data))box;
-            // TODO: consider System.Memory nuget package dependency here:
-            //var abiSpan = new ReadOnlySpan<T>(abi.data.ToPointer(), abi.length);
-            //return abiSpan.ToArray();
-            var array = (T[])Array.CreateInstance(typeof(T), abi.length);
+            var abiSpan = new ReadOnlySpan<T>(abi.data.ToPointer(), abi.length);
+            return abiSpan.ToArray();
+        }
+
+        public static unsafe (int length, IntPtr data) FromManagedArray(Array array)
+        {
+            var length = array.Length;
+            var byte_length = length * Marshal.SizeOf<T>();
+            var data = Marshal.AllocCoTaskMem(byte_length);
             var array_handle = GCHandle.Alloc(array, GCHandleType.Pinned);
             var array_data = array_handle.AddrOfPinnedObject();
-            var byte_length = abi.length * Marshal.SizeOf<T>();
-            Buffer.MemoryCopy(abi.data.ToPointer(), array_data.ToPointer(), byte_length, byte_length);
+            Buffer.MemoryCopy(data.ToPointer(), array_data.ToPointer(), byte_length, byte_length);
             array_handle.Free();
-            return array;
+            return (length, data);
         }
 
         public static void DisposeMarshalerArray(object box)
@@ -246,6 +271,9 @@ namespace WinRT
             CreateMarshaler = BindCreateMarshaler();
             GetAbi = BindGetAbi();
             FromAbi = BindFromAbi();
+            CopyAbi = BindCopyAbi();
+            FromManaged = BindFromManaged();
+            CopyManaged = BindCopyManaged();
             DisposeMarshaler = BindDisposeMarshaler();
         }
 
@@ -268,6 +296,17 @@ namespace WinRT
                         typeof(object)), parms).Compile();
         }
 
+        public static readonly Action<object, IntPtr> CopyAbi;
+        private static Action<object, IntPtr> BindCopyAbi()
+        {
+            var copyAbi = HelperType.GetMethod("CopyAbi");
+            if (copyAbi == null) return null;
+            var parms = new[] { Expression.Parameter(typeof(object), "arg"), Expression.Parameter(typeof(IntPtr), "dest") };
+            return Expression.Lambda<Action<object, IntPtr>>(
+                Expression.Call(copyAbi,
+                    new Expression[] { Expression.Convert(parms[0], MarshalerType), parms[1] }), parms).Compile();
+        }
+
         public static readonly Func<object, T> FromAbi;
         private static Func<object, T> BindFromAbi()
         {
@@ -275,6 +314,25 @@ namespace WinRT
             return Expression.Lambda<Func<object, T>>(
                 Expression.Call(HelperType.GetMethod("FromAbi"),
                     new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
+        }
+
+        public static readonly Func<T, object> FromManaged;
+        private static Func<T, object> BindFromManaged()
+        {
+            var parms = new[] { Expression.Parameter(typeof(T), "arg") };
+            return Expression.Lambda<Func<T, object>>(
+                Expression.Convert(Expression.Call(HelperType.GetMethod("FromManaged"), parms),
+                    typeof(object)), parms).Compile();
+        }
+
+        public static readonly Action<T, IntPtr> CopyManaged;
+        private static Action<T, IntPtr> BindCopyManaged()
+        {
+            var copyManaged = HelperType.GetMethod("CopyManaged");
+            if (copyManaged == null) return null;
+            var parms = new[] { Expression.Parameter(typeof(T), "arg"), Expression.Parameter(typeof(IntPtr), "dest") };
+            return Expression.Lambda<Action<T, IntPtr>>(
+                Expression.Call(copyManaged, parms), parms).Compile();
         }
 
         public static readonly Action<object> DisposeMarshaler;
@@ -291,42 +349,48 @@ namespace WinRT
     {
         public struct MarshalerArray
         {
-            public bool Dispose()
+            public void Dispose()
             {
-                _gchandle.Dispose();
-                foreach (var abi_element in _abi_elements)
+                if (_marshalers != null)
                 {
-                    Marshaler<T>.DisposeMarshaler(abi_element);
+                    foreach (var marshaler in _marshalers)
+                    {
+                        Marshaler<T>.DisposeMarshaler(marshaler);
+                    }
                 }
-                return false;
+                if (_array != null)
+                {
+                    Marshal.FreeCoTaskMem(_array);
+                }
             }
 
-            public GCHandle _gchandle;
-            public object[] _abi_elements;
+            public IntPtr _array;
+            public object[] _marshalers;
         }
 
-        public static MarshalerArray CreateMarshalerArray(T[] array)
+        public static unsafe MarshalerArray CreateMarshalerArray(T[] array)
         {
             MarshalerArray m = new MarshalerArray();
+            Func<bool> dispose = () => { m.Dispose(); return false; };
             try
             {
-                var length = array.Length;
-                // TODO: consider Marshal.AllocCoTaskMem based on sizeof(HelperType)
-                // and a Marshaler<T>.CopyTo to allow blitting into array directly 
-                // without boxing
-                var abi_array = Array.CreateInstance(HelperType, length);
-                m._abi_elements = new object[length];
+                int length = array.Length;
+                var abi_element_size = Marshal.SizeOf(HelperType);
+                var byte_length = length * abi_element_size;
+                m._array = Marshal.AllocCoTaskMem(byte_length);
+                m._marshalers = new object[length];
+                var element = (byte*)m._array.ToPointer();
                 for (int i = 0; i < length; i++)
                 {
-                    m._abi_elements[i] = Marshaler<T>.CreateMarshaler(array[i]);
-                    abi_array.SetValue(Marshaler<T>.GetAbi(m._abi_elements[i]), i);
+                    m._marshalers[i] = Marshaler<T>.CreateMarshaler(array[i]);
+                    Marshaler<T>.CopyAbi(m._marshalers[i], (IntPtr)element);
+                    element += abi_element_size;
                 }
-                m._gchandle = GCHandle.Alloc(abi_array, GCHandleType.Pinned);
                 return m;
             }
-            catch (Exception) when (m.Dispose())
+            catch (Exception) when (dispose())
             {
-                // Will never execute 
+                // Will never execute
                 return default;
             }
         }
@@ -334,7 +398,7 @@ namespace WinRT
         public static (int length, IntPtr data) GetAbiArray(object box)
         {
             var m = (MarshalerArray)box;
-            return (((Array)m._gchandle.Target).Length, m._gchandle.AddrOfPinnedObject());
+            return (m._marshalers.Length, m._array);
         }
 
         public static unsafe T[] FromAbiArray(object box)
@@ -352,11 +416,44 @@ namespace WinRT
             return array;
         }
 
+        public static unsafe (int length, IntPtr data) FromManagedArray(T[] array)
+        {
+            IntPtr data = IntPtr.Zero;
+            int i = 0;
+            Func<bool> dispose = () =>
+            {
+                DisposeAbiArray((i, data));
+                i = 0;
+                data = IntPtr.Zero;
+                return false;
+            };
+            try
+            {
+                int length = array.Length;
+                var abi_element_size = Marshal.SizeOf(HelperType);
+                var byte_length = length * abi_element_size;
+                data = Marshal.AllocCoTaskMem(byte_length);
+                var bytes = (byte*)data.ToPointer();
+                for (i = 0; i < length; i++)
+                {
+                    Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
+                    bytes += abi_element_size;
+                }
+            }
+            catch (Exception) when (dispose())
+            {
+                // Will never execute
+                return default;
+            }
+            return (i, data);
+        }
+
         public static void DisposeMarshalerArray(object box) => ((MarshalerArray)box).Dispose();
 
         public static unsafe void DisposeAbiArray(object box)
         {
             var abi = ((int length, IntPtr data))box;
+            if (abi.data == IntPtr.Zero) return;
             var data = (byte*)abi.data.ToPointer();
             var abi_element_size = Marshal.SizeOf(HelperType);
             for (int i = 0; i < abi.length; i++)
@@ -372,11 +469,16 @@ namespace WinRT
     struct MarshalInterface<T>
     {
         private static readonly Type HelperType = typeof(T).GetHelperType();
-        private static Func<T, IntPtr> _ToAbi;
+        private static Func<T, IObjectReference> _ToAbi;
         private static Func<IntPtr, T> _FromAbi;
+        private static Func<IObjectReference, IObjectReference> _As;
 
         public static T FromAbi(IntPtr ptr)
         {
+            if (ptr == IntPtr.Zero)
+            {
+                return (T)(object)null;
+            }
             // TODO: Check if the value is a CCW and return the underlying object.
             if (_FromAbi == null)
             {
@@ -385,27 +487,28 @@ namespace WinRT
             return _FromAbi(ptr);
         }
 
-        public static IntPtr CreateMarshaler(T value) => ToAbi(value);
+        public static IntPtr GetAbi(IObjectReference value) => MarshalInspectable.GetAbi(value);
 
-        public static IntPtr GetAbi(object value) => (IntPtr)value;
+        public static void DisposeAbi(IntPtr thisPtr) => MarshalInspectable.DisposeAbi(thisPtr);
 
-        public static void DisposeAbi(IntPtr thisPtr) => IInspectable.DisposeAbi(thisPtr);
-
-        public static void DisposeMarshaler(object value) { }
+        public static void DisposeMarshaler(IObjectReference value) => MarshalInspectable.DisposeMarshaler(value);
 
         public static IntPtr FromManaged(T value)
         {
-            Type type = value.GetType();
-            var objRef = GetObjectReference(value, type);
-            if (objRef != null)
+            if (value is null)
             {
-                return objRef.GetRef();
+                return IntPtr.Zero;
             }
-            throw new InvalidCastException($"Unable to get native interface of type '{typeof(T)}' for object of type '{type}'.");
+            return CreateMarshaler(value).GetRef();
         }
 
-        public static IntPtr ToAbi(T value)
+        public static IObjectReference CreateMarshaler(T value)
         {
+            if (value is null)
+            {
+                return null;
+            }
+
             // If the value passed in is the native implementation of the interface
             // use the ToAbi delegate since it will be faster than reflection.
             if (value.GetType() == HelperType)
@@ -417,64 +520,14 @@ namespace WinRT
                 return _ToAbi(value);
             }
 
-            Type type = value.GetType();
-            var objRef = GetObjectReference(value, type);
-            if (objRef != null)
+            if (_As is null)
             {
-                return objRef.ThisPtr;
+                _As = BindAs();
             }
 
-            // The type is a class. We need to determine if it's an RCW or a managed class.
-            Type interfaceTagType = type.GetNestedType("InterfaceTag`1", BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.MakeGenericType(typeof(T));
-            // If the type declares a nested InterfaceTag<I> type, then it is a generated RCW.
-            if (interfaceTagType != null)
-            {
-                Type interfaceType = typeof(T);
-                T iface = default;
+            var inspectable = MarshalInspectable.CreateMarshaler(value, true);
 
-                for (Type currentRcwType = type; currentRcwType != typeof(object); currentRcwType = interfaceType.BaseType)
-                {
-                    interfaceTagType = type.GetNestedType("InterfaceTag`1", BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.MakeGenericType(typeof(T));
-                    if (interfaceTagType == null)
-                    {
-                        throw new InvalidOperationException($"Found a non-RCW type '{currentRcwType}' that is a base class of a generated RCW type '{type}'.");
-                    }
-
-                    Type interfaceTag = interfaceTagType.MakeGenericType(interfaceType);
-                    MethodInfo asInternalMethod = type.GetMethod("AsInternal", BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance, null, new[] { interfaceTag }, null);
-                    if (asInternalMethod != null)
-                    {
-                        iface = (T)asInternalMethod.Invoke(value, new[] { Activator.CreateInstance(interfaceTag) });
-                        break;
-                    }
-                }
-
-                if (iface == null)
-                {
-                    throw new InvalidCastException($"Unable to get native interface of type '{interfaceType}' for object of type '{type}'.");
-                }
-
-                if (_ToAbi == null)
-                {
-                    _ToAbi = BindToAbi();
-                }
-                return _ToAbi(iface);
-            }
-
-            var objReference = ComCallableWrapper.CreateCCWForObject(value);
-            return _ToAbi(objReference.AsType<TAbi>());
-        }
-
-        private static IObjectReference GetObjectReference(T value, Type type)
-        {
-            MethodInfo asInterfaceMethod = type.GetMethod("AsInterface`1");
-            // If the type has an AsInterface<A> method, then it is an interface.
-            if (asInterfaceMethod != null)
-            {
-                var objRef = (IObjectReference)asInterfaceMethod.MakeGenericMethod(typeof(T)).Invoke(value, null);
-                return objRef;
-            }
-            return null;
+            return _As(inspectable);
         }
 
         private static Func<IntPtr, T> BindFromAbi()
@@ -487,13 +540,247 @@ namespace WinRT
                         Expression.Call(fromAbiMethod, parms[0])), parms).Compile();
         }
 
-        private static Func<T, IntPtr> BindToAbi()
+        private static Func<T, IObjectReference> BindToAbi()
         {
             var parms = new[] { Expression.Parameter(typeof(T), "arg") };
-            return Expression.Lambda<Func<T, IntPtr>>(
+            return Expression.Lambda<Func<T, IObjectReference>>(
                 Expression.MakeMemberAccess(
                     Expression.Convert(parms[0], HelperType),
-                    HelperType.GetProperty("ThisPtr")), parms).Compile();
+                    HelperType.GetField("_obj", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)), parms).Compile();
+        }
+
+        private static Func<IObjectReference, IObjectReference> BindAs()
+        {
+            var helperType = typeof(T).GetHelperType();
+            var parms = new[] { Expression.Parameter(typeof(IObjectReference), "arg") };
+            return Expression.Lambda<Func<IObjectReference, IObjectReference>>(
+                Expression.Call(
+                    parms[0],
+                    typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(helperType.GetNestedType("Vftbl"))
+                    ), parms).Compile();
+        }
+    }
+
+    static class MarshalInspectable
+    {
+        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
+
+        public static IObjectReference CreateMarshaler(object o, bool unwrapObject = true)
+        {
+            if (o is null)
+            {
+                return null;
+            }
+
+            if (unwrapObject && TryUnwrapObject(o, out var objRef))
+            {
+                return objRef.As<IInspectable.Vftbl>();
+            }
+            // TODO: Create a CCW for user-defined implementations of interfaces.
+            throw new NotImplementedException("Generating a CCW for a user-defined class is not currently implemented");
+        }
+
+        public static IntPtr GetAbi(IObjectReference objRef)
+        {
+            return objRef?.ThisPtr ?? IntPtr.Zero;
+        }
+
+        public static object FromAbi(IntPtr ptr)
+        {
+            if (ptr == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            var inspectable = new IInspectable(ObjectReference<WinRT.Interop.IUnknownVftbl>.Attach(ref ptr));
+            string runtimeClassName = inspectable.GetRuntimeClassName();
+            return TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
+        }
+
+        public static void DisposeMarshaler(IObjectReference objRef)
+        {
+            // Since IObjectReference doesn't have an explicit dispose,
+            // just use GC.KeepAlive here to ensure that the IObjectReference instance
+            // gets finalized after the call to native.
+            GC.KeepAlive(objRef);
+        }
+
+        public static void DisposeAbi(IntPtr ptr)
+        {
+            if (ptr == IntPtr.Zero) return;
+            // TODO: this should be a direct v-table call when function pointers are a thing
+            ObjectReference<IInspectable.Vftbl>.Attach(ref ptr);
+        }
+
+        public static IntPtr FromManaged(object o, bool unwrapObject = true)
+        {
+            var objRef = CreateMarshaler(o, unwrapObject);
+            return objRef?.GetRef() ?? IntPtr.Zero;
+        }
+
+        private static bool TryUnwrapObject(object o, out IObjectReference objRef)
+        {
+            // The unwrapping here needs to be in exact type match in case the user
+            // has implemented a WinRT interface or inherited from a WinRT class
+            // in a .NET (non-projected) type.
+
+            // TODO: Define and output attributes defining that a type is a projected interface
+            // or class type to avoid accidental collisions.
+            // Also, it might be a good idea to add a property to get the IObjectReference
+            // that is marked [EditorBrowsable(EditorBrowsableState.Never)] to hide it from most IDEs
+            // to help avoid using private implementation details.
+            Type type = o.GetType();
+            // Projected interface types have fields name _obj that hold their object reference.
+            objRef = (IObjectReference)type.GetField("_obj", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)?.GetValue(o);
+            if (objRef != null)
+            {
+                return true;
+            }
+
+            // If we get here, we're either a class or a non-WinRT type. If we're a class, we'll have a _default field holding a reference to our default interface.
+            object defaultInterface = type.GetField("_default", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)?.GetValue(o);
+            if (defaultInterface != null)
+            {
+                return TryUnwrapObject(defaultInterface, out objRef);
+            }
+
+            objRef = null;
+            return false;
+        }
+
+        private static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
+        {
+            var (implementationType, _) = FindTypeByName(runtimeClassName);
+
+            Type classType;
+            Type interfaceType;
+            Type vftblType;
+            if (implementationType.IsInterface)
+            {
+                classType = null;
+                interfaceType = FindTypeByName("ABI." + runtimeClassName).type ??
+                    throw new TypeLoadException($"Unable to find an ABI implementation for the type '{runtimeClassName}'");
+                vftblType = interfaceType.GetNestedType("Vftbl") ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
+                if (vftblType.IsGenericTypeDefinition)
+                {
+                    vftblType = vftblType.MakeGenericType(interfaceType.GetGenericArguments());
+                }
+            }
+            else
+            {
+                classType = implementationType;
+                interfaceType = classType.GetField("_default", BindingFlags.Instance | BindingFlags.NonPublic)?.FieldType;
+                if (interfaceType is null)
+                {
+                    throw new TypeLoadException($"Unable to create a runtime wrapper for a WinRT object of type '{runtimeClassName}'. This type is not a projected type.");
+                }
+                vftblType = interfaceType.GetNestedType("Vftbl") ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
+            }
+
+            var objReference = ComCallableWrapper.CreateCCWForObject(value);
+            return _ToAbi(objReference.AsType<TAbi>());
+        }
+
+        private static (Type type, int remaining) FindTypeByName(string runtimeClassName)
+        {
+            var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
+            return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
+        }
+
+        private static Type FindTypeByNameCore(string runtimeClassName, Type[] genericTypes)
+        {
+            // TODO: This implementation is a strawman implementation.
+            // It's missing support for types not loaded in the default ALC.
+            if (genericTypes is null)
+            {
+                Type primitiveType = ResolvePrimitiveType(runtimeClassName);
+                if (primitiveType is object)
+                {
+                    return primitiveType;
+                }
+            }
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                Type type = assembly.GetType(runtimeClassName);
+                if (type is object)
+                {
+                    if (genericTypes != null)
+                    {
+                        type = type.MakeGenericType(genericTypes);
+                    }
+                    return type;
+                }
+            }
+            throw new TypeLoadException($"Unable to find a type named '{runtimeClassName}'");
+        }
+
+        private static Type ResolvePrimitiveType(string primitiveTypeName)
+        {
+            return primitiveTypeName switch
+            {
+                "UInt8" => typeof(byte),
+                "Int8" => typeof(sbyte),
+                "UInt16" => typeof(ushort),
+                "Int16" => typeof(short),
+                "UInt32" => typeof(uint),
+                "Int32" => typeof(int),
+                "UInt64" => typeof(ulong),
+                "Int64" => typeof(long),
+                "Boolean" => typeof(bool),
+                "String" => typeof(string),
+                "Char" => typeof(char),
+                "Single" => typeof(float),
+                "Double" => typeof(double),
+                "Guid" => typeof(Guid),
+                "Object" => typeof(object),
+                _ => null
+            };
+        }
+
+        // TODO: Use types from System.Memory to eliminate allocations of intermediate strings.
+        private static (string genericTypeName, Type[] genericTypes, int remaining) ParseGenericTypeName(string partialTypeName)
+        {
+            int possibleEndOfSimpleTypeName = partialTypeName.IndexOfAny(new[] { ',', '>' });
+            int endOfSimpleTypeName = partialTypeName.Length;
+            if (possibleEndOfSimpleTypeName != -1)
+            {
+                endOfSimpleTypeName = possibleEndOfSimpleTypeName;
+            }
+            string typeName = partialTypeName.Substring(0, endOfSimpleTypeName);
+
+            if (!typeName.Contains('`'))
+            {
+                return (typeName.ToString(), null, endOfSimpleTypeName);
+            }
+
+            int genericTypeListStart = partialTypeName.IndexOf('<');
+            string genericTypeName = partialTypeName.Substring(0, genericTypeListStart);
+            string remaining = partialTypeName.Substring(genericTypeListStart + 1);
+            int remainingIndex = genericTypeListStart + 1;
+            List<Type> genericTypes = new List<Type>();
+            while (true)
+            {
+                var (genericType, endOfGenericArgument) = FindTypeByName(remaining);
+                remainingIndex += endOfGenericArgument;
+                genericTypes.Add(genericType);
+                remaining = remaining.Substring(endOfGenericArgument);
+                if (remaining[0] == ',')
+                {
+                    // Skip the comma and the space in the type name.
+                    remainingIndex += 2;
+                    remaining = remaining.Substring(2);
+                    continue;
+                }
+                else if (remaining[0] == '>')
+                {
+                    break;
+                }
+                else
+                {
+                    throw new InvalidOperationException("The provided type name is invalid.");
+                }
+            }
+            return (genericTypeName, genericTypes.ToArray(), partialTypeName.Length - remaining.Length);
         }
     }
 
@@ -514,12 +801,16 @@ namespace WinRT
                 AbiType = typeof(byte);
                 CreateMarshaler = (T value) => value;
                 GetAbi = (object box) => (bool)box ? 1 : 0;
+                CopyAbi = (object box, IntPtr dest) => { unsafe { *(byte*)dest.ToPointer() = (byte)((bool)box ? 1 : 0); } };
                 FromAbi = (object box) => (T)(object)((byte)box != 0);
+                FromManaged = (T value) => (bool)(object)value ? 1 : 0;
+                CopyManaged = (T value, IntPtr dest) => { unsafe { *(byte*)dest.ToPointer() = (byte)((bool)(object)value ? 1 : 0); } };
                 DisposeMarshaler = (object box) => { };
                 DisposeAbi = (object box) => { };
                 CreateMarshalerArray = (T[] array) => MarshalNonBlittable<T>.CreateMarshalerArray(array);
                 GetAbiArray = (object box) => MarshalNonBlittable<T>.GetAbiArray(box);
                 FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box);
+                FromManagedArray = (T[] array) => MarshalNonBlittable<T>.FromManagedArray(array);
                 DisposeMarshalerArray = (object box) => MarshalNonBlittable<T>.DisposeMarshalerArray(box);
                 DisposeAbiArray = (object box) => MarshalNonBlittable<T>.DisposeAbiArray(box);
             }
@@ -529,11 +820,13 @@ namespace WinRT
                 CreateMarshaler = (T value) => MarshalString.CreateMarshaler((string)(object)value);
                 GetAbi = (object box) => MarshalString.GetAbi(box);
                 FromAbi = (object value) => (T)(object)MarshalString.FromAbi((IntPtr)value);
+                FromManaged = (T value) => MarshalString.FromManaged((string)(object)value);
                 DisposeMarshaler = (object box) => MarshalString.DisposeMarshaler(box);
                 DisposeAbi = (object box) => MarshalString.DisposeAbi(box);
                 CreateMarshalerArray = (T[] array) => MarshalString.CreateMarshalerArray((string[])(object)array);
                 GetAbiArray = (object box) => MarshalString.GetAbiArray(box);
                 FromAbiArray = (object box) => (T[])(object)MarshalString.FromAbiArray(box);
+                FromManagedArray = (T[] array) => MarshalString.FromManagedArray((string[])(object)array);
                 DisposeMarshalerArray = (object box) => MarshalString.DisposeMarshalerArray(box);
                 DisposeAbiArray = (object box) => MarshalString.DisposeAbiArray(box);
             }
@@ -541,17 +834,28 @@ namespace WinRT
             {
                 // If type is blittable just pass through
                 AbiType = type.FindHelperType();
+                if (AbiType != null)
+                {
+                    // Could still be blittable and the 'ABI.*' type exists for other reasons (e.g. it's a mapped type)
+                    if (AbiType.GetMethod("FromAbi") == null)
+                    {
+                        AbiType = null;
+                    }
+                }
+
                 if (AbiType == null)
                 {
                     AbiType = type;
                     CreateMarshaler = (T value) => value;
                     GetAbi = (object box) => box;
                     FromAbi = (object value) => (T)value;
+                    FromManaged = (T value) => value;
                     DisposeMarshaler = (object box) => { };
                     DisposeAbi = (object box) => { };
                     CreateMarshalerArray = (T[] array) => MarshalBlittable<T>.CreateMarshalerArray(array);
                     GetAbiArray = (object box) => MarshalBlittable<T>.GetAbiArray(box);
                     FromAbiArray = (object box) => MarshalBlittable<T>.FromAbiArray(box);
+                    FromManagedArray = (T[] array) => MarshalBlittable<T>.FromManagedArray(array);
                     DisposeMarshalerArray = (object box) => MarshalBlittable<T>.DisposeMarshalerArray(box);
                     DisposeAbiArray = (object box) => MarshalBlittable<T>.DisposeAbiArray(box);
                 }
@@ -559,12 +863,16 @@ namespace WinRT
                 {
                     CreateMarshaler = MarshalNonBlittable<T>.CreateMarshaler;
                     GetAbi = MarshalNonBlittable<T>.GetAbi;
+                    CopyAbi = MarshalNonBlittable<T>.CopyAbi;
                     FromAbi = MarshalNonBlittable<T>.FromAbi;
+                    FromManaged = MarshalNonBlittable<T>.FromManaged;
+                    CopyManaged = MarshalNonBlittable<T>.CopyManaged;
                     DisposeMarshaler = MarshalNonBlittable<T>.DisposeMarshaler;
                     DisposeAbi = (object box) => { };
                     CreateMarshalerArray = (T[] array) => MarshalNonBlittable<T>.CreateMarshalerArray(array);
                     GetAbiArray = (object box) => MarshalNonBlittable<T>.GetAbiArray(box);
                     FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box);
+                    FromManagedArray = (T[] array) => MarshalNonBlittable<T>.FromManagedArray(array);
                     DisposeMarshalerArray = (object box) => MarshalNonBlittable<T>.DisposeMarshalerArray(box);
                     DisposeAbiArray = (object box) => MarshalNonBlittable<T>.DisposeAbiArray(box);
                 }
@@ -582,19 +890,19 @@ namespace WinRT
             {
                 AbiType = typeof(IntPtr);
                 CreateMarshaler = (T value) => MarshalInterface<T>.CreateMarshaler(value);
-                GetAbi = (object box) => MarshalInterface<T>.GetAbi((IntPtr)box);
+                GetAbi = (object objRef) => MarshalInterface<T>.GetAbi((IObjectReference)objRef);
                 FromAbi = (object value) => (T)(object)MarshalInterface<T>.FromAbi((IntPtr)value);
-                DisposeMarshaler = (object box) => { };
-                DisposeAbi = (object box) => { };
+                DisposeMarshaler = (object objRef) => MarshalInterface<T>.DisposeMarshaler((IObjectReference)objRef);
+                DisposeAbi = (object box) => MarshalInterface<T>.DisposeAbi((IntPtr)box);
             }
-            else if (typeof(T) == typeof(WinRT.IInspectable))
+            else if (typeof(T) == typeof(object))
             {
                 AbiType = typeof(IntPtr);
-                CreateMarshaler = (T abi) => abi;
-                GetAbi = (object abi) => ((WinRT.IInspectable)abi).ThisPtr;
-                FromAbi = (object abi) => (T)(object)IInspectable.FromAbi((IntPtr)abi);
-                DisposeMarshaler = (object box) => { };
-                DisposeAbi = (object box) => { };
+                CreateMarshaler = (T value) => MarshalInspectable.CreateMarshaler(value);
+                GetAbi = (object objRef) => MarshalInspectable.GetAbi((IObjectReference)objRef);
+                FromAbi = (object box) => (T)MarshalInspectable.FromAbi((IntPtr)box);
+                DisposeMarshaler = (object objRef) => MarshalInspectable.DisposeMarshaler((IObjectReference)objRef);
+                DisposeAbi = (object box) => MarshalInspectable.DisposeAbi((IntPtr)box);
             }
             else // class type
             {
@@ -635,12 +943,16 @@ namespace WinRT
         public static readonly Type RefAbiType;
         public static readonly Func<T, object> CreateMarshaler;
         public static readonly Func<object, object> GetAbi;
+        public static readonly Action<object, IntPtr> CopyAbi;
         public static readonly Func<object, T> FromAbi;
+        public static readonly Func<T, object> FromManaged;
+        public static readonly Action<T, IntPtr> CopyManaged;
         public static readonly Action<object> DisposeMarshaler;
         public static readonly Action<object> DisposeAbi;
         public static readonly Func<T[], object> CreateMarshalerArray;
         public static readonly Func<object, (int, IntPtr)> GetAbiArray;
         public static readonly Func<object, T[]> FromAbiArray;
+        public static readonly Func<T[], (int, IntPtr)> FromManagedArray;
         public static readonly Action<object> DisposeMarshalerArray;
         public static readonly Action<object> DisposeAbiArray;
 

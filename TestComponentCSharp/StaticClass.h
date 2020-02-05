@@ -1,17 +1,17 @@
 #pragma once
 #include "StaticClass.g.h"
 
-namespace winrt::TestComp::implementation
+namespace winrt::TestComponentCSharp::implementation
 {
     struct StaticClass
     {
         StaticClass() = default;
 
-        static TestComp::Class MakeClass();
+        static TestComponentCSharp::Class MakeClass();
         static int32_t NumClasses();
     };
 }
-namespace winrt::TestComp::factory_implementation
+namespace winrt::TestComponentCSharp::factory_implementation
 {
     struct StaticClass : StaticClassT<StaticClass, implementation::StaticClass>
     {

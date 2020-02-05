@@ -1,4 +1,195 @@
 
+namespace Windows.Foundation
+{
+    using global::System;
+    using global::System.Globalization;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Point : IFormattable
+    {
+        float _x;
+        float _y;
+
+        public Point(double x, double y)
+        {
+            _x = (float)x;
+            _y = (float)y;
+        }
+
+        public double X
+        {
+            get { return _x; }
+            set { _x = (float)value; }
+        }
+
+        public double Y
+        {
+            get { return _y; }
+            set { _y = (float)value; }
+        }
+
+        public override string ToString()
+        {
+            return ConvertToString(null, null);
+        }
+
+        public string ToString(IFormatProvider provider)
+        {
+            return ConvertToString(null, provider);
+        }
+
+        string IFormattable.ToString(string format, IFormatProvider provider)
+        {
+            return ConvertToString(format, provider);
+        }
+
+        private string ConvertToString(string format, IFormatProvider provider)
+        {
+            char separator = GetNumericListSeparator(provider);
+            return string.Format(provider, "{1:" + format + "}{0}{2:" + format + "}", separator, _x, _y);
+        }
+
+        static char GetNumericListSeparator(IFormatProvider provider)
+        {
+            // If the decimal separator is a comma use ';'
+            char numericSeparator = ',';
+            var numberFormat = NumberFormatInfo.GetInstance(provider);
+            if ((numberFormat.NumberDecimalSeparator.Length > 0) && (numberFormat.NumberDecimalSeparator[0] == numericSeparator))
+            {
+                numericSeparator = ';';
+            }
+
+            return numericSeparator;
+        }
+
+        public static bool operator==(Point point1, Point point2)
+        {
+            return point1.X == point2.X && point1.Y == point2.Y;
+        }
+
+        public static bool operator!=(Point point1, Point point2)
+        {
+            return !(point1 == point2);
+        }
+
+        public override bool Equals(object o)
+        {
+            return o is Point && this == (Point)o;
+        }
+
+        public bool Equals(Point value)
+        {
+            return (this == value);
+        }
+
+        public override int GetHashCode()
+        {
+            return X.GetHashCode() ^ Y.GetHashCode();
+        }
+    }
+}
+
+namespace ABI.Windows.Foundation
+{
+    public class Point
+    {
+        public static string GetGuidSignature()
+        {
+            return "struct(Windows.Foundation.Point;f4;f4)";
+        }
+    }
+}
+
+namespace ABI.System
+{
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TimeSpan
+    {
+        // NOTE: both 'Windows.Foundation.TimeSpan.Duration' and 'System.TimeSpan.Ticks' are in units of 100ns
+        public long Duration;
+
+        public struct Marshaler
+        {
+            public TimeSpan __abi;
+        }
+
+        public static Marshaler CreateMarshaler(global::System.TimeSpan value)
+        {
+            return new Marshaler{ __abi = new TimeSpan{ Duration = value.Ticks } };
+        }
+
+        public static TimeSpan GetAbi(Marshaler m) => m.__abi;
+
+        public static global::System.TimeSpan FromAbi(TimeSpan value)
+        {
+            return global::System.TimeSpan.FromTicks(value.Duration);
+        }
+
+        public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) =>
+            *(TimeSpan*)dest.ToPointer() = GetAbi(arg);
+
+        public static TimeSpan FromManaged(global::System.TimeSpan value)
+        {
+            return new TimeSpan { Duration = value.Ticks };
+        }
+
+        public static unsafe void CopyManaged(global::System.TimeSpan arg, IntPtr dest) =>
+            *(TimeSpan*)dest.ToPointer() = FromManaged(arg);
+
+        public static void DisposeMarshaler(Marshaler m) {}
+        public static void DisposeAbi(TimeSpan abi) {}
+
+        public static string GetGuidSignature()
+        {
+            return "struct(Windows.Foundation.TimeSpan;i8)";
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DateTimeOffset
+    {
+        // NOTE: 'Windows.Foundation.DateTime.UniversalTime' is a FILETIME value (relative to 01/01/1601), however
+        // 'System.DateTimeOffset.Ticks' is relative to 01/01/0001
+        public long UniversalTime;
+
+        public struct Marshaler
+        {
+            public DateTimeOffset __abi;
+        }
+
+        public static Marshaler CreateMarshaler(global::System.DateTimeOffset value)
+        {
+            return new Marshaler{ __abi = new DateTimeOffset{ UniversalTime = value.ToFileTime() } };
+        }
+
+        public static DateTimeOffset GetAbi(Marshaler m) => m.__abi;
+
+        public static global::System.DateTimeOffset FromAbi(DateTimeOffset value)
+        {
+            return global::System.DateTimeOffset.FromFileTime(value.UniversalTime);
+        }
+
+        public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) =>
+            *(DateTimeOffset*)dest.ToPointer() = GetAbi(arg);
+
+        public static DateTimeOffset FromManaged(global::System.DateTimeOffset value)
+        {
+            return new DateTimeOffset { UniversalTime = value.ToFileTime() };
+        }
+
+        public static unsafe void CopyManaged(global::System.DateTimeOffset arg, IntPtr dest) =>
+            *(DateTimeOffset*)dest.ToPointer() = FromManaged(arg);
+
+        public static void DisposeMarshaler(Marshaler m) {}
+        public static void DisposeAbi(DateTimeOffset abi) {}
+
+        public static string GetGuidSignature()
+        {
+            return "struct(Windows.Foundation.DateTime;i8)";
+        }
+    }
+}
+
 namespace System
 {
     using global::System.Diagnostics;

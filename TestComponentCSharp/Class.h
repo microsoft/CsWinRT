@@ -3,7 +3,7 @@
 #include "Class.g.h"
 #include "winrt/Windows.Foundation.Collections.h"
 
-namespace winrt::TestComp::implementation
+namespace winrt::TestComponentCSharp::implementation
 {
     struct Class : ClassT<Class>
     {
@@ -18,7 +18,7 @@ namespace winrt::TestComp::implementation
         winrt::event<EventHandler3> _event3;
         winrt::event<EventHandlerCollection> _collectionEvent;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IVector<int32_t>>> _nestedEvent;
-        winrt::event<Windows::Foundation::TypedEventHandler<TestComp::Class, Windows::Foundation::Collections::IVector<hstring>>> _nestedTypedEvent;
+        winrt::event<Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, Windows::Foundation::Collections::IVector<hstring>>> _nestedTypedEvent;
 
         int32_t _int = 0;
         winrt::event<Windows::Foundation::EventHandler<int32_t>> _intChanged;
@@ -26,7 +26,7 @@ namespace winrt::TestComp::implementation
         winrt::event<Windows::Foundation::EventHandler<bool>> _boolChanged;
         winrt::hstring _string;
         winrt::hstring _string2;
-        winrt::event<Windows::Foundation::TypedEventHandler<TestComp::Class, hstring>> _stringChanged;
+        winrt::event<Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, hstring>> _stringChanged;
         Windows::Foundation::Collections::IVector<hstring> _strings;
         Windows::Foundation::IInspectable _object;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::IInspectable>> _objectChanged;
@@ -36,6 +36,9 @@ namespace winrt::TestComp::implementation
         winrt::handle _syncHandle;
         int32_t _asyncResult;
         int32_t _asyncProgress;
+        Windows::Foundation::Point _point{};
+        Windows::Foundation::TimeSpan _timeSpan{};
+        Windows::Foundation::DateTime _dateTime{};
 
         Class(int32_t intProperty);
         Class(int32_t intProperty, hstring const& stringProperty);
@@ -45,51 +48,53 @@ namespace winrt::TestComp::implementation
         static void StaticIntPropertyChanged(winrt::event_token const& token) noexcept;
         static hstring StaticStringProperty();
         static void StaticStringProperty(hstring const& value);
-        static winrt::event_token StaticStringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComp::Class, hstring> const& handler);
+        static winrt::event_token StaticStringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, hstring> const& handler);
         static void StaticStringPropertyChanged(winrt::event_token const& token) noexcept;
         static void StaticGetString();
-        static void StaticSetString(TestComp::ProvideString const& provideString);
+        static void StaticSetString(TestComponentCSharp::ProvideString const& provideString);
         static int32_t StaticReadWriteProperty();
         static void StaticReadWriteProperty(int32_t value);
-        winrt::event_token Event0(TestComp::EventHandler0 const& handler);
+        static Windows::Foundation::TimeSpan FromSeconds(int32_t seconds);
+        static Windows::Foundation::DateTime Now();
+        winrt::event_token Event0(TestComponentCSharp::EventHandler0 const& handler);
         void Event0(winrt::event_token const& token) noexcept;
         void InvokeEvent0();
-        winrt::event_token Event1(TestComp::EventHandler1 const& handler);
+        winrt::event_token Event1(TestComponentCSharp::EventHandler1 const& handler);
         void Event1(winrt::event_token const& token) noexcept;
-        void InvokeEvent1(TestComp::Class const& sender);
-        winrt::event_token Event2(TestComp::EventHandler2 const& handler);
+        void InvokeEvent1(TestComponentCSharp::Class const& sender);
+        winrt::event_token Event2(TestComponentCSharp::EventHandler2 const& handler);
         void Event2(winrt::event_token const& token) noexcept;
-        void InvokeEvent2(TestComp::Class const& sender, int32_t arg0);
-        winrt::event_token Event3(TestComp::EventHandler3 const& handler);
+        void InvokeEvent2(TestComponentCSharp::Class const& sender, int32_t arg0);
+        winrt::event_token Event3(TestComponentCSharp::EventHandler3 const& handler);
         void Event3(winrt::event_token const& token) noexcept;
-        void InvokeEvent3(TestComp::Class const& sender, int32_t arg0, hstring const& arg1);
-        winrt::event_token CollectionEvent(TestComp::EventHandlerCollection const& handler);
+        void InvokeEvent3(TestComponentCSharp::Class const& sender, int32_t arg0, hstring const& arg1);
+        winrt::event_token CollectionEvent(TestComponentCSharp::EventHandlerCollection const& handler);
         void CollectionEvent(winrt::event_token const& token) noexcept;
-        void InvokeCollectionEvent(TestComp::Class const& sender, Windows::Foundation::Collections::IVector<int32_t> const& arg0, Windows::Foundation::Collections::IMap<int32_t, hstring> const& arg1);
+        void InvokeCollectionEvent(TestComponentCSharp::Class const& sender, Windows::Foundation::Collections::IVector<int32_t> const& arg0, Windows::Foundation::Collections::IMap<int32_t, hstring> const& arg1);
         winrt::event_token NestedEvent(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IVector<int32_t>> const& handler);
         void NestedEvent(winrt::event_token const& token) noexcept;
-        void InvokeNestedEvent(TestComp::Class const& sender, Windows::Foundation::Collections::IVector<int32_t> const& arg0);
-        winrt::event_token NestedTypedEvent(Windows::Foundation::TypedEventHandler<TestComp::Class, Windows::Foundation::Collections::IVector<hstring>> const& handler);
+        void InvokeNestedEvent(TestComponentCSharp::Class const& sender, Windows::Foundation::Collections::IVector<int32_t> const& arg0);
+        winrt::event_token NestedTypedEvent(Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, Windows::Foundation::Collections::IVector<hstring>> const& handler);
         void NestedTypedEvent(winrt::event_token const& token) noexcept;
-        void InvokeNestedTypedEvent(TestComp::Class const& sender, Windows::Foundation::Collections::IVector<hstring> const& arg0);
+        void InvokeNestedTypedEvent(TestComponentCSharp::Class const& sender, Windows::Foundation::Collections::IVector<hstring> const& arg0);
         int32_t IntProperty();
         void IntProperty(int32_t value);
         winrt::event_token IntPropertyChanged(Windows::Foundation::EventHandler<int32_t> const& handler);
         void IntPropertyChanged(winrt::event_token const& token) noexcept;
         void RaiseIntChanged();
-        void CallForInt(TestComp::ProvideInt const& provideInt);
+        void CallForInt(TestComponentCSharp::ProvideInt const& provideInt);
         bool BoolProperty();
         void BoolProperty(bool value);
         winrt::event_token BoolPropertyChanged(Windows::Foundation::EventHandler<bool> const& handler);
         void BoolPropertyChanged(winrt::event_token const& token) noexcept;
         void RaiseBoolChanged();
-        void CallForBool(TestComp::ProvideBool const& provideBool);
+        void CallForBool(TestComponentCSharp::ProvideBool const& provideBool);
         hstring StringProperty();
         void StringProperty(hstring const& value);
-        winrt::event_token StringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComp::Class, hstring> const& handler);
+        winrt::event_token StringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, hstring> const& handler);
         void StringPropertyChanged(winrt::event_token const& token) noexcept;
         void RaiseStringChanged();
-        void CallForString(TestComp::ProvideString const& provideString);
+        void CallForString(TestComponentCSharp::ProvideString const& provideString);
         hstring StringProperty2();
         void StringProperty2(hstring const& value);
         Windows::Foundation::Collections::IVector<hstring> StringsProperty();
@@ -97,7 +102,7 @@ namespace winrt::TestComp::implementation
         Windows::Foundation::IInspectable ObjectProperty();
         void ObjectProperty(Windows::Foundation::IInspectable const& value);
         void RaiseObjectChanged();
-        void CallForObject(TestComp::ProvideObject const& provideObject);
+        void CallForObject(TestComponentCSharp::ProvideObject const& provideObject);
         winrt::event_token ObjectPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::IInspectable> const& handler);
         void ObjectPropertyChanged(winrt::event_token const& token) noexcept;
         BlittableStruct BlittableStructProperty();
@@ -140,11 +145,11 @@ namespace winrt::TestComp::implementation
         Windows::Foundation::Collections::IVectorView<int32_t> GetIntVector();
         Windows::Foundation::Collections::IVectorView<bool> GetBoolVector();
         Windows::Foundation::Collections::IVectorView<hstring> GetStringVector();
-        Windows::Foundation::Collections::IVectorView<TestComp::ComposedBlittableStruct> GetBlittableStructVector();
-        Windows::Foundation::Collections::IVectorView<TestComp::ComposedNonBlittableStruct> GetNonBlittableStructVector();
+        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ComposedBlittableStruct> GetBlittableStructVector();
+        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ComposedNonBlittableStruct> GetNonBlittableStructVector();
         Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> GetObjectVector();
-        Windows::Foundation::Collections::IVectorView<TestComp::IProperties1> GetInterfaceVector();
-        Windows::Foundation::Collections::IVectorView<TestComp::Class> GetClassVector();
+        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> GetInterfaceVector();
+        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector();
 
         void CopyProperties(TestComp::IProperties1 const& src);
         void CompleteAsync();
@@ -154,6 +159,16 @@ namespace winrt::TestComp::implementation
         Windows::Foundation::IAsyncActionWithProgress<int32_t> DoitAsyncWithProgress();
         Windows::Foundation::IAsyncOperation<int32_t> AddAsync(int32_t lhs, int32_t rhs);
         Windows::Foundation::IAsyncOperationWithProgress<int32_t, int32_t> AddAsyncWithProgress(int32_t lhs, int32_t rhs);
+
+        Windows::Foundation::Point PointProperty();
+        void PointProperty(Windows::Foundation::Point const& value);
+        Windows::Foundation::IReference<Windows::Foundation::Point> GetPointReference();
+        Windows::Foundation::TimeSpan TimeSpanProperty();
+        void TimeSpanProperty(Windows::Foundation::TimeSpan const& value);
+        Windows::Foundation::IReference<Windows::Foundation::TimeSpan> GetTimeSpanReference();
+        Windows::Foundation::DateTime DateTimeProperty();
+        void DateTimeProperty(Windows::Foundation::DateTime const& value);
+        Windows::Foundation::IReference<Windows::Foundation::DateTime> GetDateTimeProperty();
 
         // IStringable
         hstring ToString();
@@ -198,7 +213,7 @@ namespace winrt::TestComp::implementation
     };
 }
 
-namespace winrt::TestComp::factory_implementation
+namespace winrt::TestComponentCSharp::factory_implementation
 {
     struct Class : ClassT<Class, implementation::Class>
     {

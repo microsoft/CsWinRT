@@ -38,7 +38,17 @@ namespace WinRT
 
         public static string GetSignature(Type type)
         {
-            if (type == typeof(IInspectable))
+            var helperType = type.FindHelperType();
+            if (helperType != null)
+            {
+                var sigMethod = helperType.GetMethod("GetGuidSignature", BindingFlags.Static | BindingFlags.Public);
+                if (sigMethod != null)
+                {
+                    return (string)sigMethod.Invoke(null, new Type[]{});
+                }
+            }
+
+            if (type == typeof(object))
             {
                 return "cinterface(IInspectable)";
             }

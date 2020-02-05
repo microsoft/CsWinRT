@@ -168,7 +168,7 @@ namespace WinRT
         public struct Vftbl
         {
             public delegate int _GetIids(IntPtr pThis, out uint iidCount, out Guid[] iids);
-            public delegate int _GetRuntimeClassName(IntPtr pThis, IntPtr className);
+            public delegate int _GetRuntimeClassName(IntPtr pThis, out IntPtr className);
             public delegate int _GetTrustLevel(IntPtr pThis, out TrustLevel trustLevel);
 
             public IUnknownVftbl IUnknownVftbl;
@@ -208,11 +208,11 @@ namespace WinRT
                 return 0;
             }
 
-            private unsafe static int Do_Abi_GetRuntimeClassName(IntPtr pThis, IntPtr className)
+            private unsafe static int Do_Abi_GetRuntimeClassName(IntPtr pThis, out IntPtr className)
             {
                 try
                 {
-                    *(IntPtr*)className = new HString(UnmanagedObject.FindObject<ComCallableWrapper>(pThis).RuntimeClassName).Handle;
+                    className = new HString(UnmanagedObject.FindObject<ComCallableWrapper>(pThis).RuntimeClassName).Handle;
                 }
                 catch (Exception ex)
                 {
@@ -228,17 +228,8 @@ namespace WinRT
             }
         }
 
-        // Factor IInspectable as 'object' projection, and move out to ABI.WinRT.IInspectable:
         public static IInspectable FromAbi(IntPtr thisPtr) =>
             new IInspectable(ObjectReference<Vftbl>.FromAbi(thisPtr));
-        public static void DisposeAbi(IntPtr thisPtr)
-        {
-            if (thisPtr == IntPtr.Zero) return;
-            // TODO: this should be a direct v-table call when function pointers are a thing
-            ObjectReference<IInspectable.Vftbl>.Attach(ref thisPtr);
-            thisPtr = IntPtr.Zero;
-        }
-        public static IntPtr FromManaged(IInspectable value) => value._obj.GetRef();
 
         private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
@@ -250,7 +241,20 @@ namespace WinRT
         {
             _obj = obj;
         }
-        public object _WinRT_Owner { get; set; }
+
+        public string GetRuntimeClassName()
+        {
+            IntPtr __retval = default;
+            try
+            {
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetRuntimeClassName(ThisPtr, out __retval));
+                return MarshalString.FromAbi(__retval);
+            }
+            finally
+            {
+                MarshalString.DisposeAbi(__retval);
+            }
+        }
     }
 
     internal class Platform
@@ -512,7 +516,6 @@ namespace WinRT
         {
             var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
             var vftblIUnknown = Marshal.PtrToStructure<IUnknownVftbl>(vftblPtr.Vftbl);
-            // TODO: need to delegate back to the T implementation for generics ...
             T vftblT;
             if (typeof(T).IsGenericType)
             {

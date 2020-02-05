@@ -32,11 +32,16 @@ The **/testcomp** folder contains an implementation of a WinRT test component, d
 
 ## /unittest
 
-The **/unittest** folder contains unit tests for validating the projection generated for the test component and for the Windows SDK.  All pull requests should ensure that this project executes without errors.
+The **/unittest** folder contains unit tests for validating the projection generated for the TestComp project (above), for the TestWinRT\TestComponent project (below), and for foundational parts of the Windows SDK.  All pull requests should ensure that this project executes without errors.
 
 ## /winuitest
 
 The **/winuitest** folder contains a smoke test for generating and building a complete Windows SDK and WinUI projection, ensuring that most edge cases are validated.  All pull requests should ensure that this project builds without errors.
+
+## /TestWinRT
+
+C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/TestWinRT/) repository for general language projection test coverage.  This repo should be cloned into the root of the C#/WinRT repo, via get_testwinrt.cmd, so that the cswinrt.sln can resolve the reference to TestComponent.vcxproj.  The resulting TestComponent.dll,winmd files are consumed by the UnitTest project above.
+
 
 # Contributing
 
