@@ -3,17 +3,17 @@
 #include "StaticClass.h"
 #include "StaticClass.g.cpp"
 
-namespace winrt::TestComp::implementation
+namespace winrt::TestComponentCSharp::implementation
 {
     namespace statics
     {
         int _count{};
     }
 
-    TestComp::Class StaticClass::MakeClass()
+    TestComponentCSharp::Class StaticClass::MakeClass()
     {
         ++statics::_count;
-        return winrt::make<TestComp::implementation::Class>();
+        return winrt::make<TestComponentCSharp::implementation::Class>();
     }
     int32_t StaticClass::NumClasses()
     {

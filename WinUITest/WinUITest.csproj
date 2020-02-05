@@ -22,6 +22,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
     <PackageReference Include="Microsoft.UI.Xaml" Version="3.0.0-alpha.191024.2" />
     <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.1-rc" />
+    <PackageReference Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.console" Version="2.4.1">
       <PrivateAssets>all</PrivateAssets>

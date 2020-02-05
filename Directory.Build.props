@@ -5,6 +5,7 @@
     <MinimalCoreWin>true</MinimalCoreWin>
     <VCProjectVersion>15.0</VCProjectVersion>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+    <CppWinRTVerbosity>high</CppWinRTVerbosity>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(VisualStudioVersion)' == '15.0'">

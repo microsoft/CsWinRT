@@ -10,14 +10,12 @@
   </ItemGroup>
   
   <Target Name="CopyBinaries" BeforeTargets="PreBuildEvent">
-    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.dll&quot; &quot;$(TargetDir)&quot;" />
-    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComp\TestComp.pdb&quot; &quot;$(TargetDir)&quot;" />
-    <!--<Exec Command="xcopy /D /Y &quot;$(OutDir)TestComponent.dll&quot; &quot;$(TargetDir)&quot;" />
-    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComponent.pdb&quot; &quot;$(TargetDir)&quot;" />-->
+    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComponentCSharp\TestComponentCSharp.dll&quot; &quot;$(TargetDir)&quot;" />
+    <Exec Command="xcopy /D /Y &quot;$(OutDir)TestComponentCSharp\TestComponentCSharp.pdb&quot; &quot;$(TargetDir)&quot;" />
   </Target>
 
   <Target Name="GenerateProjection" BeforeTargets="CoreCompile" Condition="'$(GenerateTestProjection)' == 'true'">
-    <Exec Command="$(CsWinrtExe) -verbose -in 10.0.18362.0 $(OutDir)TestComp\TestComp.winmd $(OutDir)TestComponent.winmd -out &quot;$(ProjectDir)Generated Files&quot; -include TestComp TestComponent Windows.Foundation -exclude Windows.Foundation.Diagnostics -exclude Windows.Foundation.Metadata" />
+    <Exec Command="$(CsWinrtExe) -verbose -in 10.0.18362.0 $(OutDir)TestComponentCSharp\TestComponentCSharp.winmd $(OutDir)TestComponent.winmd -out &quot;$(ProjectDir)Generated Files&quot; -include TestComponentCSharp TestComponent Windows.Foundation -exclude Windows.Foundation.Diagnostics -exclude Windows.Foundation.Metadata" />
   </Target>
 
   <Target Name="IncludeProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateProjection">

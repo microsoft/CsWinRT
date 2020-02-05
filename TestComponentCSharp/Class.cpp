@@ -4,14 +4,14 @@
 
 using namespace std::chrono;
 
-namespace winrt::TestComp::implementation
+namespace winrt::TestComponentCSharp::implementation
 {
     namespace statics
     {
         static int _int {};
         static winrt::event<Windows::Foundation::EventHandler<int32_t>> _intChanged {};
         static winrt::hstring _string;
-        static winrt::event<Windows::Foundation::TypedEventHandler<TestComp::Class, hstring>> _stringChanged {};
+        static winrt::event<Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, hstring>> _stringChanged {};
         static int _readWrite{};
     }
 
@@ -55,7 +55,7 @@ namespace winrt::TestComp::implementation
     {
         statics::_string = value;
     }
-    winrt::event_token Class::StaticStringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComp::Class, hstring> const& handler)
+    winrt::event_token Class::StaticStringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, hstring> const& handler)
     {
         return statics::_stringChanged.add(handler);
     }
@@ -67,7 +67,7 @@ namespace winrt::TestComp::implementation
     {
         statics::_stringChanged(/*todo*/ nullptr, statics::_string);
     }
-    void Class::StaticSetString(TestComp::ProvideString const& provideString)
+    void Class::StaticSetString(TestComponentCSharp::ProvideString const& provideString)
     {
         statics::_string = provideString();
     }
@@ -87,7 +87,7 @@ namespace winrt::TestComp::implementation
     {
         return winrt::clock::now();
     }
-    winrt::event_token Class::Event0(TestComp::EventHandler0 const& handler)
+    winrt::event_token Class::Event0(TestComponentCSharp::EventHandler0 const& handler)
     {
         return _event0.add(handler);
     }
@@ -99,7 +99,7 @@ namespace winrt::TestComp::implementation
     {
         _event0();
     }
-    winrt::event_token Class::Event1(TestComp::EventHandler1 const& handler)
+    winrt::event_token Class::Event1(TestComponentCSharp::EventHandler1 const& handler)
     {
         return _event1.add(handler);
     }
@@ -107,11 +107,11 @@ namespace winrt::TestComp::implementation
     {
         _event1.remove(token);
     }
-    void Class::InvokeEvent1(TestComp::Class const& sender)
+    void Class::InvokeEvent1(TestComponentCSharp::Class const& sender)
     {
         _event1(sender);
     }
-    winrt::event_token Class::Event2(TestComp::EventHandler2 const& handler)
+    winrt::event_token Class::Event2(TestComponentCSharp::EventHandler2 const& handler)
     {
         return _event2.add(handler);
     }
@@ -119,11 +119,11 @@ namespace winrt::TestComp::implementation
     {
         _event2.remove(token);
     }
-    void Class::InvokeEvent2(TestComp::Class const& sender, int32_t arg0)
+    void Class::InvokeEvent2(TestComponentCSharp::Class const& sender, int32_t arg0)
     {
         _event2(sender, arg0);
     }
-    winrt::event_token Class::Event3(TestComp::EventHandler3 const& handler)
+    winrt::event_token Class::Event3(TestComponentCSharp::EventHandler3 const& handler)
     {
         return _event3.add(handler);
     }
@@ -131,11 +131,11 @@ namespace winrt::TestComp::implementation
     {
         _event3.remove(token);
     }
-    void Class::InvokeEvent3(TestComp::Class const& sender, int32_t arg0, hstring const& arg1)
+    void Class::InvokeEvent3(TestComponentCSharp::Class const& sender, int32_t arg0, hstring const& arg1)
     {
         _event3(sender, arg0, arg1);
     }
-    winrt::event_token Class::CollectionEvent(TestComp::EventHandlerCollection const& handler)
+    winrt::event_token Class::CollectionEvent(TestComponentCSharp::EventHandlerCollection const& handler)
     {
         return _collectionEvent.add(handler);
     }
@@ -143,7 +143,7 @@ namespace winrt::TestComp::implementation
     {
         _collectionEvent.remove(token);
     }
-    void Class::InvokeCollectionEvent(TestComp::Class const& sender, Windows::Foundation::Collections::IVector<int32_t> const& arg0, Windows::Foundation::Collections::IMap<int32_t, hstring> const& arg1)
+    void Class::InvokeCollectionEvent(TestComponentCSharp::Class const& sender, Windows::Foundation::Collections::IVector<int32_t> const& arg0, Windows::Foundation::Collections::IMap<int32_t, hstring> const& arg1)
     {
         _collectionEvent(sender, arg0, arg1);
     }
@@ -155,11 +155,11 @@ namespace winrt::TestComp::implementation
     {
         _nestedEvent.remove(token);
     }
-    void Class::InvokeNestedEvent(TestComp::Class const& sender, Windows::Foundation::Collections::IVector<int32_t> const& arg0)
+    void Class::InvokeNestedEvent(TestComponentCSharp::Class const& sender, Windows::Foundation::Collections::IVector<int32_t> const& arg0)
     {
         _nestedEvent(sender, arg0);
     }
-    winrt::event_token Class::NestedTypedEvent(Windows::Foundation::TypedEventHandler<TestComp::Class, Windows::Foundation::Collections::IVector<hstring>> const& handler)
+    winrt::event_token Class::NestedTypedEvent(Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, Windows::Foundation::Collections::IVector<hstring>> const& handler)
     {
         return _nestedTypedEvent.add(handler);
     }
@@ -167,7 +167,7 @@ namespace winrt::TestComp::implementation
     {
         _nestedTypedEvent.remove(token);
     }
-    void Class::InvokeNestedTypedEvent(TestComp::Class const& sender, Windows::Foundation::Collections::IVector<hstring> const& arg0)
+    void Class::InvokeNestedTypedEvent(TestComponentCSharp::Class const& sender, Windows::Foundation::Collections::IVector<hstring> const& arg0)
     {
         _nestedTypedEvent(sender, arg0);
     }
@@ -192,7 +192,7 @@ namespace winrt::TestComp::implementation
     {
         _intChanged(*this, _int);
     }
-    void Class::CallForInt(TestComp::ProvideInt const& provideInt)
+    void Class::CallForInt(TestComponentCSharp::ProvideInt const& provideInt)
     {
         _int = provideInt();
     }
@@ -217,7 +217,7 @@ namespace winrt::TestComp::implementation
     {
         _boolChanged(*this, _bool);
     }
-    void Class::CallForBool(TestComp::ProvideBool const& provideBool)
+    void Class::CallForBool(TestComponentCSharp::ProvideBool const& provideBool)
     {
         _bool = provideBool();
         _boolChanged(*this, _bool);
@@ -230,7 +230,7 @@ namespace winrt::TestComp::implementation
     {
         _string = value;
     }
-    winrt::event_token Class::StringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComp::Class, hstring> const& handler)
+    winrt::event_token Class::StringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, hstring> const& handler)
     {
         return _stringChanged.add(handler);
     }
@@ -242,7 +242,7 @@ namespace winrt::TestComp::implementation
     {
         _stringChanged(*this, _string);
     }
-    void Class::CallForString(TestComp::ProvideString const& provideString)
+    void Class::CallForString(TestComponentCSharp::ProvideString const& provideString)
     {
         _string = provideString();
     }
@@ -274,7 +274,7 @@ namespace winrt::TestComp::implementation
     {
         _objectChanged(*this, _object);
     }
-    void Class::CallForObject(TestComp::ProvideObject const& provideObject)
+    void Class::CallForObject(TestComponentCSharp::ProvideObject const& provideObject)
     {
         _object = provideObject();
     }
@@ -420,27 +420,27 @@ namespace winrt::TestComp::implementation
         _nonBlittableStruct.refs = value;
     }
 
-    TestComp::ComposedNonBlittableStruct Class::ComposedNonBlittableStructProperty()
+    TestComponentCSharp::ComposedNonBlittableStruct Class::ComposedNonBlittableStructProperty()
     {
         return _nonBlittableStruct;
     }
 
-    void Class::ComposedNonBlittableStructProperty(TestComp::ComposedNonBlittableStruct const& value)
+    void Class::ComposedNonBlittableStructProperty(TestComponentCSharp::ComposedNonBlittableStruct const& value)
     {
         _nonBlittableStruct = value;
     }
 
-    TestComp::ComposedNonBlittableStruct Class::GetComposedNonBlittableStruct()
+    TestComponentCSharp::ComposedNonBlittableStruct Class::GetComposedNonBlittableStruct()
     {
         return _nonBlittableStruct;
     }
 
-    void Class::OutComposedNonBlittableStruct(TestComp::ComposedNonBlittableStruct& value)
+    void Class::OutComposedNonBlittableStruct(TestComponentCSharp::ComposedNonBlittableStruct& value)
     {
         value = _nonBlittableStruct;
     }
 
-    void Class::SetComposedNonBlittableStruct(TestComp::ComposedNonBlittableStruct const& value)
+    void Class::SetComposedNonBlittableStruct(TestComponentCSharp::ComposedNonBlittableStruct const& value)
     {
         _nonBlittableStruct = value;
     }
@@ -475,13 +475,13 @@ namespace winrt::TestComp::implementation
         return winrt::single_threaded_vector(std::vector<hstring>{ L"String0", L"String1", L"String2", L"String3", L"String4" }).GetView();
     }
 
-    Windows::Foundation::Collections::IVectorView<TestComp::ComposedBlittableStruct> Class::GetBlittableStructVector()
+    Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ComposedBlittableStruct> Class::GetBlittableStructVector()
     {
         return winrt::single_threaded_vector(std::vector{ ComposedBlittableStruct{0}, ComposedBlittableStruct{1},
             ComposedBlittableStruct{2}, ComposedBlittableStruct{3}, ComposedBlittableStruct{4} }).GetView();
     }
 
-    Windows::Foundation::Collections::IVectorView<TestComp::ComposedNonBlittableStruct> Class::GetNonBlittableStructVector()
+    Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ComposedNonBlittableStruct> Class::GetNonBlittableStructVector()
     {
         return winrt::single_threaded_vector(std::vector
         {
@@ -496,14 +496,14 @@ namespace winrt::TestComp::implementation
         return winrt::single_threaded_vector(std::vector<IInspectable>{ winrt::box_value(0), winrt::box_value(1), winrt::box_value(2) }).GetView();
     }
 
-    Windows::Foundation::Collections::IVectorView<TestComp::IProperties1> Class::GetInterfaceVector()
+    Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> Class::GetInterfaceVector()
     {
         return winrt::single_threaded_vector(std::vector<IProperties1>{ *this, *this, *this }).GetView();
     }
 
-    Windows::Foundation::Collections::IVectorView<TestComp::Class> Class::GetClassVector()
+    Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> Class::GetClassVector()
     {
-        return winrt::single_threaded_vector(std::vector<TestComp::Class>{ *this, *this, *this }).GetView();
+        return winrt::single_threaded_vector(std::vector<TestComponentCSharp::Class>{ *this, *this, *this }).GetView();
     }
 
     void Class::CompleteAsync()

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29009.5
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestComp", "TestComp\TestComp.vcxproj", "{7E3A9AB3-8CBB-4B9C-BA76-0FE7108DCAEB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestComponentCSharp", "TestComponentCSharp\TestComponentCSharp.vcxproj", "{7E3A9AB3-8CBB-4B9C-BA76-0FE7108DCAEB}"
 	ProjectSection(ProjectDependencies) = postProject
 		{6ACFD2B2-E8AA-4CD4-AAD8-213CE8BB2637} = {6ACFD2B2-E8AA-4CD4-AAD8-213CE8BB2637}
 	EndProjectSection
@@ -20,6 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution 
 		build.cmd = build.cmd
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
+		get_testwinrt.cmd = get_testwinrt.cmd
 		README.md = README.md
 	EndProjectSection
 EndProject
