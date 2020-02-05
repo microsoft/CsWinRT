@@ -47,6 +47,8 @@ namespace WinRT
 
         public static unsafe MarshalString CreateMarshaler(string value)
         {
+            if (value == null) return null;
+
             var m = new MarshalString();
             try
             {
@@ -65,7 +67,7 @@ namespace WinRT
             }
         }
 
-        public static IntPtr GetAbi(MarshalString m) => m._handle;
+        public static IntPtr GetAbi(MarshalString m) => m == null ? IntPtr.Zero : m._handle;
 
         public static IntPtr GetAbi(object box) => ((MarshalString)box)._handle;
 
@@ -161,6 +163,18 @@ namespace WinRT
             return array;
         }
 
+        public static unsafe (int length, IntPtr data) FromManagedArray(string[] array)
+        {
+            var length = array.Length;
+            IntPtr data = Marshal.AllocCoTaskMem(length * Marshal.SizeOf<IntPtr>());
+            var elements = (IntPtr*)data;
+            for (int i = 0; i < length; i++)
+            {
+                elements[i] = MarshalString.FromManaged(array[i]);
+            };
+            return (length, data);
+        }
+
         public static void DisposeMarshalerArray(object box)
         {
             if (box != null)
@@ -203,16 +217,20 @@ namespace WinRT
         public static unsafe T[] FromAbiArray(object box)
         {
             var abi = ((int length, IntPtr data))box;
-            // TODO: consider System.Memory nuget package dependency here:
-            //var abiSpan = new ReadOnlySpan<T>(abi.data.ToPointer(), abi.length);
-            //return abiSpan.ToArray();
-            var array = (T[])Array.CreateInstance(typeof(T), abi.length);
+            var abiSpan = new ReadOnlySpan<T>(abi.data.ToPointer(), abi.length);
+            return abiSpan.ToArray();
+        }
+
+        public static unsafe (int length, IntPtr data) FromManagedArray(Array array)
+        {
+            var length = array.Length;
+            var byte_length = length * Marshal.SizeOf<T>();
+            var data = Marshal.AllocCoTaskMem(byte_length);
             var array_handle = GCHandle.Alloc(array, GCHandleType.Pinned);
             var array_data = array_handle.AddrOfPinnedObject();
-            var byte_length = abi.length * Marshal.SizeOf<T>();
-            Buffer.MemoryCopy(abi.data.ToPointer(), array_data.ToPointer(), byte_length, byte_length);
+            Buffer.MemoryCopy(data.ToPointer(), array_data.ToPointer(), byte_length, byte_length);
             array_handle.Free();
-            return array;
+            return (length, data);
         }
 
         public static void DisposeMarshalerArray(object box)
@@ -242,6 +260,7 @@ namespace WinRT
             CreateMarshaler = BindCreateMarshaler();
             GetAbi = BindGetAbi();
             FromAbi = BindFromAbi();
+            FromManaged = BindFromManaged();
             DisposeMarshaler = BindDisposeMarshaler();
         }
 
@@ -271,6 +290,15 @@ namespace WinRT
             return Expression.Lambda<Func<object, T>>(
                 Expression.Call(HelperType.GetMethod("FromAbi"),
                     new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
+        }
+
+        public static readonly Func<T, object> FromManaged;
+        private static Func<T, object> BindFromManaged()
+        {
+            var parms = new[] { Expression.Parameter(typeof(T), "arg") };
+            return Expression.Lambda<Func<T, object>>(
+                Expression.Convert(Expression.Call(HelperType.GetMethod("FromManaged"), parms),
+                    typeof(object)), parms).Compile();
         }
 
         public static readonly Action<object> DisposeMarshaler;
@@ -346,6 +374,12 @@ namespace WinRT
                 data += abi_element_size;
             }
             return array;
+        }
+
+        public static (int length, IntPtr data) FromManagedArray(T[] array)
+        {
+            // todo: after CreateMarshalerArray uses CoTaskMemAlloc
+            return (0, IntPtr.Zero);
         }
 
         public static void DisposeMarshalerArray(object box) => ((MarshalerArray)box).Dispose();
@@ -713,11 +747,13 @@ namespace WinRT
                 CreateMarshaler = (T value) => value;
                 GetAbi = (object box) => (bool)box ? 1 : 0;
                 FromAbi = (object box) => (T)(object)((byte)box != 0);
+                FromManaged = (T value) => (bool)(object)value ? 1 : 0;
                 DisposeMarshaler = (object box) => { };
                 DisposeAbi = (object box) => { };
                 CreateMarshalerArray = (T[] array) => MarshalNonBlittable<T>.CreateMarshalerArray(array);
                 GetAbiArray = (object box) => MarshalNonBlittable<T>.GetAbiArray(box);
                 FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box);
+                FromManagedArray = (T[] array) => MarshalNonBlittable<T>.FromManagedArray(array);
                 DisposeMarshalerArray = (object box) => MarshalNonBlittable<T>.DisposeMarshalerArray(box);
                 DisposeAbiArray = (object box) => MarshalNonBlittable<T>.DisposeAbiArray(box);
             }
@@ -727,11 +763,13 @@ namespace WinRT
                 CreateMarshaler = (T value) => MarshalString.CreateMarshaler((string)(object)value);
                 GetAbi = (object box) => MarshalString.GetAbi(box);
                 FromAbi = (object value) => (T)(object)MarshalString.FromAbi((IntPtr)value);
+                FromManaged = (T value) => MarshalString.FromManaged((string)(object)value);
                 DisposeMarshaler = (object box) => MarshalString.DisposeMarshaler(box);
                 DisposeAbi = (object box) => MarshalString.DisposeAbi(box);
                 CreateMarshalerArray = (T[] array) => MarshalString.CreateMarshalerArray((string[])(object)array);
                 GetAbiArray = (object box) => MarshalString.GetAbiArray(box);
                 FromAbiArray = (object box) => (T[])(object)MarshalString.FromAbiArray(box);
+                FromManagedArray = (T[] array) => MarshalString.FromManagedArray((string[])(object)array);
                 DisposeMarshalerArray = (object box) => MarshalString.DisposeMarshalerArray(box);
                 DisposeAbiArray = (object box) => MarshalString.DisposeAbiArray(box);
             }
@@ -754,11 +792,13 @@ namespace WinRT
                     CreateMarshaler = (T value) => value;
                     GetAbi = (object box) => box;
                     FromAbi = (object value) => (T)value;
+                    FromManaged = (T value) => value;
                     DisposeMarshaler = (object box) => { };
                     DisposeAbi = (object box) => { };
                     CreateMarshalerArray = (T[] array) => MarshalBlittable<T>.CreateMarshalerArray(array);
                     GetAbiArray = (object box) => MarshalBlittable<T>.GetAbiArray(box);
                     FromAbiArray = (object box) => MarshalBlittable<T>.FromAbiArray(box);
+                    FromManagedArray = (T[] array) => MarshalBlittable<T>.FromManagedArray(array);
                     DisposeMarshalerArray = (object box) => MarshalBlittable<T>.DisposeMarshalerArray(box);
                     DisposeAbiArray = (object box) => MarshalBlittable<T>.DisposeAbiArray(box);
                 }
@@ -767,11 +807,13 @@ namespace WinRT
                     CreateMarshaler = MarshalNonBlittable<T>.CreateMarshaler;
                     GetAbi = MarshalNonBlittable<T>.GetAbi;
                     FromAbi = MarshalNonBlittable<T>.FromAbi;
+                    FromManaged = MarshalNonBlittable<T>.FromManaged;
                     DisposeMarshaler = MarshalNonBlittable<T>.DisposeMarshaler;
                     DisposeAbi = (object box) => { };
                     CreateMarshalerArray = (T[] array) => MarshalNonBlittable<T>.CreateMarshalerArray(array);
                     GetAbiArray = (object box) => MarshalNonBlittable<T>.GetAbiArray(box);
                     FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box);
+                    FromManagedArray = (T[] array) => MarshalNonBlittable<T>.FromManagedArray(array);
                     DisposeMarshalerArray = (object box) => MarshalNonBlittable<T>.DisposeMarshalerArray(box);
                     DisposeAbiArray = (object box) => MarshalNonBlittable<T>.DisposeAbiArray(box);
                 }
@@ -843,11 +885,13 @@ namespace WinRT
         public static readonly Func<T, object> CreateMarshaler;
         public static readonly Func<object, object> GetAbi;
         public static readonly Func<object, T> FromAbi;
+        public static readonly Func<T, object> FromManaged;
         public static readonly Action<object> DisposeMarshaler;
         public static readonly Action<object> DisposeAbi;
         public static readonly Func<T[], object> CreateMarshalerArray;
         public static readonly Func<object, (int, IntPtr)> GetAbiArray;
         public static readonly Func<object, T[]> FromAbiArray;
+        public static readonly Func<T[], (int, IntPtr)> FromManagedArray;
         public static readonly Action<object> DisposeMarshalerArray;
         public static readonly Action<object> DisposeAbiArray;
     }
