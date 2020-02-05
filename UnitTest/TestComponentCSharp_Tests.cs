@@ -14,7 +14,7 @@ using WFC = Windows.Foundation.Collections;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 
-using TestComp;
+using TestComponentCSharp;
 
 namespace UnitTest
 {
@@ -96,6 +96,7 @@ namespace UnitTest
         }
 
         // TODO: project asyncs as awaitable tasks
+        // TODO: enable TestWinRT coverage
         [Fact]
         public void TestAsync()
         {
@@ -114,20 +115,6 @@ namespace UnitTest
             async_get_string.Progress = (info, progress) => async_progress = progress;
             async_get_string.GetResults();
             Assert.Equal("foo", async_string);
-        }
-
-        [Fact]
-        public void TestCollections()
-        {
-            // TODO: need more - currently just a smoke test for generics
-            var strings = TestObject.StringsProperty;
-            Assert.Equal(2u, strings.Size);
-        }
-
-        [Fact]
-        public void TestArrays()
-        {
-            // TODO
         }
 
         [Fact]

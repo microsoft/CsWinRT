@@ -20,10 +20,10 @@
     <ClInclude Include="StaticClass.h" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Class.idl" />
+    <Midl Include="TestComponentCSharp.idl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="TestComp.def" />
+    <None Include="TestComponentCSharp.def" />
     <None Include="packages.config" />
   </ItemGroup>
 </Project>

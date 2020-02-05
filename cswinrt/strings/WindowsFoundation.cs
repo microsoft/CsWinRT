@@ -125,6 +125,17 @@ namespace ABI.System
             return global::System.TimeSpan.FromTicks(value.Duration);
         }
 
+        public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) =>
+            *(TimeSpan*)dest.ToPointer() = GetAbi(arg);
+
+        public static TimeSpan FromManaged(global::System.TimeSpan value)
+        {
+            return new TimeSpan { Duration = value.Ticks };
+        }
+
+        public static unsafe void CopyManaged(global::System.TimeSpan arg, IntPtr dest) =>
+            *(TimeSpan*)dest.ToPointer() = FromManaged(arg);
+
         public static void DisposeMarshaler(Marshaler m) {}
         public static void DisposeAbi(TimeSpan abi) {}
 
@@ -157,6 +168,17 @@ namespace ABI.System
         {
             return global::System.DateTimeOffset.FromFileTime(value.UniversalTime);
         }
+
+        public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) =>
+            *(DateTimeOffset*)dest.ToPointer() = GetAbi(arg);
+
+        public static DateTimeOffset FromManaged(global::System.DateTimeOffset value)
+        {
+            return new DateTimeOffset { UniversalTime = value.ToFileTime() };
+        }
+
+        public static unsafe void CopyManaged(global::System.DateTimeOffset arg, IntPtr dest) =>
+            *(DateTimeOffset*)dest.ToPointer() = FromManaged(arg);
 
         public static void DisposeMarshaler(Marshaler m) {}
         public static void DisposeAbi(DateTimeOffset abi) {}

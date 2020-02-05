@@ -14,7 +14,7 @@ using WFC = Windows.Foundation.Collections;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 
-using TestComp;
+using TestComponentCSharp;
 
 namespace UnitTest
 {

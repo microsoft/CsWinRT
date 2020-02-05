@@ -2622,6 +2622,13 @@ R"(%%var hr = WinRT.Delegate.MarshalInvoke(%, (% invoke) =>
 public static class @%
 {%
 %
+public static unsafe WinRT.Delegate CreateMarshaler(% managedDelegate)
+{
+%
+}
+
+public static IntPtr GetAbi(WinRT.Delegate value) => value.ThisPtr;
+
 public static unsafe % FromAbi(IntPtr ThisPtr)
 {
 var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(ThisPtr);
@@ -2631,12 +2638,7 @@ var abiInvoke = Marshal.GetDelegateForFunctionPointer%(abiDelegate.Vftbl.Invoke%
 return managedDelegate;
 }
 
-public static unsafe WinRT.Delegate CreateMarshaler(% managedDelegate)
-{
-%
-}
-
-public static IntPtr GetAbi(WinRT.Delegate value) => value.ThisPtr;
+public static IntPtr FromManaged(% managedDelegate) => GetAbi(CreateMarshaler(managedDelegate));
 
 public static void DisposeMarshaler(WinRT.Delegate value) => value.Release();
 
@@ -2673,14 +2675,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                         w.write("%, ", pair.first);
                     }, generic_abi_types));
             },
-            // FromAbi
-            type_name,
-            type_name,
-            bind_list<write_projection_parameter>(", ", signature.params()),
-            is_generic ? "" : "<Abi_Invoke>",
-            is_generic ? ", Abi_Invoke_Type" : "",
-            bind<write_abi_method_call>(signature, "abiInvoke", is_generic),
-            // ToAbi
+            // CreateMarshaler
             type_name,
             [&](writer& w) {
                 if (!is_generic)
@@ -2709,6 +2704,16 @@ return new WinRT.Delegate(func, managedDelegate);)",
                         });
                     });
             },
+            // FromAbi
+            type_name,
+            type_name,
+            bind_list<write_projection_parameter>(", ", signature.params()),
+            is_generic ? "" : "<Abi_Invoke>",
+            is_generic ? ", Abi_Invoke_Type" : "",
+            bind<write_abi_method_call>(signature, "abiInvoke", is_generic),
+            // FromManaged
+            type_name,
+            // Do_Abi_Invoke
             [&](writer& w) {
                 if (!is_generic)
                 {
@@ -2852,9 +2857,9 @@ internal struct Marshaler
             abi_type,
             [&](writer& w){
                 if (!have_disposers) return;
-                w.write(R"(public bool Dispose()
+                w.write(R"(public void Dispose()
 {
-%return false;
+%
 }
 )",
                 bind_each([](writer& w, abi_marshaler const& m)
@@ -2894,12 +2899,19 @@ return new %()
 %};
 }
 
+public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) => 
+    *(%*)dest.ToPointer() = GetAbi(arg);
+
 public static % FromManaged(% arg)
 {
 return new %()
 {
 %};
 }
+
+
+public static unsafe void CopyManaged(% arg, IntPtr dest) =>
+    *(%*)dest.ToPointer() = FromManaged(arg);
 
 public static void DisposeMarshaler(Marshaler m) {}
 
@@ -2924,6 +2936,7 @@ public static void DisposeAbi(% abi){ /*todo*/ }
                         m.write_from_abi(w, "arg." + m.get_escaped_param_name(w)); });
                 }, ", ", marshalers),
                 abi_type,
+                abi_type,
                 projected_type,
                 abi_type,
                 bind_list([](writer& w, abi_marshaler const& m)
@@ -2931,6 +2944,8 @@ public static void DisposeAbi(% abi){ /*todo*/ }
                     w.write("% = %\n", m.get_escaped_param_name(w), [&](writer& w) {
                         m.write_from_managed(w, "arg." + m.get_escaped_param_name(w)); });
                 }, ", ", marshalers),
+                projected_type,
+                abi_type,
                 abi_type);
             return;
         }
@@ -2939,6 +2954,7 @@ public static void DisposeAbi(% abi){ /*todo*/ }
 public static Marshaler CreateMarshaler(% arg)
 {
 var m = new Marshaler();
+Func<bool> dispose = () => { m.Dispose(); return false; };
 try
 {
 %m.__abi = new %()
@@ -2946,7 +2962,7 @@ try
 %};
 return m;
 }
-catch (Exception) when (m.Dispose())
+catch (Exception) when (dispose())
 {
 // Will never execute
 return default;
