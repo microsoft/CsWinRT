@@ -140,11 +140,12 @@ namespace UnitTest
         public void Params_Blittable()
         {
             // TODO: project struct ctor
-            //Blittable a = new Blittable(false, 1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, 'X', typeof(ITests).GUID );
+            //Blittable a = new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, 'X', typeof(ITests).GUID );
             Blittable a = new Blittable{ 
-                A=false, B=1, C=2, D=3, E=4, F=-5, G=-6, H=-7, I=8.0f, J=9.0, K='X', L=typeof(ITests).GUID };
+                A=1, B=2, C=3, D=4, E=-5, F=-6, G=-7, H=8.0f, I=9.0, J='X', K=typeof(ITests).GUID };
             Blittable b;
-            Blittable c = Tests.Param13(a, out b);
+            // todo: ref structs
+            Blittable c = Tests.Param13(a, a, out b);
             // TODO: override ==, Equals for perf (non-reflection)
             //Assert.True(a == b && a == c);
             Assert.True(a.Equals(b) && a.Equals(c));
@@ -154,10 +155,11 @@ namespace UnitTest
         public void Params_NonBlittable()
         {
             // TODO: project IReference as nullale
-            NonBlittable a = new NonBlittable{ A="WinRT", 
-                B=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(1234) };
+            NonBlittable a = new NonBlittable{ A=false, B="WinRT", 
+                C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(1234) };
             NonBlittable b;
-            NonBlittable c = Tests.Param14(a, out b);
+            // todo: ref structs
+            NonBlittable c = Tests.Param14(a, a, out b);
             // TODO: override ==, Equals for perf (non-reflection)
             //Assert.True(a == b && a == c);
             Assert.True(a.Equals(b) && a.Equals(c));
@@ -169,11 +171,12 @@ namespace UnitTest
             // TODO: project ctor
             Nested a = new Nested{
                 Blittable = new Blittable{
-                    A=false, B=1, C=2, D=3, E=4, F=-5, G=-6, H=-7, I=8.0f, J=9.0, K='X', L=typeof(ITests).GUID },
-                NonBlittable = new NonBlittable{ A="WinRT",
-                    B=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(1234) } };
+                    A=1, B=2, C=3, D=4, E=-5, F=-6, G=-7, H=8.0f, I=9.0, J='X', K=typeof(ITests).GUID },
+                NonBlittable = new NonBlittable{ A=false, B="WinRT", 
+                    C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(1234) } };
             Nested b;
-            Nested c = Tests.Param15(a, out b);
+            // todo: ref structs
+            Nested c = Tests.Param15(a, a, out b);
             // TODO: override ==, Equals for perf (non-reflection)
             //Assert.True(a == b && a == c);
             Assert.True(a.Equals(b) && a.Equals(c));
@@ -254,19 +257,22 @@ namespace UnitTest
         [Fact]
         public void Params_Blittable_Call()
         {
-            Tests.Param13Call((Blittable a, out Blittable b) => { b = a; return a; });
+            // todo: ref structs
+            Tests.Param13Call((Blittable a, Blittable b, out Blittable c) => { c = a; return a; });
         }
 
         [Fact]
         public void Params_NonBlittable_Call()
         {
-            Tests.Param14Call((NonBlittable a, out NonBlittable b) => { b = a; return a; });
+            // todo: ref structs
+            Tests.Param14Call((NonBlittable a, NonBlittable b, out NonBlittable c) => { c = a; return a; });
         }
 
         [Fact]
         public void Params_Nested_Call()
         {
-            Tests.Param15Call((Nested a, out Nested b) => { b = a; return a; });
+            // todo: ref structs
+            Tests.Param15Call((Nested a, Nested b, out Nested c) => { c = a; return a; });
         }
 
         [Fact]
@@ -395,9 +401,9 @@ namespace UnitTest
             // TODO: project struct ctor
             Blittable[] a = new Blittable[] {
                 new Blittable {
-                    A=false, B=1, C=2, D=3, E=4, F=-5, G=-6, H=-7, I=8.0f, J=9.0, K='X', L=typeof(ITests).GUID },
+                    A=1, B=2, C=3, D=4, E=-5, F=-6, G=-7, H=8.0f, I=9.0, J='X', K=typeof(ITests).GUID },
                 new Blittable {
-                    A=true, B=10, C=20, D=30, E=40, F=-50, G=-60, H=-70, I=80.0f, J=90.0, K='Y', L=typeof(IStringable).GUID },
+                    A=10, B=20, C=30, D=40, E=-50, F=-60, G=-70, H=80.0f, I=90.0, J='Y', K=typeof(IStringable).GUID },
             };
             Blittable[] b = new Blittable[a.Length];
             Blittable[] c;
@@ -410,9 +416,9 @@ namespace UnitTest
         {
             // TODO: project IReference as nullale
             NonBlittable[] a = new NonBlittable[] {
-                new NonBlittable { A="First", B=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(123) },
-                new NonBlittable { A="Second", B=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(456) },
-                new NonBlittable { A="Third", B=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(789) }
+                new NonBlittable { A=false, B="First", C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(123) },
+                new NonBlittable { A=true, B="Second", C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(456) },
+                new NonBlittable { A=false, B="Third", C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(789) }
             };
             NonBlittable[] b = new NonBlittable[a.Length];
             NonBlittable[] c;
@@ -427,19 +433,19 @@ namespace UnitTest
             Nested[] a = new Nested[]{
                 new Nested{
                     Blittable = new Blittable{
-                        A=false, B=1, C=2, D=3, E=4, F=-5, G=-6, H=-7, I=8.0f, J=9.0, K='X', L=typeof(ITests).GUID },
-                    NonBlittable = new NonBlittable{ A="First",
-                        B=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(123) } },
+                        A=1, B=2, C=3, D=4, E=-5, F=-6, G=-7, H=8.0f, I=9.0, J='X', K=typeof(ITests).GUID },
+                    NonBlittable = new NonBlittable{ A=false, B="First", 
+                        C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(123) } },
+                new Nested{
+                    Blittable = new Blittable {
+                        A=10, B=20, C=30, D=40, E=-50, F=-60, G=-70, H=80.0f, I=90.0, J='Y', K=typeof(IStringable).GUID },
+                    NonBlittable = new NonBlittable{ A=true, B="Second",
+                        C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(456) } },
                 new Nested{
                     Blittable = new Blittable{
-                        A=true, B=10, C=20, D=30, E=40, F=-50, G=-60, H=-70, I=80.0f, J=90.0, K='Y', L=typeof(IStringable).GUID },
-                    NonBlittable = new NonBlittable{ A="Second",
-                        B=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(456) } },
-                new Nested{
-                    Blittable = new Blittable{
-                        A=false, B=1, C=2, D=3, E=4, F=-5, G=-6, H=-7, I=8.0f, J=9.0, K='Z', L=typeof(IInspectable).GUID },
-                    NonBlittable = new NonBlittable{ A="Third",
-                        B=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(789) } }
+                        A=1, B=2, C=3, D=4, E=-5, F=-6, G=-7, H=8.0f, I=9.0, J='Z', K=typeof(IInspectable).GUID },
+                    NonBlittable = new NonBlittable{ A=false, B="Third",
+                        C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(789) } }
             };
             Nested[] b = new Nested[a.Length];
             Nested[] c;
