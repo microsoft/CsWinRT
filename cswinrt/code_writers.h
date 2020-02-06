@@ -1987,7 +1987,6 @@ remove => _%.Unsubscribe(value);
 
     auto get_generic_abi_types(writer& w, method_signature const& signature)
     {
-        // TODO: Correctly support array parameters.
         std::vector<std::pair<std::string, std::string>> generic_abi_types;
         auto add_generic_abi_type = [&](TypeSig sig, bool byref)
         {
@@ -1995,13 +1994,49 @@ remove => _%.Unsubscribe(value);
             generic_abi_types.push_back({w.write_temp(!generic_param.empty() ? "%%" : "typeof(%)%",
                 generic_abi_type, byref ? ".MakeByRefType()" : ""), generic_param });
         };
+
+        auto add_array_param = [&](param_category category)
+        {
+            XLANG_ASSERT(category > param_category::out);
+            switch (category)
+            {
+            case param_category::pass_array:
+                generic_abi_types.push_back({ "typeof(int)", "" });
+                generic_abi_types.push_back({ "typeof(IntPtr)", "" });
+                break;
+            case param_category::fill_array:
+                generic_abi_types.push_back({ "typeof(int)", "" });
+                generic_abi_types.push_back({ "typeof(IntPtr).MakeByRefType()", "" });
+                break;
+            case param_category::receive_array:
+                generic_abi_types.push_back({ "typeof(int).MakeByRefType()", "" });
+                generic_abi_types.push_back({ "typeof(IntPtr).MakeByRefType()", "" });
+                break;
+            }
+        };
+
         for (auto&& param : signature.params())
         {
-            add_generic_abi_type(param.second->Type(), get_param_category(param) == param_category::out);
+            param_category category = get_param_category(param);
+            if (category <= param_category::out)
+            {
+                add_generic_abi_type(param.second->Type(), category == param_category::out);
+            }
+            else
+            {
+                add_array_param(category);
+            }
         }
         if (signature.return_signature())
         {
-            add_generic_abi_type(signature.return_signature().Type(), true);
+            if (!signature.return_signature().Type().is_szarray())
+            {
+                add_generic_abi_type(signature.return_signature().Type(), true);
+            }
+            else
+            {
+                add_array_param(param_category::receive_array);
+            }
         }
         return generic_abi_types;
     }
@@ -2031,7 +2066,7 @@ remove => _%.Unsubscribe(value);
             }
             w.write(">");
         }
-        w.write("(void* thisPtr");
+        w.write(have_generic_params ? "(void* thisPtr" : "(IntPtr thisPtr");
         int index = 0;
         for (auto&& param : signature.params())
         {
@@ -2389,7 +2424,6 @@ return 0;)",
         auto type_name = write_type_name_temp(w, method.Parent());
         auto vmethod_name = get_vmethod_name(w, method.Parent(), method);
 
-        bool is_generic = distance(method.GenericParam()) > 0;
         auto generic_abi_types = get_generic_abi_types(w, signature);
         bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
             [](auto&& pair) { return !pair.second.empty(); }) != generic_abi_types.end();
@@ -2406,7 +2440,7 @@ private static unsafe int Do_Abi_%%
                 signature,
                 w.write_temp("WinRT.ComCallableWrapper.FindObject<%>(%).%%",
                     type_name,
-                    is_generic || have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
+                    have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                     method.Name(),
                     "(%)")));
     }
@@ -2421,7 +2455,6 @@ private static unsafe int Do_Abi_%%
             method_signature setter_sig{ setter };
             auto vmethod_name = get_vmethod_name(w, setter.Parent(), setter);
 
-            bool is_generic = distance(setter.GenericParam()) > 0;
             auto generic_abi_types = get_generic_abi_types(w, setter_sig);
             bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
                 [](auto&& pair) { return !pair.second.empty(); }) != generic_abi_types.end();
@@ -2441,7 +2474,7 @@ private static unsafe int Do_Abi_%%
                 setter_sig,
                 w.write_temp("WinRT.ComCallableWrapper.FindObject<%>(%).% = %",
                     type_name,
-                    is_generic || have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
+                    have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                     prop.Name(),
                     "%")));
         }
@@ -2451,7 +2484,6 @@ private static unsafe int Do_Abi_%%
             method_signature getter_sig{ getter };
             auto vmethod_name = get_vmethod_name(w, getter.Parent(), getter);
 
-            bool is_generic = distance(getter.GenericParam()) > 0;
             auto generic_abi_types = get_generic_abi_types(w, getter_sig);
             bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
                 [](auto&& pair) { return !pair.second.empty(); }) != generic_abi_types.end();
@@ -2470,7 +2502,7 @@ private static unsafe int Do_Abi_%%
                     getter_sig,
                     w.write_temp("WinRT.ComCallableWrapper.FindObject<%>(%).%%",
                         type_name,
-                        is_generic || have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
+                        have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                         prop.Name(),
                         "%")));
         }
