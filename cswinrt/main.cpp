@@ -168,16 +168,19 @@ Where <spec> is one or more of:
                         {
                         case category::class_type:
                             write_class(w, type);
+                            type_requires_abi = true;
                             break;
                         case category::delegate_type:
                             write_delegate(w, type);
+                            type_requires_abi = true;
                             break;
                         case category::enum_type:
                             write_enum(w, type);
-                            type_requires_abi = false;
+                            type_requires_abi = true;
                             break;
                         case category::interface_type:
                             write_interface(w, type);
+                            type_requires_abi = true;
                             break;
                         case category::struct_type:
                             write_struct(w, type);

@@ -212,7 +212,7 @@ namespace WinRT
             {
                 try
                 {
-                    className = new HString(UnmanagedObject.FindObject<ComCallableWrapper>(pThis).RuntimeClassName).Handle;
+                    className = MarshalString.FromManaged(UnmanagedObject.FindObject<ComCallableWrapper>(pThis).RuntimeClassName);
                 }
                 catch (Exception ex)
                 {
@@ -770,23 +770,28 @@ namespace WinRT
             return (uint)refs;
         }
 
-        public static int MarshalInvoke<T>(IntPtr thisPtr, Action<T> invoke)
+        public static TReturn MarshalInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
         {
-            try
+            using (new Mono.ThreadContext())
             {
-                using (new Mono.ThreadContext())
+                var target_invoke = (TDelegate)FindObject(thisPtr)._weakInvoker.Target;
+                if (target_invoke != null)
                 {
-                    var target_invoke = (T)FindObject(thisPtr)._weakInvoker.Target;
-                    if (target_invoke != null)
-                    {
-                        invoke(target_invoke);
-                    }
-                    return 0; // S_OK;
+                    return invoke(target_invoke);
                 }
+                return default;
             }
-            catch (Exception e)
+        }
+
+        public static void MarshalInvoke<T>(IntPtr thisPtr, Action<T> invoke)
+        {
+            using (new Mono.ThreadContext())
             {
-                return Marshal.GetHRForException(e);
+                var target_invoke = (T)FindObject(thisPtr)._weakInvoker.Target;
+                if (target_invoke != null)
+                {
+                    invoke(target_invoke);
+                }
             }
         }
 

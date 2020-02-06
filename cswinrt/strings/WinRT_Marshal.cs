@@ -955,8 +955,5 @@ namespace WinRT
         public static readonly Func<T[], (int, IntPtr)> FromManagedArray;
         public static readonly Action<object> DisposeMarshalerArray;
         public static readonly Action<object> DisposeAbiArray;
-
-        public static readonly Func<T[], (int, IntPtr)> FromManagedArray;
-        public static readonly Func<object, object> FromManaged;
     }
 }

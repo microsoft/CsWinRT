@@ -655,7 +655,7 @@ namespace winrt::TestComponentCSharp::implementation
         _int = value;
     }
 
-    void Class::CopyProperties(winrt::TestComp::IProperties1 const& src)
+    void Class::CopyProperties(winrt::TestComponentCSharp::IProperties1 const& src)
     {
         ReadWriteProperty(src.ReadWriteProperty());
     }
