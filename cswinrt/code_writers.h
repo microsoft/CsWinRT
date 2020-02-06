@@ -2838,6 +2838,9 @@ return new WinRT.Delegate(func, managedDelegate);)",
             marshalers.push_back(std::move(m));
         }
 
+        // blittable - (no marshaler) value type requiring no marshaling/disposing 
+        // marshalable - (marshaler, is_value_type) value type requiring only marshaling, no disposing
+        // disposable - (marshaler, !is_value_type) ref type requiring marshaling and disposing
         bool have_disposers = std::find_if(marshalers.begin(), marshalers.end(), [](abi_marshaler const& m)
         {
             return !m.is_value_type;
@@ -2923,8 +2926,14 @@ public static void DisposeAbi(% abi){ /*todo*/ }
                 abi_type,
                 bind_list([](writer& w, abi_marshaler const& m)
                 {
+                    if (m.marshaler_type.empty())
+                    {
+                        w.write("% = %\n", m.get_escaped_param_name(w), [&](writer& w) {
+                            m.write_marshal_to_abi(w, "arg."); });
+                        return;
+                    }
                     w.write("% = %\n", m.get_escaped_param_name(w), [&](writer& w) {
-                        m.write_marshal_to_abi(w, "arg."); });
+                        m.write_from_managed(w, "arg." + m.get_escaped_param_name(w)); });
                 }, ", ", marshalers),
                 abi_type,
                 projected_type,
@@ -3004,6 +3013,12 @@ public static void DisposeAbi(% abi){ /*todo*/ }
                 for (auto&& m : marshalers)
                 {
                     w.write(count++ == 0 ? "" : ", ");
+                    if (m.is_value_type)
+                    {
+                        w.write("% = %\n", m.get_escaped_param_name(w), [&](writer& w) {
+                            m.write_marshal_to_abi(w, "arg."); });
+                        continue;
+                    }
                     if (m.marshaler_type.empty())
                     {
                         w.write(m.param_type == "bool" ? "% = (byte)(arg.% ? 1 : 0)\n" : "% = arg.%\n",
