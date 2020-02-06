@@ -2480,10 +2480,17 @@ private static unsafe int Do_Abi_%%
     {
         auto type_name = write_type_name_temp(w, evt.Parent());
         auto semantics = get_type_semantics(evt.EventType());
-        MethodDef add_method, remove_method;
-        std::tie(add_method, remove_method) = get_event_methods(evt);
+        auto [add_method, remove_method] = get_event_methods(evt);
+        auto add_signature = method_signature{ add_method };
 
-        auto event_token_name = method_signature{ add_method }.return_param_name();
+        auto handler_parameter_name = add_signature.params().back().first.Name();
+        auto add_handler_event_token_name = add_signature.return_param_name();
+        auto remove_handler_event_token_name = method_signature{ remove_method }.params().back().first.Name();
+
+        w.write("private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_TokenTables;",
+            type_name,
+            bind<write_type_name>(semantics, false, false),
+            evt.Name());
 
         w.write(
             R"(
@@ -2492,6 +2499,10 @@ private static unsafe int Do_Abi_%%
     % = default;
     try
     {
+        var __this = WinRT.ComCallableWrapper.FindObject<%>(thisPtr);
+        var __handler = %.FromAbi(%);
+        % = _%_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
+        __this.% += __handler;
         return 0;
     }
     catch (Exception __ex)
@@ -2501,13 +2512,24 @@ private static unsafe int Do_Abi_%%
 })",
             get_vmethod_name(w, add_method.Parent(), add_method),
             bind<write_abi_signature>(add_method),
-            event_token_name);
+            add_handler_event_token_name,
+            type_name,
+            bind<write_type_name>(semantics, true, false),
+            handler_parameter_name,
+            add_handler_event_token_name,
+            evt.Name(),
+            evt.Name());
         w.write(
     R"(
 private static unsafe int Do_Abi_%%
 {
     try
     {
+        var __this = WinRT.ComCallableWrapper.FindObject<%>(thisPtr);
+        if(_%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(%, out var __handler))
+        {
+            __this.% -= __handler;
+        }
         return 0;
     }
     catch (Exception __ex)
@@ -2516,7 +2538,11 @@ private static unsafe int Do_Abi_%%
     }
 })",
             get_vmethod_name(w, remove_method.Parent(), remove_method),
-            bind<write_abi_signature>(remove_method));
+            bind<write_abi_signature>(remove_method),
+            type_name,
+            evt.Name(),
+            remove_handler_event_token_name,
+            evt.Name());
     }
 
     void write_vtable(writer& w, TypeDef const& type, std::string const& type_name,

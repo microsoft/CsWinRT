@@ -17,6 +17,7 @@ using System.Linq.Expressions;
 namespace WinRT
 {
     using System.Diagnostics;
+    using System.Net;
     using WinRT.Interop;
 
     public enum TrustLevel
@@ -142,8 +143,8 @@ namespace WinRT
         public unsafe delegate int _put_PropertyAsQuaternion(IntPtr thisPtr, Windows.Foundation.Numerics.Quaternion value);
         public unsafe delegate int _get_PropertyAsMatrix4x4(IntPtr thisPtr, out Windows.Foundation.Numerics.Matrix4x4 value);
         public unsafe delegate int _put_PropertyAsMatrix4x4(IntPtr thisPtr, Windows.Foundation.Numerics.Matrix4x4 value);
-        public unsafe delegate int _add_EventHandler(IntPtr thisPtr, IntPtr handler, out EventRegistrationToken token);
-        public unsafe delegate int _remove_EventHandler(IntPtr thisPtr, EventRegistrationToken token);
+        public unsafe delegate int _add_EventHandler(IntPtr thisPtr, IntPtr handler, out Windows.Foundation.EventRegistrationToken token);
+        public unsafe delegate int _remove_EventHandler(IntPtr thisPtr, Windows.Foundation.EventRegistrationToken token);
 
         // IDelegate
         public struct IDelegateVftbl
@@ -152,11 +153,6 @@ namespace WinRT
             public IntPtr AddRef;
             public IntPtr Release;
             public IntPtr Invoke;
-        }
-
-        public struct EventRegistrationToken
-        {
-            public long Value;
         }
     }
 
@@ -210,6 +206,7 @@ namespace WinRT
 
             private unsafe static int Do_Abi_GetRuntimeClassName(IntPtr pThis, out IntPtr className)
             {
+                className = default;
                 try
                 {
                     className = MarshalString.FromManaged(UnmanagedObject.FindObject<ComCallableWrapper>(pThis).RuntimeClassName);
@@ -1043,7 +1040,7 @@ namespace WinRT
         readonly _add_EventHandler _addHandler;
         readonly _remove_EventHandler _removeHandler;
 
-        private EventRegistrationToken _token;
+        private Windows.Foundation.EventRegistrationToken _token;
         private TDelegate _event;
 
         public void Subscribe(TDelegate del)
@@ -1056,7 +1053,7 @@ namespace WinRT
                     try
                     {
                         var nativeDelegate = (IntPtr)Marshaler<TDelegate>.GetAbi(marshaler);
-                        Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out EventRegistrationToken token));
+                        Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out Windows.Foundation.EventRegistrationToken token));
                         _token = token;
                     }
                     finally
@@ -1130,6 +1127,142 @@ namespace WinRT
         {
             Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
             _token.Value = 0;
+        }
+    }
+
+    // An event registration token table stores mappings from delegates to event tokens, in order to support
+    // sourcing WinRT style events from managed code.
+    internal sealed class EventRegistrationTokenTable<T> where T : class, global::System.Delegate
+    {
+        // Note this dictionary is also used as the synchronization object for this table
+        private readonly Dictionary<Windows.Foundation.EventRegistrationToken, T> m_tokens = new Dictionary<Windows.Foundation.EventRegistrationToken, T>();
+
+        // Cached multicast delegate which will invoke all of the currently registered delegates.  This
+        // will be accessed frequently in common coding paterns, so we don't want to calculate it repeatedly.
+        private volatile T m_invokeList = null;
+
+        public Windows.Foundation.EventRegistrationToken AddEventHandler(T handler)
+        {
+            // Windows Runtime allows null handlers.  Assign those the default token (token value 0) for simplicity
+            if (handler == null)
+            {
+                return default;
+            }
+
+            lock (m_tokens)
+            {
+                return AddEventHandlerNoLock(handler);
+            }
+        }
+
+        private Windows.Foundation.EventRegistrationToken AddEventHandlerNoLock(T handler)
+        {
+            Debug.Assert(handler != null);
+
+            // Get a registration token, making sure that we haven't already used the value.  This should be quite
+            // rare, but in the case it does happen, just keep trying until we find one that's unused.
+            Windows.Foundation.EventRegistrationToken token = GetPreferredToken(handler);
+            while (m_tokens.ContainsKey(token))
+            {
+                token = new Windows.Foundation.EventRegistrationToken { Value = token.Value + 1 };
+            }
+            m_tokens[token] = handler;
+
+            // Update the current invocation list to include the newly added delegate
+            global::System.Delegate invokeList = m_invokeList;
+            invokeList = MulticastDelegate.Combine(invokeList, handler);
+            m_invokeList = (T)(object)invokeList;
+
+            return token;
+        }
+
+        // Generate a token that may be used for a particular event handler.  We will frequently be called
+        // upon to look up a token value given only a delegate to start from.  Therefore, we want to make
+        // an initial token value that is easily determined using only the delegate instance itself.  Although
+        // in the common case this token value will be used to uniquely identify the handler, it is not
+        // the only possible token that can represent the handler.
+        //
+        // This means that both:
+        //  * if there is a handler assigned to the generated initial token value, it is not necessarily
+        //    this handler.
+        //  * if there is no handler assigned to the generated initial token value, the handler may still
+        //    be registered under a different token
+        //
+        // Effectively the only reasonable thing to do with this value is either to:
+        //  1. Use it as a good starting point for generating a token for handler
+        //  2. Use it as a guess to quickly see if the handler was really assigned this token value
+        private static Windows.Foundation.EventRegistrationToken GetPreferredToken(T handler)
+        {
+            Debug.Assert(handler != null);
+
+            // We want to generate a token value that has the following properties:
+            //  1. is quickly obtained from the handler instance
+            //  2. uses bits in the upper 32 bits of the 64 bit value, in order to avoid bugs where code
+            //     may assume the value is realy just 32 bits
+            //  3. uses bits in the bottom 32 bits of the 64 bit value, in order to ensure that code doesn't
+            //     take a dependency on them always being 0.
+            //
+            // The simple algorithm chosen here is to simply assign the upper 32 bits the metadata token of the
+            // event handler type, and the lower 32 bits the hash code of the handler instance itself. Using the
+            // metadata token for the upper 32 bits gives us at least a small chance of being able to identify a
+            // totally corrupted token if we ever come across one in a minidump or other scenario.
+            //
+            // The hash code of a unicast delegate is not tied to the method being invoked, so in the case
+            // of a unicast delegate, the hash code of the target method is used instead of the full delegate
+            // hash code.
+            //
+            // While calculating this initial value will be somewhat more expensive than just using a counter
+            // for events that have few registrations, it will also gives us a shot at preventing unregistration
+            // from becoming an O(N) operation.
+            //
+            // We should feel free to change this algorithm as other requirements / optimizations become
+            // available.  This implementation is sufficiently random that code cannot simply guess the value to
+            // take a dependency upon it.  (Simply applying the hash-value algorithm directly won't work in the
+            // case of collisions, where we'll use a different token value).
+
+            uint handlerHashCode;
+            global::System.Delegate[] invocationList = ((global::System.Delegate)(object)handler).GetInvocationList();
+            if (invocationList.Length == 1)
+            {
+                handlerHashCode = (uint)invocationList[0].Method.GetHashCode();
+            }
+            else
+            {
+                handlerHashCode = (uint)handler.GetHashCode();
+            }
+
+            ulong tokenValue = ((ulong)(uint)typeof(T).MetadataToken << 32) | handlerHashCode;
+            return new Windows.Foundation.EventRegistrationToken { Value = (long)tokenValue };
+        }
+
+        // Remove the event handler from the table and
+        // Get the delegate associated with an event registration token if it exists
+        // If the event registration token is not registered, returns false
+        public bool RemoveEventHandler(Windows.Foundation.EventRegistrationToken token, out T handler)
+        {
+            lock (m_tokens)
+            {
+                if (m_tokens.TryGetValue(token, out handler))
+                {
+                    RemoveEventHandlerNoLock(token);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void RemoveEventHandlerNoLock(Windows.Foundation.EventRegistrationToken token)
+        {
+            if (m_tokens.TryGetValue(token, out T handler))
+            {
+                m_tokens.Remove(token);
+
+                // Update the current invocation list to remove the delegate
+                global::System.Delegate invokeList = m_invokeList;
+                invokeList = MulticastDelegate.Remove(invokeList, handler);
+                m_invokeList = (T)(object)invokeList;
+            }
         }
     }
 }
