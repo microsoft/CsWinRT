@@ -2838,9 +2838,9 @@ return new WinRT.Delegate(func, managedDelegate);)",
             marshalers.push_back(std::move(m));
         }
 
-        // blittable - (no marshaler) value type requiring no marshaling/disposing 
-        // marshalable - (marshaler, is_value_type) value type requiring only marshaling, no disposing
-        // disposable - (marshaler, !is_value_type) ref type requiring marshaling and disposing
+        // blittable: (no marshaler) value type requiring no marshaling/disposing 
+        // marshalable: (marshaler, is_value_type) value type requiring only marshaling, no disposing
+        // disposable: (marshaler, !is_value_type) ref type requiring marshaling and disposing
         bool have_disposers = std::find_if(marshalers.begin(), marshalers.end(), [](abi_marshaler const& m)
         {
             return !m.is_value_type;
@@ -2850,17 +2850,16 @@ return new WinRT.Delegate(func, managedDelegate);)",
 internal struct Marshaler
 {
 %public % __abi;
-%}
 )",
             bind_each([](writer& w, abi_marshaler const& m)
             {
                 if (m.marshaler_type.empty()) return;
                 w.write("public % %;\n", m.local_type, m.get_escaped_param_name(w));
             }, marshalers),
-            abi_type,
-            [&](writer& w){
-                if (!have_disposers) return;
-                w.write(R"(public void Dispose()
+            abi_type);
+        if (have_disposers)
+        {
+            w.write(R"(public void Dispose()
 {
 %
 }
@@ -2878,134 +2877,33 @@ internal struct Marshaler
                         m.marshaler_type,
                         m.get_escaped_param_name(w));
                 }, marshalers));
-            });
-
-        if (!have_disposers)
-        {
-            w.write(R"(
-public static Marshaler CreateMarshaler(% arg) 
-{
-return new Marshaler()
-{
-__abi = new %()
-{
-%}  
-};
-}
-
-public static % GetAbi(Marshaler m) => m.__abi;
-
-public static % FromAbi(% arg) 
-{
-return new %()
-{
-%};
-}
-
-public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) => 
-    *(%*)dest.ToPointer() = GetAbi(arg);
-
-public static % FromManaged(% arg)
-{
-return new %()
-{
-%};
-}
-
-
-public static unsafe void CopyManaged(% arg, IntPtr dest) =>
-    *(%*)dest.ToPointer() = FromManaged(arg);
-
-public static void DisposeMarshaler(Marshaler m) {}
-
-public static void DisposeAbi(% abi){ /*todo*/ }
-}
-
-)",
-                projected_type,
-                abi_type,
-                bind_list([](writer& w, abi_marshaler const& m)
-                {
-                    if (m.marshaler_type.empty())
-                    {
-                        w.write("% = %\n", m.get_escaped_param_name(w), [&](writer& w) {
-                            m.write_marshal_to_abi(w, "arg."); });
-                        return;
-                    }
-                    w.write("% = %\n", m.get_escaped_param_name(w), [&](writer& w) {
-                        m.write_from_managed(w, "arg." + m.get_escaped_param_name(w)); });
-                }, ", ", marshalers),
-                abi_type,
-                projected_type,
-                abi_type,
-                projected_type,
-                bind_list([](writer& w, abi_marshaler const& m)
-                {
-                    w.write("% = %\n", m.get_escaped_param_name(w), [&](writer& w) {
-                        m.write_from_abi(w, "arg." + m.get_escaped_param_name(w)); });
-                }, ", ", marshalers),
-                abi_type,
-                abi_type,
-                projected_type,
-                abi_type,
-                bind_list([](writer& w, abi_marshaler const& m)
-                {
-                    w.write("% = %\n", m.get_escaped_param_name(w), [&](writer& w) {
-                        m.write_from_managed(w, "arg." + m.get_escaped_param_name(w)); });
-                }, ", ", marshalers),
-                projected_type,
-                abi_type,
-                abi_type);
-            return;
         }
+        w.write("}\n");
 
         w.write(R"(
 public static Marshaler CreateMarshaler(% arg)
 {
-var m = new Marshaler();
+var m = new Marshaler();)",
+            projected_type);
+        if (have_disposers)
+        {
+            w.write(R"(
 Func<bool> dispose = () => { m.Dispose(); return false; };
 try
-{
-%m.__abi = new %()
-{
-%};
-return m;
-}
-catch (Exception) when (dispose())
-{
-// Will never execute
-return default;
-}
-}
-
-public static % GetAbi(Marshaler m) => m.__abi;
-
-public static % FromAbi(% arg)
-{
-return new %()
+{)");
+        }
+        for (auto&& m : marshalers)
+        {
+            if (m.marshaler_type.empty()) continue;
+            w.write("\nm.% = ", m.get_escaped_param_name(w));
+            m.write_create(w, "arg." + m.get_escaped_param_name(w));
+            w.write(";");
+        }
+        w.write(R"(
+m.__abi = new %()
 {
 %};
-}
-
-public static % FromManaged(% arg)
-{
-return new %()
-{
-%};
-}
-
-public static void DisposeMarshaler(Marshaler m) => m.Dispose();
-
-public static void DisposeAbi(% abi){ /*todo*/ }
-)",
-            projected_type,
-            bind_each([](writer& w, abi_marshaler const& m)
-            {
-                if (m.marshaler_type.empty()) return;
-                w.write("m.% = ", m.get_escaped_param_name(w));
-                m.write_create(w, "arg." + m.get_escaped_param_name(w));
-                w.write(";\n");
-            }, marshalers),
+return m;)",
             abi_type,
             [&](writer& w)
             {
@@ -3013,12 +2911,6 @@ public static void DisposeAbi(% abi){ /*todo*/ }
                 for (auto&& m : marshalers)
                 {
                     w.write(count++ == 0 ? "" : ", ");
-                    if (m.is_value_type)
-                    {
-                        w.write("% = %\n", m.get_escaped_param_name(w), [&](writer& w) {
-                            m.write_marshal_to_abi(w, "arg."); });
-                        continue;
-                    }
                     if (m.marshaler_type.empty())
                     {
                         w.write(m.param_type == "bool" ? "% = (byte)(arg.% ? 1 : 0)\n" : "% = arg.%\n",
@@ -3031,8 +2923,33 @@ public static void DisposeAbi(% abi){ /*todo*/ }
                         m.marshaler_type,
                         m.get_escaped_param_name(w));
                 }
-            },
-            abi_type,
+            });
+        if (have_disposers)
+        {
+            w.write(R"(
+}
+catch (Exception) when (dispose())
+{
+// Will never execute
+return default;
+}
+)");
+        }
+        w.write("}\n");
+
+        w.write(R"(
+public static % GetAbi(Marshaler m) => m.__abi;
+)",
+            abi_type);
+
+        w.write(R"(
+public static % FromAbi(% arg)
+{
+return new %()
+{
+%};
+}
+)",
             projected_type,
             abi_type,
             projected_type,
@@ -3053,7 +2970,16 @@ public static void DisposeAbi(% abi){ /*todo*/ }
                         m.get_escaped_param_name(w),
                         [&](writer& w) {m.write_from_abi(w, "arg." + m.get_escaped_param_name(w)); });
                 }
-            },
+            });
+
+        w.write(R"(
+public static % FromManaged(% arg)
+{
+return new %()
+{
+%};
+}
+)",
             abi_type,
             projected_type,
             abi_type,
@@ -3071,12 +2997,37 @@ public static void DisposeAbi(% abi){ /*todo*/ }
                         continue;
                     }
                     w.write("% = %\n",
-                        m.get_escaped_param_name(w),
-                        [&](writer& w) {m.write_from_managed(w, "arg." + m.get_escaped_param_name(w)); });
+                        m.get_escaped_param_name(w), [&](writer& w) {
+                            m.write_from_managed(w, "arg." + m.get_escaped_param_name(w)); });
                 }
-            },
-            abi_type);
+            });
 
-        w.write("}\n\n");
+        if (!have_disposers) 
+        {
+            w.write(R"(
+public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) => 
+    *(%*)dest.ToPointer() = GetAbi(arg);
+)",
+                abi_type);
+
+            w.write(R"(
+public static unsafe void CopyManaged(% arg, IntPtr dest) =>
+    *(%*)dest.ToPointer() = FromManaged(arg);
+)",
+                projected_type,
+                abi_type);
+        }
+    
+    w.write(R"(
+public static void DisposeMarshaler(Marshaler m) %
+)",
+        have_disposers ? "=> m.Dispose();" : "{}");
+
+    w.write(R"(
+public static void DisposeAbi(% abi){ /*todo*/ }
+}
+
+)",
+            abi_type);
     }
 }
