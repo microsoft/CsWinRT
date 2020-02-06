@@ -2861,8 +2861,7 @@ internal struct Marshaler
         {
             w.write(R"(public void Dispose()
 {
-%
-}
+%}
 )",
                 bind_each([](writer& w, abi_marshaler const& m)
                 {

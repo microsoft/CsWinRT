@@ -553,7 +553,7 @@ namespace UnitTest
 
         // Nota Bene: this test case must always remain the final one
         [Fact]
-        public void Check_Coverage()
+        public void Z_Check_Coverage()
         {
             Tests.Simple();
             //Assert.Equal((double)Tests.Percentage, (double)100);
