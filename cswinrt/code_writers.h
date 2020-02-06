@@ -2206,7 +2206,7 @@ remove => _%.Unsubscribe(value);
 
             auto get_abi_type = [&]()
             {
-                return w.write_temp("%", bind<write_type_name>(semantics, true, false));
+                return w.write_temp("%", bind<write_type_name>(semantics, true, true));
             };
 
             auto set_typedef_marshaler = [&](TypeDef const& type)
@@ -2922,6 +2922,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 {
 public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
 public static IntPtr FromManaged(% obj) => MarshalInterface<%>.FromManaged(obj);
+public static (int length, IntPtr data) FromManagedArray(%[] obj) => MarshalInterface<%>.FromManagedArray(obj);
 }
 )",
             abi_type_name,
@@ -2929,6 +2930,8 @@ public static IntPtr FromManaged(% obj) => MarshalInterface<%>.FromManaged(obj);
             projected_type_name,
             default_interface_abi_name,
             default_interface_abi_name,
+            projected_type_name,
+            default_interface_name,
             projected_type_name,
             default_interface_name);
     }
@@ -3237,9 +3240,12 @@ internal struct Marshaler
 
         if (!have_disposers)
         {
+            /*if (type.TypeName() == "KeyTime" && type.TypeNamespace() == "Windows.UI.Xaml.Media.Animation") DebugBreak();*/
+
             w.write(R"(
 public static Marshaler CreateMarshaler(% arg) 
 {
+%
 return new Marshaler()
 {
 __abi = new %()
@@ -3278,6 +3284,21 @@ public static void DisposeAbi(% abi){ /*todo*/ }
 
 )",
                 projected_type,
+                bind_each([](writer& w, abi_marshaler const& m)
+                {
+                    if (!m.marshaler_type.empty())
+                    {
+                        w.write("var % = %;\n",
+                            bind([&](writer& w)
+                                {
+                                    w.write(m.get_marshaler_local(w));
+                                }),
+                            bind([&](writer& w)
+                                {
+                                    m.write_create(w, w.write_temp("arg.%", m.get_escaped_param_name(w)));
+                                }));
+                    }
+                }, marshalers),
                 abi_type,
                 bind_list([](writer& w, abi_marshaler const& m)
                 {
