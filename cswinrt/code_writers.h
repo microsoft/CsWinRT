@@ -1987,6 +1987,7 @@ remove => _%.Unsubscribe(value);
 
     auto get_generic_abi_types(writer& w, method_signature const& signature)
     {
+        // TODO: Correctly support array parameters.
         std::vector<std::pair<std::string, std::string>> generic_abi_types;
         auto add_generic_abi_type = [&](TypeSig sig, bool byref)
         {
@@ -2660,11 +2661,18 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
                     bind_each([&](writer& w, MethodDef const& method)
                     {
                         auto vmethod_name = get_vmethod_name(w, type, method);
-                        auto generic_abi_types = get_generic_abi_types(w, method_signature(method));
-                        bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
-                            [](auto&& pair){ return !pair.second.empty(); }) != generic_abi_types.end();
-                        if (have_generic_params)
+                        bool signature_has_generic_parameters{};
+
+                        writer::write_generic_type_name_guard g(w, [&](writer& /*w*/, uint32_t /*index*/) {
+                            signature_has_generic_parameters = true;
+                        });
+
+                        auto _ = w.write_temp("%", bind<write_abi_parameters>(method_signature{ method }));
+
+                        if (signature_has_generic_parameters)
                         {
+                            auto generic_abi_types = get_generic_abi_types(w, method_signature(method));
+
                             w.write("private static readonly Type %_Type = Expression.GetDelegateType(new Type[]{ typeof(void*), %typeof(int) });\n",
                                 vmethod_name,
                                 bind_each([&](writer& w, auto&& pair)
