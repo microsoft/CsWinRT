@@ -1541,31 +1541,6 @@ event % %;)",
         m.param_type = w.write_temp("%", bind<write_projection_type>(semantics));
         m.is_value_type = is_value_type(semantics);
 
-        if (m.is_array())
-        {
-            if (m.is_generic())
-            {
-                m.marshaler_type = w.write_temp("Marshaler<%>", m.param_type);
-                m.local_type = "object";
-                return;
-            }
-
-            if (auto ft = std::get_if<fundamental_type>(&semantics))
-            {
-                if (*ft == fundamental_type::String)
-                {
-                    m.marshaler_type = "MarshalString";
-                    m.local_type = "MarshalString.MarshalerArray";
-                    return;
-                }
-            }
-
-            m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
-            m.marshaler_type += "<" + m.param_type + ">";
-            m.local_type = m.marshaler_type + ".MarshalerArray";
-            return;
-        }
-
         auto get_abi_type = [&]()
         {
             auto abi_type = w.write_temp("%", bind<write_type_name>(semantics, true, false));
@@ -1576,6 +1551,22 @@ event % %;)",
             return w.write_temp("%", bind<write_type_name>(semantics, true, true));
         };
 
+        auto set_simple_marshaler_type = [&](abi_marshaler& m, TypeDef const& type)
+        {
+            if (m.is_array())
+            {
+                m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
+                m.marshaler_type += "<" + m.param_type + ">";
+                m.local_type = m.marshaler_type + ".MarshalerArray";
+            }
+            else if (!is_type_blittable(type))
+            {
+                m.marshaler_type = get_abi_type();
+                m.local_type = m.marshaler_type;
+                if (!m.is_out()) m.local_type += ".Marshaler";
+            }
+        };
+
         auto set_typedef_marshaler = [&](abi_marshaler& m, TypeDef const& type)
         {
             switch (get_category(type))
@@ -1583,12 +1574,7 @@ event % %;)",
             case category::enum_type:
                 break;
             case category::struct_type:
-                if (!is_type_blittable(type))
-                {
-                    m.marshaler_type = get_abi_type();
-                    m.local_type = m.marshaler_type;
-                    if (!m.is_out()) m.local_type += ".Marshaler";
-                }
+                set_simple_marshaler_type(m, type);
                 break;
             case category::interface_type:
                 m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
@@ -1629,8 +1615,16 @@ event % %;)",
             {
                 if (type == fundamental_type::String)
                 {
-                    m.marshaler_type = "MarshalString";
-                    m.local_type = m.is_out() ? "IntPtr" : "MarshalString";
+                    if (m.is_array())
+                    {
+                        m.marshaler_type = "MarshalString";
+                        m.local_type = "MarshalString.MarshalerArray";
+                    }
+                    else
+                    {
+                        m.marshaler_type = "MarshalString";
+                        m.local_type = m.is_out() ? "IntPtr" : "MarshalString";
+                    }
                 }
             },
             [&](auto const&) {});
@@ -1638,6 +1632,21 @@ event % %;)",
         if (m.is_out() && m.local_type.empty())
         {
             m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
+        }
+
+        if (m.is_array() && m.marshaler_type.empty())
+        {
+            if (m.is_generic())
+            {
+                m.marshaler_type = w.write_temp("Marshaler<%>", m.param_type);
+                m.local_type = "object";
+            }
+            else
+            {
+                m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
+                m.marshaler_type += "<" + m.param_type + ">";
+                m.local_type = m.marshaler_type + ".MarshalerArray";
+            }
         }
     }
 
