@@ -176,7 +176,7 @@ Where <spec> is one or more of:
                             break;
                         case category::enum_type:
                             write_enum(w, type);
-                            type_requires_abi = true;
+                            type_requires_abi = false;
                             break;
                         case category::interface_type:
                             write_interface(w, type);
