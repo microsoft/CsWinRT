@@ -97,7 +97,9 @@ namespace cswinrt
             },
             [&](fundamental_type const& type)
             {
-                return (type != fundamental_type::String) && (type != fundamental_type::Boolean);
+                return (type != fundamental_type::String) && 
+                    (type != fundamental_type::Char) &&
+                    (type != fundamental_type::Boolean);
             },
             [&](auto&&)
             {
@@ -434,7 +436,7 @@ namespace cswinrt
             w.write(", int __%Size, IntPtr %", param_name, param_name);
             break;
         case param_category::fill_array:
-            w.write(", int __%Size, ref IntPtr %", param_name, param_name);
+            w.write(", int __%Size, IntPtr %", param_name, param_name);
             break;
         case param_category::receive_array:
             w.write(", out int __%Size, out IntPtr %", param_name, param_name);
@@ -1398,7 +1400,7 @@ event % %;)",
                 {
                     w.write("%__%_length, %__%_data",
                         is_out() ? "out " : "", param_name,
-                        is_ref() ? "ref " : is_out() ? "out " : "", param_name);
+                        is_out() ? "out " : "", param_name);
                     return;
                 }
 
@@ -3017,12 +3019,12 @@ public static unsafe void CopyManaged(% arg, IntPtr dest) =>
                 abi_type);
         }
     
-    w.write(R"(
+      w.write(R"(
 public static void DisposeMarshaler(Marshaler m) %
 )",
-        have_disposers ? "=> m.Dispose();" : "{}");
+            have_disposers ? "=> m.Dispose();" : "{}");
 
-    w.write(R"(
+        w.write(R"(
 public static void DisposeAbi(% abi){ /*todo*/ }
 }
 
