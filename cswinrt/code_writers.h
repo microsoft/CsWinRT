@@ -1578,7 +1578,14 @@ event % %;)",
                 break;
             case category::interface_type:
                 m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
-                m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                if (m.is_array())
+                {
+                    m.local_type = m.marshaler_type + ".MarshalerArray";
+                }
+                else
+                {
+                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                }
                 break;
             case category::class_type:
                 m.local_type = "IntPtr";
@@ -1594,7 +1601,14 @@ event % %;)",
             [&](object_type)
             {
                 m.marshaler_type = "MarshalInspectable";
-                m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                if (m.is_array())
+                {
+                    m.local_type = "MarshalInspectable.MarshalerArray";
+                }
+                else
+                {
+                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                }
             },
             [&](type_definition const& type)
             {
