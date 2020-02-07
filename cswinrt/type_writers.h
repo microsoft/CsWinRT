@@ -203,35 +203,22 @@ namespace %
             }
         }
 
-        template<auto writer:: * custom_writer_member>
-        struct custom_writer_guard
+        using generic_type_name_write = std::function<void(writer & w, uint32_t index)>;
+        generic_type_name_write write_generic_type_name_custom{};
+        struct write_generic_type_name_guard
         {
-            using custom_writer_func = std::remove_reference_t<std::remove_cv_t<decltype(std::declval<writer>().*custom_writer_member)>>;
             writer& _writer;
-            custom_writer_func _current;
-            custom_writer_guard(writer& w, custom_writer_func current) :
+            generic_type_name_write _current;
+            write_generic_type_name_guard(writer& w, generic_type_name_write current) : 
                 _writer(w), _current(current)
             {
-                std::swap(_current, _writer.*custom_writer_member);
+                std::swap(_current, _writer.write_generic_type_name_custom);
             }
-            ~custom_writer_guard()
+            ~write_generic_type_name_guard()
             {
-                std::swap(_current, _writer.*custom_writer_member);
+                std::swap(_current, _writer.write_generic_type_name_custom);
             }
         };
-
-        std::function<void(writer & w, uint32_t index)> write_generic_type_name_custom{};
-
-        using write_generic_type_name_guard = custom_writer_guard<&writer::write_generic_type_name_custom>;
-
-        using generic_type_marshal_write = std::function<void(writer & w, std::string_view generic_type, std::string_view name)>;
-        generic_type_marshal_write write_generic_type_marshal_to_abi_custom{};
-
-        using write_generic_type_marshal_to_abi_guard = custom_writer_guard<&writer::write_generic_type_marshal_to_abi_custom>;
-
-        generic_type_marshal_write write_generic_type_marshal_from_abi_custom{};
-
-        using write_generic_type_marshal_from_abi_guard = custom_writer_guard<&writer::write_generic_type_marshal_from_abi_custom>;
     };
 
     struct separator

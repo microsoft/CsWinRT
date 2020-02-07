@@ -253,11 +253,6 @@ namespace WinRT
                 Marshal.FreeCoTaskMem(abi.data);
             }
         }
-
-        public static (int length, IntPtr data) FromManagedArray(T[] array)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     class MarshalGeneric<T>
