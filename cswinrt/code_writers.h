@@ -2408,12 +2408,19 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
         {
             if (!is_ref() && (!is_out() || local_type.empty()))
                 return;
+            auto param_local = get_param_local(w);
+            if (category == param_category::fill_array)
+            {
+                w.write("%.CopyManagedArray(%, %);\n",
+                    marshaler_type,
+                    param_local,
+                    bind<write_escaped_identifier>(param_name));
+                return;
+            }
             is_array() ?
                 w.write("(__%Size, %) = ", param_name, bind<write_escaped_identifier>(param_name)) :
                 w.write("% = ", bind<write_escaped_identifier>(param_name));
-            auto param_local = get_param_local(w);
-            auto param_cast = is_generic() ?
-                w.write_temp("(%)", param_type) : "";
+            auto param_cast = is_generic() ? w.write_temp("(%)", param_type) : "";
             if (marshaler_type.empty())
             {
                 if (local_type == "IntPtr")
