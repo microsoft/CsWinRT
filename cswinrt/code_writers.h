@@ -2411,7 +2411,7 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
             auto param_local = get_param_local(w);
             if (category == param_category::fill_array)
             {
-                w.write("%.CopyManagedArray(%, %);",
+                w.write("%.CopyManagedArray(%, %);\n",
                     marshaler_type,
                     param_local,
                     bind<write_escaped_identifier>(param_name));

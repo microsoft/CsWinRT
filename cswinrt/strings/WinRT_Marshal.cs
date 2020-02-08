@@ -282,7 +282,7 @@ namespace WinRT
             var byte_length = length * Marshal.SizeOf<T>();
             var array_handle = GCHandle.Alloc(array, GCHandleType.Pinned);
             var array_data = array_handle.AddrOfPinnedObject();
-            Buffer.MemoryCopy(data.ToPointer(), array_data.ToPointer(), byte_length, byte_length);
+            Buffer.MemoryCopy(array_data.ToPointer(), data.ToPointer(), byte_length, byte_length);
             array_handle.Free();
         }
 
