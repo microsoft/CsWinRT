@@ -1580,7 +1580,7 @@ event % %;)",
                 m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
                 if (m.is_array())
                 {
-                    m.local_type = m.marshaler_type + ".MarshalerArray";
+                    m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
                 }
                 else
                 {
@@ -1603,7 +1603,7 @@ event % %;)",
                 m.marshaler_type = "MarshalInspectable";
                 if (m.is_array())
                 {
-                    m.local_type = "MarshalInspectable.MarshalerArray";
+                    m.local_type = "MarshalInterfaceHelper<object>.MarshalerArray";
                 }
                 else
                 {
