@@ -171,14 +171,51 @@ namespace WinRT
 
         public static unsafe (int length, IntPtr data) FromManagedArray(string[] array)
         {
-            var length = array.Length;
-            IntPtr data = Marshal.AllocCoTaskMem(length * Marshal.SizeOf<IntPtr>());
-            var elements = (IntPtr*)data;
-            for (int i = 0; i < length; i++)
+            IntPtr data = IntPtr.Zero;
+            int i = 0;
+            Func<bool> dispose = () =>
             {
-                elements[i] = MarshalString.FromManaged(array[i]);
+                DisposeAbiArray((i, data));
+                i = 0;
+                data = IntPtr.Zero;
+                return false;
             };
-            return (length, data);
+            try
+            {
+                var length = array.Length;
+                data = Marshal.AllocCoTaskMem(length * Marshal.SizeOf<IntPtr>());
+                var elements = (IntPtr*)data;
+                for (i = 0; i < length; i++)
+                {
+                    elements[i] = MarshalString.FromManaged(array[i]);
+                };
+            }
+            catch (Exception) when (dispose())
+            {
+                // Will never execute
+                return default;
+            }
+            return (i, data);
+        }
+
+        public static unsafe void CopyManagedArray(string[] array, IntPtr data)
+        {
+            DisposeAbiArrayElements((array.Length, data));
+
+            int i = 0;
+            Func<bool> dispose = () => { DisposeAbiArrayElements((i, data)); return false; };
+            try
+            {
+                var length = array.Length;
+                var elements = (IntPtr*)data;
+                for (i = 0; i < length; i++)
+                {
+                    elements[i] = MarshalString.FromManaged(array[i]);
+                };
+            }
+            catch (Exception) when (dispose())
+            {
+            }
         }
 
         public static void DisposeMarshalerArray(object box)
@@ -187,18 +224,21 @@ namespace WinRT
                 ((MarshalerArray)box).Dispose();
         }
 
+        public static unsafe void DisposeAbiArrayElements((int length, IntPtr data) abi)
+        {
+            var elements = (IntPtr*)abi.data;
+            for (int i = 0; i < abi.length; i++)
+            {
+                DisposeAbi(elements[i]);
+            }
+        }
+
         public static unsafe void DisposeAbiArray(object box)
         {
-            if (box != null)
-            {
-                var abi = ((int length, IntPtr data))box;
-                var elements = (IntPtr*)abi.data;
-                for (int i = 0; i < abi.length; i++)
-                {
-                    DisposeAbi(elements[i]);
-                }
-                Marshal.FreeCoTaskMem(abi.data);
-            }
+            if (box == null) return;
+            var abi = ((int length, IntPtr data))box;
+            DisposeAbiArrayElements(abi);
+            Marshal.FreeCoTaskMem(abi.data);
         }
     }
 
@@ -232,11 +272,18 @@ namespace WinRT
             var length = array.Length;
             var byte_length = length * Marshal.SizeOf<T>();
             var data = Marshal.AllocCoTaskMem(byte_length);
+            CopyManagedArray(array, data);
+            return (length, data);
+        }
+
+        public static unsafe void CopyManagedArray(Array array, IntPtr data)
+        {
+            var length = array.Length;
+            var byte_length = length * Marshal.SizeOf<T>();
             var array_handle = GCHandle.Alloc(array, GCHandleType.Pinned);
             var array_data = array_handle.AddrOfPinnedObject();
-            Buffer.MemoryCopy(data.ToPointer(), array_data.ToPointer(), byte_length, byte_length);
+            Buffer.MemoryCopy(array_data.ToPointer(), data.ToPointer(), byte_length, byte_length);
             array_handle.Free();
-            return (length, data);
         }
 
         public static void DisposeMarshalerArray(object box)
@@ -247,11 +294,9 @@ namespace WinRT
 
         public static void DisposeAbiArray(object box)
         {
-            if (box != null)
-            {
-                var abi = ((int length, IntPtr data))box;
-                Marshal.FreeCoTaskMem(abi.data);
-            }
+            if (box == null) return;
+            var abi = ((int length, IntPtr data))box;
+            Marshal.FreeCoTaskMem(abi.data);
         }
     }
 
@@ -443,12 +488,33 @@ namespace WinRT
             return (i, data);
         }
 
+        public static unsafe void CopyManagedArray(T[] array, IntPtr data)
+        {
+            DisposeAbiArrayElements((array.Length, data));
+
+            int i = 0;
+            Func<bool> dispose = () => { DisposeAbiArrayElements((i, data)); return false; };
+            try
+            {
+                int length = array.Length;
+                var abi_element_size = Marshal.SizeOf(HelperType);
+                var byte_length = length * abi_element_size;
+                var bytes = (byte*)data.ToPointer();
+                for (i = 0; i < length; i++)
+                {
+                    Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
+                    bytes += abi_element_size;
+                }
+            }
+            catch (Exception) when (dispose())
+            {
+            }
+        }
+
         public static void DisposeMarshalerArray(object box) => ((MarshalerArray)box).Dispose();
 
-        public static unsafe void DisposeAbiArray(object box)
+        public static unsafe void DisposeAbiArrayElements((int length, IntPtr data) abi)
         {
-            var abi = ((int length, IntPtr data))box;
-            if (abi.data == IntPtr.Zero) return;
             var data = (byte*)abi.data.ToPointer();
             var abi_element_size = Marshal.SizeOf(HelperType);
             for (int i = 0; i < abi.length; i++)
@@ -457,7 +523,174 @@ namespace WinRT
                 Marshaler<T>.DisposeAbi(abi_element);
                 data += abi_element_size;
             }
+        }
+
+        public static unsafe void DisposeAbiArray(object box)
+        {
+            if (box == null) return;
+            var abi = ((int length, IntPtr data))box;
+            if (abi.data == IntPtr.Zero) return;
+            DisposeAbiArrayElements(abi);
             Marshal.FreeCoTaskMem(abi.data);
+        }
+    }
+
+    class MarshalInterfaceHelper<T>
+    {
+        public struct MarshalerArray
+        {
+            public void Dispose()
+            {
+                if (_marshalers != null)
+                {
+                    foreach (var marshaler in _marshalers)
+                    {
+                        DisposeMarshaler(marshaler);
+                    }
+                }
+                if (_array != null)
+                {
+                    Marshal.FreeCoTaskMem(_array);
+                }
+            }
+
+            public IntPtr _array;
+            public IObjectReference[] _marshalers;
+        }
+
+        public static unsafe MarshalerArray CreateMarshalerArray(T[] array, Func<T, IObjectReference> createMarshaler)
+        {
+            MarshalerArray m = new MarshalerArray();
+            Func<bool> dispose = () => { m.Dispose(); return false; };
+            try
+            {
+                int length = array.Length;
+                var byte_length = length * IntPtr.Size;
+                m._array = Marshal.AllocCoTaskMem(byte_length);
+                m._marshalers = new IObjectReference[length];
+                var element = (IntPtr*)m._array.ToPointer();
+                for (int i = 0; i < length; i++)
+                {
+                    m._marshalers[i] = createMarshaler(array[i]);
+                    element[i] = GetAbi(m._marshalers[i]);
+                }
+                return m;
+            }
+            catch (Exception) when (dispose())
+            {
+                // Will never execute
+                return default;
+            }
+        }
+
+        public static (int length, IntPtr data) GetAbiArray(object box)
+        {
+            var m = (MarshalerArray)box;
+            return (m._marshalers.Length, m._array);
+        }
+
+        public static unsafe T[] FromAbiArray(object box, Func<IntPtr, T> fromAbi)
+        {
+            var abi = ((int length, IntPtr data))box;
+            var array = new T[abi.length];
+            var data = (IntPtr*)abi.data.ToPointer();
+            for (int i = 0; i < abi.length; i++)
+            {
+                array[i] = fromAbi(data[i]);
+            }
+            return array;
+        }
+
+        public static unsafe (int length, IntPtr data) FromManagedArray(T[] array, Func<T, IntPtr> fromManaged)
+        {
+            IntPtr data = IntPtr.Zero;
+            int i = 0;
+            Func<bool> dispose = () =>
+            {
+                DisposeAbiArray((i, data));
+                i = 0;
+                data = IntPtr.Zero;
+                return false;
+            };
+            try
+            {
+                int length = array.Length;
+                var byte_length = length * IntPtr.Size;
+                data = Marshal.AllocCoTaskMem(byte_length);
+                var native = (IntPtr*)data.ToPointer();
+                for (i = 0; i < length; i++)
+                {
+                    native[i] = fromManaged(array[i]);
+                }
+            }
+            catch (Exception) when (dispose())
+            {
+                // Will never execute
+                return default;
+            }
+            return (i, data);
+        }
+
+        public static unsafe void CopyManagedArray(T[] array, IntPtr data, Action<T, IntPtr> copyManaged)
+        {
+            DisposeAbiArrayElements((array.Length, data));
+
+            int i = 0;
+            Func<bool> dispose = () => { DisposeAbiArrayElements((i, data)); return false; };
+            try
+            {
+                int length = array.Length;
+                var byte_length = length * IntPtr.Size;
+                var bytes = (byte*)data.ToPointer();
+                for (i = 0; i < length; i++)
+                {
+                    copyManaged(array[i], (IntPtr)bytes);
+                    bytes += IntPtr.Size;
+                }
+            }
+            catch (Exception) when (dispose())
+            {
+            }
+        }
+
+        public static void DisposeMarshalerArray(object box) => ((MarshalerArray)box).Dispose();
+
+        public static unsafe void DisposeAbiArrayElements((int length, IntPtr data) abi)
+        {
+            var data = (IntPtr*)abi.data.ToPointer();
+            for (int i = 0; i < abi.length; i++)
+            {
+                DisposeAbi(data[i]);
+            }
+        }
+
+        public static unsafe void DisposeAbiArray(object box)
+        {
+            if (box == null) return;
+            var abi = ((int length, IntPtr data))box;
+            if (abi.data == IntPtr.Zero) return;
+            DisposeAbiArrayElements(abi);
+            Marshal.FreeCoTaskMem(abi.data);
+        }
+
+        public static IntPtr GetAbi(IObjectReference objRef)
+        {
+            return objRef?.ThisPtr ?? IntPtr.Zero;
+        }
+
+        public static void DisposeMarshaler(IObjectReference objRef)
+        {
+            // Since IObjectReference doesn't have an explicit dispose,
+            // just use GC.KeepAlive here to ensure that the IObjectReference instance
+            // gets finalized after the call to native.
+            GC.KeepAlive(objRef);
+        }
+
+        public static void DisposeAbi(IntPtr ptr)
+        {
+            if (ptr == IntPtr.Zero) return;
+            // TODO: this should be a direct v-table call when function pointers are a thing
+            ObjectReference<IInspectable.Vftbl>.Attach(ref ptr);
         }
     }
 
@@ -482,11 +715,11 @@ namespace WinRT
             return _FromAbi(ptr);
         }
 
-        public static IntPtr GetAbi(IObjectReference value) => MarshalInspectable.GetAbi(value);
+        public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<T>.GetAbi(value);
 
-        public static void DisposeAbi(IntPtr thisPtr) => MarshalInspectable.DisposeAbi(thisPtr);
+        public static void DisposeAbi(IntPtr thisPtr) => MarshalInterfaceHelper<T>.DisposeAbi(thisPtr);
 
-        public static void DisposeMarshaler(IObjectReference value) => MarshalInspectable.DisposeMarshaler(value);
+        public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<T>.DisposeMarshaler(value);
 
         public static IntPtr FromManaged(T value)
         {
@@ -495,6 +728,12 @@ namespace WinRT
                 return IntPtr.Zero;
             }
             return CreateMarshaler(value).GetRef();
+        }
+
+        public static unsafe void CopyManaged(T value, IntPtr dest)
+        {
+            *(IntPtr*)dest.ToPointer() =
+                (value is null) ? IntPtr.Zero : CreateMarshaler(value).GetRef();
         }
 
         public static IObjectReference CreateMarshaler(T value)
@@ -525,114 +764,19 @@ namespace WinRT
             return _As(inspectable);
         }
 
+        public static unsafe MarshalInterfaceHelper<T>.MarshalerArray CreateMarshalerArray(T[] array) => MarshalInterfaceHelper<T>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
 
-        public struct MarshalerArray
-        {
-            public void Dispose()
-            {
-                if (_marshalers != null)
-                {
-                    foreach (var marshaler in _marshalers)
-                    {
-                        DisposeMarshaler(marshaler);
-                    }
-                }
-                if (_array != null)
-                {
-                    Marshal.FreeCoTaskMem(_array);
-                }
-            }
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<T>.GetAbiArray(box);
 
-            public IntPtr _array;
-            public IObjectReference[] _marshalers;
-        }
+        public static unsafe T[] FromAbiArray(object box) => MarshalInterfaceHelper<T>.FromAbiArray(box, FromAbi);
 
-        public static unsafe MarshalerArray CreateMarshalerArray(T[] array)
-        {
-            MarshalerArray m = new MarshalerArray();
-            Func<bool> dispose = () => { m.Dispose(); return false; };
-            try
-            {
-                int length = array.Length;
-                var byte_length = length * IntPtr.Size;
-                m._array = Marshal.AllocCoTaskMem(byte_length);
-                m._marshalers = new IObjectReference[length];
-                var element = (IntPtr*)m._array.ToPointer();
-                for (int i = 0; i < length; i++)
-                {
-                    m._marshalers[i] = CreateMarshaler(array[i]);
-                    element[i] = GetAbi(m._marshalers[i]);
-                }
-                return m;
-            }
-            catch (Exception) when (dispose())
-            {
-                // Will never execute
-                return default;
-            }
-        }
+        public static unsafe (int length, IntPtr data) FromManagedArray(T[] array) => MarshalInterfaceHelper<T>.FromManagedArray(array, (o) => FromManaged(o));
 
-        public static (int length, IntPtr data) GetAbiArray(object box)
-        {
-            var m = (MarshalerArray)box;
-            return (m._marshalers.Length, m._array);
-        }
+        public static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, (o, dest) => CopyManaged(o, dest));
 
-        public static unsafe T[] FromAbiArray(object box)
-        {
-            var abi = ((int length, IntPtr data))box;
-            var array = new T[abi.length];
-            var data = (IntPtr*)abi.data.ToPointer();
-            for (int i = 0; i < abi.length; i++)
-            {
-                array[i] = FromAbi(data[i]);
-            }
-            return array;
-        }
+        public static void DisposeMarshalerArray(object box) => MarshalInterfaceHelper<T>.DisposeMarshalerArray(box);
 
-        public static unsafe (int length, IntPtr data) FromManagedArray(T[] array)
-        {
-            IntPtr data = IntPtr.Zero;
-            int i = 0;
-            Func<bool> dispose = () =>
-            {
-                DisposeAbiArray((i, data));
-                i = 0;
-                data = IntPtr.Zero;
-                return false;
-            };
-            try
-            {
-                int length = array.Length;
-                var byte_length = length * IntPtr.Size;
-                data = Marshal.AllocCoTaskMem(byte_length);
-                var native = (IntPtr*)data.ToPointer();
-                for (i = 0; i < length; i++)
-                {
-                    native[i] = FromManaged(array[i]);
-                }
-            }
-            catch (Exception) when (dispose())
-            {
-                // Will never execute
-                return default;
-            }
-            return (i, data);
-        }
-
-        public static void DisposeMarshalerArray(object box) => ((MarshalerArray)box).Dispose();
-
-        public static unsafe void DisposeAbiArray(object box)
-        {
-            var abi = ((int length, IntPtr data))box;
-            if (abi.data == IntPtr.Zero) return;
-            var data = (IntPtr*)abi.data.ToPointer();
-            for (int i = 0; i < abi.length; i++)
-            {
-                DisposeAbi(data[i]);
-            }
-            Marshal.FreeCoTaskMem(abi.data);
-        }
+        public static unsafe void DisposeAbiArray(object box) => MarshalInterfaceHelper<T>.DisposeAbiArray(box);
 
         private static Func<IntPtr, T> BindFromAbi()
         {
@@ -683,10 +827,7 @@ namespace WinRT
             return ComCallableWrapper.CreateCCWForObject(o);
         }
 
-        public static IntPtr GetAbi(IObjectReference objRef)
-        {
-            return objRef?.ThisPtr ?? IntPtr.Zero;
-        }
+        public static IntPtr GetAbi(IObjectReference objRef) => MarshalInterfaceHelper<object>.GetAbi(objRef);
 
         public static object FromAbi(IntPtr ptr)
         {
@@ -700,25 +841,19 @@ namespace WinRT
             return TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
         }
 
-        public static void DisposeMarshaler(IObjectReference objRef)
-        {
-            // Since IObjectReference doesn't have an explicit dispose,
-            // just use GC.KeepAlive here to ensure that the IObjectReference instance
-            // gets finalized after the call to native.
-            GC.KeepAlive(objRef);
-        }
+        public static void DisposeMarshaler(IObjectReference objRef) => MarshalInterfaceHelper<object>.DisposeMarshaler(objRef);
 
-        public static void DisposeAbi(IntPtr ptr)
-        {
-            if (ptr == IntPtr.Zero) return;
-            // TODO: this should be a direct v-table call when function pointers are a thing
-            ObjectReference<IInspectable.Vftbl>.Attach(ref ptr);
-        }
-
+        public static void DisposeAbi(IntPtr ptr) => MarshalInterfaceHelper<object>.DisposeAbi(ptr);
         public static IntPtr FromManaged(object o, bool unwrapObject = true)
         {
             var objRef = CreateMarshaler(o, unwrapObject);
             return objRef?.GetRef() ?? IntPtr.Zero;
+        }
+
+        public static unsafe void CopyManaged(object o, IntPtr dest, bool unwrapObject = true)
+        {
+            var objRef = CreateMarshaler(o, unwrapObject);
+            *(IntPtr*)dest.ToPointer() = objRef?.GetRef() ?? IntPtr.Zero;
         }
 
         private static bool TryUnwrapObject(object o, out IObjectReference objRef)
@@ -898,113 +1033,19 @@ namespace WinRT
             return (genericTypeName, genericTypes.ToArray(), partialTypeName.Length - remaining.Length);
         }
 
-        public struct MarshalerArray
-        {
-            public void Dispose()
-            {
-                if (_marshalers != null)
-                {
-                    foreach (var marshaler in _marshalers)
-                    {
-                        DisposeMarshaler(marshaler);
-                    }
-                }
-                if (_array != null)
-                {
-                    Marshal.FreeCoTaskMem(_array);
-                }
-            }
+        public static unsafe MarshalInterfaceHelper<object>.MarshalerArray CreateMarshalerArray(object[] array) => MarshalInterfaceHelper<object>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
 
-            public IntPtr _array;
-            public IObjectReference[] _marshalers;
-        }
+        public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<object>.GetAbiArray(box);
 
-        public static unsafe MarshalerArray CreateMarshalerArray(object[] array)
-        {
-            MarshalerArray m = new MarshalerArray();
-            Func<bool> dispose = () => { m.Dispose(); return false; };
-            try
-            {
-                int length = array.Length;
-                var byte_length = length * IntPtr.Size;
-                m._array = Marshal.AllocCoTaskMem(byte_length);
-                m._marshalers = new IObjectReference[length];
-                var element = (IntPtr*)m._array.ToPointer();
-                for (int i = 0; i < length; i++)
-                {
-                    m._marshalers[i] = CreateMarshaler(array[i]);
-                    element[i] = GetAbi(m._marshalers[i]);
-                }
-                return m;
-            }
-            catch (Exception) when (dispose())
-            {
-                // Will never execute
-                return default;
-            }
-        }
+        public static unsafe object[] FromAbiArray(object box) => MarshalInterfaceHelper<object>.FromAbiArray(box, FromAbi);
 
-        public static (int length, IntPtr data) GetAbiArray(object box)
-        {
-            var m = (MarshalerArray)box;
-            return (m._marshalers.Length, m._array);
-        }
+        public static unsafe (int length, IntPtr data) FromManagedArray(object[] array) => MarshalInterfaceHelper<object>.FromManagedArray(array, (o) => FromManaged(o));
 
-        public static unsafe object[] FromAbiArray(object box)
-        {
-            var abi = ((int length, IntPtr data))box;
-            var array = new object[abi.length];
-            var data = (IntPtr*)abi.data.ToPointer();
-            for (int i = 0; i < abi.length; i++)
-            {
-                array[i] = FromAbi(data[i]);
-            }
-            return array;
-        }
+        public static unsafe void CopyManagedArray(object[] array, IntPtr data) => MarshalInterfaceHelper<object>.CopyManagedArray(array, data, (o, dest) => CopyManaged(o, dest));
 
-        public static unsafe (int length, IntPtr data) FromManagedArray(object[] array)
-        {
-            IntPtr data = IntPtr.Zero;
-            int i = 0;
-            Func<bool> dispose = () =>
-            {
-                DisposeAbiArray((i, data));
-                i = 0;
-                data = IntPtr.Zero;
-                return false;
-            };
-            try
-            {
-                int length = array.Length;
-                var byte_length = length * IntPtr.Size;
-                data = Marshal.AllocCoTaskMem(byte_length);
-                var native = (IntPtr*)data.ToPointer();
-                for (i = 0; i < length; i++)
-                {
-                    native[i] = FromManaged(array[i]);
-                }
-            }
-            catch (Exception) when (dispose())
-            {
-                // Will never execute
-                return default;
-            }
-            return (i, data);
-        }
+        public static void DisposeMarshalerArray(object box) => MarshalInterfaceHelper<object>.DisposeMarshalerArray(box);
 
-        public static void DisposeMarshalerArray(object box) => ((MarshalerArray)box).Dispose();
-
-        public static unsafe void DisposeAbiArray(object box)
-        {
-            var abi = ((int length, IntPtr data))box;
-            if (abi.data == IntPtr.Zero) return;
-            var data = (IntPtr*)abi.data.ToPointer();
-            for (int i = 0; i < abi.length; i++)
-            {
-                DisposeAbi(data[i]);
-            }
-            Marshal.FreeCoTaskMem(abi.data);
-        }
+        public static unsafe void DisposeAbiArray(object box) => MarshalInterfaceHelper<object>.DisposeAbiArray(box);
     }
 
     public class Marshaler<T>
@@ -1034,6 +1075,7 @@ namespace WinRT
                 GetAbiArray = (object box) => MarshalNonBlittable<T>.GetAbiArray(box);
                 FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box);
                 FromManagedArray = (T[] array) => MarshalNonBlittable<T>.FromManagedArray(array);
+                CopyManagedArray = (T[] array, IntPtr data) => MarshalNonBlittable<T>.CopyManagedArray(array, data);
                 DisposeMarshalerArray = (object box) => MarshalNonBlittable<T>.DisposeMarshalerArray(box);
                 DisposeAbiArray = (object box) => MarshalNonBlittable<T>.DisposeAbiArray(box);
             }
@@ -1050,6 +1092,7 @@ namespace WinRT
                 GetAbiArray = (object box) => MarshalString.GetAbiArray(box);
                 FromAbiArray = (object box) => (T[])(object)MarshalString.FromAbiArray(box);
                 FromManagedArray = (T[] array) => MarshalString.FromManagedArray((string[])(object)array);
+                CopyManagedArray = (T[] array, IntPtr data) => MarshalString.CopyManagedArray((string[])(object)array, data);
                 DisposeMarshalerArray = (object box) => MarshalString.DisposeMarshalerArray(box);
                 DisposeAbiArray = (object box) => MarshalString.DisposeAbiArray(box);
             }
@@ -1079,6 +1122,7 @@ namespace WinRT
                     GetAbiArray = (object box) => MarshalBlittable<T>.GetAbiArray(box);
                     FromAbiArray = (object box) => MarshalBlittable<T>.FromAbiArray(box);
                     FromManagedArray = (T[] array) => MarshalBlittable<T>.FromManagedArray(array);
+                    CopyManagedArray = (T[] array, IntPtr data) => MarshalBlittable<T>.CopyManagedArray(array, data);
                     DisposeMarshalerArray = (object box) => MarshalBlittable<T>.DisposeMarshalerArray(box);
                     DisposeAbiArray = (object box) => MarshalBlittable<T>.DisposeAbiArray(box);
                 }
@@ -1096,6 +1140,7 @@ namespace WinRT
                     GetAbiArray = (object box) => MarshalNonBlittable<T>.GetAbiArray(box);
                     FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box);
                     FromManagedArray = (T[] array) => MarshalNonBlittable<T>.FromManagedArray(array);
+                    CopyManagedArray = (T[] array, IntPtr data) => MarshalNonBlittable<T>.CopyManagedArray(array, data);
                     DisposeMarshalerArray = (object box) => MarshalNonBlittable<T>.DisposeMarshalerArray(box);
                     DisposeAbiArray = (object box) => MarshalNonBlittable<T>.DisposeAbiArray(box);
                 }
@@ -1176,6 +1221,7 @@ namespace WinRT
         public static readonly Func<object, (int, IntPtr)> GetAbiArray;
         public static readonly Func<object, T[]> FromAbiArray;
         public static readonly Func<T[], (int, IntPtr)> FromManagedArray;
+        public static readonly Action<T[], IntPtr> CopyManagedArray;
         public static readonly Action<object> DisposeMarshalerArray;
         public static readonly Action<object> DisposeAbiArray;
     }

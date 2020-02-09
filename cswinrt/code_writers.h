@@ -97,7 +97,9 @@ namespace cswinrt
             },
             [&](fundamental_type const& type)
             {
-                return (type != fundamental_type::String) && (type != fundamental_type::Boolean);
+                return (type != fundamental_type::String) && 
+                    (type != fundamental_type::Char) &&
+                    (type != fundamental_type::Boolean);
             },
             [&](auto&&)
             {
@@ -434,7 +436,7 @@ namespace cswinrt
             w.write(", int __%Size, IntPtr %", param_name, param_name);
             break;
         case param_category::fill_array:
-            w.write(", int __%Size, ref IntPtr %", param_name, param_name);
+            w.write(", int __%Size, IntPtr %", param_name, param_name);
             break;
         case param_category::receive_array:
             w.write(", out int __%Size, out IntPtr %", param_name, param_name);
@@ -1398,7 +1400,7 @@ event % %;)",
                 {
                     w.write("%__%_length, %__%_data",
                         is_out() ? "out " : "", param_name,
-                        is_ref() ? "ref " : is_out() ? "out " : "", param_name);
+                        is_out() ? "out " : "", param_name);
                     return;
                 }
 
@@ -1541,31 +1543,6 @@ event % %;)",
         m.param_type = w.write_temp("%", bind<write_projection_type>(semantics));
         m.is_value_type = is_value_type(semantics);
 
-        if (m.is_array())
-        {
-            if (m.is_generic())
-            {
-                m.marshaler_type = w.write_temp("Marshaler<%>", m.param_type);
-                m.local_type = "object";
-                return;
-            }
-
-            if (auto ft = std::get_if<fundamental_type>(&semantics))
-            {
-                if (*ft == fundamental_type::String)
-                {
-                    m.marshaler_type = "MarshalString";
-                    m.local_type = "MarshalString.MarshalerArray";
-                    return;
-                }
-            }
-
-            m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
-            m.marshaler_type += "<" + m.param_type + ">";
-            m.local_type = m.marshaler_type + ".MarshalerArray";
-            return;
-        }
-
         auto get_abi_type = [&]()
         {
             auto abi_type = w.write_temp("%", bind<write_type_name>(semantics, true, false));
@@ -1576,6 +1553,22 @@ event % %;)",
             return w.write_temp("%", bind<write_type_name>(semantics, true, true));
         };
 
+        auto set_simple_marshaler_type = [&](abi_marshaler& m, TypeDef const& type)
+        {
+            if (m.is_array())
+            {
+                m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
+                m.marshaler_type += "<" + m.param_type + ">";
+                m.local_type = m.marshaler_type + ".MarshalerArray";
+            }
+            else if (!is_type_blittable(type))
+            {
+                m.marshaler_type = get_abi_type();
+                m.local_type = m.marshaler_type;
+                if (!m.is_out()) m.local_type += ".Marshaler";
+            }
+        };
+
         auto set_typedef_marshaler = [&](abi_marshaler& m, TypeDef const& type)
         {
             switch (get_category(type))
@@ -1583,16 +1576,18 @@ event % %;)",
             case category::enum_type:
                 break;
             case category::struct_type:
-                if (!is_type_blittable(type))
-                {
-                    m.marshaler_type = get_abi_type();
-                    m.local_type = m.marshaler_type;
-                    if (!m.is_out()) m.local_type += ".Marshaler";
-                }
+                set_simple_marshaler_type(m, type);
                 break;
             case category::interface_type:
                 m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
-                m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                if (m.is_array())
+                {
+                    m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
+                }
+                else
+                {
+                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                }
                 break;
             case category::class_type:
                 m.local_type = "IntPtr";
@@ -1608,7 +1603,14 @@ event % %;)",
             [&](object_type)
             {
                 m.marshaler_type = "MarshalInspectable";
-                m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                if (m.is_array())
+                {
+                    m.local_type = "MarshalInterfaceHelper<object>.MarshalerArray";
+                }
+                else
+                {
+                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                }
             },
             [&](type_definition const& type)
             {
@@ -1629,8 +1631,16 @@ event % %;)",
             {
                 if (type == fundamental_type::String)
                 {
-                    m.marshaler_type = "MarshalString";
-                    m.local_type = m.is_out() ? "IntPtr" : "MarshalString";
+                    if (m.is_array())
+                    {
+                        m.marshaler_type = "MarshalString";
+                        m.local_type = "MarshalString.MarshalerArray";
+                    }
+                    else
+                    {
+                        m.marshaler_type = "MarshalString";
+                        m.local_type = m.is_out() ? "IntPtr" : "MarshalString";
+                    }
                 }
             },
             [&](auto const&) {});
@@ -1638,6 +1648,21 @@ event % %;)",
         if (m.is_out() && m.local_type.empty())
         {
             m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
+        }
+
+        if (m.is_array() && m.marshaler_type.empty())
+        {
+            if (m.is_generic())
+            {
+                m.marshaler_type = w.write_temp("Marshaler<%>", m.param_type);
+                m.local_type = "object";
+            }
+            else
+            {
+                m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
+                m.marshaler_type += "<" + m.param_type + ">";
+                m.local_type = m.marshaler_type + ".MarshalerArray";
+            }
         }
     }
 
@@ -2197,12 +2222,19 @@ remove => _%.Unsubscribe(value);
         {
             if (!is_ref() && (!is_out() || local_type.empty()))
                 return;
+            auto param_local = get_param_local(w);
+            if (category == param_category::fill_array)
+            {
+                w.write("%.CopyManagedArray(%, %);\n",
+                    marshaler_type,
+                    param_local,
+                    bind<write_escaped_identifier>(param_name));
+                return;
+            }
             is_array() ?
                 w.write("(__%Size, %) = ", param_name, bind<write_escaped_identifier>(param_name)) :
                 w.write("% = ", bind<write_escaped_identifier>(param_name));
-            auto param_local = get_param_local(w);
-            auto param_cast = is_generic() ?
-                w.write_temp("(%)", param_type) : "";
+            auto param_cast = is_generic() ? w.write_temp("(%)", param_type) : "";
             if (marshaler_type.empty())
             {
                 if (local_type == "IntPtr")
@@ -3410,12 +3442,12 @@ public static unsafe void CopyManaged(% arg, IntPtr dest) =>
                 abi_type);
         }
     
-    w.write(R"(
+      w.write(R"(
 public static void DisposeMarshaler(Marshaler m) %
 )",
-        have_disposers ? "=> m.Dispose();" : "{}");
+            have_disposers ? "=> m.Dispose();" : "{}");
 
-    w.write(R"(
+        w.write(R"(
 public static void DisposeAbi(% abi){ /*todo*/ }
 }
 

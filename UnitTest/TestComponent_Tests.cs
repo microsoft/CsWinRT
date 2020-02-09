@@ -282,7 +282,7 @@ namespace UnitTest
             bool[] b = new bool[a.Length];
             bool[] c;
             bool[] d = Tests.Array1(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -292,7 +292,7 @@ namespace UnitTest
             byte[] b = new byte[a.Length];
             byte[] c;
             byte[] d = Tests.Array2(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -302,7 +302,7 @@ namespace UnitTest
             UInt16[] b = new UInt16[a.Length];
             UInt16[] c;
             UInt16[] d = Tests.Array3(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -312,7 +312,7 @@ namespace UnitTest
             UInt32[] b = new UInt32[a.Length];
             UInt32[] c;
             UInt32[] d = Tests.Array4(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -322,7 +322,7 @@ namespace UnitTest
             UInt64[] b = new UInt64[a.Length];
             UInt64[] c;
             UInt64[] d = Tests.Array5(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -332,7 +332,7 @@ namespace UnitTest
             Int16[] b = new Int16[a.Length];
             Int16[] c;
             Int16[] d = Tests.Array6(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -342,7 +342,7 @@ namespace UnitTest
             Int32[] b = new Int32[a.Length];
             Int32[] c;
             Int32[] d = Tests.Array7(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -352,7 +352,7 @@ namespace UnitTest
             Int64[] b = new Int64[a.Length];
             Int64[] c;
             Int64[] d = Tests.Array8(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -362,7 +362,7 @@ namespace UnitTest
             float[] b = new float[a.Length];
             float[] c;
             float[] d = Tests.Array9(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -372,7 +372,7 @@ namespace UnitTest
             double[] b = new double[a.Length];
             double[] c;
             double[] d = Tests.Array10(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -382,7 +382,7 @@ namespace UnitTest
             char[] b = new char[a.Length];
             char[] c;
             char[] d = Tests.Array11(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -392,7 +392,7 @@ namespace UnitTest
             string[] b = new string[a.Length];
             string[] c;
             string[] d = Tests.Array12(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -408,7 +408,7 @@ namespace UnitTest
             Blittable[] b = new Blittable[a.Length];
             Blittable[] c;
             Blittable[] d = Tests.Array13(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -423,7 +423,7 @@ namespace UnitTest
             NonBlittable[] b = new NonBlittable[a.Length];
             NonBlittable[] c;
             NonBlittable[] d = Tests.Array14(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         [Fact]
@@ -450,7 +450,7 @@ namespace UnitTest
             Nested[] b = new Nested[a.Length];
             Nested[] c;
             Nested[] d = Tests.Array15(a, ref b, out c);
-            Assert.True(a == b && a == c && c == d);
+            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
         }
 
         private T[] Array_Call<T>(T[] a, ref T[] b, out T[] c)
