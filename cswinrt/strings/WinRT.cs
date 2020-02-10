@@ -36,6 +36,16 @@ namespace WinRT
         {
             return type.FindHelperType() ?? throw new InvalidOperationException("Target type is not a projected type.");
         }
+
+        public static Type GetAbiType(this Type type)
+        {
+            return type.GetHelperType().GetMethod("GetAbi").ReturnType;
+        }
+
+        public static Type GetMarshalerType(this Type type)
+        {
+            return type.GetHelperType().GetMethod("CreateMarshaler").ReturnType;
+        }
     }
 
     public static class DelegateExtensions

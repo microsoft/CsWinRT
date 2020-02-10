@@ -91,7 +91,7 @@ namespace Windows.Foundation
 
 namespace ABI.Windows.Foundation
 {
-    public class Point
+    public static class Point
     {
         public static string GetGuidSignature()
         {

@@ -413,7 +413,11 @@ namespace cswinrt
                 {
                     if (type == fundamental_type::Boolean)
                     {
-                        type =  fundamental_type::UInt8;
+                        type = fundamental_type::UInt8;
+                    }
+                    if (type == fundamental_type::Char)
+                    {
+                        type = fundamental_type::UInt16;
                     }
                     write_fundamental_type(w, type);
                 }
@@ -561,6 +565,9 @@ namespace cswinrt
         case fundamental_type::Boolean:
             w.write("(byte)(% ? 1 : 0)", name);
             break;
+        case fundamental_type::Char:
+            w.write("(ushort)%", name);
+            break;
         default:
             w.write("%", name);
             break;
@@ -575,14 +582,11 @@ namespace cswinrt
         }
         else if (type == fundamental_type::Boolean)
         {
-            if (is_boxed)
-            {
-                w.write("((byte)(object)% != 0)", name);
-            }
-            else
-            {
-                w.write("(% != 0)", name);
-            }
+            w.write(is_boxed ? "((byte)(object)% != 0)" : "(% != 0)", name);
+        }
+        else if (type == fundamental_type::Char)
+        {
+            w.write(is_boxed ? "(char)(ushort)(object)%" : "(char)%", name);
         }
         else if (is_boxed)
         {
@@ -1418,9 +1422,20 @@ event % %;)",
 
                 if (marshaler_type.empty())
                 {
-                    w.write(param_type == "bool" ? "(byte)(%% ? 1 : 0)" : "%%",
-                        source,
-                        bind<write_escaped_identifier>(param_name));
+                    if (param_type == "bool")
+                    {
+                        w.write("(byte)(%% ? 1 : 0)",
+                            source, bind<write_escaped_identifier>(param_name));
+                        return;
+                    }
+                    if (param_type == "char")
+                    {
+                        w.write("(ushort)%%",
+                            source, bind<write_escaped_identifier>(param_name));
+                        return;
+                    }
+                    w.write("%%",
+                        source, bind<write_escaped_identifier>(param_name));
                     return;
                 }
             }
@@ -1457,10 +1472,17 @@ event % %;)",
                     w.write("%.FromAbi(%)", param_type, source);
                     return;
                 }
-
-                param_type == "bool" ?
-                    w.write(is_generic() ? "(byte)% != 0" : "% != 0", source) :
-                    w.write("%%", param_cast, source);
+                if (param_type == "bool")
+                {
+                    w.write(is_generic() ? "(byte)% != 0" : "% != 0", source);
+                    return;
+                }
+                if (param_type == "char")
+                {
+                    w.write(is_generic() ? "(char)(ushort)%" : "(char)%", source);
+                    return;
+                }
+                w.write("%%", param_cast, source);
                 return;
             }
 
@@ -1482,10 +1504,17 @@ event % %;)",
                     w.write("%.FromManaged(%)", param_type, source);
                     return;
                 }
-
-                param_type == "bool" ?
-                    w.write("(byte)(% ? 1 : 0)", source) :
-                    w.write("%%", param_cast, source);
+                if (param_type == "bool")
+                {
+                    w.write("(byte)(% ? 1 : 0)", source);
+                    return;
+                }
+                if (param_type == "char")
+                {
+                    w.write("(ushort)%", source);
+                    return;
+                }
+                w.write("%%", param_cast, source);
                 return;
             }
 
@@ -2372,8 +2401,21 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
                     param_name, bind<write_escaped_identifier>(param_name));
                 return;
             }
+            std::string_view out_local_type;
+            if (param_type == "bool")
+            {
+                out_local_type = is_array() ? "bool[]" : "bool";
+            }
+            else if (param_type == "char")
+            {
+                out_local_type = is_array() ? "char[]" : "char";
+            }
+            else
+            {
+                out_local_type = local_type;
+            }
             w.write("% __% = default;\n",
-                param_type == "bool" ? is_array() ? "bool[]" : "bool" : local_type,
+                out_local_type,
                 param_name);
         }
 
@@ -2387,8 +2429,20 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
             }
             else if (marshaler_type.empty())
             {
-                w.write(param_type == "bool" ? (is_generic() ? "(byte)% != 0" : "% != 0") : "%",
-                    bind<write_escaped_identifier>(param_name));
+                std::string_view format_string;
+                if (param_type == "bool")
+                {
+                    format_string = is_generic() ? "(byte)% != 0" : "% != 0";
+                } 
+                else if (param_type == "char")
+                {
+                    format_string = is_generic() ? "(char)(ushort)%" : "(char)%";
+                }
+                else
+                {
+                    format_string = "%";
+                }
+                w.write(format_string, bind<write_escaped_identifier>(param_name));
             }
             else if (is_array())
             {
@@ -2431,9 +2485,18 @@ public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new 
                 }
                 else
                 {
-                    param_type == "bool" ?
-                        w.write("(byte)(% ? 1 : 0);", param_local) :
+                    if (param_type == "bool")
+                    {
+                        w.write("(byte)(% ? 1 : 0);", param_local);
+                    }
+                    else if (param_type == "char")
+                    {
+                        w.write("(ushort)%;", param_local);
+                    }
+                    else
+                    {
                         w.write("%%;", param_cast, param_local);
+                    }
                 }
             }
             else
@@ -2944,7 +3007,20 @@ return m;)",
                     w.write(count++ == 0 ? "" : ", ");
                     if (m.marshaler_type.empty())
                     {
-                        w.write(m.param_type == "bool" ? "% = (byte)(arg.% ? 1 : 0)\n" : "% = arg.%\n",
+                        std::string format;
+                        if (m.param_type == "bool")
+                        {
+                            format = "% = (byte)(arg.% ? 1 : 0)\n";
+                        }
+                        else if (m.param_type == "char")
+                        {
+                            format = "% = (ushort)arg.%\n";
+                        }
+                        else
+                        {
+                            format = "% = arg.%\n";
+                        }
+                        w.write(format,
                             m.get_escaped_param_name(w),
                             m.get_escaped_param_name(w));
                         continue;
@@ -2992,7 +3068,20 @@ return new %()
                     w.write(count++ == 0 ? "" : ", ");
                     if (m.marshaler_type.empty())
                     {
-                        w.write(m.param_type == "bool" ? "% = arg.% != 0\n" : "% = arg.%\n",
+                        std::string format;
+                        if (m.param_type == "bool")
+                        {
+                            format = "% = arg.% != 0\n";
+                        }
+                        else if (m.param_type == "char")
+                        {
+                            format = "% = (char)arg.%\n";
+                        }
+                        else
+                        {
+                            format = "% = arg.%\n";
+                        }
+                        w.write(format,
                             m.get_escaped_param_name(w),
                             m.get_escaped_param_name(w));
                         continue;
@@ -3022,7 +3111,20 @@ return new %()
                     w.write(count++ == 0 ? "" : ", ");
                     if (m.marshaler_type.empty())
                     {
-                        w.write(m.param_type == "bool" ? "% = (byte)(arg.% ? 1 : 0)\n" : "% = arg.%\n",
+                        std::string format;
+                        if (m.param_type == "bool")
+                        {
+                            format = "% = (byte)(arg.% ? 1 : 0)\n";
+                        }
+                        else if (m.param_type == "char")
+                        {
+                            format = "% = (ushort)arg.%\n";
+                        }
+                        else
+                        {
+                            format = "% = arg.%\n";
+                        }
+                        w.write(format,
                             m.get_escaped_param_name(w),
                             m.get_escaped_param_name(w));
                         continue;
