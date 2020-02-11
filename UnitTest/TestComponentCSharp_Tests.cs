@@ -458,6 +458,87 @@ namespace UnitTest
             Assert.Equal(managedProperties.ReadWriteProperty, TestObject.ReadWriteProperty);
         }
 
+        [Fact]
+        public void TestCCWIdentity()
+        {
+            var managedProperties = new ManagedProperties(42);
+            IObjectReference ccw1 = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
+            IObjectReference ccw2 = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
+            Assert.Equal(ccw1.ThisPtr, ccw2.ThisPtr);
+        }
+
+        [Fact]
+        public void TestCCWLifetime()
+        {
+            static (WeakReference, IObjectReference) CreateCCW()
+            {
+                var managedProperties = new ManagedProperties(42);
+                IObjectReference ccw1 = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
+                return (new WeakReference(managedProperties), ccw1);
+            }
+
+            static (WeakReference obj, WeakReference ccw) GetWeakReferenceToObjectAndCCW()
+            {
+                var (reference, ccw) = CreateCCW();
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                Assert.True(reference.IsAlive);
+                return (reference, new WeakReference(ccw));
+            }
+
+            var (obj, ccw) = GetWeakReferenceToObjectAndCCW();
+
+            while (ccw.IsAlive)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+
+            // Now that the CCW is dead, we should have no references to the managed object.
+            // Run GC one more time to collect the managed object.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.False(obj.IsAlive);
+        }
+
+        [Fact]
+        public void TestDelegateCCWLifetime()
+        {
+            static (WeakReference, IObjectReference) CreateCCW(Action<object, int> action)
+            {
+                TypedEventHandler<object, int> eventHandler = (o, i) => action(o, i);
+                IObjectReference ccw1 = ABI.Windows.Foundation.TypedEventHandler<object, int>.CreateMarshaler(eventHandler);
+                return (new WeakReference(eventHandler), ccw1);
+            }
+
+            static (WeakReference obj, WeakReference ccw) GetWeakReferenceToObjectAndCCW(Action<object, int> action)
+            {
+                var (reference, ccw) = CreateCCW(action);
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                Assert.True(reference.IsAlive);
+                return (reference, new WeakReference(ccw));
+            }
+
+            var (obj, ccw) = GetWeakReferenceToObjectAndCCW((o, i) => { });
+
+            while (ccw.IsAlive)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+
+            // Now that the CCW is dead, we should have no references to the managed object.
+            // Run GC one more time to collect the managed object.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.False(obj.IsAlive);
+        }
+
         class ManagedProperties : IProperties1
         {
             private readonly int _value;

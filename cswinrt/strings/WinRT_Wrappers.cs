@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Numerics;
 using System.Security.Cryptography;
@@ -106,20 +107,23 @@ namespace WinRT
 #if MANUAL_IUNKNOWN
     public static partial class ComWrappersSupport
     {
+        private static ConditionalWeakTable<object, ComCallableWrapper> ComWrapperCache = new ConditionalWeakTable<object, ComCallableWrapper>();
+        private static ConditionalWeakTable<object, Delegate> DelegateWrapperCache = new ConditionalWeakTable<object, Delegate>();
+
         internal static InspectableInfo GetInspectableInfo(IntPtr pThis) => UnmanagedObject.FindObject<ComCallableWrapper>(pThis).InspectableInfo;
 
         public static IObjectReference CreateCCWForObject(object obj)
         {
-            var wrapper = new ComCallableWrapper(obj);
-            var objPtr = wrapper.IdentityPtr;
-            return ObjectReference<IUnknownVftbl>.Attach(ref objPtr);
+            if (obj is global::System.Delegate del)
+            {
+                // TODO: Handle delegate passed as IInspectable
+            }
+            return ObjectReference<IUnknownVftbl>.FromAbi(ComWrapperCache.GetValue(obj, _ => new ComCallableWrapper(obj)).IdentityPtr);
         }
 
         public static IObjectReference CreateCCWForDelegate(IntPtr invoke, global::System.Delegate del)
         {
-            var wrapper = new Delegate(invoke, del);
-            var objPtr = wrapper.ThisPtr;
-            return ObjectReference<IDelegateVftbl>.Attach(ref objPtr);
+            return ObjectReference<IDelegateVftbl>.FromAbi(DelegateWrapperCache.GetValue(del, _ => new Delegate(invoke, del)).ThisPtr);
         }
 
         public static T FindObject<T>(IntPtr thisPtr)
@@ -127,7 +131,7 @@ namespace WinRT
             (T)UnmanagedObject.FindObject<ComCallableWrapper>(thisPtr).ManagedObject;
 
         internal static T FindDelegate<T>(IntPtr thisPtr)
-            where T : class, System.Delegate => (T)(UnmanagedObject.FindObject<Delegate>(thisPtr).WeakInvoker.Target);
+            where T : class, System.Delegate => (T)(UnmanagedObject.FindObject<Delegate>(thisPtr).Target);
 
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr)
         {
@@ -154,6 +158,10 @@ namespace WinRT
         {
             return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).Release();
         }
+
+        internal static void RemoveReleasedComWrapper(object obj) => ComWrapperCache.Remove(obj);
+
+        internal static void RemoveReleasedComWrapper(global::System.Delegate del) => DelegateWrapperCache.Remove(del);
     }
 
     struct ComInterfaceEntry
@@ -177,6 +185,10 @@ namespace WinRT
 
     internal class ComCallableWrapper
     {
+        private readonly IntPtr _handle;
+        private int _refs = 0;
+        private Dictionary<Guid, IntPtr> _managedQITable;
+
         public object ManagedObject { get; }
         public ComWrappersSupport.InspectableInfo InspectableInfo { get; }
         public IntPtr IdentityPtr { get; }
@@ -205,10 +217,6 @@ namespace WinRT
 
             IdentityPtr = _managedQITable[typeof(IUnknownVftbl).GUID];
         }
-
-        private readonly IntPtr _handle;
-        private int _refs = 1;
-        private Dictionary<Guid, IntPtr> _managedQITable;
 
         private void InitializeManagedQITable(List<ComInterfaceEntry> entries)
         {
@@ -258,6 +266,7 @@ namespace WinRT
 
         private void Cleanup()
         {
+            ComWrappersSupport.RemoveReleasedComWrapper(ManagedObject);
             foreach (var obj in _managedQITable.Values)
             {
                 Marshal.FreeCoTaskMem(obj);
@@ -269,11 +278,7 @@ namespace WinRT
 
     partial class Delegate
     {
-        int _refs = 1;
-        public readonly IntPtr ThisPtr;
-
         private static Delegate FindObject(IntPtr thisPtr) => UnmanagedObject.FindObject<Delegate>(thisPtr);
-
 
         // IUnknown
         static unsafe readonly IUnknownVftbl._QueryInterface _QueryInterface = new IUnknownVftbl._QueryInterface(QueryInterface);
@@ -335,18 +340,18 @@ namespace WinRT
             _vftblTemplate.Release = Marshal.GetFunctionPointerForDelegate(_Release);
             _vftblTemplate.Invoke = IntPtr.Zero;
         }
-
+    
+        int _refs = 0;
         readonly GCHandle _thisHandle;
-        readonly WeakReference _weakInvoker = new WeakReference(null);
         readonly UnmanagedObject _unmanagedObj;
-
-        internal WeakReference WeakInvoker => _weakInvoker;
+        public readonly IntPtr ThisPtr;
+        public global::System.Delegate Target { get; }
 
         public Delegate(MulticastDelegate abiInvoke, MulticastDelegate managedDelegate) :
             this(Marshal.GetFunctionPointerForDelegate(abiInvoke), managedDelegate)
         { }
 
-        public Delegate(IntPtr invoke_method, object target_invoker)
+        public Delegate(IntPtr invoke_method, global::System.Delegate target_invoker)
         {
             _ = WinrtModule.Instance; // Ensure COM is initialized
 
@@ -356,7 +361,7 @@ namespace WinRT
             _unmanagedObj._vftblPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf(_vftblTemplate));
             Marshal.StructureToPtr(vftbl, _unmanagedObj._vftblPtr, false);
 
-            _weakInvoker.Target = target_invoker;
+            Target = target_invoker;
             _thisHandle = GCHandle.Alloc(this);
             _unmanagedObj._gchandlePtr = GCHandle.ToIntPtr(_thisHandle);
 
@@ -375,6 +380,8 @@ namespace WinRT
             {
                 throw new InvalidOperationException("WinRT.Delegate has been leaked!");
             }
+
+            ComWrappersSupport.RemoveReleasedComWrapper(Target);
 
             Marshal.FreeCoTaskMem(ThisPtr);
             _thisHandle.Free();
