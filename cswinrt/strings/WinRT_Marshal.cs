@@ -24,6 +24,14 @@ namespace WinRT
                 handle.Free();
             }
         }
+
+        // TEMP: used by TestComponent_Tests
+        // TODO: implement ==, !=, Equals, IEquatable for projected objects
+        public static bool ObjectEquals<T>(this T x, T y)
+        {
+            return MarshalInterface<T>.CreateMarshaler(x).ThisPtr ==
+                MarshalInterface<T>.CreateMarshaler(y).ThisPtr;
+        }
     }
 
     // TODO: minimize heap allocations for marshalers by eliminating explicit try/finally
@@ -114,7 +122,7 @@ namespace WinRT
                 {
                     foreach (var marshaler in _marshalers)
                     {
-                        marshaler.Dispose();
+                        marshaler?.Dispose();
                     }
                 }
                 if (_array != null)
@@ -303,8 +311,8 @@ namespace WinRT
     class MarshalGeneric<T>
     {
         protected static readonly Type HelperType = typeof(T).GetHelperType();
-        protected static readonly Type AbiType = typeof(T).GetHelperType().GetMethod("GetAbi").ReturnType;
-        protected static readonly Type MarshalerType = typeof(T).GetHelperType().GetMethod("CreateMarshaler").ReturnType;
+        protected static readonly Type AbiType = typeof(T).GetAbiType();
+        protected static readonly Type MarshalerType = typeof(T).GetMarshalerType();
 
         static MarshalGeneric()
         {
@@ -1061,26 +1069,7 @@ namespace WinRT
                 throw new InvalidOperationException("Arrays may not be marshaled generically.");
             }
 
-            if (type == typeof(bool))
-            {
-                AbiType = typeof(byte);
-                CreateMarshaler = (T value) => value;
-                GetAbi = (object box) => (bool)box ? 1 : 0;
-                CopyAbi = (object box, IntPtr dest) => { unsafe { *(byte*)dest.ToPointer() = (byte)((bool)box ? 1 : 0); } };
-                FromAbi = (object box) => (T)(object)((byte)box != 0);
-                FromManaged = (T value) => (bool)(object)value ? 1 : 0;
-                CopyManaged = (T value, IntPtr dest) => { unsafe { *(byte*)dest.ToPointer() = (byte)((bool)(object)value ? 1 : 0); } };
-                DisposeMarshaler = (object box) => { };
-                DisposeAbi = (object box) => { };
-                CreateMarshalerArray = (T[] array) => MarshalNonBlittable<T>.CreateMarshalerArray(array);
-                GetAbiArray = (object box) => MarshalNonBlittable<T>.GetAbiArray(box);
-                FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box);
-                FromManagedArray = (T[] array) => MarshalNonBlittable<T>.FromManagedArray(array);
-                CopyManagedArray = (T[] array, IntPtr data) => MarshalNonBlittable<T>.CopyManagedArray(array, data);
-                DisposeMarshalerArray = (object box) => MarshalNonBlittable<T>.DisposeMarshalerArray(box);
-                DisposeAbiArray = (object box) => MarshalNonBlittable<T>.DisposeAbiArray(box);
-            }
-            else if (type == typeof(String))
+            if (type == typeof(String))
             {
                 AbiType = typeof(IntPtr);
                 CreateMarshaler = (T value) => MarshalString.CreateMarshaler((string)(object)value);
@@ -1099,7 +1088,6 @@ namespace WinRT
             }
             else if (type.IsValueType)
             {
-                // If type is blittable just pass through
                 AbiType = type.FindHelperType();
                 if (AbiType != null)
                 {
@@ -1127,7 +1115,7 @@ namespace WinRT
                     DisposeMarshalerArray = (object box) => MarshalBlittable<T>.DisposeMarshalerArray(box);
                     DisposeAbiArray = (object box) => MarshalBlittable<T>.DisposeAbiArray(box);
                 }
-                else // bind to marshaler
+                else
                 {
                     CreateMarshaler = MarshalNonBlittable<T>.CreateMarshaler;
                     GetAbi = MarshalNonBlittable<T>.GetAbi;
@@ -1225,5 +1213,50 @@ namespace WinRT
         public static readonly Action<T[], IntPtr> CopyManagedArray;
         public static readonly Action<object> DisposeMarshalerArray;
         public static readonly Action<object> DisposeAbiArray;
+    }
+}
+
+namespace ABI.System
+{
+    public struct Boolean
+    {
+        byte value;
+
+        public static bool CreateMarshaler(bool value) => value;
+
+        public static Boolean GetAbi(bool value) => new Boolean() { value = (byte)(value ? 1 : 0) };
+
+        public static bool FromAbi(Boolean abi) => abi.value != 0;
+
+        public static unsafe void CopyAbi(bool value, IntPtr dest) => *(byte*)dest.ToPointer() = GetAbi(value).value;
+
+        public static Boolean FromManaged(bool value) => GetAbi(value);
+
+        public static unsafe void CopyManaged(bool arg, IntPtr dest) => *(byte*)dest.ToPointer() = FromManaged(arg).value;
+
+        public static void DisposeMarshaler(bool m) { }
+
+        public static void DisposeAbi(byte abi) { }
+    }
+
+    public struct Char
+    {
+        ushort value;
+
+        public static char CreateMarshaler(char value) => value;
+
+        public static Char GetAbi(char value) => new Char() { value = (ushort)value };
+
+        public static char FromAbi(Char abi) => (char)abi.value;
+
+        public static unsafe void CopyAbi(char value, IntPtr dest) => *(ushort*)dest.ToPointer() = GetAbi(value).value;
+
+        public static Char FromManaged(char value) => GetAbi(value);
+
+        public static unsafe void CopyManaged(char arg, IntPtr dest) => *(ushort*)dest.ToPointer() = FromManaged(arg).value;
+
+        public static void DisposeMarshaler(char m) { }
+
+        public static void DisposeAbi(Char abi) { }
     }
 }

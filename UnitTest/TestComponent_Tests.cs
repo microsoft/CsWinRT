@@ -1,3 +1,6 @@
+// TODO: ref structs
+// TODO: project IReference as nullable
+
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -16,6 +19,7 @@ using Windows.Foundation.Collections;
 
 // Error CS0246?  run get_testwinrt.cmd
 using TestComponent;
+using System.Collections.Generic;
 
 namespace UnitTest
 {
@@ -27,6 +31,12 @@ namespace UnitTest
         {
             Tests = TestRunner.MakeTests();
         }
+
+        public static bool AllEqual<T>(T x, params T[] list) => 
+            list.All((y) => x.Equals(y));
+
+        public static bool AllEqual<T>(T[] x, params T[][] list) => 
+            list.All((y) => x.SequenceEqual(y));
 
         [Fact]
         public void Params_Bool()
@@ -139,47 +149,30 @@ namespace UnitTest
         [Fact]
         public void Params_Blittable()
         {
-            // TODO: project struct ctor
-            //Blittable a = new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, 'X', typeof(ITests).GUID );
-            Blittable a = new Blittable{ 
-                A=1, B=2, C=3, D=4, E=-5, F=-6, G=-7, H=8.0f, I=9.0, J='X', K=typeof(ITests).GUID };
+            Blittable a = new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(ITests).GUID);
             Blittable b;
-            // todo: ref structs
             Blittable c = Tests.Param13(a, a, out b);
-            // TODO: override ==, Equals for perf (non-reflection)
-            //Assert.True(a == b && a == c);
-            Assert.True(a.Equals(b) && a.Equals(c));
+            Assert.True(AllEqual(a, b, c));
         }
 
         [Fact]
         public void Params_NonBlittable()
         {
-            // TODO: project IReference as nullale
-            NonBlittable a = new NonBlittable{ A=false, B="WinRT", 
-                C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(1234) };
+            NonBlittable a = new NonBlittable(false, 'X', "WinRT", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(1234));
             NonBlittable b;
-            // todo: ref structs
             NonBlittable c = Tests.Param14(a, a, out b);
-            // TODO: override ==, Equals for perf (non-reflection)
-            //Assert.True(a == b && a == c);
-            Assert.True(a.Equals(b) && a.Equals(c));
+            Assert.True(AllEqual(a, b, c));
         }
 
         [Fact]
         public void Params_Nested()
         {
-            // TODO: project ctor
-            Nested a = new Nested{
-                Blittable = new Blittable{
-                    A=1, B=2, C=3, D=4, E=-5, F=-6, G=-7, H=8.0f, I=9.0, J='X', K=typeof(ITests).GUID },
-                NonBlittable = new NonBlittable{ A=false, B="WinRT", 
-                    C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(1234) } };
+            Nested a = new Nested(
+                new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(ITests).GUID),
+                new NonBlittable(false, 'X', "WinRT", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(1234)));
             Nested b;
-            // todo: ref structs
             Nested c = Tests.Param15(a, a, out b);
-            // TODO: override ==, Equals for perf (non-reflection)
-            //Assert.True(a == b && a == c);
-            Assert.True(a.Equals(b) && a.Equals(c));
+            Assert.True(AllEqual(a, b, c));
         }
 
         [Fact]
@@ -257,21 +250,18 @@ namespace UnitTest
         [Fact]
         public void Params_Blittable_Call()
         {
-            // todo: ref structs
             Tests.Param13Call((Blittable a, Blittable b, out Blittable c) => { c = a; return a; });
         }
 
         [Fact]
         public void Params_NonBlittable_Call()
         {
-            // todo: ref structs
             Tests.Param14Call((NonBlittable a, NonBlittable b, out NonBlittable c) => { c = a; return a; });
         }
 
         [Fact]
         public void Params_Nested_Call()
         {
-            // todo: ref structs
             Tests.Param15Call((Nested a, Nested b, out Nested c) => { c = a; return a; });
         }
 
@@ -282,7 +272,7 @@ namespace UnitTest
             bool[] b = new bool[a.Length];
             bool[] c;
             bool[] d = Tests.Array1(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
@@ -292,7 +282,7 @@ namespace UnitTest
             byte[] b = new byte[a.Length];
             byte[] c;
             byte[] d = Tests.Array2(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
@@ -302,7 +292,7 @@ namespace UnitTest
             UInt16[] b = new UInt16[a.Length];
             UInt16[] c;
             UInt16[] d = Tests.Array3(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
@@ -312,7 +302,7 @@ namespace UnitTest
             UInt32[] b = new UInt32[a.Length];
             UInt32[] c;
             UInt32[] d = Tests.Array4(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
@@ -322,7 +312,7 @@ namespace UnitTest
             UInt64[] b = new UInt64[a.Length];
             UInt64[] c;
             UInt64[] d = Tests.Array5(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
@@ -332,7 +322,7 @@ namespace UnitTest
             Int16[] b = new Int16[a.Length];
             Int16[] c;
             Int16[] d = Tests.Array6(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
@@ -342,7 +332,7 @@ namespace UnitTest
             Int32[] b = new Int32[a.Length];
             Int32[] c;
             Int32[] d = Tests.Array7(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
@@ -352,7 +342,7 @@ namespace UnitTest
             Int64[] b = new Int64[a.Length];
             Int64[] c;
             Int64[] d = Tests.Array8(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
@@ -362,7 +352,7 @@ namespace UnitTest
             float[] b = new float[a.Length];
             float[] c;
             float[] d = Tests.Array9(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
@@ -372,7 +362,7 @@ namespace UnitTest
             double[] b = new double[a.Length];
             double[] c;
             double[] d = Tests.Array10(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
@@ -382,7 +372,7 @@ namespace UnitTest
             char[] b = new char[a.Length];
             char[] c;
             char[] d = Tests.Array11(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
@@ -392,65 +382,54 @@ namespace UnitTest
             string[] b = new string[a.Length];
             string[] c;
             string[] d = Tests.Array12(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
         public void Array_Blittable()
         {
-            // TODO: project struct ctor
             Blittable[] a = new Blittable[] {
-                new Blittable {
-                    A=1, B=2, C=3, D=4, E=-5, F=-6, G=-7, H=8.0f, I=9.0, J='X', K=typeof(ITests).GUID },
-                new Blittable {
-                    A=10, B=20, C=30, D=40, E=-50, F=-60, G=-70, H=80.0f, I=90.0, J='Y', K=typeof(IStringable).GUID },
+                new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(ITests).GUID),
+                new Blittable(10, 20, 30, 40, -50, -60, -70, 80.0f, 90.0, typeof(IStringable).GUID)
             };
             Blittable[] b = new Blittable[a.Length];
             Blittable[] c;
             Blittable[] d = Tests.Array13(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
         public void Array_NonBlittable()
         {
-            // TODO: project IReference as nullale
             NonBlittable[] a = new NonBlittable[] {
-                new NonBlittable { A=false, B="First", C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(123) },
-                new NonBlittable { A=true, B="Second", C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(456) },
-                new NonBlittable { A=false, B="Third", C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(789) }
+                new NonBlittable(false, 'X', "First", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(123)),
+                new NonBlittable(true, 'Y', "Second", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(456)),
+                new NonBlittable(false, 'Z', "Third", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(789))
             };
             NonBlittable[] b = new NonBlittable[a.Length];
             NonBlittable[] c;
             NonBlittable[] d = Tests.Array14(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         [Fact]
         public void Array_Nested()
         {
-            // TODO: project struct ctors
             Nested[] a = new Nested[]{
-                new Nested{
-                    Blittable = new Blittable{
-                        A=1, B=2, C=3, D=4, E=-5, F=-6, G=-7, H=8.0f, I=9.0, J='X', K=typeof(ITests).GUID },
-                    NonBlittable = new NonBlittable{ A=false, B="First", 
-                        C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(123) } },
-                new Nested{
-                    Blittable = new Blittable {
-                        A=10, B=20, C=30, D=40, E=-50, F=-60, G=-70, H=80.0f, I=90.0, J='Y', K=typeof(IStringable).GUID },
-                    NonBlittable = new NonBlittable{ A=true, B="Second",
-                        C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(456) } },
-                new Nested{
-                    Blittable = new Blittable{
-                        A=1, B=2, C=3, D=4, E=-5, F=-6, G=-7, H=8.0f, I=9.0, J='Z', K=typeof(IInspectable).GUID },
-                    NonBlittable = new NonBlittable{ A=false, B="Third",
-                        C=(global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(789) } }
+                new Nested(
+                    new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(ITests).GUID),
+                    new NonBlittable(false, 'X', "First", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(123))),
+                new Nested(
+                    new Blittable(10, 20, 30, 40, -50, -60, -70, 80.0f, 90.0, typeof(IStringable).GUID),
+                    new NonBlittable(true, 'Y', "Second", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(456))),
+                new Nested(
+                    new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(IInspectable).GUID),
+                    new NonBlittable(false, 'Z', "Third", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(789)))
             };
             Nested[] b = new Nested[a.Length];
             Nested[] c;
             Nested[] d = Tests.Array15(a, ref b, out c);
-            Assert.True(a.SequenceEqual(b) && a.SequenceEqual(c) && c.SequenceEqual(d));
+            Assert.True(AllEqual(a, b, c, d));
         }
 
         private T[] Array_Call<T>(T[] a, ref T[] b, out T[] c)
