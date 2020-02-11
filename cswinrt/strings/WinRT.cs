@@ -95,8 +95,8 @@ namespace WinRT
         // standard accessors/mutators
         public unsafe delegate int _get_PropertyAsBoolean(IntPtr thisPtr, out byte value);
         public delegate int _put_PropertyAsBoolean(IntPtr thisPtr, byte value);
-        public unsafe delegate int _get_PropertyAsChar(IntPtr thisPtr, out char value);
-        public delegate int _put_PropertyAsChar(IntPtr thisPtr, char value);
+        public unsafe delegate int _get_PropertyAsChar(IntPtr thisPtr, out ushort value);
+        public delegate int _put_PropertyAsChar(IntPtr thisPtr, ushort value);
         public unsafe delegate int _get_PropertyAsSByte(IntPtr thisPtr, out sbyte value);
         public delegate int _put_PropertyAsSByte(IntPtr thisPtr, sbyte value);
         public unsafe delegate int _get_PropertyAsByte(IntPtr thisPtr, out byte value);
