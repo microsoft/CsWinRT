@@ -832,7 +832,7 @@ namespace WinRT
             {
                 return objRef.As<IInspectable.Vftbl>();
             }
-            return ComCallableWrapper.CreateCCWForObject(o);
+            return ComWrappersSupport.CreateCCWForObject(o);
         }
 
         public static IntPtr GetAbi(IObjectReference objRef) => MarshalInterfaceHelper<object>.GetAbi(objRef);

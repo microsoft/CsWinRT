@@ -143,6 +143,7 @@ Where <spec> is one or more of:
                 write_file("WinRT.cs", strings::WinRT);
                 write_file("WinRT_Guid.cs", strings::WinRT_Guid);
                 write_file("WinRT_Marshal.cs", strings::WinRT_Marshal);
+                write_file("WinRT_Wrappers.cs", strings::WinRT_Wrappers);
             });
 
             for (auto&& ns_members : c.namespaces())

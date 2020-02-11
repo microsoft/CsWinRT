@@ -1623,7 +1623,7 @@ event % %;)",
                 break;
             case category::delegate_type:
                 m.marshaler_type = get_abi_type();
-                m.local_type = m.is_out() ? "IntPtr" : "WinRT.Delegate";
+                m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
                 break;
             }
         };
@@ -2532,7 +2532,7 @@ private static unsafe int Do_Abi_%%
             bind<write_abi_signature>(method),
             bind<write_managed_method_call>(
                 signature,
-                w.write_temp("WinRT.ComCallableWrapper.FindObject<%>(%).%%",
+                w.write_temp("WinRT.ComWrappersSupport.FindObject<%>(%).%%",
                     type_name,
                     have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                     method.Name(),
@@ -2565,7 +2565,7 @@ private static unsafe int Do_Abi_%%
             bind<write_abi_signature>(setter),
             bind<write_managed_method_call>(
                 setter_sig,
-                w.write_temp("WinRT.ComCallableWrapper.FindObject<%>(%).% = %",
+                w.write_temp("WinRT.ComWrappersSupport.FindObject<%>(%).% = %",
                     type_name,
                     have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                     prop.Name(),
@@ -2593,7 +2593,7 @@ private static unsafe int Do_Abi_%%
                 bind<write_abi_signature>(getter),
                 bind<write_managed_method_call>(
                     getter_sig,
-                    w.write_temp("WinRT.ComCallableWrapper.FindObject<%>(%).%%",
+                    w.write_temp("WinRT.ComWrappersSupport.FindObject<%>(%).%%",
                         type_name,
                         have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                         prop.Name(),
@@ -2625,7 +2625,7 @@ private static unsafe int Do_Abi_%%
 % = default;
 try
 {
-var __this = WinRT.ComCallableWrapper.FindObject<%>(thisPtr);
+var __this = WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
 var __handler = %.FromAbi(%);
 % = _%_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
 __this.% += __handler;
@@ -2651,7 +2651,7 @@ private static unsafe int Do_Abi_%%
 {
 try
 {
-var __this = WinRT.ComCallableWrapper.FindObject<%>(thisPtr);
+var __this = WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
 if(_%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(%, out var __handler))
 {
 __this.% -= __handler;
@@ -3086,12 +3086,12 @@ public static (int length, IntPtr data) FromManagedArray(%[] obj) => MarshalInte
 public static class @%
 {%
 %
-public static unsafe WinRT.Delegate CreateMarshaler(% managedDelegate)
+public static unsafe IObjectReference CreateMarshaler(% managedDelegate)
 {
 %
 }
 
-public static IntPtr GetAbi(WinRT.Delegate value) => value.ThisPtr;
+public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
 
 public static unsafe % FromAbi(IntPtr ThisPtr)
 {
@@ -3102,11 +3102,11 @@ var abiInvoke = Marshal.GetDelegateForFunctionPointer%(abiDelegate.Vftbl.Invoke%
 return managedDelegate;
 }
 
-public static IntPtr FromManaged(% managedDelegate) => GetAbi(CreateMarshaler(managedDelegate));
+public static IntPtr FromManaged(% managedDelegate) => CreateMarshaler(managedDelegate).GetRef();
 
-public static void DisposeMarshaler(WinRT.Delegate value) => value.Release();
+public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<%>.DisposeMarshaler(value);
 
-public static void DisposeAbi(IntPtr abi) => MarshalInspectable.DisposeAbi(abi);
+public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<%>.DisposeAbi(abi);
 
 private static unsafe int Do_Abi_Invoke%
 {
@@ -3145,13 +3145,13 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                 if (!is_generic)
                 {
                     w.write(R"(var func = Marshal.GetFunctionPointerForDelegate(new Abi_Invoke(Do_Abi_Invoke));
-return new WinRT.Delegate(func, managedDelegate);)");
+return ComWrappersSupport.CreateCCWForDelegate(func, managedDelegate);)");
                     return;
                 }
                 w.write(R"(var self = typeof(@%);
 var invoke = self.GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic);
 %var func = Marshal.GetFunctionPointerForDelegate(global::System.Delegate.CreateDelegate(Abi_Invoke_Type, invoke));
-return new WinRT.Delegate(func, managedDelegate);)",
+return ComWrappersSupport.CreateCCWForDelegate(func, managedDelegate);)",
                     type.TypeName(),
                     type_params,
                     [&](writer& w) {
@@ -3168,6 +3168,8 @@ return new WinRT.Delegate(func, managedDelegate);)",
                         });
                     });
             },
+            // GetAbi
+            type_name,
             // FromAbi
             type_name,
             type_name,
@@ -3176,6 +3178,10 @@ return new WinRT.Delegate(func, managedDelegate);)",
             is_generic ? ", Abi_Invoke_Type" : "",
             bind<write_abi_method_call>(signature, "abiInvoke", is_generic),
             // FromManaged
+            type_name,
+            // DisposeMarshaler
+            type_name,
+            // DisposeAbi
             type_name,
             // Do_Abi_Invoke
             [&](writer& w) {
@@ -3229,7 +3235,7 @@ return new WinRT.Delegate(func, managedDelegate);)",
                 w.write(")");
             },
             bind<write_managed_method_call>(signature,
-                w.write_temp(R"(WinRT.Delegate.MarshalInvoke(%, (% invoke) =>
+                w.write_temp(R"(WinRT.ComWrappersSupport.MarshalDelegateInvoke(%, (% invoke) =>
 {
     %
 }))",
