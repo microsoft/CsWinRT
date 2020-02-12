@@ -39,6 +39,16 @@ namespace WinRT
         {
             return type.FindHelperType() ?? throw new InvalidOperationException("Target type is not a projected type.");
         }
+
+        public static Type GetAbiType(this Type type)
+        {
+            return type.GetHelperType().GetMethod("GetAbi").ReturnType;
+        }
+
+        public static Type GetMarshalerType(this Type type)
+        {
+            return type.GetHelperType().GetMethod("CreateMarshaler").ReturnType;
+        }
     }
 
     public static class DelegateExtensions
@@ -109,8 +119,8 @@ namespace WinRT
         // standard accessors/mutators
         public delegate int _get_PropertyAsBoolean(IntPtr thisPtr, out byte value);
         public delegate int _put_PropertyAsBoolean(IntPtr thisPtr, byte value);
-        public delegate int _get_PropertyAsChar(IntPtr thisPtr, out char value);
-        public delegate int _put_PropertyAsChar(IntPtr thisPtr, char value);
+        public delegate int _get_PropertyAsChar(IntPtr thisPtr, out ushort value);
+        public delegate int _put_PropertyAsChar(IntPtr thisPtr, ushort value);
         public delegate int _get_PropertyAsSByte(IntPtr thisPtr, out sbyte value);
         public delegate int _put_PropertyAsSByte(IntPtr thisPtr, sbyte value);
         public delegate int _get_PropertyAsByte(IntPtr thisPtr, out byte value);

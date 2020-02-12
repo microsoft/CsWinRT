@@ -413,7 +413,11 @@ namespace cswinrt
                 {
                     if (type == fundamental_type::Boolean)
                     {
-                        type =  fundamental_type::UInt8;
+                        type = fundamental_type::UInt8;
+                    }
+                    if (type == fundamental_type::Char)
+                    {
+                        type = fundamental_type::UInt16;
                     }
                     write_fundamental_type(w, type);
                 }
@@ -561,6 +565,9 @@ namespace cswinrt
         case fundamental_type::Boolean:
             w.write("(byte)(% ? 1 : 0)", name);
             break;
+        case fundamental_type::Char:
+            w.write("(ushort)%", name);
+            break;
         default:
             w.write("%", name);
             break;
@@ -575,14 +582,11 @@ namespace cswinrt
         }
         else if (type == fundamental_type::Boolean)
         {
-            if (is_boxed)
-            {
-                w.write("((byte)(object)% != 0)", name);
-            }
-            else
-            {
-                w.write("(% != 0)", name);
-            }
+            w.write(is_boxed ? "((byte)(object)% != 0)" : "(% != 0)", name);
+        }
+        else if (type == fundamental_type::Char)
+        {
+            w.write(is_boxed ? "(char)(ushort)(object)%" : "(char)%", name);
         }
         else if (is_boxed)
         {
@@ -1418,9 +1422,20 @@ event % %;)",
 
                 if (marshaler_type.empty())
                 {
-                    w.write(param_type == "bool" ? "(byte)(%% ? 1 : 0)" : "%%",
-                        source,
-                        bind<write_escaped_identifier>(param_name));
+                    if (param_type == "bool")
+                    {
+                        w.write("(byte)(%% ? 1 : 0)",
+                            source, bind<write_escaped_identifier>(param_name));
+                        return;
+                    }
+                    if (param_type == "char")
+                    {
+                        w.write("(ushort)%%",
+                            source, bind<write_escaped_identifier>(param_name));
+                        return;
+                    }
+                    w.write("%%",
+                        source, bind<write_escaped_identifier>(param_name));
                     return;
                 }
             }
@@ -1457,10 +1472,17 @@ event % %;)",
                     w.write("%.FromAbi(%)", param_type, source);
                     return;
                 }
-
-                param_type == "bool" ?
-                    w.write(is_generic() ? "(byte)% != 0" : "% != 0", source) :
-                    w.write("%%", param_cast, source);
+                if (param_type == "bool")
+                {
+                    w.write(is_generic() ? "(byte)% != 0" : "% != 0", source);
+                    return;
+                }
+                if (param_type == "char")
+                {
+                    w.write(is_generic() ? "(char)(ushort)%" : "(char)%", source);
+                    return;
+                }
+                w.write("%%", param_cast, source);
                 return;
             }
 
@@ -1482,10 +1504,17 @@ event % %;)",
                     w.write("%.FromManaged(%)", param_type, source);
                     return;
                 }
-
-                param_type == "bool" ?
-                    w.write("(byte)(% ? 1 : 0)", source) :
-                    w.write("%%", param_cast, source);
+                if (param_type == "bool")
+                {
+                    w.write("(byte)(% ? 1 : 0)", source);
+                    return;
+                }
+                if (param_type == "char")
+                {
+                    w.write("(ushort)%", source);
+                    return;
+                }
+                w.write("%%", param_cast, source);
                 return;
             }
 
@@ -2176,8 +2205,21 @@ remove => _%.Unsubscribe(value);
                     param_name, bind<write_escaped_identifier>(param_name));
                 return;
             }
+            std::string_view out_local_type;
+            if (param_type == "bool")
+            {
+                out_local_type = is_array() ? "bool[]" : "bool";
+            }
+            else if (param_type == "char")
+            {
+                out_local_type = is_array() ? "char[]" : "char";
+            }
+            else
+            {
+                out_local_type = local_type;
+            }
             w.write("% __% = default;\n",
-                param_type == "bool" ? is_array() ? "bool[]" : "bool" : local_type,
+                out_local_type,
                 param_name);
         }
 
@@ -2201,8 +2243,20 @@ remove => _%.Unsubscribe(value);
             }
             else if (marshaler_type.empty())
             {
-                w.write(param_type == "bool" ? (is_generic() ? "(byte)% != 0" : "% != 0") : "%",
-                    bind<write_escaped_identifier>(param_name));
+                std::string_view format_string;
+                if (param_type == "bool")
+                {
+                    format_string = is_generic() ? "(byte)% != 0" : "% != 0";
+                } 
+                else if (param_type == "char")
+                {
+                    format_string = is_generic() ? "(char)(ushort)%" : "(char)%";
+                }
+                else
+                {
+                    format_string = "%";
+                }
+                w.write(format_string, bind<write_escaped_identifier>(param_name));
             }
             else if (is_array())
             {
@@ -2245,9 +2299,18 @@ remove => _%.Unsubscribe(value);
                 }
                 else
                 {
-                    param_type == "bool" ?
-                        w.write("(byte)(% ? 1 : 0);", param_local) :
+                    if (param_type == "bool")
+                    {
+                        w.write("(byte)(% ? 1 : 0);", param_local);
+                    }
+                    else if (param_type == "char")
+                    {
+                        w.write("(ushort)%;", param_local);
+                    }
+                    else
+                    {
                         w.write("%%;", param_cast, param_local);
+                    }
                 }
             }
             else
@@ -3227,14 +3290,96 @@ return new WinRT.Delegate(func, managedDelegate);)",
 
     void write_struct(writer& w, TypeDef const& type)
     {
-        w.write("public struct %\n{\n", bind<write_type_name>(type, false, false));
+        auto name = w.write_temp("%", bind<write_type_name>(type, false, false));
+
+        struct field_info
+        {
+            std::string type;
+            std::string name;
+            bool is_interface;
+        };
+        std::vector<field_info> fields;
         for (auto&& field : type.FieldList())
         {
-            w.write("public ");
-            write_projection_type(w, get_type_semantics(field.Signature().Type()));
-            w.write(" %;\n", field.Name());
+            auto semantics = get_type_semantics(field.Signature().Type());
+            field_info field_info{};
+            field_info.type = w.write_temp("%", [&](writer& w){ write_projection_type(w, semantics); });
+            field_info.name = field.Name();
+            if (auto td = std::get_if<type_definition>(&semantics))
+            {
+                field_info.is_interface = get_category(*td) == category::interface_type;
+            }
+            else if (auto gti = std::get_if<generic_type_instance>(&semantics))
+            {
+                field_info.is_interface = get_category(gti->generic_type) == category::interface_type;
+            }
+            fields.emplace_back(field_info);
         }
-        w.write("}\n");
+
+        w.write(R"(public struct %: IEquatable<%>
+{
+%
+public %(%)
+{
+%
+}
+
+public static bool operator ==(% x, % y)
+{
+return %;
+}
+
+public static bool operator !=(% x, % y) => !(x == y);
+
+public bool Equals(% other) => this == other;
+
+public override bool Equals(object obj)
+{
+return obj is % that && this == that;
+}
+
+public override int GetHashCode()
+{
+return %;
+}
+}
+)",
+            // struct
+            name,
+            name,
+            bind_each([](writer& w, auto&& field)
+            {
+                w.write("public % %;\n", field.type, field.name);
+            }, fields),
+            // ctor
+            name,
+            bind_list([](writer& w, auto&& field)
+            {
+                w.write("% _%", field.type, field.name);
+            }, ", ", fields),
+            bind_each([](writer& w, auto&& field)
+            {
+                w.write("% = _%; ", field.name, field.name);
+            }, fields),
+            // ==
+            name,
+            name,
+            bind_list([](writer& w, auto&& field)
+            {
+                w.write(field.is_interface ? "x.%.ObjectEquals(y.%)" : "x.% == y.%", 
+                    field.name, field.name);
+            }, " && ", fields),
+            // !=, Equals
+            name,
+            name,
+            name,
+            name,
+            // GetHashCode
+            bind_list([](writer& w, auto&& field)
+            {
+                w.write("%.GetHashCode()", field.name);
+            }, " ^ ", fields)
+        );
     }
 
     void write_abi_struct(writer& w, TypeDef const& type)
@@ -3279,7 +3424,7 @@ internal struct Marshaler
             bind_each([](writer& w, abi_marshaler const& m)
             {
                 if (m.marshaler_type.empty()) return;
-                w.write("public % %;\n", m.local_type, m.get_escaped_param_name(w));
+                w.write("public % _%;\n", m.local_type, m.param_name);
             }, marshalers),
             abi_type);
         if (have_disposers)
@@ -3291,15 +3436,9 @@ internal struct Marshaler
                 bind_each([](writer& w, abi_marshaler const& m)
                 {
                     if(m.is_value_type) return;
-                    if ((m.marshaler_type == m.local_type) || (m.marshaler_type + ".Marshaler" == m.local_type))
-                    {
-                        w.write("%.Dispose();\n",
-                            m.get_escaped_param_name(w));
-                        return;
-                    }
-                    w.write("%.DisposeMarshaler(%);\n",
+                    w.write("%.DisposeMarshaler(_%);\n",
                         m.marshaler_type,
-                        m.get_escaped_param_name(w));
+                        m.param_name);
                 }, marshalers));
         }
         w.write("}\n");
@@ -3319,7 +3458,7 @@ try
         for (auto&& m : marshalers)
         {
             if (m.marshaler_type.empty()) continue;
-            w.write("\nm.% = ", m.get_escaped_param_name(w));
+            w.write("\nm._% = ", m.param_name);
             m.write_create(w, "arg." + m.get_escaped_param_name(w));
             w.write(";");
         }
@@ -3337,15 +3476,28 @@ return m;)",
                     w.write(count++ == 0 ? "" : ", ");
                     if (m.marshaler_type.empty())
                     {
-                        w.write(m.param_type == "bool" ? "% = (byte)(arg.% ? 1 : 0)\n" : "% = arg.%\n",
+                        std::string format;
+                        if (m.param_type == "bool")
+                        {
+                            format = "% = (byte)(arg.% ? 1 : 0)\n";
+                        }
+                        else if (m.param_type == "char")
+                        {
+                            format = "% = (ushort)arg.%\n";
+                        }
+                        else
+                        {
+                            format = "% = arg.%\n";
+                        }
+                        w.write(format,
                             m.get_escaped_param_name(w),
                             m.get_escaped_param_name(w));
                         continue;
                     }
-                    w.write("% = %.GetAbi(m.%)\n",
+                    w.write("% = %.GetAbi(m._%)\n",
                         m.get_escaped_param_name(w),
                         m.marshaler_type,
-                        m.get_escaped_param_name(w));
+                        m.param_name);
                 }
             });
         if (have_disposers)
@@ -3385,7 +3537,20 @@ return new %()
                     w.write(count++ == 0 ? "" : ", ");
                     if (m.marshaler_type.empty())
                     {
-                        w.write(m.param_type == "bool" ? "% = arg.% != 0\n" : "% = arg.%\n",
+                        std::string format;
+                        if (m.param_type == "bool")
+                        {
+                            format = "% = arg.% != 0\n";
+                        }
+                        else if (m.param_type == "char")
+                        {
+                            format = "% = (char)arg.%\n";
+                        }
+                        else
+                        {
+                            format = "% = arg.%\n";
+                        }
+                        w.write(format,
                             m.get_escaped_param_name(w),
                             m.get_escaped_param_name(w));
                         continue;
@@ -3415,7 +3580,20 @@ return new %()
                     w.write(count++ == 0 ? "" : ", ");
                     if (m.marshaler_type.empty())
                     {
-                        w.write(m.param_type == "bool" ? "% = (byte)(arg.% ? 1 : 0)\n" : "% = arg.%\n",
+                        std::string format;
+                        if (m.param_type == "bool")
+                        {
+                            format = "% = (byte)(arg.% ? 1 : 0)\n";
+                        }
+                        else if (m.param_type == "char")
+                        {
+                            format = "% = (ushort)arg.%\n";
+                        }
+                        else
+                        {
+                            format = "% = arg.%\n";
+                        }
+                        w.write(format,
                             m.get_escaped_param_name(w),
                             m.get_escaped_param_name(w));
                         continue;
@@ -3426,21 +3604,18 @@ return new %()
                 }
             });
 
-        if (!have_disposers) 
-        {
-            w.write(R"(
+        w.write(R"(
 public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) => 
     *(%*)dest.ToPointer() = GetAbi(arg);
 )",
-                abi_type);
+            abi_type);
 
-            w.write(R"(
+        w.write(R"(
 public static unsafe void CopyManaged(% arg, IntPtr dest) =>
     *(%*)dest.ToPointer() = FromManaged(arg);
 )",
-                projected_type,
-                abi_type);
-        }
+            projected_type,
+            abi_type);
     
       w.write(R"(
 public static void DisposeMarshaler(Marshaler m) %
