@@ -1147,10 +1147,6 @@ namespace WinRT
         // Note this dictionary is also used as the synchronization object for this table
         private readonly Dictionary<Windows.Foundation.EventRegistrationToken, T> m_tokens = new Dictionary<Windows.Foundation.EventRegistrationToken, T>();
 
-        // Cached multicast delegate which will invoke all of the currently registered delegates.  This
-        // will be accessed frequently in common coding paterns, so we don't want to calculate it repeatedly.
-        private volatile T m_invokeList = null;
-
         public Windows.Foundation.EventRegistrationToken AddEventHandler(T handler)
         {
             // Windows Runtime allows null handlers.  Assign those the default token (token value 0) for simplicity
@@ -1178,11 +1174,6 @@ namespace WinRT
             }
             m_tokens[token] = handler;
 
-            // Update the current invocation list to include the newly added delegate
-            global::System.Delegate invokeList = m_invokeList;
-            invokeList = MulticastDelegate.Combine(invokeList, handler);
-            m_invokeList = (T)(object)invokeList;
-
             return token;
         }
 
@@ -1208,7 +1199,7 @@ namespace WinRT
             // We want to generate a token value that has the following properties:
             //  1. is quickly obtained from the handler instance
             //  2. uses bits in the upper 32 bits of the 64 bit value, in order to avoid bugs where code
-            //     may assume the value is realy just 32 bits
+            //     may assume the value is really just 32 bits
             //  3. uses bits in the bottom 32 bits of the 64 bit value, in order to ensure that code doesn't
             //     take a dependency on them always being 0.
             //
@@ -1222,7 +1213,7 @@ namespace WinRT
             // hash code.
             //
             // While calculating this initial value will be somewhat more expensive than just using a counter
-            // for events that have few registrations, it will also gives us a shot at preventing unregistration
+            // for events that have few registrations, it will also give us a shot at preventing unregistration
             // from becoming an O(N) operation.
             //
             // We should feel free to change this algorithm as other requirements / optimizations become
@@ -1267,11 +1258,6 @@ namespace WinRT
             if (m_tokens.TryGetValue(token, out T handler))
             {
                 m_tokens.Remove(token);
-
-                // Update the current invocation list to remove the delegate
-                global::System.Delegate invokeList = m_invokeList;
-                invokeList = MulticastDelegate.Remove(invokeList, handler);
-                m_invokeList = (T)(object)invokeList;
             }
         }
     }
