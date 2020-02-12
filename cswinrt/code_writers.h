@@ -2380,19 +2380,19 @@ remove => _%.Unsubscribe(value);
                 {
                     set_typedef_marshaler(type);
                 },
-                    [&](generic_type_index const& /*var*/)
+                [&](generic_type_index const& /*var*/)
                 {
                     m.param_type = get_generic_abi_type(w, semantics).second;
                     m.local_type = w.write_temp("%", bind<write_projection_type>(semantics));
                     m.marshaler_type = w.write_temp("Marshaler<%>", m.local_type);
                     m.abi_boxed = true;
                 },
-                    [&](generic_type_instance const& type)
+                [&](generic_type_instance const& type)
                 {
                     auto guard{ w.push_generic_args(type) };
                     set_typedef_marshaler(type.generic_type);
                 },
-                    [&](fundamental_type type)
+                [&](fundamental_type type)
                 {
                     if (type == fundamental_type::String)
                     {
@@ -2400,7 +2400,7 @@ remove => _%.Unsubscribe(value);
                         m.local_type = m.is_out() ? "string" : "";
                     }
                 },
-                    [&](auto const&) {});
+                [&](auto const&) {});
 
             if (m.is_out() && m.local_type.empty())
             {
@@ -2454,13 +2454,12 @@ R"(%
 %
 try
 {
-%
+%%%
 }
 catch (Exception __exception__)
 {
-    return __exception__.HResult;
+return __exception__.HResult;
 }
-%%
 return 0;)",
             [&](writer& w) {
                 if (!return_sig) return;
@@ -2542,8 +2541,7 @@ private static unsafe int Do_Abi_%%
 
     void write_property_abi_invoke(writer& w, Property const& prop)
     {
-        MethodDef getter, setter;
-        std::tie(getter, setter) = get_property_methods(prop);
+        auto [getter, setter] = get_property_methods(prop);
         auto type_name = write_type_name_temp(w, prop.Parent());
         if (setter)
         {
@@ -2624,20 +2622,21 @@ private static unsafe int Do_Abi_%%
             R"(
 private static unsafe int Do_Abi_%%
 {
-    % = default;
-    try
-    {
-        var __this = WinRT.ComCallableWrapper.FindObject<%>(thisPtr);
-        var __handler = %.FromAbi(%);
-        % = _%_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
-        __this.% += __handler;
-        return 0;
-    }
-    catch (Exception __ex)
-    {
-        return __ex.HResult;
-    }
-})",
+% = default;
+try
+{
+var __this = WinRT.ComCallableWrapper.FindObject<%>(thisPtr);
+var __handler = %.FromAbi(%);
+% = _%_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
+__this.% += __handler;
+return 0;
+}
+catch (Exception __ex)
+{
+return __ex.HResult;
+}
+}
+)",
             get_vmethod_name(w, add_method.Parent(), add_method),
             bind<write_abi_signature>(add_method),
             add_handler_event_token_name,
@@ -2651,20 +2650,21 @@ private static unsafe int Do_Abi_%%
     R"(
 private static unsafe int Do_Abi_%%
 {
-    try
-    {
-        var __this = WinRT.ComCallableWrapper.FindObject<%>(thisPtr);
-        if(_%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(%, out var __handler))
-        {
-            __this.% -= __handler;
-        }
-        return 0;
-    }
-    catch (Exception __ex)
-    {
-        return __ex.HResult;
-    }
-})",
+try
+{
+var __this = WinRT.ComCallableWrapper.FindObject<%>(thisPtr);
+if(_%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(%, out var __handler))
+{
+__this.% -= __handler;
+}
+return 0;
+}
+catch (Exception __ex)
+{
+return __ex.HResult;
+}
+}
+)",
             get_vmethod_name(w, remove_method.Parent(), remove_method),
             bind<write_abi_signature>(remove_method),
             type_name,
@@ -2819,14 +2819,14 @@ private static readonly Vftbl AbiToProjectionVftable;
 public static readonly IntPtr AbiToProjectionVftablePtr;
 static unsafe Vftbl()
 {
-    AbiToProjectionVftable = new Vftbl
-    {
-        IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable, 
-        %
-    };
-    var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * %);
-    %
-    AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
+AbiToProjectionVftable = new Vftbl
+{
+IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable, 
+%
+};
+var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * %);
+%
+AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
 }
 )",
                     bind_list(",\n", method_create_delegates_to_projection),
