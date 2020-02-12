@@ -450,6 +450,25 @@ namespace UnitTest
             }
         }
 
+        [Fact]
+        public void TestSimpleCCWs()
+        {
+            var managedProperties = new ManagedProperties(42);
+            TestObject.CopyProperties(managedProperties);
+            Assert.Equal(managedProperties.ReadWriteProperty, TestObject.ReadWriteProperty);
+        }
+
+        class ManagedProperties : IProperties1
+        {
+            private readonly int _value;
+
+            public ManagedProperties(int value)
+            {
+                _value = value;
+            }
+            public int ReadWriteProperty => _value;
+        }
+
         readonly int E_FAIL = -2147467259;
 
         async Task InvokeDoitAsync()

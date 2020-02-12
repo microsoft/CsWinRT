@@ -832,8 +832,7 @@ namespace WinRT
             {
                 return objRef.As<IInspectable.Vftbl>();
             }
-            // TODO: Create a CCW for user-defined implementations of interfaces.
-            throw new NotImplementedException("Generating a CCW for a user-defined class is not currently implemented");
+            return ComCallableWrapper.CreateCCWForObject(o);
         }
 
         public static IntPtr GetAbi(IObjectReference objRef) => MarshalInterfaceHelper<object>.GetAbi(objRef);

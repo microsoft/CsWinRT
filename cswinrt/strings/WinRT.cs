@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Linq.Expressions;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
@@ -15,6 +17,7 @@ using System.Linq.Expressions;
 namespace WinRT
 {
     using System.Diagnostics;
+    using System.Net;
     using WinRT.Interop;
 
     public enum TrustLevel
@@ -80,6 +83,27 @@ namespace WinRT
             public _QueryInterface QueryInterface;
             public _AddRef AddRef;
             public _Release Release;
+
+            public static readonly IUnknownVftbl AbiToProjectionVftbl;
+            public static readonly IntPtr AbiToProjectionVftblPtr;
+
+            static IUnknownVftbl()
+            {
+                AbiToProjectionVftbl = GetVftbl();
+                AbiToProjectionVftblPtr = Marshal.AllocHGlobal(Marshal.SizeOf<IUnknownVftbl>());
+                Marshal.StructureToPtr(AbiToProjectionVftbl, AbiToProjectionVftblPtr, false);
+            }
+
+            private static IUnknownVftbl GetVftbl()
+            {
+                // TODO: Use runtime-provided IUnknown vftbl when available.
+#if MANUAL_IUNKNOWN
+                return ComCallableWrapper.ManualRefCountingVftbl;
+#else
+                throw new NotImplementedException();
+#endif
+            }
+
         }
 
         // IActivationFactory
@@ -93,44 +117,44 @@ namespace WinRT
         }
 
         // standard accessors/mutators
-        public unsafe delegate int _get_PropertyAsBoolean(IntPtr thisPtr, out byte value);
+        public delegate int _get_PropertyAsBoolean(IntPtr thisPtr, out byte value);
         public delegate int _put_PropertyAsBoolean(IntPtr thisPtr, byte value);
-        public unsafe delegate int _get_PropertyAsChar(IntPtr thisPtr, out ushort value);
+        public delegate int _get_PropertyAsChar(IntPtr thisPtr, out ushort value);
         public delegate int _put_PropertyAsChar(IntPtr thisPtr, ushort value);
-        public unsafe delegate int _get_PropertyAsSByte(IntPtr thisPtr, out sbyte value);
+        public delegate int _get_PropertyAsSByte(IntPtr thisPtr, out sbyte value);
         public delegate int _put_PropertyAsSByte(IntPtr thisPtr, sbyte value);
-        public unsafe delegate int _get_PropertyAsByte(IntPtr thisPtr, out byte value);
+        public delegate int _get_PropertyAsByte(IntPtr thisPtr, out byte value);
         public delegate int _put_PropertyAsByte(IntPtr thisPtr, byte value);
-        public unsafe delegate int _get_PropertyAsInt16(IntPtr thisPtr, out short value);
+        public delegate int _get_PropertyAsInt16(IntPtr thisPtr, out short value);
         public delegate int _put_PropertyAsInt16(IntPtr thisPtr, short value);
-        public unsafe delegate int _get_PropertyAsUInt16(IntPtr thisPtr, out ushort value);
+        public delegate int _get_PropertyAsUInt16(IntPtr thisPtr, out ushort value);
         public delegate int _put_PropertyAsUInt16(IntPtr thisPtr, ushort value);
-        public unsafe delegate int _get_PropertyAsInt32(IntPtr thisPtr, out int value);
+        public delegate int _get_PropertyAsInt32(IntPtr thisPtr, out int value);
         public delegate int _put_PropertyAsInt32(IntPtr thisPtr, int value);
-        public unsafe delegate int _get_PropertyAsUInt32(IntPtr thisPtr, out uint value);
+        public delegate int _get_PropertyAsUInt32(IntPtr thisPtr, out uint value);
         public delegate int _put_PropertyAsUInt32(IntPtr thisPtr, uint value);
-        public unsafe delegate int _get_PropertyAsInt64(IntPtr thisPtr, out long value);
+        public delegate int _get_PropertyAsInt64(IntPtr thisPtr, out long value);
         public delegate int _put_PropertyAsInt64(IntPtr thisPtr, long value);
-        public unsafe delegate int _get_PropertyAsUInt64(IntPtr thisPtr, out ulong value);
+        public delegate int _get_PropertyAsUInt64(IntPtr thisPtr, out ulong value);
         public delegate int _put_PropertyAsUInt64(IntPtr thisPtr, ulong value);
-        public unsafe delegate int _get_PropertyAsFloat(IntPtr thisPtr, out float value);
+        public delegate int _get_PropertyAsFloat(IntPtr thisPtr, out float value);
         public delegate int _put_PropertyAsFloat(IntPtr thisPtr, float value);
-        public unsafe delegate int _get_PropertyAsDouble(IntPtr thisPtr, out double value);
+        public delegate int _get_PropertyAsDouble(IntPtr thisPtr, out double value);
         public delegate int _put_PropertyAsDouble(IntPtr thisPtr, double value);
-        public unsafe delegate int _get_PropertyAsObject(IntPtr thisPtr, out IntPtr value);
+        public delegate int _get_PropertyAsObject(IntPtr thisPtr, out IntPtr value);
         public delegate int _put_PropertyAsObject(IntPtr thisPtr, IntPtr value);
-        public unsafe delegate int _get_PropertyAsGuid(IntPtr thisPtr, out Guid value);
+        public delegate int _get_PropertyAsGuid(IntPtr thisPtr, out Guid value);
         public delegate int _put_PropertyAsGuid(IntPtr thisPtr, Guid value);
-        public unsafe delegate int _get_PropertyAsString(IntPtr thisPtr, out IntPtr value);
+        public delegate int _get_PropertyAsString(IntPtr thisPtr, out IntPtr value);
         public delegate int _put_PropertyAsString(IntPtr thisPtr, IntPtr value);
-        public unsafe delegate int _get_PropertyAsVector3(IntPtr thisPtr, out Windows.Foundation.Numerics.Vector3 value);
+        public delegate int _get_PropertyAsVector3(IntPtr thisPtr, out Windows.Foundation.Numerics.Vector3 value);
         public delegate int _put_PropertyAsVector3(IntPtr thisPtr, Windows.Foundation.Numerics.Vector3 value);
-        public unsafe delegate int _get_PropertyAsQuaternion(IntPtr thisPtr, out Windows.Foundation.Numerics.Quaternion value);
+        public delegate int _get_PropertyAsQuaternion(IntPtr thisPtr, out Windows.Foundation.Numerics.Quaternion value);
         public delegate int _put_PropertyAsQuaternion(IntPtr thisPtr, Windows.Foundation.Numerics.Quaternion value);
-        public unsafe delegate int _get_PropertyAsMatrix4x4(IntPtr thisPtr, out Windows.Foundation.Numerics.Matrix4x4 value);
+        public delegate int _get_PropertyAsMatrix4x4(IntPtr thisPtr, out Windows.Foundation.Numerics.Matrix4x4 value);
         public delegate int _put_PropertyAsMatrix4x4(IntPtr thisPtr, Windows.Foundation.Numerics.Matrix4x4 value);
-        public unsafe delegate int _add_EventHandler(IntPtr thisPtr, IntPtr handler, out EventRegistrationToken token);
-        public delegate int _remove_EventHandler(IntPtr thisPtr, EventRegistrationToken token);
+        public delegate int _add_EventHandler(IntPtr thisPtr, IntPtr handler, out Windows.Foundation.EventRegistrationToken token);
+        public delegate int _remove_EventHandler(IntPtr thisPtr, Windows.Foundation.EventRegistrationToken token);
 
         // IDelegate
         public struct IDelegateVftbl
@@ -139,11 +163,6 @@ namespace WinRT
             public IntPtr AddRef;
             public IntPtr Release;
             public IntPtr Invoke;
-        }
-
-        public struct EventRegistrationToken
-        {
-            public long Value;
         }
     }
 
@@ -162,6 +181,58 @@ namespace WinRT
             public _GetIids GetIids;
             public _GetRuntimeClassName GetRuntimeClassName;
             public _GetTrustLevel GetTrustLevel;
+
+            public static readonly Vftbl AbiToProjectionVftable;
+            public static readonly IntPtr AbiToProjectionVftablePtr;
+
+            static Vftbl()
+            {
+                AbiToProjectionVftable = new Vftbl
+                {
+                    IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl,
+                    GetIids = Do_Abi_GetIids,
+                    GetRuntimeClassName = Do_Abi_GetRuntimeClassName,
+                    GetTrustLevel = Do_Abi_GetTrustLevel
+                };
+                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
+                Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
+            }
+
+            private static int Do_Abi_GetIids(IntPtr pThis, out uint iidCount, out Guid[] iids)
+            {
+                iidCount = 0u;
+                iids = null;
+                try
+                {
+                    iids = UnmanagedObject.FindObject<ComCallableWrapper>(pThis).IIDs;
+                    iidCount = (uint)iids.Length;
+                }
+                catch (Exception ex)
+                {
+                    return ex.HResult;
+                }
+                return 0;
+            }
+
+            private unsafe static int Do_Abi_GetRuntimeClassName(IntPtr pThis, out IntPtr className)
+            {
+                className = default;
+                try
+                {
+                    className = MarshalString.FromManaged(UnmanagedObject.FindObject<ComCallableWrapper>(pThis).RuntimeClassName);
+                }
+                catch (Exception ex)
+                {
+                    return ex.HResult;
+                }
+                return 0;
+            }
+
+            private static int Do_Abi_GetTrustLevel(IntPtr pThis, out TrustLevel trustLevel)
+            {
+                trustLevel = TrustLevel.BaseTrust;
+                return 0;
+            }
         }
 
         public static IInspectable FromAbi(IntPtr thisPtr) =>
@@ -652,12 +723,7 @@ namespace WinRT
         int _refs = 1;
         public readonly IntPtr ThisPtr;
 
-        public static Delegate FindObject(IntPtr thisPtr)
-        {
-            UnmanagedObject unmanagedObject = Marshal.PtrToStructure<UnmanagedObject>(thisPtr);
-            GCHandle thisHandle = GCHandle.FromIntPtr(unmanagedObject._gchandlePtr);
-            return (Delegate)thisHandle.Target;
-        }
+        protected static Delegate FindObject(IntPtr thisPtr) => UnmanagedObject.FindObject<Delegate>(thisPtr);
 
         // IUnknown
         static unsafe readonly IUnknownVftbl._QueryInterface _QueryInterface = new IUnknownVftbl._QueryInterface(QueryInterface);
@@ -711,23 +777,28 @@ namespace WinRT
             return (uint)refs;
         }
 
-        public static int MarshalInvoke<T>(IntPtr thisPtr, Action<T> invoke)
+        public static TReturn MarshalInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
         {
-            try
+            using (new Mono.ThreadContext())
             {
-                using (new Mono.ThreadContext())
+                var target_invoke = (TDelegate)FindObject(thisPtr)._weakInvoker.Target;
+                if (target_invoke != null)
                 {
-                    var target_invoke = (T)FindObject(thisPtr)._weakInvoker.Target;
-                    if (target_invoke != null)
-                    {
-                        invoke(target_invoke);
-                    }
-                    return 0; // S_OK;
+                    return invoke(target_invoke);
                 }
+                return default;
             }
-            catch (Exception e)
+        }
+
+        public static void MarshalInvoke<T>(IntPtr thisPtr, Action<T> invoke)
+        {
+            using (new Mono.ThreadContext())
             {
-                return Marshal.GetHRForException(e);
+                var target_invoke = (T)FindObject(thisPtr)._weakInvoker.Target;
+                if (target_invoke != null)
+                {
+                    invoke(target_invoke);
+                }
             }
         }
 
@@ -739,12 +810,6 @@ namespace WinRT
             _vftblTemplate.AddRef = Marshal.GetFunctionPointerForDelegate(_AddRef);
             _vftblTemplate.Release = Marshal.GetFunctionPointerForDelegate(_Release);
             _vftblTemplate.Invoke = IntPtr.Zero;
-        }
-
-        struct UnmanagedObject
-        {
-            public IntPtr _vftblPtr;
-            public IntPtr _gchandlePtr;
         }
 
         readonly GCHandle _thisHandle;
@@ -788,17 +853,193 @@ namespace WinRT
         }
     }
 
-    public struct MarshaledValue<T>
+    internal struct Entry
     {
-        public MarshaledValue(IntPtr interopValue)
+        public Guid IID;
+        public IntPtr Vtable;
+    }
+
+    public class ComCallableWrapper
+    {
+        private object ManagedObject { get; }
+        internal string RuntimeClassName { get; }
+        internal Guid[] IIDs { get; }
+
+        private ComCallableWrapper(object obj)
         {
-            this.InteropValue = interopValue;
+            ManagedObject = obj;
+            List<Entry> interfaceTableEntries = GetInterfaceTableEntries();
+
+            string typeName = ManagedObject.GetType().FullName;
+            if (typeName.StartsWith("ABI.")) // If our type is an ABI type, get the real type name
+            {
+                typeName = typeName.Substring("ABI.".Length);
+            }
+            RuntimeClassName = typeName;
+            IIDs = new Guid[interfaceTableEntries.Count];
+            for (int i = 0; i < interfaceTableEntries.Count; i++)
+            {
+                IIDs[i] = interfaceTableEntries[i].IID;
+            }
+
+            interfaceTableEntries.Add(new Entry
+            {
+                IID = typeof(IUnknownVftbl).GUID,
+                Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
+            });
+
+            interfaceTableEntries.Add(new Entry
+            {
+                IID = typeof(IInspectable).GUID,
+                Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
+            });
+
+#if MANUAL_IUNKNOWN
+            _handle = GCHandle.ToIntPtr(GCHandle.Alloc(this));
+            InitializeManagedQITable(interfaceTableEntries);
+#endif
         }
 
-        public IntPtr InteropValue
+        private List<Entry> GetInterfaceTableEntries()
         {
-            get;
-            private set;
+            var entries = new List<Entry>();
+            var interfaces = ManagedObject.GetType().GetInterfaces();
+            foreach (var iface in interfaces)
+            {
+                var ifaceAbiType = iface.Assembly.GetType("ABI." + iface.FullName);
+                if (ifaceAbiType == null)
+                {
+                    // This interface isn't a WinRT interface.
+                    // TODO: Handle WinRT -> .NET projected interfaces.
+                    continue;
+                }
+
+                entries.Add(new Entry
+                {
+                    IID = GuidGenerator.GetIID(ifaceAbiType),
+                    Vtable = (IntPtr)ifaceAbiType.GetNestedType("Vftbl").GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                });
+            }
+            return entries;
+        }
+
+        public static IObjectReference CreateCCWForObject(object obj)
+        {
+            var wrapper = new ComCallableWrapper(obj);
+#if MANUAL_IUNKNOWN
+            var objPtr = wrapper._managedQITable[typeof(IUnknownVftbl).GUID];
+            return ObjectReference<IUnknownVftbl>.Attach(ref objPtr);
+#else
+            throw new NotImplementedException();
+#endif
+        }
+
+        public static T FindObject<T>(IntPtr thisPtr) =>
+#if MANUAL_IUNKNOWN
+            (T)UnmanagedObject.FindObject<ComCallableWrapper>(thisPtr).ManagedObject;
+#else
+            throw new NotImplementedException();
+#endif
+
+#if MANUAL_IUNKNOWN
+        private IntPtr _handle;
+        private int _refs = 1;
+        private Dictionary<Guid, IntPtr> _managedQITable;
+
+        private void InitializeManagedQITable(List<Entry> entries)
+        {
+            _managedQITable = new Dictionary<Guid, IntPtr>();
+            foreach (var entry in entries)
+            {
+                unsafe
+                {
+                    UnmanagedObject* ifaceTearOff = (UnmanagedObject*)Marshal.AllocCoTaskMem(sizeof(UnmanagedObject));
+                    ifaceTearOff->_vftblPtr = entry.Vtable;
+                    ifaceTearOff->_gchandlePtr = _handle;
+                    _managedQITable.Add(entry.IID, (IntPtr)ifaceTearOff);
+                }
+            }
+        }
+
+        public static IUnknownVftbl ManualRefCountingVftbl { get; } = new IUnknownVftbl
+        {
+            QueryInterface = Do_Abi_QueryInterface,
+            AddRef = Do_Abi_AddRef,
+            Release = Do_Abi_Release
+        };
+
+        private static int Do_Abi_QueryInterface(IntPtr pThis, ref Guid iid, out IntPtr ptr)
+        {
+            ptr = IntPtr.Zero;
+
+            var ccw = UnmanagedObject.FindObject<ComCallableWrapper>(pThis);
+
+            return ccw.QueryInterface(iid, out ptr);
+        }
+
+        private static uint Do_Abi_AddRef(IntPtr pThis)
+        {
+            return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).AddRef();
+        }
+
+        private static uint Do_Abi_Release(IntPtr pThis)
+        {
+            return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).Release();
+        }
+
+        internal uint AddRef()
+        {
+            return (uint)System.Threading.Interlocked.Increment(ref _refs);
+        }
+
+        internal uint Release()
+        {
+            if (_refs == 0)
+            {
+                throw new InvalidOperationException("WinRT.ComCallableWrapper has been over-released!");
+            }
+
+            var refs = (uint)System.Threading.Interlocked.Decrement(ref _refs);
+            if (refs == 0)
+            {
+                Cleanup();
+            }
+            return refs;
+        }
+
+        internal int QueryInterface(Guid iid, out IntPtr ptr)
+        {
+            const int E_NOINTERFACE = unchecked((int)0x80040002);
+            if (_managedQITable.TryGetValue(iid, out ptr))
+            {
+                AddRef();
+                return 0;
+            }
+            return E_NOINTERFACE;
+        }
+
+        private void Cleanup()
+        {
+            foreach (var obj in _managedQITable.Values)
+            {
+                Marshal.FreeCoTaskMem(obj);
+            }
+            _managedQITable.Clear();
+            GCHandle.FromIntPtr(_handle).Free();
+        }
+#endif
+    }
+
+    struct UnmanagedObject
+    {
+        public IntPtr _vftblPtr;
+        public IntPtr _gchandlePtr;
+
+        internal static T FindObject<T>(IntPtr thisPtr)
+        {
+            UnmanagedObject unmanagedObject = Marshal.PtrToStructure<UnmanagedObject>(thisPtr);
+            GCHandle thisHandle = GCHandle.FromIntPtr(unmanagedObject._gchandlePtr);
+            return (T)thisHandle.Target;
         }
     }
 
@@ -809,7 +1050,7 @@ namespace WinRT
         readonly _add_EventHandler _addHandler;
         readonly _remove_EventHandler _removeHandler;
 
-        private EventRegistrationToken _token;
+        private Windows.Foundation.EventRegistrationToken _token;
         private TDelegate _event;
 
         public void Subscribe(TDelegate del)
@@ -822,7 +1063,7 @@ namespace WinRT
                     try
                     {
                         var nativeDelegate = (IntPtr)Marshaler<TDelegate>.GetAbi(marshaler);
-                        Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out EventRegistrationToken token));
+                        Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out Windows.Foundation.EventRegistrationToken token));
                         _token = token;
                     }
                     finally
@@ -896,6 +1137,128 @@ namespace WinRT
         {
             Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
             _token.Value = 0;
+        }
+    }
+
+    // An event registration token table stores mappings from delegates to event tokens, in order to support
+    // sourcing WinRT style events from managed code.
+    internal sealed class EventRegistrationTokenTable<T> where T : class, global::System.Delegate
+    {
+        // Note this dictionary is also used as the synchronization object for this table
+        private readonly Dictionary<Windows.Foundation.EventRegistrationToken, T> m_tokens = new Dictionary<Windows.Foundation.EventRegistrationToken, T>();
+
+        public Windows.Foundation.EventRegistrationToken AddEventHandler(T handler)
+        {
+            // Windows Runtime allows null handlers.  Assign those the default token (token value 0) for simplicity
+            if (handler == null)
+            {
+                return default;
+            }
+
+            lock (m_tokens)
+            {
+                return AddEventHandlerNoLock(handler);
+            }
+        }
+
+        private Windows.Foundation.EventRegistrationToken AddEventHandlerNoLock(T handler)
+        {
+            Debug.Assert(handler != null);
+
+            // Get a registration token, making sure that we haven't already used the value.  This should be quite
+            // rare, but in the case it does happen, just keep trying until we find one that's unused.
+            Windows.Foundation.EventRegistrationToken token = GetPreferredToken(handler);
+            while (m_tokens.ContainsKey(token))
+            {
+                token = new Windows.Foundation.EventRegistrationToken { Value = token.Value + 1 };
+            }
+            m_tokens[token] = handler;
+
+            return token;
+        }
+
+        // Generate a token that may be used for a particular event handler.  We will frequently be called
+        // upon to look up a token value given only a delegate to start from.  Therefore, we want to make
+        // an initial token value that is easily determined using only the delegate instance itself.  Although
+        // in the common case this token value will be used to uniquely identify the handler, it is not
+        // the only possible token that can represent the handler.
+        //
+        // This means that both:
+        //  * if there is a handler assigned to the generated initial token value, it is not necessarily
+        //    this handler.
+        //  * if there is no handler assigned to the generated initial token value, the handler may still
+        //    be registered under a different token
+        //
+        // Effectively the only reasonable thing to do with this value is either to:
+        //  1. Use it as a good starting point for generating a token for handler
+        //  2. Use it as a guess to quickly see if the handler was really assigned this token value
+        private static Windows.Foundation.EventRegistrationToken GetPreferredToken(T handler)
+        {
+            Debug.Assert(handler != null);
+
+            // We want to generate a token value that has the following properties:
+            //  1. is quickly obtained from the handler instance
+            //  2. uses bits in the upper 32 bits of the 64 bit value, in order to avoid bugs where code
+            //     may assume the value is really just 32 bits
+            //  3. uses bits in the bottom 32 bits of the 64 bit value, in order to ensure that code doesn't
+            //     take a dependency on them always being 0.
+            //
+            // The simple algorithm chosen here is to simply assign the upper 32 bits the metadata token of the
+            // event handler type, and the lower 32 bits the hash code of the handler instance itself. Using the
+            // metadata token for the upper 32 bits gives us at least a small chance of being able to identify a
+            // totally corrupted token if we ever come across one in a minidump or other scenario.
+            //
+            // The hash code of a unicast delegate is not tied to the method being invoked, so in the case
+            // of a unicast delegate, the hash code of the target method is used instead of the full delegate
+            // hash code.
+            //
+            // While calculating this initial value will be somewhat more expensive than just using a counter
+            // for events that have few registrations, it will also give us a shot at preventing unregistration
+            // from becoming an O(N) operation.
+            //
+            // We should feel free to change this algorithm as other requirements / optimizations become
+            // available.  This implementation is sufficiently random that code cannot simply guess the value to
+            // take a dependency upon it.  (Simply applying the hash-value algorithm directly won't work in the
+            // case of collisions, where we'll use a different token value).
+
+            uint handlerHashCode;
+            global::System.Delegate[] invocationList = ((global::System.Delegate)(object)handler).GetInvocationList();
+            if (invocationList.Length == 1)
+            {
+                handlerHashCode = (uint)invocationList[0].Method.GetHashCode();
+            }
+            else
+            {
+                handlerHashCode = (uint)handler.GetHashCode();
+            }
+
+            ulong tokenValue = ((ulong)(uint)typeof(T).MetadataToken << 32) | handlerHashCode;
+            return new Windows.Foundation.EventRegistrationToken { Value = (long)tokenValue };
+        }
+
+        // Remove the event handler from the table and
+        // Get the delegate associated with an event registration token if it exists
+        // If the event registration token is not registered, returns false
+        public bool RemoveEventHandler(Windows.Foundation.EventRegistrationToken token, out T handler)
+        {
+            lock (m_tokens)
+            {
+                if (m_tokens.TryGetValue(token, out handler))
+                {
+                    RemoveEventHandlerNoLock(token);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void RemoveEventHandlerNoLock(Windows.Foundation.EventRegistrationToken token)
+        {
+            if (m_tokens.TryGetValue(token, out T handler))
+            {
+                m_tokens.Remove(token);
+            }
         }
     }
 }

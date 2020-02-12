@@ -193,7 +193,6 @@ namespace TestComponentCSharp
         // Generics
         Windows.Foundation.IAsyncOperation<Int32> GetIntAsync();
         Windows.Foundation.IAsyncOperationWithProgress<String, Int32> GetStringAsync();
-
         Windows.Foundation.Collections.IVectorView<Int32> GetIntVector();
         Windows.Foundation.Collections.IVectorView<Boolean> GetBoolVector();
         Windows.Foundation.Collections.IVectorView<String> GetStringVector();
@@ -203,6 +202,7 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IVectorView<IProperties1> GetInterfaceVector();
         Windows.Foundation.Collections.IVectorView<Class> GetClassVector();
 
+        void CopyProperties(IProperties1 src);
         // Async
         void CompleteAsync(); // Completes the in-flight async operation successfully
         void CompleteAsync(Int32 hr); // Completes the in-flight async operation with a failed HRESULT
