@@ -2613,7 +2613,7 @@ private static unsafe int Do_Abi_%%
         auto add_handler_event_token_name = add_signature.return_param_name();
         auto remove_handler_event_token_name = method_signature{ remove_method }.params().back().first.Name();
 
-        w.write("private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_TokenTables;",
+        w.write("\nprivate static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_TokenTables;",
             type_name,
             bind<write_type_name>(semantics, false, false),
             evt.Name());
@@ -2635,8 +2635,7 @@ catch (Exception __ex)
 {
 return __ex.HResult;
 }
-}
-)",
+})",
             get_vmethod_name(w, add_method.Parent(), add_method),
             bind<write_abi_signature>(add_method),
             add_handler_event_token_name,
@@ -2663,8 +2662,7 @@ catch (Exception __ex)
 {
 return __ex.HResult;
 }
-}
-)",
+})",
             get_vmethod_name(w, remove_method.Parent(), remove_method),
             bind<write_abi_signature>(remove_method),
             type_name,
