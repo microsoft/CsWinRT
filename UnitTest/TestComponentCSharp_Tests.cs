@@ -539,6 +539,29 @@ namespace UnitTest
             Assert.False(obj.IsAlive);
         }
 
+        [Fact]
+        public void TestCCWIdentityThroughRefCountZero()
+        {
+            static (WeakReference, IntPtr) CreateCCWReference(IProperties1 properties)
+            {
+                IObjectReference ccw = MarshalInterface<IProperties1>.CreateMarshaler(properties);
+                return (new WeakReference(ccw), ccw.ThisPtr);
+            }
+
+            var obj = new ManagedProperties(42);
+
+            var (ccwWeakReference, ptr) = CreateCCWReference(obj);
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            Assert.False(ccwWeakReference.IsAlive);
+
+            var (_, ptr2) = CreateCCWReference(obj);
+
+            Assert.Equal(ptr, ptr2);
+        }
+
         class ManagedProperties : IProperties1
         {
             private readonly int _value;

@@ -118,12 +118,18 @@ namespace WinRT
             {
                 // TODO: Handle delegate passed as IInspectable
             }
-            return ObjectReference<IUnknownVftbl>.FromAbi(ComWrapperCache.GetValue(obj, _ => new ComCallableWrapper(obj)).IdentityPtr);
+            var wrapper = ComWrapperCache.GetValue(obj, _ => new ComCallableWrapper(obj));
+            var objRef = ObjectReference<IUnknownVftbl>.FromAbi(wrapper.IdentityPtr);
+            GC.KeepAlive(wrapper); // This GC.KeepAlive ensures that a newly created wrapper is alive until objRef is created and has AddRef'd the CCW.
+            return objRef;
         }
 
         public static IObjectReference CreateCCWForDelegate(IntPtr invoke, global::System.Delegate del)
         {
-            return ObjectReference<IDelegateVftbl>.FromAbi(DelegateWrapperCache.GetValue(del, _ => new Delegate(invoke, del)).ThisPtr);
+            var wrapper = DelegateWrapperCache.GetValue(obj, _ => new Delegate(obj));
+            var objRef = ObjectReference<IDelegateVftbl>.FromAbi(wrapper.ThisPtr);
+            GC.KeepAlive(wrapper); // This GC.KeepAlive ensures that a newly created wrapper is alive until objRef is created and has AddRef'd the CCW.
+            return objRef;
         }
 
         public static T FindObject<T>(IntPtr thisPtr)
@@ -158,10 +164,6 @@ namespace WinRT
         {
             return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).Release();
         }
-
-        internal static void RemoveReleasedComWrapper(object obj) => ComWrapperCache.Remove(obj);
-
-        internal static void RemoveReleasedComWrapper(global::System.Delegate del) => DelegateWrapperCache.Remove(del);
     }
 
     struct ComInterfaceEntry
@@ -183,10 +185,82 @@ namespace WinRT
         }
     }
 
-    internal class ComCallableWrapper
+    internal class RefCountingWrapperBase
     {
-        private readonly IntPtr _handle;
+        private volatile IntPtr _strongHandle;
+        protected GCHandle WeakHandle { get; }
         private int _refs = 0;
+
+        public RefCountingWrapperBase()
+        {
+            _strongHandle = IntPtr.Zero;
+            WeakHandle = GCHandle.Alloc(this, GCHandleType.WeakTrackResurrection);
+        }
+
+        ~RefCountingWrapperBase()
+        {
+            WeakHandle.Free();
+        }
+
+        internal uint AddRef()
+        {
+            uint refs = (uint)System.Threading.Interlocked.Increment(ref _refs);
+            // We now own a reference. Let's try to create a strong handle if we don't already have one.
+            if (_strongHandle == IntPtr.Zero)
+            {
+                GCHandle strongHandle = GCHandle.Alloc(this);
+                IntPtr previousStrongHandle = Interlocked.CompareExchange(ref _strongHandle, GCHandle.ToIntPtr(strongHandle), IntPtr.Zero);
+                if (previousStrongHandle != IntPtr.Zero)
+                {
+                    // We lost the race and someone else set the strong handle.
+                    // Release our strong handle.
+                    strongHandle.Free();
+                }
+            }
+            return refs;
+        }
+
+        internal uint Release()
+        {
+            if (_refs == 0)
+            {
+                throw new InvalidOperationException("WinRT wrapper has been over-released!");
+            }
+
+            var refs = (uint)System.Threading.Interlocked.Decrement(ref _refs);
+            if (refs == 0)
+            {
+                IntPtr currentStrongHandle = _strongHandle;
+                // No more references. We need to remove the strong reference to make sure we don't stay alive forever.
+                // Only remove the strong handle if someone else doesn't change the strong handle
+                // If the strong handle changes, then someone else released and re-acquired the strong handle, meaning someone is holding a reference
+                IntPtr oldStrongHandle = Interlocked.CompareExchange(ref _strongHandle, IntPtr.Zero, currentStrongHandle);
+                // If _refs != 0, then someone AddRef'd this back from zero
+                // so we can't release this handle.
+                if (oldStrongHandle == currentStrongHandle)
+                {
+                    if (_refs == 0)
+                    {
+                        GCHandle.FromIntPtr(currentStrongHandle).Free();
+                    }
+                    else
+                    {
+                        // We took away the strong handle but someone AddRef'd. We need to put the handle back if it's still IntPtr.Zero
+                        oldStrongHandle = Interlocked.CompareExchange(ref _strongHandle, currentStrongHandle, IntPtr.Zero);
+                        if (oldStrongHandle != IntPtr.Zero)
+                        {
+                            // Someone allocated another strong handle in the meantime, we can release ours.
+                            GCHandle.FromIntPtr(currentStrongHandle).Free();
+                        }
+                    }
+                }
+            }
+            return refs;
+        }
+    }
+
+    internal class ComCallableWrapper : RefCountingWrapperBase
+    {
         private Dictionary<Guid, IntPtr> _managedQITable;
 
         public object ManagedObject { get; }
@@ -212,10 +286,18 @@ namespace WinRT
                 Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
             });
 
-            _handle = GCHandle.ToIntPtr(GCHandle.Alloc(this));
             InitializeManagedQITable(interfaceTableEntries);
 
             IdentityPtr = _managedQITable[typeof(IUnknownVftbl).GUID];
+        }
+
+        ~ComCallableWrapper()
+        {
+            foreach (var obj in _managedQITable.Values)
+            {
+                Marshal.FreeCoTaskMem(obj);
+            }
+            _managedQITable.Clear();
         }
 
         private void InitializeManagedQITable(List<ComInterfaceEntry> entries)
@@ -227,30 +309,10 @@ namespace WinRT
                 {
                     UnmanagedObject* ifaceTearOff = (UnmanagedObject*)Marshal.AllocCoTaskMem(sizeof(UnmanagedObject));
                     ifaceTearOff->_vftblPtr = entry.Vtable;
-                    ifaceTearOff->_gchandlePtr = _handle;
+                    ifaceTearOff->_gchandlePtr = GCHandle.ToIntPtr(WeakHandle);
                     _managedQITable.Add(entry.IID, (IntPtr)ifaceTearOff);
                 }
             }
-        }
-
-        internal uint AddRef()
-        {
-            return (uint)System.Threading.Interlocked.Increment(ref _refs);
-        }
-
-        internal uint Release()
-        {
-            if (_refs == 0)
-            {
-                throw new InvalidOperationException("WinRT.ComCallableWrapper has been over-released!");
-            }
-
-            var refs = (uint)System.Threading.Interlocked.Decrement(ref _refs);
-            if (refs == 0)
-            {
-                Cleanup();
-            }
-            return refs;
         }
 
         internal int QueryInterface(Guid iid, out IntPtr ptr)
@@ -263,20 +325,9 @@ namespace WinRT
             }
             return E_NOINTERFACE;
         }
-
-        private void Cleanup()
-        {
-            ComWrappersSupport.RemoveReleasedComWrapper(ManagedObject);
-            foreach (var obj in _managedQITable.Values)
-            {
-                Marshal.FreeCoTaskMem(obj);
-            }
-            _managedQITable.Clear();
-            GCHandle.FromIntPtr(_handle).Free();
-        }
     }
 
-    partial class Delegate
+    partial class Delegate : RefCountingWrapperBase
     {
         private static Delegate FindObject(IntPtr thisPtr) => UnmanagedObject.FindObject<Delegate>(thisPtr);
 
@@ -310,27 +361,6 @@ namespace WinRT
             return FindObject(thisPtr).Release();
         }
 
-        // IUnknown
-        uint AddRef()
-        {
-            return (uint)System.Threading.Interlocked.Increment(ref _refs);
-        }
-
-        uint Release()
-        {
-            if (_refs == 0)
-            {
-                throw new InvalidOperationException("WinRT.Delegate has been over-released!");
-            }
-
-            var refs = System.Threading.Interlocked.Decrement(ref _refs);
-            if (refs == 0)
-            {
-                _Dispose();
-            }
-            return (uint)refs;
-        }
-
         static IDelegateVftbl _vftblTemplate;
         static Delegate()
         {
@@ -340,9 +370,7 @@ namespace WinRT
             _vftblTemplate.Release = Marshal.GetFunctionPointerForDelegate(_Release);
             _vftblTemplate.Invoke = IntPtr.Zero;
         }
-    
-        int _refs = 0;
-        readonly GCHandle _thisHandle;
+
         readonly UnmanagedObject _unmanagedObj;
         public readonly IntPtr ThisPtr;
         public global::System.Delegate Target { get; }
@@ -362,8 +390,7 @@ namespace WinRT
             Marshal.StructureToPtr(vftbl, _unmanagedObj._vftblPtr, false);
 
             Target = target_invoker;
-            _thisHandle = GCHandle.Alloc(this);
-            _unmanagedObj._gchandlePtr = GCHandle.ToIntPtr(_thisHandle);
+            _unmanagedObj._gchandlePtr = GCHandle.ToIntPtr(WeakHandle);
 
             ThisPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf(_unmanagedObj));
             Marshal.StructureToPtr(_unmanagedObj, ThisPtr, false);
@@ -371,22 +398,7 @@ namespace WinRT
 
         ~Delegate()
         {
-            _Dispose();
-        }
-
-        public void _Dispose()
-        {
-            if (_refs != 0)
-            {
-                throw new InvalidOperationException("WinRT.Delegate has been leaked!");
-            }
-
-            ComWrappersSupport.RemoveReleasedComWrapper(Target);
-
             Marshal.FreeCoTaskMem(ThisPtr);
-            _thisHandle.Free();
-
-            GC.SuppressFinalize(this);
         }
     }
 #endif
