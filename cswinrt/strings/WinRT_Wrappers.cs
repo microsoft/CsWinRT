@@ -20,6 +20,8 @@ namespace WinRT
 {
     public static partial class ComWrappersSupport
     {
+        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
+
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, System.Delegate
         {
@@ -90,6 +92,153 @@ namespace WinRT
                 interfaceTableEntries);
         }
 
+        internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
+        {
+            var (implementationType, _) = FindTypeByName(runtimeClassName);
+
+            Type classType;
+            Type interfaceType;
+            Type vftblType;
+            if (implementationType.IsInterface)
+            {
+                classType = null;
+                interfaceType = FindTypeByName("ABI." + runtimeClassName).type ??
+                    throw new TypeLoadException($"Unable to find an ABI implementation for the type '{runtimeClassName}'");
+                vftblType = interfaceType.GetNestedType("Vftbl") ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
+                if (vftblType.IsGenericTypeDefinition)
+                {
+                    vftblType = vftblType.MakeGenericType(interfaceType.GetGenericArguments());
+                }
+            }
+            else
+            {
+                classType = implementationType;
+                interfaceType = classType.GetField("_default", BindingFlags.Instance | BindingFlags.NonPublic)?.FieldType;
+                if (interfaceType is null)
+                {
+                    throw new TypeLoadException($"Unable to create a runtime wrapper for a WinRT object of type '{runtimeClassName}'. This type is not a projected type.");
+                }
+                vftblType = interfaceType.GetNestedType("Vftbl") ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
+            }
+
+            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
+            var createInterfaceInstanceExpression = Expression.New(interfaceType.GetConstructor(new[] { typeof(ObjectReference<>).MakeGenericType(vftblType) }),
+                    Expression.Call(parms[0],
+                        typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
+
+            if (classType is null)
+            {
+                return Expression.Lambda<Func<IInspectable, object>>(createInterfaceInstanceExpression, parms).Compile();
+            }
+
+            return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.New(classType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { interfaceType }, null),
+                    createInterfaceInstanceExpression),
+                parms).Compile();
+        }
+
+        private static (Type type, int remaining) FindTypeByName(string runtimeClassName)
+        {
+            var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
+            return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
+        }
+
+        private static Type FindTypeByNameCore(string runtimeClassName, Type[] genericTypes)
+        {
+            // TODO: This implementation is a strawman implementation.
+            // It's missing support for types not loaded in the default ALC.
+            if (genericTypes is null)
+            {
+                Type primitiveType = ResolvePrimitiveType(runtimeClassName);
+                if (primitiveType is object)
+                {
+                    return primitiveType;
+                }
+            }
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                Type type = assembly.GetType(runtimeClassName);
+                if (type is object)
+                {
+                    if (genericTypes != null)
+                    {
+                        type = type.MakeGenericType(genericTypes);
+                    }
+                    return type;
+                }
+            }
+            throw new TypeLoadException($"Unable to find a type named '{runtimeClassName}'");
+        }
+
+        private static Type ResolvePrimitiveType(string primitiveTypeName)
+        {
+            return primitiveTypeName switch
+            {
+                "UInt8" => typeof(byte),
+                "Int8" => typeof(sbyte),
+                "UInt16" => typeof(ushort),
+                "Int16" => typeof(short),
+                "UInt32" => typeof(uint),
+                "Int32" => typeof(int),
+                "UInt64" => typeof(ulong),
+                "Int64" => typeof(long),
+                "Boolean" => typeof(bool),
+                "String" => typeof(string),
+                "Char" => typeof(char),
+                "Single" => typeof(float),
+                "Double" => typeof(double),
+                "Guid" => typeof(Guid),
+                "Object" => typeof(object),
+                _ => null
+            };
+        }
+
+        // TODO: Use types from System.Memory to eliminate allocations of intermediate strings.
+        private static (string genericTypeName, Type[] genericTypes, int remaining) ParseGenericTypeName(string partialTypeName)
+        {
+            int possibleEndOfSimpleTypeName = partialTypeName.IndexOfAny(new[] { ',', '>' });
+            int endOfSimpleTypeName = partialTypeName.Length;
+            if (possibleEndOfSimpleTypeName != -1)
+            {
+                endOfSimpleTypeName = possibleEndOfSimpleTypeName;
+            }
+            string typeName = partialTypeName.Substring(0, endOfSimpleTypeName);
+
+            if (!typeName.Contains('`'))
+            {
+                return (typeName.ToString(), null, endOfSimpleTypeName);
+            }
+
+            int genericTypeListStart = partialTypeName.IndexOf('<');
+            string genericTypeName = partialTypeName.Substring(0, genericTypeListStart);
+            string remaining = partialTypeName.Substring(genericTypeListStart + 1);
+            int remainingIndex = genericTypeListStart + 1;
+            List<Type> genericTypes = new List<Type>();
+            while (true)
+            {
+                var (genericType, endOfGenericArgument) = FindTypeByName(remaining);
+                remainingIndex += endOfGenericArgument;
+                genericTypes.Add(genericType);
+                remaining = remaining.Substring(endOfGenericArgument);
+                if (remaining[0] == ',')
+                {
+                    // Skip the comma and the space in the type name.
+                    remainingIndex += 2;
+                    remaining = remaining.Substring(2);
+                    continue;
+                }
+                else if (remaining[0] == '>')
+                {
+                    break;
+                }
+                else
+                {
+                    throw new InvalidOperationException("The provided type name is invalid.");
+                }
+            }
+            return (genericTypeName, genericTypes.ToArray(), partialTypeName.Length - remaining.Length);
+        }
+
         internal class InspectableInfo
         {
             public readonly string RuntimeClassName;
@@ -110,7 +259,47 @@ namespace WinRT
         private static ConditionalWeakTable<object, ComCallableWrapper> ComWrapperCache = new ConditionalWeakTable<object, ComCallableWrapper>();
         private static ConditionalWeakTable<object, Delegate> DelegateWrapperCache = new ConditionalWeakTable<object, Delegate>();
 
+        private static ConcurrentDictionary<IntPtr, WeakReference<object>> RuntimeWrapperCache = new ConcurrentDictionary<IntPtr, WeakReference<object>>();
+
         internal static InspectableInfo GetInspectableInfo(IntPtr pThis) => UnmanagedObject.FindObject<ComCallableWrapper>(pThis).InspectableInfo;
+
+        public static object CreateRcwForComObject(IntPtr ptr)
+        {
+            if (ptr == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            IObjectReference identity = ObjectReference<IUnknownVftbl>.Attach(ref ptr).As<IUnknownVftbl>();
+
+            object keepAliveSentinel = null;
+
+            Func<IntPtr, IObjectReference, WeakReference<object>> rcwFactory = (_, objRef) =>
+            {
+                var inspectable = new IInspectable(objRef);
+                string runtimeClassName = inspectable.GetRuntimeClassName();
+                var runtimeWrapper = TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
+                keepAliveSentinel = runtimeWrapper; // We don't take a strong reference on runtimeWrapper at any point, so we need to make sure it lives until it can get assigned to rcw.
+                var cleanupSentinel = new RuntimeWrapperCleanup(identity.ThisPtr, new WeakReference(runtimeWrapper));
+                return new WeakReference<object>(runtimeWrapper);
+            };
+
+            RuntimeWrapperCache.AddOrUpdate(
+                identity.ThisPtr,
+                rcwFactory,
+                (ptr, oldValue, objRef) =>
+                {
+                    if (!oldValue.TryGetTarget(out keepAliveSentinel))
+                    {
+                        return rcwFactory(ptr, objRef);
+                    }
+                    return oldValue;
+                },
+                identity).TryGetTarget(out object rcw);
+
+            GC.KeepAlive(keepAliveSentinel);
+            return rcw;
+        }
 
         public static IObjectReference CreateCCWForObject(object obj)
         {
@@ -126,7 +315,7 @@ namespace WinRT
 
         public static IObjectReference CreateCCWForDelegate(IntPtr invoke, global::System.Delegate del)
         {
-            var wrapper = DelegateWrapperCache.GetValue(obj, _ => new Delegate(obj));
+            var wrapper = DelegateWrapperCache.GetValue(del, _ => new Delegate(invoke, del));
             var objRef = ObjectReference<IDelegateVftbl>.FromAbi(wrapper.ThisPtr);
             GC.KeepAlive(wrapper); // This GC.KeepAlive ensures that a newly created wrapper is alive until objRef is created and has AddRef'd the CCW.
             return objRef;
@@ -163,6 +352,31 @@ namespace WinRT
         private static uint Do_Abi_Release(IntPtr pThis)
         {
             return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).Release();
+        }
+
+        private class RuntimeWrapperCleanup
+        {
+            public IntPtr _identityComObject;
+            public WeakReference _runtimeWrapper;
+
+            public RuntimeWrapperCleanup(IntPtr identityComObject, object runtimeWrapper)
+            {
+                _identityComObject = identityComObject;
+                _runtimeWrapper = new WeakReference(runtimeWrapper);
+            }
+            ~RuntimeWrapperCleanup()
+            {
+                // If runtimeWrapper is still alive, then we need to go back into the finalization queue
+                // so we can check again later.
+                if (_runtimeWrapper.IsAlive)
+                {
+                    GC.ReRegisterForFinalize(this);
+                }
+                else
+                {
+                    RuntimeWrapperCache.TryRemove(_identityComObject, out var _);
+                }
+            }
         }
     }
 
