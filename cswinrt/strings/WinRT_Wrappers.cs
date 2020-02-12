@@ -280,8 +280,9 @@ namespace WinRT
                 string runtimeClassName = inspectable.GetRuntimeClassName();
                 var runtimeWrapper = TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
                 keepAliveSentinel = runtimeWrapper; // We don't take a strong reference on runtimeWrapper at any point, so we need to make sure it lives until it can get assigned to rcw.
-                var cleanupSentinel = new RuntimeWrapperCleanup(identity.ThisPtr, new WeakReference(runtimeWrapper));
-                return new WeakReference<object>(runtimeWrapper);
+                var runtimeWrapperReference = new WeakReference<object>(runtimeWrapper);
+                var cleanupSentinel = new RuntimeWrapperCleanup(identity.ThisPtr, runtimeWrapperReference);
+                return runtimeWrapperReference;
             };
 
             RuntimeWrapperCache.AddOrUpdate(
@@ -299,6 +300,13 @@ namespace WinRT
 
             GC.KeepAlive(keepAliveSentinel);
             return rcw;
+        }
+    
+        public static void RegisterObjectForInterface(object obj, IntPtr thisPtr)
+        {
+            var referenceWrapper = new WeakReference<object>(obj);
+            var _ = new RuntimeWrapperCleanup(thisPtr, referenceWrapper);
+            RuntimeWrapperCache.TryAdd(thisPtr, referenceWrapper);
         }
 
         public static IObjectReference CreateCCWForObject(object obj)
@@ -328,10 +336,6 @@ namespace WinRT
         internal static T FindDelegate<T>(IntPtr thisPtr)
             where T : class, System.Delegate => (T)(UnmanagedObject.FindObject<Delegate>(thisPtr).Target);
 
-        public static void RegisterObjectForInterface(object obj, IntPtr thisPtr)
-        {
-        }
-
         public static IUnknownVftbl IUnknownVftbl { get; } = new IUnknownVftbl
         {
             QueryInterface = Do_Abi_QueryInterface,
@@ -357,24 +361,24 @@ namespace WinRT
         private class RuntimeWrapperCleanup
         {
             public IntPtr _identityComObject;
-            public WeakReference _runtimeWrapper;
+            public WeakReference<object> _runtimeWrapper;
 
-            public RuntimeWrapperCleanup(IntPtr identityComObject, object runtimeWrapper)
+            public RuntimeWrapperCleanup(IntPtr identityComObject, WeakReference<object> runtimeWrapper)
             {
                 _identityComObject = identityComObject;
-                _runtimeWrapper = new WeakReference(runtimeWrapper);
+                _runtimeWrapper = runtimeWrapper;
             }
             ~RuntimeWrapperCleanup()
             {
                 // If runtimeWrapper is still alive, then we need to go back into the finalization queue
                 // so we can check again later.
-                if (_runtimeWrapper.IsAlive)
+                if (_runtimeWrapper.TryGetTarget(out var _))
                 {
                     GC.ReRegisterForFinalize(this);
                 }
                 else
                 {
-                    RuntimeWrapperCache.TryRemove(_identityComObject, out var _);
+                    ((ICollection<KeyValuePair<IntPtr, WeakReference<object>>>)RuntimeWrapperCache).Remove(new KeyValuePair<IntPtr, WeakReference<object>>(_identityComObject, _runtimeWrapper));
                 }
             }
         }
@@ -420,15 +424,14 @@ namespace WinRT
         {
             uint refs = (uint)System.Threading.Interlocked.Increment(ref _refs);
             // We now own a reference. Let's try to create a strong handle if we don't already have one.
-            if (_strongHandle == IntPtr.Zero)
+            if (refs == 1)
             {
                 GCHandle strongHandle = GCHandle.Alloc(this);
-                IntPtr previousStrongHandle = Interlocked.CompareExchange(ref _strongHandle, GCHandle.ToIntPtr(strongHandle), IntPtr.Zero);
+                IntPtr previousStrongHandle = Interlocked.Exchange(ref _strongHandle, GCHandle.ToIntPtr(strongHandle));
                 if (previousStrongHandle != IntPtr.Zero)
                 {
-                    // We lost the race and someone else set the strong handle.
-                    // Release our strong handle.
-                    strongHandle.Free();
+                    // We've set a new handle. Release the old strong handle if there was one.
+                    GCHandle.FromIntPtr(previousStrongHandle).Free();
                 }
             }
             return refs;
@@ -441,10 +444,10 @@ namespace WinRT
                 throw new InvalidOperationException("WinRT wrapper has been over-released!");
             }
 
+            IntPtr currentStrongHandle = _strongHandle;
             var refs = (uint)System.Threading.Interlocked.Decrement(ref _refs);
             if (refs == 0)
             {
-                IntPtr currentStrongHandle = _strongHandle;
                 // No more references. We need to remove the strong reference to make sure we don't stay alive forever.
                 // Only remove the strong handle if someone else doesn't change the strong handle
                 // If the strong handle changes, then someone else released and re-acquired the strong handle, meaning someone is holding a reference
@@ -453,20 +456,7 @@ namespace WinRT
                 // so we can't release this handle.
                 if (oldStrongHandle == currentStrongHandle)
                 {
-                    if (_refs == 0)
-                    {
-                        GCHandle.FromIntPtr(currentStrongHandle).Free();
-                    }
-                    else
-                    {
-                        // We took away the strong handle but someone AddRef'd. We need to put the handle back if it's still IntPtr.Zero
-                        oldStrongHandle = Interlocked.CompareExchange(ref _strongHandle, currentStrongHandle, IntPtr.Zero);
-                        if (oldStrongHandle != IntPtr.Zero)
-                        {
-                            // Someone allocated another strong handle in the meantime, we can release ours.
-                            GCHandle.FromIntPtr(currentStrongHandle).Free();
-                        }
-                    }
+                    GCHandle.FromIntPtr(currentStrongHandle).Free();
                 }
             }
             return refs;

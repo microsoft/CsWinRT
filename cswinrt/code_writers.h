@@ -940,7 +940,10 @@ internal static % Instance => _instance.Value;
             {
                 method_signature signature{ method };
                 w.write(R"(
-public %(%) : this(%.%(%)._default) {}
+public %(%) : this(%.%(%)._default)
+{
+    ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+}
 )",
                     class_type.TypeName(),
                     bind_list<write_projection_parameter>(", ", signature.params()),
@@ -953,7 +956,10 @@ public %(%) : this(%.%(%)._default) {}
         {
             auto default_interface_name = get_default_interface_name(w, class_type);
             w.write(R"(
-public %() : this(new %(ActivationFactory<%>.ActivateInstance<%.Vftbl>())){}
+public %() : this(new %(ActivationFactory<%>.ActivateInstance<%.Vftbl>()))
+{
+    ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+}
 )",
                 class_type.TypeName(),
                 default_interface_name,
@@ -979,7 +985,10 @@ public %(%) : this(((Func<%>)(() => {
 object baseInspectable = null;
 object innerInspectable;
 return %.%(%%baseInspectable, out innerInspectable)._default;
-}))()){}
+}))())
+{
+    ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+}
 )",
                 class_type.TypeName(),
                 bind_list<write_projection_parameter>(", ", params_without_objects),
