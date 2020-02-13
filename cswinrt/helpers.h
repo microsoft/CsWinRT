@@ -434,6 +434,7 @@ namespace cswinrt
             std::initializer_list<mapped_type> types;
         } mapped_types[] =
         {
+            // Make sure to keep this table consistent with the table in WinRT_Wrappers.cs
             // NOTE: Must keep namespaces sorted (outer) and abi type names sorted (inner)
             { "Windows.Foundation",
                 {

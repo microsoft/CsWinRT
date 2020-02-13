@@ -21,6 +21,17 @@ namespace WinRT
     public static partial class ComWrappersSupport
     {
         private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
+        private readonly static IReadOnlyDictionary<string, string> TypeMappings;
+
+        static ComWrappersSupport()
+        {
+            // Make sure to keep this consistent with the table in helpers.h
+            TypeMappings = new Dictionary<string, string>
+            {
+                { "Windows.Foundation.DateTime", "System.DateTimeOffset" },
+                { "Windows.Foundation.TimeSpan", "System.TimeSpan" }
+            };
+        }
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, System.Delegate
@@ -147,6 +158,12 @@ namespace WinRT
         {
             // TODO: This implementation is a strawman implementation.
             // It's missing support for types not loaded in the default ALC.
+
+            if (TypeMappings.TryGetValue(runtimeClassName, out string mappedClassName))
+            {
+                return FindTypeByNameCore(mappedClassName, genericTypes);
+            }
+
             if (genericTypes is null)
             {
                 Type primitiveType = ResolvePrimitiveType(runtimeClassName);
@@ -155,6 +172,7 @@ namespace WinRT
                     return primitiveType;
                 }
             }
+
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 Type type = assembly.GetType(runtimeClassName);
@@ -167,6 +185,7 @@ namespace WinRT
                     return type;
                 }
             }
+
             throw new TypeLoadException($"Unable to find a type named '{runtimeClassName}'");
         }
 
