@@ -466,7 +466,7 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestCCWLifetime()
+        public void TestInterfaceCCWLifetime()
         {
             static (WeakReference, IObjectReference) CreateCCW()
             {
