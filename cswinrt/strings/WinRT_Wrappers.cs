@@ -105,7 +105,7 @@ namespace WinRT
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
         {
-            var (implementationType, _) = FindTypeByName(runtimeClassName);
+            var (implementationType, _) = FindTypeByName(runtimeClassName.AsSpan());
 
             Type classType;
             Type interfaceType;
@@ -113,7 +113,7 @@ namespace WinRT
             if (implementationType.IsInterface)
             {
                 classType = null;
-                interfaceType = FindTypeByName("ABI." + runtimeClassName).type ??
+                interfaceType = FindTypeByName(("ABI." + runtimeClassName).AsSpan()).type ??
                     throw new TypeLoadException($"Unable to find an ABI implementation for the type '{runtimeClassName}'");
                 vftblType = interfaceType.GetNestedType("Vftbl") ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
                 if (vftblType.IsGenericTypeDefinition)
@@ -148,7 +148,7 @@ namespace WinRT
                 parms).Compile();
         }
 
-        private static (Type type, int remaining) FindTypeByName(string runtimeClassName)
+        private static (Type type, int remaining) FindTypeByName(ReadOnlySpan<char> runtimeClassName)
         {
             var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
             return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
@@ -212,8 +212,7 @@ namespace WinRT
             };
         }
 
-        // TODO: Use types from System.Memory to eliminate allocations of intermediate strings.
-        private static (string genericTypeName, Type[] genericTypes, int remaining) ParseGenericTypeName(string partialTypeName)
+        private static (string genericTypeName, Type[] genericTypes, int remaining) ParseGenericTypeName(ReadOnlySpan<char> partialTypeName)
         {
             int possibleEndOfSimpleTypeName = partialTypeName.IndexOfAny(new[] { ',', '>' });
             int endOfSimpleTypeName = partialTypeName.Length;
@@ -221,16 +220,16 @@ namespace WinRT
             {
                 endOfSimpleTypeName = possibleEndOfSimpleTypeName;
             }
-            string typeName = partialTypeName.Substring(0, endOfSimpleTypeName);
+            var typeName = partialTypeName.Slice(0, endOfSimpleTypeName);
 
-            if (!typeName.Contains('`'))
+            if (!typeName.Contains("`".AsSpan(), StringComparison.Ordinal))
             {
                 return (typeName.ToString(), null, endOfSimpleTypeName);
             }
 
             int genericTypeListStart = partialTypeName.IndexOf('<');
-            string genericTypeName = partialTypeName.Substring(0, genericTypeListStart);
-            string remaining = partialTypeName.Substring(genericTypeListStart + 1);
+            var genericTypeName = partialTypeName.Slice(0, genericTypeListStart);
+            var remaining = partialTypeName.Slice(genericTypeListStart + 1);
             int remainingIndex = genericTypeListStart + 1;
             List<Type> genericTypes = new List<Type>();
             while (true)
@@ -238,12 +237,12 @@ namespace WinRT
                 var (genericType, endOfGenericArgument) = FindTypeByName(remaining);
                 remainingIndex += endOfGenericArgument;
                 genericTypes.Add(genericType);
-                remaining = remaining.Substring(endOfGenericArgument);
+                remaining = remaining.Slice(endOfGenericArgument);
                 if (remaining[0] == ',')
                 {
                     // Skip the comma and the space in the type name.
                     remainingIndex += 2;
-                    remaining = remaining.Substring(2);
+                    remaining = remaining.Slice(2);
                     continue;
                 }
                 else if (remaining[0] == '>')
@@ -255,7 +254,7 @@ namespace WinRT
                     throw new InvalidOperationException("The provided type name is invalid.");
                 }
             }
-            return (genericTypeName, genericTypes.ToArray(), partialTypeName.Length - remaining.Length);
+            return (genericTypeName.ToString(), genericTypes.ToArray(), partialTypeName.Length - remaining.Length);
         }
 
         internal class InspectableInfo
