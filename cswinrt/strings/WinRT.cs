@@ -797,11 +797,6 @@ namespace WinRT
             _removeHandler = removeHandler;
         }
 
-        ~EventSource()
-        {
-            _UnsubscribeFromNative();
-        }
-
         void _UnsubscribeFromNative()
         {
             Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
