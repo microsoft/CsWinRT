@@ -430,8 +430,7 @@ namespace UnitTest
             for (uint i = 0; i < 3; ++i)
             {
                 var obj = objs.GetAt(i);
-                // TODO: Validate that each item 'is' TestObject (RCW caching)
-                //Assert.Same(obj, TestObject);
+                Assert.Same(obj, TestObject);
                 Assert.Equal(42, obj.ReadWriteProperty);
             }
         }
@@ -444,8 +443,7 @@ namespace UnitTest
             for (uint i = 0; i < 3; ++i)
             {
                 var obj = objs.GetAt(i);
-                // TODO: Validate that each item 'is' TestObject (RCW caching)
-                //Assert.Same(obj, TestObject);
+                Assert.Same(obj, TestObject);
                 Assert.Equal(TestObject.ThisPtr, objs.GetAt(i).ThisPtr);
             }
         }

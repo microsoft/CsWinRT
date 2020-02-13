@@ -3142,19 +3142,26 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 
         w.write(R"(public struct %
 {
-public static % FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
+public static IObjectReference CreateMarshaler(% obj) => MarshalInterface<%>.CreateMarshaler(obj);
+public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
+public static % FromAbi(IntPtr thisPtr) => (%)MarshalInspectable.FromAbi(thisPtr);
 public static IntPtr FromManaged(% obj) => MarshalInterface<%>.FromManaged(obj);
 public static (int length, IntPtr data) FromManagedArray(%[] obj) => MarshalInterface<%>.FromManagedArray(obj);
+public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<%>.DisposeMarshaler(value);
+public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<%>.DisposeAbi(abi);
 }
 )",
             abi_type_name,
             projected_type_name,
+            default_interface_name,
+            default_interface_name,
             projected_type_name,
-            default_interface_abi_name,
-            default_interface_abi_name,
+            projected_type_name,
             projected_type_name,
             default_interface_name,
             projected_type_name,
+            default_interface_name,
+            default_interface_name,
             default_interface_name);
     }
 

@@ -715,7 +715,15 @@ namespace WinRT
             {
                 return (T)(object)null;
             }
-            // TODO: Check if the value is a CCW and return the underlying object.
+
+            object primaryManagedWrapper = MarshalInspectable.FromAbi(ptr);
+
+            if (primaryManagedWrapper is T obj)
+            {
+                return obj;
+            }
+            // If the metadata type doesn't implement the interface, then create a tear-off RCW.
+            // TODO: Uniqueness of tear-offs?
             if (_FromAbi == null)
             {
                 _FromAbi = BindFromAbi();
@@ -837,6 +845,10 @@ namespace WinRT
 
         public static object FromAbi(IntPtr ptr)
         {
+            if (ptr == IntPtr.Zero)
+            {
+                return (object)null;
+            }
             return ComWrappersSupport.CreateRcwForComObject(ptr);
         }
 
@@ -1007,36 +1019,13 @@ namespace WinRT
             else // class type
             {
                 AbiType = typeof(IntPtr);
-                var interfaceAbiType = type.GetField("_default", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.FieldType;
-                if (interfaceAbiType is null)
-                {
-                    throw new ArgumentException($"Unable to marshal non-WinRT class: '{type.FullName}'");
-                }
-                CreateMarshaler = (T value) => value;
-                GetAbi = BindClassGetAbi();
-                FromAbi = BindClassFromAbi(interfaceAbiType);
-                DisposeMarshaler = (object box) => { };
+                CreateMarshaler = MarshalGeneric<T>.CreateMarshaler;
+                GetAbi = MarshalGeneric<T>.GetAbi;
+                FromAbi = MarshalGeneric<T>.FromAbi;
+                DisposeMarshaler = MarshalGeneric<T>.DisposeMarshaler;
                 DisposeAbi = (object box) => { };
             }
             RefAbiType = AbiType.MakeByRefType();
-        }
-
-        private static Func<object, T> BindClassFromAbi(Type AbiType)
-        {
-            var fromAbiMethod = AbiType.GetMethod("FromAbi");
-            var objReferenceConstructor = AbiType.GetConstructor(new[] { fromAbiMethod.ReturnType });
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Func<object, T>>(
-                Expression.New(
-                    typeof(T).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance, null, new[] { AbiType }, null),
-                    Expression.New(objReferenceConstructor,
-                        Expression.Call(fromAbiMethod, Expression.Convert(parms[0], typeof(IntPtr))))), parms).Compile();
-        }
-
-        private static Func<object, object> BindClassGetAbi()
-        {
-            var thisPtrField = (Func<T, IntPtr>)typeof(T).GetProperty("ThisPtr").GetMethod.CreateDelegate(typeof(Func<T, IntPtr>));
-            return (object value) => (object)thisPtrField((T)value);
         }
 
         public static readonly Type AbiType;
