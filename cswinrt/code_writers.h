@@ -937,7 +937,10 @@ internal static % Instance => _instance.Value;
             {
                 method_signature signature{ method };
                 w.write(R"(
-public %(%) : this(%.Attach(%.%(%)))
+public %(%) : this(((Func<%>)(() => {
+IntPtr ptr = (%.%(%));
+return new %(ObjectReference<%.Vftbl>.Attach(ref ptr));
+}))())
 {
     ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
@@ -947,7 +950,9 @@ public %(%) : this(%.Attach(%.%(%)))
                     default_interface_name,
                     cache_object,
                     method.Name(),
-                    bind_list<write_parameter_name_with_modifier>(", ", signature.params(), true));
+                    bind_list<write_parameter_name_with_modifier>(", ", signature.params(), true),
+                    default_interface_name,
+                    default_interface_name);
             }
         }
         else
@@ -955,7 +960,7 @@ public %(%) : this(%.Attach(%.%(%)))
             w.write(R"(
 public %() : this(new %(ActivationFactory<%>.ActivateInstance<%.Vftbl>()))
 {
-    ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
 )",
                 class_type.TypeName(),
@@ -981,17 +986,22 @@ public %() : this(new %(ActivationFactory<%>.ActivateInstance<%.Vftbl>()))
 public %(%) : this(((Func<%>)(() => {
 object baseInspectable = null;
 object innerInspectable;
-return %.Attach(%.%(%%baseInspectable, out innerInspectable));
-}))()){}
+IntPtr ptr = %.%(%%baseInspectable, out innerInspectable);
+return new %(ObjectReference<%.Vftbl>.Attach(ref ptr));
+}))())
+{
+ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+}
 )",
                 class_type.TypeName(),
                 bind_list<write_projection_parameter>(", ", params_without_objects),
                 default_interface_name,
-                default_interface_name,
                 cache_object,
                 method.Name(),
                 bind_list<write_parameter_name_with_modifier>(", ", params_without_objects, true),
-                [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); });
+                [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
+                default_interface_name,
+                default_interface_name);
         }
     }
 
@@ -3008,7 +3018,6 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
 internal class % : %
 {
 %
-public static % Attach(IntPtr thisPtr) => ObjectReference<Vftbl>.Attach(ref thisPtr);
 public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr)%
 public static implicit operator %(IObjectReference obj) => (obj != null) ? new %(obj) : null;
 public static implicit operator %(ObjectReference<Vftbl> obj) => (obj != null) ? new %(obj) : null;
@@ -3030,7 +3039,6 @@ _obj = obj;%
             bind<write_type_name>(type, false, false),
             // Vftbl
             bind<write_vtable>(type, type_name, generic_methods, nongenerics_class, nongeneric_delegates),
-            bind<write_type_name>(type, true, false),
             // Interface impl
             [&](writer& w) {
                 if (!is_generic)
