@@ -808,6 +808,32 @@ remove => %.% -= value;
         }
     }
 
+    auto find_attributed_type(TypeDef const& type, CustomAttributeSig const& signature)
+    {
+        for (auto&& arg : signature.FixedArgs())
+        {
+            if (auto type_param = std::get_if<ElemSig::SystemType>(&std::get<ElemSig>(arg.value).value))
+            {
+                return type.get_cache().find_required(type_param->name);
+            }
+        }
+        return TypeDef{};
+    };
+
+    auto get_attributed_type(TypeDef const& type, std::string_view attribute)
+    {
+        if (auto exclusive_to_attr = get_attribute(type, "Windows.Foundation.Metadata", attribute))
+        {
+            return find_attributed_type(type, exclusive_to_attr.Value());
+        }
+        return TypeDef{};
+    }
+
+    auto get_exclusive_to(TypeDef const& type)
+    {
+        return get_attributed_type(type, "ExclusiveToAttribute");
+    }
+
     struct attributed_type
     {
         TypeDef type;
@@ -816,22 +842,8 @@ remove => %.% -= value;
         bool composable{};
         bool visible{};
     };
-
     static auto get_attributed_types(writer& w, TypeDef const& type)
     {
-        auto get_system_type = [&](auto&& signature) -> TypeDef
-        {
-            for (auto&& arg : signature.FixedArgs())
-            {
-                if (auto type_param = std::get_if<ElemSig::SystemType>(&std::get<ElemSig>(arg.value).value))
-                {
-                    return type.get_cache().find_required(type_param->name);
-                }
-            }
-
-            return {};
-        };
-
         std::map<std::string, attributed_type> result;
 
         for (auto&& attribute : type.CustomAttribute())
@@ -848,17 +860,17 @@ remove => %.% -= value;
 
             if (attribute_name.second == "ActivatableAttribute")
             {
-                info.type = get_system_type(signature);
+                info.type = find_attributed_type(type, signature);
                 info.activatable = true;
             }
             else if (attribute_name.second == "StaticAttribute")
             {
-                info.type = get_system_type(signature);
+                info.type = find_attributed_type(type, signature);
                 info.statics = true;
             }
             else if (attribute_name.second == "ComposableAttribute")
             {
-                info.type = get_system_type(signature);
+                info.type = find_attributed_type(type, signature);
                 info.composable = true;
 
                 for (auto&& arg : signature.FixedArgs())
@@ -910,7 +922,7 @@ internal class _% : ABI.%.%
 {
 public _%() : base(%()) { }
 private static WeakLazy<_%> _instance = new WeakLazy<_%>();
-internal static % Instance => _instance.Value;
+internal static _% Instance => _instance.Value;
 }
 )",
             cache_type_name,
@@ -940,7 +952,7 @@ internal static % Instance => _instance.Value;
             {
                 method_signature signature{ method };
                 w.write(R"(
-public %(%) : this(%.%(%)._default) {}
+public %(%) : this(DefaultFromAbi(%.%_Abi(%))) {}
 )",
                     class_type.TypeName(),
                     bind_list<write_projection_parameter>(", ", signature.params()),
@@ -1218,14 +1230,9 @@ private EventSource<%> _%;)",
         }
 
         // then search peer exclusive-to interfaces and their bases
-        if (auto exclusive_to_attr = get_attribute(setter_iface, "Windows.Foundation.Metadata", "ExclusiveToAttribute"))
+        if (auto exclusive_to = get_exclusive_to(setter_iface))
         {
-            auto sig = exclusive_to_attr.Value();
-            auto const& fixed_args = sig.FixedArgs();
-            XLANG_ASSERT(fixed_args.size() == 1);
-            auto sys_type = std::get<ElemSig::SystemType>(std::get<ElemSig>(fixed_args[0].value).value);
-            auto exclusive_to_type = setter_iface.get_cache().find_required(sys_type.name);
-            if (search_interfaces(exclusive_to_type))
+            if (search_interfaces(exclusive_to))
             {
                 return { getter_iface, false };
             }
@@ -1469,7 +1476,9 @@ event % %;)",
             {
                 if (local_type == "IntPtr")
                 {
-                    w.write("%.FromAbi(%)", param_type, source);
+                    param_type == "" ?
+                        w.write("%", source) :
+                        w.write("%.FromAbi(%)", param_type, source);
                     return;
                 }
                 if (param_type == "bool")
@@ -1823,15 +1832,71 @@ finally
             }
             method_signature signature{ method };
             auto [invoke_target, is_generic] = get_method_info(method);
+
+            auto return_type = w.write_temp("%", bind<write_projection_return_type>(signature));
+
+            auto exclusive_to = get_exclusive_to(type);
+
+            bool is_factory_method{};
+            if (auto return_sig = signature.return_signature())
+            {
+                auto semantics = get_type_semantics(return_sig.Type());
+                if (auto td = std::get_if<type_definition>(&semantics))
+                {
+                    // Cannot rely solely on exclusive-to attribute as it's not consistently applied.
+                    // So check also whether this interface is an activation factory for the return type.
+                    if(exclusive_to)
+                    {
+                        is_factory_method = exclusive_to == *td;
+                    }
+                    else 
+                    {
+                        auto attributed_types = get_attributed_types(w, *td);
+                        for (auto&& attrib_type : attributed_types)
+                        {
+                            if (attrib_type.second.activatable && (attrib_type.second.type == type))
+                            {
+                                is_factory_method = true;
+                                break;
+                            }
+                        }
+                    }
+                    if(is_factory_method)
+                    {
+                        w.write(R"(
+public % %(%) =>
+    %.FromAbi(%_Abi(%));
+)",
+                            return_type,
+                            method.Name(),
+                            bind_list<write_projection_parameter>(", ", signature.params()),
+                            return_type,
+                            method.Name(),
+                            bind_list<write_parameter_name_with_modifier>(", ", signature.params(), true));
+                    }
+                }
+            }
+
+            auto marshalers = get_abi_marshalers(w, signature, is_generic);
+            if (is_factory_method)
+            {
+                auto& return_marshaler = marshalers.back();
+                return_marshaler.param_type = "";
+                return_marshaler.marshaler_type = "";
+                return_type = "IntPtr";
+            }
+            
             w.write(R"(
-public unsafe %% %(%)
+% unsafe %% %%(%)
 {%}
 )",
+                is_factory_method ? "internal" : "public",
                 (method.Name() == "ToString"sv) ? "new " : "",
-                bind<write_projection_return_type>(signature),
+                return_type,
                 method.Name(),
+                is_factory_method ? "_Abi" : "",
                 bind_list<write_projection_parameter>(", ", signature.params()),
-                bind<write_abi_method_call>(signature, invoke_target, is_generic));
+                bind<write_abi_method_call_marshalers>(signature, invoke_target, is_generic, marshalers));
         }
 
         for (auto&& prop : type.PropertyList())
@@ -2450,12 +2515,10 @@ remove => _%.Unsubscribe(value);
         auto return_sig = signature.return_signature();
         
         w.write(
-R"(%
-%
-try
+R"(%%try
 {
-%%%
-}
+%
+%%}
 catch (Exception __exception__)
 {
 return __exception__.HResult;
@@ -2999,7 +3062,11 @@ public %IntPtr ThisPtr => _default.ThisPtr;
 
 private % _default;
 %
-public static %% FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
+internal static %% DefaultFromAbi(IntPtr thisPtr) =>
+    new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr));
+
+public static %% FromAbi(IntPtr thisPtr) => 
+    (thisPtr != IntPtr.Zero) ? new %(DefaultFromAbi(thisPtr)) : null;
 
 internal %(% ifc)%
 {
@@ -3018,14 +3085,20 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             derived_new,
             default_interface_abi_name,
             bind<write_attributed_types>(type),
+            // DefaultFromAbi
+            derived_new,
+            default_interface_abi_name,
+            default_interface_abi_name,
+            default_interface_abi_name,
+            // FromAbi
             derived_new,
             type_name,
             type_name,
-            default_interface_abi_name,
-            default_interface_abi_name,
+            // ctor
             type_name,
             default_interface_abi_name,
             bind<write_base_constructor_dispatch>(base_semantics),
+            // AsInternal
             default_interface_name,
             default_interface_name,
             bind<write_class_members>(type));
