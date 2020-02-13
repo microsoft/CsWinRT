@@ -74,27 +74,27 @@
         foreach(var index in Input.GroupBy(item => item.GetMetadata("Index")))
         {
           foreach(ITaskItem item in index)  
-	        {  
-	          var content = item.GetMetadata("Content");
-	          var file = item.GetMetadata("File");
+          {  
+            var content = item.GetMetadata("Content");
+            var file = item.GetMetadata("File");
             var global = file.Replace('.', '_');
-	          var fileSize = new FileInfo(content).Length;
-	          lines.Add("    extern char const " + global + "[" + fileSize + "];");
-	        } 
-	        lines.Add("    static const struct");
-	        lines.Add("    {");
-	        lines.Add("        char const* name;");
-	        lines.Add("        char const* value;");
-	        lines.Add("    } " + (index.Key == "" ? "base" : index.Key.Trim('\\')) +"[] = {");
-	        var delimeter = "";
-	        foreach(ITaskItem item in index)  
-	        {  
-	          var file = item.GetMetadata("File");
+            var fileSize = new FileInfo(content).Length;
+            lines.Add("    extern char const " + global + "[" + fileSize + "];");
+          } 
+          lines.Add("    static const struct");
+          lines.Add("    {");
+          lines.Add("        char const* name;");
+          lines.Add("        char const* value;");
+          lines.Add("    } " + (index.Key == "" ? "base" : index.Key.Trim('\\')) +"[] = {");
+          var delimeter = "";
+          foreach(ITaskItem item in index)  
+          {  
+            var file = item.GetMetadata("File");
             var global = file.Replace('.', '_');
-	          lines.Add("        " + delimeter + "{\"" + file + "\", " + global + "}");
-	          delimeter = ", ";
-	        }  
-	        lines.Add("    };");
+            lines.Add("        " + delimeter + "{\"" + file + "\", " + global + "}");
+            delimeter = ", ";
+          }  
+          lines.Add("    };");
         }
         lines.Add("}");
         if (File.Exists(Header))
