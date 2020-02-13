@@ -313,7 +313,7 @@ namespace WinRT
         {
             if (obj is global::System.Delegate del)
             {
-                // TODO: Handle delegate passed as IInspectable
+                return (IObjectReference)del.GetType().GetHelperType().GetMethod("CreateMarshaler").Invoke(null, new object[] { del });
             }
             var wrapper = ComWrapperCache.GetValue(obj, _ => new ComCallableWrapper(obj));
             var objRef = ObjectReference<IUnknownVftbl>.FromAbi(wrapper.IdentityPtr);
