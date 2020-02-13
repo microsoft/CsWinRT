@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code_writers.h" />
@@ -22,12 +21,12 @@
     <Filter Include="strings">
       <UniqueIdentifier>{22759db3-c622-4dcf-855d-54153084cf6d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="strings\additions">
+      <UniqueIdentifier>{4f770820-72c5-46d5-9944-7d76ca1fe60b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="strings\WinRT.cs">
-      <Filter>strings</Filter>
-    </None>
-    <None Include="strings\WindowsFoundation.cs">
       <Filter>strings</Filter>
     </None>
     <None Include="packages.config" />
@@ -39,6 +38,12 @@
     </None>
     <None Include="strings\WinRT_Wrappers.cs">
       <Filter>strings</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Foundation.cs">
+      <Filter>strings\additions</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml.cs">
+      <Filter>strings\additions</Filter>
     </None>
   </ItemGroup>
 </Project>
