@@ -659,4 +659,92 @@ namespace winrt::TestComponentCSharp::implementation
     {
         ReadWriteProperty(src.ReadWriteProperty());
     }
+
+    // IVector<String>
+    //Windows::Foundation::Collections::IIterator<hstring> Class::First()
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //hstring Class::GetAt(uint32_t index)
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //uint32_t Class::Size()
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //Windows::Foundation::Collections::IVectorView<hstring> Class::GetView()
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //bool Class::IndexOf(hstring const& value, uint32_t& index)
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //void Class::SetAt(uint32_t index, hstring const& value)
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //void Class::InsertAt(uint32_t index, hstring const& value)
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //void Class::RemoveAt(uint32_t index)
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //void Class::Append(hstring const& value)
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //void Class::RemoveAtEnd()
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //void Class::Clear()
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //uint32_t Class::GetMany(uint32_t startIndex, array_view<hstring> items)
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //void Class::ReplaceAll(array_view<hstring const> items)
+    //{
+    //    throw hresult_not_implemented();
+    //}
+
+    // IMap<Int32, String>
+    //Windows::Foundation::Collections::IIterator<Windows::Foundation::Collections::IKeyValuePair<int32_t, hstring>> Class::First()
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //hstring Class::Lookup(int32_t const& key)
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //uint32_t Class::Size()
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //bool Class::HasKey(int32_t const& key)
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //Windows::Foundation::Collections::IMapView<int32_t, hstring> Class::GetView()
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //bool Class::Insert(int32_t const& key, hstring const& value)
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //void Class::Remove(int32_t const& key)
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    //void Class::Clear()
+    //{
+    //    throw hresult_not_implemented();
+    //}
 }

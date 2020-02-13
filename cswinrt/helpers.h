@@ -11,6 +11,12 @@ namespace cswinrt
         return static_cast<bool>(get_attribute(row, type_namespace, type_name));
     }
 
+    //template <typename T>
+    //auto get_attribute_value(CustomAttribute const& attribute, uint32_t const arg)
+    //{
+    //	return std::get<T>(std::get<ElemSig>(attribute.Value().FixedArgs()[arg].value).value);
+    //}
+
     bool is_exclusive_to(TypeDef const& type)
     {
         return get_category(type) == category::interface_type && has_attribute(type, "Windows.Foundation.Metadata"sv, "ExclusiveToAttribute"sv);

@@ -12,7 +12,7 @@ git checkout -f master
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
 git fetch -f
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
-git reset -q --hard b9b413dba2c1058b87400ea1b080f3a1f3b7cbea
+git reset -q --hard d32f1d9a80d5234ff06faa12e3c660882187e5c6
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
 where nuget
 if %ErrorLevel% equ 0 (

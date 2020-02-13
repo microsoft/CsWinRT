@@ -185,6 +185,31 @@ namespace winrt::TestComponentCSharp::implementation
         void ReadWriteProperty(int32_t value);
         //hstring DistinctProperty();
         //void DistinctProperty(hstring const& value);
+
+        // IVector<String>
+        //Windows::Foundation::Collections::IIterator<hstring> First();
+        //hstring GetAt(uint32_t index);
+        //uint32_t Size();
+        //Windows::Foundation::Collections::IVectorView<hstring> GetView();
+        //bool IndexOf(hstring const& value, uint32_t& index);
+        //void SetAt(uint32_t index, hstring const& value);
+        //void InsertAt(uint32_t index, hstring const& value);
+        //void RemoveAt(uint32_t index);
+        //void Append(hstring const& value);
+        //void RemoveAtEnd();
+        //void Clear();
+        //uint32_t GetMany(uint32_t startIndex, array_view<hstring> items);
+        //void ReplaceAll(array_view<hstring const> items);
+
+        // IMap<Int32, String>
+        //Windows::Foundation::Collections::IIterator<Windows::Foundation::Collections::IKeyValuePair<int32_t, hstring>> First();
+        //hstring Lookup(int32_t const& key);
+        //uint32_t Size();
+        //bool HasKey(int32_t const& key);
+        //Windows::Foundation::Collections::IMapView<int32_t, hstring> GetView();
+        //bool Insert(int32_t const& key, hstring const& value);
+        //void Remove(int32_t const& key);
+        //void Clear();
     };
 }
 
