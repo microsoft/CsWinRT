@@ -430,8 +430,7 @@ namespace UnitTest
             for (uint i = 0; i < 3; ++i)
             {
                 var obj = objs.GetAt(i);
-                // TODO: Validate that each item 'is' TestObject (RCW caching)
-                //Assert.Same(obj, TestObject);
+                Assert.Same(obj, TestObject);
                 Assert.Equal(42, obj.ReadWriteProperty);
             }
         }
@@ -444,8 +443,7 @@ namespace UnitTest
             for (uint i = 0; i < 3; ++i)
             {
                 var obj = objs.GetAt(i);
-                // TODO: Validate that each item 'is' TestObject (RCW caching)
-                //Assert.Same(obj, TestObject);
+                Assert.Same(obj, TestObject);
                 Assert.Equal(TestObject.ThisPtr, objs.GetAt(i).ThisPtr);
             }
         }
@@ -456,6 +454,110 @@ namespace UnitTest
             var managedProperties = new ManagedProperties(42);
             TestObject.CopyProperties(managedProperties);
             Assert.Equal(managedProperties.ReadWriteProperty, TestObject.ReadWriteProperty);
+        }
+
+        [Fact]
+        public void TestCCWIdentity()
+        {
+            var managedProperties = new ManagedProperties(42);
+            IObjectReference ccw1 = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
+            IObjectReference ccw2 = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
+            Assert.Equal(ccw1.ThisPtr, ccw2.ThisPtr);
+        }
+
+        [Fact]
+        public void TestInterfaceCCWLifetime()
+        {
+            static (WeakReference, IObjectReference) CreateCCW()
+            {
+                var managedProperties = new ManagedProperties(42);
+                IObjectReference ccw1 = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
+                return (new WeakReference(managedProperties), ccw1);
+            }
+
+            static (WeakReference obj, WeakReference ccw) GetWeakReferenceToObjectAndCCW()
+            {
+                var (reference, ccw) = CreateCCW();
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                Assert.True(reference.IsAlive);
+                return (reference, new WeakReference(ccw));
+            }
+
+            var (obj, ccw) = GetWeakReferenceToObjectAndCCW();
+
+            while (ccw.IsAlive)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+
+            // Now that the CCW is dead, we should have no references to the managed object.
+            // Run GC one more time to collect the managed object.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.False(obj.IsAlive);
+        }
+
+        [Fact]
+        public void TestDelegateCCWLifetime()
+        {
+            static (WeakReference, IObjectReference) CreateCCW(Action<object, int> action)
+            {
+                TypedEventHandler<object, int> eventHandler = (o, i) => action(o, i);
+                IObjectReference ccw1 = ABI.Windows.Foundation.TypedEventHandler<object, int>.CreateMarshaler(eventHandler);
+                return (new WeakReference(eventHandler), ccw1);
+            }
+
+            static (WeakReference obj, WeakReference ccw) GetWeakReferenceToObjectAndCCW(Action<object, int> action)
+            {
+                var (reference, ccw) = CreateCCW(action);
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                Assert.True(reference.IsAlive);
+                return (reference, new WeakReference(ccw));
+            }
+
+            var (obj, ccw) = GetWeakReferenceToObjectAndCCW((o, i) => { });
+
+            while (ccw.IsAlive)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+
+            // Now that the CCW is dead, we should have no references to the managed object.
+            // Run GC one more time to collect the managed object.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.False(obj.IsAlive);
+        }
+
+        [Fact]
+        public void TestCCWIdentityThroughRefCountZero()
+        {
+            static (WeakReference, IntPtr) CreateCCWReference(IProperties1 properties)
+            {
+                IObjectReference ccw = MarshalInterface<IProperties1>.CreateMarshaler(properties);
+                return (new WeakReference(ccw), ccw.ThisPtr);
+            }
+
+            var obj = new ManagedProperties(42);
+
+            var (ccwWeakReference, ptr) = CreateCCWReference(obj);
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            Assert.False(ccwWeakReference.IsAlive);
+
+            var (_, ptr2) = CreateCCWReference(obj);
+
+            Assert.Equal(ptr, ptr2);
         }
 
         class ManagedProperties : IProperties1

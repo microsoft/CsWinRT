@@ -715,7 +715,15 @@ namespace WinRT
             {
                 return (T)(object)null;
             }
-            // TODO: Check if the value is a CCW and return the underlying object.
+
+            object primaryManagedWrapper = MarshalInspectable.FromAbi(ptr);
+
+            if (primaryManagedWrapper is T obj)
+            {
+                return obj;
+            }
+            // If the metadata type doesn't implement the interface, then create a tear-off RCW.
+            // TODO: Uniqueness of tear-offs?
             if (_FromAbi == null)
             {
                 _FromAbi = BindFromAbi();
@@ -819,8 +827,6 @@ namespace WinRT
 
     static class MarshalInspectable
     {
-        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
-
         public static IObjectReference CreateMarshaler(object o, bool unwrapObject = true)
         {
             if (o is null)
@@ -832,7 +838,7 @@ namespace WinRT
             {
                 return objRef.As<IInspectable.Vftbl>();
             }
-            return ComCallableWrapper.CreateCCWForObject(o);
+            return ComWrappersSupport.CreateCCWForObject(o);
         }
 
         public static IntPtr GetAbi(IObjectReference objRef) => MarshalInterfaceHelper<object>.GetAbi(objRef);
@@ -841,12 +847,9 @@ namespace WinRT
         {
             if (ptr == IntPtr.Zero)
             {
-                return null;
+                return (object)null;
             }
-
-            var inspectable = new IInspectable(ObjectReference<WinRT.Interop.IUnknownVftbl>.Attach(ref ptr));
-            string runtimeClassName = inspectable.GetRuntimeClassName();
-            return TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
+            return ComWrappersSupport.CreateRcwForComObject(ptr);
         }
 
         public static void DisposeMarshaler(IObjectReference objRef) => MarshalInterfaceHelper<object>.DisposeMarshaler(objRef);
@@ -892,153 +895,6 @@ namespace WinRT
 
             objRef = null;
             return false;
-        }
-
-        private static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
-        {
-            var (implementationType, _) = FindTypeByName(runtimeClassName);
-
-            Type classType;
-            Type interfaceType;
-            Type vftblType;
-            if (implementationType.IsInterface)
-            {
-                classType = null;
-                interfaceType = FindTypeByName("ABI." + runtimeClassName).type ??
-                    throw new TypeLoadException($"Unable to find an ABI implementation for the type '{runtimeClassName}'");
-                vftblType = interfaceType.GetNestedType("Vftbl") ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
-                if (vftblType.IsGenericTypeDefinition)
-                {
-                    vftblType = vftblType.MakeGenericType(interfaceType.GetGenericArguments());
-                }
-            }
-            else
-            {
-                classType = implementationType;
-                interfaceType = classType.GetField("_default", BindingFlags.Instance | BindingFlags.NonPublic)?.FieldType;
-                if (interfaceType is null)
-                {
-                    throw new TypeLoadException($"Unable to create a runtime wrapper for a WinRT object of type '{runtimeClassName}'. This type is not a projected type.");
-                }
-                vftblType = interfaceType.GetNestedType("Vftbl") ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
-            }
-
-            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
-            var createInterfaceInstanceExpression = Expression.New(interfaceType.GetConstructor(new[] { typeof(ObjectReference<>).MakeGenericType(vftblType) }),
-                    Expression.Call(parms[0],
-                        typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
-
-            if (classType is null)
-            {
-                return Expression.Lambda<Func<IInspectable, object>>(createInterfaceInstanceExpression, parms).Compile();
-            }
-
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.New(classType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { interfaceType }, null),
-                    createInterfaceInstanceExpression),
-                parms).Compile();
-        }
-
-        private static (Type type, int remaining) FindTypeByName(string runtimeClassName)
-        {
-            var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
-            return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
-        }
-
-        private static Type FindTypeByNameCore(string runtimeClassName, Type[] genericTypes)
-        {
-            // TODO: This implementation is a strawman implementation.
-            // It's missing support for types not loaded in the default ALC.
-            if (genericTypes is null)
-            {
-                Type primitiveType = ResolvePrimitiveType(runtimeClassName);
-                if (primitiveType is object)
-                {
-                    return primitiveType;
-                }
-            }
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                Type type = assembly.GetType(runtimeClassName);
-                if (type is object)
-                {
-                    if (genericTypes != null)
-                    {
-                        type = type.MakeGenericType(genericTypes);
-                    }
-                    return type;
-                }
-            }
-            throw new TypeLoadException($"Unable to find a type named '{runtimeClassName}'");
-        }
-
-        private static Type ResolvePrimitiveType(string primitiveTypeName)
-        {
-            return primitiveTypeName switch
-            {
-                "UInt8" => typeof(byte),
-                "Int8" => typeof(sbyte),
-                "UInt16" => typeof(ushort),
-                "Int16" => typeof(short),
-                "UInt32" => typeof(uint),
-                "Int32" => typeof(int),
-                "UInt64" => typeof(ulong),
-                "Int64" => typeof(long),
-                "Boolean" => typeof(bool),
-                "String" => typeof(string),
-                "Char" => typeof(char),
-                "Single" => typeof(float),
-                "Double" => typeof(double),
-                "Guid" => typeof(Guid),
-                "Object" => typeof(object),
-                _ => null
-            };
-        }
-
-        // TODO: Use types from System.Memory to eliminate allocations of intermediate strings.
-        private static (string genericTypeName, Type[] genericTypes, int remaining) ParseGenericTypeName(string partialTypeName)
-        {
-            int possibleEndOfSimpleTypeName = partialTypeName.IndexOfAny(new[] { ',', '>' });
-            int endOfSimpleTypeName = partialTypeName.Length;
-            if (possibleEndOfSimpleTypeName != -1)
-            {
-                endOfSimpleTypeName = possibleEndOfSimpleTypeName;
-            }
-            string typeName = partialTypeName.Substring(0, endOfSimpleTypeName);
-
-            if (!typeName.Contains('`'))
-            {
-                return (typeName.ToString(), null, endOfSimpleTypeName);
-            }
-
-            int genericTypeListStart = partialTypeName.IndexOf('<');
-            string genericTypeName = partialTypeName.Substring(0, genericTypeListStart);
-            string remaining = partialTypeName.Substring(genericTypeListStart + 1);
-            int remainingIndex = genericTypeListStart + 1;
-            List<Type> genericTypes = new List<Type>();
-            while (true)
-            {
-                var (genericType, endOfGenericArgument) = FindTypeByName(remaining);
-                remainingIndex += endOfGenericArgument;
-                genericTypes.Add(genericType);
-                remaining = remaining.Substring(endOfGenericArgument);
-                if (remaining[0] == ',')
-                {
-                    // Skip the comma and the space in the type name.
-                    remainingIndex += 2;
-                    remaining = remaining.Substring(2);
-                    continue;
-                }
-                else if (remaining[0] == '>')
-                {
-                    break;
-                }
-                else
-                {
-                    throw new InvalidOperationException("The provided type name is invalid.");
-                }
-            }
-            return (genericTypeName, genericTypes.ToArray(), partialTypeName.Length - remaining.Length);
         }
 
         public static unsafe MarshalInterfaceHelper<object>.MarshalerArray CreateMarshalerArray(object[] array) => MarshalInterfaceHelper<object>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
@@ -1163,36 +1019,13 @@ namespace WinRT
             else // class type
             {
                 AbiType = typeof(IntPtr);
-                var interfaceAbiType = type.GetField("_default", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)?.FieldType;
-                if (interfaceAbiType is null)
-                {
-                    throw new ArgumentException($"Unable to marshal non-WinRT class: '{type.FullName}'");
-                }
-                CreateMarshaler = (T value) => value;
-                GetAbi = BindClassGetAbi();
-                FromAbi = BindClassFromAbi(interfaceAbiType);
-                DisposeMarshaler = (object box) => { };
+                CreateMarshaler = MarshalGeneric<T>.CreateMarshaler;
+                GetAbi = MarshalGeneric<T>.GetAbi;
+                FromAbi = MarshalGeneric<T>.FromAbi;
+                DisposeMarshaler = MarshalGeneric<T>.DisposeMarshaler;
                 DisposeAbi = (object box) => { };
             }
             RefAbiType = AbiType.MakeByRefType();
-        }
-
-        private static Func<object, T> BindClassFromAbi(Type AbiType)
-        {
-            var fromAbiMethod = AbiType.GetMethod("FromAbi");
-            var objReferenceConstructor = AbiType.GetConstructor(new[] { fromAbiMethod.ReturnType });
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Func<object, T>>(
-                Expression.New(
-                    typeof(T).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance, null, new[] { AbiType }, null),
-                    Expression.New(objReferenceConstructor,
-                        Expression.Call(fromAbiMethod, Expression.Convert(parms[0], typeof(IntPtr))))), parms).Compile();
-        }
-
-        private static Func<object, object> BindClassGetAbi()
-        {
-            var thisPtrField = (Func<T, IntPtr>)typeof(T).GetProperty("ThisPtr").GetMethod.CreateDelegate(typeof(Func<T, IntPtr>));
-            return (object value) => (object)thisPtrField((T)value);
         }
 
         public static readonly Type AbiType;
