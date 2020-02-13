@@ -3241,14 +3241,12 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             [&](writer& w) {
                 if (!is_generic)
                 {
-                    w.write(R"(var func = Marshal.GetFunctionPointerForDelegate(new Abi_Invoke(Do_Abi_Invoke));
-return ComWrappersSupport.CreateCCWForDelegate(func, managedDelegate);)");
+                    w.write(R"(return ComWrappersSupport.CreateCCWForDelegate(new Abi_Invoke(Do_Abi_Invoke), managedDelegate);)");
                     return;
                 }
                 w.write(R"(var self = typeof(@%);
 var invoke = self.GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic);
-%var func = Marshal.GetFunctionPointerForDelegate(global::System.Delegate.CreateDelegate(Abi_Invoke_Type, invoke));
-return ComWrappersSupport.CreateCCWForDelegate(func, managedDelegate);)",
+%return ComWrappersSupport.CreateCCWForDelegate(global::System.Delegate.CreateDelegate(Abi_Invoke_Type, invoke), managedDelegate);)",
                     type.TypeName(),
                     type_params,
                     [&](writer& w) {

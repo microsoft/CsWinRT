@@ -270,7 +270,7 @@ namespace WinRT
                 return null;
             }
 
-            IObjectReference identity = ObjectReference<IUnknownVftbl>.Attach(ref ptr).As<IUnknownVftbl>();
+            IObjectReference identity = ObjectReference<IUnknownVftbl>.FromAbi(ptr).As<IUnknownVftbl>();
 
             object keepAliveSentinel = null;
 
@@ -321,9 +321,9 @@ namespace WinRT
             return objRef;
         }
 
-        public static IObjectReference CreateCCWForDelegate(IntPtr invoke, global::System.Delegate del)
+        public static IObjectReference CreateCCWForDelegate(global::System.Delegate abiInvoke, global::System.Delegate del)
         {
-            var wrapper = DelegateWrapperCache.GetValue(del, _ => new Delegate(invoke, del));
+            var wrapper = DelegateWrapperCache.GetValue(del, _ => new Delegate(abiInvoke, del));
             var objRef = ObjectReference<IDelegateVftbl>.FromAbi(wrapper.ThisPtr);
             GC.KeepAlive(wrapper); // This GC.KeepAlive ensures that a newly created wrapper is alive until objRef is created and has AddRef'd the CCW.
             return objRef;
@@ -577,23 +577,20 @@ namespace WinRT
 
         readonly UnmanagedObject _unmanagedObj;
         public readonly IntPtr ThisPtr;
+        private global::System.Delegate _abiInvoke;
         public global::System.Delegate Target { get; }
 
-        public Delegate(MulticastDelegate abiInvoke, MulticastDelegate managedDelegate) :
-            this(Marshal.GetFunctionPointerForDelegate(abiInvoke), managedDelegate)
-        { }
-
-        public Delegate(IntPtr invoke_method, global::System.Delegate target_invoker)
+        public Delegate(global::System.Delegate abiInvoke, global::System.Delegate managedDelegate)
         {
-            _ = WinrtModule.Instance; // Ensure COM is initialized
-
+            _abiInvoke = abiInvoke;
+    
             var vftbl = _vftblTemplate;
-            vftbl.Invoke = invoke_method;
+            vftbl.Invoke = Marshal.GetFunctionPointerForDelegate(abiInvoke);
 
             _unmanagedObj._vftblPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf(_vftblTemplate));
             Marshal.StructureToPtr(vftbl, _unmanagedObj._vftblPtr, false);
 
-            Target = target_invoker;
+            Target = managedDelegate;
             _unmanagedObj._gchandlePtr = GCHandle.ToIntPtr(WeakHandle);
 
             ThisPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf(_unmanagedObj));
