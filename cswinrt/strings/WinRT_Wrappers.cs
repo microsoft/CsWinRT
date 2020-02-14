@@ -554,7 +554,7 @@ namespace WinRT
 
         internal int QueryInterface(Guid iid, out IntPtr ptr)
         {
-            const int E_NOINTERFACE = unchecked((int)0x800040002);
+            const int E_NOINTERFACE = unchecked((int)0x80004002);
             if (_managedQITable.TryGetValue(iid, out ptr))
             {
                 AddRef();
@@ -575,7 +575,7 @@ namespace WinRT
 
         static unsafe int QueryInterface([In] IntPtr thisPtr, [In] ref Guid iid, [Out] out IntPtr obj)
         {
-            const int E_NOINTERFACE = unchecked((int)0x800040002);
+            const int E_NOINTERFACE = unchecked((int)0x80004002);
 
             if (iid == typeof(IUnknownVftbl).GUID)
             {
