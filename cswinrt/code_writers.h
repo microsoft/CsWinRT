@@ -3196,20 +3196,48 @@ public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<%>.DisposeAb
 public static class @%
 {%
 %
-public static unsafe IObjectReference CreateMarshaler(% managedDelegate)
+private static readonly global::WinRT.Interop.IDelegateVftbl AbiToProjectionVftable;
+public static readonly IntPtr AbiToProjectionVftablePtr;
+
+static @()
 {
-%
+AbiInvokeDelegate = %;
+AbiToProjectionVftable = new global::WinRT.Interop.IDelegateVftbl
+{
+IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
+Invoke = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate)
+};
+var nativeVftbl = Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
+Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
+AbiToProjectionVftablePtr = nativeVftbl;
 }
+
+public static global::System.Delegate AbiInvokeDelegate { get ; }
+
+public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).As<WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%)));
 
 public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
 
-public static unsafe % FromAbi(IntPtr ThisPtr)
+public static unsafe % FromAbi(IntPtr nativeDelegate)
 {
-var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(ThisPtr);
-% managedDelegate = (%) =>
+var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(nativeDelegate);
+return (%)ComWrappersSupport.TryRegisterObjectForInterface(new %(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+}
+
+private class NativeDelegateWrapper
 {
-var abiInvoke = Marshal.GetDelegateForFunctionPointer%(abiDelegate.Vftbl.Invoke%);%};
-return managedDelegate;
+public ObjectReference<global::WinRT.Interop.IDelegateVftbl> NativeDelegate { get; }
+
+public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
+{
+NativeDelegate = nativeDelegate;
+}
+
+public % Invoke(%)
+{
+IntPtr ThisPtr = NativeDelegate.ThisPtr;
+var abiInvoke = Marshal.GetDelegateForFunctionPointer%(NativeDelegate.Vftbl.Invoke%);%
+}
 }
 
 public static IntPtr FromManaged(% managedDelegate) => CreateMarshaler(managedDelegate).GetRef();
@@ -3249,38 +3277,43 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                         w.write("%, ", pair.first);
                     }, generic_abi_types));
             },
-            // CreateMarshaler
-            type_name,
+            // class constructor
+            type.TypeName(),
             [&](writer& w) {
                 if (!is_generic)
                 {
-                    w.write(R"(return ComWrappersSupport.CreateCCWForDelegate(new Abi_Invoke(Do_Abi_Invoke), managedDelegate);)");
+                    w.write("new Abi_Invoke(Do_Abi_Invoke)");
                     return;
                 }
-                w.write(R"(var self = typeof(@%);
-var invoke = self.GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic);
-%return ComWrappersSupport.CreateCCWForDelegate(global::System.Delegate.CreateDelegate(Abi_Invoke_Type, invoke), managedDelegate);)",
+                w.write("global::System.Delegate.CreateDelegate(Abi_Invoke_Type, typeof(@%).GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic)%)",
                     type.TypeName(),
                     type_params,
                     [&](writer& w) {
                         if (!have_generic_params) return;
-                        w.write("invoke = invoke.MakeGenericMethod(new Type[]{ % });\n",
+                        w.write(".MakeGenericMethod(new Type[]{ % })\n",
                             [&](writer& w) {
-                            int count = 0;
-                            for (auto&& pair : generic_abi_types)
-                            {
-                                if (pair.second.empty()) continue;
-                                w.write(count++ == 0 ? "" : ", ");
-                                w.write(pair.first);
-                            }
-                        });
+                                int count = 0;
+                                for (auto&& pair : generic_abi_types)
+                                {
+                                    if (pair.second.empty()) continue;
+                                    w.write(count++ == 0 ? "" : ", ");
+                                    w.write(pair.first);
+                                }
+                            });
                     });
             },
+            // CreateMarshaler
+            type_name,
+            type.TypeName(),
+            type_params,
             // GetAbi
             type_name,
             // FromAbi
             type_name,
             type_name,
+            type_name,
+            // NativeDelegateWrapper.Invoke
+            bind<write_projection_return_type>(signature),
             bind_list<write_projection_parameter>(", ", signature.params()),
             is_generic ? "" : "<Abi_Invoke>",
             is_generic ? ", Abi_Invoke_Type" : "",
