@@ -559,19 +559,30 @@ namespace WinRT
         public IntPtr Vftbl;
     }
 
-    public abstract class IObjectReference
+    public abstract class IObjectReference : IDisposable
     {
+        protected bool disposed;
         public readonly IntPtr ThisPtr;
         protected virtual Interop.IUnknownVftbl VftblIUnknown { get; }
 
         protected IObjectReference(IntPtr thisPtr)
         {
+            if (thisPtr == IntPtr.Zero)
+            {
+                throw new ArgumentNullException(nameof(thisPtr));
+            }
             ThisPtr = thisPtr;
+        }
+
+        ~IObjectReference()
+        {
+            Dispose(false);
         }
 
         public ObjectReference<T> As<T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
         public unsafe ObjectReference<T> As<T>(Guid iid)
         {
+            ThrowIfDisposed();
             IntPtr thatPtr;
             Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out thatPtr));
             return ObjectReference<T>.Attach(ref thatPtr);
@@ -579,6 +590,7 @@ namespace WinRT
 
         public unsafe IObjectReference As(Guid iid)
         {
+            ThrowIfDisposed();
             IntPtr thatPtr;
             Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out thatPtr));
             return ObjectReference<Interop.IUnknownVftbl>.Attach(ref thatPtr);
@@ -586,6 +598,7 @@ namespace WinRT
 
         public T AsType<T>()
         {
+            ThrowIfDisposed();
             var ctor = typeof(T).GetConstructor(new[] { typeof(IObjectReference) });
             if (ctor != null)
             {
@@ -596,8 +609,29 @@ namespace WinRT
 
         public IntPtr GetRef()
         {
+            ThrowIfDisposed();
             VftblIUnknown.AddRef(ThisPtr);
             return ThisPtr;
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (disposed) throw new ObjectDisposedException("ObjectReference");
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+            {
+                return;
+            }
+            disposed = true;
         }
     }
 
@@ -629,6 +663,18 @@ namespace WinRT
         ObjectReference(IntPtr thisPtr, (IUnknownVftbl vftblIUnknown, T vftblT) vtables) :
             this(thisPtr, vtables.vftblIUnknown, vtables.vftblT)
         {
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            _vftblIUnknown.Release(ThisPtr);
+
+            base.Dispose(disposing);
         }
 
         public static ObjectReference<T> FromAbi(IntPtr thisPtr, IUnknownVftbl vftblIUnknown, T vftblT)
@@ -667,11 +713,6 @@ namespace WinRT
                 vftblT = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
             }
             return (vftblIUnknown, vftblT);
-        }
-
-        ~ObjectReference()
-        {
-            _vftblIUnknown.Release(ThisPtr);
         }
     }
 
