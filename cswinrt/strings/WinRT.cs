@@ -631,6 +631,7 @@ namespace WinRT
             {
                 return;
             }
+            VftblIUnknown.Release(ThisPtr);
             disposed = true;
         }
     }
@@ -663,18 +664,6 @@ namespace WinRT
         ObjectReference(IntPtr thisPtr, (IUnknownVftbl vftblIUnknown, T vftblT) vtables) :
             this(thisPtr, vtables.vftblIUnknown, vtables.vftblT)
         {
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposed)
-            {
-                return;
-            }
-
-            _vftblIUnknown.Release(ThisPtr);
-
-            base.Dispose(disposing);
         }
 
         public static ObjectReference<T> FromAbi(IntPtr thisPtr, IUnknownVftbl vftblIUnknown, T vftblT)
