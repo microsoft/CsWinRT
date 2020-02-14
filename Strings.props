@@ -21,7 +21,7 @@
         {  
           var content = item.GetMetadata("Content");
           var source = item.GetMetadata("Source");
-          var global = item.GetMetadata("Global");
+          var global = item.GetMetadata("File").Replace('.', '_');
           Log.LogMessage(MessageImportance.High, "Writing {0}", source);
           Directory.CreateDirectory(new FileInfo(source).DirectoryName);
           File.WriteAllLines(source, GetContentLines(content));
@@ -71,26 +71,31 @@
         lines.Add("#pragma once");
         lines.Add("namespace " + Namespace + "::strings");
         lines.Add("{");
-        foreach(ITaskItem item in Input)  
-        {  
-          var content = item.GetMetadata("Content");
-          var global = item.GetMetadata("Global");
-          var fileSize = new FileInfo(content).Length;
-          lines.Add("    extern char const " + global + "[" + fileSize + "];");
-        } 
-        lines.Add("    static const struct");
-        lines.Add("    {");
-        lines.Add("        char const* name;");
-        lines.Add("        char const* value;");
-        lines.Add("    } index[] = {");
-        var delimeter = "";
-        foreach(ITaskItem item in Input)  
-        {  
-          var global = item.GetMetadata("Global");
-          lines.Add("        " + delimeter + "{\"" + global + "\", " + global + "}");
-          delimeter = ", ";
-        }  
-        lines.Add("    };");
+        foreach(var index in Input.GroupBy(item => item.GetMetadata("Index")))
+        {
+          foreach(ITaskItem item in index)  
+          {  
+            var content = item.GetMetadata("Content");
+            var file = item.GetMetadata("File");
+            var global = file.Replace('.', '_');
+            var fileSize = new FileInfo(content).Length;
+            lines.Add("    extern char const " + global + "[" + fileSize + "];");
+          } 
+          lines.Add("    static const struct");
+          lines.Add("    {");
+          lines.Add("        char const* name;");
+          lines.Add("        char const* value;");
+          lines.Add("    } " + (index.Key == "" ? "base" : index.Key.Trim('\\')) +"[] = {");
+          var delimeter = "";
+          foreach(ITaskItem item in index)  
+          {  
+            var file = item.GetMetadata("File");
+            var global = file.Replace('.', '_');
+            lines.Add("        " + delimeter + "{\"" + file + "\", " + global + "}");
+            delimeter = ", ";
+          }  
+          lines.Add("    };");
+        }
         lines.Add("}");
         if (File.Exists(Header))
         {
@@ -114,8 +119,9 @@
     <StaticStringDirs Include="@(StaticStringSpec->'%(RootDir)%(Directory)'->Distinct())" />
     <StaticStrings Include="@(StaticStringSpec->'%(FullPath)'->Distinct())">
       <Content>%(Identity)</Content>
+      <Index>$([System.String]::Copy('%(RecursiveDir)'))</Index>
       <Source>$([System.String]::Copy('$(IntDir)strings\%(RecursiveDir)%(Filename).cpp'))</Source>
-      <Global>$([System.String]::Copy('%(Filename)'))</Global>
+      <File>$([System.String]::Copy('%(Filename)'))</File>
     </StaticStrings>
     <Filter Include="strings" />
     <ClCompile Include="@(StaticStrings->'%(Source)')">
@@ -133,7 +139,7 @@
     <WriteLinesToFile Encoding="Unicode"
       File="$(TLogLocation)strings.write.1.tlog"
       Lines="@(StaticStrings->'^%(Identity)');@(StaticStrings->'%(Source)')"/>
-    <Message Text="Static strings:&#x0d;&#x0a;@(StaticStrings->'%(Global): %(Content), %(Source)','&#x0d;&#x0a;')" Importance="High"/>
+    <Message Text="Static strings:&#x0d;&#x0a;@(StaticStrings->'%(File): %(Content), %(Source)','&#x0d;&#x0a;')" Importance="High"/>
     <WriteStringSources Input="@(StaticStrings)" Namespace="$(RootNamespace)"/>
   </Target>
 
