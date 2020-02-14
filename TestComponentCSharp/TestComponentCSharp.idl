@@ -203,6 +203,7 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IVectorView<Class> GetClassVector();
 
         void CopyProperties(IProperties1 src);
+        void CopyPropertiesViaWeakReference(IProperties1 src);
         // Async
         void CompleteAsync(); // Completes the in-flight async operation successfully
         void CompleteAsync(Int32 hr); // Completes the in-flight async operation with a failed HRESULT

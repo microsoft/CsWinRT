@@ -66,6 +66,16 @@ namespace WinRT
             var interfaces = obj.GetType().GetInterfaces();
             foreach (var iface in interfaces)
             {
+                if (iface == typeof(WinRT.IWeakReference))
+                {
+                    entries.Add(new ComInterfaceEntry
+                    {
+                        IID = typeof(WinRT.Interop.IWeakReferenceVftbl).GUID,
+                        Vtable = WinRT.Interop.IWeakReferenceVftbl.AbiToProjectionVftablePtr
+                    });
+                    continue;
+                }
+
                 var ifaceAbiType = iface.Assembly.GetType("ABI." + iface.FullName);
                 if (ifaceAbiType == null)
                 {
@@ -80,6 +90,11 @@ namespace WinRT
                     Vtable = (IntPtr)ifaceAbiType.GetNestedType("Vftbl").GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
                 });
             }
+            entries.Add(new ComInterfaceEntry
+            {
+                IID = typeof(WinRT.Interop.IWeakReferenceSourceVftbl).GUID,
+                Vtable = WinRT.Interop.IWeakReferenceSourceVftbl.AbiToProjectionVftablePtr
+            });
             return entries;
         }
 
@@ -539,7 +554,7 @@ namespace WinRT
 
         internal int QueryInterface(Guid iid, out IntPtr ptr)
         {
-            const int E_NOINTERFACE = unchecked((int)0x80040002);
+            const int E_NOINTERFACE = unchecked((int)0x800040002);
             if (_managedQITable.TryGetValue(iid, out ptr))
             {
                 AddRef();
@@ -560,7 +575,7 @@ namespace WinRT
 
         static unsafe int QueryInterface([In] IntPtr thisPtr, [In] ref Guid iid, [Out] out IntPtr obj)
         {
-            const int E_NOINTERFACE = unchecked((int)0x80040002);
+            const int E_NOINTERFACE = unchecked((int)0x800040002);
 
             if (iid == typeof(IUnknownVftbl).GUID)
             {
