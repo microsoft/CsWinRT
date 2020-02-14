@@ -223,7 +223,7 @@ Where <spec> is one or more of:
 
                         // Custom additions to namespaces
                         if (auto addition = std::find_if(std::begin(strings::additions), std::end(strings::additions),
-                                [&](auto&& item) { return ns == item.value; }); 
+                                [&](auto&& item) { return ns == item.name; }); 
                             addition != std::end(strings::additions))
                         {
                             w.write(addition->value);
