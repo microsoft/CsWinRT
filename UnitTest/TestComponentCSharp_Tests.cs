@@ -457,6 +457,14 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestWeakReference()
+        {
+            var managedProperties = new ManagedProperties(42);
+            TestObject.CopyPropertiesViaWeakReference(managedProperties);
+            Assert.Equal(managedProperties.ReadWriteProperty, TestObject.ReadWriteProperty);
+        }
+
+        [Fact]
         public void TestCCWIdentity()
         {
             var managedProperties = new ManagedProperties(42);

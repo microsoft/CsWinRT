@@ -152,6 +152,8 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector();
 
         void CopyProperties(TestComponentCSharp::IProperties1 const& src);
+        void CopyPropertiesViaWeakReference(TestComponentCSharp::IProperties1 const& src);
+
         void CompleteAsync();
         void CompleteAsync(int32_t hr);
         void AdvanceAsync(int32_t delta);

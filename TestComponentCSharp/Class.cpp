@@ -660,6 +660,12 @@ namespace winrt::TestComponentCSharp::implementation
         ReadWriteProperty(src.ReadWriteProperty());
     }
 
+    void Class::CopyPropertiesViaWeakReference(winrt::TestComponentCSharp::IProperties1 const& src)
+    {
+        auto weak_ref = winrt::make_weak(src);
+        ReadWriteProperty(weak_ref.get().ReadWriteProperty());
+    }
+
     // IVector<String>
     //Windows::Foundation::Collections::IIterator<hstring> Class::First()
     //{
