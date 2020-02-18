@@ -1568,7 +1568,7 @@ event % %;)",
 
             if (marshaler_type.empty())
             {
-                if (is_out() && (local_type == "IntPtr"))
+                if (is_out() && (local_type == "IntPtr" && param_type != "IntPtr"))
                 {
                     w.write("MarshalInspectable.DisposeAbi(%);\n", get_marshaler_local(w));
                 }

@@ -688,17 +688,14 @@ namespace WinRT
 
         public static void DisposeMarshaler(IObjectReference objRef)
         {
-            // Since IObjectReference doesn't have an explicit dispose,
-            // just use GC.KeepAlive here to ensure that the IObjectReference instance
-            // gets finalized after the call to native.
-            GC.KeepAlive(objRef);
+            objRef?.Dispose();
         }
 
         public static void DisposeAbi(IntPtr ptr)
         {
             if (ptr == IntPtr.Zero) return;
             // TODO: this should be a direct v-table call when function pointers are a thing
-            ObjectReference<IInspectable.Vftbl>.Attach(ref ptr);
+            ObjectReference<IInspectable.Vftbl>.Attach(ref ptr).Dispose();
         }
     }
 
