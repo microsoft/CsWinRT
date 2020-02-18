@@ -182,9 +182,7 @@ namespace WinRT
         // IDelegate
         public struct IDelegateVftbl
         {
-            public IntPtr QueryInterface;
-            public IntPtr AddRef;
-            public IntPtr Release;
+            public IUnknownVftbl IUnknownVftbl;
             public IntPtr Invoke;
         }
 

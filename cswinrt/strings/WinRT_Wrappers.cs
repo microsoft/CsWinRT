@@ -38,7 +38,7 @@ namespace WinRT
         {
             using (new Mono.ThreadContext())
             {
-                var target_invoke = FindDelegate<TDelegate>(thisPtr);
+                var target_invoke = FindObject<TDelegate>(thisPtr);
                 if (target_invoke != null)
                 {
                     return invoke(target_invoke);
@@ -52,7 +52,7 @@ namespace WinRT
         {
             using (new Mono.ThreadContext())
             {
-                var target_invoke = FindDelegate<T>(thisPtr);
+                var target_invoke = FindObject<T>(thisPtr);
                 if (target_invoke != null)
                 {
                     invoke(target_invoke);
@@ -90,10 +90,27 @@ namespace WinRT
                     Vtable = (IntPtr)ifaceAbiType.GetNestedType("Vftbl").GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
                 });
             }
+
+            if (obj is global::System.Delegate)
+            {
+                entries.Add(new ComInterfaceEntry
+                {
+                    IID = GuidGenerator.GetIID(obj.GetType()),
+                    Vtable = (IntPtr)obj.GetType().GetHelperType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                });
+            }
+
             entries.Add(new ComInterfaceEntry
             {
                 IID = typeof(WinRT.Interop.IWeakReferenceSourceVftbl).GUID,
                 Vtable = WinRT.Interop.IWeakReferenceSourceVftbl.AbiToProjectionVftablePtr
+            });
+
+            // Add IAgileObject to all CCWs
+            entries.Add(new ComInterfaceEntry
+            {
+                IID = Guid.Parse("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90"),
+                Vtable = WinRT.Interop.IUnknownVftbl.AbiToProjectionVftblPtr
             });
             return entries;
         }
@@ -290,7 +307,6 @@ namespace WinRT
     public static partial class ComWrappersSupport
     {
         private static ConditionalWeakTable<object, ComCallableWrapper> ComWrapperCache = new ConditionalWeakTable<object, ComCallableWrapper>();
-        private static ConditionalWeakTable<object, Delegate> DelegateWrapperCache = new ConditionalWeakTable<object, Delegate>();
 
         private static ConcurrentDictionary<IntPtr, WeakReference<object>> RuntimeWrapperCache = new ConcurrentDictionary<IntPtr, WeakReference<object>>();
 
@@ -342,22 +358,36 @@ namespace WinRT
             RuntimeWrapperCache.TryAdd(thisPtr, referenceWrapper);
         }
 
-        public static IObjectReference CreateCCWForObject(object obj)
+        // If we aren't in the activation scenario and we need to register an RCW after the fact,
+        // we need to be resilient to an RCW having already been created on another thread.
+        // This method registers the given object as the RCW if there isn't already one registered
+        // and returns the registered RCW if it is still alive.
+        public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr)
         {
-            if (obj is global::System.Delegate del)
+            object registered = obj;
+            var referenceWrapper = new WeakReference<object>(obj);
+            RuntimeWrapperCache.AddOrUpdate(thisPtr, referenceWrapper, (_, value) =>
             {
-                return (IObjectReference)del.GetType().GetHelperType().GetMethod("CreateMarshaler").Invoke(null, new object[] { del });
+                value.TryGetTarget(out registered);
+                if (registered is null)
+                {
+                    registered = obj;
+                }
+                return value;
+            });
+
+            if (object.ReferenceEquals(registered, obj))
+            {
+                var _ = new RuntimeWrapperCleanup(thisPtr, referenceWrapper);
             }
-            var wrapper = ComWrapperCache.GetValue(obj, _ => new ComCallableWrapper(obj));
-            var objRef = ObjectReference<IUnknownVftbl>.FromAbi(wrapper.IdentityPtr);
-            GC.KeepAlive(wrapper); // This GC.KeepAlive ensures that a newly created wrapper is alive until objRef is created and has AddRef'd the CCW.
-            return objRef;
+
+            return registered;
         }
 
-        public static IObjectReference CreateCCWForDelegate(global::System.Delegate abiInvoke, global::System.Delegate del)
+        public static IObjectReference CreateCCWForObject(object obj)
         {
-            var wrapper = DelegateWrapperCache.GetValue(del, _ => new Delegate(abiInvoke, del));
-            var objRef = ObjectReference<IDelegateVftbl>.FromAbi(wrapper.ThisPtr);
+            var wrapper = ComWrapperCache.GetValue(obj, _ => new ComCallableWrapper(obj));
+            var objRef = ObjectReference<IUnknownVftbl>.FromAbi(wrapper.IdentityPtr);
             GC.KeepAlive(wrapper); // This GC.KeepAlive ensures that a newly created wrapper is alive until objRef is created and has AddRef'd the CCW.
             return objRef;
         }
@@ -365,9 +395,6 @@ namespace WinRT
         public static T FindObject<T>(IntPtr thisPtr)
             where T : class =>
             (T)UnmanagedObject.FindObject<ComCallableWrapper>(thisPtr).ManagedObject;
-
-        internal static T FindDelegate<T>(IntPtr thisPtr)
-            where T : class, System.Delegate => (T)(UnmanagedObject.FindObject<Delegate>(thisPtr).Target);
 
         public static IUnknownVftbl IUnknownVftbl { get; } = new IUnknownVftbl
         {
@@ -436,21 +463,66 @@ namespace WinRT
         }
     }
 
-    internal class RefCountingWrapperBase
+    internal class ComCallableWrapper
     {
+        private Dictionary<Guid, IntPtr> _managedQITable;
         private volatile IntPtr _strongHandle;
-        protected GCHandle WeakHandle { get; }
         private int _refs = 0;
+        private GCHandle WeakHandle { get; }
 
-        public RefCountingWrapperBase()
+        public object ManagedObject { get; }
+        public ComWrappersSupport.InspectableInfo InspectableInfo { get; }
+        public IntPtr IdentityPtr { get; }
+
+        public ComCallableWrapper(object obj)
         {
             _strongHandle = IntPtr.Zero;
             WeakHandle = GCHandle.Alloc(this, GCHandleType.WeakTrackResurrection);
+            ManagedObject = obj;
+            var (inspectableInfo, interfaceTableEntries) = ComWrappersSupport.PregenerateNativeTypeInformation(ManagedObject);
+
+            InspectableInfo = inspectableInfo;
+
+            interfaceTableEntries.Add(new ComInterfaceEntry
+            {
+                IID = typeof(IUnknownVftbl).GUID,
+                Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
+            });
+
+            interfaceTableEntries.Add(new ComInterfaceEntry
+            {
+                IID = typeof(IInspectable).GUID,
+                Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
+            });
+
+            InitializeManagedQITable(interfaceTableEntries);
+
+            IdentityPtr = _managedQITable[typeof(IUnknownVftbl).GUID];
         }
 
-        ~RefCountingWrapperBase()
+        ~ComCallableWrapper()
         {
             WeakHandle.Free();
+            foreach (var obj in _managedQITable.Values)
+            {
+                Marshal.FreeCoTaskMem(obj);
+            }
+            _managedQITable.Clear();
+        }
+
+        private void InitializeManagedQITable(List<ComInterfaceEntry> entries)
+        {
+            _managedQITable = new Dictionary<Guid, IntPtr>();
+            foreach (var entry in entries)
+            {
+                unsafe
+                {
+                    UnmanagedObject* ifaceTearOff = (UnmanagedObject*)Marshal.AllocCoTaskMem(sizeof(UnmanagedObject));
+                    ifaceTearOff->_vftblPtr = entry.Vtable;
+                    ifaceTearOff->_gchandlePtr = GCHandle.ToIntPtr(WeakHandle);
+                    _managedQITable.Add(entry.IID, (IntPtr)ifaceTearOff);
+                }
+            }
         }
 
         internal uint AddRef()
@@ -494,63 +566,6 @@ namespace WinRT
             }
             return refs;
         }
-    }
-
-    internal class ComCallableWrapper : RefCountingWrapperBase
-    {
-        private Dictionary<Guid, IntPtr> _managedQITable;
-
-        public object ManagedObject { get; }
-        public ComWrappersSupport.InspectableInfo InspectableInfo { get; }
-        public IntPtr IdentityPtr { get; }
-
-        internal ComCallableWrapper(object obj)
-        {
-            ManagedObject = obj;
-            var (inspectableInfo, interfaceTableEntries) = ComWrappersSupport.PregenerateNativeTypeInformation(ManagedObject);
-
-            InspectableInfo = inspectableInfo;
-
-            interfaceTableEntries.Add(new ComInterfaceEntry
-            {
-                IID = typeof(IUnknownVftbl).GUID,
-                Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
-            });
-
-            interfaceTableEntries.Add(new ComInterfaceEntry
-            {
-                IID = typeof(IInspectable).GUID,
-                Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
-            });
-
-            InitializeManagedQITable(interfaceTableEntries);
-
-            IdentityPtr = _managedQITable[typeof(IUnknownVftbl).GUID];
-        }
-
-        ~ComCallableWrapper()
-        {
-            foreach (var obj in _managedQITable.Values)
-            {
-                Marshal.FreeCoTaskMem(obj);
-            }
-            _managedQITable.Clear();
-        }
-
-        private void InitializeManagedQITable(List<ComInterfaceEntry> entries)
-        {
-            _managedQITable = new Dictionary<Guid, IntPtr>();
-            foreach (var entry in entries)
-            {
-                unsafe
-                {
-                    UnmanagedObject* ifaceTearOff = (UnmanagedObject*)Marshal.AllocCoTaskMem(sizeof(UnmanagedObject));
-                    ifaceTearOff->_vftblPtr = entry.Vtable;
-                    ifaceTearOff->_gchandlePtr = GCHandle.ToIntPtr(WeakHandle);
-                    _managedQITable.Add(entry.IID, (IntPtr)ifaceTearOff);
-                }
-            }
-        }
 
         internal int QueryInterface(Guid iid, out IntPtr ptr)
         {
@@ -561,78 +576,6 @@ namespace WinRT
                 return 0;
             }
             return E_NOINTERFACE;
-        }
-    }
-
-    partial class Delegate : RefCountingWrapperBase
-    {
-        private static Delegate FindObject(IntPtr thisPtr) => UnmanagedObject.FindObject<Delegate>(thisPtr);
-
-        // IUnknown
-        static unsafe readonly IUnknownVftbl._QueryInterface _QueryInterface = new IUnknownVftbl._QueryInterface(QueryInterface);
-        static readonly IUnknownVftbl._AddRef _AddRef = new IUnknownVftbl._AddRef(AddRef);
-        static readonly IUnknownVftbl._Release _Release = new IUnknownVftbl._Release(Release);
-
-        static unsafe int QueryInterface([In] IntPtr thisPtr, [In] ref Guid iid, [Out] out IntPtr obj)
-        {
-            const int E_NOINTERFACE = unchecked((int)0x80004002);
-
-            if (iid == typeof(IUnknownVftbl).GUID)
-            {
-                AddRef(thisPtr);
-                obj = thisPtr;
-                return 0; // S_OK;
-            }
-
-            obj = IntPtr.Zero;
-            return E_NOINTERFACE;
-        }
-
-        static uint AddRef([In] IntPtr thisPtr)
-        {
-            return FindObject(thisPtr).AddRef();
-        }
-
-        static uint Release([In] IntPtr thisPtr)
-        {
-            return FindObject(thisPtr).Release();
-        }
-
-        static IDelegateVftbl _vftblTemplate;
-        static Delegate()
-        {
-            // lay out the vftable
-            _vftblTemplate.QueryInterface = Marshal.GetFunctionPointerForDelegate(_QueryInterface);
-            _vftblTemplate.AddRef = Marshal.GetFunctionPointerForDelegate(_AddRef);
-            _vftblTemplate.Release = Marshal.GetFunctionPointerForDelegate(_Release);
-            _vftblTemplate.Invoke = IntPtr.Zero;
-        }
-
-        readonly UnmanagedObject _unmanagedObj;
-        public readonly IntPtr ThisPtr;
-        private global::System.Delegate _abiInvoke;
-        public global::System.Delegate Target { get; }
-
-        public Delegate(global::System.Delegate abiInvoke, global::System.Delegate managedDelegate)
-        {
-            _abiInvoke = abiInvoke;
-    
-            var vftbl = _vftblTemplate;
-            vftbl.Invoke = Marshal.GetFunctionPointerForDelegate(abiInvoke);
-
-            _unmanagedObj._vftblPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf(_vftblTemplate));
-            Marshal.StructureToPtr(vftbl, _unmanagedObj._vftblPtr, false);
-
-            Target = managedDelegate;
-            _unmanagedObj._gchandlePtr = GCHandle.ToIntPtr(WeakHandle);
-
-            ThisPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf(_unmanagedObj));
-            Marshal.StructureToPtr(_unmanagedObj, ThisPtr, false);
-        }
-
-        ~Delegate()
-        {
-            Marshal.FreeCoTaskMem(ThisPtr);
         }
     }
 #endif
