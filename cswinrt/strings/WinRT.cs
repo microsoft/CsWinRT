@@ -132,7 +132,7 @@ namespace WinRT
             }
             else
             {
-                IntPtr winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-0.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
+                winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-0.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
                 if (winRTErrorModule != IntPtr.Zero)
                 {
                     getRestrictedErrorInfo = Platform.GetProcAddress<GetRestrictedErrorInfo>(winRTErrorModule);
@@ -158,19 +158,20 @@ namespace WinRT
 
         private static Exception GetExceptionForHR(int hr, bool useGlobalErrorState, out bool restoredExceptionFromGlobalState)
         {
-            IObjectReference iErrorInfo;
+            restoredExceptionFromGlobalState = false;
+
+            IObjectReference iErrorInfo = null;
+            IObjectReference restrictedErrorInfoToSave = null;
             Exception ex;
-            bool foundRestrictedErrorInfo = false;
             string description = null;
             string restrictedError = null;
             string restrictedErrorReference = null;
             string restrictedCapabilitySid = null;
             bool hasOtherLanguageException = false;
-            IObjectReference restrictedErrorInfoToSave = null;
+
             if (useGlobalErrorState && getRestrictedErrorInfo != null)
             {
                 Marshal.ThrowExceptionForHR(getRestrictedErrorInfo(out IntPtr restrictedErrorInfoPtr));
-                foundRestrictedErrorInfo = true;
 
                 IObjectReference restrictedErrorInfoRef = ObjectReference<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>.Attach(ref restrictedErrorInfoPtr);
                 restrictedErrorInfoToSave = restrictedErrorInfoRef.As<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>();
@@ -280,12 +281,15 @@ namespace WinRT
                         hstring = IntPtr.Zero;
                     }
 
-                    roOriginateLanguageException(GetHRForException(ex), hstring, ComWrappersSupport.CreateCCWForObject(ex));
+                    using (var managedExceptionWrapper = ComWrappersSupport.CreateCCWForObject(ex))
+                    {
+                        roOriginateLanguageException(GetHRForException(ex), hstring, managedExceptionWrapper.ThisPtr);
+                    }
                 }
             }
             else
             {
-                using (var iErrorInfo = ComWrappersSupport.CreateCCWForObject(new ManagedExceptionErrorInfo(iErrorInfo)))
+                using (var iErrorInfo = ComWrappersSupport.CreateCCWForObject(new ManagedExceptionErrorInfo(ex)))
                 {
                     Platform.SetErrorInfo(0, iErrorInfo.ThisPtr);
                 }
@@ -297,7 +301,7 @@ namespace WinRT
             int hr = ex.HResult;
             if (ex.TryGetRestrictedLanguageErrorObject(out var restrictedErrorObject))
             {
-                restrictedErrorObject.AsType<ABI.WinRT.Interop.IRestrictedErrorInfo>().GetDetails(out _, out hr, out _, out _);
+                restrictedErrorObject.AsType<ABI.WinRT.Interop.IRestrictedErrorInfo>().GetErrorDetails(out _, out hr, out _, out _);
             }
             if (hr == COR_E_OBJECTDISPOSED)
             {
@@ -357,7 +361,7 @@ namespace WinRT
             }
         }
 
-        internal bool TryGetRestrictedLanguageErrorObject(
+        internal static bool TryGetRestrictedLanguageErrorObject(
             this Exception ex,
             out IObjectReference restrictedErrorObject)
         {
@@ -420,7 +424,8 @@ namespace WinRT
                 }
                 catch (Exception ex)
                 {
-                    return ex.HResult;
+                    ExceptionHelpers.SetErrorInfo(ex);
+                    return ExceptionHelpers.GetHRForException(ex);
                 }
                 return 0;
             }
@@ -434,7 +439,8 @@ namespace WinRT
                 }
                 catch (Exception ex)
                 {
-                    return ex.HResult;
+                    ExceptionHelpers.SetErrorInfo(ex);
+                    return ExceptionHelpers.GetHRForException(ex);
                 }
                 return 0;
             }
@@ -465,7 +471,7 @@ namespace WinRT
             IntPtr __retval = default;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetRuntimeClassName(ThisPtr, out __retval));
+                ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetRuntimeClassName(ThisPtr, out __retval));
                 return MarshalString.FromAbi(__retval);
             }
             finally
@@ -728,7 +734,7 @@ namespace WinRT
             {
                 using (var unknownObjRef = this.As<IUnknownVftbl>())
                 {
-                    return Unsafe.AsRef<VftblPtr>(unknownObjRef.ThisPtr.ToPointer()).Vftbl == IUnknownVftbl.AbiToProjectionVftblPtr;
+                    return ((VftblPtr*)unknownObjRef.ThisPtr.ToPointer())->Vftbl == IUnknownVftbl.AbiToProjectionVftblPtr;
                 }
             }
         }

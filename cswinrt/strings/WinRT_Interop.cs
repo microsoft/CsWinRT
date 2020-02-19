@@ -126,7 +126,7 @@ namespace WinRT.Interop
 
             try
             {
-                weakReference = ComWrappersSupport.CreateCCWForObject(new ManagedWeakReference(ComWrappersSupport.FindObject<object>(thisPtr))).As<IWeakReferenceVftbl>().GetRef();
+                weakReference = ComWrappersSupport.CreateCCWForObject(new ManagedWeakReference(ComWrappersSupport.FindObject<object>(thisPtr))).As<ABI.WinRT.Interop.IWeakReference.Vftbl>().GetRef();
             }
             catch (Exception __exception__)
             {
@@ -169,7 +169,7 @@ namespace WinRT.Interop
         string GetSource();
         string GetDescription();
         string GetHelpFile();
-        string GetHelpContent();
+        string GetHelpFileContent();
     }
 
     [Guid("DF0B3D60-548F-101B-8E65-08002B2BD119")]
@@ -179,7 +179,7 @@ namespace WinRT.Interop
     }
 
     [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
-    internal interface ILangaugeExceptionErrorInfo
+    internal interface ILanguageExceptionErrorInfo
     {
         IObjectReference GetLanguageException();
     }
@@ -223,9 +223,11 @@ namespace WinRT.Interop
 
         public string GetHelpFile() => _exception.HelpLink;
 
-        public string GetHelpContent() => string.Empty;
+        public string GetHelpFileContent() => string.Empty;
     }
 }
+
+#pragma warning disable CS0649
 
 namespace ABI.WinRT.Interop
 {
@@ -245,9 +247,9 @@ namespace ABI.WinRT.Interop
             public static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-            static IWeakReferenceVftbl()
+            static Vftbl()
             {
-                AbiToProjectionVftable = new IWeakReferenceVftbl
+                AbiToProjectionVftable = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
                     Resolve = Do_Abi_Resolve
@@ -264,7 +266,7 @@ namespace ABI.WinRT.Interop
 
                 try
                 {
-                    _objectReference = WinRT.ComWrappersSupport.FindObject<IWeakReference>(thisPtr).Resolve(riid);
+                    _objectReference = global::WinRT.ComWrappersSupport.FindObject<global::WinRT.Interop.IWeakReference>(thisPtr).Resolve(riid);
                     objectReference = _objectReference?.GetRef() ?? IntPtr.Zero;
                 }
                 catch (Exception __exception__)
@@ -282,7 +284,7 @@ namespace ABI.WinRT.Interop
         [Guid("1CF2B120-547D-101B-8E65-08002B2BD119")]
         public struct Vftbl
         {
-            internal global::WinRT.Interop.IUnknownVftbl unknownVftbl;
+            internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
             public global::WinRT.Interop._get_PropertyAsGuid GetGuid_0;
             public global::WinRT.Interop._get_PropertyAsString GetSource_1;
             public global::WinRT.Interop._get_PropertyAsString GetDescription_2;
@@ -312,7 +314,7 @@ namespace ABI.WinRT.Interop
             {
                 try
                 {
-                    guid = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>().GetGuid();
+                    guid = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetGuid();
                 }
                 catch (Exception ex)
                 {
@@ -328,7 +330,7 @@ namespace ABI.WinRT.Interop
                 string _source;
                 try
                 {
-                    _source = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>().GetSource();
+                    _source = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetSource();
                     source = Marshal.StringToBSTR(_source);
                 }
                 catch (Exception ex)
@@ -346,7 +348,7 @@ namespace ABI.WinRT.Interop
                 string _description;
                 try
                 {
-                    _description = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>().GetDescription();
+                    _description = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetDescription();
                     description = Marshal.StringToBSTR(_description);
                 }
                 catch (Exception ex)
@@ -364,7 +366,7 @@ namespace ABI.WinRT.Interop
                 string _helpFile;
                 try
                 {
-                    _helpFile = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>().GetHelpFile();
+                    _helpFile = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetHelpFile();
                     helpFile = Marshal.StringToBSTR(_helpFile);
                 }
                 catch (Exception ex)
@@ -382,7 +384,7 @@ namespace ABI.WinRT.Interop
                 string _helpFileContent;
                 try
                 {
-                    _helpFileContent = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>().GetHelpFileContent();
+                    _helpFileContent = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetHelpFileContent();
                     helpFileContent = Marshal.StringToBSTR(_helpFileContent);
                 }
                 catch (Exception ex)
@@ -458,12 +460,12 @@ namespace ABI.WinRT.Interop
             }
         }
 
-        public string GetHelpContent()
+        public string GetHelpFileContent()
         {
             IntPtr __retval = default;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetHelpContent_4(ThisPtr, out __retval));
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetHelpFileContent_4(ThisPtr, out __retval));
                 return Marshal.PtrToStringBSTR(__retval);
             }
             finally
@@ -474,7 +476,7 @@ namespace ABI.WinRT.Interop
     }
 
     [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
-    internal class ILanguageExceptionErrorInfo : global::WinRT.Interop.ILangaugeExceptionErrorInfo
+    internal class ILanguageExceptionErrorInfo : global::WinRT.Interop.ILanguageExceptionErrorInfo
     {
         [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
         public struct Vftbl
@@ -499,12 +501,12 @@ namespace ABI.WinRT.Interop
 
         public IObjectReference GetLanguageException()
         {
-            IntPtr __return_value__;
+            IntPtr __return_value__ = IntPtr.Zero;
 
             try
             {
                 Marshal.ThrowExceptionForHR(_obj.Vftbl.GetLanguageException_0(ThisPtr, out __return_value__));
-                return ObjectReference<IUnknownVftbl>.Attach(ref __return_value__);
+                return ObjectReference<global::WinRT.Interop.IUnknownVftbl>.Attach(ref __return_value__);
             }
             finally
             {
@@ -542,14 +544,13 @@ namespace ABI.WinRT.Interop
             {
                 try
                 {
-                    return ComWrappersSupport.FindObject<global::WinRT.Interop.ISupportErrorInfo>().InterfaceSupportsErrorInfo(guid);
+                    return global::WinRT.ComWrappersSupport.FindObject<global::WinRT.Interop.ISupportErrorInfo>(thisPtr).InterfaceSupportsErrorInfo(guid) ? 0 : 1;
                 }
                 catch (Exception ex)
                 {
                     ExceptionHelpers.SetErrorInfo(ex);
                     return ExceptionHelpers.GetHRForException(ex);
                 }
-                return 0;
             }
         }
 
@@ -606,9 +607,9 @@ namespace ABI.WinRT.Interop
             out string restrictedDescription,
             out string capabilitySid)
         {
-            IntPtr _description;
-            IntPtr _restrictedDescription;
-            IntPtr _capabilitySid;
+            IntPtr _description = IntPtr.Zero;
+            IntPtr _restrictedDescription = IntPtr.Zero;
+            IntPtr _capabilitySid = IntPtr.Zero;
             try
             {
                 Marshal.ThrowExceptionForHR(_obj.Vftbl.GetErrorDetails_0(ThisPtr, out _description, out error, out _restrictedDescription, out _capabilitySid));

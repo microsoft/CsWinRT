@@ -1773,7 +1773,7 @@ event % %;)",
             }
             else
             {
-                w.write("Marshal.ThrowExceptionForHR(%(ThisPtr%));\n",
+                w.write("global::WinRT.ExceptionHelpers.ThrowExceptionForHR(%(ThisPtr%));\n",
                     invoke_target,
                     bind_each([](writer& w, abi_marshaler const& m)
                     {
@@ -2569,7 +2569,8 @@ try
 }
 catch (Exception __exception__)
 {
-return __exception__.HResult;
+global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
 }
 return 0;)",
             [&](writer& w) {
@@ -2643,7 +2644,7 @@ private static unsafe int Do_Abi_%%
             bind<write_abi_signature>(method),
             bind<write_managed_method_call>(
                 signature,
-                w.write_temp("WinRT.ComWrappersSupport.FindObject<%>(%).%%",
+                w.write_temp("global::WinRT.ComWrappersSupport.FindObject<%>(%).%%",
                     type_name,
                     have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                     method.Name(),
@@ -2676,7 +2677,7 @@ private static unsafe int Do_Abi_%%
             bind<write_abi_signature>(setter),
             bind<write_managed_method_call>(
                 setter_sig,
-                w.write_temp("WinRT.ComWrappersSupport.FindObject<%>(%).% = %",
+                w.write_temp("global::WinRT.ComWrappersSupport.FindObject<%>(%).% = %",
                     type_name,
                     have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                     prop.Name(),
@@ -2704,7 +2705,7 @@ private static unsafe int Do_Abi_%%
                 bind<write_abi_signature>(getter),
                 bind<write_managed_method_call>(
                     getter_sig,
-                    w.write_temp("WinRT.ComWrappersSupport.FindObject<%>(%).%%",
+                    w.write_temp("global::WinRT.ComWrappersSupport.FindObject<%>(%).%%",
                         type_name,
                         have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                         prop.Name(),
@@ -2736,7 +2737,7 @@ private static unsafe int Do_Abi_%%
 % = default;
 try
 {
-var __this = WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
+var __this = global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
 var __handler = %.FromAbi(%);
 % = _%_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
 __this.% += __handler;
@@ -2762,7 +2763,7 @@ private static unsafe int Do_Abi_%%
 {
 try
 {
-var __this = WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
+var __this = global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
 if(_%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(%, out var __handler))
 {
 __this.% -= __handler;
@@ -3102,7 +3103,7 @@ public %IntPtr ThisPtr => _default.ThisPtr;
 
 private % _default;
 %
-public static %% FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
+public static %% FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(global::WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
 
 internal %(% ifc)%
 {
@@ -3214,7 +3215,7 @@ AbiToProjectionVftablePtr = nativeVftbl;
 
 public static global::System.Delegate AbiInvokeDelegate { get ; }
 
-public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).As<WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%)));
+public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%)));
 
 public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
 
@@ -3376,7 +3377,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                 w.write(")");
             },
             bind<write_managed_method_call>(signature,
-                w.write_temp(R"(WinRT.ComWrappersSupport.MarshalDelegateInvoke(%, (% invoke) =>
+                w.write_temp(R"(global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(%, (% invoke) =>
 {
     %
 }))",
