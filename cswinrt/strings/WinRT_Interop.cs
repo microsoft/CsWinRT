@@ -172,6 +172,12 @@ namespace WinRT.Interop
         string GetHelpContent();
     }
 
+    [Guid("DF0B3D60-548F-101B-8E65-08002B2BD119")]
+    internal interface ISupportErrorInfo
+    {
+        bool InterfaceSupportsErrorInfo(Guid riid);
+    }
+
     [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
     internal interface ILangaugeExceptionErrorInfo
     {
@@ -188,6 +194,36 @@ namespace WinRT.Interop
             out string capabilitySid);
 
         string GetReference();
+    }
+
+    internal class ManagedExceptionErrorInfo : IErrorInfo, ISupportErrorInfo
+    {
+        private readonly Exception _exception;
+
+        public ManagedExceptionErrorInfo(Exception ex)
+        {
+            _exception = ex;
+        }
+
+        public bool InterfaceSupportsErrorInfo(Guid riid) => true;
+
+        public Guid GetGuid() => default;
+
+        public string GetSource() => _exception.Source;
+
+        public string GetDescription()
+        {
+            string desc = _exception.Message;
+            if (string.IsNullOrEmpty(desc))
+            {
+                desc = _exception.GetType().FullName;
+            }
+            return desc;
+        }
+
+        public string GetHelpFile() => _exception.HelpLink;
+
+        public string GetHelpContent() => string.Empty;
     }
 }
 
@@ -445,36 +481,6 @@ namespace ABI.WinRT.Interop
         {
             internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
             public global::WinRT.Interop._get_PropertyAsObject GetLanguageException_0;
-
-            private static readonly Vftbl AbiToProjectionVftable;
-            public static readonly IntPtr AbiToProjectionVftablePtr;
-            static unsafe Vftbl()
-            {
-                AbiToProjectionVftable = new Vftbl
-                {
-                    IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-                    GetLanguageException_0 = Do_Abi_GetLanguageException_0
-                };
-                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<Vftbl>());
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
-                AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
-            }
-
-            private static int Do_Abi_GetLanguageException_0(IntPtr thisPtr, out IntPtr languageException)
-            {
-                languageException = IntPtr.Zero;
-                try
-                {
-                    IObjectReference objRef = ComWrappersSupport.FindObject<global::ILanguageExceptionErrorInfo>(thisPtr).GetLanguageException();
-                    languageException = objRef.GetRef();
-                }
-                catch (Exception ex)
-                {
-                    ExceptionHelpers.SetErrorInfo(ex);
-                    return ExceptionHelpers.GetHRForException(ex);
-                }
-                return 0;
-            }
         }
 
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
@@ -507,6 +513,66 @@ namespace ABI.WinRT.Interop
         }
     }
 
+    [Guid("DF0B3D60-548F-101B-8E65-08002B2BD119")]
+    internal class ISupportErrorInfo : global::WinRT.Interop.ISupportErrorInfo
+    {
+        [Guid("DF0B3D60-548F-101B-8E65-08002B2BD119")]
+        public struct Vftbl
+        {
+            public delegate int _InterfaceSupportsErrorInfo(IntPtr thisPtr, ref Guid riid);
+            internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
+            public _InterfaceSupportsErrorInfo InterfaceSupportsErrorInfo_0;
+
+            private static readonly Vftbl AbiToProjectionVftable;
+            public static readonly IntPtr AbiToProjectionVftablePtr;
+
+            static unsafe Vftbl()
+            {
+                AbiToProjectionVftable = new Vftbl
+                {
+                    IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
+                    InterfaceSupportsErrorInfo_0 = Do_Abi_InterfaceSupportsErrorInfo_0
+                };
+                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<Vftbl>());
+                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
+            }
+
+            private static int Do_Abi_InterfaceSupportsErrorInfo_0(IntPtr thisPtr, ref Guid guid)
+            {
+                try
+                {
+                    return ComWrappersSupport.FindObject<global::WinRT.Interop.ISupportErrorInfo>().InterfaceSupportsErrorInfo(guid);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionHelpers.SetErrorInfo(ex);
+                    return ExceptionHelpers.GetHRForException(ex);
+                }
+                return 0;
+            }
+        }
+
+        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+
+        public static implicit operator ISupportErrorInfo(IObjectReference obj) => (obj != null) ? new ISupportErrorInfo(obj) : null;
+        public static implicit operator ISupportErrorInfo(ObjectReference<Vftbl> obj) => (obj != null) ? new ISupportErrorInfo(obj) : null;
+        protected readonly ObjectReference<Vftbl> _obj;
+        public IntPtr ThisPtr => _obj.ThisPtr;
+        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
+        public A As<A>() => _obj.AsType<A>();
+        public ISupportErrorInfo(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public ISupportErrorInfo(ObjectReference<Vftbl> obj)
+        {
+            _obj = obj;
+        }
+
+        public bool InterfaceSupportsErrorInfo(Guid riid)
+        {
+            return _obj.Vftbl.InterfaceSupportsErrorInfo_0(ThisPtr, ref riid) == 0;
+        }
+    }
+
     [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
     internal class IRestrictedErrorInfo : global::WinRT.Interop.IRestrictedErrorInfo
     {
@@ -518,66 +584,6 @@ namespace ABI.WinRT.Interop
             internal global::WinRT.Interop.IUnknownVftbl unknownVftbl;
             public _GetErrorDetails GetErrorDetails_0;
             public global::WinRT.Interop._get_PropertyAsString GetReference_1;
-
-            private static readonly Vftbl AbiToProjectionVftable;
-            public static readonly IntPtr AbiToProjectionVftablePtr;
-            static unsafe Vftbl()
-            {
-                AbiToProjectionVftable = new Vftbl
-                {
-                    IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-                    GetErrorDetails_0 = Do_Abi_GetErrorDetails_0,
-                    GetReference_1 = Do_Abi_GetReference_1
-                };
-                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<Vftbl>());
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
-                AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
-            }
-
-            private static int Do_Abi_GetErrorDetails_0(IntPtr thisPtr, out IntPtr description, out int error, out IntPtr restrictedDescription, out IntPtr capabilitySid)
-            {
-                description = IntPtr.Zero;
-                restrictedDescription = IntPtr.Zero;
-                capabilitySid = IntPtr.Zero;
-                string _description;
-                string _restrictedDescription;
-                string _capabilitySid;
-
-                try
-                {
-                    ComWrappersSupport.FindObject<global::WinRT.Interop.IRestrictedErrorInfo>().GetErrorDetails(out _description, out error, out _restrictedDescription, out _capabilitySid);
-                    description = Marshal.StringToBSTR(_description);
-                    restrictedDescription = Marshal.StringToBSTR(_restrictedDescription);
-                    capabilitySid = Marshal.StringToBSTR(_capabilitySid);
-                }
-                catch (Exception ex)
-                {
-                    Marshal.FreeBSTR(description);
-                    Marshal.FreeBSTR(restrictedDescription);
-                    Marshal.FreeBSTR(capabilitySid);
-                    ExceptionHelpers.SetErrorInfo(ex);
-                    return ExceptionHelpers.GetHRForException(ex);
-                }
-                return 0;
-            }
-
-            private static int Do_Abi_GetReference_1(IntPtr thisPtr, out IntPtr reference)
-            {
-                reference = IntPtr.Zero;
-                string _reference;
-                try
-                {
-                    _reference = ComWrappersSupport.FindObject<global::WinRT.Interop.IRestrictedErrorInfo>().GetReference();
-                    reference = Marshal.StringToBSTR(_reference);
-                }
-                catch (Exception ex)
-                {
-                    Marshal.FreeBSTR(reference);
-                    ExceptionHelpers.SetErrorInfo(ex);
-                    return ExceptionHelpers.GetHRForException(ex);
-                }
-                return 0;
-            }
         }
 
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
