@@ -777,5 +777,19 @@ namespace UnitTest
             Assert.Equal(now, TestObject.DateTimeProperty);
             Assert.Equal(now, TestObject.GetDateTimeProperty().Value);
         }
+
+        [Fact]
+        public void TestExceptionMapping()
+        {
+            var ex = new ArgumentOutOfRangeException();
+
+            TestObject.HResultProperty = ex;
+
+            Assert.IsType<ArgumentOutOfRangeException>(TestObject.HResultProperty);
+
+            TestObject.HResultProperty = null;
+
+            Assert.Null(TestObject.HResultProperty);
+        }
     }
 }

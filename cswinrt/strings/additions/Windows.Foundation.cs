@@ -188,6 +188,48 @@ namespace ABI.System
             return "struct(Windows.Foundation.DateTime;i8)";
         }
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Exception
+    {
+        public int hr;
+
+        public struct Marshaler
+        {
+            public Exception __abi;
+        }
+
+        public static Marshaler CreateMarshaler(global::System.Exception value)
+        {
+            return new Marshaler { __abi = new Exception { hr = value is object ? global::WinRT.ExceptionHelpers.GetHRForException(value) : 0 } };
+        }
+
+        public static Exception GetAbi(Marshaler m) => m.__abi;
+
+        public static global::System.Exception FromAbi(Exception value)
+        {
+            return global::WinRT.ExceptionHelpers.GetExceptionForHR(value.hr);
+        }
+
+        public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) =>
+            *(Exception*)dest.ToPointer() = GetAbi(arg);
+
+        public static Exception FromManaged(global::System.Exception value)
+        {
+            return new Exception { hr = value is object ? global::WinRT.ExceptionHelpers.GetHRForException(value) : 0 };
+        }
+
+        public static unsafe void CopyManaged(global::System.Exception arg, IntPtr dest) =>
+            *(Exception*)dest.ToPointer() = FromManaged(arg);
+
+        public static void DisposeMarshaler(Marshaler m) { }
+        public static void DisposeAbi(Exception abi) { }
+
+        public static string GetGuidSignature()
+        {
+            return "struct(Windows.Foundation.HResult;i4)";
+        }
+    }
 }
 
 namespace System
@@ -217,7 +259,7 @@ namespace System
                     return Task.CompletedTask;
 
                 case AsyncStatus.Error:
-                    return Task.FromException(Marshal.GetExceptionForHR(source.ErrorCode.Value)); // TODO: Restricted error info
+                    return Task.FromException(source.ErrorCode);
 
                 case AsyncStatus.Canceled:
                     return Task.FromCanceled(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
@@ -255,7 +297,7 @@ namespace System
                     return Task.FromResult(source.GetResults());
 
                 case AsyncStatus.Error:
-                    return Task.FromException<TResult>(Marshal.GetExceptionForHR(source.ErrorCode.Value)); // TODO: Restricted error info
+                    return Task.FromException<TResult>(source.ErrorCode);
 
                 case AsyncStatus.Canceled:
                     return Task.FromCanceled<TResult>(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
@@ -293,7 +335,7 @@ namespace System
                     return Task.CompletedTask;
 
                 case AsyncStatus.Error:
-                    return Task.FromException(Marshal.GetExceptionForHR(source.ErrorCode.Value)); // TODO: Restricted error info
+                    return Task.FromException(source.ErrorCode);
 
                 case AsyncStatus.Canceled:
                     return Task.FromCanceled(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
@@ -352,7 +394,7 @@ namespace System
                     return Task.FromResult(source.GetResults());
 
                 case AsyncStatus.Error:
-                    return Task.FromException<TResult>(Marshal.GetExceptionForHR(source.ErrorCode.Value)); // TODO: Restricted error info
+                    return Task.FromException<TResult>(source.ErrorCode);
 
                 case AsyncStatus.Canceled:
                     return Task.FromCanceled<TResult>(cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken(true));
@@ -510,17 +552,13 @@ namespace System
                     Exception error = null;
                     if (asyncStatus == AsyncStatus.Error)
                     {
-                        var hr = asyncInfo.ErrorCode;
+                        error = asyncInfo.ErrorCode;
 
                         // Defend against a faulty IAsyncInfo implementation
-                        if (hr.Value >= 0)
+                        if (error is null)
                         {
                             Debug.Fail("IAsyncInfo.Status == Error, but ErrorCode returns a null Exception (implying S_OK).");
                             error = new InvalidOperationException("The asynchronous operation could not be completed.");
-                        }
-                        else
-                        {
-                            error = Marshal.GetExceptionForHR(hr.Value); // TODO: Restricted error info
                         }
                     }
                     else if (asyncStatus == AsyncStatus.Completed && getResultsFunction != null)

@@ -148,7 +148,7 @@ namespace WinRT
             {
                 ExceptionDispatchInfo.Capture(ex).Throw();
             }
-            else
+            else if (ex is object)
             {
                 throw ex;
             }
@@ -159,6 +159,10 @@ namespace WinRT
         private static Exception GetExceptionForHR(int hr, bool useGlobalErrorState, out bool restoredExceptionFromGlobalState)
         {
             restoredExceptionFromGlobalState = false;
+            if (hr == 0)
+            {
+                return null;
+            }
 
             IObjectReference iErrorInfo = null;
             IObjectReference restrictedErrorInfoToSave = null;
@@ -173,45 +177,48 @@ namespace WinRT
             {
                 Marshal.ThrowExceptionForHR(getRestrictedErrorInfo(out IntPtr restrictedErrorInfoPtr));
 
-                IObjectReference restrictedErrorInfoRef = ObjectReference<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>.Attach(ref restrictedErrorInfoPtr);
-                restrictedErrorInfoToSave = restrictedErrorInfoRef.As<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>();
-
-                ABI.WinRT.Interop.IRestrictedErrorInfo restrictedErrorInfo = new ABI.WinRT.Interop.IRestrictedErrorInfo(restrictedErrorInfoRef);
-                restrictedErrorInfo.GetErrorDetails(out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
-                restrictedErrorReference = restrictedErrorInfo.GetReference();
-                try
+                if (restrictedErrorInfoPtr != IntPtr.Zero)
                 {
-                    ILanguageExceptionErrorInfo languageErrorInfo = restrictedErrorInfo.As<ABI.WinRT.Interop.ILanguageExceptionErrorInfo>();
-                    using (IObjectReference languageException = languageErrorInfo.GetLanguageException())
+                    IObjectReference restrictedErrorInfoRef = ObjectReference<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>.Attach(ref restrictedErrorInfoPtr);
+                    restrictedErrorInfoToSave = restrictedErrorInfoRef.As<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>();
+
+                    ABI.WinRT.Interop.IRestrictedErrorInfo restrictedErrorInfo = new ABI.WinRT.Interop.IRestrictedErrorInfo(restrictedErrorInfoRef);
+                    restrictedErrorInfo.GetErrorDetails(out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
+                    restrictedErrorReference = restrictedErrorInfo.GetReference();
+                    try
                     {
-                        if (languageException is object)
+                        ILanguageExceptionErrorInfo languageErrorInfo = restrictedErrorInfo.As<ABI.WinRT.Interop.ILanguageExceptionErrorInfo>();
+                        using (IObjectReference languageException = languageErrorInfo.GetLanguageException())
                         {
-                            if (languageException.IsReferenceToManagedObject)
+                            if (languageException is object)
                             {
-                                ex = ComWrappersSupport.FindObject<Exception>(languageException.ThisPtr);
-                                if (GetHRForException(ex) == hr)
+                                if (languageException.IsReferenceToManagedObject)
                                 {
-                                    restoredExceptionFromGlobalState = true;
-                                    return ex;
+                                    ex = ComWrappersSupport.FindObject<Exception>(languageException.ThisPtr);
+                                    if (GetHRForException(ex) == hr)
+                                    {
+                                        restoredExceptionFromGlobalState = true;
+                                        return ex;
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                hasOtherLanguageException = true;
+                                else
+                                {
+                                    hasOtherLanguageException = true;
+                                }
                             }
                         }
                     }
-                }
-                catch (Exception)
-                {
-                    if (hr == hrLocal)
+                    catch (Exception)
                     {
-                        try
+                        if (hr == hrLocal)
                         {
-                            iErrorInfo = restrictedErrorInfoRef.As<ABI.WinRT.Interop.IErrorInfo.Vftbl>();
-                        }
-                        catch (Exception)
-                        {
+                            try
+                            {
+                                iErrorInfo = restrictedErrorInfoRef.As<ABI.WinRT.Interop.IErrorInfo.Vftbl>();
+                            }
+                            catch (Exception)
+                            {
+                            }
                         }
                     }
                 }
