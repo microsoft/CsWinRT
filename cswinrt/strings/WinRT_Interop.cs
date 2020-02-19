@@ -424,7 +424,7 @@ namespace ABI.WinRT.Interop
             try
             {
                 Marshal.ThrowExceptionForHR(_obj.Vftbl.GetSource_1(ThisPtr, out __retval));
-                return Marshal.PtrToStringBSTR(__retval);
+                return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
             {
@@ -438,7 +438,7 @@ namespace ABI.WinRT.Interop
             try
             {
                 Marshal.ThrowExceptionForHR(_obj.Vftbl.GetDescription_2(ThisPtr, out __retval));
-                return Marshal.PtrToStringBSTR(__retval);
+                return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
             {
@@ -452,7 +452,7 @@ namespace ABI.WinRT.Interop
             try
             {
                 Marshal.ThrowExceptionForHR(_obj.Vftbl.GetHelpFile_3(ThisPtr, out __retval));
-                return Marshal.PtrToStringBSTR(__retval);
+                return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
             {
@@ -466,7 +466,7 @@ namespace ABI.WinRT.Interop
             try
             {
                 Marshal.ThrowExceptionForHR(_obj.Vftbl.GetHelpFileContent_4(ThisPtr, out __retval));
-                return Marshal.PtrToStringBSTR(__retval);
+                return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
             {
@@ -613,9 +613,9 @@ namespace ABI.WinRT.Interop
             try
             {
                 Marshal.ThrowExceptionForHR(_obj.Vftbl.GetErrorDetails_0(ThisPtr, out _description, out error, out _restrictedDescription, out _capabilitySid));
-                description = Marshal.PtrToStringBSTR(_description);
-                restrictedDescription = Marshal.PtrToStringBSTR(_restrictedDescription);
-                capabilitySid = Marshal.PtrToStringBSTR(_capabilitySid);
+                description = _description != IntPtr.Zero ? Marshal.PtrToStringBSTR(_description) : string.Empty;
+                restrictedDescription = _restrictedDescription != IntPtr.Zero ? Marshal.PtrToStringBSTR(_restrictedDescription) : string.Empty;
+                capabilitySid = _capabilitySid != IntPtr.Zero ? Marshal.PtrToStringBSTR(_capabilitySid) : string.Empty;
             }
             finally
             {
@@ -631,7 +631,7 @@ namespace ABI.WinRT.Interop
             try
             {
                 Marshal.ThrowExceptionForHR(_obj.Vftbl.GetReference_1(ThisPtr, out __retval));
-                return Marshal.PtrToStringBSTR(__retval);
+                return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
             {
