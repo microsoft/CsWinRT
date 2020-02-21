@@ -43,5 +43,5 @@ if %cswinrt_platform%==x86 (
 )
 %program_files%\dotnet\dotnet.exe test --no-build --logger xunit;LogFilePath=%~dp0test_%cswinrt_version%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
 
-set cswinrt_bin_dir=%~dp0_build\%cswinrt_platform%\%cswinrt_configuration%
+set cswinrt_bin_dir=%~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin
 nuget pack nuget/Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_bin_dir%\cswinrt.exe -Version %cswinrt_version% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed
