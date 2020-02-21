@@ -22,12 +22,15 @@
     <BuildVersion Condition="'$(BuildVersion)'==''">1.0.0.0</BuildVersion>
     <BuildPlatform>$(Platform)</BuildPlatform>
     <BuildPlatform Condition="'$(Platform)'=='Win32'">x86</BuildPlatform>
-    <BuildOutDir Condition="'$(BuildOutDir)'==''">$([System.IO.Path]::GetFullPath('$(SolutionDir)_build\$(BuildPlatform)\$(Configuration)\'))</BuildOutDir>
-    <CsWinRTDir>$(BuildOutDir)</CsWinRTDir>
-    <CsWinRTDir Condition="'$(Platform)'=='ARM' or '$(Platform)'=='ARM64'">$([System.IO.Path]::GetFullPath('$(SolutionDir)_build\x86\$(Configuration)\'))</CsWinRTDir>
+    <BuildOutDir Condition="'$(BuildOutDir)'==''">$([MSBuild]::NormalizeDirectory('$(SolutionDir)_build', '$(BuildPlatform)', '$(Configuration)'))</BuildOutDir>
+    <CsWinRTDir>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', 'cswinrt', 'bin'))</CsWinRTDir>
+    <CsWinRTDir Condition="'$(Platform)'=='ARM' or '$(Platform)'=='ARM64'">$([MSBuild]::NormalizeDirectory('$(SolutionDir)_build', 'x86', '$(Configuration)', 'cswinrt', 'bin'))</CsWinRTDir>
     <CsWinRTExe>$(CsWinRTDir)cswinrt.exe</CsWinRTExe>
-    <OutDir>$(BuildOutDir)</OutDir>
-    <IntDir>$(OutDir)$(ProjectName)\</IntDir>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.vcxproj'">
+    <OutDir>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', '$(MSBuildProjectName)', 'bin'))</OutDir>
+    <IntDir>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', '$(MSBuildProjectName)', 'obj'))</IntDir>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
