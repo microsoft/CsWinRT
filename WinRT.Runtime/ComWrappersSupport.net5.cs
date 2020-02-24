@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -100,6 +101,21 @@ namespace WinRT
             // and correctly handles calling Release on a finalizer thread.
             var inspectable = new IInspectable(ObjectReference<IUnknownVftbl>.Attach(ref externalComObject)); string runtimeClassName = inspectable.GetRuntimeClassName();
             return ComWrappersSupport.GetTypedRcwFactory(inspectable.GetRuntimeClassName())(inspectable);
+        }
+
+        protected override void ReleaseObjects(IEnumerable objects)
+        {
+            foreach (var obj in objects)
+            {
+                if (ComWrappersSupport.TryUnwrapObject(obj, out var objRef))
+                {
+                    objRef.Dispose();
+                }
+                else
+                {
+                    throw new InvalidOperationException("Cannot release objects that are not runtime wrappers of native WinRT objects.");
+                }
+            }
         }
 
         unsafe class VtableEntriesCleanupScout

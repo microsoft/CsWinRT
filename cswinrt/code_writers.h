@@ -3012,7 +3012,8 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
 
         uint32_t const vtable_base = type.MethodList().first.index();
 
-        w.write(R"(%
+        w.write(R"([global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+%
 internal class % : %
 {
 %
@@ -3096,7 +3097,8 @@ public static Guid PIID = Vftbl.PIID;
         auto base_semantics = get_type_semantics(type.Extends());
         auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
 
-        w.write(R"(public %class %%
+        w.write(R"([global::WinRT.ProjectedRuntimeClass(nameof(_default))]
+public %class %%
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
 
@@ -3224,19 +3226,20 @@ var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(nativeDelegate);
 return (%)ComWrappersSupport.TryRegisterObjectForInterface(new %(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
 }
 
+[global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 private class NativeDelegateWrapper
 {
-public ObjectReference<global::WinRT.Interop.IDelegateVftbl> NativeDelegate { get; }
+private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
 
 public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
 {
-NativeDelegate = nativeDelegate;
+_nativeDelegate = nativeDelegate;
 }
 
 public % Invoke(%)
 {
-IntPtr ThisPtr = NativeDelegate.ThisPtr;
-var abiInvoke = Marshal.GetDelegateForFunctionPointer%(NativeDelegate.Vftbl.Invoke%);%
+IntPtr ThisPtr = _nativeDelegate.ThisPtr;
+var abiInvoke = Marshal.GetDelegateForFunctionPointer%(_nativeDelegate.Vftbl.Invoke%);%
 }
 }
 

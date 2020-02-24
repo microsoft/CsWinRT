@@ -67,6 +67,38 @@ namespace WinRT
             }
         }
 
+        public static bool TryUnwrapObject(object o, out IObjectReference objRef)
+        {
+            // The unwrapping here needs to be in exact type match in case the user
+            // has implemented a WinRT interface or inherited from a WinRT class
+            // in a .NET (non-projected) type.
+
+            if (o is global::System.Delegate del)
+            {
+                return TryUnwrapObject(del.Target, out objRef);
+            }
+
+            Type type = o.GetType();
+            ObjectReferenceWrapperAttribute objRefWrapper = type.GetCustomAttribute<ObjectReferenceWrapperAttribute>();
+            if (objRefWrapper is object)
+            {
+                objRef = (IObjectReference)type.GetField(objRefWrapper.ObjectReferenceField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).GetValue(o);
+                return true;
+            }
+
+            ProjectedRuntimeClassAttribute projectedClass = type.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
+
+            if (projectedClass is object)
+            {
+                return TryUnwrapObject(
+                    type.GetField(projectedClass.DefaultInterfaceField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).GetValue(o),
+                    out objRef);
+            }
+
+            objRef = null;
+            return false;
+        }
+
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(object obj)
         {
             var entries = new List<ComInterfaceEntry>();
@@ -106,6 +138,8 @@ namespace WinRT
                     Vtable = (IntPtr)obj.GetType().GetHelperType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
                 });
             }
+
+            // TODO: Handle Arrays
 
             entries.Add(new ComInterfaceEntry
             {
