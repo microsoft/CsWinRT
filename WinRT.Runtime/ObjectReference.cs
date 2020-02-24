@@ -172,31 +172,4 @@ namespace WinRT
             return (vftblIUnknown, vftblT);
         }
     }
-
-    class AgileObjectReference<T> : ObjectReference<T>
-    {
-        private IAgileReference _agileReference;
-
-        public AgileObjectReference(IAgileReference agileReference, IntPtr thisPtr)
-            :base(thisPtr)
-        {
-            _agileReference = agileReference;
-        }
-
-        protected override void AddRef()
-        {
-        }
-
-        protected override void Release()
-        {
-        }
-
-        public override unsafe IObjectReference As(Guid iid)
-        {
-            using (IObjectReference resolvedObjectReference = _agileReference.Resolve(iid))
-            {
-                return new AgileObjectReference<IUnknownVftbl>(_agileReference, resolvedObjectReference.ThisPtr);
-            }
-        }
-    }
 }
