@@ -18,7 +18,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="GenerateWinUIProjection" BeforeTargets="Build" Condition="'$(GenerateTestProjection)' == 'true'">
+  <Target Name="GenerateWinUIProjection" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)' == 'true'">
     <ItemGroup>
       <!--PkgMicrosoft_UI_Xaml is defined by Nuget reference-->
       <WinUIWinMDs Include="$(PkgMicrosoft_UI_Xaml)/**/*.winmd" />

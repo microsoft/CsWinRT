@@ -420,7 +420,7 @@ namespace cswinrt
         bool requires_marshaling;
     };
 
-    inline const mapped_type* get_mapped_type(std::string_view typeNamespace, std::string_view typeName)
+    inline const std::initializer_list<mapped_type> get_mapped_types_in_namespace(std::string_view typeNamespace)
     {
         static const struct
         {
@@ -428,7 +428,7 @@ namespace cswinrt
             std::initializer_list<mapped_type> types;
         } mapped_types[] =
         {
-            // Make sure to keep this table consistent with the table in WinRT_Wrappers.cs
+            // Make sure to keep this table consistent with the table in WinRT.Runtime/ComWrappersSupport.cs
             // NOTE: Must keep namespaces sorted (outer) and abi type names sorted (inner)
             { "Windows.Foundation",
                 {
@@ -448,16 +448,29 @@ namespace cswinrt
         {
             return v.name_space < ns;
         });
+
         if ((nsItr == std::end(mapped_types)) || (nsItr->name_space != typeNamespace))
+        {
+            return {};
+        }
+
+        return nsItr->types;
+    }
+
+    inline const mapped_type* get_mapped_type(std::string_view typeNamespace, std::string_view typeName)
+    {
+        auto mapped_types = get_mapped_types_in_namespace(typeNamespace);
+
+        if (mapped_types.size() == 0)
         {
             return nullptr;
         }
 
-        auto nameItr = std::lower_bound(nsItr->types.begin(), nsItr->types.end(), typeName, [](auto&& v, std::string_view name)
+        auto nameItr = std::lower_bound(mapped_types.begin(), mapped_types.end(), typeName, [](auto&& v, std::string_view name)
         {
             return v.abi_name < name;
         });
-        if ((nameItr == nsItr->types.end()) || (nameItr->abi_name != typeName))
+        if ((nameItr == mapped_types.end()) || (nameItr->abi_name != typeName))
         {
             return nullptr;
         }

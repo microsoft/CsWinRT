@@ -18,7 +18,7 @@ using TestComponentCSharp;
 
 namespace UnitTest
 {
-    public class TestComp
+    public class TestComp : UnitTestBase
     {
         public Class TestObject { get; private set; }
 

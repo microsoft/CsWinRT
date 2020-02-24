@@ -38,6 +38,7 @@
     <ProjectReference Include="..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\TestComponentCSharp\TestComponentCSharp.vcxproj" />
     <ProjectReference Include="..\TestWinRT\TestComponent\TestComponent.vcxproj" />
+    <ProjectReference Include="..\WinRT.Runtime\WinRT.Runtime.csproj" />
   </ItemGroup>
 
 </Project>
