@@ -38,7 +38,7 @@ namespace WinRT
         }
 
         public ObjectReference<T> As<T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
-        public unsafe ObjectReference<T> As<T>(Guid iid)
+        public virtual unsafe ObjectReference<T> As<T>(Guid iid)
         {
             ThrowIfDisposed();
             IntPtr thatPtr;
@@ -46,13 +46,7 @@ namespace WinRT
             return ObjectReference<T>.Attach(ref thatPtr);
         }
 
-        public virtual unsafe IObjectReference As(Guid iid)
-        {
-            ThrowIfDisposed();
-            IntPtr thatPtr;
-            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out thatPtr));
-            return ObjectReference<Interop.IUnknownVftbl>.Attach(ref thatPtr);
-        }
+        public unsafe IObjectReference As(Guid iid) => As<IUnknownVftbl>(iid);
 
         public T AsType<T>()
         {
@@ -72,7 +66,7 @@ namespace WinRT
             return ThisPtr;
         }
 
-        private void ThrowIfDisposed()
+        protected void ThrowIfDisposed()
         {
             if (disposed) throw new ObjectDisposedException("ObjectReference");
         }
@@ -170,6 +164,37 @@ namespace WinRT
                 vftblT = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
             }
             return (vftblIUnknown, vftblT);
+        }
+    }
+
+    internal class ObjectReferenceWithContext<T> : ObjectReference<T>
+    {
+        private static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = Guid.Parse("0A299774-3E4E-FC42-1D9D-72CEE105CA57");
+        private readonly IContextCallback _context;
+
+        internal ObjectReferenceWithContext(IntPtr thisPtr, IContextCallback context)
+            :base(thisPtr)
+        {
+            _context = context;
+        }
+
+        protected override unsafe void Release()
+        {
+            ComCallData data = default;
+
+            _context.ContextCallback(_ =>
+            {
+                base.Release();
+                return 0;
+            }, &data, IID_ICallbackWithNoReentrancyToApplicationSTA, 5);
+        }
+
+        public override ObjectReference<U> As<U>(Guid iid)
+        {
+            ThrowIfDisposed();
+            IntPtr thatPtr;
+            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out thatPtr));
+            return new ObjectReferenceWithContext<U>(thatPtr, _context);
         }
     }
 }

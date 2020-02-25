@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using WinRT.Interop;
 
 namespace WinRT
 {
@@ -53,6 +54,16 @@ namespace WinRT
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
         internal static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* length);
+
+        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
+        private static extern int CoGetObjectContext(ref Guid riid, out IntPtr ppv);
+
+        public static IContextCallback GetContextCallback()
+        {
+            Guid riid = typeof(IContextCallback).GUID;
+            Marshal.ThrowExceptionForHR(CoGetObjectContext(ref riid, out IntPtr contextCallbackPtr));
+            return new ABI.WinRT.Interop.IContextCallback(ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.Attach(ref contextCallbackPtr));
+        }
     }
 
 }

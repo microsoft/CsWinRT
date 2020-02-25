@@ -109,9 +109,7 @@ namespace WinRT
 
         protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
         {
-            // TODO: Figure out how to create an ObjectReference that wraps an interface ptr
-            // and correctly handles calling Release on a finalizer thread.
-            var inspectable = new IInspectable(ObjectReference<IUnknownVftbl>.FromAbi(externalComObject));
+            var inspectable = new IInspectable(ComWrappersSupport.GetObjectReferenceForIntPtr(externalComObject, true));
             string runtimeClassName = inspectable.GetRuntimeClassName();
             return ComWrappersSupport.GetTypedRcwFactory(inspectable.GetRuntimeClassName())(inspectable);
         }

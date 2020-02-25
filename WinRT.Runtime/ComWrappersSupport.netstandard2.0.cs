@@ -23,7 +23,7 @@ namespace WinRT
                 return null;
             }
 
-            IObjectReference identity = ObjectReference<IUnknownVftbl>.FromAbi(ptr).As<IUnknownVftbl>();
+            IObjectReference identity = GetObjectReferenceForIntPtr(ptr, true).As<IUnknownVftbl>();
 
             object keepAliveSentinel = null;
 

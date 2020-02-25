@@ -27,6 +27,8 @@ namespace WinRT
         private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
         private readonly static IReadOnlyDictionary<string, string> TypeMappings;
 
+        private readonly static Guid IID_IAgileObject = Guid.Parse("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90");
+
         static ComWrappersSupport()
         {
             // Make sure to keep this consistent with the table in helpers.h
@@ -99,6 +101,35 @@ namespace WinRT
             return false;
         }
 
+        internal static IObjectReference GetObjectReferenceForIntPtr(IntPtr externalComObject, bool addRef)
+        {
+            IObjectReference objRefToReturn = null;
+            ObjectReference<IUnknownVftbl> unknownRef;
+            if (addRef)
+            {
+                unknownRef = ObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
+            }
+            else
+            {
+                unknownRef = ObjectReference<IUnknownVftbl>.Attach(ref externalComObject);
+            }
+
+            using (unknownRef)
+            {
+                try
+                {
+                    var agileObjectRef = unknownRef.As(IID_IAgileObject);
+                    agileObjectRef.Dispose();
+                    objRefToReturn = unknownRef.As<IUnknownVftbl>();
+                }
+                catch (Exception)
+                {
+                    objRefToReturn = new ObjectReferenceWithContext<IUnknownVftbl>(unknownRef.GetRef(), Platform.GetContextCallback());
+                }
+            }
+            return objRefToReturn;
+        }
+
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(object obj)
         {
             var entries = new List<ComInterfaceEntry>();
@@ -150,7 +181,7 @@ namespace WinRT
             // Add IAgileObject to all CCWs
             entries.Add(new ComInterfaceEntry
             {
-                IID = Guid.Parse("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90"),
+                IID = IID_IAgileObject,
                 Vtable = WinRT.Interop.IUnknownVftbl.AbiToProjectionVftblPtr
             });
             return entries;
