@@ -8,6 +8,9 @@ namespace UnitTest
     {
         static UnitTestBase()
         {
+#if !NETCOREAPP2_0
+            WinRT.ComWrappersSupport.InitializeComWrappers();
+#endif
             ProjectionInitializer.RegisterCustomProjections();
         }
     }
