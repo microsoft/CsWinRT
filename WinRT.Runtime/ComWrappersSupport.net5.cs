@@ -25,10 +25,6 @@ namespace WinRT
 
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr) => TryRegisterObjectForInterface(obj, thisPtr);
 
-        // If we aren't in the activation scenario and we need to register an RCW after the fact,
-        // we need to be resilient to an RCW having already been created on another thread.
-        // This method registers the given object as the RCW if there isn't already one registered
-        // and returns the registered RCW if it is still alive.
         public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr) => ComWrappers.GetOrCreateObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);
 
         public static IObjectReference CreateCCWForObject(object obj)
