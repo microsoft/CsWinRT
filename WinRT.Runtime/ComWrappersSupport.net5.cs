@@ -13,23 +13,29 @@ namespace WinRT
     {
         internal static readonly ConditionalWeakTable<object, ComWrappersSupport.InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<object, ComWrappersSupport.InspectableInfo>();
 
+        private static ComWrappers ComWrappers;
+
         internal static unsafe InspectableInfo GetInspectableInfo(IntPtr pThis)
         {
             var _this = FindObject<object>(pThis);
             return InspectableInfoTable.GetValue(_this, o => ComWrappersSupport.PregenerateNativeTypeInformation(o).inspectableInfo);
         }
 
-        public static object CreateRcwForComObject(IntPtr ptr) => throw new NotImplementedException();
+        public static object CreateRcwForComObject(IntPtr ptr) => ComWrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.TrackerObject);
 
-        public static void RegisterObjectForInterface(object obj, IntPtr thisPtr) => throw new NotImplementedException();
+        public static void RegisterObjectForInterface(object obj, IntPtr thisPtr) => TryRegisterObjectForInterface(obj, thisPtr);
 
         // If we aren't in the activation scenario and we need to register an RCW after the fact,
         // we need to be resilient to an RCW having already been created on another thread.
         // This method registers the given object as the RCW if there isn't already one registered
         // and returns the registered RCW if it is still alive.
-        public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr) => throw new NotImplementedException();
+        public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr) => ComWrappers.GetOrCreateObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);
 
-        public static IObjectReference CreateCCWForObject(object obj) => throw new NotImplementedException();
+        public static IObjectReference CreateCCWForObject(object obj)
+        {
+            IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.CallerDefinedIUnknown | CreateComInterfaceFlags.TrackerSupport);
+            return ObjectReference<IUnknownVftbl>.Attach(ref ccw);
+        }
 
         public static unsafe T FindObject<T>(IntPtr ptr)
             where T : class => ComInterfaceDispatch.GetInstance<T>((ComInterfaceDispatch*)ptr);
@@ -42,6 +48,12 @@ namespace WinRT
         static partial void PlatformSpecificInitialize()
         {
             IUnknownVftbl = DefaultComWrappers.IUnknownVftbl;
+        }
+
+        public static void InitializeComWrappers(ComWrappers wrappers = null)
+        {
+            ComWrappers = wrappers ?? new DefaultComWrappers();
+            ComWrappers.RegisterAsGlobalInstance();
         }
 
         internal static Func<IInspectable, object> GetTypedRcwFactory(string runtimeClassName) => TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className));
@@ -95,11 +107,12 @@ namespace WinRT
             return nativeEntries;
         }
 
-        protected override object CreateObject(IntPtr externalComObject, IntPtr agileObjectRef, CreateObjectFlags flags)
+        protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
         {
             // TODO: Figure out how to create an ObjectReference that wraps an interface ptr
             // and correctly handles calling Release on a finalizer thread.
-            var inspectable = new IInspectable(ObjectReference<IUnknownVftbl>.Attach(ref externalComObject)); string runtimeClassName = inspectable.GetRuntimeClassName();
+            var inspectable = new IInspectable(ObjectReference<IUnknownVftbl>.FromAbi(externalComObject));
+            string runtimeClassName = inspectable.GetRuntimeClassName();
             return ComWrappersSupport.GetTypedRcwFactory(inspectable.GetRuntimeClassName())(inspectable);
         }
 
