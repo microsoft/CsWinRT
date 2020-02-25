@@ -422,7 +422,7 @@ namespace UnitTest
         }
 
         [Fact]
-        void TestInterfaceGeneric()
+        public void TestInterfaceGeneric()
         {
             var objs = TestObject.GetInterfaceVector();
             Assert.Equal(3u, objs.Size);
@@ -436,7 +436,7 @@ namespace UnitTest
         }
 
         [Fact]
-        void TestClassGeneric()
+        public void TestClassGeneric()
         {
             var objs = TestObject.GetClassVector();
             Assert.Equal(3u, objs.Size);
