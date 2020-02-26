@@ -3,6 +3,7 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code_writers.h" />
@@ -37,6 +38,9 @@
       <Filter>strings</Filter>
     </None>
     <None Include="strings\WinRT_Wrappers.cs">
+      <Filter>strings</Filter>
+    </None>
+    <None Include="strings\WinRT_Interop.cs">
       <Filter>strings</Filter>
     </None>
     <None Include="strings\additions\Windows.Foundation.cs">

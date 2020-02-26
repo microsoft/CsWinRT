@@ -79,7 +79,7 @@ namespace UnitTest
             AssertGuid<IReference<double>>("2f2d6c29-5473-5f3e-92e7-96572bb990e2");
             AssertGuid<IReference<char>>("fb393ef3-bbac-5bd5-9144-84f23576f415");
             AssertGuid<IReference<Guid>>("7d50f649-632c-51f9-849a-ee49428933ea");
-            AssertGuid<IReference<HResult>>("6ff27a1e-4b6a-59b7-b2c3-d1f2ee474593");
+            AssertGuid<IReference<Exception>>("6ff27a1e-4b6a-59b7-b2c3-d1f2ee474593");
             AssertGuid<IReference<string>>("fd416dfb-2a07-52eb-aae3-dfce14116c05");
             //AssertGuid<IReference<event_token>>("a9b18291-ce2a-5dae-8a23-b7f7388416db");
             AssertGuid<IReference<System.TimeSpan>>("604d0c4c-91de-5c2a-935f-362f13eaf800");
