@@ -640,6 +640,16 @@ namespace winrt::TestComponentCSharp::implementation
         return _dateTime;
     }
 
+    winrt::hresult Class::HResultProperty()
+    {
+        return _hr;
+    }
+
+    void Class::HResultProperty(winrt::hresult const& hr)
+    {
+        _hr = hr;
+    }
+
     // IStringable
     hstring Class::ToString()
     {

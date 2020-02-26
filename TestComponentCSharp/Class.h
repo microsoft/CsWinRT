@@ -39,6 +39,7 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Point _point{};
         Windows::Foundation::TimeSpan _timeSpan{};
         Windows::Foundation::DateTime _dateTime{};
+        winrt::hresult _hr;
 
         Class(int32_t intProperty);
         Class(int32_t intProperty, hstring const& stringProperty);
@@ -171,6 +172,8 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::DateTime DateTimeProperty();
         void DateTimeProperty(Windows::Foundation::DateTime const& value);
         Windows::Foundation::IReference<Windows::Foundation::DateTime> GetDateTimeProperty();
+        winrt::hresult HResultProperty();
+        void HResultProperty(winrt::hresult const& value);
 
         // IStringable
         hstring ToString();

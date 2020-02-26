@@ -568,6 +568,14 @@ namespace UnitTest
             Assert.Equal(ptr, ptr2);
         }
 
+        [Fact]
+        public void TestExceptionPropagation_Managed()
+        {
+            var exceptionToThrow = new ArgumentNullException("foo");
+            var properties = new ThrowingManagedProperties(exceptionToThrow);
+            Assert.Throws<ArgumentNullException>("foo", () => TestObject.CopyProperties(properties));
+        }
+
         class ManagedProperties : IProperties1
         {
             private readonly int _value;
@@ -577,6 +585,18 @@ namespace UnitTest
                 _value = value;
             }
             public int ReadWriteProperty => _value;
+        }
+
+        class ThrowingManagedProperties : IProperties1
+        {
+            public ThrowingManagedProperties(Exception exceptionToThrow)
+            {
+                ExceptionToThrow = exceptionToThrow;
+            }
+
+            public Exception ExceptionToThrow { get; }
+
+            public int ReadWriteProperty => throw ExceptionToThrow;
         }
 
         readonly int E_FAIL = -2147467259;
@@ -756,6 +776,20 @@ namespace UnitTest
             TestObject.DateTimeProperty = now;
             Assert.Equal(now, TestObject.DateTimeProperty);
             Assert.Equal(now, TestObject.GetDateTimeProperty().Value);
+        }
+
+        [Fact]
+        public void TestExceptionMapping()
+        {
+            var ex = new ArgumentOutOfRangeException();
+
+            TestObject.HResultProperty = ex;
+
+            Assert.IsType<ArgumentOutOfRangeException>(TestObject.HResultProperty);
+
+            TestObject.HResultProperty = null;
+
+            Assert.Null(TestObject.HResultProperty);
         }
     }
 }

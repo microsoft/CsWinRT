@@ -4,11 +4,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code_writers.h" />
@@ -37,6 +32,9 @@
     </None>
     <None Include="packages.config" />
     <None Include="strings\WinRT_Marshal.cs">
+      <Filter>strings</Filter>
+    </None>
+    <None Include="strings\WinRT_Interop.cs">
       <Filter>strings</Filter>
     </None>
     <None Include="strings\additions\Windows.Foundation.cs">

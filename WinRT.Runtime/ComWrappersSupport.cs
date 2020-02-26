@@ -129,16 +129,6 @@ namespace WinRT
             var interfaces = obj.GetType().GetInterfaces();
             foreach (var iface in interfaces)
             {
-                if (iface == typeof(WinRT.Interop.IWeakReference))
-                {
-                    entries.Add(new ComInterfaceEntry
-                    {
-                        IID = typeof(WinRT.Interop.IWeakReferenceVftbl).GUID,
-                        Vtable = WinRT.Interop.IWeakReferenceVftbl.AbiToProjectionVftablePtr
-                    });
-                    continue;
-                }
-
                 var ifaceAbiType = iface.Assembly.GetType("ABI." + iface.FullName);
                 if (ifaceAbiType == null)
                 {

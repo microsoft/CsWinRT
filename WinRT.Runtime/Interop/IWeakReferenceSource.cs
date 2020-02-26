@@ -5,48 +5,6 @@ using System.Text;
 
 namespace WinRT.Interop
 {
-
-    [Guid("00000037-0000-0000-C000-000000000046")]
-    internal struct IWeakReferenceVftbl
-    {
-        public delegate int _Resolve(IntPtr thisPtr, ref Guid riid, out IntPtr objectReference);
-
-        public IUnknownVftbl IUnknownVftbl;
-        public _Resolve Resolve;
-
-        public static readonly IWeakReferenceVftbl AbiToProjectionVftable;
-        public static readonly IntPtr AbiToProjectionVftablePtr;
-
-        static IWeakReferenceVftbl()
-        {
-            AbiToProjectionVftable = new IWeakReferenceVftbl
-            {
-                IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl,
-                Resolve = Do_Abi_Resolve
-            };
-            AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<IWeakReferenceVftbl>());
-            Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
-        }
-
-        private static int Do_Abi_Resolve(IntPtr thisPtr, ref Guid riid, out IntPtr objectReference)
-        {
-            IObjectReference _objectReference = default;
-
-            objectReference = default;
-
-            try
-            {
-                _objectReference = WinRT.ComWrappersSupport.FindObject<IWeakReference>(thisPtr).Resolve(riid);
-                objectReference = _objectReference?.GetRef() ?? IntPtr.Zero;
-            }
-            catch (Exception __exception__)
-            {
-                return __exception__.HResult;
-            }
-            return 0;
-        }
-    }
-
     [Guid("00000038-0000-0000-C000-000000000046")]
     internal struct IWeakReferenceSourceVftbl
     {
@@ -75,7 +33,7 @@ namespace WinRT.Interop
 
             try
             {
-                weakReference = ComWrappersSupport.CreateCCWForObject(new ManagedWeakReference(ComWrappersSupport.FindObject<object>(thisPtr))).As<IWeakReferenceVftbl>().GetRef();
+                weakReference = ComWrappersSupport.CreateCCWForObject(new ManagedWeakReference(ComWrappersSupport.FindObject<object>(thisPtr))).As<ABI.WinRT.Interop.IWeakReference.Vftbl>().GetRef();
             }
             catch (Exception __exception__)
             {
@@ -109,6 +67,57 @@ namespace WinRT.Interop
             using (IObjectReference objReference = ComWrappersSupport.CreateCCWForObject(target))
             {
                 return objReference.As(riid);
+            }
+        }
+    }
+}
+
+
+namespace ABI.WinRT.Interop
+{
+    using global::WinRT;
+
+    [Guid("00000037-0000-0000-C000-000000000046")]
+    internal class IWeakReference
+    {
+        [Guid("00000037-0000-0000-C000-000000000046")]
+        public struct Vftbl
+        {
+            public delegate int _Resolve(IntPtr thisPtr, ref Guid riid, out IntPtr objectReference);
+
+            public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
+            public _Resolve Resolve;
+
+            public static readonly Vftbl AbiToProjectionVftable;
+            public static readonly IntPtr AbiToProjectionVftablePtr;
+
+            static Vftbl()
+            {
+                AbiToProjectionVftable = new Vftbl
+                {
+                    IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
+                    Resolve = Do_Abi_Resolve
+                };
+                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
+                Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
+            }
+
+            private static int Do_Abi_Resolve(IntPtr thisPtr, ref Guid riid, out IntPtr objectReference)
+            {
+                IObjectReference _objectReference = default;
+
+                objectReference = default;
+
+                try
+                {
+                    _objectReference = global::WinRT.ComWrappersSupport.FindObject<global::WinRT.Interop.IWeakReference>(thisPtr).Resolve(riid);
+                    objectReference = _objectReference?.GetRef() ?? IntPtr.Zero;
+                }
+                catch (Exception __exception__)
+                {
+                    return __exception__.HResult;
+                }
+                return 0;
             }
         }
     }

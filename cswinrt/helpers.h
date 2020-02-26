@@ -433,6 +433,7 @@ namespace cswinrt
             { "Windows.Foundation",
                 {
                     { "Windows.Foundation", "DateTime", "System", "DateTimeOffset", true },
+                    { "Windows.Foundation", "HResult", "System", "Exception", true },
                     { "Windows.Foundation", "Point", "Windows.Foundation", "Point" },
                     { "Windows.Foundation", "TimeSpan", "System", "TimeSpan", true },
                 }

@@ -1773,7 +1773,7 @@ event % %;)",
             }
             else
             {
-                w.write("Marshal.ThrowExceptionForHR(%(ThisPtr%));\n",
+                w.write("global::WinRT.ExceptionHelpers.ThrowExceptionForHR(%(ThisPtr%));\n",
                     invoke_target,
                     bind_each([](writer& w, abi_marshaler const& m)
                     {
@@ -2569,7 +2569,8 @@ try
 }
 catch (Exception __exception__)
 {
-return __exception__.HResult;
+global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
 }
 return 0;)",
             [&](writer& w) {

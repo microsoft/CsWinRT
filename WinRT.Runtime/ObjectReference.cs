@@ -96,6 +96,15 @@ namespace WinRT
         {
             VftblIUnknown.Release(ThisPtr);
         }
+
+        public unsafe bool IsReferenceToManagedObject
+        {
+            get
+            {
+                using var unknownObjRef = As<IUnknownVftbl>();
+                return ((VftblPtr*)unknownObjRef.ThisPtr.ToPointer())->Vftbl == IUnknownVftbl.AbiToProjectionVftblPtr;
+            }
+        }
     }
 
     public class ObjectReference<T> : IObjectReference
