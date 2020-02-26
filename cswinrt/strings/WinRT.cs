@@ -1209,7 +1209,7 @@ namespace WinRT
 
 namespace Windows.UI.Xaml
 {
-    using System.Runtime.Serialization;
+    using global::System.Runtime.Serialization;
     namespace Automation
     {
         [Serializable]
