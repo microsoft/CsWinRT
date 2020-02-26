@@ -31,6 +31,9 @@ namespace WinRT
             return Marshal.GetDelegateForFunctionPointer<T>(functionPtr);
         }
 
+        [DllImport("oleaut32.dll")]
+        internal static extern int SetErrorInfo(uint dwReserved, IntPtr perrinfo);
+
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern IntPtr LoadLibraryExW([MarshalAs(UnmanagedType.LPWStr)] string fileName, IntPtr fileHandle, uint flags);
 
