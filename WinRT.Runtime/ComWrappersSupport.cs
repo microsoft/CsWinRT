@@ -25,18 +25,11 @@ namespace WinRT
     public static partial class ComWrappersSupport
     {
         private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
-        private readonly static IReadOnlyDictionary<string, string> TypeMappings;
 
         private readonly static Guid IID_IAgileObject = Guid.Parse("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90");
 
         static ComWrappersSupport()
         {
-            // Make sure to keep this consistent with the table in helpers.h
-            TypeMappings = new Dictionary<string, string>
-            {
-                { "Windows.Foundation.DateTime", "System.DateTimeOffset" },
-                { "Windows.Foundation.TimeSpan", "System.TimeSpan" }
-            };
             PlatformSpecificInitialize();
         }
 
