@@ -10,7 +10,7 @@ namespace WinRT
     {
         private static ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
         private static Dictionary<Type, Type> CustomHelperTypeMappings = new Dictionary<Type, Type>();
-        private static Dictionary<string, string> CustomAbiTypeNameToTypeMappings = new Dictionary<string, string>();
+        private static Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>();
 
         static Projections()
         {
@@ -24,7 +24,7 @@ namespace WinRT
             try
             {
                 CustomHelperTypeMappings.Add(publicType, abiType);
-                CustomAbiTypeNameToTypeMappings.Add(winrtTypeName, publicType.FullName);
+                CustomAbiTypeNameToTypeMappings.Add(winrtTypeName, publicType);
             }
             finally
             {
@@ -45,12 +45,12 @@ namespace WinRT
             }
         }
 
-        public static string FindTypeNameForAbiTypeName(string abiTypeName)
+        public static Type FindTypeForAbiTypeName(string abiTypeName)
         {
             rwlock.EnterReadLock();
             try
             {
-                return CustomAbiTypeNameToTypeMappings.TryGetValue(abiTypeName, out string typeName) ? typeName : null;
+                return CustomAbiTypeNameToTypeMappings.TryGetValue(abiTypeName, out Type type) ? type : null;
             }
             finally
             {

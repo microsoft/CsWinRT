@@ -260,33 +260,37 @@ namespace WinRT
 
         private static Type FindTypeByNameCore(string runtimeClassName, Type[] genericTypes)
         {
-            string mappedClassName = Projections.FindTypeNameForAbiTypeName(runtimeClassName);
+            Type resolvedType = Projections.FindTypeForAbiTypeName(runtimeClassName);
 
-            if (mappedClassName != null && runtimeClassName != mappedClassName)
+            if (resolvedType is null)
             {
-                return FindTypeByNameCore(mappedClassName, genericTypes);
-            }
-
-            if (genericTypes is null)
-            {
-                Type primitiveType = ResolvePrimitiveType(runtimeClassName);
-                if (primitiveType is object)
+                if (genericTypes is null)
                 {
-                    return primitiveType;
-                }
-            }
-
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                Type type = assembly.GetType(runtimeClassName);
-                if (type is object)
-                {
-                    if (genericTypes != null)
+                    Type primitiveType = ResolvePrimitiveType(runtimeClassName);
+                    if (primitiveType is object)
                     {
-                        type = type.MakeGenericType(genericTypes);
+                        return primitiveType;
                     }
-                    return type;
                 }
+
+                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    Type type = assembly.GetType(runtimeClassName);
+                    if (type is object)
+                    {
+                        resolvedType = type;
+                        break;
+                    }
+                }
+            }
+
+            if (resolvedType is object)
+            {
+                if (genericTypes != null)
+                {
+                    resolvedType = resolvedType.MakeGenericType(genericTypes);
+                }
+                return resolvedType;
             }
 
             throw new TypeLoadException($"Unable to find a type named '{runtimeClassName}'");
