@@ -9,9 +9,13 @@
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <Target Name="CopyTestComponent" BeforeTargets="PreBuildEvent">
-    <Exec Condition="'$(Platform)'=='x64'" Command="xcopy /D /Y &quot;$(PkgMicrosoft_UI_Xaml)\runtimes\win10-x64\native\*.dll&quot; &quot;$(TargetDir)&quot;" />
-    <Exec Condition="'$(Platform)'=='win32'" Command="xcopy /D /Y &quot;$(PkgMicrosoft_UI_Xaml)\runtimes\win10-x86\native\*.dll&quot; &quot;$(TargetDir)&quot;" />
+  <Target Name="CopyTestComponent" BeforeTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <Content Include="
+                $(PkgMicrosoft_UI_Xaml)\runtimes\win10-x64\native\*.dll;
+                $(PkgMicrosoft_UI_Xaml)\runtimes\win10-x86\native\*.dll"
+               CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
   </Target>
 
   <Target Name="GenerateWinUIProjection" BeforeTargets="CoreCompile" Condition="'$(GenerateTestProjection)' == 'true'">
@@ -21,7 +25,7 @@
     </ItemGroup>
     <PropertyGroup>
       <CsWinRTVerbosity>high</CsWinRTVerbosity>
-      <CsWinRTResponseFile>$(IntDir)cswinrt_platform.rsp</CsWinRTResponseFile>
+      <CsWinRTResponseFile>$(IntermediateOutputPath)/cswinrt_platform.rsp</CsWinRTResponseFile>
       <CsWinRTCommand>$(CsWinrtExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
     </PropertyGroup>
     <PropertyGroup>
