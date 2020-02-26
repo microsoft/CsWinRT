@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 
@@ -56,6 +57,17 @@ namespace WinRT
             {
                 rwlock.ExitReadLock();
             }
+        }
+
+        internal static Type GetDefaultInterfaceTypeForRuntimeClassType(Type runtimeClass)
+        {
+            ProjectedRuntimeClassAttribute attr = runtimeClass.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
+            if (attr is null)
+            {
+                throw new ArgumentException($"The provided type '{runtimeClass.FullName}' is not a WinRT projected runtime class.", nameof(runtimeClass));
+            }
+
+            return runtimeClass.GetField(attr.DefaultInterfaceField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).FieldType;
         }
     }
 }

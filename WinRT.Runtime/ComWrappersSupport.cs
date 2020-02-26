@@ -217,7 +217,7 @@ namespace WinRT
             if (implementationType.IsInterface)
             {
                 classType = null;
-                interfaceType = FindTypeByName(("ABI." + runtimeClassName).AsSpan()).type ??
+                interfaceType = implementationType.GetHelperType() ??
                     throw new TypeLoadException($"Unable to find an ABI implementation for the type '{runtimeClassName}'");
                 vftblType = interfaceType.GetNestedType("Vftbl") ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
                 if (vftblType.IsGenericTypeDefinition)
@@ -228,7 +228,7 @@ namespace WinRT
             else
             {
                 classType = implementationType;
-                interfaceType = classType.GetField("_default", BindingFlags.Instance | BindingFlags.NonPublic)?.FieldType;
+                interfaceType = Projections.GetDefaultInterfaceTypeForRuntimeClassType(classType);
                 if (interfaceType is null)
                 {
                     throw new TypeLoadException($"Unable to create a runtime wrapper for a WinRT object of type '{runtimeClassName}'. This type is not a projected type.");
