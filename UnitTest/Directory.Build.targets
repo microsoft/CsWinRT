@@ -21,7 +21,6 @@
   </Target>
 
   <Target Name="GenerateProjection" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)' == 'true'">
-    <Message Importance="High" Text="Generating projeciton..." />
     <Exec Command="$(CsWinrtExe) -verbose -in 10.0.18362.0 $(BuildOutDir)TestComponentCSharp\bin\TestComponentCSharp\TestComponentCSharp.winmd $(BuildOutDir)TestComponent\bin\TestComponent.winmd -out &quot;$(ProjectDir)Generated Files&quot; -include TestComponentCSharp TestComponent Windows.Foundation -exclude Windows.Foundation.Diagnostics -exclude Windows.Foundation.Metadata" />
   </Target>
 
