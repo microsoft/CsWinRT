@@ -122,7 +122,6 @@ namespace WinRT
 
         static ExceptionHelpers()
         {
-            // TODO: Determine minimum expected platform support (aka do we care about platforms that don't support RoOriginateLanguageException?)
             IntPtr winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
             if (winRTErrorModule != IntPtr.Zero)
             {
