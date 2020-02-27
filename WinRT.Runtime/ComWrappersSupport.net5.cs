@@ -41,6 +41,8 @@ namespace WinRT
 
         public static IUnknownVftbl IUnknownVftbl { get; private set; }
 
+        public static IntPtr AllocateVtableMemory(Type vtableType, int size) => RuntimeHelpers.AllocateTypeAssociatedMemory(vtableType, size);
+
         static partial void PlatformSpecificInitialize()
         {
             IUnknownVftbl = DefaultComWrappers.IUnknownVftbl;

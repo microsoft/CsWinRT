@@ -2927,7 +2927,7 @@ AbiToProjectionVftable = new Vftbl
 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable, 
 %
 };
-var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * %);
+var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * %);
 %
 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
 }
@@ -3210,7 +3210,7 @@ AbiToProjectionVftable = new global::WinRT.Interop.IDelegateVftbl
 IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
 Invoke = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate)
 };
-var nativeVftbl = Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
+var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(@%), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
 Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
 AbiToProjectionVftablePtr = nativeVftbl;
 }
@@ -3306,6 +3306,8 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                             });
                     });
             },
+            type.TypeName(),
+            type_params,
             // CreateMarshaler
             type_name,
             type.TypeName(),

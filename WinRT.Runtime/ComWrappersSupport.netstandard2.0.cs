@@ -105,6 +105,8 @@ namespace WinRT
             AddRef = Do_Abi_AddRef,
             Release = Do_Abi_Release
         };
+        
+        public static IntPtr AllocateVtableMemory(Type vtableType, int size) => Marshal.AllocCoTaskMem(size);
 
         private static int Do_Abi_QueryInterface(IntPtr pThis, ref Guid iid, out IntPtr ptr)
         {
