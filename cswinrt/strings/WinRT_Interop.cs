@@ -312,6 +312,7 @@ namespace ABI.WinRT.Interop
 
             private static int Do_Abi_GetGuid_0(IntPtr thisPtr, out Guid guid)
             {
+                guid = default;
                 try
                 {
                     guid = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetGuid();
