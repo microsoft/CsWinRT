@@ -294,7 +294,7 @@ namespace ABI.Windows.UI.Xaml
     {
         public static string GetGuidSignature()
         {
-            return $"struct(Windows.UI.Xaml.Duration;{WinRT.GuidGenerator.GetSignature(typeof(global::System.TimeSpan))};{WinRT.GuidGenerator.GetSignature(typeof(global::Windows.UI.Xaml.DurationType))})";
+            return $"struct(Windows.UI.Xaml.Duration;{global::WinRT.GuidGenerator.GetSignature(typeof(global::System.TimeSpan))};{global::WinRT.GuidGenerator.GetSignature(typeof(global::Windows.UI.Xaml.DurationType))})";
         }
     }
 }
