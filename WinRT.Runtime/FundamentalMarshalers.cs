@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ABI.System
 {
-    public struct Boolean
+    internal struct Boolean
     {
         byte value;
         public static bool CreateMarshaler(bool value) => value;
@@ -17,7 +17,7 @@ namespace ABI.System
         public static void DisposeAbi(byte abi) { }
     }
 
-    public struct Char
+    internal struct Char
     {
         ushort value;
         public static char CreateMarshaler(char value) => value;
