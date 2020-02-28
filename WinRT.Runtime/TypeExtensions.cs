@@ -38,7 +38,7 @@ namespace WinRT
         }
         public static bool IsDelegate(this Type type)
         {
-            return typeof(MulticastDelegate).IsAssignableFrom(type.BaseType);
+            return typeof(Delegate).IsAssignableFrom(type);
         }
     }
 }

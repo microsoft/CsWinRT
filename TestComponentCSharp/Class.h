@@ -175,6 +175,13 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::hresult HResultProperty();
         void HResultProperty(winrt::hresult const& value);
 
+        static int32_t UnboxInt32(IInspectable const& obj);
+        static bool UnboxBoolean(IInspectable const& obj);
+        static hstring UnboxString(IInspectable const& obj);
+        static com_array<int32_t> UnboxInt32Array(IInspectable const& obj);
+        static com_array<bool> UnboxBooleanArray(IInspectable const& obj);
+        static com_array<hstring> UnboxStringArray(IInspectable const& obj);
+
         // IStringable
         hstring ToString();
 

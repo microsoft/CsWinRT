@@ -158,7 +158,7 @@ namespace UnitTest
         [Fact]
         public void Params_NonBlittable()
         {
-            NonBlittable a = new NonBlittable(false, 'X', "WinRT", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(1234));
+            NonBlittable a = new NonBlittable(false, 'X', "WinRT", (long?)PropertyValue.CreateInt64(1234));
             NonBlittable b;
             NonBlittable c = Tests.Param14(a, a, out b);
             Assert.True(AllEqual(a, b, c));
@@ -169,7 +169,7 @@ namespace UnitTest
         {
             Nested a = new Nested(
                 new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(ITests).GUID),
-                new NonBlittable(false, 'X', "WinRT", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(1234)));
+                new NonBlittable(false, 'X', "WinRT", (long?)PropertyValue.CreateInt64(1234)));
             Nested b;
             Nested c = Tests.Param15(a, a, out b);
             Assert.True(AllEqual(a, b, c));
@@ -402,9 +402,9 @@ namespace UnitTest
         public void Array_NonBlittable()
         {
             NonBlittable[] a = new NonBlittable[] {
-                new NonBlittable(false, 'X', "First", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(123)),
-                new NonBlittable(true, 'Y', "Second", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(456)),
-                new NonBlittable(false, 'Z', "Third", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(789))
+                new NonBlittable(false, 'X', "First", (long?)PropertyValue.CreateInt64(123)),
+                new NonBlittable(true, 'Y', "Second", (long?)PropertyValue.CreateInt64(456)),
+                new NonBlittable(false, 'Z', "Third", (long?)PropertyValue.CreateInt64(789))
             };
             NonBlittable[] b = new NonBlittable[a.Length];
             NonBlittable[] c;
@@ -418,13 +418,13 @@ namespace UnitTest
             Nested[] a = new Nested[]{
                 new Nested(
                     new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(ITests).GUID),
-                    new NonBlittable(false, 'X', "First", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(123))),
+                    new NonBlittable(false, 'X', "First", (long?)PropertyValue.CreateInt64(123))),
                 new Nested(
                     new Blittable(10, 20, 30, 40, -50, -60, -70, 80.0f, 90.0, typeof(IStringable).GUID),
-                    new NonBlittable(true, 'Y', "Second", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(456))),
+                    new NonBlittable(true, 'Y', "Second", (long?)PropertyValue.CreateInt64(456))),
                 new Nested(
                     new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(IInspectable).GUID),
-                    new NonBlittable(false, 'Z', "Third", (global::Windows.Foundation.IReference<long>)PropertyValue.CreateInt64(789)))
+                    new NonBlittable(false, 'Z', "Third", (long?)PropertyValue.CreateInt64(789)))
             };
             Nested[] b = new Nested[a.Length];
             Nested[] c;
@@ -443,91 +443,91 @@ namespace UnitTest
         [Fact]
         public void Array_Bool_Call()
         {
-            Tests.Array1Call(Array_Call<bool>);
+            Tests.Array1Call(Array_Call);
         }
 
         [Fact]
         public void Array_Byte_Call()
         {
-            Tests.Array2Call(Array_Call<byte>);
+            Tests.Array2Call(Array_Call);
         }
 
         [Fact]
         public void Array_UInt16_Call()
         {
-            Tests.Array3Call(Array_Call<UInt16>);
+            Tests.Array3Call(Array_Call);
         }
 
         [Fact]
         public void Array_UInt32_Call()
         {
-            Tests.Array4Call(Array_Call<UInt32>);
+            Tests.Array4Call(Array_Call);
         }
 
         [Fact]
         public void Array_UInt64_Call()
         {
-            Tests.Array5Call(Array_Call<UInt64>);
+            Tests.Array5Call(Array_Call);
         }
 
         [Fact]
         public void Array_Int16_Call()
         {
-            Tests.Array6Call(Array_Call<Int16>);
+            Tests.Array6Call(Array_Call);
         }
 
         [Fact]
         public void Array_Int32_Call()
         {
-            Tests.Array7Call(Array_Call<Int32>);
+            Tests.Array7Call(Array_Call);
         }
 
         [Fact]
         public void Array_Int64_Call()
         {
-            Tests.Array8Call(Array_Call<Int64>);
+            Tests.Array8Call(Array_Call);
         }
 
         [Fact]
         public void Array_Float_Call()
         {
-            Tests.Array9Call(Array_Call<float>);
+            Tests.Array9Call(Array_Call);
         }
 
         [Fact]
         public void Array_Double_Call()
         {
-            Tests.Array10Call(Array_Call<double>);
+            Tests.Array10Call(Array_Call);
         }
 
         [Fact]
         public void Array_Char_Call()
         {
-            Tests.Array11Call(Array_Call<char>);
+            Tests.Array11Call(Array_Call);
         }
 
         [Fact]
         public void Array_String_Call()
         {
-            Tests.Array12Call(Array_Call<string>);
+            Tests.Array12Call(Array_Call);
         }
 
         [Fact]
         public void Array_Blittable_Call()
         {
-            Tests.Array13Call(Array_Call<Blittable>);
+            Tests.Array13Call(Array_Call);
         }
 
         [Fact]
         public void Array_NonBlittable_Call()
         {
-            Tests.Array14Call(Array_Call<NonBlittable>);
+            Tests.Array14Call(Array_Call);
         }
 
         [Fact]
         public void Array_Nested_Call()
         {
-            Tests.Array15Call(Array_Call<Nested>);
+            Tests.Array15Call(Array_Call);
         }
 
         // Nota Bene: this test case must always remain the final one

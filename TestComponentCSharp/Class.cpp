@@ -676,6 +676,36 @@ namespace winrt::TestComponentCSharp::implementation
         ReadWriteProperty(weak_ref.get().ReadWriteProperty());
     }
 
+    int32_t Class::UnboxInt32(IInspectable const& obj)
+    {
+        return winrt::unbox_value<int32_t>(obj);
+    }
+
+    bool Class::UnboxBoolean(IInspectable const& obj)
+    {
+        return winrt::unbox_value<bool>(obj);
+    }
+
+    hstring Class::UnboxString(IInspectable const& obj)
+    {
+        return winrt::unbox_value<hstring>(obj);
+    }
+
+    com_array<int32_t> Class::UnboxInt32Array(IInspectable const& obj)
+    {
+        return obj.as<Windows::Foundation::IReferenceArray<int32_t>>().Value();
+    }
+
+    com_array<bool> Class::UnboxBooleanArray(IInspectable const& obj)
+    {
+        return obj.as<Windows::Foundation::IReferenceArray<bool>>().Value();
+    }
+    
+    com_array<hstring> Class::UnboxStringArray(IInspectable const& obj)
+    {
+        return obj.as<Windows::Foundation::IReferenceArray<hstring>>().Value();
+    }
+
     // IVector<String>
     //Windows::Foundation::Collections::IIterator<hstring> Class::First()
     //{

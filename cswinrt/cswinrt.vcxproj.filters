@@ -4,6 +4,17 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code_writers.h" />
@@ -14,6 +25,7 @@
     <ClInclude Include="text_writer.h" />
     <ClInclude Include="cmd_reader.h" />
     <ClInclude Include="task_group.h" />
+    <ClInclude Include="$(IntDir)strings.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="version.rc" />
@@ -23,7 +35,13 @@
       <UniqueIdentifier>{22759db3-c622-4dcf-855d-54153084cf6d}</UniqueIdentifier>
     </Filter>
     <Filter Include="strings\additions">
+      <UniqueIdentifier>{79a6595f-c96d-41c4-a90f-04033a23c979}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.Foundation">
       <UniqueIdentifier>{4f770820-72c5-46d5-9944-7d76ca1fe60b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml">
+      <UniqueIdentifier>{8626e8bc-727e-4c4d-a7fa-fe90c02b3090}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -37,11 +55,11 @@
     <None Include="strings\WinRT_Interop.cs">
       <Filter>strings</Filter>
     </None>
-    <None Include="strings\additions\Windows.Foundation.cs">
-      <Filter>strings\additions</Filter>
+    <None Include="strings\additions\Windows.Foundation\Windows.Foundation.cs">
+      <Filter>strings\additions\Windows.Foundation</Filter>
     </None>
-    <None Include="strings\additions\Windows.UI.Xaml.cs">
-      <Filter>strings\additions</Filter>
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.cs">
+      <Filter>strings\additions\Windows.UI.Xaml</Filter>
     </None>
   </ItemGroup>
 </Project>
