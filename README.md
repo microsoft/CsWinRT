@@ -2,12 +2,28 @@
 
 # The C#/WinRT Language Projection
 
-C#/WinRT provides packaged WinRT projection support for the C# language.  It is compatible with .NET Standard 2.0 and later and does not require any built-in knowledge of WinRT by the CLR or C# compiler.  
+C#/WinRT provides WinRT projection support for the C# language. The projection allows the .NET runtime to interop with the Windows Runtime (WinRT). Windows Runtime APIs are defined in `*.winmd` format, and cswinrt includes tooling that generates .NET Standard 2.0 C# code that can be compiled into interop assemblies, similar to how [cppwinrt](https://github.com/Microsoft/cppwinrt) generates headers for the C++ language projection. This means that neither the C# compiler nor the .NET Runtime no longer need to have built-in knowledge of WinRT.
 
-C#/WinRT is part of the [xlang](https://github.com/microsoft/xlang) family of projects that help developers create APIs that can run on multiple platforms and be used with a variety of languages.
+C#/WinRT is part of the [xlang](https://github.com/microsoft/xlang) family of projects that help developers create APIs that can run on multiple platforms and be used with a variety of languages. 
+
+### Motivation
+.NET Core is the focus for the .NET platform. It is an open-source, cross-platform runtime that and can be used to build device, cloud, and IoT applications. Previous versions of .NET Framework and .NET Core have built-in knowledge of WinRT which is a windows specific techology. By lifting this projection support out of the compiler and runtime, we are supporting efforts to make .NET more efficient for its .NET5 release. More information about .NET can be found at https://docs.microsoft.com/en-us/dotnet/core/
+
+[WinUI3.0](https://github.com/Microsoft/microsoft-ui-xaml) is the effort to lift official native Microsoft UI controls and features out of the operating system, so app developers can use the latest controls and visuals on any in-market version of the OS. C#/WinRT is needed to support the changes required for lifting the XAML APIs out of Windows.UI.XAML and into Microsoft.UI.XAML.
+
+### Goals
+1. Create Tooling that enables .net developers to consume `.winmds`
+2. Maintain compat with the existing .NET projection
+3. Production support as required for activation contract support (TBD)
+
+#### Non-Goals
+1. Cross platform implementation of an api 
+2. Does not define how the project system will use the projection 
+
+### Release
+C#/WinRT will release with NET5, and be consumed by WinUI3.0. It will ship as a Nuget package on nuget.org.
 
 # Structure
-
 The C#/WinRT compiler and unit tests are all contained within the Visual Studio 2019 solution file, \cswinrt\cswinrt.sln.  
 
 ## /cswinrt
