@@ -20,14 +20,7 @@ namespace WinRT
     using System.Diagnostics;
     using WinRT.Interop;
 
-    public enum TrustLevel
-    {
-        BaseTrust = 0,
-        PartialTrust = BaseTrust + 1,
-        FullTrust = PartialTrust + 1
-    };
-
-    public static class DelegateExtensions
+    internal static class DelegateExtensions
     {
         public static bool IsDelegate(this Type type)
         {
@@ -43,34 +36,6 @@ namespace WinRT
         {
             return Marshal.GetDelegateForFunctionPointer<T>(
                 Marshal.GetFunctionPointerForDelegate(del));
-        }
-    }
-
-    public static class CastExtensions
-    {
-        public static TInterface As<TInterface>(this object value)
-        {
-            IntPtr GetThisPointer()
-            {
-                PropertyInfo thisPtrProperty = value.GetType().GetProperty("ThisPtr", BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public);
-                if (thisPtrProperty is null)
-                {
-                    throw new ArgumentException("Source type is not a projected type.", nameof(TInterface));
-                }
-                return (IntPtr)thisPtrProperty.GetValue(value);
-            }
-            if (typeof(TInterface) == typeof(object))
-            {
-                // Use MarshalInspectable to get the default interface pointer.
-                return (TInterface)MarshalInspectable.FromAbi(GetThisPointer());
-            }
-
-            if (value is TInterface convertableInMetadata)
-            {
-                return convertableInMetadata;
-            }
-
-            return (TInterface)typeof(MarshalInterface<>).MakeGenericType(typeof(TInterface)).GetMethod("FromAbi").Invoke(null, new[] { (object)GetThisPointer() });
         }
     }
 

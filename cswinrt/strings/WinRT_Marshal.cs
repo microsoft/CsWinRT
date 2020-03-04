@@ -15,7 +15,7 @@ using System.Collections.Concurrent;
 
 namespace WinRT
 {
-    public static class MarshalExtensions
+    internal static class MarshalExtensions
     {
         public static void Dispose(this GCHandle handle)
         {
@@ -909,7 +909,7 @@ namespace WinRT
         public static unsafe void DisposeAbiArray(object box) => MarshalInterfaceHelper<object>.DisposeAbiArray(box);
     }
 
-    public class Marshaler<T>
+    internal class Marshaler<T>
     {
         static Marshaler()
         {
