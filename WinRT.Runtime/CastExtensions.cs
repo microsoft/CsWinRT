@@ -17,7 +17,7 @@ namespace WinRT
                 }
                 else
                 {
-                    return ComWrappersSupport.CreateCCWForObject(value);
+                    throw new ArgumentException("Source object type is not a projected type.", nameof(value));
                 }
             }
 
