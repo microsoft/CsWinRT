@@ -21,7 +21,7 @@
   <Target Name="GenerateWinUIProjection" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)' == 'true'">
     <ItemGroup>
       <!--PkgMicrosoft_UI_Xaml is defined by Nuget reference-->
-      <WinUIWinMDs Include="$(PkgMicrosoft_UI_Xaml)/**/*.winmd" />
+      <WinUIWinMDs Include="$(NuGetPackageRoot)/microsoft.ui.xaml/$(MicrosoftUIXamlVersion)/**/*.winmd" />
     </ItemGroup>
     <PropertyGroup>
       <CsWinRTVerbosity>high</CsWinRTVerbosity>
