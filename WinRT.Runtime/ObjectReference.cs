@@ -11,12 +11,6 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-
-    internal struct VftblPtr
-    {
-        public IntPtr Vftbl;
-    }
-
     public abstract class IObjectReference : IDisposable
     {
         protected bool disposed;

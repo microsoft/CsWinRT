@@ -117,7 +117,7 @@ namespace WinRT
                 }
                 catch (Exception)
                 {
-                    objRefToReturn = new ObjectReferenceWithContext<IUnknownVftbl>(unknownRef.GetRef(), Platform.GetContextCallback());
+                    objRefToReturn = new ObjectReferenceWithContext<IUnknownVftbl>(unknownRef.GetRef(), Context.GetContextCallback());
                 }
             }
             return objRefToReturn;

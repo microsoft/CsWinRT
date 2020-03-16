@@ -11,6 +11,8 @@ using System.Text;
 using System.Threading;
 using System.Linq.Expressions;
 
+#pragma warning disable CS0649
+
 namespace WinRT.Interop
 {
     // IActivationFactory
@@ -54,14 +56,8 @@ namespace WinRT.Interop
     internal delegate int _put_PropertyAsGuid(IntPtr thisPtr, Guid value);
     internal delegate int _get_PropertyAsString(IntPtr thisPtr, out IntPtr value);
     internal delegate int _put_PropertyAsString(IntPtr thisPtr, IntPtr value);
-    internal delegate int _get_PropertyAsVector3(IntPtr thisPtr, out Windows.Foundation.Numerics.Vector3 value);
-    internal delegate int _put_PropertyAsVector3(IntPtr thisPtr, Windows.Foundation.Numerics.Vector3 value);
-    internal delegate int _get_PropertyAsQuaternion(IntPtr thisPtr, out Windows.Foundation.Numerics.Quaternion value);
-    internal delegate int _put_PropertyAsQuaternion(IntPtr thisPtr, Windows.Foundation.Numerics.Quaternion value);
-    internal delegate int _get_PropertyAsMatrix4x4(IntPtr thisPtr, out Windows.Foundation.Numerics.Matrix4x4 value);
-    internal delegate int _put_PropertyAsMatrix4x4(IntPtr thisPtr, Windows.Foundation.Numerics.Matrix4x4 value);
-    internal delegate int _add_EventHandler(IntPtr thisPtr, IntPtr handler, out Windows.Foundation.EventRegistrationToken token);
-    internal delegate int _remove_EventHandler(IntPtr thisPtr, Windows.Foundation.EventRegistrationToken token);
+    internal delegate int _add_EventHandler(IntPtr thisPtr, IntPtr handler, out EventRegistrationToken token);
+    internal delegate int _remove_EventHandler(IntPtr thisPtr, EventRegistrationToken token);
 
     // IDelegate
     internal struct IDelegateVftbl

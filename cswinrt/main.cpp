@@ -124,7 +124,7 @@ public static void RegisterCustomProjections()
 
                 for (mapped_type const& type : mapped_types)
                 {
-                    if (settings.filter.includes(w.write_temp("%.%", type.abi_namespace, type.abi_name)))
+                    if (!type.runtime_defined && settings.filter.includes(w.write_temp("%.%", type.abi_namespace, type.abi_name)))
                     {
                         w.write("WinRT.Projections.RegisterCustomAbiTypeMapping(typeof(%.%), typeof(ABI.%.%), \"%.%\");\n",
                             type.mapped_namespace,
