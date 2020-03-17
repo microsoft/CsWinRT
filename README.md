@@ -12,7 +12,9 @@ C#/WinRT is part of the [xlang](https://github.com/microsoft/xlang) family of pr
 [WinUI3.0](https://github.com/Microsoft/microsoft-ui-xaml) is the effort to lift official native Microsoft UI controls and features out of the operating system, so app developers can use the latest controls and visuals on any in-market version of the OS. C#/WinRT is needed to support the changes required for lifting the XAML APIs out of Windows.UI.XAML and into Microsoft.UI.XAML.
 
 ### Goals
-1. Create Tooling that enables .net developers to consume `.winmds`
+1. Create tooling that enables .net developers to consume `.winmds`
+    - includes adding a reference to winmd 
+    - includes component library authors to produce projection assemblies to redist with their libraries.
 2. Maintain compat with the existing .NET projection
 3. Production support as required for activation contract support (TBD)
 
