@@ -11,14 +11,14 @@ namespace WinRT
 {
     public static partial class ComWrappersSupport
     {
-        internal static readonly ConditionalWeakTable<object, ComWrappersSupport.InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<object, ComWrappersSupport.InspectableInfo>();
+        internal static readonly ConditionalWeakTable<object, InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<object, InspectableInfo>();
 
         private static ComWrappers ComWrappers;
 
         internal static unsafe InspectableInfo GetInspectableInfo(IntPtr pThis)
         {
             var _this = FindObject<object>(pThis);
-            return InspectableInfoTable.GetValue(_this, o => ComWrappersSupport.PregenerateNativeTypeInformation(o).inspectableInfo);
+            return InspectableInfoTable.GetValue(_this, o => PregenerateNativeTypeInformation(o).inspectableInfo);
         }
 
         public static object CreateRcwForComObject(IntPtr ptr) => ComWrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.TrackerObject);
@@ -48,6 +48,14 @@ namespace WinRT
             IUnknownVftbl = DefaultComWrappers.IUnknownVftbl;
         }
 
+        /// <summary>
+        /// Initialize the global <see cref="System.Runtime.InteropServices.ComWrappers"/> instance to use for WinRT.
+        /// </summary>
+        /// <param name="wrappers">The wrappers instance to use, or the default if null.</param>
+        /// <remarks>
+        /// A custom ComWrappers instance can be supplied to enable programs to fast-track some type resolution
+        /// instead of using reflection when the full type closure is known.
+        /// </remarks>
         public static void InitializeComWrappers(ComWrappers wrappers = null)
         {
             ComWrappers = wrappers ?? new DefaultComWrappers();
@@ -107,7 +115,20 @@ namespace WinRT
 
         protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
         {
-            var inspectable = new IInspectable(ComWrappersSupport.GetObjectReferenceForIntPtr(externalComObject, true));
+            IObjectReference objRef = ComWrappersSupport.GetObjectReferenceForIntPtr(externalComObject, true);
+            IInspectable inspectable;
+            try
+            {
+                inspectable = new IInspectable(objRef);
+            }
+            catch (InvalidCastException)
+            {
+                // If the external COM object isn't IInspectable, we can't handle it.
+                // If we're registered globally, we want to let the runtime fall back for IUnknown and IDispatch support.
+                // Return null so the runtime can fall back gracefully in IUnknown and IDispatch scenarios.
+                return null;
+            }
+
             string runtimeClassName = inspectable.GetRuntimeClassName();
             return ComWrappersSupport.GetTypedRcwFactory(inspectable.GetRuntimeClassName())(inspectable);
         }
@@ -129,7 +150,7 @@ namespace WinRT
 
         unsafe class VtableEntriesCleanupScout
         {
-            private ComInterfaceEntry* _data;
+            private readonly ComInterfaceEntry* _data;
 
             public VtableEntriesCleanupScout(ComInterfaceEntry* data)
             {
