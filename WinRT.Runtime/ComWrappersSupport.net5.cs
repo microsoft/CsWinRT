@@ -25,7 +25,7 @@ namespace WinRT
 
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr) => TryRegisterObjectForInterface(obj, thisPtr);
 
-        public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr) => ComWrappers.GetOrCreateObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);
+        public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr) => ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);
 
         public static IObjectReference CreateCCWForObject(object obj)
         {

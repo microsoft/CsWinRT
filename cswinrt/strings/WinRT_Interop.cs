@@ -11,6 +11,8 @@ using System.Text;
 using System.Threading;
 using System.Linq.Expressions;
 
+#pragma warning disable CS0649
+
 namespace WinRT.Interop
 {
     // IActivationFactory
