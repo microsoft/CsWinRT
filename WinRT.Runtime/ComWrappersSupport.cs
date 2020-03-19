@@ -36,7 +36,7 @@ namespace WinRT
         static partial void PlatformSpecificInitialize();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
-            where TDelegate : class, System.Delegate
+            where TDelegate : class, Delegate
         {
             using (new Mono.ThreadContext())
             {
@@ -50,7 +50,7 @@ namespace WinRT
         }
 
         public static void MarshalDelegateInvoke<T>(IntPtr thisPtr, Action<T> invoke)
-            where T : class, System.Delegate
+            where T : class, Delegate
         {
             using (new Mono.ThreadContext())
             {
@@ -68,7 +68,7 @@ namespace WinRT
             // has implemented a WinRT interface or inherited from a WinRT class
             // in a .NET (non-projected) type.
 
-            if (o is global::System.Delegate del)
+            if (o is Delegate del)
             {
                 return TryUnwrapObject(del.Target, out objRef);
             }
@@ -129,7 +129,7 @@ namespace WinRT
             var interfaces = obj.GetType().GetInterfaces();
             foreach (var iface in interfaces)
             {
-                var ifaceAbiType = iface.Assembly.GetType("ABI." + iface.FullName);
+                var ifaceAbiType = iface.GetHelperType();
                 if (ifaceAbiType == null)
                 {
                     // This interface isn't a WinRT interface.
@@ -144,7 +144,7 @@ namespace WinRT
                 });
             }
 
-            if (obj is global::System.Delegate)
+            if (obj is Delegate)
             {
                 entries.Add(new ComInterfaceEntry
                 {
@@ -157,15 +157,15 @@ namespace WinRT
 
             entries.Add(new ComInterfaceEntry
             {
-                IID = typeof(WinRT.Interop.IWeakReferenceSourceVftbl).GUID,
-                Vtable = WinRT.Interop.IWeakReferenceSourceVftbl.AbiToProjectionVftablePtr
+                IID = typeof(IWeakReferenceSourceVftbl).GUID,
+                Vtable = IWeakReferenceSourceVftbl.AbiToProjectionVftablePtr
             });
 
             // Add IAgileObject to all CCWs
             entries.Add(new ComInterfaceEntry
             {
                 IID = IID_IAgileObject,
-                Vtable = WinRT.Interop.IUnknownVftbl.AbiToProjectionVftblPtr
+                Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
             });
             return entries;
         }
@@ -235,12 +235,27 @@ namespace WinRT
                 parms).Compile();
         }
 
+        /// <summary>
+        /// Parse the first full type name within the provided span.
+        /// </summary>
+        /// <param name="runtimeClassName">The runtime class name to attempt to parse.</param>
+        /// <returns>A tuple containing the resolved type and the index of the end of the resolved type name.</returns>
         private static (Type type, int remaining) FindTypeByName(ReadOnlySpan<char> runtimeClassName)
         {
             var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
             return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
         }
 
+        /// <summary>
+        /// Resolve a type from the given simple type name and the provided generic parameters.
+        /// </summary>
+        /// <param name="runtimeClassName">The simple type name.</param>
+        /// <param name="genericTypes">The generic parameters.</param>
+        /// <returns>The resolved (and instantiated if generic) type.</returns>
+        /// <remarks>
+        /// We look up the type dynamically because at this point in the stack we can't know
+        /// the full type closure of the application.
+        /// </remarks>
         private static Type FindTypeByNameCore(string runtimeClassName, Type[] genericTypes)
         {
             Type resolvedType = Projections.FindTypeForAbiTypeName(runtimeClassName);
@@ -302,6 +317,11 @@ namespace WinRT
             };
         }
 
+        /// <summary>
+        /// Parses a type name from the start of a span including its generic parameters.
+        /// </summary>
+        /// <param name="partialTypeName">A span starting with a type name to parse.</param>
+        /// <returns>Returns a tuple containing the simple type name of the type, and generic type parameters if they exist, and the index of the end of the type name in the span.</returns>
         private static (string genericTypeName, Type[] genericTypes, int remaining) ParseGenericTypeName(ReadOnlySpan<char> partialTypeName)
         {
             int possibleEndOfSimpleTypeName = partialTypeName.IndexOfAny(new[] { ',', '>' });
@@ -312,6 +332,8 @@ namespace WinRT
             }
             var typeName = partialTypeName.Slice(0, endOfSimpleTypeName);
 
+            // If the type name doesn't contain a '`', then it isn't a generic type
+            // so we can return before starting to parse the generic type list.
             if (!typeName.Contains("`".AsSpan(), StringComparison.Ordinal))
             {
                 return (typeName.ToString(), null, endOfSimpleTypeName);
@@ -319,23 +341,24 @@ namespace WinRT
 
             int genericTypeListStart = partialTypeName.IndexOf('<');
             var genericTypeName = partialTypeName.Slice(0, genericTypeListStart);
-            var remaining = partialTypeName.Slice(genericTypeListStart + 1);
+            var remainingTypeName = partialTypeName.Slice(genericTypeListStart + 1);
             int remainingIndex = genericTypeListStart + 1;
             List<Type> genericTypes = new List<Type>();
             while (true)
             {
-                var (genericType, endOfGenericArgument) = FindTypeByName(remaining);
+                // Resolve the generic type argument at this point in the parameter list.
+                var (genericType, endOfGenericArgument) = FindTypeByName(remainingTypeName);
                 remainingIndex += endOfGenericArgument;
                 genericTypes.Add(genericType);
-                remaining = remaining.Slice(endOfGenericArgument);
-                if (remaining[0] == ',')
+                remainingTypeName = remainingTypeName.Slice(endOfGenericArgument);
+                if (remainingTypeName[0] == ',')
                 {
                     // Skip the comma and the space in the type name.
                     remainingIndex += 2;
-                    remaining = remaining.Slice(2);
+                    remainingTypeName = remainingTypeName.Slice(2);
                     continue;
                 }
-                else if (remaining[0] == '>')
+                else if (remainingTypeName[0] == '>')
                 {
                     break;
                 }
@@ -344,7 +367,7 @@ namespace WinRT
                     throw new InvalidOperationException("The provided type name is invalid.");
                 }
             }
-            return (genericTypeName.ToString(), genericTypes.ToArray(), partialTypeName.Length - remaining.Length);
+            return (genericTypeName.ToString(), genericTypes.ToArray(), partialTypeName.Length - remainingTypeName.Length);
         }
 
         internal class InspectableInfo
