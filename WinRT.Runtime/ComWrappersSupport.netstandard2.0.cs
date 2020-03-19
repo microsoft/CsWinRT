@@ -171,6 +171,7 @@ namespace WinRT
     internal class ComCallableWrapper
     {
         private Dictionary<Guid, IntPtr> _managedQITable;
+        private GCHandle _qiTableHandle;
         private volatile IntPtr _strongHandle;
         private int _refs = 0;
         private GCHandle WeakHandle { get; }
@@ -208,16 +209,26 @@ namespace WinRT
         ~ComCallableWrapper()
         {
             WeakHandle.Free();
-            foreach (var obj in _managedQITable.Values)
+            if (_managedQITable != null)
             {
-                Marshal.FreeCoTaskMem(obj);
+                foreach (var obj in _managedQITable.Values)
+                {
+                    Marshal.FreeCoTaskMem(obj);
+                }
+                _managedQITable.Clear();
             }
-            _managedQITable.Clear();
+            if (_qiTableHandle.IsAllocated)
+            {
+                _qiTableHandle.Free();
+                _qiTableHandle = default;
+            }
         }
 
         private void InitializeManagedQITable(List<ComInterfaceEntry> entries)
         {
-            _managedQITable = new Dictionary<Guid, IntPtr>();
+            var managedQITable = new Dictionary<Guid, IntPtr>();
+            _qiTableHandle = GCHandle.Alloc(managedQITable);
+            _managedQITable = managedQITable;
             foreach (var entry in entries)
             {
                 unsafe

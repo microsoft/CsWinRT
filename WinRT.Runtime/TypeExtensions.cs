@@ -9,6 +9,10 @@ namespace WinRT
     {
         public static Type FindHelperType(this Type type)
         {
+            if (typeof(Exception).IsAssignableFrom(type))
+            {
+                type = typeof(Exception);
+            }
             Type customMapping = Projections.FindCustomHelperTypeMapping(type);
             if (customMapping is object)
             {

@@ -129,7 +129,7 @@ namespace WinRT
             var interfaces = obj.GetType().GetInterfaces();
             foreach (var iface in interfaces)
             {
-                var ifaceAbiType = iface.GetHelperType();
+                var ifaceAbiType = iface.FindHelperType();
                 if (ifaceAbiType == null)
                 {
                     // This interface isn't a WinRT interface.

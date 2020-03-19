@@ -115,6 +115,10 @@ namespace WinRT
 
         public static ObjectReference<T> Attach(ref IntPtr thisPtr)
         {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
             var obj = new ObjectReference<T>(thisPtr);
             thisPtr = IntPtr.Zero;
             return obj;
