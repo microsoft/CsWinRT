@@ -26,8 +26,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution 
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestComponent", "TestWinRT\TestComponent\TestComponent.vcxproj", "{2954F343-85A7-46F5-A3F3-F106FDD13900}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6ACFD2B2-E8AA-4CD4-AAD8-213CE8BB2637} = {6ACFD2B2-E8AA-4CD4-AAD8-213CE8BB2637}
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinRT.Runtime", "WinRT.Runtime\WinRT.Runtime.csproj", "{25244CED-966E-45F2-9711-1F51E951FF89}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinRT.Runtime", "WinRT.Runtime\WinRT.Runtime.csproj", "{25244CED-966E-45F2-9711-1F51E951FF89}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
