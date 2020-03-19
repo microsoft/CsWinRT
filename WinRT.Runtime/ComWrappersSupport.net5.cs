@@ -130,7 +130,7 @@ namespace WinRT
             }
 
             string runtimeClassName = inspectable.GetRuntimeClassName();
-            return ComWrappersSupport.GetTypedRcwFactory(inspectable.GetRuntimeClassName())(inspectable);
+            return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
         }
 
         protected override void ReleaseObjects(IEnumerable objects)
