@@ -92,7 +92,7 @@ namespace UnitTest
             AssertGuid<IReference<PropertyType>>("ecebde54-fac0-5aeb-9ba9-9e1fe17e31d5");
             AssertGuid<IReference<Point>>("84f14c22-a00a-5272-8d3d-82112e66df00");
             AssertGuid<IVector<object>>("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a");
-            AssertGuid<IVector<WF.Uri>>("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e");
+            AssertGuid<IVector<Uri>>("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e");
             AssertGuid<IVector<AsyncActionCompletedHandler>>("5dafe591-86dc-59aa-bfda-07f5d59fc708");
             AssertGuid<IVector<ComposedNonBlittableStruct>>("c8477314-b257-511b-a3a1-9e4eb6385152");
         }
