@@ -7,6 +7,10 @@
     <LangVersion>8</LangVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Include="../cswinrt/strings/*.cs" Link="cswinrt/%(FileName)%(Extension)" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <Compile Remove="**/*.net5.cs" />
     <None Include="**/*.net5.cs" />

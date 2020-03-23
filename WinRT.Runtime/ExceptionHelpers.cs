@@ -21,6 +21,9 @@ namespace WinRT
         internal const int E_ELEMENTNOTENABLED = unchecked((int)0x802B001E);
         internal const int E_ELEMENTNOTAVAILABLE = unchecked((int)0x802B001F);
 
+        [DllImport("oleaut32.dll")]
+        private static extern int SetErrorInfo(uint dwReserved, IntPtr perrinfo);
+
         internal delegate int GetRestrictedErrorInfo(out IntPtr ppRestrictedErrorInfo);
         private static GetRestrictedErrorInfo getRestrictedErrorInfo;
 
@@ -207,7 +210,7 @@ namespace WinRT
             {
                 using (var iErrorInfo = ComWrappersSupport.CreateCCWForObject(new ManagedExceptionErrorInfo(ex)))
                 {
-                    Platform.SetErrorInfo(0, iErrorInfo.ThisPtr);
+                    SetErrorInfo(0, iErrorInfo.ThisPtr);
                 }
             }
         }

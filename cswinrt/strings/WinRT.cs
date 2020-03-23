@@ -22,11 +22,6 @@ namespace WinRT
 
     internal static class DelegateExtensions
     {
-        public static bool IsDelegate(this Type type)
-        {
-            return typeof(MulticastDelegate).IsAssignableFrom(type.BaseType);
-        }
-
         public static void DynamicInvokeAbi(this System.Delegate del, object[] invoke_params)
         {
             Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params));
@@ -90,116 +85,6 @@ namespace WinRT
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
         internal static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* length);
-    }
-
-    internal class Mono
-    {
-        static Lazy<bool> _usingMono = new Lazy<bool>(() =>
-        {
-            var modulePtr = Platform.LoadLibraryExW("mono-2.0-bdwgc.dll", IntPtr.Zero, 0);
-            if (modulePtr == IntPtr.Zero) return false;
-
-            if (!Platform.FreeLibrary(modulePtr))
-            {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-            }
-            return true;
-        });
-
-        [DllImport("mono-2.0-bdwgc.dll")]
-        static extern IntPtr mono_thread_current();
-
-        [DllImport("mono-2.0-bdwgc.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool mono_thread_is_foreign(IntPtr threadPtr);
-
-        [DllImport("mono-2.0-bdwgc.dll")]
-        static extern void mono_unity_thread_fast_attach(IntPtr domainPtr);
-
-        [DllImport("mono-2.0-bdwgc.dll")]
-        static extern void mono_unity_thread_fast_detach();
-
-        [DllImport("mono-2.0-bdwgc.dll")]
-        static extern void mono_thread_pop_appdomain_ref();
-
-        [DllImport("mono-2.0-bdwgc.dll")]
-        static extern IntPtr mono_domain_get();
-
-        struct MonoObject
-        {
-            IntPtr vtable;
-            IntPtr synchronisation; // sic
-        }
-
-        unsafe struct MonoThread
-        {
-            MonoObject obj;
-            public MonoInternalThread_x64* internal_thread;
-            IntPtr start_obj;
-            IntPtr pending_exception;
-        }
-
-        [Flags]
-        enum MonoThreadFlag : int
-        {
-            MONO_THREAD_FLAG_DONT_MANAGE = 1,
-            MONO_THREAD_FLAG_NAME_SET = 2,
-            MONO_THREAD_FLAG_APPDOMAIN_ABORT = 4,
-        }
-
-        [StructLayout(LayoutKind.Explicit)]
-        struct MonoInternalThread_x64
-        {
-            [FieldOffset(0xd0)]
-            public MonoThreadFlag flags;
-        }
-
-        public class ThreadContext : IDisposable
-        {
-            static Lazy<HashSet<IntPtr>> _foreignThreads = new Lazy<HashSet<IntPtr>>();
-
-            readonly IntPtr _threadPtr = IntPtr.Zero;
-
-            public ThreadContext()
-            {
-                if (_usingMono.Value)
-                {
-                    // nothing to do for Mono-native threads
-                    var threadPtr = mono_thread_current();
-                    if (mono_thread_is_foreign(threadPtr))
-                    {
-                        // initialize this thread the first time it runs managed code, and remember it for future reference
-                        if (_foreignThreads.Value.Add(threadPtr))
-                        {
-                            // clear initial appdomain ref for new foreign threads to avoid deadlock on domain unload
-                            mono_thread_pop_appdomain_ref();
-
-                            unsafe
-                            {
-                                // tell Mono to ignore the thread on process shutdown since there's nothing to synchronize with
-                                ((MonoThread*)threadPtr)->internal_thread->flags |= MonoThreadFlag.MONO_THREAD_FLAG_DONT_MANAGE;
-                            }
-                        }
-
-                        unsafe
-                        {
-                            // attach as Unity does to set up the proper domain for the call
-                            mono_unity_thread_fast_attach(mono_domain_get());
-                            _threadPtr = threadPtr;
-                        }
-                    }
-                }
-            }
-
-            public void Dispose()
-            {
-                if (_threadPtr != IntPtr.Zero)
-                {
-                    // detach as Unity does to properly reset the domain context
-                    mono_unity_thread_fast_detach();
-                }
-            }
-        }
     }
 
     internal struct VftblPtr
@@ -391,7 +276,7 @@ namespace WinRT
         readonly _add_EventHandler _addHandler;
         readonly _remove_EventHandler _removeHandler;
 
-        private Windows.Foundation.EventRegistrationToken _token;
+        private EventRegistrationToken _token;
         private TDelegate _event;
 
         public void Subscribe(TDelegate del)
@@ -404,7 +289,7 @@ namespace WinRT
                     try
                     {
                         var nativeDelegate = (IntPtr)Marshaler<TDelegate>.GetAbi(marshaler);
-                        Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out Windows.Foundation.EventRegistrationToken token));
+                        Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out EventRegistrationToken token));
                         _token = token;
                     }
                     finally
@@ -481,9 +366,9 @@ namespace WinRT
     internal sealed class EventRegistrationTokenTable<T> where T : class, global::System.Delegate
     {
         // Note this dictionary is also used as the synchronization object for this table
-        private readonly Dictionary<Windows.Foundation.EventRegistrationToken, T> m_tokens = new Dictionary<Windows.Foundation.EventRegistrationToken, T>();
+        private readonly Dictionary<EventRegistrationToken, T> m_tokens = new Dictionary<EventRegistrationToken, T>();
 
-        public Windows.Foundation.EventRegistrationToken AddEventHandler(T handler)
+        public EventRegistrationToken AddEventHandler(T handler)
         {
             // Windows Runtime allows null handlers.  Assign those the default token (token value 0) for simplicity
             if (handler == null)
@@ -497,16 +382,16 @@ namespace WinRT
             }
         }
 
-        private Windows.Foundation.EventRegistrationToken AddEventHandlerNoLock(T handler)
+        private EventRegistrationToken AddEventHandlerNoLock(T handler)
         {
             Debug.Assert(handler != null);
 
             // Get a registration token, making sure that we haven't already used the value.  This should be quite
             // rare, but in the case it does happen, just keep trying until we find one that's unused.
-            Windows.Foundation.EventRegistrationToken token = GetPreferredToken(handler);
+            EventRegistrationToken token = GetPreferredToken(handler);
             while (m_tokens.ContainsKey(token))
             {
-                token = new Windows.Foundation.EventRegistrationToken { Value = token.Value + 1 };
+                token = new EventRegistrationToken { Value = token.Value + 1 };
             }
             m_tokens[token] = handler;
 
@@ -528,7 +413,7 @@ namespace WinRT
         // Effectively the only reasonable thing to do with this value is either to:
         //  1. Use it as a good starting point for generating a token for handler
         //  2. Use it as a guess to quickly see if the handler was really assigned this token value
-        private static Windows.Foundation.EventRegistrationToken GetPreferredToken(T handler)
+        private static EventRegistrationToken GetPreferredToken(T handler)
         {
             Debug.Assert(handler != null);
 
@@ -569,13 +454,13 @@ namespace WinRT
             }
 
             ulong tokenValue = ((ulong)(uint)typeof(T).MetadataToken << 32) | handlerHashCode;
-            return new Windows.Foundation.EventRegistrationToken { Value = (long)tokenValue };
+            return new EventRegistrationToken { Value = (long)tokenValue };
         }
 
         // Remove the event handler from the table and
         // Get the delegate associated with an event registration token if it exists
         // If the event registration token is not registered, returns false
-        public bool RemoveEventHandler(Windows.Foundation.EventRegistrationToken token, out T handler)
+        public bool RemoveEventHandler(EventRegistrationToken token, out T handler)
         {
             lock (m_tokens)
             {
@@ -589,7 +474,7 @@ namespace WinRT
             return false;
         }
 
-        private void RemoveEventHandlerNoLock(Windows.Foundation.EventRegistrationToken token)
+        private void RemoveEventHandlerNoLock(EventRegistrationToken token)
         {
             if (m_tokens.TryGetValue(token, out T handler))
             {

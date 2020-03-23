@@ -418,6 +418,7 @@ namespace cswinrt
         std::string_view mapped_namespace;
         std::string_view mapped_name;
         bool requires_marshaling;
+        bool runtime_defined;
     };
 
     inline const std::initializer_list<mapped_type> get_mapped_types_in_namespace(std::string_view typeNamespace)
@@ -433,6 +434,7 @@ namespace cswinrt
             { "Windows.Foundation",
                 {
                     { "Windows.Foundation", "DateTime", "System", "DateTimeOffset", true },
+                    { "Windows.Foundation", "EventRegistrationToken", "WinRT", "EventRegistrationToken", false, true },
                     { "Windows.Foundation", "HResult", "System", "Exception", true },
                     { "Windows.Foundation", "Point", "Windows.Foundation", "Point" },
                     { "Windows.Foundation", "TimeSpan", "System", "TimeSpan", true },
