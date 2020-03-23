@@ -18,6 +18,8 @@ namespace WinRT
             CustomHelperTypeMappings.Add(typeof(bool), typeof(ABI.System.Boolean));
             CustomHelperTypeMappings.Add(typeof(char), typeof(ABI.System.Char));
             CustomAbiTypeNameToTypeMappings.Add("Windows.Foundation.EventRegistrationToken", typeof(EventRegistrationToken));
+            CustomHelperTypeMappings.Add(typeof(Uri), typeof(ABI.System.Uri));
+            CustomAbiTypeNameToTypeMappings.Add("Windows.Foundation.Uri", typeof(Uri));
         }
 
         public static void RegisterCustomAbiTypeMapping(Type publicType, Type abiType, string winrtTypeName)
