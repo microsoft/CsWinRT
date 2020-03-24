@@ -10,14 +10,16 @@ namespace WinRT
     public static class Projections
     {
         private static ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
-        private static Dictionary<Type, Type> CustomHelperTypeMappings = new Dictionary<Type, Type>();
+        private static Dictionary<Type, Type> CustomTypeToHelperTypeMappings = new Dictionary<Type, Type>();
+        private static Dictionary<Type, Type> CustomAbiTypeToTypeMappings = new Dictionary<Type, Type>();
         private static Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>();
+        private static Dictionary<Type, string> CustomTypeToAbiTypeNameMappings = new Dictionary<Type, string>();
 
         static Projections()
         {
-            CustomHelperTypeMappings.Add(typeof(bool), typeof(ABI.System.Boolean));
-            CustomHelperTypeMappings.Add(typeof(char), typeof(ABI.System.Char));
-            CustomAbiTypeNameToTypeMappings.Add("Windows.Foundation.EventRegistrationToken", typeof(EventRegistrationToken));
+            RegisterCustomAbiTypeMappingNoLock(typeof(bool), typeof(ABI.System.Boolean), "Boolean");
+            RegisterCustomAbiTypeMappingNoLock(typeof(char), typeof(ABI.System.Char), "Char");
+            RegisterCustomAbiTypeMappingNoLock(typeof(EventRegistrationToken), typeof(ABI.WinRT.EventRegistrationToken), "Windows.Foundation.EventRegistrationToken");
         }
 
         public static void RegisterCustomAbiTypeMapping(Type publicType, Type abiType, string winrtTypeName)
@@ -25,8 +27,7 @@ namespace WinRT
             rwlock.EnterWriteLock();
             try
             {
-                CustomHelperTypeMappings.Add(publicType, abiType);
-                CustomAbiTypeNameToTypeMappings.Add(winrtTypeName, publicType);
+                RegisterCustomAbiTypeMappingNoLock(publicType, abiType, winrtTypeName);
             }
             finally
             {
@@ -34,12 +35,33 @@ namespace WinRT
             }
         }
 
+        private static void RegisterCustomAbiTypeMappingNoLock(Type publicType, Type abiType, string winrtTypeName)
+        {
+            CustomTypeToHelperTypeMappings.Add(publicType, abiType);
+            CustomAbiTypeToTypeMappings.Add(abiType, publicType);
+            CustomAbiTypeNameToTypeMappings.Add(winrtTypeName, publicType);
+            CustomTypeToAbiTypeNameMappings.Add(publicType, winrtTypeName);
+        }
+
         public static Type FindCustomHelperTypeMapping(Type publicType)
         {
             rwlock.EnterReadLock();
             try
             {
-                return CustomHelperTypeMappings.TryGetValue(publicType, out Type abiType) ? abiType : null;
+                return CustomTypeToHelperTypeMappings.TryGetValue(publicType, out Type abiType) ? abiType : null;
+            }
+            finally
+            {
+                rwlock.ExitReadLock();
+            }
+        }
+
+        public static Type FindPublicTypeForAbiType(Type abiType)
+        {
+            rwlock.EnterReadLock();
+            try
+            {
+                return CustomTypeToHelperTypeMappings.TryGetValue(abiType, out Type publicType) ? publicType : null;
             }
             finally
             {
@@ -53,6 +75,19 @@ namespace WinRT
             try
             {
                 return CustomAbiTypeNameToTypeMappings.TryGetValue(abiTypeName, out Type type) ? type : null;
+            }
+            finally
+            {
+                rwlock.ExitReadLock();
+            }
+        }
+
+        public static string FindAbiTypeNameForType(Type type)
+        {
+            rwlock.EnterReadLock();
+            try
+            {
+                return CustomTypeToAbiTypeNameMappings.TryGetValue(type, out string typeName) ? typeName : null;
             }
             finally
             {
