@@ -1,9 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 
 namespace WinRT
 {
+    [Flags]
+    enum TypeNameGenerationFlags
+    {
+        None = 0,
+        /// <summary>
+        /// Generate the name of the type as if it was boxed in an object.
+        /// </summary>
+        GenerateBoxedName = 0x1,
+        /// <summary>
+        /// Don't output a type name of a custom .NET type. Generate a compatible WinRT type name if needed.
+        /// </summary>
+        NoCustomTypeName = 0x2
+    }
+
     static class TypeNameSupport
     {
         /// <summary>
@@ -141,27 +159,42 @@ namespace WinRT
             return (genericTypeName.ToString(), genericTypes.ToArray(), partialTypeName.Length - remainingTypeName.Length);
         }
 
-        public static string GetNameForType(Type type, bool boxedType)
+        struct VisitedType
+        {
+            public Type Type { get; set; }
+            public bool Covariant { get; set; }
+        }
+
+        /// <summary>
+        /// Tracker for visited types when determining a WinRT interface to use as the type name.
+        /// Only used when GetNameForType is called with <see cref="TypeNameGenerationFlags.NoCustomTypeName"/>.
+        /// </summary>
+        private static readonly ThreadLocal<Stack<VisitedType>> VisitedTypes = new ThreadLocal<Stack<VisitedType>>();
+
+        public static string GetNameForType(Type type, TypeNameGenerationFlags flags)
         {
             if (type is null)
             {
                 return string.Empty;
             }
             StringBuilder nameBuilder = new StringBuilder();
-            AppendTypeName(type, nameBuilder, boxedType);
-            return nameBuilder.ToString();
+            if (AppendTypeName(type, nameBuilder, flags))
+            {
+                return nameBuilder.ToString();
+            }
+            return null;
         }
 
-        private static void AppendSimpleTypeName(Type type, StringBuilder builder, bool boxedType)
+        private static bool AppendSimpleTypeName(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
         {
             if (type.IsPrimitive || type == typeof(string) || type == typeof(Guid))
             {
-                if (boxedType)
+                if ((flags & TypeNameGenerationFlags.GenerateBoxedName) != 0)
                 {
                     builder.Append("Windows.Foundation.IReference`1<");
-                    AppendSimpleTypeName(type, builder, false);
+                    AppendSimpleTypeName(type, builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName);
                     builder.Append(">");
-                    return;
+                    return true;
                 }
                 if (type == typeof(byte))
                 {
@@ -182,11 +215,62 @@ namespace WinRT
             }
             else
             {
-                builder.Append(Projections.FindAbiTypeNameForType(type) ?? type.FullName);
+                var projectedAbiTypeName = Projections.FindAbiTypeNameForType(type);
+                if (projectedAbiTypeName is object)
+                {
+                    builder.Append(projectedAbiTypeName);
+                }
+                else if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
+                {
+                    return AppendWinRTInterfaceNameForType(type, builder, flags);
+                }
+            }
+            return true;
+        }
+
+        private static bool AppendWinRTInterfaceNameForType(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
+        {
+            Debug.Assert((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0);
+            Debug.Assert(!type.IsGenericTypeDefinition);
+
+            var visitedTypes = VisitedTypes.Value;
+
+            if (visitedTypes.Any(visited => visited.Type == type))
+            {
+                // In this case, we've already visited the type when recursing through generic parameters.
+                // Try to fall back to object if the parameter is covariant and the argument is compatable with object.
+                // Otherwise there's no valid type name.
+                if (visitedTypes.Peek().Covariant && !type.IsValueType)
+                {
+                    builder.Append("Object");
+                    return true;
+                }
+                return false;
+            }
+            else
+            {
+                VisitedTypes.Value.Push(new VisitedType { Type = type });
+                Type interfaceTypeToUse = null;
+                foreach (var iface in type.GetInterfaces())
+                {
+                    if (iface.FindHelperType() is object)
+                    {
+                        if (interfaceTypeToUse is null || iface.IsAssignableFrom(interfaceTypeToUse))
+                        {
+                            interfaceTypeToUse = iface;
+                        }
+                    }
+                }
+
+                bool success = AppendTypeName(interfaceTypeToUse, builder, flags);
+
+                VisitedTypes.Value.Pop();
+
+                return success;
             }
         }
 
-        private static void AppendTypeName(Type type, StringBuilder builder, bool boxedType)
+        private static bool AppendTypeName(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
         {
 #if NETSTANDARD2_0
             // We can't easily determine from just the type
@@ -199,33 +283,73 @@ namespace WinRT
 #endif
             {
                 builder.Append("Windows.Foundation.IReferenceArray`1<");
-                AppendTypeName(type, builder, boxedType);
+                AppendTypeName(type, builder, flags);
                 builder.Append(">");
             }
 
-            if (!type.IsGenericType)
+            if (!type.IsGenericType || type.IsGenericTypeDefinition)
             {
-                AppendSimpleTypeName(type, builder, boxedType);
-                return;
+                return AppendSimpleTypeName(type, builder, flags);
             }
 
-            AppendSimpleTypeName(type.GetGenericTypeDefinition(), builder, boxedType);
+            // TODO: Handle non-blittable structures that don't have a helper type.
+            if (type.FindHelperType() is null && (flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
+            {
+                return AppendWinRTInterfaceNameForType(type, builder, flags);
+            }
+
+            Type definition = type.GetGenericTypeDefinition();
+            if (!AppendSimpleTypeName(definition, builder, flags))
+            {
+                return false;
+            }
 
             builder.Append('<');
 
             bool first = true;
 
-            foreach (var argument in type.GetGenericArguments())
+            Type[] genericTypeArguments = type.GetGenericArguments();
+            Type[] genericTypeParameters = definition.GetGenericArguments();
+
+            for (int i = 0; i < genericTypeArguments.Length; i++)
             {
+                Type argument = genericTypeArguments[i];
+
+                if (argument.ContainsGenericParameters)
+                {
+                    throw new ArgumentException(nameof(type));
+                }
+
                 if (!first)
                 {
                     builder.Append(", ");
                 }
-                AppendTypeName(argument, builder, boxedType);
                 first = false;
+
+                if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
+                {
+                    VisitedTypes.Value.Push(new VisitedType
+                    {
+                        Type = type,
+                        Covariant = (genericTypeParameters[i].GenericParameterAttributes & GenericParameterAttributes.VarianceMask) == GenericParameterAttributes.Covariant
+                    });
+                }
+
+                bool success = AppendTypeName(argument, builder, flags);
+
+                if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
+                {
+                    VisitedTypes.Value.Pop();
+                }
+
+                if (!success)
+                {
+                    return false;
+                }
             }
 
             builder.Append('>');
+            return true;
         }
     }
 }

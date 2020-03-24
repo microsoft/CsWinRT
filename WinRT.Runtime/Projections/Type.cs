@@ -32,19 +32,22 @@ namespace ABI.System
         {
             TypeKind kind = TypeKind.Custom;
 
-            // TODO: Handle non-blittable structures that don't have a helper type.
-            if (value.IsPrimitive)
+            if (value is object)
             {
-                kind = TypeKind.Primitive;
-            }
-            else if (value.FindHelperType() != null)
-            {
-                kind = TypeKind.Metadata;
+                // TODO: Handle non-blittable structures that don't have a helper type.
+                if (value.IsPrimitive)
+                {
+                    kind = TypeKind.Primitive;
+                }
+                else if (value.FindHelperType() != null)
+                {
+                    kind = TypeKind.Metadata;
+                } 
             }
 
             return new Marshaler
             {
-                Name = MarshalString.CreateMarshaler(TypeNameSupport.GetNameForType(value, false)),
+                Name = MarshalString.CreateMarshaler(TypeNameSupport.GetNameForType(value, TypeNameGenerationFlags.None)),
                 Kind = kind
             };
         }
@@ -77,7 +80,7 @@ namespace ABI.System
 
         public static Type FromManaged(global::System.Type value)
         {
-            throw new NotImplementedException();
+            return GetAbi(CreateMarshaler(value));
         }
 
         public static unsafe void CopyManaged(global::System.Type arg, IntPtr dest) =>
