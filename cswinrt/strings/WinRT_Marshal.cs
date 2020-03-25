@@ -15,7 +15,7 @@ using System.Collections.Concurrent;
 
 namespace WinRT
 {
-    public static class MarshalExtensions
+    internal static class MarshalExtensions
     {
         public static void Dispose(this GCHandle handle)
         {
@@ -909,7 +909,7 @@ namespace WinRT
         public static unsafe void DisposeAbiArray(object box) => MarshalInterfaceHelper<object>.DisposeAbiArray(box);
     }
 
-    public class Marshaler<T>
+    internal class Marshaler<T>
     {
         static Marshaler()
         {
@@ -1033,34 +1033,5 @@ namespace WinRT
         public static readonly Action<T[], IntPtr> CopyManagedArray;
         public static readonly Action<object> DisposeMarshalerArray;
         public static readonly Action<object> DisposeAbiArray;
-    }
-}
-
-namespace ABI.System
-{
-    public struct Boolean
-    {
-        byte value;
-        public static bool CreateMarshaler(bool value) => value;
-        public static Boolean GetAbi(bool value) => new Boolean() { value = (byte)(value ? 1 : 0) };
-        public static bool FromAbi(Boolean abi) => abi.value != 0;
-        public static unsafe void CopyAbi(bool value, IntPtr dest) => *(byte*)dest.ToPointer() = GetAbi(value).value;
-        public static Boolean FromManaged(bool value) => GetAbi(value);
-        public static unsafe void CopyManaged(bool arg, IntPtr dest) => *(byte*)dest.ToPointer() = FromManaged(arg).value;
-        public static void DisposeMarshaler(bool m) { }
-        public static void DisposeAbi(byte abi) { }
-    }
-
-    public struct Char
-    {
-        ushort value;
-        public static char CreateMarshaler(char value) => value;
-        public static Char GetAbi(char value) => new Char() { value = (ushort)value };
-        public static char FromAbi(Char abi) => (char)abi.value;
-        public static unsafe void CopyAbi(char value, IntPtr dest) => *(ushort*)dest.ToPointer() = GetAbi(value).value;
-        public static Char FromManaged(char value) => GetAbi(value);
-        public static unsafe void CopyManaged(char arg, IntPtr dest) => *(ushort*)dest.ToPointer() = FromManaged(arg).value;
-        public static void DisposeMarshaler(char m) { }
-        public static void DisposeAbi(Char abi) { }
     }
 }

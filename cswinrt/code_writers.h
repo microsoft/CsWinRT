@@ -2927,7 +2927,7 @@ AbiToProjectionVftable = new Vftbl
 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable, 
 %
 };
-var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * %);
+var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * %);
 %
 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
 }
@@ -3013,7 +3013,8 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
 
         uint32_t const vtable_base = type.MethodList().first.index();
 
-        w.write(R"(%
+        w.write(R"([global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+%
 internal class % : %
 {
 %
@@ -3097,7 +3098,8 @@ public static Guid PIID = Vftbl.PIID;
         auto base_semantics = get_type_semantics(type.Extends());
         auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
 
-        w.write(R"(public %class %%
+        w.write(R"([global::WinRT.ProjectedRuntimeClass(nameof(_default))]
+public %class %%
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
 
@@ -3208,7 +3210,7 @@ AbiToProjectionVftable = new global::WinRT.Interop.IDelegateVftbl
 IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
 Invoke = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate)
 };
-var nativeVftbl = Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
+var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(@%), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
 Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
 AbiToProjectionVftablePtr = nativeVftbl;
 }
@@ -3225,19 +3227,20 @@ var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(nativeDelegate);
 return (%)ComWrappersSupport.TryRegisterObjectForInterface(new %(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
 }
 
+[global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 private class NativeDelegateWrapper
 {
-public ObjectReference<global::WinRT.Interop.IDelegateVftbl> NativeDelegate { get; }
+private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
 
 public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
 {
-NativeDelegate = nativeDelegate;
+_nativeDelegate = nativeDelegate;
 }
 
 public % Invoke(%)
 {
-IntPtr ThisPtr = NativeDelegate.ThisPtr;
-var abiInvoke = Marshal.GetDelegateForFunctionPointer%(NativeDelegate.Vftbl.Invoke%);%
+IntPtr ThisPtr = _nativeDelegate.ThisPtr;
+var abiInvoke = Marshal.GetDelegateForFunctionPointer%(_nativeDelegate.Vftbl.Invoke%);%
 }
 }
 
@@ -3303,6 +3306,8 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                             });
                     });
             },
+            type.TypeName(),
+            type_params,
             // CreateMarshaler
             type_name,
             type.TypeName(),

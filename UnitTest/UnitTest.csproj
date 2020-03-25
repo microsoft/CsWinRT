@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!--Target .NET Core 2.0 to ensure .NET Standard 2.0 compatibility-->
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFrameworks>netcoreapp2.0;netcoreapp5.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
@@ -38,6 +38,7 @@
     <ProjectReference Include="..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\TestComponentCSharp\TestComponentCSharp.vcxproj" />
     <ProjectReference Include="..\TestWinRT\TestComponent\TestComponent.vcxproj" />
+    <ProjectReference Include="..\WinRT.Runtime\WinRT.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

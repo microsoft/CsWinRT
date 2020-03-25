@@ -70,10 +70,8 @@
     <None Include="strings\additions\Windows.Foundation.cs" />
     <None Include="strings\additions\Windows.UI.Xaml.cs" />
     <None Include="strings\WinRT.cs" />
-    <None Include="strings\WinRT_Guid.cs" />
     <None Include="strings\WinRT_Interop.cs" />
     <None Include="strings\WinRT_Marshal.cs" />
-    <None Include="strings\WinRT_Wrappers.cs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

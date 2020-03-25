@@ -2,7 +2,7 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
+    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">$(IsCrossTargetingBuild)</GenerateTestProjection>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +20,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="GenerateProjection" BeforeTargets="CoreCompile" Condition="'$(GenerateTestProjection)' == 'true'">
+  <Target Name="GenerateProjection" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)' == 'true'">
     <Exec Command="$(CsWinrtExe) -verbose -in 10.0.18362.0 $(BuildOutDir)TestComponentCSharp\bin\TestComponentCSharp\TestComponentCSharp.winmd $(BuildOutDir)TestComponent\bin\TestComponent.winmd -out &quot;$(ProjectDir)Generated Files&quot; -include TestComponentCSharp TestComponent Windows.Foundation -exclude Windows.Foundation.Diagnostics -exclude Windows.Foundation.Metadata" />
   </Target>
 

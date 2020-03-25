@@ -1,16 +1,8 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
-using System.Linq.Expressions;
-
-#pragma warning disable 0169 // The field 'xxx' is never used
-#pragma warning disable 0649 // Field 'xxx' is never assigned to, and will always have its default value
 
 namespace WinRT
 {
@@ -44,7 +36,7 @@ namespace WinRT
                 var sigMethod = helperType.GetMethod("GetGuidSignature", BindingFlags.Static | BindingFlags.Public);
                 if (sigMethod != null)
                 {
-                    return (string)sigMethod.Invoke(null, new Type[]{});
+                    return (string)sigMethod.Invoke(null, new Type[] { });
                 }
             }
 
@@ -85,7 +77,7 @@ namespace WinRT
                             }
                             if (!type.IsPrimitive)
                             {
-                                var args = type.GetFields().Select(fi => GetSignature(fi.FieldType));
+                                var args = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(fi => GetSignature(fi.FieldType));
                                 return "struct(" + type.FullName + ";" + String.Join(";", args) + ")";
                             }
                             throw new InvalidOperationException("unsupported value type");
@@ -93,7 +85,7 @@ namespace WinRT
                 }
             }
 
-            if (type == typeof(String))
+            if (type == typeof(string))
             {
                 return "string";
             }

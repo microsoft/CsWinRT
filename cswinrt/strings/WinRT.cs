@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
@@ -18,46 +17,11 @@ using System.Linq.Expressions;
 
 namespace WinRT
 {
+    using System.Diagnostics;
     using WinRT.Interop;
 
-    public enum TrustLevel
+    internal static class DelegateExtensions
     {
-        BaseTrust = 0,
-        PartialTrust = BaseTrust + 1,
-        FullTrust = PartialTrust + 1
-    };
-
-
-    public static class TypeExtensions
-    {
-        public static Type FindHelperType(this Type type)
-        {
-            return Type.GetType($"ABI.{type.FullName}");
-        }
-
-        public static Type GetHelperType(this Type type)
-        {
-            return type.FindHelperType() ?? throw new InvalidOperationException("Target type is not a projected type.");
-        }
-
-        public static Type GetAbiType(this Type type)
-        {
-            return type.GetHelperType().GetMethod("GetAbi").ReturnType;
-        }
-
-        public static Type GetMarshalerType(this Type type)
-        {
-            return type.GetHelperType().GetMethod("CreateMarshaler").ReturnType;
-        }
-    }
-
-    public static class DelegateExtensions
-    {
-        public static bool IsDelegate(this Type type)
-        {
-            return typeof(MulticastDelegate).IsAssignableFrom(type.BaseType);
-        }
-
         public static void DynamicInvokeAbi(this System.Delegate del, object[] invoke_params)
         {
             Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params));
@@ -67,423 +31,6 @@ namespace WinRT
         {
             return Marshal.GetDelegateForFunctionPointer<T>(
                 Marshal.GetFunctionPointerForDelegate(del));
-        }
-    }
-
-    public static class CastExtensions
-    {
-        public static TInterface As<TInterface>(this object value)
-        {
-            IntPtr GetThisPointer()
-            {
-                PropertyInfo thisPtrProperty = value.GetType().GetProperty("ThisPtr", BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public);
-                if (thisPtrProperty is null)
-                {
-                    throw new ArgumentException("Source type is not a projected type.", nameof(TInterface));
-                }
-                return (IntPtr)thisPtrProperty.GetValue(value);
-            }
-            if (typeof(TInterface) == typeof(object))
-            {
-                // Use MarshalInspectable to get the default interface pointer.
-                return (TInterface)MarshalInspectable.FromAbi(GetThisPointer());
-            }
-
-            if (value is TInterface convertableInMetadata)
-            {
-                return convertableInMetadata;
-            }
-
-            return (TInterface)typeof(MarshalInterface<>).MakeGenericType(typeof(TInterface)).GetMethod("FromAbi").Invoke(null, new[] { (object)GetThisPointer()  });
-        }
-    }
-
-    public static class ExceptionHelpers
-    {
-        private const int COR_E_OBJECTDISPOSED = unchecked((int)0x80131622);
-        private const int RO_E_CLOSED = unchecked((int)0x80000013);
-        private const int E_ILLEGAL_STATE_CHANGE = unchecked((int)0x8000000d);
-        private const int E_ILLEGAL_METHOD_CALL = unchecked((int)0x8000000e);
-        private const int E_ILLEGAL_DELEGATE_ASSIGNMENT = unchecked((int)0x80000018);
-        private const int APPMODEL_ERROR_NO_PACKAGE = unchecked((int)0x80073D54);
-        internal const int E_XAMLPARSEFAILED = unchecked((int)0x802B000A);
-        internal const int E_LAYOUTCYCLE = unchecked((int)0x802B0014);
-        internal const int E_ELEMENTNOTENABLED = unchecked((int)0x802B001E);
-        internal const int E_ELEMENTNOTAVAILABLE = unchecked((int)0x802B001F);
-
-        internal delegate int GetRestrictedErrorInfo(out IntPtr ppRestrictedErrorInfo);
-        private static GetRestrictedErrorInfo getRestrictedErrorInfo;
-
-        internal delegate int SetRestrictedErrorInfo(IntPtr pRestrictedErrorInfo);
-        private static SetRestrictedErrorInfo setRestrictedErrorInfo;
-
-        internal delegate int RoOriginateLanguageException(int error, IntPtr message, IntPtr langaugeException);
-        private static RoOriginateLanguageException roOriginateLanguageException;
-
-        static ExceptionHelpers()
-        {
-            IntPtr winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
-            if (winRTErrorModule != IntPtr.Zero)
-            {
-                getRestrictedErrorInfo = Platform.GetProcAddress<GetRestrictedErrorInfo>(winRTErrorModule);
-                setRestrictedErrorInfo = Platform.GetProcAddress<SetRestrictedErrorInfo>(winRTErrorModule);
-                roOriginateLanguageException = Platform.GetProcAddress<RoOriginateLanguageException>(winRTErrorModule);
-            }
-            else
-            {
-                winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-0.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
-                if (winRTErrorModule != IntPtr.Zero)
-                {
-                    getRestrictedErrorInfo = Platform.GetProcAddress<GetRestrictedErrorInfo>(winRTErrorModule);
-                    setRestrictedErrorInfo = Platform.GetProcAddress<SetRestrictedErrorInfo>(winRTErrorModule);
-                }
-            }
-        }
-
-        public static void ThrowExceptionForHR(int hr)
-        {
-            Exception ex = GetExceptionForHR(hr, useGlobalErrorState : true, out bool restoredExceptionFromGlobalState);
-            if (restoredExceptionFromGlobalState)
-            {
-                ExceptionDispatchInfo.Capture(ex).Throw();
-            }
-            else if (ex is object)
-            {
-                throw ex;
-            }
-        }
-
-        public static Exception GetExceptionForHR(int hr) => GetExceptionForHR(hr, false, out _);
-
-        private static Exception GetExceptionForHR(int hr, bool useGlobalErrorState, out bool restoredExceptionFromGlobalState)
-        {
-            restoredExceptionFromGlobalState = false;
-            if (hr == 0)
-            {
-                return null;
-            }
-
-            IObjectReference iErrorInfo = null;
-            IObjectReference restrictedErrorInfoToSave = null;
-            Exception ex;
-            string description = null;
-            string restrictedError = null;
-            string restrictedErrorReference = null;
-            string restrictedCapabilitySid = null;
-            bool hasOtherLanguageException = false;
-
-            if (useGlobalErrorState && getRestrictedErrorInfo != null)
-            {
-                Marshal.ThrowExceptionForHR(getRestrictedErrorInfo(out IntPtr restrictedErrorInfoPtr));
-
-                if (restrictedErrorInfoPtr != IntPtr.Zero)
-                {
-                    IObjectReference restrictedErrorInfoRef = ObjectReference<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>.Attach(ref restrictedErrorInfoPtr);
-                    restrictedErrorInfoToSave = restrictedErrorInfoRef.As<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>();
-
-                    ABI.WinRT.Interop.IRestrictedErrorInfo restrictedErrorInfo = new ABI.WinRT.Interop.IRestrictedErrorInfo(restrictedErrorInfoRef);
-                    restrictedErrorInfo.GetErrorDetails(out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
-                    restrictedErrorReference = restrictedErrorInfo.GetReference();
-                    try
-                    {
-                        ILanguageExceptionErrorInfo languageErrorInfo = restrictedErrorInfo.As<ABI.WinRT.Interop.ILanguageExceptionErrorInfo>();
-                        using (IObjectReference languageException = languageErrorInfo.GetLanguageException())
-                        {
-                            if (languageException is object)
-                            {
-                                if (languageException.IsReferenceToManagedObject)
-                                {
-                                    ex = ComWrappersSupport.FindObject<Exception>(languageException.ThisPtr);
-                                    if (GetHRForException(ex) == hr)
-                                    {
-                                        restoredExceptionFromGlobalState = true;
-                                        return ex;
-                                    }
-                                }
-                                else
-                                {
-                                    hasOtherLanguageException = true;
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        if (hr == hrLocal)
-                        {
-                            try
-                            {
-                                iErrorInfo = restrictedErrorInfoRef.As<ABI.WinRT.Interop.IErrorInfo.Vftbl>();
-                            }
-                            catch (Exception)
-                            {
-                            }
-                        }
-                    }
-                }
-            }
-
-            using (iErrorInfo)
-            {
-                switch (hr)
-                {
-                    case E_ILLEGAL_STATE_CHANGE:
-                    case E_ILLEGAL_METHOD_CALL:
-                    case E_ILLEGAL_DELEGATE_ASSIGNMENT:
-                    case APPMODEL_ERROR_NO_PACKAGE:
-                        ex = new InvalidOperationException(description);
-                        break;
-                    case E_XAMLPARSEFAILED:
-                        ex = new Windows.UI.Xaml.Markup.XamlParseException();
-                        break;
-                    case E_LAYOUTCYCLE:
-                        ex = new Windows.UI.Xaml.LayoutCycleException();
-                        break;
-                    case E_ELEMENTNOTAVAILABLE:
-                        ex = new Windows.UI.Xaml.Automation.ElementNotAvailableException();
-                        break;
-                    case E_ELEMENTNOTENABLED:
-                        ex = new Windows.UI.Xaml.Automation.ElementNotEnabledException();
-                        break;
-                    default:
-                        ex = Marshal.GetExceptionForHR(hr, iErrorInfo?.ThisPtr ?? (IntPtr)(-1));
-                        break;
-                }
-            }
-
-            ex.AddExceptionDataForRestrictedErrorInfo(
-                description,
-                restrictedError,
-                restrictedErrorReference,
-                restrictedCapabilitySid,
-                restrictedErrorInfoToSave,
-                hasOtherLanguageException);
-
-            return ex;
-        }
-
-        public static unsafe void SetErrorInfo(Exception ex)
-        {
-            if (getRestrictedErrorInfo != null && setRestrictedErrorInfo != null && roOriginateLanguageException != null)
-            {
-                // If the exception has information for an IRestrictedErrorInfo, use that
-                // as our error so as to propagate the error through WinRT end-to-end.
-                if (ex.TryGetRestrictedLanguageErrorObject(out var restrictedErrorObject))
-                {
-                    setRestrictedErrorInfo(restrictedErrorObject.GetRef());
-                }
-                else
-                {
-                    string message = ex.Message;
-                    if (string.IsNullOrEmpty(message))
-                    {
-                        message = ex.GetType().FullName;
-                    }
-
-                    IntPtr hstring;
-
-                    if (Platform.WindowsCreateString(message, message.Length, &hstring) != 0)
-                    {
-                        hstring = IntPtr.Zero;
-                    }
-
-                    using (var managedExceptionWrapper = ComWrappersSupport.CreateCCWForObject(ex))
-                    {
-                        roOriginateLanguageException(GetHRForException(ex), hstring, managedExceptionWrapper.ThisPtr);
-                    }
-                }
-            }
-            else
-            {
-                using (var iErrorInfo = ComWrappersSupport.CreateCCWForObject(new ManagedExceptionErrorInfo(ex)))
-                {
-                    Platform.SetErrorInfo(0, iErrorInfo.ThisPtr);
-                }
-            }
-        }
-
-        public static int GetHRForException(Exception ex)
-        {
-            int hr = ex.HResult;
-            if (ex.TryGetRestrictedLanguageErrorObject(out var restrictedErrorObject))
-            {
-                restrictedErrorObject.AsType<ABI.WinRT.Interop.IRestrictedErrorInfo>().GetErrorDetails(out _, out hr, out _, out _);
-            }
-            if (hr == COR_E_OBJECTDISPOSED)
-            {
-                return RO_E_CLOSED;
-            }
-            return hr;
-        }
-
-        //
-        // Exception requires anything to be added into Data dictionary is serializable
-        // This wrapper is made serializable to satisfy this requirement but does NOT serialize
-        // the object and simply ignores it during serialization, because we only need
-        // the exception instance in the app to hold the error object alive.
-        //
-        [Serializable]
-        internal class __RestrictedErrorObject
-        {
-            // Hold the error object instance but don't serialize/deserialize it
-            [NonSerialized]
-            private readonly IObjectReference _realErrorObject;
-
-            internal __RestrictedErrorObject(IObjectReference errorObject)
-            {
-                _realErrorObject = errorObject;
-            }
-
-            public IObjectReference RealErrorObject
-            {
-                get
-                {
-                    return _realErrorObject;
-                }
-            }
-        }
-
-        internal static void AddExceptionDataForRestrictedErrorInfo(
-            this Exception ex,
-            string description,
-            string restrictedError,
-            string restrictedErrorReference,
-            string restrictedCapabilitySid,
-            IObjectReference restrictedErrorObject,
-            bool hasRestrictedLanguageErrorObject = false)
-        {
-            IDictionary dict = ex.Data;
-            if (dict != null)
-            {
-                dict.Add("Description", description);
-                dict.Add("RestrictedDescription", restrictedError);
-                dict.Add("RestrictedErrorReference", restrictedErrorReference);
-                dict.Add("RestrictedCapabilitySid", restrictedCapabilitySid);
-
-                // Keep the error object alive so that user could retrieve error information
-                // using Data["RestrictedErrorReference"]
-                dict.Add("__RestrictedErrorObjectReference", restrictedErrorObject == null ? null : new __RestrictedErrorObject(restrictedErrorObject));
-                dict.Add("__HasRestrictedLanguageErrorObject", hasRestrictedLanguageErrorObject);
-            }
-        }
-
-        internal static bool TryGetRestrictedLanguageErrorObject(
-            this Exception ex,
-            out IObjectReference restrictedErrorObject)
-        {
-            restrictedErrorObject = null;
-            IDictionary dict = ex.Data;
-            if (dict != null && dict.Contains("__HasRestrictedLanguageErrorObject"))
-            {
-                if (dict.Contains("__RestrictedErrorObjectReference"))
-                {
-                    if (dict["__RestrictedErrorObjectReference"] is __RestrictedErrorObject restrictedObject)
-                        restrictedErrorObject = restrictedObject.RealErrorObject;
-                }
-                return (bool)dict["__HasRestrictedLanguageErrorObject"]!;
-            }
-
-            return false;
-        }
-    }
-
-    // IInspectable
-    [Guid("AF86E2E0-B12D-4c6a-9C5A-D7AA65101E90")]
-    public class IInspectable
-    {
-        [Guid("AF86E2E0-B12D-4c6a-9C5A-D7AA65101E90")]
-        public struct Vftbl
-        {
-            public delegate int _GetIids(IntPtr pThis, out uint iidCount, out Guid[] iids);
-            public delegate int _GetRuntimeClassName(IntPtr pThis, out IntPtr className);
-            public delegate int _GetTrustLevel(IntPtr pThis, out TrustLevel trustLevel);
-
-            public IUnknownVftbl IUnknownVftbl;
-            public _GetIids GetIids;
-            public _GetRuntimeClassName GetRuntimeClassName;
-            public _GetTrustLevel GetTrustLevel;
-
-            public static readonly Vftbl AbiToProjectionVftable;
-            public static readonly IntPtr AbiToProjectionVftablePtr;
-
-            static Vftbl()
-            {
-                AbiToProjectionVftable = new Vftbl
-                {
-                    IUnknownVftbl = IUnknownVftbl.AbiToProjectionVftbl,
-                    GetIids = Do_Abi_GetIids,
-                    GetRuntimeClassName = Do_Abi_GetRuntimeClassName,
-                    GetTrustLevel = Do_Abi_GetTrustLevel
-                };
-                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
-                Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
-            }
-
-            private static int Do_Abi_GetIids(IntPtr pThis, out uint iidCount, out Guid[] iids)
-            {
-                iidCount = 0u;
-                iids = null;
-                try
-                {
-                    iids = ComWrappersSupport.GetInspectableInfo(pThis).IIDs;
-                    iidCount = (uint)iids.Length;
-                }
-                catch (Exception ex)
-                {
-                    ExceptionHelpers.SetErrorInfo(ex);
-                    return ExceptionHelpers.GetHRForException(ex);
-                }
-                return 0;
-            }
-
-            private unsafe static int Do_Abi_GetRuntimeClassName(IntPtr pThis, out IntPtr className)
-            {
-                className = default;
-                try
-                {
-                    className = MarshalString.FromManaged(ComWrappersSupport.GetInspectableInfo(pThis).RuntimeClassName);
-                }
-                catch (Exception ex)
-                {
-                    ExceptionHelpers.SetErrorInfo(ex);
-                    return ExceptionHelpers.GetHRForException(ex);
-                }
-                return 0;
-            }
-
-            private static int Do_Abi_GetTrustLevel(IntPtr pThis, out TrustLevel trustLevel)
-            {
-                trustLevel = TrustLevel.BaseTrust;
-                return 0;
-            }
-        }
-
-        public static IInspectable FromAbi(IntPtr thisPtr) =>
-            new IInspectable(ObjectReference<Vftbl>.FromAbi(thisPtr));
-
-        private readonly ObjectReference<Vftbl> _obj;
-        public IntPtr ThisPtr => _obj.ThisPtr;
-        public static implicit operator IInspectable(IObjectReference obj) => obj.As<Vftbl>();
-        public static implicit operator IInspectable(ObjectReference<Vftbl> obj) => new IInspectable(obj);
-        public ObjectReference<I> As<I>() => _obj.As<I>();
-        public IInspectable(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        public IInspectable(ObjectReference<Vftbl> obj)
-        {
-            _obj = obj;
-        }
-
-        public string GetRuntimeClassName()
-        {
-            IntPtr __retval = default;
-            try
-            {
-                ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetRuntimeClassName(ThisPtr, out __retval));
-                return MarshalString.FromAbi(__retval);
-            }
-            finally
-            {
-                MarshalString.DisposeAbi(__retval);
-            }
         }
     }
 
@@ -511,9 +58,6 @@ namespace WinRT
             }
             return Marshal.GetDelegateForFunctionPointer<T>(functionPtr);
         }
-
-        [DllImport("oleaut32.dll")]
-        internal static extern int SetErrorInfo(uint dwReserved, IntPtr perrinfo);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern IntPtr LoadLibraryExW([MarshalAs(UnmanagedType.LPWStr)] string fileName, IntPtr fileHandle, uint flags);
@@ -543,276 +87,9 @@ namespace WinRT
         internal static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* length);
     }
 
-    internal class Mono
-    {
-        static Lazy<bool> _usingMono = new Lazy<bool>(() =>
-        {
-            var modulePtr = Platform.LoadLibraryExW("mono-2.0-bdwgc.dll", IntPtr.Zero, 0);
-            if (modulePtr == IntPtr.Zero) return false;
-
-            if (!Platform.FreeLibrary(modulePtr))
-            {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-            }
-            return true;
-        });
-
-        [DllImport("mono-2.0-bdwgc.dll")]
-        static extern IntPtr mono_thread_current();
-
-        [DllImport("mono-2.0-bdwgc.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool mono_thread_is_foreign(IntPtr threadPtr);
-
-        [DllImport("mono-2.0-bdwgc.dll")]
-        static extern void mono_unity_thread_fast_attach(IntPtr domainPtr);
-
-        [DllImport("mono-2.0-bdwgc.dll")]
-        static extern void mono_unity_thread_fast_detach();
-
-        [DllImport("mono-2.0-bdwgc.dll")]
-        static extern void mono_thread_pop_appdomain_ref();
-
-        [DllImport("mono-2.0-bdwgc.dll")]
-        static extern IntPtr mono_domain_get();
-
-        struct MonoObject
-        {
-            IntPtr vtable;
-            IntPtr synchronisation; // sic
-        }
-
-        unsafe struct MonoThread
-        {
-            MonoObject obj;
-            public MonoInternalThread_x64* internal_thread;
-            IntPtr start_obj;
-            IntPtr pending_exception;
-        }
-
-        [Flags]
-        enum MonoThreadFlag : int
-        {
-            MONO_THREAD_FLAG_DONT_MANAGE = 1,
-            MONO_THREAD_FLAG_NAME_SET = 2,
-            MONO_THREAD_FLAG_APPDOMAIN_ABORT = 4,
-        }
-
-        [StructLayout(LayoutKind.Explicit)]
-        struct MonoInternalThread_x64
-        {
-            [FieldOffset(0xd0)]
-            public MonoThreadFlag flags;
-        }
-
-        public class ThreadContext : IDisposable
-        {
-            static Lazy<HashSet<IntPtr>> _foreignThreads = new Lazy<HashSet<IntPtr>>();
-
-            readonly IntPtr _threadPtr = IntPtr.Zero;
-
-            public ThreadContext()
-            {
-                if (_usingMono.Value)
-                {
-                    // nothing to do for Mono-native threads
-                    var threadPtr = mono_thread_current();
-                    if (mono_thread_is_foreign(threadPtr))
-                    {
-                        // initialize this thread the first time it runs managed code, and remember it for future reference
-                        if (_foreignThreads.Value.Add(threadPtr))
-                        {
-                            // clear initial appdomain ref for new foreign threads to avoid deadlock on domain unload
-                            mono_thread_pop_appdomain_ref();
-
-                            unsafe
-                            {
-                                // tell Mono to ignore the thread on process shutdown since there's nothing to synchronize with
-                                ((MonoThread*)threadPtr)->internal_thread->flags |= MonoThreadFlag.MONO_THREAD_FLAG_DONT_MANAGE;
-                            }
-                        }
-
-                        unsafe
-                        {
-                            // attach as Unity does to set up the proper domain for the call
-                            mono_unity_thread_fast_attach(mono_domain_get());
-                            _threadPtr = threadPtr;
-                        }
-                    }
-                }
-            }
-
-            public void Dispose()
-            {
-                if (_threadPtr != IntPtr.Zero)
-                {
-                    // detach as Unity does to properly reset the domain context
-                    mono_unity_thread_fast_detach();
-                }
-            }
-        }
-    }
-
     internal struct VftblPtr
     {
         public IntPtr Vftbl;
-    }
-
-    public abstract class IObjectReference : IDisposable
-    {
-        protected bool disposed;
-        public readonly IntPtr ThisPtr;
-        protected virtual Interop.IUnknownVftbl VftblIUnknown { get; }
-
-        protected IObjectReference(IntPtr thisPtr)
-        {
-            if (thisPtr == IntPtr.Zero)
-            {
-                throw new ArgumentNullException(nameof(thisPtr));
-            }
-            ThisPtr = thisPtr;
-        }
-
-        ~IObjectReference()
-        {
-            Dispose(false);
-        }
-
-        public ObjectReference<T> As<T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
-        public unsafe ObjectReference<T> As<T>(Guid iid)
-        {
-            ThrowIfDisposed();
-            IntPtr thatPtr;
-            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out thatPtr));
-            return ObjectReference<T>.Attach(ref thatPtr);
-        }
-
-        public unsafe IObjectReference As(Guid iid)
-        {
-            ThrowIfDisposed();
-            IntPtr thatPtr;
-            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out thatPtr));
-            return ObjectReference<Interop.IUnknownVftbl>.Attach(ref thatPtr);
-        }
-
-        public T AsType<T>()
-        {
-            ThrowIfDisposed();
-            var ctor = typeof(T).GetConstructor(new[] { typeof(IObjectReference) });
-            if (ctor != null)
-            {
-                return (T)ctor.Invoke(new[] { this });
-            }
-            throw new InvalidOperationException("Target type is not a projected interface.");
-        }
-
-        public IntPtr GetRef()
-        {
-            ThrowIfDisposed();
-            VftblIUnknown.AddRef(ThisPtr);
-            return ThisPtr;
-        }
-
-        private void ThrowIfDisposed()
-        {
-            if (disposed) throw new ObjectDisposedException("ObjectReference");
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-            {
-                return;
-            }
-            VftblIUnknown.Release(ThisPtr);
-            disposed = true;
-        }
-
-        internal unsafe bool IsReferenceToManagedObject
-        {
-            get
-            {
-                using (var unknownObjRef = this.As<IUnknownVftbl>())
-                {
-                    return ((VftblPtr*)unknownObjRef.ThisPtr.ToPointer())->Vftbl == IUnknownVftbl.AbiToProjectionVftblPtr;
-                }
-            }
-        }
-    }
-
-    public class ObjectReference<T> : IObjectReference
-    {
-        protected override IUnknownVftbl VftblIUnknown => _vftblIUnknown;
-        readonly IUnknownVftbl _vftblIUnknown;
-        public readonly T Vftbl;
-
-        public static ObjectReference<T> Attach(ref IntPtr thisPtr)
-        {
-            var obj = new ObjectReference<T>(thisPtr);
-            thisPtr = IntPtr.Zero;
-            return obj;
-        }
-
-        ObjectReference(IntPtr thisPtr, IUnknownVftbl vftblIUnknown, T vftblT) :
-            base(thisPtr)
-        {
-            _vftblIUnknown = vftblIUnknown;
-            Vftbl = vftblT;
-        }
-
-        ObjectReference(IntPtr thisPtr) :
-            this(thisPtr, GetVtables(thisPtr))
-        {
-        }
-
-        ObjectReference(IntPtr thisPtr, (IUnknownVftbl vftblIUnknown, T vftblT) vtables) :
-            this(thisPtr, vtables.vftblIUnknown, vtables.vftblT)
-        {
-        }
-
-        public static ObjectReference<T> FromAbi(IntPtr thisPtr, IUnknownVftbl vftblIUnknown, T vftblT)
-        {
-            if (thisPtr == IntPtr.Zero)
-            {
-                return null;
-            }
-            var obj = new ObjectReference<T>(thisPtr, vftblIUnknown, vftblT);
-            obj._vftblIUnknown.AddRef(obj.ThisPtr);
-            return obj;
-        }
-
-        public static ObjectReference<T> FromAbi(IntPtr thisPtr)
-        {
-            if (thisPtr == IntPtr.Zero)
-            {
-                return null;
-            }
-            var (vftblIUnknown, vftblT) = GetVtables(thisPtr);
-            return FromAbi(thisPtr, vftblIUnknown, vftblT);
-        }
-
-        // C# doesn't allow us to express that T contains IUnknownVftbl, so we'll use a tuple
-        private static (IUnknownVftbl vftblIUnknown, T vftblT) GetVtables(IntPtr thisPtr)
-        {
-            var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-            var vftblIUnknown = Marshal.PtrToStructure<IUnknownVftbl>(vftblPtr.Vftbl);
-            T vftblT;
-            if (typeof(T).IsGenericType)
-            {
-                vftblT = (T)typeof(T).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance, null, new[] { typeof(IntPtr) }, null).Invoke(new object[] { thisPtr });
-            }
-            else
-            {
-                vftblT = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
-            }
-            return (vftblIUnknown, vftblT);
-        }
     }
 
     internal class DllModule
@@ -999,7 +276,7 @@ namespace WinRT
         readonly _add_EventHandler _addHandler;
         readonly _remove_EventHandler _removeHandler;
 
-        private Windows.Foundation.EventRegistrationToken _token;
+        private EventRegistrationToken _token;
         private TDelegate _event;
 
         public void Subscribe(TDelegate del)
@@ -1012,7 +289,7 @@ namespace WinRT
                     try
                     {
                         var nativeDelegate = (IntPtr)Marshaler<TDelegate>.GetAbi(marshaler);
-                        Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out Windows.Foundation.EventRegistrationToken token));
+                        Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out EventRegistrationToken token));
                         _token = token;
                     }
                     finally
@@ -1089,9 +366,9 @@ namespace WinRT
     internal sealed class EventRegistrationTokenTable<T> where T : class, global::System.Delegate
     {
         // Note this dictionary is also used as the synchronization object for this table
-        private readonly Dictionary<Windows.Foundation.EventRegistrationToken, T> m_tokens = new Dictionary<Windows.Foundation.EventRegistrationToken, T>();
+        private readonly Dictionary<EventRegistrationToken, T> m_tokens = new Dictionary<EventRegistrationToken, T>();
 
-        public Windows.Foundation.EventRegistrationToken AddEventHandler(T handler)
+        public EventRegistrationToken AddEventHandler(T handler)
         {
             // Windows Runtime allows null handlers.  Assign those the default token (token value 0) for simplicity
             if (handler == null)
@@ -1105,16 +382,16 @@ namespace WinRT
             }
         }
 
-        private Windows.Foundation.EventRegistrationToken AddEventHandlerNoLock(T handler)
+        private EventRegistrationToken AddEventHandlerNoLock(T handler)
         {
             Debug.Assert(handler != null);
 
             // Get a registration token, making sure that we haven't already used the value.  This should be quite
             // rare, but in the case it does happen, just keep trying until we find one that's unused.
-            Windows.Foundation.EventRegistrationToken token = GetPreferredToken(handler);
+            EventRegistrationToken token = GetPreferredToken(handler);
             while (m_tokens.ContainsKey(token))
             {
-                token = new Windows.Foundation.EventRegistrationToken { Value = token.Value + 1 };
+                token = new EventRegistrationToken { Value = token.Value + 1 };
             }
             m_tokens[token] = handler;
 
@@ -1136,7 +413,7 @@ namespace WinRT
         // Effectively the only reasonable thing to do with this value is either to:
         //  1. Use it as a good starting point for generating a token for handler
         //  2. Use it as a guess to quickly see if the handler was really assigned this token value
-        private static Windows.Foundation.EventRegistrationToken GetPreferredToken(T handler)
+        private static EventRegistrationToken GetPreferredToken(T handler)
         {
             Debug.Assert(handler != null);
 
@@ -1177,13 +454,13 @@ namespace WinRT
             }
 
             ulong tokenValue = ((ulong)(uint)typeof(T).MetadataToken << 32) | handlerHashCode;
-            return new Windows.Foundation.EventRegistrationToken { Value = (long)tokenValue };
+            return new EventRegistrationToken { Value = (long)tokenValue };
         }
 
         // Remove the event handler from the table and
         // Get the delegate associated with an event registration token if it exists
         // If the event registration token is not registered, returns false
-        public bool RemoveEventHandler(Windows.Foundation.EventRegistrationToken token, out T handler)
+        public bool RemoveEventHandler(EventRegistrationToken token, out T handler)
         {
             lock (m_tokens)
             {
@@ -1197,116 +474,12 @@ namespace WinRT
             return false;
         }
 
-        private void RemoveEventHandlerNoLock(Windows.Foundation.EventRegistrationToken token)
+        private void RemoveEventHandlerNoLock(EventRegistrationToken token)
         {
             if (m_tokens.TryGetValue(token, out T handler))
             {
                 m_tokens.Remove(token);
             }
-        }
-    }
-}
-
-namespace Windows.UI.Xaml
-{
-    using global::System.Runtime.Serialization;
-    namespace Automation
-    {
-        [Serializable]
-        public class ElementNotAvailableException : Exception
-        {
-            public ElementNotAvailableException()
-                : base("The element is not available.")
-            {
-                HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTAVAILABLE;
-            }
-
-            public ElementNotAvailableException(string message)
-                : base(message)
-            {
-                HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTAVAILABLE;
-            }
-
-            public ElementNotAvailableException(string message, Exception innerException)
-                : base(message, innerException)
-            {
-                HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTAVAILABLE;
-            }
-
-            protected ElementNotAvailableException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-                : base(serializationInfo, streamingContext)
-            {
-            }
-        }
-
-        public class ElementNotEnabledException : Exception
-        {
-            public ElementNotEnabledException()
-                : base("The element is not enabled.")
-            {
-                HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTENABLED;
-            }
-
-            public ElementNotEnabledException(string message)
-                : base(message)
-            {
-                HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTENABLED;
-            }
-
-            public ElementNotEnabledException(string message, Exception innerException)
-                : base(message, innerException)
-            {
-                HResult = WinRT.ExceptionHelpers.E_ELEMENTNOTENABLED;
-            }
-        }
-    }
-    namespace Markup
-    {
-        public class XamlParseException : Exception
-        {
-            public XamlParseException()
-                : base("XAML parsing failed.")
-            {
-                HResult = WinRT.ExceptionHelpers.E_XAMLPARSEFAILED;
-            }
-
-            public XamlParseException(string message)
-                : base(message)
-            {
-                HResult = WinRT.ExceptionHelpers.E_XAMLPARSEFAILED;
-            }
-
-            public XamlParseException(string message, Exception innerException)
-                : base(message, innerException)
-            {
-                HResult = WinRT.ExceptionHelpers.E_XAMLPARSEFAILED;
-            }
-        }
-    }
-    [Serializable]
-    public class LayoutCycleException : Exception
-    {
-        public LayoutCycleException()
-            : base("A cycle occurred while laying out the GUI.")
-        {
-            HResult = WinRT.ExceptionHelpers.E_LAYOUTCYCLE;
-        }
-
-        public LayoutCycleException(string message)
-            : base(message)
-        {
-            HResult = WinRT.ExceptionHelpers.E_LAYOUTCYCLE;
-        }
-
-        public LayoutCycleException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-            HResult = WinRT.ExceptionHelpers.E_LAYOUTCYCLE;
-        }
-
-        protected LayoutCycleException(SerializationInfo serializationInfo, StreamingContext streamingContext)
-            : base(serializationInfo, streamingContext)
-        {
         }
     }
 }

@@ -18,7 +18,7 @@ using TestComponentCSharp;
 
 namespace UnitTest
 {
-    public class TestComp
+    public class TestComp : UnitTestBase
     {
         public Class TestObject { get; private set; }
 
@@ -422,7 +422,7 @@ namespace UnitTest
         }
 
         [Fact]
-        void TestInterfaceGeneric()
+        public void TestInterfaceGeneric()
         {
             var objs = TestObject.GetInterfaceVector();
             Assert.Equal(3u, objs.Size);
@@ -436,7 +436,7 @@ namespace UnitTest
         }
 
         [Fact]
-        void TestClassGeneric()
+        public void TestClassGeneric()
         {
             var objs = TestObject.GetClassVector();
             Assert.Equal(3u, objs.Size);
@@ -568,7 +568,7 @@ namespace UnitTest
             Assert.Equal(ptr, ptr2);
         }
 
-        [Fact]
+        [Fact()]
         public void TestExceptionPropagation_Managed()
         {
             var exceptionToThrow = new ArgumentNullException("foo");
