@@ -164,7 +164,7 @@ namespace ABI.System
 
         public static string GetGuidSignature()
         {
-            return "rc(Windows.Foundation.Uri;{9E365E57-48B2-4160-956F-C7385120BBFC})";
+            return "rc(Windows.Foundation.Uri;{9e365e57-48b2-4160-956f-c7385120bbfc})";
         }
     }
 }
