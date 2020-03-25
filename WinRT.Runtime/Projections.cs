@@ -32,6 +32,9 @@ namespace WinRT
 
             CustomHelperTypeMappings.Add(typeof(TimeSpan), typeof(ABI.System.TimeSpan));
             CustomAbiTypeNameToTypeMappings.Add("Windows.Foundation.TimeSpan", typeof(TimeSpan));
+
+            CustomHelperTypeMappings.Add(typeof(Uri), typeof(ABI.System.Uri));
+            CustomAbiTypeNameToTypeMappings.Add("Windows.Foundation.Uri", typeof(Uri));
         }
 
         public static void RegisterCustomAbiTypeMapping(Type publicType, Type abiType, string winrtTypeName)

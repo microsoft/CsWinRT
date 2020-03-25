@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using WinRT.Interop;
@@ -14,8 +15,26 @@ namespace WinRT
     public abstract class IObjectReference : IDisposable
     {
         protected bool disposed;
-        public readonly IntPtr ThisPtr;
-        protected virtual Interop.IUnknownVftbl VftblIUnknown { get; }
+        private readonly IntPtr _thisPtr;
+        public IntPtr ThisPtr
+        {
+            get
+            {
+                ThrowIfDisposed();
+                return _thisPtr;
+            }
+        }
+
+        protected IUnknownVftbl VftblIUnknown
+        {
+            get
+            {
+                ThrowIfDisposed();
+                return VftblIUnknownUnsafe;
+            }
+        }
+
+        protected virtual IUnknownVftbl VftblIUnknownUnsafe { get; }
 
         protected IObjectReference(IntPtr thisPtr)
         {
@@ -23,7 +42,7 @@ namespace WinRT
             {
                 throw new ArgumentNullException(nameof(thisPtr));
             }
-            ThisPtr = thisPtr;
+            _thisPtr = thisPtr;
         }
 
         ~IObjectReference()
@@ -35,8 +54,7 @@ namespace WinRT
         public virtual unsafe ObjectReference<T> As<T>(Guid iid)
         {
             ThrowIfDisposed();
-            IntPtr thatPtr;
-            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out thatPtr));
+            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
             return ObjectReference<T>.Attach(ref thatPtr);
         }
 
@@ -88,7 +106,20 @@ namespace WinRT
 
         protected virtual void Release()
         {
-            VftblIUnknown.Release(ThisPtr);
+            var releaseDelegate = VftblIUnknown.Release;
+
+            if (releaseDelegate is null)
+            {
+                unsafe
+                {
+                    // If we're in the finalizer, then releaseDelegate might already be null.
+                    // In this case, we need to re-fetch the delegate from the vtable.
+                    // TODO: Fix this once we have function pointers.
+                    releaseDelegate = Marshal.PtrToStructure<IUnknownVftbl>(Unsafe.AsRef<VftblPtr>(ThisPtr.ToPointer()).Vftbl).Release;
+                }
+            }
+
+            releaseDelegate(ThisPtr);
         }
 
         internal unsafe bool IsReferenceToManagedObject
@@ -103,7 +134,7 @@ namespace WinRT
 
     public class ObjectReference<T> : IObjectReference
     {
-        protected override IUnknownVftbl VftblIUnknown => _vftblIUnknown;
+        protected override IUnknownVftbl VftblIUnknownUnsafe => _vftblIUnknown;
         readonly IUnknownVftbl _vftblIUnknown;
         public readonly T Vftbl;
 
@@ -157,9 +188,9 @@ namespace WinRT
         }
 
         // C# doesn't allow us to express that T contains IUnknownVftbl, so we'll use a tuple
-        private static (IUnknownVftbl vftblIUnknown, T vftblT) GetVtables(IntPtr thisPtr)
+        private static unsafe (IUnknownVftbl vftblIUnknown, T vftblT) GetVtables(IntPtr thisPtr)
         {
-            var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
+            var vftblPtr = Unsafe.AsRef<VftblPtr>(thisPtr.ToPointer());
             var vftblIUnknown = Marshal.PtrToStructure<IUnknownVftbl>(vftblPtr.Vftbl);
             T vftblT;
             if (typeof(T).IsGenericType)
@@ -177,19 +208,22 @@ namespace WinRT
     internal class ObjectReferenceWithContext<T> : ObjectReference<T>
     {
         private static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = Guid.Parse("0A299774-3E4E-FC42-1D9D-72CEE105CA57");
-        private readonly IContextCallback _context;
+        private readonly IntPtr _contextCallbackPtr;
 
-        internal ObjectReferenceWithContext(IntPtr thisPtr, IContextCallback context)
+        internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr)
             :base(thisPtr)
         {
-            _context = context;
+            _contextCallbackPtr = contextCallbackPtr;
         }
 
         protected override unsafe void Release()
         {
             ComCallData data = default;
+            IntPtr contextCallbackPtr = _contextCallbackPtr;
 
-            _context.ContextCallback(_ =>
+            var contextCallback = new ABI.WinRT.Interop.IContextCallback(ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.Attach(ref contextCallbackPtr));
+
+            contextCallback.ContextCallback(_ =>
             {
                 base.Release();
                 return 0;
@@ -199,9 +233,11 @@ namespace WinRT
         public override ObjectReference<U> As<U>(Guid iid)
         {
             ThrowIfDisposed();
-            IntPtr thatPtr;
-            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out thatPtr));
-            return new ObjectReferenceWithContext<U>(thatPtr, _context);
+            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
+            using (var contextCallbackReference = ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.FromAbi(_contextCallbackPtr))
+            {
+                return new ObjectReferenceWithContext<U>(thatPtr, contextCallbackReference.GetRef()); 
+            }
         }
     }
 }

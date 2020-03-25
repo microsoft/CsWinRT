@@ -440,6 +440,7 @@ namespace cswinrt
                     { "Windows.Foundation", "IReference`1", "System", "Nullable", true },
                     { "Windows.Foundation", "Point", "Windows.Foundation", "Point" },
                     { "Windows.Foundation", "TimeSpan", "System", "TimeSpan", true },
+                    { "Windows.Foundation", "Uri", "System", "Uri", true }
                 }
             },
             { "Windows.UI.Xaml",
