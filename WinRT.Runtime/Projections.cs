@@ -10,11 +10,11 @@ namespace WinRT
 {
     public static class Projections
     {
-        private static ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
-        private static Dictionary<Type, Type> CustomTypeToHelperTypeMappings = new Dictionary<Type, Type>();
-        private static Dictionary<Type, Type> CustomAbiTypeToTypeMappings = new Dictionary<Type, Type>();
-        private static Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>();
-        private static Dictionary<Type, string> CustomTypeToAbiTypeNameMappings = new Dictionary<Type, string>();
+        private static readonly ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
+        private static readonly Dictionary<Type, Type> CustomTypeToHelperTypeMappings = new Dictionary<Type, Type>();
+        private static readonly Dictionary<Type, Type> CustomAbiTypeToTypeMappings = new Dictionary<Type, Type>();
+        private static readonly Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>();
+        private static readonly Dictionary<Type, string> CustomTypeToAbiTypeNameMappings = new Dictionary<Type, string>();
 
         static Projections()
         {
