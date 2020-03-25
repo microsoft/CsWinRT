@@ -7,6 +7,7 @@ using WinRT.Interop;
 namespace ABI.Windows.Foundation
 {
     [Guid("9E365E57-48B2-4160-956F-C7385120BBFC")]
+    [StructLayout(LayoutKind.Sequential)]
     internal struct IUriRuntimeClassVftbl
     {
         internal IInspectable.Vftbl IInspectableVftbl;
@@ -38,6 +39,7 @@ namespace ABI.System
     internal class WinRTUriRuntimeClassFactory
     {
         [Guid("44A9796F-723E-4FDF-A218-033E75B0C084")]
+        [StructLayout(LayoutKind.Sequential)]
         public struct Vftbl
         {
             public unsafe delegate int _CreateWithRelativeUri_1(IntPtr thisPtr, IntPtr baseUri, IntPtr relativeUri, out IntPtr instance);
