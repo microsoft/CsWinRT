@@ -224,5 +224,13 @@ namespace TestComponentCSharp
         Windows.Foundation.IReference<Windows.Foundation.DateTime> GetDateTimeProperty();
         // HResult->Exception type mapping
         Windows.Foundation.HResult HResultProperty;
+
+        // Boxing
+        static Int32 UnboxInt32(Object obj);
+        static Boolean UnboxBoolean(Object obj);
+        static String UnboxString(Object obj);
+        static Int32[] UnboxInt32Array(Object obj);
+        static Boolean[] UnboxBooleanArray(Object obj);
+        static String[] UnboxStringArray(Object obj);
     }
 }

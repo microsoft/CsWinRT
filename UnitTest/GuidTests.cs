@@ -41,8 +41,6 @@ namespace UnitTest
             AssertGuid<IAsyncActionWithProgress<A>>("dd725452-2da3-5103-9c7d-22ee9bb14ad3");
             AssertGuid<IAsyncOperationWithProgress<A, B>>("94645425-b9e5-5b91-b509-8da4df6a8916");
             AssertGuid<IAsyncOperation<A>>("2bd35ee6-72d9-5c5d-9827-05ebb81487ab");
-            AssertGuid<IReferenceArray<A>>("4a33fe03-e8b9-5346-a124-5449913eca57");
-            AssertGuid<IReference<A>>("f9e4006c-6e8c-56df-811c-61f9990ebfb0");
             AssertGuid<AsyncActionProgressHandler<A>>("c261d8d0-71ba-5f38-a239-872342253a18");
             AssertGuid<AsyncActionWithProgressCompletedHandler<A>>("9a0d211c-0374-5d23-9e15-eaa3570fae63");
             AssertGuid<AsyncOperationCompletedHandler<A>>("9d534225-231f-55e7-a6d0-6c938e2d9160");
@@ -66,31 +64,29 @@ namespace UnitTest
             AssertGuid<VectorChangedEventHandler<A>>("a1e9acd7-e4df-5a79-aefa-de07934ab0fb");
 
             // Generated primitive GUIDs
-            AssertGuid<IReference<bool>>("3c00fd60-2950-5939-a21a-2d12c5a01b8a");
-            AssertGuid<IReference<sbyte>>("95500129-fbf6-5afc-89df-70642d741990");
-            AssertGuid<IReference<Int16>>("6ec9e41b-6709-5647-9918-a1270110fc4e");
-            AssertGuid<IReference<Int32>>("548cefbd-bc8a-5fa0-8df2-957440fc8bf4");
-            AssertGuid<IReference<Int64>>("4dda9e24-e69f-5c6a-a0a6-93427365af2a");
-            AssertGuid<IReference<byte>>("e5198cc8-2873-55f5-b0a1-84ff9e4aad62");
-            AssertGuid<IReference<UInt16>>("5ab7d2c3-6b62-5e71-a4b6-2d49c4f238fd");
-            AssertGuid<IReference<UInt32>>("513ef3af-e784-5325-a91e-97c2b8111cf3");
-            AssertGuid<IReference<UInt64>>("6755e376-53bb-568b-a11d-17239868309e");
-            AssertGuid<IReference<float>>("719cc2ba-3e76-5def-9f1a-38d85a145ea8");
-            AssertGuid<IReference<double>>("2f2d6c29-5473-5f3e-92e7-96572bb990e2");
-            AssertGuid<IReference<char>>("fb393ef3-bbac-5bd5-9144-84f23576f415");
-            AssertGuid<IReference<Guid>>("7d50f649-632c-51f9-849a-ee49428933ea");
-            AssertGuid<IReference<Exception>>("6ff27a1e-4b6a-59b7-b2c3-d1f2ee474593");
-            AssertGuid<IReference<string>>("fd416dfb-2a07-52eb-aae3-dfce14116c05");
-            //AssertGuid<IReference<event_token>>("a9b18291-ce2a-5dae-8a23-b7f7388416db");
-            AssertGuid<IReference<System.TimeSpan>>("604d0c4c-91de-5c2a-935f-362f13eaf800");
-            AssertGuid<IReference<System.DateTimeOffset>>("5541d8a7-497c-5aa4-86fc-7713adbf2a2c");
-            AssertGuid<IReference<Point>>("84f14c22-a00a-5272-8d3d-82112e66df00");
-            AssertGuid<IReference<Rect>>("80423f11-054f-5eac-afd3-63b6ce15e77b");
-            AssertGuid<IReference<Size>>("61723086-8e53-5276-9f36-2a4bb93e2b75");
+            AssertGuid<bool?>("3c00fd60-2950-5939-a21a-2d12c5a01b8a");
+            AssertGuid<sbyte?>("95500129-fbf6-5afc-89df-70642d741990");
+            AssertGuid<short?>("6ec9e41b-6709-5647-9918-a1270110fc4e");
+            AssertGuid<int?>("548cefbd-bc8a-5fa0-8df2-957440fc8bf4");
+            AssertGuid<long?>("4dda9e24-e69f-5c6a-a0a6-93427365af2a");
+            AssertGuid<byte?>("e5198cc8-2873-55f5-b0a1-84ff9e4aad62");
+            AssertGuid<ushort?>("5ab7d2c3-6b62-5e71-a4b6-2d49c4f238fd");
+            AssertGuid<uint?>("513ef3af-e784-5325-a91e-97c2b8111cf3");
+            AssertGuid<ulong?>("6755e376-53bb-568b-a11d-17239868309e");
+            AssertGuid<float?>("719cc2ba-3e76-5def-9f1a-38d85a145ea8");
+            AssertGuid<double?>("2f2d6c29-5473-5f3e-92e7-96572bb990e2");
+            AssertGuid<char?>("fb393ef3-bbac-5bd5-9144-84f23576f415");
+            AssertGuid<Guid?>("7d50f649-632c-51f9-849a-ee49428933ea");
+            AssertGuid<EventRegistrationToken?>("a9b18291-ce2a-5dae-8a23-b7f7388416db");
+            AssertGuid<TimeSpan?>("604d0c4c-91de-5c2a-935f-362f13eaf800");
+            AssertGuid<DateTimeOffset?>("5541d8a7-497c-5aa4-86fc-7713adbf2a2c");
+            AssertGuid<Point?>("84f14c22-a00a-5272-8d3d-82112e66df00");
+            AssertGuid<Rect?>("80423f11-054f-5eac-afd3-63b6ce15e77b");
+            AssertGuid<Size?>("61723086-8e53-5276-9f36-2a4bb93e2b75");
 
             // Enums, structs, IInspectable, classes, and delegates
-            AssertGuid<IReference<PropertyType>>("ecebde54-fac0-5aeb-9ba9-9e1fe17e31d5");
-            AssertGuid<IReference<Point>>("84f14c22-a00a-5272-8d3d-82112e66df00");
+            AssertGuid<PropertyType?>("ecebde54-fac0-5aeb-9ba9-9e1fe17e31d5");
+            AssertGuid<Point?>("84f14c22-a00a-5272-8d3d-82112e66df00");
             AssertGuid<IVector<object>>("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a");
             AssertGuid<IVector<Uri>>("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e");
             AssertGuid<IVector<AsyncActionCompletedHandler>>("5dafe591-86dc-59aa-bfda-07f5d59fc708");

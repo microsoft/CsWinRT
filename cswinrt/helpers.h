@@ -418,7 +418,6 @@ namespace cswinrt
         std::string_view mapped_namespace;
         std::string_view mapped_name;
         bool requires_marshaling;
-        bool runtime_defined;
     };
 
     inline const std::initializer_list<mapped_type> get_mapped_types_in_namespace(std::string_view typeNamespace)
@@ -429,16 +428,19 @@ namespace cswinrt
             std::initializer_list<mapped_type> types;
         } mapped_types[] =
         {
-            // Make sure to keep this table consistent with the table in WinRT.Runtime/ComWrappersSupport.cs
+            // Make sure to keep this table consistent with the registrations in WinRT.Runtime/Projections.cs
             // NOTE: Must keep namespaces sorted (outer) and abi type names sorted (inner)
             { "Windows.Foundation",
                 {
                     { "Windows.Foundation", "DateTime", "System", "DateTimeOffset", true },
-                    { "Windows.Foundation", "EventRegistrationToken", "WinRT", "EventRegistrationToken", false, true },
+                    { "Windows.Foundation", "EventRegistrationToken", "WinRT", "EventRegistrationToken", false },
                     { "Windows.Foundation", "HResult", "System", "Exception", true },
+                    { "Windows.Foundation", "IPropertyValue", "Windows.Foundation", "IPropertyValue", true },
+                    { "Windows.Foundation", "IReferenceArray`1", "Windows.Foundation", "IReferenceArray", true },
+                    { "Windows.Foundation", "IReference`1", "System", "Nullable", true },
                     { "Windows.Foundation", "Point", "Windows.Foundation", "Point" },
                     { "Windows.Foundation", "TimeSpan", "System", "TimeSpan", true },
-                    { "Windows.Foundation", "Uri", "System", "Uri", true, true }
+                    { "Windows.Foundation", "Uri", "System", "Uri", true }
                 }
             },
             { "Windows.UI.Xaml",
