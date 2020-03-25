@@ -60,7 +60,6 @@ namespace ABI.System
             _obj = obj;
         }
 
-
         public unsafe IObjectReference CreateUri(string uri)
         {
             MarshalString __uri = default;
