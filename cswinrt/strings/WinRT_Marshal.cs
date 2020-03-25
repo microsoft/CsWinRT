@@ -817,7 +817,7 @@ namespace WinRT
             return Expression.Lambda<Func<IObjectReference, IObjectReference>>(
                 Expression.Call(
                     parms[0],
-                    typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(helperType.GetNestedType("Vftbl"))
+                    typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(helperType.FindVftblType())
                     ), parms).Compile();
         }
     }

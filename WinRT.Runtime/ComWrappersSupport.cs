@@ -141,7 +141,7 @@ namespace WinRT
                 entries.Add(new ComInterfaceEntry
                 {
                     IID = GuidGenerator.GetIID(ifaceAbiType),
-                    Vtable = (IntPtr)ifaceAbiType.GetNestedType("Vftbl").GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                    Vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
                 });
             }
 
@@ -241,7 +241,7 @@ namespace WinRT
         private static Func<IInspectable, object> CreateNullableTFactory(Type implementationType)
         {
             Type helperType = implementationType.GetHelperType();
-            Type vftblType = helperType.GetNestedType("Vftbl").MakeGenericType(helperType.GetGenericArguments());
+            Type vftblType = helperType.FindVftblType();
 
             ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
             var createInterfaceInstanceExpression = Expression.New(helperType.GetConstructor(new[] { typeof(ObjectReference<>).MakeGenericType(vftblType) }),
@@ -255,7 +255,7 @@ namespace WinRT
         private static Func<IInspectable, object> CreateArrayFactory(Type implementationType)
         {
             Type helperType = implementationType.GetHelperType();
-            Type vftblType = helperType.GetNestedType("Vftbl").MakeGenericType(helperType.GetGenericArguments());
+            Type vftblType = helperType.FindVftblType();
 
             ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
             var createInterfaceInstanceExpression = Expression.New(helperType.GetConstructor(new[] { typeof(ObjectReference<>).MakeGenericType(vftblType) }),
@@ -294,7 +294,7 @@ namespace WinRT
                 classType = null;
                 interfaceType = implementationType.GetHelperType() ??
                     throw new TypeLoadException($"Unable to find an ABI implementation for the type '{runtimeClassName}'");
-                vftblType = interfaceType.GetNestedType("Vftbl") ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
+                vftblType = interfaceType.FindVftblType() ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
                 if (vftblType.IsGenericTypeDefinition)
                 {
                     vftblType = vftblType.MakeGenericType(interfaceType.GetGenericArguments());
@@ -308,7 +308,7 @@ namespace WinRT
                 {
                     throw new TypeLoadException($"Unable to create a runtime wrapper for a WinRT object of type '{runtimeClassName}'. This type is not a projected type.");
                 }
-                vftblType = interfaceType.GetNestedType("Vftbl") ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
+                vftblType = interfaceType.FindVftblType() ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
             }
 
             ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
