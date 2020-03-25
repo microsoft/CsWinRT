@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -56,7 +57,7 @@ namespace WinRT
             }
         }
 
-        public static Type FindPublicTypeForAbiType(Type abiType)
+        public static Type FindCustomPublicTypeForAbiType(Type abiType)
         {
             rwlock.EnterReadLock();
             try
@@ -69,7 +70,7 @@ namespace WinRT
             }
         }
 
-        public static Type FindTypeForAbiTypeName(string abiTypeName)
+        public static Type FindCustomTypeForAbiTypeName(string abiTypeName)
         {
             rwlock.EnterReadLock();
             try
@@ -82,7 +83,7 @@ namespace WinRT
             }
         }
 
-        public static string FindAbiTypeNameForType(Type type)
+        public static string FindCustomAbiTypeNameForType(Type type)
         {
             rwlock.EnterReadLock();
             try
@@ -93,6 +94,20 @@ namespace WinRT
             {
                 rwlock.ExitReadLock();
             }
+        }
+
+        public static bool IsTypeWindowsRuntimeType(Type type)
+        {
+            Type typeToTest = type;
+            if (typeToTest.IsArray)
+            {
+                typeToTest = typeToTest.GetElementType();
+            }
+            if (typeToTest.IsGenericType)
+            {
+                typeToTest = typeToTest.GetGenericTypeDefinition();
+            }
+            return CustomTypeToAbiTypeNameMappings.ContainsKey(typeToTest) || typeToTest.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object;
         }
 
         internal static Type GetDefaultInterfaceTypeForRuntimeClassType(Type runtimeClass)

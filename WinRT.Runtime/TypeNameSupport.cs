@@ -47,7 +47,7 @@ namespace WinRT
         /// </remarks>
         private static Type FindTypeByNameCore(string runtimeClassName, Type[] genericTypes)
         {
-            Type resolvedType = Projections.FindTypeForAbiTypeName(runtimeClassName);
+            Type resolvedType = Projections.FindCustomTypeForAbiTypeName(runtimeClassName);
 
             if (resolvedType is null)
             {
@@ -169,7 +169,7 @@ namespace WinRT
         /// Tracker for visited types when determining a WinRT interface to use as the type name.
         /// Only used when GetNameForType is called with <see cref="TypeNameGenerationFlags.NoCustomTypeName"/>.
         /// </summary>
-        private static readonly ThreadLocal<Stack<VisitedType>> VisitedTypes = new ThreadLocal<Stack<VisitedType>>();
+        private static readonly ThreadLocal<Stack<VisitedType>> VisitedTypes = new ThreadLocal<Stack<VisitedType>>(() => new Stack<VisitedType>());
 
         public static string GetNameForType(Type type, TypeNameGenerationFlags flags)
         {
@@ -192,7 +192,10 @@ namespace WinRT
                 if ((flags & TypeNameGenerationFlags.GenerateBoxedName) != 0)
                 {
                     builder.Append("Windows.Foundation.IReference`1<");
-                    AppendSimpleTypeName(type, builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName);
+                    if (!AppendSimpleTypeName(type, builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
+                    {
+                        return false;
+                    }
                     builder.Append(">");
                     return true;
                 }
@@ -215,14 +218,23 @@ namespace WinRT
             }
             else
             {
-                var projectedAbiTypeName = Projections.FindAbiTypeNameForType(type);
+                var projectedAbiTypeName = Projections.FindCustomAbiTypeNameForType(type);
                 if (projectedAbiTypeName is object)
                 {
                     builder.Append(projectedAbiTypeName);
                 }
+                else if (Projections.IsTypeWindowsRuntimeType(type))
+                {
+                    builder.Append(type.FullName);
+                    return true;
+                }
                 else if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
                 {
                     return AppendWinRTInterfaceNameForType(type, builder, flags);
+                }
+                else
+                {
+                    return false;
                 }
             }
             return true;
@@ -249,11 +261,11 @@ namespace WinRT
             }
             else
             {
-                VisitedTypes.Value.Push(new VisitedType { Type = type });
+                visitedTypes.Push(new VisitedType { Type = type });
                 Type interfaceTypeToUse = null;
                 foreach (var iface in type.GetInterfaces())
                 {
-                    if (iface.FindHelperType() is object)
+                    if (Projections.IsTypeWindowsRuntimeType(iface))
                     {
                         if (interfaceTypeToUse is null || iface.IsAssignableFrom(interfaceTypeToUse))
                         {
@@ -262,9 +274,14 @@ namespace WinRT
                     }
                 }
 
-                bool success = AppendTypeName(interfaceTypeToUse, builder, flags);
+                bool success = false;
 
-                VisitedTypes.Value.Pop();
+                if (interfaceTypeToUse is object)
+                {
+                    success = AppendTypeName(interfaceTypeToUse, builder, flags); 
+                }
+
+                visitedTypes.Pop();
 
                 return success;
             }
@@ -283,8 +300,12 @@ namespace WinRT
 #endif
             {
                 builder.Append("Windows.Foundation.IReferenceArray`1<");
-                AppendTypeName(type, builder, flags);
-                builder.Append(">");
+                if (AppendTypeName(type.GetElementType(), builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
+                {
+                    builder.Append(">");
+                    return true;
+                }
+                return true;
             }
 
             if (!type.IsGenericType || type.IsGenericTypeDefinition)
@@ -292,8 +313,7 @@ namespace WinRT
                 return AppendSimpleTypeName(type, builder, flags);
             }
 
-            // TODO: Handle non-blittable structures that don't have a helper type.
-            if (type.FindHelperType() is null && (flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
+            if (!Projections.IsTypeWindowsRuntimeType(type) && (flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
             {
                 return AppendWinRTInterfaceNameForType(type, builder, flags);
             }

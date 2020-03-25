@@ -172,15 +172,6 @@ namespace WinRT
 
         internal static (InspectableInfo inspectableInfo, List<ComInterfaceEntry> interfaceTableEntries) PregenerateNativeTypeInformation(object obj)
         {
-            // TODO: Unify with System.Type projection handling
-            Type type = obj.GetType();
-            type = Projections.FindPublicTypeForAbiType(type) ?? type;
-            string typeName = type.FullName;
-            if (typeName.StartsWith("ABI.")) // If our type is an ABI type, get the real type name
-            {
-                typeName = typeName.Substring("ABI.".Length);
-            }
-
             var interfaceTableEntries = GetInterfaceTableEntries(obj);
             var iids = new Guid[interfaceTableEntries.Count];
             for (int i = 0; i < interfaceTableEntries.Count; i++)
@@ -188,8 +179,19 @@ namespace WinRT
                 iids[i] = interfaceTableEntries[i].IID;
             }
 
+            Type type = obj.GetType();
+
+            if (type.FullName.StartsWith("ABI."))
+            {
+                type = type.Assembly.GetType(type.FullName.Substring("ABI.".Length));
+            }
+            else
+            {
+                type = Projections.FindCustomPublicTypeForAbiType(type) ?? type;
+            }
+
             return (
-                new InspectableInfo(typeName, iids),
+                new InspectableInfo(type, iids),
                 interfaceTableEntries);
         }
 
@@ -240,12 +242,14 @@ namespace WinRT
 
         internal class InspectableInfo
         {
-            public readonly string RuntimeClassName;
-            public readonly Guid[] IIDs;
+            private readonly Lazy<string> runtimeClassName;
 
-            internal InspectableInfo(string runtimeClassName, Guid[] iids)
+            public Guid[] IIDs { get; }
+            public string RuntimeClassName => runtimeClassName.Value;
+
+            internal InspectableInfo(Type type, Guid[] iids)
             {
-                RuntimeClassName = runtimeClassName;
+                runtimeClassName = new Lazy<string>(() => TypeNameSupport.GetNameForType(type, TypeNameGenerationFlags.GenerateBoxedName | TypeNameGenerationFlags.NoCustomTypeName));
                 IIDs = iids;
             }
 

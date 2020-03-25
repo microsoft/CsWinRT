@@ -67,10 +67,7 @@ namespace WinRT
                 try
                 {
                     string runtimeClassName = ComWrappersSupport.GetInspectableInfo(pThis).RuntimeClassName;
-                    fixed (IntPtr* classNamePtr = &className)
-                    {
-                        Marshal.ThrowExceptionForHR(Platform.WindowsCreateString(runtimeClassName, runtimeClassName.Length, classNamePtr));
-                    }
+                    className = MarshalString.FromManaged(runtimeClassName);
                 }
                 catch (Exception ex)
                 {

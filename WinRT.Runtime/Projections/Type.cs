@@ -5,7 +5,8 @@ using WinRT;
 
 namespace ABI.System
 {
-    internal enum TypeKind
+    [WindowsRuntimeType]
+    internal enum TypeKind : int
     {
         Primitive,
         Metadata,
@@ -34,15 +35,18 @@ namespace ABI.System
 
             if (value is object)
             {
-                // TODO: Handle non-blittable structures that don't have a helper type.
                 if (value.IsPrimitive)
                 {
                     kind = TypeKind.Primitive;
                 }
-                else if (value.FindHelperType() != null)
+                else if (value == typeof(object) || value == typeof(string) || value == typeof(Guid))
                 {
                     kind = TypeKind.Metadata;
-                } 
+                }
+                else if (Projections.IsTypeWindowsRuntimeType(value))
+                {
+                    kind = TypeKind.Metadata;
+                }
             }
 
             return new Marshaler

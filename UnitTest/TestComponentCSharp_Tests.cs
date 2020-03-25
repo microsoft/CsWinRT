@@ -791,5 +791,26 @@ namespace UnitTest
 
             Assert.Null(TestObject.HResultProperty);
         }
+
+        [Fact]
+        public void TestGeneratedRuntimeClassName()
+        {
+            IInspectable inspectable = new IInspectable(ComWrappersSupport.CreateCCWForObject(new ManagedProperties(2)));
+            Assert.Equal(typeof(IProperties1).FullName, inspectable.GetRuntimeClassName());
+        }
+
+        [Fact]
+        public void TestGeneratedRuntimeClassName_Primitive()
+        {
+            IInspectable inspectable = new IInspectable(ComWrappersSupport.CreateCCWForObject(2));
+            Assert.Equal("Windows.Foundation.IReference`1<Int32>", inspectable.GetRuntimeClassName());
+        }
+
+        [Fact]
+        public void TestGeneratedRuntimeClassName_Array()
+        {
+            IInspectable inspectable = new IInspectable(ComWrappersSupport.CreateCCWForObject(new int[0]));
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Int32>", inspectable.GetRuntimeClassName());
+        }
     }
 }

@@ -2987,7 +2987,8 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         auto type_name = write_type_name_temp(w, type);
 
         uint32_t const vtable_base = type.MethodList().first.index();
-        w.write(R"(%
+        w.write(R"([global::WinRT.WindowsRuntimeType]
+%
 % interface %%
 {%
 }
@@ -3098,7 +3099,8 @@ public static Guid PIID = Vftbl.PIID;
         auto base_semantics = get_type_semantics(type.Extends());
         auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
 
-        w.write(R"([global::WinRT.ProjectedRuntimeClass(nameof(_default))]
+        w.write(R"([global::WinRT.WindowsRuntimeType]
+[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
 public %class %%
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
@@ -3177,7 +3179,8 @@ public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<%>.DisposeAb
     void write_delegate(writer& w, TypeDef const& type)
     {
         method_signature signature{ get_delegate_invoke(type) };
-        w.write(R"(public delegate % %(%);
+        w.write(R"([global::WinRT.WindowsRuntimeType]
+public delegate % %(%);
 )",
             bind<write_projection_return_type>(signature),
             bind<write_type_name>(type, false, false),
@@ -3426,7 +3429,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             w.write("[FlagsAttribute]\n");
         }
 
-        w.write("public enum % : %\n{\n", bind<write_type_name>(type, false, false), is_flags_enum(type) ? "uint" : "uint");
+        w.write("[global::WinRT.WindowsRuntimeType]\npublic enum % : %\n{\n", bind<write_type_name>(type, false, false), is_flags_enum(type) ? "uint" : "uint");
         {
             for (auto&& field : type.FieldList())
             {
@@ -3467,7 +3470,8 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             fields.emplace_back(field_info);
         }
 
-        w.write(R"(public struct %: IEquatable<%>
+        w.write(R"([global::WinRT.WindowsRuntimeType]
+public struct %: IEquatable<%>
 {
 %
 public %(%)
