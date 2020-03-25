@@ -29,6 +29,9 @@ namespace WinRT
         public string ObjectReferenceField { get; }
     }
 
+    /// <summary>
+    /// When applied to a type, designates to WinRT.Runtime that this type represents a type defined in WinRT metadata.
+    /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Delegate | AttributeTargets.Struct | AttributeTargets.Enum, Inherited = false, AllowMultiple = false)]
     public sealed class WindowsRuntimeTypeAttribute : Attribute
