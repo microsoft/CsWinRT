@@ -706,6 +706,36 @@ namespace winrt::TestComponentCSharp::implementation
         return obj.as<Windows::Foundation::IReferenceArray<hstring>>().Value();
     }
 
+    Windows::UI::Xaml::Interop::TypeName Class::Int32Type()
+    {
+        return winrt::xaml_typename<int32_t>();
+    }
+
+    Windows::UI::Xaml::Interop::TypeName Class::ReferenceInt32Type()
+    {
+        return winrt::xaml_typename<Windows::Foundation::IReference<int32_t>>();
+    }
+
+    Windows::UI::Xaml::Interop::TypeName Class::ThisClassType()
+    {
+        return winrt::xaml_typename<winrt::TestComponentCSharp::Class>();
+    }
+
+    bool Class::VerifyTypeIsInt32Type(Windows::UI::Xaml::Interop::TypeName const& type_name)
+    {
+        return winrt::xaml_typename<int32_t>() == type_name;
+    }
+
+    bool Class::VerifyTypeIsReferenceInt32Type(Windows::UI::Xaml::Interop::TypeName const& type_name)
+    {
+        return winrt::xaml_typename<Windows::Foundation::IReference<int32_t>>() == type_name;
+    }
+
+    bool Class::VerifyTypeIsThisClassType(Windows::UI::Xaml::Interop::TypeName const& type_name)
+    {
+        return winrt::xaml_typename<winrt::TestComponentCSharp::Class>() == type_name;
+    }
+
     // IVector<String>
     //Windows::Foundation::Collections::IIterator<hstring> Class::First()
     //{

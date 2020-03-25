@@ -232,5 +232,14 @@ namespace TestComponentCSharp
         static Int32[] UnboxInt32Array(Object obj);
         static Boolean[] UnboxBooleanArray(Object obj);
         static String[] UnboxStringArray(Object obj);
+
+        // WUX.Interop.TypeName -> System.Type mapping
+        static Windows.UI.Xaml.Interop.TypeName Int32Type { get; };
+        static Windows.UI.Xaml.Interop.TypeName ThisClassType { get; };
+        static Windows.UI.Xaml.Interop.TypeName ReferenceInt32Type { get; };
+
+        static Boolean VerifyTypeIsInt32Type(Windows.UI.Xaml.Interop.TypeName type);
+        static Boolean VerifyTypeIsThisClassType(Windows.UI.Xaml.Interop.TypeName type);
+        static Boolean VerifyTypeIsReferenceInt32Type(Windows.UI.Xaml.Interop.TypeName type);
     }
 }

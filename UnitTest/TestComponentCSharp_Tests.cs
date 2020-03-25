@@ -841,5 +841,26 @@ namespace UnitTest
             Assert.IsType<int[]>(obj);
             Assert.Equal(i, (IEnumerable<int>)obj);
         }
+
+        [Fact]
+        public void TestPrimitiveTypeInfo()
+        {
+            Assert.Equal(typeof(int), Class.Int32Type);
+            Assert.True(Class.VerifyTypeIsInt32Type(typeof(int)));
+        }
+
+        [Fact]
+        public void TestWinRTTypeInfo()
+        {
+            Assert.Equal(typeof(Class), Class.ThisClassType);
+            Assert.True(Class.VerifyTypeIsThisClassType(typeof(Class)));
+        }
+
+        [Fact]
+        public void TestProjectedTypeInfo()
+        {
+            Assert.Equal(typeof(int?), Class.ReferenceInt32Type);
+            Assert.True(Class.VerifyTypeIsReferenceInt32Type(typeof(int?)));
+        }
     }
 }
