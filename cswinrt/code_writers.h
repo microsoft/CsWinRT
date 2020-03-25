@@ -1645,7 +1645,15 @@ event % %;)",
                 }
                 break;
             case category::class_type:
-                m.local_type = "IntPtr";
+                if (get_mapped_type(type.TypeNamespace(), type.TypeName()))
+                {
+                    m.marshaler_type = w.write_temp("%", bind<write_type_name>(type, true, true));
+                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                }
+                else
+                {
+                    m.local_type = "IntPtr";
+                }
                 break;
             case category::delegate_type:
                 m.marshaler_type = get_abi_type();

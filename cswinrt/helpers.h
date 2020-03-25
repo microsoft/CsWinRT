@@ -438,6 +438,7 @@ namespace cswinrt
                     { "Windows.Foundation", "HResult", "System", "Exception", true },
                     { "Windows.Foundation", "Point", "Windows.Foundation", "Point" },
                     { "Windows.Foundation", "TimeSpan", "System", "TimeSpan", true },
+                    { "Windows.Foundation", "Uri", "System", "Uri", true, true }
                 }
             },
             { "Windows.UI.Xaml",

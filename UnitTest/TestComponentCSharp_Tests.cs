@@ -33,16 +33,11 @@ namespace UnitTest
             var base_uri = "https://github.com";
             var relative_uri = "microsoft/CsWinRT";
             var full_uri = base_uri + "/" + relative_uri;
+            var managedUri = new Uri(full_uri);
 
-            var uri1 = new WF.Uri(full_uri);
+            var uri1 = ABI.System.Uri.FromAbi(ABI.System.Uri.FromManaged(managedUri));
             var str1 = uri1.ToString();
             Assert.Equal(full_uri, str1);
-
-            var uri2 = new WF.Uri(base_uri, relative_uri);
-            var str2 = uri2.ToString();
-            Assert.Equal(full_uri, str2);
-
-            Assert.True(uri1.Equals(uri2));
         }
 
         [Fact]

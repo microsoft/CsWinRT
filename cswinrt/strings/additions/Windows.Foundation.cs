@@ -1,4 +1,3 @@
-
 namespace Windows.Foundation
 {
     using global::System;
@@ -115,7 +114,7 @@ namespace ABI.System
 
         public static Marshaler CreateMarshaler(global::System.TimeSpan value)
         {
-            return new Marshaler{ __abi = new TimeSpan{ Duration = value.Ticks } };
+            return new Marshaler { __abi = new TimeSpan { Duration = value.Ticks } };
         }
 
         public static TimeSpan GetAbi(Marshaler m) => m.__abi;
@@ -136,8 +135,8 @@ namespace ABI.System
         public static unsafe void CopyManaged(global::System.TimeSpan arg, IntPtr dest) =>
             *(TimeSpan*)dest.ToPointer() = FromManaged(arg);
 
-        public static void DisposeMarshaler(Marshaler m) {}
-        public static void DisposeAbi(TimeSpan abi) {}
+        public static void DisposeMarshaler(Marshaler m) { }
+        public static void DisposeAbi(TimeSpan abi) { }
 
         public static string GetGuidSignature()
         {
@@ -159,7 +158,7 @@ namespace ABI.System
 
         public static Marshaler CreateMarshaler(global::System.DateTimeOffset value)
         {
-            return new Marshaler{ __abi = new DateTimeOffset{ UniversalTime = value.ToFileTime() } };
+            return new Marshaler { __abi = new DateTimeOffset { UniversalTime = value.ToFileTime() } };
         }
 
         public static DateTimeOffset GetAbi(Marshaler m) => m.__abi;
@@ -180,8 +179,8 @@ namespace ABI.System
         public static unsafe void CopyManaged(global::System.DateTimeOffset arg, IntPtr dest) =>
             *(DateTimeOffset*)dest.ToPointer() = FromManaged(arg);
 
-        public static void DisposeMarshaler(Marshaler m) {}
-        public static void DisposeAbi(DateTimeOffset abi) {}
+        public static void DisposeMarshaler(Marshaler m) { }
+        public static void DisposeAbi(DateTimeOffset abi) { }
 
         public static string GetGuidSignature()
         {
