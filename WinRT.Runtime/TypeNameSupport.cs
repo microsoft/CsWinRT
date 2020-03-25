@@ -226,7 +226,6 @@ namespace WinRT
                 else if (Projections.IsTypeWindowsRuntimeType(type))
                 {
                     builder.Append(type.FullName);
-                    return true;
                 }
                 else if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
                 {
@@ -234,7 +233,7 @@ namespace WinRT
                 }
                 else
                 {
-                    return false;
+                    builder.Append(type.FullName);
                 }
             }
             return true;
