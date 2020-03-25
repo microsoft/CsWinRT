@@ -67,8 +67,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="strings\additions\Windows.Foundation.cs" />
-    <None Include="strings\additions\Windows.UI.Xaml.cs" />
+    <None Include="strings\additions\Windows.Foundation\Windows.Foundation.cs" />
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.cs" />
     <None Include="strings\WinRT.cs" />
     <None Include="strings\WinRT_Interop.cs" />
     <None Include="strings\WinRT_Marshal.cs" />

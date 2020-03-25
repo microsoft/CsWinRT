@@ -1645,7 +1645,15 @@ event % %;)",
                 }
                 break;
             case category::class_type:
-                m.local_type = "IntPtr";
+                if (get_mapped_type(type.TypeNamespace(), type.TypeName()))
+                {
+                    m.marshaler_type = w.write_temp("%", bind<write_type_name>(type, true, true));
+                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                }
+                else
+                {
+                    m.local_type = "IntPtr";
+                }
                 break;
             case category::delegate_type:
                 m.marshaler_type = get_abi_type();
@@ -2903,7 +2911,7 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
                         {
                             auto generic_abi_types = get_generic_abi_types(w, method_signature{ method });
 
-                            w.write("private static readonly Type %_Type = Expression.GetDelegateType(new Type[]{ typeof(void*), %typeof(int) });\n",
+                            w.write("public static readonly Type %_Type = Expression.GetDelegateType(new Type[]{ typeof(void*), %typeof(int) });\n",
                                 vmethod_name,
                                 bind_each([&](writer& w, auto&& pair)
                                 {
@@ -3521,7 +3529,7 @@ return %;
             name,
             bind_list([](writer& w, auto&& field)
             {
-                w.write(field.is_interface ? "x.%.ObjectEquals(y.%)" : "x.% == y.%", 
+                w.write("x.% == y.%", 
                     field.name, field.name);
             }, " && ", fields),
             // !=, Equals

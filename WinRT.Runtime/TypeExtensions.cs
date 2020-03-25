@@ -27,6 +27,16 @@ namespace WinRT
             return type.FindHelperType() ?? throw new InvalidOperationException("Target type is not a projected type.");
         }
 
+        public static Type FindVftblType(this Type helperType)
+        {
+            Type vftblType = helperType.GetNestedType("Vftbl");
+            if (helperType.IsGenericType && vftblType is object)
+            {
+                vftblType = vftblType.MakeGenericType(helperType.GetGenericArguments());
+            }
+            return vftblType;
+        }
+
         public static Type GetAbiType(this Type type)
         {
             return type.GetHelperType().GetMethod("GetAbi").ReturnType;
@@ -38,7 +48,7 @@ namespace WinRT
         }
         public static bool IsDelegate(this Type type)
         {
-            return typeof(MulticastDelegate).IsAssignableFrom(type.BaseType);
+            return typeof(Delegate).IsAssignableFrom(type);
         }
     }
 }

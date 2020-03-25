@@ -15,6 +15,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 
 using TestComponentCSharp;
+using System.Collections.Generic;
 
 namespace UnitTest
 {
@@ -33,16 +34,11 @@ namespace UnitTest
             var base_uri = "https://github.com";
             var relative_uri = "microsoft/CsWinRT";
             var full_uri = base_uri + "/" + relative_uri;
+            var managedUri = new Uri(full_uri);
 
-            var uri1 = new WF.Uri(full_uri);
+            var uri1 = ABI.System.Uri.FromAbi(ABI.System.Uri.FromManaged(managedUri));
             var str1 = uri1.ToString();
             Assert.Equal(full_uri, str1);
-
-            var uri2 = new WF.Uri(base_uri, relative_uri);
-            var str2 = uri2.ToString();
-            Assert.Equal(full_uri, str2);
-
-            Assert.True(uri1.Equals(uri2));
         }
 
         [Fact]
@@ -408,16 +404,13 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestObjectGeneric()
+        public void TestValueUnboxing()
         {
             var objs = TestObject.GetObjectVector();
             Assert.Equal(3u, objs.Size);
             for (int i = 0; i < 3; ++i)
             {
-                var propValAsObj = objs.GetAt((uint)i);
-                Assert.IsAssignableFrom<IPropertyValue>(propValAsObj);
-                IPropertyValue propVal = (IPropertyValue)propValAsObj;
-                Assert.Equal(i, propVal.GetInt32());
+                Assert.Equal(i, (int)objs.GetAt((uint)i));
             }
         }
 
@@ -811,6 +804,42 @@ namespace UnitTest
         {
             IInspectable inspectable = new IInspectable(ComWrappersSupport.CreateCCWForObject(new int[0]));
             Assert.Equal("Windows.Foundation.IReferenceArray`1<Int32>", inspectable.GetRuntimeClassName());
+        }
+
+        [Fact]
+        public void TestValueBoxing()
+        {
+            int i = 42;
+            Assert.Equal(i, Class.UnboxInt32(i));
+
+            bool b = true;
+            Assert.Equal(b, Class.UnboxBoolean(b));
+
+            string s = "Hello World!";
+            Assert.Equal(s, Class.UnboxString(s));
+        }
+
+        [Fact]
+        public void TestArrayBoxing()
+        {
+            int[] i = new[] { 42, 1, 4, 50, 0, -23 };
+            Assert.Equal((IEnumerable<int>)i, Class.UnboxInt32Array(i));
+
+            bool[] b = new[] { true, false, true, true, false };
+            Assert.Equal((IEnumerable<bool>)b, Class.UnboxBooleanArray(b));
+
+            string[] s = new[] { "Hello World!", "WinRT", "C#", "Boxing" };
+            Assert.Equal((IEnumerable<string>)s, Class.UnboxStringArray(s));
+        }
+
+        [Fact]
+        public void TestArrayUnboxing()
+        {
+            int[] i = new[] { 42, 1, 4, 50, 0, -23 };
+
+            var obj = PropertyValue.CreateInt32Array(i);
+            Assert.IsType<int[]>(obj);
+            Assert.Equal(i, (IEnumerable<int>)obj);
         }
     }
 }
