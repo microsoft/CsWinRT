@@ -482,13 +482,4 @@ namespace cswinrt
 
         return &*nameItr;
     }
-
-    inline bool namespace_has_additional_interface_registrations(std::string_view ns)
-    {
-        if (ns == "Windows.Foundation")
-        {
-            return true;
-        }
-        return false;
-    }
 }
