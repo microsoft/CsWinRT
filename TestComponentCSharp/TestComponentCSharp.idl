@@ -241,5 +241,7 @@ namespace TestComponentCSharp
         static Boolean VerifyTypeIsInt32Type(Windows.UI.Xaml.Interop.TypeName type);
         static Boolean VerifyTypeIsThisClassType(Windows.UI.Xaml.Interop.TypeName type);
         static Boolean VerifyTypeIsReferenceInt32Type(Windows.UI.Xaml.Interop.TypeName type);
+
+        static String GetTypeNameForType(Windows.UI.Xaml.Interop.TypeName type);
     }
 }

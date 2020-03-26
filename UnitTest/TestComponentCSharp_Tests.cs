@@ -843,24 +843,32 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestPrimitiveTypeInfo()
+        public void PrimitiveTypeInfo()
         {
             Assert.Equal(typeof(int), Class.Int32Type);
             Assert.True(Class.VerifyTypeIsInt32Type(typeof(int)));
         }
 
         [Fact]
-        public void TestWinRTTypeInfo()
+        public void WinRTTypeInfo()
         {
             Assert.Equal(typeof(Class), Class.ThisClassType);
             Assert.True(Class.VerifyTypeIsThisClassType(typeof(Class)));
         }
 
         [Fact]
-        public void TestProjectedTypeInfo()
+        public void ProjectedTypeInfo()
         {
             Assert.Equal(typeof(int?), Class.ReferenceInt32Type);
             Assert.True(Class.VerifyTypeIsReferenceInt32Type(typeof(int?)));
+        }
+
+        [Fact]
+        public void TypeInfoGenerics()
+        {
+            var typeName = Class.GetTypeNameForType(typeof(IVector<int>));
+
+            Assert.Equal("Windows.Foundation.Collections.IVector`1<Int32>", typeName);
         }
     }
 }

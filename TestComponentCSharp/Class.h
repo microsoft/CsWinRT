@@ -188,6 +188,7 @@ namespace winrt::TestComponentCSharp::implementation
         static bool VerifyTypeIsInt32Type(Windows::UI::Xaml::Interop::TypeName const& type_name);
         static bool VerifyTypeIsReferenceInt32Type(Windows::UI::Xaml::Interop::TypeName const& type_name);
         static bool VerifyTypeIsThisClassType(Windows::UI::Xaml::Interop::TypeName const& type_name);
+        static hstring GetTypeNameForType(Windows::UI::Xaml::Interop::TypeName const& type);
 
         // IStringable
         hstring ToString();

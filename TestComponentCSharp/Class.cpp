@@ -736,6 +736,11 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::xaml_typename<winrt::TestComponentCSharp::Class>() == type_name;
     }
 
+    hstring Class::GetTypeNameForType(Windows::UI::Xaml::Interop::TypeName const& type)
+    {
+        return type.Name;
+    }
+
     // IVector<String>
     //Windows::Foundation::Collections::IIterator<hstring> Class::First()
     //{

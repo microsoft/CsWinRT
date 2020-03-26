@@ -354,7 +354,7 @@ namespace WinRT
                     });
                 }
 
-                bool success = AppendTypeName(argument, builder, flags);
+                bool success = AppendTypeName(argument, builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName);
 
                 if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
                 {
