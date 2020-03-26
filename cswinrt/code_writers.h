@@ -3022,20 +3022,19 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
 
         uint32_t const vtable_base = type.MethodList().first.index();
 
-        w.write(R"([global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+        w.write(R"([global::WinRT.ObjectReferenceWrapper(nameof(_obj)), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 %
-internal class % : %
+public class % : %
 {
 %
-public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr)%
+internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr)%
 public static implicit operator %(IObjectReference obj) => (obj != null) ? new %(obj) : null;
-public static implicit operator %(ObjectReference<Vftbl> obj) => (obj != null) ? new %(obj) : null;
 protected readonly ObjectReference<Vftbl> _obj;
 public IntPtr ThisPtr => _obj.ThisPtr;
 public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
 public A As<A>() => _obj.AsType<A>();
 public @(IObjectReference obj) : this(obj.As<Vftbl>()) {}
-public @(ObjectReference<Vftbl> obj)
+internal @(ObjectReference<Vftbl> obj)
 {
 _obj = obj;%
 }
@@ -3069,8 +3068,6 @@ public static Guid PIID = Vftbl.PIID;
             },
             type_name,
             type_name,
-            type_name,
-            type_name,
             type.TypeName(),
             type.TypeName(),
             bind<write_event_source_ctors>(type),
@@ -3081,7 +3078,8 @@ public static Guid PIID = Vftbl.PIID;
 
         if (!nongeneric_delegates.empty())
         {
-            w.write(R"(internal static class %
+            w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+public static class %
 {
 %}
 )",
@@ -3117,7 +3115,7 @@ private % _default;
 %
 public static %% FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(global::WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
 
-internal %(% ifc)%
+% %(% ifc)%
 {
 _default = ifc;
 }
@@ -3139,6 +3137,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             type_name,
             default_interface_abi_name,
             default_interface_abi_name,
+            type.Flags().Sealed() ? "internal" : "protected internal",
             type_name,
             default_interface_abi_name,
             bind<write_base_constructor_dispatch>(base_semantics),
@@ -3159,7 +3158,8 @@ private % AsInternal(InterfaceTag<%> _) => _default;
         auto default_interface_name = get_default_interface_name(w, type, false);
         auto default_interface_abi_name = get_default_interface_name(w, type, true);
 
-        w.write(R"(public struct %
+        w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+public struct %
 {
 public static IObjectReference CreateMarshaler(% obj) => MarshalInterface<%>.CreateMarshaler(obj);
 public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
@@ -3206,7 +3206,8 @@ public delegate % %(%);
         bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
             [](auto&& pair){ return !pair.second.empty(); }) != generic_abi_types.end();
 
-        w.write(R"(%
+        w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+%
 public static class @%
 {%
 %
@@ -3552,7 +3553,7 @@ return %;
             return;
         }
 
-        w.write("internal struct %\n{\n", bind<write_type_name>(type, true, false));
+        w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\npublic struct %\n{\n", bind<write_type_name>(type, true, false));
         for (auto&& field : type.FieldList())
         {
             w.write("public ");
@@ -3607,7 +3608,7 @@ internal struct Marshaler
         w.write("}\n");
 
         w.write(R"(
-public static Marshaler CreateMarshaler(% arg)
+internal static Marshaler CreateMarshaler(% arg)
 {
 var m = new Marshaler();)",
             projected_type);
@@ -3677,7 +3678,7 @@ return default;
         w.write("}\n");
 
         w.write(R"(
-public static % GetAbi(Marshaler m) => m.__abi;
+internal static % GetAbi(Marshaler m) => m.__abi;
 )",
             abi_type);
 
@@ -3768,7 +3769,7 @@ return new %()
             });
 
         w.write(R"(
-public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) => 
+internal static unsafe void CopyAbi(Marshaler arg, IntPtr dest) => 
     *(%*)dest.ToPointer() = GetAbi(arg);
 )",
             abi_type);
@@ -3781,7 +3782,7 @@ public static unsafe void CopyManaged(% arg, IntPtr dest) =>
             abi_type);
     
       w.write(R"(
-public static void DisposeMarshaler(Marshaler m) %
+internal static void DisposeMarshaler(Marshaler m) %
 )",
             have_disposers ? "=> m.Dispose();" : "{}");
 

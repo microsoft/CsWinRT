@@ -330,7 +330,7 @@ namespace WinRT
         {
             var parms = new[] { Expression.Parameter(typeof(T), "arg") };
             return Expression.Lambda<Func<T, object>>(
-                Expression.Convert(Expression.Call(HelperType.GetMethod("CreateMarshaler"), parms),
+                Expression.Convert(Expression.Call(HelperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static), parms),
                     typeof(object)), parms).Compile();
         }
 
@@ -339,7 +339,7 @@ namespace WinRT
         {
             var parms = new[] { Expression.Parameter(typeof(object), "arg") };
             return Expression.Lambda<Func<object, object>>(
-                Expression.Convert(Expression.Call(HelperType.GetMethod("GetAbi"),
+                Expression.Convert(Expression.Call(HelperType.GetMethod("GetAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
                     new[] { Expression.Convert(parms[0], MarshalerType) }),
                         typeof(object)), parms).Compile();
         }
@@ -347,7 +347,7 @@ namespace WinRT
         public static readonly Action<object, IntPtr> CopyAbi;
         private static Action<object, IntPtr> BindCopyAbi()
         {
-            var copyAbi = HelperType.GetMethod("CopyAbi");
+            var copyAbi = HelperType.GetMethod("CopyAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (copyAbi == null) return null;
             var parms = new[] { Expression.Parameter(typeof(object), "arg"), Expression.Parameter(typeof(IntPtr), "dest") };
             return Expression.Lambda<Action<object, IntPtr>>(
@@ -360,7 +360,7 @@ namespace WinRT
         {
             var parms = new[] { Expression.Parameter(typeof(object), "arg") };
             return Expression.Lambda<Func<object, T>>(
-                Expression.Call(HelperType.GetMethod("FromAbi"),
+                Expression.Call(HelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
                     new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
         }
 
@@ -369,14 +369,14 @@ namespace WinRT
         {
             var parms = new[] { Expression.Parameter(typeof(T), "arg") };
             return Expression.Lambda<Func<T, object>>(
-                Expression.Convert(Expression.Call(HelperType.GetMethod("FromManaged"), parms),
+                Expression.Convert(Expression.Call(HelperType.GetMethod("FromManaged", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static), parms),
                     typeof(object)), parms).Compile();
         }
 
         public static readonly Action<T, IntPtr> CopyManaged;
         private static Action<T, IntPtr> BindCopyManaged()
         {
-            var copyManaged = HelperType.GetMethod("CopyManaged");
+            var copyManaged = HelperType.GetMethod("CopyManaged", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (copyManaged == null) return null;
             var parms = new[] { Expression.Parameter(typeof(T), "arg"), Expression.Parameter(typeof(IntPtr), "dest") };
             return Expression.Lambda<Action<T, IntPtr>>(
@@ -388,7 +388,7 @@ namespace WinRT
         {
             var parms = new[] { Expression.Parameter(typeof(object), "arg") };
             return Expression.Lambda<Action<object>>(
-                Expression.Call(HelperType.GetMethod("DisposeMarshaler"),
+                Expression.Call(HelperType.GetMethod("DisposeMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
                     new[] { Expression.Convert(parms[0], MarshalerType) }), parms).Compile();
         }
     }
