@@ -108,7 +108,7 @@ namespace ABI.System
             internal IInspectable.Vftbl IInspectableVftbl;
             public global::System.Delegate get_Value_0;
             public static Guid PIID = GuidGenerator.CreateIID(typeof(Nullable<T>));
-            public static readonly Type get_Value_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
+            public static readonly global::System.Type get_Value_0_Type = Expression.GetDelegateType(new global::System.Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {

@@ -447,6 +447,12 @@ namespace cswinrt
                 {
                     { "Windows.UI.Xaml", "Duration", "Windows.UI.Xaml", "Duration" },
                 }
+            },
+            {
+                "Windows.UI.Xaml.Interop",
+                {
+                    { "Windows.UI.Xaml.Interop", "TypeName", "System", "Type", true }
+                }
             }
         };
 
