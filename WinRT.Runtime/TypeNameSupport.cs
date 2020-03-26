@@ -178,21 +178,21 @@ namespace WinRT
                 return string.Empty;
             }
             StringBuilder nameBuilder = new StringBuilder();
-            if (AppendTypeName(type, nameBuilder, flags))
+            if (TryAppendTypeName(type, nameBuilder, flags))
             {
                 return nameBuilder.ToString();
             }
             return null;
         }
 
-        private static bool AppendSimpleTypeName(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
+        private static bool TryAppendSimpleTypeName(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
         {
             if (type.IsPrimitive || type == typeof(string) || type == typeof(Guid))
             {
                 if ((flags & TypeNameGenerationFlags.GenerateBoxedName) != 0)
                 {
                     builder.Append("Windows.Foundation.IReference`1<");
-                    if (!AppendSimpleTypeName(type, builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
+                    if (!TryAppendSimpleTypeName(type, builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
                     {
                         return false;
                     }
@@ -229,7 +229,7 @@ namespace WinRT
                 }
                 else if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
                 {
-                    return AppendWinRTInterfaceNameForType(type, builder, flags);
+                    return TryAppendWinRTInterfaceNameForType(type, builder, flags);
                 }
                 else
                 {
@@ -239,7 +239,7 @@ namespace WinRT
             return true;
         }
 
-        private static bool AppendWinRTInterfaceNameForType(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
+        private static bool TryAppendWinRTInterfaceNameForType(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
         {
             Debug.Assert((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0);
             Debug.Assert(!type.IsGenericTypeDefinition);
@@ -277,7 +277,7 @@ namespace WinRT
 
                 if (interfaceTypeToUse is object)
                 {
-                    success = AppendTypeName(interfaceTypeToUse, builder, flags); 
+                    success = TryAppendTypeName(interfaceTypeToUse, builder, flags); 
                 }
 
                 visitedTypes.Pop();
@@ -286,7 +286,7 @@ namespace WinRT
             }
         }
 
-        private static bool AppendTypeName(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
+        private static bool TryAppendTypeName(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
         {
 #if NETSTANDARD2_0
             // We can't easily determine from just the type
@@ -299,7 +299,7 @@ namespace WinRT
 #endif
             {
                 builder.Append("Windows.Foundation.IReferenceArray`1<");
-                if (AppendTypeName(type.GetElementType(), builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
+                if (TryAppendTypeName(type.GetElementType(), builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
                 {
                     builder.Append(">");
                     return true;
@@ -309,16 +309,16 @@ namespace WinRT
 
             if (!type.IsGenericType || type.IsGenericTypeDefinition)
             {
-                return AppendSimpleTypeName(type, builder, flags);
+                return TryAppendSimpleTypeName(type, builder, flags);
             }
 
             if (!Projections.IsTypeWindowsRuntimeType(type) && (flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
             {
-                return AppendWinRTInterfaceNameForType(type, builder, flags);
+                return TryAppendWinRTInterfaceNameForType(type, builder, flags);
             }
 
             Type definition = type.GetGenericTypeDefinition();
-            if (!AppendSimpleTypeName(definition, builder, flags))
+            if (!TryAppendSimpleTypeName(definition, builder, flags))
             {
                 return false;
             }
@@ -354,7 +354,7 @@ namespace WinRT
                     });
                 }
 
-                bool success = AppendTypeName(argument, builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName);
+                bool success = TryAppendTypeName(argument, builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName);
 
                 if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
                 {
