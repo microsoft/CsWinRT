@@ -2803,7 +2803,7 @@ return __ex.HResult;
         std::vector<std::string> method_create_delegates_to_projection;
 
         w.write(R"(%
-protected internal struct Vftbl
+public struct Vftbl
 {
 internal IInspectable.Vftbl IInspectableVftbl;
 %%%%%%
