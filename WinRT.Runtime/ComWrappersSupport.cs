@@ -167,6 +167,12 @@ namespace WinRT
 
             entries.Add(new ComInterfaceEntry
             {
+                IID = typeof(ManagedIStringableVftbl).GUID,
+                Vtable = ManagedIStringableVftbl.AbiToProjectionVftablePtr
+            });
+
+            entries.Add(new ComInterfaceEntry
+            {
                 IID = typeof(IWeakReferenceSourceVftbl).GUID,
                 Vtable = IWeakReferenceSourceVftbl.AbiToProjectionVftablePtr
             });

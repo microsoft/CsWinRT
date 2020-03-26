@@ -697,7 +697,6 @@ namespace cswinrt
                         {
                             method_spec = "override ";
                             return_type = "string";
-                            write_explicit_implementation = true;
                         }
                     }
                 }
@@ -1946,7 +1945,7 @@ internal static _% Instance => _instance.Value;
 public unsafe %% %(%)
 {%}
 )",
-                (method.Name() == "ToString"sv) ? "new " : "",
+                (method.Name() == "ToString"sv) ? "override " : "",
                 bind<write_projection_return_type>(signature),
                 method.Name(),
                 bind_list<write_projection_parameter>(", ", signature.params()),
