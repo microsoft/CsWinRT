@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace WinRT
@@ -39,12 +40,12 @@ namespace WinRT
 
         public static Type GetAbiType(this Type type)
         {
-            return type.GetHelperType().GetMethod("GetAbi").ReturnType;
+            return type.GetHelperType().GetMethod("GetAbi", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static).ReturnType;
         }
 
         public static Type GetMarshalerType(this Type type)
         {
-            return type.GetHelperType().GetMethod("CreateMarshaler").ReturnType;
+            return type.GetHelperType().GetMethod("CreateMarshaler", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static).ReturnType;
         }
         public static bool IsDelegate(this Type type)
         {
