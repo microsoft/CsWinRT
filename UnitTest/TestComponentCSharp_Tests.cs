@@ -19,7 +19,7 @@ using System.Collections.Generic;
 
 namespace UnitTest
 {
-    public class TestComp : UnitTestBase
+    public class TestComp
     {
         public Class TestObject { get; private set; }
 
