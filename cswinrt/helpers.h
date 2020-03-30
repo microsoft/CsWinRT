@@ -451,6 +451,7 @@ namespace cswinrt
             { "Windows.UI.Xaml.Data",
                 {
                     { "Windows.UI.Xaml.Data", "PropertyChangedEventArgs", "System.ComponentModel", "PropertyChangedEventArgs" },
+                    { "Windows.UI.Xaml.Data", "PropertyChangedEventHandler", "System.ComponentModel", "PropertyChangedEventHandler" },
                 }
             },
             {
