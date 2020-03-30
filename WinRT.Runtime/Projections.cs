@@ -30,6 +30,7 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(Uri), typeof(ABI.System.Uri), "Windows.Foundation.Uri");
             RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventArgs), typeof(ABI.System.ComponentModel.PropertyChangedEventArgs), "Windows.UI.Xaml.Data.PropertyChangedEventArgs");
             RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventHandler), typeof(ABI.System.ComponentModel.PropertyChangedEventHandler), "Windows.UI.Xaml.Data.PropertyChangedEventHandler");
+            RegisterCustomAbiTypeMappingNoLock(typeof(INotifyPropertyChanged), typeof(ABI.System.ComponentModel.INotifyPropertyChanged), "Windows.UI.Xaml.Data.INotifyPropertyChanged");
         }
 
         public static void RegisterCustomAbiTypeMapping(Type publicType, Type abiType, string winrtTypeName)
