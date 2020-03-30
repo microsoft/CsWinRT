@@ -19,7 +19,7 @@ namespace ABI.Windows.Foundation
     [Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F")]
     internal static class EventHandler<T>
     {
-        public static Guid PIID = GuidGenerator.CreateIID(typeof(global::Windows.Foundation.EventHandler<T>));
+        public static Guid[] PIIDs = GuidGenerator.CreateIIDs(typeof(global::Windows.Foundation.EventHandler<T>));
         private static readonly Type Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int) });
 
         private static readonly global::WinRT.Interop.IDelegateVftbl AbiToProjectionVftable;
@@ -41,7 +41,7 @@ namespace ABI.Windows.Foundation
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
-        public static unsafe IObjectReference CreateMarshaler(global::Windows.Foundation.EventHandler<T> managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(EventHandler<T>)));
+        public static unsafe IObjectReference CreateMarshaler(global::Windows.Foundation.EventHandler<T> managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).AsAny<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIIDs(typeof(EventHandler<T>)));
 
         public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<global::Windows.Foundation.EventHandler<T>>.GetAbi(value);
 

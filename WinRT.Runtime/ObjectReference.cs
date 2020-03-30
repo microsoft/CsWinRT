@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -50,12 +51,53 @@ namespace WinRT
             Dispose(false);
         }
 
-        public ObjectReference<T> As<T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
-        public virtual unsafe ObjectReference<T> As<T>(Guid iid)
+        public ObjectReference<T> As<T>()
         {
+            Guid[] iids = GuidGenerator.GetIIDs(typeof(T));
+            return AsAny<T>(iids);
+        }
+
+
+        /// <summary>
+        /// Attempt to query for an interface on this object with any of the given IIDs.
+        /// </summary>
+        /// <typeparam name="T">A type representing the vtable of the interfaces defined by the IIDs.</typeparam>
+        /// <param name="iids">The IIDs.</param>
+        /// <returns>A reference to an object from the first successful query/</returns>
+        /// <remarks>
+        /// All interfaces represented by the interface ids in <paramref name="iids"/> must have the same vtable layout, the layout provided by <typeparamref name="T"/>
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public ObjectReference<T> AsAny<T>(Guid[] iids)
+        {
+            int hr = 0;
+            foreach (var iid in iids)
+            {
+                if ((hr = As<T>(iid, out ObjectReference<T> objRef)) >= 0)
+                {
+                    return objRef;
+                }
+            }
+            Marshal.ThrowExceptionForHR(hr);
+            return null;
+        }
+
+        protected internal virtual unsafe int As<T>(Guid iid, out ObjectReference<T> objRef)
+        {
+            objRef = null;
             ThrowIfDisposed();
-            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
-            return ObjectReference<T>.Attach(ref thatPtr);
+            int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
+            if (hr >= 0)
+            {
+                objRef = ObjectReference<T>.Attach(ref thatPtr);
+            }
+            return hr;
+        }
+
+        public unsafe ObjectReference<T> As<T>(Guid iid)
+        {
+            Marshal.ThrowExceptionForHR(As<T>(iid, out var objRef));
+            return objRef;
         }
 
         public unsafe IObjectReference As(Guid iid) => As<IUnknownVftbl>(iid);
@@ -230,13 +272,20 @@ namespace WinRT
             }, &data, IID_ICallbackWithNoReentrancyToApplicationSTA, 5);
         }
 
-        public override ObjectReference<U> As<U>(Guid iid)
+        protected internal override int As<U>(Guid iid, out ObjectReference<U> objRef)
         {
             ThrowIfDisposed();
-            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
+            int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
+            if (hr < 0)
+            {
+                objRef = null;
+                return hr;
+            }
+
             using (var contextCallbackReference = ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.FromAbi(_contextCallbackPtr))
             {
-                return new ObjectReferenceWithContext<U>(thatPtr, contextCallbackReference.GetRef()); 
+                objRef = new ObjectReferenceWithContext<U>(thatPtr, contextCallbackReference.GetRef());
+                return 0;
             }
         }
     }

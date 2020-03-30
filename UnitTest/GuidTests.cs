@@ -33,7 +33,7 @@ namespace UnitTest
         public void TestGenerics()
         {
             // Ensure every generic instance has a unique PIID
-            Assert.NotEqual(ABI.Windows.Foundation.Collections.IMap<bool, string>.Vftbl.PIID, ABI.Windows.Foundation.Collections.IMap<string, bool>.Vftbl.PIID);
+            Assert.NotEqual(ABI.Windows.Foundation.Collections.IMap<bool, string>.Vftbl.PIIDs[0], ABI.Windows.Foundation.Collections.IMap<string, bool>.Vftbl.PIIDs[0]);
 
             AssertGuid<IStringable>("96369f54-8eb6-48f0-abce-c1b211e627c3");
 
@@ -91,6 +91,13 @@ namespace UnitTest
             AssertGuid<IVector<Uri>>("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e");
             AssertGuid<IVector<AsyncActionCompletedHandler>>("5dafe591-86dc-59aa-bfda-07f5d59fc708");
             AssertGuid<IVector<ComposedNonBlittableStruct>>("c8477314-b257-511b-a3a1-9e4eb6385152");
+        }
+
+        [Fact]
+        public void TestGenericsMultipleIidsOneType()
+        {
+            Guid[] iids = GuidGenerator.CreateIIDs(typeof(IVector<System.ComponentModel.PropertyChangedEventArgs>));
+            Assert.Equal(2, iids.Length);
         }
     }
 }

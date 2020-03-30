@@ -68,7 +68,7 @@ namespace ABI.Windows.Foundation
             {
                 return null;
             }
-            return ComWrappersSupport.CreateCCWForObject(value).As(PIID);
+            return ComWrappersSupport.CreateCCWForObject(value).AsAny<IUnknownVftbl>(PIIDs);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m.ThisPtr;
@@ -102,9 +102,12 @@ namespace ABI.Windows.Foundation
         public static void DisposeMarshaler(IObjectReference m) { m.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref abi); }
 
-        public static string GetGuidSignature()
+        public static IEnumerable<string> GetGuidSignatures()
         {
-            return $"pinterface({{{typeof(IReferenceArray<T>).GUID}}};{GuidGenerator.GetSignature(typeof(T))})";
+            foreach (var signature in GuidGenerator.GetSignatures(typeof(T)))
+            {
+                yield return $"pinterface({{{typeof(IReferenceArray<T>).GUID}}};{signature})";
+            }
         }
 
         [Guid("61C17707-2D65-11E0-9AE8-D48564015472")]
@@ -112,7 +115,7 @@ namespace ABI.Windows.Foundation
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public IReferenceArray_Delegates.get_Value_0 get_Value_0;
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(IReferenceArray<T>));
+            public static Guid[] PIIDs = GuidGenerator.CreateIIDs(typeof(IReferenceArray<T>));
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
@@ -123,7 +126,7 @@ namespace ABI.Windows.Foundation
             }
         }
 
-        public static Guid PIID = Vftbl.PIID;
+        public static Guid[] PIIDs = Vftbl.PIIDs;
 
         public static implicit operator IReferenceArray<T>(IObjectReference obj) => (obj != null) ? new IReferenceArray<T>(obj) : null;
         public static implicit operator IReferenceArray<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new IReferenceArray<T>(obj) : null;

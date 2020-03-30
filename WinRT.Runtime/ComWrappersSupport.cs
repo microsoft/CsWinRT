@@ -111,16 +111,15 @@ namespace WinRT
 
             using (unknownRef)
             {
-                try
-                {
-                    var agileObjectRef = unknownRef.As(IID_IAgileObject);
-                    agileObjectRef.Dispose();
-                    objRefToReturn = unknownRef.As<IUnknownVftbl>();
-                }
-                catch (Exception)
+                if (unknownRef.As<IUnknownVftbl>(IID_IAgileObject, out var agileObjRef) < 0)
                 {
                     objRefToReturn = new ObjectReferenceWithContext<IUnknownVftbl>(unknownRef.GetRef(), Context.GetContextCallback());
                 }
+                else
+                {
+                    objRefToReturn = unknownRef.As<IUnknownVftbl>();
+                }
+                agileObjRef?.Dispose();
             }
             return objRefToReturn;
         }
@@ -139,31 +138,41 @@ namespace WinRT
                     continue;
                 }
 
-                entries.Add(new ComInterfaceEntry
+                IntPtr vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+
+                foreach (var iid in GuidGenerator.GetIIDs(ifaceAbiType))
                 {
-                    IID = GuidGenerator.GetIID(ifaceAbiType),
-                    Vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
-                });
+                    entries.Add(new ComInterfaceEntry
+                    {
+                        IID = iid,
+                        Vtable = vtable
+                    });
+                }
             }
 
             if (obj is Delegate)
             {
-                entries.Add(new ComInterfaceEntry
+                IntPtr vtable = (IntPtr)obj.GetType().GetHelperType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+
+                foreach (var iid in GuidGenerator.GetIIDs(obj.GetType()))
                 {
-                    IID = GuidGenerator.GetIID(obj.GetType()),
-                    Vtable = (IntPtr)obj.GetType().GetHelperType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
-                });
+                    entries.Add(new ComInterfaceEntry
+                    {
+                        IID = iid,
+                        Vtable = vtable
+                    });
+                }
             }
 
             if (ShouldProvideIReference(obj))
             {
                 entries.Add(IPropertyValueEntry);
-                entries.Add(ProvideIReference(obj));
+                ProvideIReference(obj, entries);
             }
             else if (ShouldProvideIReferenceArray(obj))
             {
                 entries.Add(IPropertyValueEntry);
-                entries.Add(ProvideIReferenceArray(obj));
+                ProvideIReferenceArray(obj, entries);
             }
 
             entries.Add(new ComInterfaceEntry
@@ -327,152 +336,168 @@ namespace WinRT
                 Vtable = ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
             };
 
-        private static ComInterfaceEntry ProvideIReference(object obj)
+        private static void ProvideIReference(object obj, List<ComInterfaceEntry> entries)
         {
             Type type = obj.GetType();
-
-            if (type == typeof(int))
+            ComInterfaceEntry? entry = CreateSimpleEntryIfPossible();
+            if (entry != null)
             {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<int>)),
-                    Vtable = BoxedValueIReferenceImpl<int>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(string))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<string>)),
-                    Vtable = BoxedValueIReferenceImpl<string>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(byte))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<byte>)),
-                    Vtable = BoxedValueIReferenceImpl<byte>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(short))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<short>)),
-                    Vtable = BoxedValueIReferenceImpl<short>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(ushort))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<ushort>)),
-                    Vtable = BoxedValueIReferenceImpl<ushort>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(uint))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<uint>)),
-                    Vtable = BoxedValueIReferenceImpl<uint>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(long))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<long>)),
-                    Vtable = BoxedValueIReferenceImpl<long>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(ulong))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<ulong>)),
-                    Vtable = BoxedValueIReferenceImpl<ulong>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(float))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<float>)),
-                    Vtable = BoxedValueIReferenceImpl<float>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(double))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<double>)),
-                    Vtable = BoxedValueIReferenceImpl<double>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(char))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<char>)),
-                    Vtable = BoxedValueIReferenceImpl<char>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(bool))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<bool>)),
-                    Vtable = BoxedValueIReferenceImpl<bool>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(Guid))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<Guid>)),
-                    Vtable = BoxedValueIReferenceImpl<Guid>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(DateTimeOffset))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<DateTimeOffset>)),
-                    Vtable = BoxedValueIReferenceImpl<DateTimeOffset>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(TimeSpan))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<TimeSpan>)),
-                    Vtable = BoxedValueIReferenceImpl<TimeSpan>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(object))
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<object>)),
-                    Vtable = BoxedValueIReferenceImpl<object>.AbiToProjectionVftablePtr
-                };
-            }
-            if (obj is Type)
-            {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<Type>)),
-                    Vtable = BoxedValueIReferenceImpl<Type>.AbiToProjectionVftablePtr
-                };
+                entries.Add(entry.Value);
+                return;
             }
 
-            return new ComInterfaceEntry
+
+            IntPtr vtable = (IntPtr)typeof(BoxedValueIReferenceImpl<>).MakeGenericType(type).GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+
+            foreach (var iid in global::WinRT.GuidGenerator.GetIIDs(typeof(ABI.System.Nullable<>).MakeGenericType(type)))
             {
-                IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<>).MakeGenericType(type)),
-                Vtable = (IntPtr)typeof(BoxedValueIReferenceImpl<>).MakeGenericType(type).GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
-            };
+                entries.Add(new ComInterfaceEntry
+                {
+                    IID = iid,
+                    Vtable = vtable
+                });
+            }
+
+            ComInterfaceEntry? CreateSimpleEntryIfPossible()
+            {
+                if (type == typeof(int))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<int>)),
+                        Vtable = BoxedValueIReferenceImpl<int>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(string))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<string>)),
+                        Vtable = BoxedValueIReferenceImpl<string>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(byte))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<byte>)),
+                        Vtable = BoxedValueIReferenceImpl<byte>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(short))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<short>)),
+                        Vtable = BoxedValueIReferenceImpl<short>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(ushort))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<ushort>)),
+                        Vtable = BoxedValueIReferenceImpl<ushort>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(uint))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<uint>)),
+                        Vtable = BoxedValueIReferenceImpl<uint>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(long))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<long>)),
+                        Vtable = BoxedValueIReferenceImpl<long>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(ulong))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<ulong>)),
+                        Vtable = BoxedValueIReferenceImpl<ulong>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(float))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<float>)),
+                        Vtable = BoxedValueIReferenceImpl<float>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(double))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<double>)),
+                        Vtable = BoxedValueIReferenceImpl<double>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(char))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<char>)),
+                        Vtable = BoxedValueIReferenceImpl<char>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(bool))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<bool>)),
+                        Vtable = BoxedValueIReferenceImpl<bool>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(Guid))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<Guid>)),
+                        Vtable = BoxedValueIReferenceImpl<Guid>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(DateTimeOffset))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<DateTimeOffset>)),
+                        Vtable = BoxedValueIReferenceImpl<DateTimeOffset>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(TimeSpan))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<TimeSpan>)),
+                        Vtable = BoxedValueIReferenceImpl<TimeSpan>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(object))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<object>)),
+                        Vtable = BoxedValueIReferenceImpl<object>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (obj is Type)
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<Type>)),
+                        Vtable = BoxedValueIReferenceImpl<Type>.AbiToProjectionVftablePtr
+                    };
+                }
+                return null;
+            }
         }
 
         private static bool ShouldProvideIReferenceArray(object obj)
@@ -480,150 +505,169 @@ namespace WinRT
             return obj is Array arr && arr.Rank == 1 && arr.GetLowerBound(0) == 0 && !obj.GetType().GetElementType().IsArray;
         }
 
-        private static ComInterfaceEntry ProvideIReferenceArray(object obj)
+        private static void ProvideIReferenceArray(object obj, List<ComInterfaceEntry> entries)
         {
             Type type = obj.GetType().GetElementType();
-            if (type == typeof(int))
+
+            ComInterfaceEntry? entry = CreateSimpleEntryIfPossible();
+            if (entry != null)
             {
-                return new ComInterfaceEntry
-                {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<int>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<int>.AbiToProjectionVftablePtr
-                };
+                entries.Add(entry.Value);
+                return;
             }
-            if (type == typeof(string))
+
+
+            IntPtr vtable = (IntPtr)typeof(BoxedArrayIReferenceArrayImpl<>).MakeGenericType(type).GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+
+            foreach (var iid in global::WinRT.GuidGenerator.GetIIDs(typeof(IReferenceArray<>).MakeGenericType(type)))
             {
-                return new ComInterfaceEntry
+                entries.Add(new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<string>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<string>.AbiToProjectionVftablePtr
-                };
+                    IID = iid,
+                    Vtable = vtable
+                });
             }
-            if (type == typeof(byte))
+
+            ComInterfaceEntry? CreateSimpleEntryIfPossible()
             {
-                return new ComInterfaceEntry
+                if (type == typeof(int))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<byte>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<byte>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(short))
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<int>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<int>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(string))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<short>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<short>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(ushort))
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<string>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<string>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(byte))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<ushort>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<ushort>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(uint))
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<byte>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<byte>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(short))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<uint>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<uint>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(long))
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<short>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<short>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(ushort))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<long>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<long>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(ulong))
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<ushort>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<ushort>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(uint))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<ulong>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<ulong>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(float))
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<uint>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<uint>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(long))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<float>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<float>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(double))
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<long>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<long>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(ulong))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<double>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<double>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(char))
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<ulong>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<ulong>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(float))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<char>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<char>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(bool))
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<float>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<float>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(double))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<bool>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<bool>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(Guid))
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<double>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<double>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(char))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<Guid>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<Guid>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(DateTimeOffset))
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<char>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<char>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(bool))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<DateTimeOffset>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<DateTimeOffset>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(TimeSpan))
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<bool>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<bool>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(Guid))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<TimeSpan>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<TimeSpan>.AbiToProjectionVftablePtr
-                };
-            }
-            if (type == typeof(object))
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<Guid>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<Guid>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(DateTimeOffset))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<object>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<object>.AbiToProjectionVftablePtr
-                };
-            }
-            if (obj is global::System.Type)
-            {
-                return new ComInterfaceEntry
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<DateTimeOffset>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<DateTimeOffset>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(TimeSpan))
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<global::System.Type>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<global::System.Type>.AbiToProjectionVftablePtr
-                };
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<TimeSpan>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<TimeSpan>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (type == typeof(object))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<object>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<object>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (obj is global::System.Type)
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<global::System.Type>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<global::System.Type>.AbiToProjectionVftablePtr
+                    };
+                }
+                return null;
             }
-            return new ComInterfaceEntry
-            {
-                IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<>).MakeGenericType(type)),
-                Vtable = (IntPtr)typeof(BoxedArrayIReferenceArrayImpl<>).MakeGenericType(type).GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
-            };
         }
 
         internal class InspectableInfo

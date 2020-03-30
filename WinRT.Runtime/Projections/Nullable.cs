@@ -63,7 +63,7 @@ namespace ABI.System
             {
                 return null;
             }
-            return ComWrappersSupport.CreateCCWForObject(value).As(PIID);
+            return ComWrappersSupport.CreateCCWForObject(value).AsAny<IUnknownVftbl>(PIIDs);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m.ThisPtr;
@@ -97,9 +97,12 @@ namespace ABI.System
         public static void DisposeMarshaler(IObjectReference m) { m.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref abi); }
 
-        public static string GetGuidSignature()
+        public static IEnumerable<string> GetGuidSignatures()
         {
-            return $"pinterface({{{typeof(Nullable<T>).GUID}}};{GuidGenerator.GetSignature(typeof(T))})";
+            foreach (var signature in GuidGenerator.GetSignatures(typeof(T)))
+            {
+                yield return $"pinterface({{{typeof(Nullable<T>).GUID}}};{signature})";
+            }
         }
 
         [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
@@ -107,7 +110,7 @@ namespace ABI.System
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public global::System.Delegate get_Value_0;
-            public static Guid PIID = GuidGenerator.CreateIID(typeof(Nullable<T>));
+            public static Guid[] PIIDs = GuidGenerator.CreateIIDs(typeof(Nullable<T>));
             public static readonly global::System.Type get_Value_0_Type = Expression.GetDelegateType(new global::System.Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
 
             internal unsafe Vftbl(IntPtr thisPtr)
@@ -119,7 +122,7 @@ namespace ABI.System
             }
         }
 
-        public static Guid PIID = Vftbl.PIID;
+        public static Guid[] PIIDs = Vftbl.PIIDs;
 
         public static implicit operator Nullable<T>(IObjectReference obj) => (obj != null) ? new Nullable<T>(obj) : null;
         public static implicit operator Nullable<T>(ObjectReference<Vftbl> obj) => (obj != null) ? new Nullable<T>(obj) : null;

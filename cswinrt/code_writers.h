@@ -2895,7 +2895,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
             [&](writer& w)
             {
                 if (!is_generic) return;
-                w.write("public static Guid PIID = GuidGenerator.CreateIID(typeof(%));\n", type_name);
+                w.write("public static Guid[] PIIDs = GuidGenerator.CreateIIDs(typeof(%));\n", type_name);
                 w.write(R"(%
 internal unsafe Vftbl(IntPtr thisPtr)
 {
@@ -3064,7 +3064,7 @@ return null;
 var vftblT = new Vftbl(thisPtr);
 return ObjectReference<Vftbl>.FromAbi(thisPtr, vftblT.IInspectableVftbl.IUnknownVftbl, vftblT);
 }
-public static Guid PIID = Vftbl.PIID;
+public static Guid[] PIIDs = Vftbl.PIIDs;
 )");
             },
             type_name,
@@ -3230,7 +3230,7 @@ AbiToProjectionVftablePtr = nativeVftbl;
 
 public static global::System.Delegate AbiInvokeDelegate { get ; }
 
-public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%)));
+%
 
 public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
 
@@ -3322,9 +3322,14 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             type.TypeName(),
             type_params,
             // CreateMarshaler
-            type_name,
-            type.TypeName(),
-            type_params,
+            bind([&](writer& w) {
+                w.write("public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).%<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.%(typeof(@%)));",
+                    type_name,
+                    is_generic ? "AsAny" : "As",
+                    is_generic ? "GetIIDs" : "GetIID",
+                    type.TypeName(),
+                    type_params);
+            }),
             // GetAbi
             type_name,
             // FromAbi

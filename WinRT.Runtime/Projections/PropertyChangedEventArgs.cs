@@ -76,10 +76,19 @@ namespace ABI.System.ComponentModel
     {
         private static WeakLazy<ActivationFactory> _propertyChangedArgsFactory = new WeakLazy<ActivationFactory>();
 
-        private class ActivationFactory : BaseActivationFactory
+        private class ActivationFactory
         {
-            public ActivationFactory() : base("Windows.UI.Xaml.Data", "Windows.UI.Xaml.Data.PropertyChangedEventArgs")
+            public BaseActivationFactory Factory { get; }
+            public ActivationFactory()
             {
+                try
+                {
+                    Factory = new BaseActivationFactory("Microsoft.UI.Xaml.Data", "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs");
+                }
+                catch (global::System.Exception)
+                {
+                    Factory = new BaseActivationFactory("Windows.UI.Xaml.Data", "Windows.UI.Xaml.Data.PropertyChangedEventArgs");
+                }
             }
         }
 
@@ -90,7 +99,7 @@ namespace ABI.System.ComponentModel
                 return null;
             }
 
-            ABI.Windows.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory factory = _propertyChangedArgsFactory.Value._As<ABI.Windows.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory.Vftbl>();
+            ABI.Windows.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory factory = _propertyChangedArgsFactory.Value.Factory._As<ABI.Windows.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory.Vftbl>();
             return factory.CreateInstance(value.PropertyName, null, out _);
         }
 
@@ -134,9 +143,15 @@ namespace ABI.System.ComponentModel
         public static void DisposeMarshaler(IObjectReference m) { m.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref abi); }
 
-        public static string GetGuidSignature()
+        public static string[] GetGuidSignatures()
         {
-            return "rc(Windows.UI.Xaml.Data.NotifyPropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})";
+            return GuidSignatures;
         }
+
+        private static readonly string[] GuidSignatures = new[]
+        {
+            "rc(Windows.UI.Xaml.Data.NotifyPropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})",
+            "rc(Microsoft.UI.Xaml.Data.NotifyPropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})",
+        };
     }
 }

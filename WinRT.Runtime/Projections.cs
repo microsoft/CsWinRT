@@ -29,10 +29,10 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(Exception), typeof(ABI.System.Exception), "Windows.Foundation.HResult");
             RegisterCustomAbiTypeMappingNoLock(typeof(TimeSpan), typeof(ABI.System.TimeSpan), "Windows.Foundation.TimeSpan");
             RegisterCustomAbiTypeMappingNoLock(typeof(Uri), typeof(ABI.System.Uri), "Windows.Foundation.Uri");
-            RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventArgs), typeof(ABI.System.ComponentModel.PropertyChangedEventArgs), "Windows.UI.Xaml.Data.PropertyChangedEventArgs");
-            RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventHandler), typeof(ABI.System.ComponentModel.PropertyChangedEventHandler), "Windows.UI.Xaml.Data.PropertyChangedEventHandler");
-            RegisterCustomAbiTypeMappingNoLock(typeof(INotifyPropertyChanged), typeof(ABI.System.ComponentModel.INotifyPropertyChanged), "Windows.UI.Xaml.Data.INotifyPropertyChanged");
-            RegisterCustomAbiTypeMappingNoLock(typeof(ICommand), typeof(ABI.System.Windows.Input.ICommand), "Windows.UI.Xaml.Interop.ICommand");
+            RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventArgs), typeof(ABI.System.ComponentModel.PropertyChangedEventArgs), "Windows.UI.Xaml.Data.PropertyChangedEventArgs", "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs");
+            RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventHandler), typeof(ABI.System.ComponentModel.PropertyChangedEventHandler), "Windows.UI.Xaml.Data.PropertyChangedEventHandler", "Microsoft.UI.Xaml.Data.PropertyChangedEventHandler");
+            RegisterCustomAbiTypeMappingNoLock(typeof(INotifyPropertyChanged), typeof(ABI.System.ComponentModel.INotifyPropertyChanged), "Windows.UI.Xaml.Data.INotifyPropertyChanged", "Microsoft.UI.Xaml.Data.INotifyPropertyChanged");
+            RegisterCustomAbiTypeMappingNoLock(typeof(ICommand), typeof(ABI.System.Windows.Input.ICommand), "Windows.UI.Xaml.Interop.ICommand", "Microsoft.UI.Xaml.Interop.ICommand");
         }
 
         public static void RegisterCustomAbiTypeMapping(Type publicType, Type abiType, string winrtTypeName)
@@ -48,12 +48,17 @@ namespace WinRT
             }
         }
 
-        private static void RegisterCustomAbiTypeMappingNoLock(Type publicType, Type abiType, string winrtTypeName)
+        private static void RegisterCustomAbiTypeMappingNoLock(Type publicType, Type abiType, string winrtTypeName, params string[] additionalWinrtTypeNames)
         {
             CustomTypeToHelperTypeMappings.Add(publicType, abiType);
             CustomAbiTypeToTypeMappings.Add(abiType, publicType);
-            CustomAbiTypeNameToTypeMappings.Add(winrtTypeName, publicType);
             CustomTypeToAbiTypeNameMappings.Add(publicType, winrtTypeName);
+            CustomAbiTypeNameToTypeMappings.Add(winrtTypeName, publicType);
+            foreach (var additionalName in additionalWinrtTypeNames)
+            {
+
+                CustomAbiTypeNameToTypeMappings.Add(additionalName, publicType);
+            }
         }
 
         public static Type FindCustomHelperTypeMapping(Type publicType)
