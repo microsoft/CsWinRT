@@ -2732,10 +2732,12 @@ private static unsafe int Do_Abi_%%
         auto add_handler_event_token_name = add_signature.return_param_name();
         auto remove_handler_event_token_name = method_signature{ remove_method }.params().back().first.Name();
 
-        w.write("\nprivate static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_TokenTables;",
+        w.write("\nprivate static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_TokenTables = new global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>>();",
             type_name,
             bind<write_type_name>(semantics, false, false),
-            evt.Name());
+            evt.Name(),
+            type_name,
+            bind<write_type_name>(semantics, false, false));
 
         w.write(
             R"(
