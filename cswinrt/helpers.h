@@ -448,6 +448,13 @@ namespace cswinrt
                     { "Windows.UI.Xaml", "Duration", "Windows.UI.Xaml", "Duration" },
                 }
             },
+            { "Windows.UI.Xaml.Data",
+                {
+                    { "Windows.UI.Xaml.Data", "INotifyPropertyChanged", "System.ComponentModel", "INotifyPropertyChanged" },
+                    { "Windows.UI.Xaml.Data", "PropertyChangedEventArgs", "System.ComponentModel", "PropertyChangedEventArgs" },
+                    { "Windows.UI.Xaml.Data", "PropertyChangedEventHandler", "System.ComponentModel", "PropertyChangedEventHandler" },
+                }
+            },
             {
                 "Windows.UI.Xaml.Input",
                 {
