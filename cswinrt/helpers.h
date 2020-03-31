@@ -456,6 +456,12 @@ namespace cswinrt
                 }
             },
             {
+                "Windows.UI.Xaml.Input",
+                {
+                    { "Windows.UI.Xaml.Input", "ICommand", "System.Windows.Input", "ICommand", true }
+                }
+            },
+            {
                 "Windows.UI.Xaml.Interop",
                 {
                     { "Windows.UI.Xaml.Interop", "TypeName", "System", "Type", true }

@@ -793,8 +793,8 @@ namespace WinRT
 
         private static Func<IntPtr, T> BindFromAbi()
         {
-            var fromAbiMethod = HelperType.GetMethod("FromAbi");
-            var objReferenceConstructor = HelperType.GetConstructor(new[] { fromAbiMethod.ReturnType });
+            var fromAbiMethod = HelperType.GetMethod("FromAbi", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
+            var objReferenceConstructor = HelperType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { fromAbiMethod.ReturnType }, null);
             var parms = new[] { Expression.Parameter(typeof(IntPtr), "arg") };
             return Expression.Lambda<Func<IntPtr, T>>(
                     Expression.New(objReferenceConstructor,
@@ -944,7 +944,7 @@ namespace WinRT
                 if (AbiType != null)
                 {
                     // Could still be blittable and the 'ABI.*' type exists for other reasons (e.g. it's a mapped type)
-                    if (AbiType.GetMethod("FromAbi") == null)
+                    if (AbiType.GetMethod("FromAbi", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static) == null)
                     {
                         AbiType = null;
                     }

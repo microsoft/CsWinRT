@@ -13,6 +13,7 @@ using System.Threading;
 using System.Linq.Expressions;
 using WinRT.Interop;
 using ABI.Windows.Foundation;
+using ABI.Windows.UI.Xaml.Data;
 
 #if !NETSTANDARD2_0
 using ComInterfaceEntry = System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry;
@@ -169,6 +170,12 @@ namespace WinRT
             {
                 IID = typeof(ManagedIStringableVftbl).GUID,
                 Vtable = ManagedIStringableVftbl.AbiToProjectionVftablePtr
+            });
+
+            entries.Add(new ComInterfaceEntry
+            {
+                IID = typeof(ManagedCustomPropertyProviderVftbl).GUID,
+                Vtable = ManagedCustomPropertyProviderVftbl.AbiToProjectionVftablePtr
             });
 
             entries.Add(new ComInterfaceEntry

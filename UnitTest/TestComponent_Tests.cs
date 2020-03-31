@@ -23,7 +23,7 @@ using System.Collections.Generic;
 
 namespace UnitTest
 {
-    public class TestComponent : UnitTestBase
+    public class TestComponent
     {
         public ITests Tests { get; private set; }
 

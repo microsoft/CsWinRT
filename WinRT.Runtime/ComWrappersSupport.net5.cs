@@ -13,7 +13,24 @@ namespace WinRT
     {
         internal static readonly ConditionalWeakTable<object, InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<object, InspectableInfo>();
 
-        private static ComWrappers ComWrappers;
+        private static ComWrappers _comWrappers;
+        private static ComWrappers ComWrappers
+        {
+            get
+            {
+                if (_comWrappers is null)
+                {
+                    _comWrappers = new DefaultComWrappers();
+                    _comWrappers.RegisterAsGlobalInstance();
+                }
+                return _comWrappers;
+            }
+            set
+            {
+                _comWrappers = value;
+                _comWrappers.RegisterAsGlobalInstance();
+            }
+        }
 
         internal static unsafe InspectableInfo GetInspectableInfo(IntPtr pThis)
         {
@@ -59,7 +76,6 @@ namespace WinRT
         public static void InitializeComWrappers(ComWrappers wrappers = null)
         {
             ComWrappers = wrappers ?? new DefaultComWrappers();
-            ComWrappers.RegisterAsGlobalInstance();
         }
 
         internal static Func<IInspectable, object> GetTypedRcwFactory(string runtimeClassName) => TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className));

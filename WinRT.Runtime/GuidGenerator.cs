@@ -10,7 +10,17 @@ namespace WinRT
     {
         private static Type GetGuidType(Type type)
         {
-            return type.IsDelegate() ? type.GetHelperType() : type;
+            if (type.IsDelegate())
+            {
+                return type.GetHelperType();
+            }
+
+            Type guidType = Projections.FindCustomHelperTypeMapping(type);
+            if (guidType is object)
+            {
+                return guidType;
+            }
+            return type;
         }
 
         public static Guid GetGUID(Type type)
