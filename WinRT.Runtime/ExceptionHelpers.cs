@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using WinRT.Interop;
 
 namespace WinRT
@@ -12,6 +10,8 @@ namespace WinRT
     {
         private const int COR_E_OBJECTDISPOSED = unchecked((int)0x80131622);
         private const int RO_E_CLOSED = unchecked((int)0x80000013);
+        internal const int E_BOUNDS = unchecked((int)0x8000000b);
+        internal const int E_CHANGED_STATE = unchecked((int)0x8000000c);
         private const int E_ILLEGAL_STATE_CHANGE = unchecked((int)0x8000000d);
         private const int E_ILLEGAL_METHOD_CALL = unchecked((int)0x8000000e);
         private const int E_ILLEGAL_DELEGATE_ASSIGNMENT = unchecked((int)0x80000018);

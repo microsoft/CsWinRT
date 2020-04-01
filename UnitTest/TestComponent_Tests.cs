@@ -1,25 +1,11 @@
-// TODO: ref structs
-// TODO: project IReference as nullable
-
 using System;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Xunit;
-using WinRT;
-
-using WF = Windows.Foundation;
-using WFC = Windows.Foundation.Collections;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
-// Error CS0246?  run get_testwinrt.cmd
-using TestComponent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using TestComponent;  // Error CS0246? run get_testwinrt.cmd
+using Windows.Foundation;
+using WinRT;
+using Xunit;
 
 namespace UnitTest
 {
@@ -35,7 +21,10 @@ namespace UnitTest
         public static bool AllEqual<T>(T x, params T[] list) => 
             list.All((y) => x.Equals(y));
 
-        public static bool AllEqual<T>(T[] x, params T[][] list) => 
+        public static bool AllEqual<T>(T[] x, params T[][] list) =>
+            list.All((y) => x.SequenceEqual(y));
+
+        public static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) =>
             list.All((y) => x.SequenceEqual(y));
 
         [Fact]
@@ -528,6 +517,134 @@ namespace UnitTest
         public void Array_Nested_Call()
         {
             Tests.Array15Call(Array_Call);
+        }
+
+        [Fact]
+        public void Collections_IEnumerable()
+        {
+            string[] a = new string[] { "apples", "oranges", "pears" };
+            IEnumerable<string> b = null;
+            var c = Tests.Collection1(a, out b);
+            Assert.True(SequencesEqual(a, b, c));
+        }
+
+        [Fact]
+        public void Collections_IEnumerable_Pair()
+        {
+            var a = new KeyValuePair<string, string>[] {
+                new KeyValuePair<string,string>("apples", "1"),
+                new KeyValuePair<string,string>("oranges", "2"),
+                new KeyValuePair<string,string>("pears", "3")
+            };
+            IEnumerable<KeyValuePair<string, string>> b = null;
+            var c = Tests.Collection2(a, out b);
+            Assert.True(SequencesEqual(a, b, c));
+        }
+
+        [Fact]
+        public void Collections_Dictionary()
+        {
+            var a = new Dictionary<string, string>()
+            {
+                ["apples"] = "1",
+                ["oranges"] = "2",
+                ["pears"] = "3"
+            };
+            IDictionary<string, string> b = null;
+            var c = Tests.Collection3(a, out b);
+            Assert.True(SequencesEqual(a, b, c));
+        }
+
+        [Fact]
+        public void Collections_ReadOnly_Dictionary()
+        {
+            var a = new Dictionary<string, string>()
+            {
+                ["apples"] = "1",
+                ["oranges"] = "2",
+                ["pears"] = "3"
+            };
+            IReadOnlyDictionary<string, string> b = null;
+            var c = Tests.Collection4(a, out b);
+            Assert.True(SequencesEqual(a, b, c));
+        }
+
+        [Fact]
+        public void Collections_List()
+        {
+            string[] a = new string[] { "apples", "oranges", "pears" };
+            IList<string> b = null;
+            var c = Tests.Collection5(a, out b);
+            Assert.True(SequencesEqual(a, b, c));
+        }
+
+        [Fact]
+        public void Collections_ReadOnly_List()
+        {
+            string[] a = new string[] { "apples", "oranges", "pears" };
+            IReadOnlyList<string> b = null;
+            var c = Tests.Collection6(a, out b);
+            Assert.True(SequencesEqual(a, b, c));
+        }
+
+        [Fact]
+        public void Collections_IEnumerable_Call()
+        {
+            Tests.Collection1Call((IEnumerable<string> a, out IEnumerable<string> b) =>
+            {
+                b = a.Select(s => s);
+                return b.Select(s => s);
+            });
+        }
+
+        [Fact]
+        public void Collections_IEnumerable_Pair_Call()
+        {
+            Tests.Collection2Call((IEnumerable<KeyValuePair<string, string>> a, out IEnumerable<KeyValuePair<string, string>> b) =>
+            {
+                b = a.Select(s => s);
+                return b.Select(s => s);
+            });
+        }
+
+        [Fact]
+        public void Collections_Dictionary_Call()
+        {
+            Tests.Collection3Call((IDictionary<string, string> a, out IDictionary<string, string> b) =>
+            {
+                b = new Dictionary<string, string>(a);
+                return new Dictionary<string, string>(b);
+            });
+        }
+
+        [Fact]
+        public void Collections_ReadOnly_Dictionary_Call()
+        {
+            Tests.Collection4Call((IReadOnlyDictionary<string, string> a, out IReadOnlyDictionary<string, string> b) =>
+            {
+                b = new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(a));
+                return new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(b));
+            });
+        }
+
+        [Fact]
+        public void Collections_List_Call()
+        {
+            Tests.Collection5Call((IList<string> a, out IList<string> b) =>
+            {
+                b = a.Select(s => s).ToList();
+                return b.Select(s => s).ToList();
+            });
+        }
+
+        [Fact]
+        public void Collections_ReadOnly_List_Call()
+        {
+            Tests.Collection6Call((IReadOnlyList<string> a, out IReadOnlyList<string> b) =>
+            {
+                b = a.Select(s => s).ToList();  
+                return b.Select(s => s).ToList();
+            });
         }
 
         // Nota Bene: this test case must always remain the final one

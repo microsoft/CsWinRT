@@ -155,6 +155,17 @@ namespace WinRT
                 });
             }
 
+            var objType = obj.GetType();
+            if ($"{objType.Namespace}.{objType.Name}" == "System.Collections.Generic.KeyValuePair`2")
+            {
+                var ifaceAbiType = objType.FindHelperType();
+                entries.Add(new ComInterfaceEntry
+                {
+                    IID = GuidGenerator.GetIID(ifaceAbiType),
+                    Vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                });
+            }
+
             if (ShouldProvideIReference(obj))
             {
                 entries.Add(IPropertyValueEntry);
@@ -254,8 +265,15 @@ namespace WinRT
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
         {
-            var (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
+            // If receiving a previously wrapped managed object, unwrap it directly
+            if ((runtimeClassName.StartsWith("System.") ||
+                (runtimeClassName.Contains('`') && !runtimeClassName.Contains('<'))))
+            {
+                return (IInspectable insp) => global::WinRT.ComWrappersSupport.FindObject<object>(insp.ThisPtr);
+            }
 
+            var (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
+            
             if (implementationType.IsValueType)
             {
                 if (IsNullableT(implementationType))
