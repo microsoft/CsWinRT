@@ -776,6 +776,15 @@ set => %.% = value;
     void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view event_target,
         std::string_view access_spec = ""sv, std::string_view method_spec = ""sv)
     {
+        auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), false, false));
+
+        // ICommand has a lower-fidelity type mapping where the type of the event handler doesn't project one-to-one
+        // so we need to hard-code mapping the event handler from the mapped WinRT type to the correct .NET type.
+        if (event.Name() == "CanExecuteChanged" && event_type == "global::System.EventHandler<object>")
+        {
+            event_type = "global::System.EventHandler";
+        }
+
         w.write(R"(
 %%event % %
 {
@@ -785,7 +794,7 @@ remove => %.% -= value;
 )",
             access_spec,
             method_spec,
-            bind<write_type_name>(get_type_semantics(event.EventType()), false, false),
+            event_type,
             external_event_name,
             event_target,
             event.Name(),
