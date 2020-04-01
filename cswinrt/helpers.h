@@ -433,6 +433,7 @@ namespace cswinrt
             { "Windows.Foundation",
                 {
                     { "Windows.Foundation", "DateTime", "System", "DateTimeOffset", true },
+                    { "Windows.Foundation", "EventHandler`1", "System", "EventHandler", false },
                     { "Windows.Foundation", "EventRegistrationToken", "WinRT", "EventRegistrationToken", false },
                     { "Windows.Foundation", "HResult", "System", "Exception", true },
                     { "Windows.Foundation", "IPropertyValue", "Windows.Foundation", "IPropertyValue", true },
