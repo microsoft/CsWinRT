@@ -46,7 +46,7 @@ namespace UnitTest
             AssertGuid<AsyncOperationCompletedHandler<A>>("9d534225-231f-55e7-a6d0-6c938e2d9160");
             AssertGuid<AsyncOperationProgressHandler<A, B>>("264f1e0c-abe4-590b-9d37-e1cc118ecc75");
             AssertGuid<AsyncOperationWithProgressCompletedHandler<A, B>>("c2d078d8-ac47-55ab-83e8-123b2be5bc5a");
-            AssertGuid<WF.EventHandler<A>>("fa0b7d80-7efa-52df-9b69-0574ce57ada4");
+            AssertGuid<EventHandler<A>>("fa0b7d80-7efa-52df-9b69-0574ce57ada4");
             AssertGuid<TypedEventHandler<A, B>>("edb31843-b4cf-56eb-925a-d4d0ce97a08d");
 
             // Generated Windows.Foundation.Collections GUIDs

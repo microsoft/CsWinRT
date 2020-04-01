@@ -430,6 +430,12 @@ namespace cswinrt
         {
             // Make sure to keep this table consistent with the registrations in WinRT.Runtime/Projections.cs
             // NOTE: Must keep namespaces sorted (outer) and abi type names sorted (inner)
+            {
+                "Microsoft.UI.Xaml.Input",
+                {
+                    { "Microsoft.UI.Xaml.Input", "ICommand", "System.Windows.Input", "ICommand", true }
+                }
+            },
             { "Windows.Foundation",
                 {
                     { "Windows.Foundation", "DateTime", "System", "DateTimeOffset", true },

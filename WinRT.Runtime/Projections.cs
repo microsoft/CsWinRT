@@ -32,7 +32,7 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventArgs), typeof(ABI.System.ComponentModel.PropertyChangedEventArgs), "Windows.UI.Xaml.Data.PropertyChangedEventArgs");
             RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventHandler), typeof(ABI.System.ComponentModel.PropertyChangedEventHandler), "Windows.UI.Xaml.Data.PropertyChangedEventHandler");
             RegisterCustomAbiTypeMappingNoLock(typeof(INotifyPropertyChanged), typeof(ABI.System.ComponentModel.INotifyPropertyChanged), "Windows.UI.Xaml.Data.INotifyPropertyChanged");
-            RegisterCustomAbiTypeMappingNoLock(typeof(ICommand), typeof(ABI.System.Windows.Input.ICommand), "Windows.UI.Xaml.Interop.ICommand");
+            RegisterCustomAbiTypeMappingNoLock(typeof(ICommand), typeof(ABI.System.Windows.Input.ICommand), "Windows.UI.Xaml.Interop.ICommand", "Microsoft.UI.Xaml.Interop.ICommand");
             RegisterCustomAbiTypeMappingNoLock(typeof(EventHandler<>), typeof(ABI.System.EventHandler<>), "Windows.Foundation.EventHandler`1");
         }
 
@@ -49,12 +49,19 @@ namespace WinRT
             }
         }
 
-        private static void RegisterCustomAbiTypeMappingNoLock(Type publicType, Type abiType, string winrtTypeName)
+        private static void RegisterCustomAbiTypeMappingNoLock(Type publicType, Type abiType, string winrtTypeName, params string[] additionalWinrtTypeNames)
         {
             CustomTypeToHelperTypeMappings.Add(publicType, abiType);
             CustomAbiTypeToTypeMappings.Add(abiType, publicType);
-            CustomAbiTypeNameToTypeMappings.Add(winrtTypeName, publicType);
             CustomTypeToAbiTypeNameMappings.Add(publicType, winrtTypeName);
+            CustomAbiTypeNameToTypeMappings.Add(winrtTypeName, publicType);
+            if (additionalWinrtTypeNames is object)
+            {
+                foreach (var name in additionalWinrtTypeNames)
+                {
+                    CustomAbiTypeNameToTypeMappings.Add(name, publicType);
+                }
+            }
         }
 
         public static Type FindCustomHelperTypeMapping(Type publicType)
