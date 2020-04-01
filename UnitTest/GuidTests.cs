@@ -26,7 +26,7 @@ namespace UnitTest
         private static void AssertGuid<T>(string expected)
         {
             var actual = GuidGenerator.CreateIID(typeof(T));
-            Assert.Equal(actual, new Guid(expected));
+            Assert.Equal(new Guid(expected), actual);
         }
 
         [Fact]

@@ -11,6 +11,121 @@ using WinRT.Interop;
 
 namespace ABI.System.Windows.Input
 {
+    [Guid("c50898f6-c536-5f47-8583-8b2c2438a13b")]
+    internal static class CanExecuteChangedEventHandler
+    {
+        private delegate int Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr args);
+
+        private static readonly global::WinRT.Interop.IDelegateVftbl AbiToProjectionVftable;
+        public static readonly IntPtr AbiToProjectionVftablePtr;
+
+        static CanExecuteChangedEventHandler()
+        {
+            AbiInvokeDelegate = (Abi_Invoke)Do_Abi_Invoke;
+            AbiToProjectionVftable = new global::WinRT.Interop.IDelegateVftbl
+            {
+                IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
+                Invoke = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate)
+            };
+            var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(CanExecuteChangedEventHandler), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
+            Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
+            AbiToProjectionVftablePtr = nativeVftbl;
+        }
+
+        public static global::System.Delegate AbiInvokeDelegate { get; }
+
+        public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(CanExecuteChangedEventHandler)));
+
+        public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<global::System.EventHandler<object>>.GetAbi(value);
+
+        public static unsafe global::System.EventHandler FromAbi(IntPtr nativeDelegate)
+        {
+            var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(nativeDelegate);
+            return (global::System.EventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+        }
+
+        [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
+        private class NativeDelegateWrapper
+        {
+            private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
+
+            public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
+            {
+                _nativeDelegate = nativeDelegate;
+            }
+
+            public void Invoke(object sender, EventArgs args)
+            {
+                IntPtr ThisPtr = _nativeDelegate.ThisPtr;
+                var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(_nativeDelegate.Vftbl.Invoke);
+                IObjectReference __sender = default;
+                IObjectReference __args = default;
+                var __params = new object[] { ThisPtr, null, null };
+                try
+                {
+                    __sender = MarshalInspectable.CreateMarshaler(sender);
+                    __params[1] = MarshalInspectable.GetAbi(__sender);
+                    __args = MarshalInspectable.CreateMarshaler(args);
+                    __params[2] = MarshalInspectable.GetAbi(__args);
+                    abiInvoke.DynamicInvokeAbi(__params);
+                }
+                finally
+                {
+                    MarshalInspectable.DisposeMarshaler(__sender);
+                    MarshalInspectable.DisposeMarshaler(__args);
+                }
+
+            }
+        }
+
+        public static IntPtr FromManaged(global::System.EventHandler managedDelegate) => CreateMarshaler(managedDelegate).GetRef();
+
+        public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::System.EventHandler<object>>.DisposeMarshaler(value);
+
+        public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<global::System.EventHandler<object>>.DisposeAbi(abi);
+
+        private static unsafe int Do_Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr args)
+        {
+            try
+            {
+                global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(thisPtr, (global::System.Delegate invoke) =>
+                {
+                    invoke.DynamicInvoke(
+                        MarshalInspectable.FromAbi(sender),
+                        MarshalInspectable.FromAbi(args) as EventArgs ?? EventArgs.Empty);
+                });
+            }
+            catch (global::System.Exception __exception__)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+            }
+            return 0;
+        }
+    }
+
+    internal sealed class CanExecuteChangedEventSource : EventSource<global::System.EventHandler>
+    {
+        internal CanExecuteChangedEventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler) : base(obj, addHandler, removeHandler)
+        {
+        }
+
+        protected override IObjectReference CreateMarshaler(EventHandler del)
+        {
+            return CanExecuteChangedEventHandler.CreateMarshaler(del);
+        }
+
+        protected override void DisposeMarshaler(IObjectReference marshaler)
+        {
+            CanExecuteChangedEventHandler.DisposeMarshaler(marshaler);
+        }
+
+        protected override IntPtr GetAbi(IObjectReference marshaler)
+        {
+            return CanExecuteChangedEventHandler.GetAbi(marshaler);
+        }
+    }
+
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
     public class ICommand : global::System.Windows.Input.ICommand
@@ -73,20 +188,17 @@ namespace ABI.System.Windows.Input
                 return 0;
             }
 
-            private static ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<object>>> _CanExecuteChanged_TokenTables = new ConditionalWeakTable<global::System.Windows.Input.ICommand, EventRegistrationTokenTable<global::System.EventHandler<object>>>();
+            private static ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>> _CanExecuteChanged_TokenTables = new ConditionalWeakTable<global::System.Windows.Input.ICommand, EventRegistrationTokenTable<global::System.EventHandler>>();
 
-            private static ConditionalWeakTable<global::System.Windows.Input.ICommand,
-                ConditionalWeakTable<global::System.EventHandler<object>, EventHandler>> _winRTToManagedDelegateTables = new ConditionalWeakTable<global::System.Windows.Input.ICommand, ConditionalWeakTable<global::System.EventHandler<object>, EventHandler>>();
             private static unsafe int Do_Abi_add_CanExecuteChanged_0(IntPtr thisPtr, IntPtr handler, out global::WinRT.EventRegistrationToken token)
             {
                 token = default;
                 try
                 {
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Windows.Input.ICommand>(thisPtr);
-                    var __handler = global::ABI.System.EventHandler<object>.FromAbi(handler);
+                    var __handler = CanExecuteChangedEventHandler.FromAbi(handler);
                     token = _CanExecuteChanged_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
-                    var managedHandler = _winRTToManagedDelegateTables.GetOrCreateValue(__this).GetValue(__handler, CreateWrapperHandler);
-                    __this.CanExecuteChanged += managedHandler;
+                    __this.CanExecuteChanged += __handler;
                     return 0;
                 }
                 catch (global::System.Exception __ex)
@@ -101,10 +213,7 @@ namespace ABI.System.Windows.Input
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Windows.Input.ICommand>(thisPtr);
                     if (_CanExecuteChanged_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(token, out var __handler))
                     {
-                        if (_winRTToManagedDelegateTables.TryGetValue(__this, out var delegateTable) && delegateTable.TryGetValue(__handler, out var managedHandler))
-                        {
-                            __this.CanExecuteChanged -= managedHandler;
-                        }
+                        __this.CanExecuteChanged -= __handler;
                     }
                     return 0;
                 }
@@ -128,7 +237,7 @@ namespace ABI.System.Windows.Input
             _obj = obj;
 
             _CanExecuteChanged =
-                new EventSource<global::System.EventHandler<object>>(_obj,
+                new CanExecuteChangedEventSource(_obj,
                 _obj.Vftbl.add_CanExecuteChanged_0,
                 _obj.Vftbl.remove_CanExecuteChanged_1);
         }
@@ -164,37 +273,18 @@ namespace ABI.System.Windows.Input
             }
         }
 
-        private EventSource<global::System.EventHandler<object>> _CanExecuteChanged;
+        private readonly EventSource<global::System.EventHandler> _CanExecuteChanged;
 
-        public event EventHandler CanExecuteChanged
+        public event global::System.EventHandler CanExecuteChanged
         {
             add
             {
-                _CanExecuteChanged.Subscribe(_managedToWinRTDelegateMap.GetValue(value, CreateWrapperHandler));
+                _CanExecuteChanged.Subscribe(value);
             }
             remove
             {
-                _CanExecuteChanged.Unsubscribe(_managedToWinRTDelegateMap.GetValue(value, CreateWrapperHandler));
+                _CanExecuteChanged.Unsubscribe(value);
             }
-        }
-
-        private readonly ConditionalWeakTable<EventHandler, global::System.EventHandler<object>> _managedToWinRTDelegateMap = new ConditionalWeakTable<EventHandler, global::System.EventHandler<object>>();
-
-
-        private static global::System.EventHandler<object> CreateWrapperHandler(EventHandler handler)
-        {
-            // Check whether it is a round-tripping case i.e. the sender is of the type eventArgs,
-            // If so we use it else we pass EventArgs.Empty
-            return (object sender, object e) =>
-            {
-                EventArgs eventArgs = e as EventArgs;
-                handler(sender, eventArgs ?? EventArgs.Empty);
-            };
-        }
-
-        private static EventHandler CreateWrapperHandler(global::System.EventHandler<object> handler)
-        {
-            return (object sender, EventArgs e) => handler(sender, e);
         }
     }
 
