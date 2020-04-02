@@ -707,7 +707,15 @@ namespace cswinrt
 
         if (write_explicit_implementation)
         {
-            write_explicitly_implemented_method(w, method, raw_return_type, method.Parent(), interface_member);
+            w.write(R"(
+% %.%(%) => %(%);)",
+                bind<write_projection_return_type>(signature),
+                bind<write_type_name>(method.Parent(), false, false),
+                method.Name(),
+                bind_list<write_projection_parameter>(", ", signature.params()),
+                method.Name(),
+                bind_list<write_parameter_name_with_modifier>(", ", signature.params(), true)
+            );
         }
     }
 
@@ -824,7 +832,7 @@ remove => %.% -= value;
 
         if (is_protected || is_overridable)
         {
-            write_explicitly_implemented_event(w, event, event.Parent(), false);
+            write_event(w, w.write_temp("%.%", bind<write_type_name>(event.Parent(), false, false), event.Name()), event, "this");
         }
     }
 
@@ -1130,12 +1138,13 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                 // Since a property has to either be overridable or not,
                 for (auto&& prop : interface_type.PropertyList())
                 {
-                    auto [getter, setter] = get_property_methods(prop);
+                    MethodDef getter, setter;
+                    std::tie(getter, setter) = get_property_methods(prop);
                     auto prop_type = write_prop_type(w, prop);
                     auto [prop_targets, inserted]  = properties.try_emplace(prop.Name(),
-                        std::move(prop_type),
-                        std::move(getter ? target : ""),
-                        std::move(setter ? target : ""),
+                        prop_type,
+                        getter ? target : "",
+                        setter ? target : "",
                         is_overridable_interface,
                         !is_protected_interface && !is_overridable_interface // By default, an overridable member is protected.
                         );
@@ -1161,7 +1170,24 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                     // If this interface is overridable or protected then we need to emit an explicit implementation of the property for that interface.
                     if (is_overridable_interface || is_protected_interface)
                     {
-                        write_explicitly_implemented_property(w, prop, interface_type, false);
+                        w.write("% %.% {%%}",
+                            prop_type,
+                            bind<write_type_name>(interface_type, false, false),
+                            prop.Name(),
+                            bind([&](writer& w)
+                            {
+                                if (getter)
+                                {
+                                    w.write("get => %; ", prop.Name());
+                                }
+                            }),
+                            bind([&](writer& w)
+                            {
+                                if (setter)
+                                {
+                                    w.write("set => % = value; ", prop.Name());
+                                }
+                            }));
                     }
                 }
             };
