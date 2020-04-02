@@ -1960,7 +1960,7 @@ public unsafe new % %(%)
             }
 
             // The innerIterface parameter is always an out IntPtr.
-            XLANG_ASSERT(get_parameter_category(params[params.size() - 1]) == param_category::out);
+            XLANG_ASSERT(get_param_category(params[params.size() - 1]) == param_category::out);
 
             s();
             w.write("out IntPtr %",
