@@ -993,33 +993,37 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
     void write_composable_constructors(writer& w, TypeDef const& composable_type, TypeDef const& class_type)
     {
         auto cache_object = write_factory_cache_object(w, composable_type, class_type);
+        auto default_interface_name = get_default_interface_name(w, class_type);
 
         for (auto&& method : composable_type.MethodList())
         {
             method_signature signature{ method };
-            auto default_interface_name = get_default_interface_name(w, class_type);
+            bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(class_type.Extends()));
             auto params_without_objects = signature.params();
             params_without_objects.pop_back();
             params_without_objects.pop_back();
 
             w.write(R"(
-public %(%) : this(((Func<%>)(() => {
-object baseInspectable = null;
+public %(%)%
+{
+object baseInspectable = this.GetType() != typeof(%) ? this : null;
 object innerInspectable;
 IntPtr ptr = %.%(%%baseInspectable, out innerInspectable);
-return new %(ObjectReference<%.Vftbl>.Attach(ref ptr));
-}))())
-{
+var defaultInterface = new %(ObjectReference<%.Vftbl>.Attach(ref ptr));
+_defaultLazy = new Lazy<%>(() => defaultInterface);
+
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
 )",
                 class_type.TypeName(),
                 bind_list<write_projection_parameter>(", ", params_without_objects),
-                default_interface_name,
+                has_base_type ? ":base(global::WinRT.DerivedComposed.Instance)" : "",
+                bind<write_type_name>(class_type, false, false),
                 cache_object,
                 method.Name(),
                 bind_list<write_parameter_name_with_modifier>(", ", params_without_objects, true),
                 [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
+                default_interface_name,
                 default_interface_name,
                 default_interface_name);
         }
@@ -3121,14 +3125,17 @@ public %class %%
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
 
-private % _default;
+private readonly Lazy<%> _defaultLazy;
+
+private % _default => _defaultLazy.Value;
 %
 public static %% FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(global::WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
 
 % %(% ifc)%
 {
-_default = ifc;
+_defaultLazy = new Lazy<%>(() => ifc);
 }
+%
 
 private struct InterfaceTag<I>{};
 
@@ -3141,6 +3148,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             bind<write_type_inheritance>(type, base_semantics),
             derived_new,
             default_interface_abi_name,
+            default_interface_abi_name,
             bind<write_attributed_types>(type),
             derived_new,
             type_name,
@@ -3151,6 +3159,39 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             type_name,
             default_interface_abi_name,
             bind<write_base_constructor_dispatch>(base_semantics),
+            default_interface_abi_name,
+            bind([&](writer& w)
+            {
+                bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
+                if (!type.Flags().Sealed())
+                {
+                    w.write(R"(
+protected %(global::WinRT.DerivedComposed _)%
+{
+_defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
+})",
+type.TypeName(),
+has_base_type ? ":base(_)" : "",
+default_interface_abi_name,
+default_interface_abi_name);
+                }
+
+
+                std::string_view access_spec = "protected ";
+                std::string_view override_spec = has_base_type ? "override " : "virtual ";
+
+                if (type.Flags().Sealed() && !has_base_type)
+                {
+                    access_spec = "private ";
+                    override_spec = " ";
+                }
+
+                w.write(R"(
+%%IObjectReference GetDefaultReference<T>() => _default.AsInterface<T>();)",
+                    access_spec,
+                    override_spec);
+
+            }),
             default_interface_name,
             default_interface_name,
             bind<write_class_members>(type));
