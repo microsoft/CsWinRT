@@ -100,10 +100,9 @@ namespace WinRT
                 return "string";
             }
 
-            var _default = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault((FieldInfo fi) => fi.Name == "_default");
-            if (_default != null)
+            if (Projections.TryGetDefaultInterfaceTypeForRuntimeClassType(type, out Type iface))
             {
-                return "rc(" + type.FullName + ";" + GetSignature(_default.FieldType) + ")";
+                return "rc(" + type.FullName + ";" + GetSignature(iface) + ")";
             }
 
             if (type.IsDelegate())
