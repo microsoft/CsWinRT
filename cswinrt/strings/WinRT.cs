@@ -279,24 +279,39 @@ namespace WinRT
         private EventRegistrationToken _token;
         private TDelegate _event;
 
+        protected virtual IObjectReference CreateMarshaler(TDelegate del)
+        {
+            return (IObjectReference)Marshaler<TDelegate>.CreateMarshaler((TDelegate)EventInvoke);
+        }
+
+        protected virtual IntPtr GetAbi(IObjectReference marshaler)
+        {
+            return (IntPtr)Marshaler<TDelegate>.GetAbi(marshaler);
+        }
+
+        protected virtual void DisposeMarshaler(IObjectReference marshaler)
+        {
+            Marshaler<TDelegate>.DisposeMarshaler(marshaler);
+        }
+
         public void Subscribe(TDelegate del)
         {
             lock (this)
             {
                 if (_event == null)
                 {
-                    var marshaler = Marshaler<TDelegate>.CreateMarshaler((TDelegate)EventInvoke);
+                    var marshaler = CreateMarshaler((TDelegate)EventInvoke);
                     try
                     {
-                        var nativeDelegate = (IntPtr)Marshaler<TDelegate>.GetAbi(marshaler);
+                        var nativeDelegate = GetAbi(marshaler);
                         Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out EventRegistrationToken token));
                         _token = token;
                     }
                     finally
                     {
                         // Dispose our managed reference to the delegate's CCW.
-                        // The either native event holds a reference now or the _addHandler call failed.
-                        Marshaler<TDelegate>.DisposeMarshaler(marshaler);
+                        // Either the native event holds a reference now or the _addHandler call failed.
+                        DisposeMarshaler(marshaler);
                     }
                 }
                 _event = (TDelegate)global::System.Delegate.Combine(_event, del);
