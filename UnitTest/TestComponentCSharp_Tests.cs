@@ -121,9 +121,12 @@ namespace UnitTest
             TestObject.StringPairPropertyChanged +=
                 (object sender, KeyValuePair<string, string> value) => Assert.Equal(expected, value);
             TestObject.RaiseStringPairChanged();
+        }
 
-            return; // Todo: System.ExecutionEngineException in Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
-
+        [Fact(Skip = "System.ExecutionEngineException in Marshal.PtrToStructure<T>(vftblPtr.Vftbl)")]
+        public void TestObjectCasting()
+        {
+            var expected = new KeyValuePair<string, string>("key", "value");
             TestObject.ObjectProperty = expected;
             var out_pair = (KeyValuePair<string, string>)TestObject.ObjectProperty;
             Assert.Equal(expected, out_pair);
@@ -136,14 +139,14 @@ namespace UnitTest
             var out_nested = (KeyValuePair<KeyValuePair<int, int>, KeyValuePair<string, string>>)TestObject.ObjectProperty;
             Assert.Equal(nested, out_nested);
 
-            // also array, list ...
-        }
+            var strings_in = new[] { "hello", "world" };
+            TestObject.StringsProperty = strings_in;
+            var strings_out = TestObject.StringsProperty;
+            Assert.True(strings_out.SequenceEqual(strings_in));
 
-        [Fact]
-        public void TestCollectionMappings()
-        {
-            // todo: test projection round-trip logic, like:
-            //var uri1 = ABI.System.Uri.FromAbi(ABI.System.Uri.FromManaged(managedUri));
+            TestObject.ObjectProperty = strings_in;
+            strings_out = (string[])TestObject.ObjectProperty;
+            Assert.True(strings_out.SequenceEqual(strings_in));
         }
 
         [Fact]
@@ -162,11 +165,9 @@ namespace UnitTest
             }
         }
 
-        [Fact]
+        [Fact(Skip = "System.ExecutionEngineException in Marshal.PtrToStructure<T>(vftblPtr.Vftbl)")]
         public void TestPropertySet()
         {
-            return; // Todo: System.ExecutionEngineException in Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
-            //var map = new Dictionary<string, object> { ["foo"] = "bar", ["hello"] = "world" };
             var map = new Dictionary<string, string> { ["foo"] = "bar", ["hello"] = "world" };
             var propertySet = new Windows.Foundation.Collections.PropertySet();
             foreach (var item in map)
@@ -180,11 +181,9 @@ namespace UnitTest
             }
         }
 
-        [Fact]
+        [Fact(Skip = "System.ExecutionEngineException in Marshal.PtrToStructure<T>(vftblPtr.Vftbl)")]
         public void TestValueSet()
         {
-            return; // Todo: System.ExecutionEngineException in Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
-
             var map = new Dictionary<string, string> { ["foo"] = "bar", ["hello"] = "world" };
             var valueSet = new Windows.Foundation.Collections.ValueSet();
             foreach (var item in map)
@@ -321,17 +320,6 @@ namespace UnitTest
             TestObject.StringPropertyChanged += (Class sender, string value) => sender.StringProperty2 = value;
             TestObject.RaiseStringChanged();
             Assert.Equal(TestObject.StringProperty2, test_string2);
-
-            var strings_in = new[] { "hello", "world" };
-            TestObject.StringsProperty = strings_in;
-            var strings_out = TestObject.StringsProperty;
-            Assert.True(strings_out.SequenceEqual(strings_in));
-
-            return; // Todo: System.ExecutionEngineException in Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
-
-            TestObject.ObjectProperty = strings_in;
-            strings_out = (string[])TestObject.ObjectProperty;
-            Assert.True(strings_out.SequenceEqual(strings_in));
         }
 
         [Fact]

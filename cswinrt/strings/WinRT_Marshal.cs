@@ -938,7 +938,7 @@ namespace WinRT
                 DisposeMarshalerArray = (object box) => MarshalString.DisposeMarshalerArray(box);
                 DisposeAbiArray = (object box) => MarshalString.DisposeAbiArray(box);
             }
-            else if (type.Namespace == "System.Collections.Generic")
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
                 AbiType = typeof(IntPtr);
                 CreateMarshaler = MarshalGeneric<T>.CreateMarshaler;
