@@ -710,7 +710,7 @@ namespace cswinrt
                 method.Name(),
                 bind_list<write_projection_parameter>(", ", signature.params()),
                 method.Name(),
-                bind_list<write_parameter_name_with_modifier>(", ", signature.params(), true)
+                bind_list<write_parameter_name_with_modifier>(", ", signature.params())
             );
         }
     }

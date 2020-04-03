@@ -244,6 +244,7 @@ namespace ABI.System.Collections.Generic
                 }
             }
 
+#nullable enable
             object? IEnumerator.Current
             {
                 get
@@ -257,6 +258,7 @@ namespace ABI.System.Collections.Generic
                     return m_current;
                 }
             }
+#nullable disable
 
             public bool MoveNext()
             {

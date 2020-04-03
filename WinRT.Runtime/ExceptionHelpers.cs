@@ -300,6 +300,7 @@ namespace WinRT
         }
     }
 
+#nullable enable
     internal static class ExceptionExtensions
     {
         public static void SetHResult(this Exception ex, int value)
@@ -323,6 +324,7 @@ namespace WinRT
             return e;
         }
     }
+#nullable disable
 
     internal class ErrorStrings
     {

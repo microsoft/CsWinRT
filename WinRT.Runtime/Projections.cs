@@ -134,6 +134,20 @@ namespace WinRT
                 rwlock.ExitReadLock();
             }
         }
+        
+        public static bool IsTypeWindowsRuntimeType(Type type)
+        {
+            Type typeToTest = type;
+            if (typeToTest.IsArray)
+            {
+                typeToTest = typeToTest.GetElementType();
+            }
+            if (typeToTest.IsGenericType)
+            {
+                typeToTest = typeToTest.GetGenericTypeDefinition();
+            }
+            return CustomTypeToAbiTypeNameMappings.ContainsKey(typeToTest) || typeToTest.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object;
+        }
 
         internal static bool TryGetDefaultInterfaceTypeForRuntimeClassType(Type runtimeClass, out Type defaultInterface)
         {

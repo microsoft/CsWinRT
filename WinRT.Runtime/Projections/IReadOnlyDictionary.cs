@@ -51,6 +51,7 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IReadOnlyDictionary<K, V>));
 
+#nullable enable
         public class FromAbiHelper : global::System.Collections.Generic.IReadOnlyDictionary<K, V>
         {
             private readonly global::ABI.System.Collections.Generic.IReadOnlyDictionary<K, V> _mapView;
@@ -460,7 +461,7 @@ namespace ABI.System.Collections.Generic
                 }
             }
         }
-
+#nullable disable
 
         [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
         public struct Vftbl
