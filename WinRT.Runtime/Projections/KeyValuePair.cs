@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
 #pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
@@ -22,62 +23,15 @@ namespace Windows.Foundation.Collections
     }
 }
 
-namespace ABI.Windows.Foundation.Collections.Adapters
-{
-    using global::Windows.Foundation.Collections;
-
-    internal sealed class KeyValuePairToIKeyValuePair<K, V> : global::Windows.Foundation.Collections.IKeyValuePair<K, V> //, IGetProxyTarget
-    {
-        private readonly KeyValuePair<K, V> _pair;
-
-        public KeyValuePairToIKeyValuePair([In] ref KeyValuePair<K, V> pair)
-        {
-            _pair = pair;
-        }
-
-        public K Key => _pair.Key;
-
-        public V Value => _pair.Value;
-    }
-
-    internal struct KeyValuePairEnumerator<K, V> : IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>
-    {
-        private readonly IEnumerator<KeyValuePair<K, V>> _enum;
-
-        internal KeyValuePairEnumerator(IEnumerator<KeyValuePair<K, V>> enumerator) => _enum = enumerator;
-
-        public bool MoveNext() => _enum.MoveNext();
-
-        public global::Windows.Foundation.Collections.IKeyValuePair<K, V> Current
-        {
-            get
-            {
-                var current = _enum.Current;
-                return new KeyValuePairToIKeyValuePair<K, V>(ref current);
-            }
-        }
-
-        object? IEnumerator.Current => Current;
-
-        void IEnumerator.Reset() => _enum.Reset();
-
-        public void Dispose()
-        {
-        }
-    }
-}
-
 namespace ABI.System.Collections.Generic
 {
-    using global::ABI.Windows.Foundation.Collections;
-    using global::ABI.Windows.Foundation.Collections.Adapters;
     using global::System;
 
     [Guid("02B51929-C1C4-4A7E-8940-0312B5C18500")]
     public class KeyValuePair<K, V> : global::Windows.Foundation.Collections.IKeyValuePair<K, V>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.KeyValuePair<K, V> obj) =>
-            MarshalInterface<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.CreateMarshaler(new KeyValuePairToIKeyValuePair<K, V>(ref obj));
+            MarshalInterface<global::System.Collections.Generic.KeyValuePair<K, V>>.CreateMarshaler(obj);
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
@@ -89,7 +43,7 @@ namespace ABI.System.Collections.Generic
         }
 
         public static IntPtr FromManaged(global::System.Collections.Generic.KeyValuePair<K, V> obj) =>
-            MarshalInterface<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.FromManaged(new KeyValuePairToIKeyValuePair<K, V>(ref obj));
+            CreateMarshaler(obj).GetRef();
 
         public static (int length, IntPtr data) FromManagedArray(global::System.Collections.Generic.KeyValuePair<K, V>[] array) =>
             MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.FromManagedArray(array, (o) => FromManaged(o));
@@ -102,6 +56,40 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(KeyValuePair<K, V>));
 
+        internal sealed class ToIKeyValuePair : global::Windows.Foundation.Collections.IKeyValuePair<K, V>
+        {
+            private readonly global::System.Collections.Generic.KeyValuePair<K, V> _pair;
+
+            public ToIKeyValuePair([In] ref global::System.Collections.Generic.KeyValuePair<K, V> pair) => _pair = pair;
+
+            public K Key => _pair.Key;
+
+            public V Value => _pair.Value;
+        }
+
+        internal struct Enumerator : global::System.Collections.Generic.IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>
+        {
+            private readonly global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> _enum;
+
+            internal Enumerator(global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> enumerator) => _enum = enumerator;
+
+            public bool MoveNext() => _enum.MoveNext();
+
+            public global::Windows.Foundation.Collections.IKeyValuePair<K, V> Current
+            {
+                get
+                {
+                    var current = _enum.Current;
+                    return new ToIKeyValuePair(ref current);
+                }
+            }
+
+            object IEnumerator.Current => Current;
+
+            void IEnumerator.Reset() => _enum.Reset();
+
+            public void Dispose() { }
+        }
 
         [Guid("02B51929-C1C4-4A7E-8940-0312B5C18500")]
         public struct Vftbl
@@ -140,15 +128,22 @@ namespace ABI.System.Collections.Generic
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
+            private static ConditionalWeakTable<object, ToIKeyValuePair> _adapterTable = 
+                new ConditionalWeakTable<object, ToIKeyValuePair>();
+
+            private static ToIKeyValuePair FindAdapter(IntPtr thisPtr)
+            {
+                var __this = (global::System.Collections.Generic.KeyValuePair<K, V>)global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
+                return _adapterTable.GetValue(__this, (pair) => new ToIKeyValuePair(ref __this));
+            }
+
             private static unsafe int Do_Abi_get_Key_0<KAbi>(void* thisPtr, out KAbi __return_value__)
             {
                 K ____return_value__ = default;
-
                 __return_value__ = default;
-
                 try
                 {
-                    ____return_value__ = global::WinRT.ComWrappersSupport.FindObject<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>(new IntPtr(thisPtr)).Key;
+                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).Key;
                     __return_value__ = (KAbi)Marshaler<K>.FromManaged(____return_value__);
                 }
                 catch (Exception __exception__)
@@ -161,12 +156,10 @@ namespace ABI.System.Collections.Generic
             private static unsafe int Do_Abi_get_Value_1<VAbi>(void* thisPtr, out VAbi __return_value__)
             {
                 V ____return_value__ = default;
-
                 __return_value__ = default;
-
                 try
                 {
-                    ____return_value__ = global::WinRT.ComWrappersSupport.FindObject<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>(new IntPtr(thisPtr)).Value;
+                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).Value;
                     __return_value__ = (VAbi)Marshaler<V>.FromManaged(____return_value__);
                 }
                 catch (Exception __exception__)

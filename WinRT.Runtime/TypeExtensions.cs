@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 
@@ -19,14 +20,21 @@ namespace WinRT
             {
                 return customMapping;
             }
-
+            //return type.Assembly.GetType($"ABI.{type.FullName}");
             var helper = $"ABI.{type.FullName}";
             return Type.GetType(helper) ?? type.Assembly.GetType(helper);
         }
 
         public static Type GetHelperType(this Type type)
         {
-            return type.FindHelperType() ?? throw new InvalidOperationException("Target type is not a projected type.");
+            var helper = type.FindHelperType();
+            if(!(helper is object))
+            {
+                if (Debugger.IsAttached)
+                    Debugger.Break();
+                throw new InvalidOperationException("Target type is not a projected type.");
+            }
+            return helper;
         }
 
         public static Type GetGuidType(this Type type)

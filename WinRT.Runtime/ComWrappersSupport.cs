@@ -165,8 +165,7 @@ namespace WinRT
                     Vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
                 });
             }
-
-            if (ShouldProvideIReference(obj))
+            else if (ShouldProvideIReference(obj))
             {
                 entries.Add(IPropertyValueEntry);
                 entries.Add(ProvideIReference(obj));
@@ -265,13 +264,6 @@ namespace WinRT
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
         {
-            // If receiving a previously wrapped managed object, unwrap it directly
-            if ((runtimeClassName.StartsWith("System.") ||
-                (runtimeClassName.Contains('`') && !runtimeClassName.Contains('<'))))
-            {
-                return (IInspectable insp) => global::WinRT.ComWrappersSupport.FindObject<object>(insp.ThisPtr);
-            }
-
             var (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
 
             if (implementationType.IsValueType)
@@ -333,7 +325,9 @@ namespace WinRT
 
         private static bool ShouldProvideIReference(object obj)
         {
-            // TODO: Handle types that are value-types in .NET and interfaces in WinRT and vice-versa
+            if (obj.GetType().Namespace.StartsWith("System.Collections.Generic"))
+                return false;
+
             return obj.GetType().IsValueType || obj is string;
         }
 

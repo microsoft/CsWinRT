@@ -793,14 +793,9 @@ namespace WinRT
 
         private static Func<IntPtr, T> BindFromAbi()
         {
-            var parms = new[] { Expression.Parameter(typeof(IntPtr), "arg") };
             var fromAbiMethod = HelperType.GetMethod("FromAbi", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
             var objReferenceConstructor = HelperType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { fromAbiMethod.ReturnType }, null);
-            if (objReferenceConstructor is null)
-            {
-                return Expression.Lambda<Func<IntPtr, T>>(
-                    Expression.Call(fromAbiMethod, parms[0]), parms).Compile();
-            }
+            var parms = new[] { Expression.Parameter(typeof(IntPtr), "arg") };
             return Expression.Lambda<Func<IntPtr, T>>(
                     Expression.New(objReferenceConstructor,
                         Expression.Call(fromAbiMethod, parms[0])), parms).Compile();
