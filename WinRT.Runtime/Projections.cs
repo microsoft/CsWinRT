@@ -134,7 +134,7 @@ namespace WinRT
                 rwlock.ExitReadLock();
             }
         }
-        
+
         public static bool IsTypeWindowsRuntimeType(Type type)
         {
             Type typeToTest = type;
