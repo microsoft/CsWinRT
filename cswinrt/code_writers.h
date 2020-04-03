@@ -2217,8 +2217,8 @@ remove => _%.Unsubscribe(value);
     struct required_interface
     {
         std::string members;
-        std::string adapter_type;
-        std::string adapter_field;
+        std::string collection;
+        std::string adapter;
     };
 
     void write_required_interface_members_for_abi_type(writer& w, TypeDef const& type, 
@@ -2242,7 +2242,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_enumerable_members>("_iterableToEnumerable")),
-                        w.write_temp("IterableToEnumerable<%>", element),
+                        w.write_temp("IEnumerable<%>", element),
                         "_iterableToEnumerable"
                     };
                 }
@@ -2252,7 +2252,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_enumerator_members>("_iteratorToEnumerator")),
-                        w.write_temp("Adapters.IteratorToEnumerator<%>", element),
+                        w.write_temp("IEnumerator<%>", element),
                         "_iteratorToEnumerator"
                     };
                 }
@@ -2266,7 +2266,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_readonlydictionary_members>("_mapViewToReadOnlyDictionary", true)),
-                        w.write_temp("MapViewToReadOnlyDictionary<%, %>", key, value),
+                        w.write_temp("IReadOnlyDictionary<%, %>", key, value),
                         "_mapViewToReadOnlyDictionary"
                     };
                     remove_interface = w.write_temp("global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<%, %>>", key, value);
@@ -2278,7 +2278,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_dictionary_members>("_mapToDictionary", true)),
-                        w.write_temp("MapToDictionary<%, %>", key, value),
+                        w.write_temp("IDictionary<%, %>", key, value),
                         "_mapToDictionary"
                     };
                     remove_interface = w.write_temp("global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<%, %>>", key, value);
@@ -2289,7 +2289,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_readonlylist_members>("_vectorViewToReadOnlyList", true)),
-                        w.write_temp("VectorViewToReadOnlyList<%>", element),
+                        w.write_temp("IReadOnlyList<%>", element),
                         "_vectorViewToReadOnlyList"
                     };
                     remove_interface = w.write_temp("global::System.Collections.Generic.IEnumerable<%>", element);
@@ -2300,7 +2300,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_list_members>("_vectorToList", true)),
-                        w.write_temp("VectorToList<%>", element),
+                        w.write_temp("IList<%>", element),
                         "_vectorToList"
                     };
                     remove_interface = w.write_temp("global::System.Collections.Generic.IEnumerable<%>", element);
@@ -3384,21 +3384,21 @@ public static Guid PIID = Vftbl.PIID;
             [&](writer& w) {
                 for (auto required_interface : required_interfaces)
                 {
-                    if (required_interface.second.adapter_type.empty()) 
+                    if (required_interface.second.collection.empty()) 
                         continue;
-                    w.write("% = new ABI.Windows.Foundation.Collections.Adapters.%(ObjRef);\n", 
-                        required_interface.second.adapter_field,
-                        required_interface.second.adapter_type);
+                    w.write("% = new ABI.System.Collections.Generic.%.FromAbiHelper(ObjRef);\n", 
+                        required_interface.second.adapter,
+                        required_interface.second.collection);
                 }
             },
             [&](writer& w) {
                 for (auto required_interface : required_interfaces)
                 {
-                    if (required_interface.second.adapter_type.empty()) 
+                    if (required_interface.second.collection.empty())
                         continue;
-                    w.write("ABI.Windows.Foundation.Collections.Adapters.% %;\n",
-                        required_interface.second.adapter_type,
-                        required_interface.second.adapter_field);
+                    w.write("ABI.System.Collections.Generic.%.FromAbiHelper %;\n",
+                        required_interface.second.collection,
+                        required_interface.second.adapter);
                 }
             },
             bind<write_interface_members>(type, generic_methods),
