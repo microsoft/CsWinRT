@@ -156,7 +156,7 @@ namespace WinRT
             }
 
             var objType = obj.GetType();
-            if ($"{objType.Namespace}.{objType.Name}" == "System.Collections.Generic.KeyValuePair`2")
+            if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
                 var ifaceAbiType = objType.FindHelperType();
                 entries.Add(new ComInterfaceEntry
@@ -325,9 +325,6 @@ namespace WinRT
 
         private static bool ShouldProvideIReference(object obj)
         {
-            if (obj.GetType().Namespace.StartsWith("System.Collections.Generic"))
-                return false;
-
             return obj.GetType().IsValueType || obj is string;
         }
 

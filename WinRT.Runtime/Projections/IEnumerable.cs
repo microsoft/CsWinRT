@@ -77,10 +77,6 @@ namespace ABI.System.Collections.Generic
                 {
                     return iterable;
                 }
-                if (first is IEnumerator<T>.ToAbiHelper adapter)
-                {
-                    return adapter.Enumerator;
-                }
                 throw new InvalidOperationException("Unexpected type for enumerator");
             }
 
