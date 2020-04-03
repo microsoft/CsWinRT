@@ -707,7 +707,15 @@ namespace cswinrt
 
         if (write_explicit_implementation)
         {
-            write_explicitly_implemented_method(w, method, raw_return_type, method.Parent(), interface_member);
+            w.write(R"(
+% %.%(%) => %(%);)",
+                bind<write_projection_return_type>(signature),
+                bind<write_type_name>(method.Parent(), false, false),
+                method.Name(),
+                bind_list<write_projection_parameter>(", ", signature.params()),
+                method.Name(),
+                bind_list<write_parameter_name_with_modifier>(", ", signature.params(), true)
+            );
         }
     }
 
@@ -824,7 +832,7 @@ remove => %.% -= value;
 
         if (is_protected || is_overridable)
         {
-            write_explicitly_implemented_event(w, event, event.Parent(), false);
+            write_event(w, w.write_temp("%.%", bind<write_type_name>(event.Parent(), false, false), event.Name()), event, "this");
         }
     }
 
@@ -908,6 +916,11 @@ remove => %.% -= value;
         return result;
     }
 
+    void write_composing_factory_method(writer& w, MethodDef const& method);
+
+    void write_abi_method_with_raw_return_type(writer& w, MethodDef const& method);
+
+    template<auto method_writer>
     std::string write_factory_cache_object(writer& w, TypeDef const& factory_type, TypeDef const& class_type);
 
     std::string write_static_cache_object(writer& w, std::string_view cache_type_name, TypeDef const& class_type)
@@ -951,7 +964,7 @@ internal static % Instance => _instance.Value;
         auto default_interface_name = get_default_interface_name(w, class_type);
         if (factory_type)
         {
-            auto cache_object = write_factory_cache_object(w, factory_type, class_type);
+            auto cache_object = write_factory_cache_object<write_abi_method_with_raw_return_type>(w, factory_type, class_type);
 
             for (auto&& method : factory_type.MethodList())
             {
@@ -992,34 +1005,37 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 
     void write_composable_constructors(writer& w, TypeDef const& composable_type, TypeDef const& class_type)
     {
-        auto cache_object = write_factory_cache_object(w, composable_type, class_type);
+        auto cache_object = write_factory_cache_object<write_composing_factory_method>(w, composable_type, class_type);
+        auto default_interface_name = get_default_interface_name(w, class_type);
 
         for (auto&& method : composable_type.MethodList())
         {
             method_signature signature{ method };
-            auto default_interface_name = get_default_interface_name(w, class_type);
+            bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(class_type.Extends()));
             auto params_without_objects = signature.params();
             params_without_objects.pop_back();
             params_without_objects.pop_back();
 
             w.write(R"(
-public %(%) : this(((Func<%>)(() => {
-object baseInspectable = null;
-object innerInspectable;
-IntPtr ptr = %.%(%%baseInspectable, out innerInspectable);
-return new %(ObjectReference<%.Vftbl>.Attach(ref ptr));
-}))())
+public %(%)%
 {
+object baseInspectable = this.GetType() != typeof(%) ? this : null;
+_ = %.%(%%baseInspectable, out IntPtr ptr);
+var defaultInterface = new %(ObjectReference<%.Vftbl>.Attach(ref ptr));
+_defaultLazy = new Lazy<%>(() => defaultInterface);
+
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
 )",
                 class_type.TypeName(),
                 bind_list<write_projection_parameter>(", ", params_without_objects),
-                default_interface_name,
+                has_base_type ? ":base(global::WinRT.DerivedComposed.Instance)" : "",
+                bind<write_type_name>(class_type, false, false),
                 cache_object,
                 method.Name(),
                 bind_list<write_parameter_name_with_modifier>(", ", params_without_objects, true),
                 [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
+                default_interface_name,
                 default_interface_name,
                 default_interface_name);
         }
@@ -1122,12 +1138,13 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                 // Since a property has to either be overridable or not,
                 for (auto&& prop : interface_type.PropertyList())
                 {
-                    auto [getter, setter] = get_property_methods(prop);
+                    MethodDef getter, setter;
+                    std::tie(getter, setter) = get_property_methods(prop);
                     auto prop_type = write_prop_type(w, prop);
                     auto [prop_targets, inserted]  = properties.try_emplace(prop.Name(),
-                        std::move(prop_type),
-                        std::move(getter ? target : ""),
-                        std::move(setter ? target : ""),
+                        prop_type,
+                        getter ? target : "",
+                        setter ? target : "",
                         is_overridable_interface,
                         !is_protected_interface && !is_overridable_interface // By default, an overridable member is protected.
                         );
@@ -1153,7 +1170,24 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.AsInterface<%.Vftbl>()
                     // If this interface is overridable or protected then we need to emit an explicit implementation of the property for that interface.
                     if (is_overridable_interface || is_protected_interface)
                     {
-                        write_explicitly_implemented_property(w, prop, interface_type, false);
+                        w.write("% %.% {%%}",
+                            prop_type,
+                            bind<write_type_name>(interface_type, false, false),
+                            prop.Name(),
+                            bind([&](writer& w)
+                            {
+                                if (getter)
+                                {
+                                    w.write("get => %; ", prop.Name());
+                                }
+                            }),
+                            bind([&](writer& w)
+                            {
+                                if (setter)
+                                {
+                                    w.write("set => % = value; ", prop.Name());
+                                }
+                            }));
                     }
                 }
             };
@@ -1779,7 +1813,7 @@ event % %;)",
         return marshalers;
     }
 
-    void write_abi_method_call_marshalers(writer& w, method_signature signature, std::string_view invoke_target, bool is_generic, std::vector<abi_marshaler> const& marshalers)
+    void write_abi_method_call_marshalers(writer& w, std::string_view invoke_target, bool is_generic, std::vector<abi_marshaler> const& marshalers)
     {
         auto write_abi_invoke = [&](writer& w)
         {
@@ -1853,12 +1887,11 @@ finally
 
     void write_abi_method_call(writer& w, method_signature signature, std::string_view invoke_target, bool is_generic, bool raw_return_type = false)
     {
-        write_abi_method_call_marshalers(w, signature, invoke_target, is_generic, get_abi_marshalers(w, signature, is_generic, "", raw_return_type));
+        write_abi_method_call_marshalers(w, invoke_target, is_generic, get_abi_marshalers(w, signature, is_generic, "", raw_return_type));
     }
 
     void write_abi_method_with_raw_return_type(writer& w, MethodDef const& method)
-    {
-        if (is_special(method))
+    {                if (is_special(method))
         {
             return;
         }
@@ -1896,7 +1929,74 @@ public unsafe new % %(%)
             bind_list<write_projection_parameter>(", ", signature.params()),
             bind<write_abi_method_call>(signature, invoke_target, is_generic, true));
     }
+
+
+    void write_composing_factory_method(writer& w, MethodDef const& method)
+    {
+        if (is_special(method))
+        {
+            return;
+        }
+
+        auto get_method_info = [&](MethodDef const& method)
+        {
+            auto vmethod_name = get_vmethod_name(w, method.Parent(), method);
+            method_signature signature{ method };
+            return std::pair{
+                "_obj.Vftbl." + vmethod_name,
+                abi_signature_has_generic_parameters(w, signature)
+            };
+        };
+
+        auto write_composable_constructor_params = [&](writer& w, method_signature const& method_sig)
+        {
+            auto const& params = method_sig.params();
+            // We need to special case the last parameter
+            separator s{ w };
+            for (size_t i = 0; i < params.size() - 1; i++)
+            {
+                s();
+                write_projection_parameter(w, params[i]);
+            }
+
+            // The innerIterface parameter is always an out IntPtr.
+            XLANG_ASSERT(get_param_category(params[params.size() - 1]) == param_category::out);
+
+            s();
+            w.write("out IntPtr %",
+                bind<write_parameter_name>(params[params.size() - 1]));
+        };
+
+        method_signature signature{ method };
+        auto [invoke_target, is_generic] = get_method_info(method);
+
+        auto abi_marshalers = get_abi_marshalers(w, signature, is_generic, "", false);
+        // The last abi marshaler is the return value and the second-to-last one
+        // is the inner object (which is the return value we want).
+        size_t inner_inspectable_index = abi_marshalers.size() - 2;
+        abi_marshaler const& inner_inspectable_ref = abi_marshalers[inner_inspectable_index];
+        abi_marshalers[inner_inspectable_index] = {
+            inner_inspectable_ref.param_name,
+            inner_inspectable_ref.param_index,
+            inner_inspectable_ref.category,
+            inner_inspectable_ref.is_return,
+            "IntPtr",
+            "IntPtr",
+            {},
+            true
+        };
+
+        w.write(R"(
+public unsafe % %(%)
+{%}
+)",
+            bind<write_projection_return_type>(signature),
+            method.Name(),
+            bind(write_composable_constructor_params, signature),
+            bind<write_abi_method_call_marshalers>(invoke_target, is_generic, abi_marshalers));
+    }
     
+    template<auto method_writer>
     std::string write_factory_cache_object(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
     {
         std::string_view cache_type_name = factory_type.TypeName();
@@ -1925,7 +2025,7 @@ internal static _% Instance => _instance.Value;
             cache_type_name,
             cache_type_name,
             cache_type_name,
-            bind_each<write_abi_method_with_raw_return_type>(factory_type.MethodList())
+            bind_each<method_writer>(factory_type.MethodList())
             );
 
         return w.write_temp("_%.Instance", cache_type_name);
@@ -1978,7 +2078,7 @@ public unsafe % %
                 w.write(R"(get
 {%}
 )",
-                    bind<write_abi_method_call_marshalers>(signature, invoke_target, is_generic, marshalers));
+                    bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers));
             }
             if (setter)
             {
@@ -1994,7 +2094,7 @@ public unsafe % %
                 w.write(R"(set
 {%}
 )",
-                    bind<write_abi_method_call_marshalers>(signature, invoke_target, is_generic, marshalers));
+                    bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers));
             }
             w.write("}\n");
         }
@@ -3121,14 +3221,17 @@ public %class %%
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
 
-private % _default;
+private readonly Lazy<%> _defaultLazy;
+
+private % _default => _defaultLazy.Value;
 %
 public static %% FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(global::WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
 
 % %(% ifc)%
 {
-_default = ifc;
+_defaultLazy = new Lazy<%>(() => ifc);
 }
+%
 
 private struct InterfaceTag<I>{};
 
@@ -3141,6 +3244,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             bind<write_type_inheritance>(type, base_semantics),
             derived_new,
             default_interface_abi_name,
+            default_interface_abi_name,
             bind<write_attributed_types>(type),
             derived_new,
             type_name,
@@ -3151,6 +3255,39 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             type_name,
             default_interface_abi_name,
             bind<write_base_constructor_dispatch>(base_semantics),
+            default_interface_abi_name,
+            bind([&](writer& w)
+            {
+                bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
+                if (!type.Flags().Sealed())
+                {
+                    w.write(R"(
+protected %(global::WinRT.DerivedComposed _)%
+{
+_defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
+})",
+type.TypeName(),
+has_base_type ? ":base(_)" : "",
+default_interface_abi_name,
+default_interface_abi_name);
+                }
+
+
+                std::string_view access_spec = "protected ";
+                std::string_view override_spec = has_base_type ? "override " : "virtual ";
+
+                if (type.Flags().Sealed() && !has_base_type)
+                {
+                    access_spec = "private ";
+                    override_spec = " ";
+                }
+
+                w.write(R"(
+%%IObjectReference GetDefaultReference<T>() => _default.AsInterface<T>();)",
+                    access_spec,
+                    override_spec);
+
+            }),
             default_interface_name,
             default_interface_name,
             bind<write_class_members>(type));
