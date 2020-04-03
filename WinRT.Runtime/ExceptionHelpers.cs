@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using WinRT.Interop;
 
 namespace WinRT
@@ -12,6 +10,8 @@ namespace WinRT
     {
         private const int COR_E_OBJECTDISPOSED = unchecked((int)0x80131622);
         private const int RO_E_CLOSED = unchecked((int)0x80000013);
+        internal const int E_BOUNDS = unchecked((int)0x8000000b);
+        internal const int E_CHANGED_STATE = unchecked((int)0x8000000c);
         private const int E_ILLEGAL_STATE_CHANGE = unchecked((int)0x8000000d);
         private const int E_ILLEGAL_METHOD_CALL = unchecked((int)0x8000000e);
         private const int E_ILLEGAL_DELEGATE_ASSIGNMENT = unchecked((int)0x80000018);
@@ -300,6 +300,54 @@ namespace WinRT
         }
     }
 
+#nullable enable
+    internal static class ExceptionExtensions
+    {
+        public static void SetHResult(this Exception ex, int value)
+        {
+            ex.GetType().GetProperty("HResult").SetValue(ex, value);
+        }
+
+        internal static Exception GetExceptionForHR(this Exception? innerException, int hresult, string messageResource)
+        {
+            Exception? e;
+            if (innerException != null)
+            {
+                string message = innerException.Message ?? messageResource;
+                e = new Exception(message, innerException);
+            }
+            else
+            {
+                e = new Exception(messageResource);
+            }
+            e.SetHResult(hresult);
+            return e;
+        }
+    }
+#nullable disable
+
+    internal class ErrorStrings
+    {
+        internal static string Format(string format, params object[] args) => String.Format(format, args);
+
+        internal static readonly string Arg_IndexOutOfRangeException = "Index was outside the bounds of the array.";
+        internal static readonly string Arg_KeyNotFound = "The given key was not present in the dictionary.";
+        internal static readonly string Arg_KeyNotFoundWithKey = "The given key '{0}' was not present in the dictionary.";
+        internal static readonly string Argument_AddingDuplicate = "An item with the same key has already been added.";
+        internal static readonly string Argument_AddingDuplicateWithKey = "An item with the same key has already been added. Key: {0}";
+        internal static readonly string Argument_IndexOutOfArrayBounds = "The specified index is out of bounds of the specified array.";
+        internal static readonly string Argument_InsufficientSpaceToCopyCollection = "The specified space is not sufficient to copy the elements from this Collection.";
+        internal static readonly string ArgumentOutOfRange_Index = "Index was out of range. Must be non-negative and less than the size of the collection.";
+        internal static readonly string ArgumentOutOfRange_IndexLargerThanMaxValue = "This collection cannot work with indices larger than Int32.MaxValue - 1 (0x7FFFFFFF - 1).";
+        internal static readonly string InvalidOperation_CannotRemoveLastFromEmptyCollection = "Cannot remove the last element from an empty collection.";
+        internal static readonly string InvalidOperation_CollectionBackingDictionaryTooLarge = "The collection backing this Dictionary contains too many elements.";
+        internal static readonly string InvalidOperation_CollectionBackingListTooLarge = "The collection backing this List contains too many elements.";
+        internal static readonly string InvalidOperation_EnumEnded = "Enumeration already finished.";
+        internal static readonly string InvalidOperation_EnumFailedVersion = "Collection was modified; enumeration operation may not execute.";
+        internal static readonly string InvalidOperation_EnumNotStarted = "Enumeration has not started. Call MoveNext.";
+        internal static readonly string NotSupported_KeyCollectionSet = "Mutating a key collection derived from a dictionary is not allowed.";
+        internal static readonly string NotSupported_ValueCollectionSet = "Mutating a value collection derived from a dictionary is not allowed.";
+    }
 }
 
 namespace Windows.UI.Xaml

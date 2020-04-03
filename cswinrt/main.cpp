@@ -152,9 +152,8 @@ Where <spec> is one or more of:
                     bool requires_abi = false;
                     for (auto&& [name, type] : members.types)
                     {
-                        if (get_mapped_type(ns, name)) continue;
-
                         if (!settings.filter.includes(type)) { continue; }
+                        if (get_mapped_type(ns, name)) continue;
                         if (is_api_contract_type(type)) { continue; }
                         if (is_attribute_type(type)) { continue; }
                         auto guard{ w.push_generic_params(type.GenericParam()) };
@@ -192,9 +191,8 @@ Where <spec> is one or more of:
                             w.write_begin_abi();
                             for (auto&& [name, type] : members.types)
                             {
-                                if (get_mapped_type(ns, name)) continue;
-
                                 if (!settings.filter.includes(type)) { continue; }
+                                if (get_mapped_type(ns, name)) continue;
                                 if (is_api_contract_type(type)) { continue; }
                                 if (is_attribute_type(type)) { continue; }
                                 auto guard{ w.push_generic_params(type.GenericParam()) };

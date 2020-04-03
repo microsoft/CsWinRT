@@ -7,10 +7,7 @@ namespace winrt::TestComponentCSharp::implementation
 {
     struct Class : ClassT<Class>
     {
-        Class() : Class(0, L"")
-        {
-            _strings = winrt::single_threaded_vector<hstring>({ L"foo", L"bar" });
-        }
+        Class();
 
         winrt::event<EventHandler0> _event0;
         winrt::event<EventHandler1> _event1;
@@ -30,9 +27,14 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVector<hstring> _strings;
         Windows::Foundation::IInspectable _object;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::IInspectable>> _objectChanged;
+        Windows::Foundation::Uri _uri;
+        winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Uri>> _uriChanged;
+        Windows::Foundation::Collections::IKeyValuePair<hstring, hstring> _stringPair;
+        winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IKeyValuePair<hstring, hstring>>> _stringPairChanged;
         ComposedBlittableStruct _blittableStruct{};
         ComposedNonBlittableStruct _nonBlittableStruct{};
         std::vector<int32_t> _ints{ 1, 2, 3 };
+        Windows::Foundation::Collections::IIterable<int32_t> _intColl;
         winrt::handle _syncHandle;
         int32_t _asyncResult;
         int32_t _asyncProgress;
@@ -105,7 +107,19 @@ namespace winrt::TestComponentCSharp::implementation
         void RaiseObjectChanged();
         void CallForObject(TestComponentCSharp::ProvideObject const& provideObject);
         winrt::event_token ObjectPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::IInspectable> const& handler);
+        Windows::Foundation::Uri UriProperty();
+        void UriProperty(Windows::Foundation::Uri const& value);
+        void RaiseUriChanged();
+        void CallForUri(TestComponentCSharp::ProvideUri const& provideUri);
+        winrt::event_token UriPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Uri> const& handler);
+        void UriPropertyChanged(winrt::event_token const& token) noexcept;
         void ObjectPropertyChanged(winrt::event_token const& token) noexcept;
+        Windows::Foundation::Collections::IKeyValuePair<hstring, hstring> StringPairProperty();
+        void StringPairProperty(Windows::Foundation::Collections::IKeyValuePair<hstring, hstring> const& value);
+        void RaiseStringPairChanged();
+        void CallForStringPair(TestComponentCSharp::ProvideStringPair const& provideStringPair);
+        winrt::event_token StringPairPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IKeyValuePair<hstring, hstring>> const& handler);
+        void StringPairPropertyChanged(winrt::event_token const& token) noexcept;
         BlittableStruct BlittableStructProperty();
         void BlittableStructProperty(BlittableStruct const& value);
         BlittableStruct GetBlittableStruct();
@@ -151,6 +165,9 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> GetObjectVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> GetInterfaceVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector();
+
+        Windows::Foundation::Collections::IIterable<int32_t> GetIntIterable();
+        void SetIntIterable(Windows::Foundation::Collections::IIterable<int32_t> const& value);
 
         void CopyProperties(TestComponentCSharp::IProperties1 const& src);
         void CopyPropertiesViaWeakReference(TestComponentCSharp::IProperties1 const& src);
@@ -205,31 +222,6 @@ namespace winrt::TestComponentCSharp::implementation
         void ReadWriteProperty(int32_t value);
         //hstring DistinctProperty();
         //void DistinctProperty(hstring const& value);
-
-        // IVector<String>
-        //Windows::Foundation::Collections::IIterator<hstring> First();
-        //hstring GetAt(uint32_t index);
-        //uint32_t Size();
-        //Windows::Foundation::Collections::IVectorView<hstring> GetView();
-        //bool IndexOf(hstring const& value, uint32_t& index);
-        //void SetAt(uint32_t index, hstring const& value);
-        //void InsertAt(uint32_t index, hstring const& value);
-        //void RemoveAt(uint32_t index);
-        //void Append(hstring const& value);
-        //void RemoveAtEnd();
-        //void Clear();
-        //uint32_t GetMany(uint32_t startIndex, array_view<hstring> items);
-        //void ReplaceAll(array_view<hstring const> items);
-
-        // IMap<Int32, String>
-        //Windows::Foundation::Collections::IIterator<Windows::Foundation::Collections::IKeyValuePair<int32_t, hstring>> First();
-        //hstring Lookup(int32_t const& key);
-        //uint32_t Size();
-        //bool HasKey(int32_t const& key);
-        //Windows::Foundation::Collections::IMapView<int32_t, hstring> GetView();
-        //bool Insert(int32_t const& key, hstring const& value);
-        //void Remove(int32_t const& key);
-        //void Clear();
     };
 }
 

@@ -155,7 +155,17 @@ namespace WinRT
                 });
             }
 
-            if (ShouldProvideIReference(obj))
+            var objType = obj.GetType();
+            if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+            {
+                var ifaceAbiType = objType.FindHelperType();
+                entries.Add(new ComInterfaceEntry
+                {
+                    IID = GuidGenerator.GetIID(ifaceAbiType),
+                    Vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                });
+            }
+            else if (ShouldProvideIReference(obj))
             {
                 entries.Add(IPropertyValueEntry);
                 entries.Add(ProvideIReference(obj));
@@ -233,7 +243,7 @@ namespace WinRT
             var createInterfaceInstanceExpression = Expression.New(helperType.GetConstructor(new[] { typeof(ObjectReference<>).MakeGenericType(vftblType) }),
                     Expression.Call(parms[0],
                         typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
-            
+
             return Expression.Lambda<Func<IInspectable, object>>(
                 Expression.Convert(Expression.Property(createInterfaceInstanceExpression, "Value"), typeof(object)), parms).Compile();
         }
@@ -315,7 +325,6 @@ namespace WinRT
 
         private static bool ShouldProvideIReference(object obj)
         {
-            // TODO: Handle types that are value-types in .NET and interfaces in WinRT and vice-versa
             return obj.GetType().IsValueType || obj is string;
         }
 

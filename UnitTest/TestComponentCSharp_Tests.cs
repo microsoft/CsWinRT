@@ -39,6 +39,162 @@ namespace UnitTest
             var uri1 = ABI.System.Uri.FromAbi(ABI.System.Uri.FromManaged(managedUri));
             var str1 = uri1.ToString();
             Assert.Equal(full_uri, str1);
+
+            var expected = new Uri("http://expected");
+            TestObject.UriProperty = expected;
+            Assert.Equal(expected, TestObject.UriProperty);
+
+            TestObject.CallForUri(() => managedUri);
+            TestObject.UriPropertyChanged +=
+                (object sender, Uri value) => Assert.Equal(managedUri, value);
+            TestObject.RaiseUriChanged();
+        }
+
+        [Fact]
+        public void TestEvents()
+        {
+            int events_expected = 0;
+            int events_received = 0;
+
+            TestObject.Event0 += () => events_received++;
+            TestObject.InvokeEvent0();
+            events_expected++;
+
+            TestObject.Event1 += (Class sender) =>
+            {
+                events_received++;
+                Assert.IsAssignableFrom<Class>(sender);
+            };
+            TestObject.InvokeEvent1(TestObject);
+            events_expected++;
+
+            int int0 = 42;
+            TestObject.Event2 += (Class sender, int arg0) =>
+            {
+                events_received++;
+                Assert.Equal(arg0, int0);
+            };
+            TestObject.InvokeEvent2(TestObject, int0);
+            events_expected++;
+
+            string string1 = "foo";
+            TestObject.Event3 += (Class sender, int arg0, string arg1) =>
+            {
+                events_received++;
+                Assert.Equal(arg1, string1);
+            };
+            TestObject.InvokeEvent3(TestObject, int0, string1);
+            events_expected++;
+
+            int[] ints = { 1, 2, 3 };
+            TestObject.NestedEvent += (object sender, IList<int> arg0) =>
+            {
+                events_received++;
+                Assert.True(arg0.SequenceEqual(ints));
+            };
+            TestObject.InvokeNestedEvent(TestObject, ints);
+            events_expected++;
+
+            var collection0 = new int[] { 42, 1729 };
+            var collection1 = new Dictionary<int, string> { [1] = "foo", [2] = "bar" };
+            TestObject.CollectionEvent += (Class sender, IList<int> arg0, IDictionary<int, string> arg1) =>
+            {
+                events_received++;
+                Assert.True(arg0.SequenceEqual(collection0));
+                Assert.True(arg1.SequenceEqual(collection1));
+            };
+            TestObject.InvokeCollectionEvent(TestObject, collection0, collection1);
+            events_expected++;
+
+            Assert.Equal(events_received, events_expected);
+        }
+
+        [Fact]
+        public void TestKeyValuePair()
+        {
+            var expected = new KeyValuePair<string, string>("key", "value");
+            TestObject.StringPairProperty = expected;
+            Assert.Equal(expected, TestObject.StringPairProperty);
+
+            expected = new KeyValuePair<string, string>("foo", "bar");
+            TestObject.CallForStringPair(() => expected);
+            TestObject.StringPairPropertyChanged +=
+                (object sender, KeyValuePair<string, string> value) => Assert.Equal(expected, value);
+            TestObject.RaiseStringPairChanged();
+        }
+
+        [Fact(Skip = "System.ExecutionEngineException in Marshal.PtrToStructure<T>(vftblPtr.Vftbl)")]
+        public void TestObjectCasting()
+        {
+            var expected = new KeyValuePair<string, string>("key", "value");
+            TestObject.ObjectProperty = expected;
+            var out_pair = (KeyValuePair<string, string>)TestObject.ObjectProperty;
+            Assert.Equal(expected, out_pair);
+
+            var nested = new KeyValuePair<KeyValuePair<int, int>, KeyValuePair<string, string>>(
+                new KeyValuePair<int, int>(42, 1729),
+                new KeyValuePair<string, string>("key", "value")
+            );
+            TestObject.ObjectProperty = nested;
+            var out_nested = (KeyValuePair<KeyValuePair<int, int>, KeyValuePair<string, string>>)TestObject.ObjectProperty;
+            Assert.Equal(nested, out_nested);
+
+            var strings_in = new[] { "hello", "world" };
+            TestObject.StringsProperty = strings_in;
+            var strings_out = TestObject.StringsProperty;
+            Assert.True(strings_out.SequenceEqual(strings_in));
+
+            TestObject.ObjectProperty = strings_in;
+            strings_out = (string[])TestObject.ObjectProperty;
+            Assert.True(strings_out.SequenceEqual(strings_in));
+        }
+
+        [Fact]
+        public void TestStringMap()
+        {
+            var map = new Dictionary<string, string> { ["foo"] = "bar", ["hello"] = "world" };
+            var stringMap = new Windows.Foundation.Collections.StringMap();
+            foreach (var item in map)
+            {
+                stringMap[item.Key] = item.Value;
+            }
+            Assert.Equal(map.Count, stringMap.Count);
+            foreach (var item in map)
+            {
+                Assert.Equal(stringMap[item.Key], item.Value);
+            }
+        }
+
+        [Fact(Skip = "System.ExecutionEngineException in Marshal.PtrToStructure<T>(vftblPtr.Vftbl)")]
+        public void TestPropertySet()
+        {
+            var map = new Dictionary<string, string> { ["foo"] = "bar", ["hello"] = "world" };
+            var propertySet = new Windows.Foundation.Collections.PropertySet();
+            foreach (var item in map)
+            {
+                propertySet[item.Key] = item.Value;
+            }
+            Assert.Equal(map.Count, propertySet.Count);
+            foreach (var item in map)
+            {
+                Assert.Equal(propertySet[item.Key], item.Value);
+            }
+        }
+
+        [Fact(Skip = "System.ExecutionEngineException in Marshal.PtrToStructure<T>(vftblPtr.Vftbl)")]
+        public void TestValueSet()
+        {
+            var map = new Dictionary<string, string> { ["foo"] = "bar", ["hello"] = "world" };
+            var valueSet = new Windows.Foundation.Collections.ValueSet();
+            foreach (var item in map)
+            {
+                valueSet[item.Key] = item.Value;
+            }
+            Assert.Equal(map.Count, valueSet.Count);
+            foreach (var item in map)
+            {
+                Assert.Equal(valueSet[item.Key], item.Value);
+            }
         }
 
         [Fact]
@@ -91,7 +247,6 @@ namespace UnitTest
             Assert.IsAssignableFrom<IStringable>(TestObject);
         }
 
-        // TODO: project asyncs as awaitable tasks
         // TODO: enable TestWinRT coverage
         [Fact]
         public void TestAsync()
@@ -171,7 +326,7 @@ namespace UnitTest
         public void TestBlittableStruct()
         {
             // Property setter/getter
-            var val = new BlittableStruct(){ i32 = 42 };
+            var val = new BlittableStruct() { i32 = 42 };
             TestObject.BlittableStructProperty = val;
             Assert.Equal(42, TestObject.BlittableStructProperty.i32);
 
@@ -193,7 +348,7 @@ namespace UnitTest
         public void TestComposedBlittableStruct()
         {
             // Property setter/getter
-            var val = new ComposedBlittableStruct(){ blittable = new BlittableStruct(){ i32 = 42 } };
+            var val = new ComposedBlittableStruct() { blittable = new BlittableStruct() { i32 = 42 } };
             TestObject.ComposedBlittableStructProperty = val;
             Assert.Equal(42, TestObject.ComposedBlittableStructProperty.blittable.i32);
 
@@ -215,7 +370,7 @@ namespace UnitTest
         public void TestNonBlittableStringStruct()
         {
             // Property getter/setter
-            var val = new NonBlittableStringStruct(){ str = "I like tacos" };
+            var val = new NonBlittableStringStruct() { str = "I like tacos" };
             TestObject.NonBlittableStringStructProperty = val;
             Assert.Equal("I like tacos", TestObject.NonBlittableStringStructProperty.str.ToString());
 
@@ -294,9 +449,9 @@ namespace UnitTest
             // Property getter/setter
             var val = new ComposedNonBlittableStruct()
             {
-                blittable = new BlittableStruct(){ i32 = 42 },
-                strings = new NonBlittableStringStruct(){ str = "I like tacos" },
-                bools = new NonBlittableBoolStruct(){ w = true, x = false, y = true, z = false },
+                blittable = new BlittableStruct() { i32 = 42 },
+                strings = new NonBlittableStringStruct() { str = "I like tacos" },
+                bools = new NonBlittableBoolStruct() { w = true, x = false, y = true, z = false },
                 refs = TestObject.NonBlittableRefStructProperty // TODO: Need to either support interface inheritance or project IReference/INullable for setter
             };
             TestObject.ComposedNonBlittableStructProperty = val;
@@ -345,25 +500,25 @@ namespace UnitTest
         public void TestGenericCast()
         {
             var ints = TestObject.GetIntVector();
-            var abiView = (ABI.Windows.Foundation.Collections.IVectorView<int>)ints;
-            Assert.Equal(abiView.ThisPtr, abiView.As<WinRT.IInspectable>().As<ABI.Windows.Foundation.Collections.IVectorView<int>.Vftbl>().ThisPtr);
+            var abiView = (ABI.System.Collections.Generic.IReadOnlyList<int>)ints;
+            Assert.Equal(abiView.ThisPtr, abiView.As<WinRT.IInspectable>().As<ABI.System.Collections.Generic.IReadOnlyList<int>.Vftbl>().ThisPtr);
         }
 
         [Fact]
         public void TestFundamentalGeneric()
         {
             var ints = TestObject.GetIntVector();
-            Assert.Equal(10u, ints.Size);
+            Assert.Equal(10, ints.Count);
             for (int i = 0; i < 10; ++i)
             {
-                Assert.Equal(i, ints.GetAt((uint)i));
+                Assert.Equal(i, ints[i]);
             }
 
             var bools = TestObject.GetBoolVector();
-            Assert.Equal(4u, bools.Size);
-            for (uint i = 0; i < 4u; ++i)
+            Assert.Equal(4, bools.Count);
+            for (int i = 0; i < 4; ++i)
             {
-                Assert.Equal(i % 2 == 0, bools.GetAt(i));
+                Assert.Equal(i % 2 == 0, bools[i]);
             }
         }
 
@@ -371,10 +526,10 @@ namespace UnitTest
         public void TestStringGeneric()
         {
             var strings = TestObject.GetStringVector();
-            Assert.Equal(5u, strings.Size);
-            for (uint i = 0; i < 5u; ++i)
+            Assert.Equal(5, strings.Count);
+            for (int i = 0; i < 5; ++i)
             {
-                Assert.Equal("String" + i, strings.GetAt(i));
+                Assert.Equal("String" + i, strings[i]);
             }
         }
 
@@ -382,17 +537,17 @@ namespace UnitTest
         public void TestStructGeneric()
         {
             var blittable = TestObject.GetBlittableStructVector();
-            Assert.Equal(5u, blittable.Size);
+            Assert.Equal(5, blittable.Count);
             for (int i = 0; i < 5; ++i)
             {
-                Assert.Equal(i, blittable.GetAt((uint)i).blittable.i32);
+                Assert.Equal(i, blittable[i].blittable.i32);
             }
 
             var nonblittable = TestObject.GetNonBlittableStructVector();
-            Assert.Equal(3u, nonblittable.Size);
+            Assert.Equal(3, nonblittable.Count);
             for (int i = 0; i < 3; ++i)
             {
-                var val = nonblittable.GetAt((uint)i);
+                var val = nonblittable[i];
                 Assert.Equal(i, val.blittable.i32);
                 Assert.Equal("String" + i, val.strings.str);
                 Assert.Equal(i % 2 == 0, val.bools.w);
@@ -407,40 +562,48 @@ namespace UnitTest
         public void TestValueUnboxing()
         {
             var objs = TestObject.GetObjectVector();
-            Assert.Equal(3u, objs.Size);
+            Assert.Equal(3, objs.Count);
             for (int i = 0; i < 3; ++i)
             {
-                Assert.Equal(i, (int)objs.GetAt((uint)i));
+                Assert.Equal(i, (int)objs[i]);
             }
         }
 
         [Fact]
-        public void TestInterfaceGeneric()
+        void TestInterfaceGeneric()
         {
             var objs = TestObject.GetInterfaceVector();
-            Assert.Equal(3u, objs.Size);
+            Assert.Equal(3, objs.Count);
             TestObject.ReadWriteProperty = 42;
-            for (uint i = 0; i < 3; ++i)
+            for (int i = 0; i < 3; ++i)
             {
-                var obj = objs.GetAt(i);
+                var obj = objs[i];
                 Assert.Same(obj, TestObject);
                 Assert.Equal(42, obj.ReadWriteProperty);
             }
         }
 
         [Fact]
+        public void TestIterable()
+        {
+            var ints_in = new int[] { 0, 1, 2 };
+            TestObject.SetIntIterable(ints_in);
+            var ints_out = TestObject.GetIntIterable();
+            Assert.True(ints_in.SequenceEqual(ints_out));
+        }
+
+        [Fact]
         public void TestClassGeneric()
         {
             var objs = TestObject.GetClassVector();
-            Assert.Equal(3u, objs.Size);
-            for (uint i = 0; i < 3; ++i)
+            Assert.Equal(3, objs.Count);
+            for (int i = 0; i < 3; ++i)
             {
-                var obj = objs.GetAt(i);
+                var obj = objs[i];
                 Assert.Same(obj, TestObject);
-                Assert.Equal(TestObject.ThisPtr, objs.GetAt(i).ThisPtr);
+                Assert.Equal(TestObject.ThisPtr, objs[i].ThisPtr);
             }
         }
-
         [Fact]
         public void TestSimpleCCWs()
         {
@@ -743,7 +906,7 @@ namespace UnitTest
         [Fact]
         public void TestPointTypeMapping()
         {
-            var pt = new Point{ X = 3.14, Y = 42 };
+            var pt = new Point { X = 3.14, Y = 42 };
             TestObject.PointProperty = pt;
             Assert.Equal(pt.X, TestObject.PointProperty.X);
             Assert.Equal(pt.Y, TestObject.PointProperty.Y);

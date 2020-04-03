@@ -8,29 +8,14 @@ namespace WinRT
 {
     public static class GuidGenerator
     {
-        private static Type GetGuidType(Type type)
-        {
-            if (type.IsDelegate())
-            {
-                return type.GetHelperType();
-            }
-
-            Type guidType = Projections.FindCustomHelperTypeMapping(type);
-            if (guidType is object)
-            {
-                return guidType;
-            }
-            return type;
-        }
-
         public static Guid GetGUID(Type type)
         {
-            return GetGuidType(type).GUID;
+            return type.GetGuidType().GUID;
         }
 
         public static Guid GetIID(Type type)
         {
-            type = GetGuidType(type);
+            type = type.GetGuidType();
             if (!type.IsGenericType)
             {
                 return type.GUID;

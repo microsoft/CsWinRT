@@ -41,4 +41,8 @@
     <ProjectReference Include="..\WinRT.Runtime\WinRT.Runtime.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Generated Files\" />
+  </ItemGroup>
+
 </Project>

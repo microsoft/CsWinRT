@@ -938,6 +938,18 @@ namespace WinRT
                 DisposeMarshalerArray = (object box) => MarshalString.DisposeMarshalerArray(box);
                 DisposeAbiArray = (object box) => MarshalString.DisposeAbiArray(box);
             }
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+            {
+                AbiType = typeof(IntPtr);
+                CreateMarshaler = MarshalGeneric<T>.CreateMarshaler;
+                GetAbi = MarshalGeneric<T>.GetAbi;
+                CopyAbi = MarshalGeneric<T>.CopyAbi;
+                FromAbi = MarshalGeneric<T>.FromAbi;
+                FromManaged = MarshalGeneric<T>.FromManaged;
+                CopyManaged = MarshalGeneric<T>.CopyManaged;
+                DisposeMarshaler = MarshalGeneric<T>.DisposeMarshaler;
+                DisposeAbi = (object box) => { };
+            }
             else if (type.IsValueType)
             {
                 AbiType = type.FindHelperType();
@@ -992,6 +1004,7 @@ namespace WinRT
                 CreateMarshaler = (T value) => MarshalInterface<T>.CreateMarshaler(value);
                 GetAbi = (object objRef) => MarshalInterface<T>.GetAbi((IObjectReference)objRef);
                 FromAbi = (object value) => (T)(object)MarshalInterface<T>.FromAbi((IntPtr)value);
+                FromManaged = (T value) => ((IObjectReference)CreateMarshaler(value)).GetRef();
                 DisposeMarshaler = (object objRef) => MarshalInterface<T>.DisposeMarshaler((IObjectReference)objRef);
                 DisposeAbi = (object box) => MarshalInterface<T>.DisposeAbi((IntPtr)box);
             }
