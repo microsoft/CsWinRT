@@ -1196,6 +1196,7 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
         w.write(R"(
 public int Count => %.Count;
+[global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")]
 public % this[int index] => %[index];
 )",
             target,
@@ -1215,6 +1216,7 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         w.write(R"(
 public int Count => %.Count;
 public bool IsReadOnly => %.IsReadOnly;
+[global::System.Runtime.CompilerServices.IndexerName("ListItem")]
 public % this[int index] 
 {
 get => %[index];
