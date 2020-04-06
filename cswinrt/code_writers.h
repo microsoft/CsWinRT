@@ -1251,6 +1251,14 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
             element, target);
     }
 
+    void write_idisposable_members(writer& w, std::string_view target)
+    {
+        w.write(R"(
+public void Dispose() => %.Dispose();
+)",
+target);
+    }
+
     void write_custom_mapped_type_members(writer& w, std::string_view target, mapped_type const& mapping)
     {
         if (mapping.abi_name == "IIterable`1") 
@@ -1276,6 +1284,10 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         else if (mapping.abi_name == "IVector`1")
         {
             write_list_members(w, target, false);
+        }
+        else if (mapping.mapped_namespace == "System" && mapping.mapped_name == "IDisposable")
+        {
+            write_idisposable_members(w, target);
         }
     }
 
@@ -2316,7 +2328,7 @@ remove => _%.Unsubscribe(value);
     struct required_interface
     {
         std::string members;
-        std::string collection;
+        std::string helper_wrapper;
         std::string adapter;
     };
 
@@ -2354,9 +2366,6 @@ remove => _%.Unsubscribe(value);
                         w.write_temp("IEnumerator<%>", element),
                         "_iteratorToEnumerator"
                     };
-                }
-                else if (mapping->abi_name == "IKeyValuePair`2") // KeyValuePair`2 
-                {
                 }
                 else if (mapping->abi_name == "IMapView`2") // IReadOnlyDictionary`2
                 {
@@ -2403,6 +2412,13 @@ remove => _%.Unsubscribe(value);
                         "_vectorToList"
                     };
                     remove_interface = w.write_temp("global::System.Collections.Generic.IEnumerable<%>", element);
+                }
+                else if (mapping->mapped_namespace == "System" && mapping->mapped_name == "IDisposable")
+                {
+                    required_interfaces[std::move(interface_name)] =
+                    {
+                        w.write_temp("%", bind<write_idisposable_members>("As<global::ABI.System.IDisposable>()"))
+                    };
                 }
                 if (!remove_interface.empty())
                 {
@@ -3483,20 +3499,20 @@ public static Guid PIID = Vftbl.PIID;
             [&](writer& w) {
                 for (auto required_interface : required_interfaces)
                 {
-                    if (required_interface.second.collection.empty()) 
+                    if (required_interface.second.helper_wrapper.empty()) 
                         continue;
                     w.write("% = new ABI.System.Collections.Generic.%.FromAbiHelper(ObjRef);\n", 
                         required_interface.second.adapter,
-                        required_interface.second.collection);
+                        required_interface.second.helper_wrapper);
                 }
             },
             [&](writer& w) {
                 for (auto required_interface : required_interfaces)
                 {
-                    if (required_interface.second.collection.empty())
+                    if (required_interface.second.helper_wrapper.empty())
                         continue;
                     w.write("ABI.System.Collections.Generic.%.FromAbiHelper %;\n",
-                        required_interface.second.collection,
+                        required_interface.second.helper_wrapper,
                         required_interface.second.adapter);
                 }
             },

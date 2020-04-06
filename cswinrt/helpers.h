@@ -442,6 +442,7 @@ namespace cswinrt
                     { "EventHandler`1", "System", "EventHandler", false },
                     { "EventRegistrationToken", "WinRT", "EventRegistrationToken", false },
                     { "HResult", "System", "Exception", true },
+                    { "IClosable", "System", "IDisposable", true, true },
                     { "IPropertyValue", "Windows.Foundation", "IPropertyValue", true },
                     { "IReferenceArray`1", "Windows.Foundation", "IReferenceArray", true },
                     { "IReference`1", "System", "Nullable", true },
