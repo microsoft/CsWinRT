@@ -417,6 +417,7 @@ namespace cswinrt
         std::string_view mapped_namespace;
         std::string_view mapped_name;
         bool requires_marshaling;
+        bool has_custom_members_output;
     };
 
     inline const std::initializer_list<mapped_type> get_mapped_types_in_namespace(std::string_view typeNamespace)
@@ -451,13 +452,13 @@ namespace cswinrt
             },
             { "Windows.Foundation.Collections",
                 {
-                    { "IIterable`1", "System.Collections.Generic", "IEnumerable`1", true },
-                    { "IIterator`1", "System.Collections.Generic", "IEnumerator`1", true },
+                    { "IIterable`1", "System.Collections.Generic", "IEnumerable`1", true, true },
+                    { "IIterator`1", "System.Collections.Generic", "IEnumerator`1", true, true },
                     { "IKeyValuePair`2", "System.Collections.Generic", "KeyValuePair`2", true },
-                    { "IMapView`2", "System.Collections.Generic", "IReadOnlyDictionary`2", true },
-                    { "IMap`2", "System.Collections.Generic", "IDictionary`2", true },
-                    { "IVectorView`1", "System.Collections.Generic", "IReadOnlyList`1", true },
-                    { "IVector`1", "System.Collections.Generic", "IList`1", true },
+                    { "IMapView`2", "System.Collections.Generic", "IReadOnlyDictionary`2", true, true },
+                    { "IMap`2", "System.Collections.Generic", "IDictionary`2", true, true },
+                    { "IVectorView`1", "System.Collections.Generic", "IReadOnlyList`1", true, true },
+                    { "IVector`1", "System.Collections.Generic", "IList`1", true, true },
                 }
             },
             { "Windows.UI.Xaml",
@@ -470,6 +471,11 @@ namespace cswinrt
                     { "INotifyPropertyChanged", "System.ComponentModel", "INotifyPropertyChanged" },
                     { "PropertyChangedEventArgs", "System.ComponentModel", "PropertyChangedEventArgs" },
                     { "PropertyChangedEventHandler", "System.ComponentModel", "PropertyChangedEventHandler" },
+                }
+            },
+            { "Windows.UI.Xaml.Input",
+                {
+                    { "ICommand", "System.Windows.Input", "ICommand", true }
                 }
             },
             {
