@@ -1251,7 +1251,7 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
             element, target);
     }
 
-    void write_mapped_collection_members(writer& w, std::string_view target, mapped_type const& mapping)
+    void write_custom_mapped_type_members(writer& w, std::string_view target, mapped_type const& mapping)
     {
         if (mapping.abi_name == "IIterable`1") 
         {
@@ -1260,9 +1260,6 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         else if (mapping.abi_name == "IIterator`1") 
         {
             write_enumerator_members(w, target);
-        }
-        else if (mapping.abi_name == "IKeyValuePair`2")
-        {
         }
         else if (mapping.abi_name == "IMapView`2") 
         {
@@ -1306,9 +1303,9 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.ObjRef);
                         interface_abi_name);
                 }
 
-                if(auto mapping = get_mapped_type(interface_type.TypeNamespace(), interface_type.TypeName()))
+                if(auto mapping = get_mapped_type(interface_type.TypeNamespace(), interface_type.TypeName()); mapping && mapping->has_custom_members_output)
                 {
-                    write_mapped_collection_members(w, target, *mapping);
+                    write_custom_mapped_type_members(w, target, *mapping);
                     return;
                 }
 
