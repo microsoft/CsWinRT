@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -18,23 +19,20 @@ using TestComponentCSharp;
 
 namespace UnitTest
 {
-    using A = IIterable<IStringable>;
-    using B = IKeyValuePair<string, IAsyncOperationWithProgress</*A*/IIterable<IStringable>, float>>;
+    using A = IEnumerable<IStringable>;
+    using B = KeyValuePair<string, IAsyncOperationWithProgress</*A*/IEnumerable<IStringable>, float>>;
 
     public class TestGuids
     {
         private static void AssertGuid<T>(string expected)
         {
             var actual = GuidGenerator.CreateIID(typeof(T));
-            Assert.Equal(actual, new Guid(expected));
+            Assert.Equal(new Guid(expected), actual);
         }
 
         [Fact]
         public void TestGenerics()
         {
-            // Ensure every generic instance has a unique PIID
-            Assert.NotEqual(ABI.Windows.Foundation.Collections.IMap<bool, string>.Vftbl.PIIDs[0], ABI.Windows.Foundation.Collections.IMap<string, bool>.Vftbl.PIIDs[0]);
-
             AssertGuid<IStringable>("96369f54-8eb6-48f0-abce-c1b211e627c3");
 
             // Generated Windows.Foundation GUIDs
@@ -46,22 +44,22 @@ namespace UnitTest
             AssertGuid<AsyncOperationCompletedHandler<A>>("9d534225-231f-55e7-a6d0-6c938e2d9160");
             AssertGuid<AsyncOperationProgressHandler<A, B>>("264f1e0c-abe4-590b-9d37-e1cc118ecc75");
             AssertGuid<AsyncOperationWithProgressCompletedHandler<A, B>>("c2d078d8-ac47-55ab-83e8-123b2be5bc5a");
-            AssertGuid<WF.EventHandler<A>>("fa0b7d80-7efa-52df-9b69-0574ce57ada4");
+            AssertGuid<EventHandler<A>>("fa0b7d80-7efa-52df-9b69-0574ce57ada4");
             AssertGuid<TypedEventHandler<A, B>>("edb31843-b4cf-56eb-925a-d4d0ce97a08d");
 
             // Generated Windows.Foundation.Collections GUIDs
-            AssertGuid<IIterable<A>>("96565eb9-a692-59c8-bcb5-647cde4e6c4d");
-            AssertGuid<IIterator<A>>("3c9b1e27-8357-590b-8828-6e917f172390");
-            AssertGuid<IKeyValuePair<A, B>>("89336cd9-8b66-50a7-9759-eb88ccb2e1fe");
-            AssertGuid<IMapChangedEventArgs<A>>("e1aa5138-12bd-51a1-8558-698dfd070abe");
-            AssertGuid<IMapView<A, B>>("b78f0653-fa89-59cf-ba95-726938aae666");
-            AssertGuid<IMap<A, B>>("9962cd50-09d5-5c46-b1e1-3c679c1c8fae");
-            AssertGuid<IObservableMap<A, B>>("75f99e2a-137e-537e-a5b1-0b5a6245fc02");
-            AssertGuid<IObservableVector<A>>("d24c289f-2341-5128-aaa1-292dd0dc1950");
-            AssertGuid<IVectorView<A>>("5f07498b-8e14-556e-9d2e-2e98d5615da9");
-            AssertGuid<IVector<A>>("0e3f106f-a266-50a1-8043-c90fcf3844f6");
-            AssertGuid<MapChangedEventHandler<A, B>>("19046f0b-cf81-5dec-bbb2-7cc250da8b8b");
-            AssertGuid<VectorChangedEventHandler<A>>("a1e9acd7-e4df-5a79-aefa-de07934ab0fb");
+            AssertGuid<IEnumerable<A>>("96565eb9-a692-59c8-bcb5-647cde4e6c4d");
+            AssertGuid<IEnumerator<A>>("3c9b1e27-8357-590b-8828-6e917f172390");
+            AssertGuid<KeyValuePair<A, B>>("89336cd9-8b66-50a7-9759-eb88ccb2e1fe");
+            AssertGuid<WFC.IMapChangedEventArgs<A>>("e1aa5138-12bd-51a1-8558-698dfd070abe");
+            AssertGuid<IReadOnlyDictionary<A, B>>("b78f0653-fa89-59cf-ba95-726938aae666");
+            AssertGuid<IDictionary<A, B>>("9962cd50-09d5-5c46-b1e1-3c679c1c8fae");
+            AssertGuid<WFC.IObservableMap<A, B>>("75f99e2a-137e-537e-a5b1-0b5a6245fc02");
+            AssertGuid<WFC.IObservableVector<A>>("d24c289f-2341-5128-aaa1-292dd0dc1950");
+            AssertGuid<IReadOnlyList<A>>("5f07498b-8e14-556e-9d2e-2e98d5615da9");
+            AssertGuid<IList<A>>("0e3f106f-a266-50a1-8043-c90fcf3844f6");
+            AssertGuid<WFC.MapChangedEventHandler<A, B>>("19046f0b-cf81-5dec-bbb2-7cc250da8b8b");
+            AssertGuid<WFC.VectorChangedEventHandler<A>>("a1e9acd7-e4df-5a79-aefa-de07934ab0fb");
 
             // Generated primitive GUIDs
             AssertGuid<bool?>("3c00fd60-2950-5939-a21a-2d12c5a01b8a");
@@ -87,10 +85,10 @@ namespace UnitTest
             // Enums, structs, IInspectable, classes, and delegates
             AssertGuid<PropertyType?>("ecebde54-fac0-5aeb-9ba9-9e1fe17e31d5");
             AssertGuid<Point?>("84f14c22-a00a-5272-8d3d-82112e66df00");
-            AssertGuid<IVector<object>>("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a");
-            AssertGuid<IVector<Uri>>("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e");
-            AssertGuid<IVector<AsyncActionCompletedHandler>>("5dafe591-86dc-59aa-bfda-07f5d59fc708");
-            AssertGuid<IVector<ComposedNonBlittableStruct>>("c8477314-b257-511b-a3a1-9e4eb6385152");
+            AssertGuid<IList<object>>("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a");
+            AssertGuid<IList<Uri>>("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e");
+            AssertGuid<IList<AsyncActionCompletedHandler>>("5dafe591-86dc-59aa-bfda-07f5d59fc708");
+            AssertGuid<IList<ComposedNonBlittableStruct>>("c8477314-b257-511b-a3a1-9e4eb6385152");
         }
 
         [Fact]

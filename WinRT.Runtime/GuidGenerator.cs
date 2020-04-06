@@ -66,14 +66,14 @@ namespace WinRT
 
         public static Guid GetGUID(Type type)
         {
-            return GetGuidType(type).GUID;
+            return type.GetGuidType().GUID;
         }
 
         public static Guid GetIID(Type type) => GetIIDs(type)[0];
 
         public static Guid[] GetIIDs(Type type)
         {
-            type = GetGuidType(type);
+            type = type.GetGuidType();
             if (!type.IsGenericType)
             {
                 return new[] { type.GUID };
@@ -150,10 +150,9 @@ namespace WinRT
                 return new[] { "string" };
             }
 
-            var _default = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault((FieldInfo fi) => fi.Name == "_default");
-            if (_default != null)
+            if (Projections.TryGetDefaultInterfaceTypeForRuntimeClassType(type, out Type iface))
             {
-                return GetSignatures(_default.FieldType)
+                return GetSignatures(iface)
                     .Select(defaultSignature => "rc(" + type.FullName + ";" + defaultSignature + ")");
             }
 

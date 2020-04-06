@@ -53,6 +53,8 @@ namespace TestComponentCSharp
     delegate Boolean ProvideBool();
     delegate String ProvideString();
     delegate Object ProvideObject();
+    delegate Windows.Foundation.Uri ProvideUri();
+    delegate Windows.Foundation.Collections.IKeyValuePair<String, String> ProvideStringPair();
 
     interface ICowboy
     {
@@ -154,6 +156,16 @@ namespace TestComponentCSharp
         void CallForObject(ProvideObject provideObject);
         event Windows.Foundation.EventHandler<Object> ObjectPropertyChanged;
 
+        Windows.Foundation.Uri UriProperty;
+        void RaiseUriChanged();
+        void CallForUri(ProvideUri provideUri);
+        event Windows.Foundation.EventHandler<Windows.Foundation.Uri > UriPropertyChanged;
+
+        Windows.Foundation.Collections.IKeyValuePair<String, String> StringPairProperty;
+        void RaiseStringPairChanged();
+        void CallForStringPair(ProvideStringPair provideStringPair);
+        event Windows.Foundation.EventHandler<Windows.Foundation.Collections.IKeyValuePair<String, String> > StringPairPropertyChanged;
+
         // Structs
         BlittableStruct BlittableStructProperty;
         BlittableStruct GetBlittableStruct();
@@ -202,6 +214,9 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IVectorView<IProperties1> GetInterfaceVector();
         Windows.Foundation.Collections.IVectorView<Class> GetClassVector();
 
+        Windows.Foundation.Collections.IIterable<Int32> GetIntIterable();
+        void SetIntIterable(Windows.Foundation.Collections.IIterable<Int32> value);
+ 
         void CopyProperties(IProperties1 src);
         void CopyPropertiesViaWeakReference(IProperties1 src);
         // Async

@@ -413,11 +413,11 @@ namespace cswinrt
 
     struct mapped_type
     {
-        std::string_view abi_namespace;
         std::string_view abi_name;
         std::string_view mapped_namespace;
         std::string_view mapped_name;
         bool requires_marshaling;
+        bool has_custom_members_output;
     };
 
     inline const std::initializer_list<mapped_type> get_mapped_types_in_namespace(std::string_view typeNamespace)
@@ -432,58 +432,68 @@ namespace cswinrt
             // NOTE: Must keep namespaces sorted (outer) and abi type names sorted (inner)
             { "Microsoft.UI.Xaml.Data",
                 {
-                    { "Microsoft.UI.Xaml.Data", "INotifyPropertyChanged", "System.ComponentModel", "INotifyPropertyChanged" },
-                    { "Microsoft.UI.Xaml.Data", "PropertyChangedEventArgs", "System.ComponentModel", "PropertyChangedEventArgs" },
-                    { "Microsoft.UI.Xaml.Data", "PropertyChangedEventHandler", "System.ComponentModel", "PropertyChangedEventHandler" },
+                    { "INotifyPropertyChanged", "System.ComponentModel", "INotifyPropertyChanged" },
+                    { "PropertyChangedEventArgs", "System.ComponentModel", "PropertyChangedEventArgs" },
+                    { "PropertyChangedEventHandler", "System.ComponentModel", "PropertyChangedEventHandler" },
                 }
             },
-            {
-                "Microsoft.UI.Xaml.Input",
+            { "Microsoft.UI.Xaml.Input",
                 {
-                    { "Microsoft.UI.Xaml.Input", "ICommand", "System.Windows.Input", "ICommand", true }
+                    { "ICommand", "System.Windows.Input", "ICommand", true }
                 }
             },
-            {
-                "Microsoft.UI.Xaml.Interop",
+            { "Microsoft.UI.Xaml.Interop",
                 {
-                    { "Microsoft.UI.Xaml.Interop", "TypeName", "System", "Type", true }
+                    { "TypeName", "System", "Type", true }
                 }
             },
             { "Windows.Foundation",
                 {
-                    { "Windows.Foundation", "DateTime", "System", "DateTimeOffset", true },
-                    { "Windows.Foundation", "EventRegistrationToken", "WinRT", "EventRegistrationToken", false },
-                    { "Windows.Foundation", "HResult", "System", "Exception", true },
-                    { "Windows.Foundation", "IPropertyValue", "Windows.Foundation", "IPropertyValue", true },
-                    { "Windows.Foundation", "IReferenceArray`1", "Windows.Foundation", "IReferenceArray", true },
-                    { "Windows.Foundation", "IReference`1", "System", "Nullable", true },
-                    { "Windows.Foundation", "Point", "Windows.Foundation", "Point" },
-                    { "Windows.Foundation", "TimeSpan", "System", "TimeSpan", true },
-                    { "Windows.Foundation", "Uri", "System", "Uri", true }
+                    { "DateTime", "System", "DateTimeOffset", true },
+                    { "EventHandler`1", "System", "EventHandler", false },
+                    { "EventRegistrationToken", "WinRT", "EventRegistrationToken", false },
+                    { "HResult", "System", "Exception", true },
+                    { "IClosable", "System", "IDisposable", true, true },
+                    { "IPropertyValue", "Windows.Foundation", "IPropertyValue", true },
+                    { "IReferenceArray`1", "Windows.Foundation", "IReferenceArray", true },
+                    { "IReference`1", "System", "Nullable", true },
+                    { "Point", "Windows.Foundation", "Point" },
+                    { "TimeSpan", "System", "TimeSpan", true },
+                    { "Uri", "System", "Uri", true }
+                }
+            },
+            { "Windows.Foundation.Collections",
+                {
+                    { "IIterable`1", "System.Collections.Generic", "IEnumerable`1", true, true },
+                    { "IIterator`1", "System.Collections.Generic", "IEnumerator`1", true, true },
+                    { "IKeyValuePair`2", "System.Collections.Generic", "KeyValuePair`2", true },
+                    { "IMapView`2", "System.Collections.Generic", "IReadOnlyDictionary`2", true, true },
+                    { "IMap`2", "System.Collections.Generic", "IDictionary`2", true, true },
+                    { "IVectorView`1", "System.Collections.Generic", "IReadOnlyList`1", true, true },
+                    { "IVector`1", "System.Collections.Generic", "IList`1", true, true },
                 }
             },
             { "Windows.UI.Xaml",
                 {
-                    { "Windows.UI.Xaml", "Duration", "Windows.UI.Xaml", "Duration" },
+                    { "Duration", "Windows.UI.Xaml", "Duration" },
                 }
             },
             { "Windows.UI.Xaml.Data",
                 {
-                    { "Windows.UI.Xaml.Data", "INotifyPropertyChanged", "System.ComponentModel", "INotifyPropertyChanged" },
-                    { "Windows.UI.Xaml.Data", "PropertyChangedEventArgs", "System.ComponentModel", "PropertyChangedEventArgs" },
-                    { "Windows.UI.Xaml.Data", "PropertyChangedEventHandler", "System.ComponentModel", "PropertyChangedEventHandler" },
+                    { "INotifyPropertyChanged", "System.ComponentModel", "INotifyPropertyChanged" },
+                    { "PropertyChangedEventArgs", "System.ComponentModel", "PropertyChangedEventArgs" },
+                    { "PropertyChangedEventHandler", "System.ComponentModel", "PropertyChangedEventHandler" },
                 }
             },
-            {
-                "Windows.UI.Xaml.Input",
+            { "Windows.UI.Xaml.Input",
                 {
-                    { "Windows.UI.Xaml.Input", "ICommand", "System.Windows.Input", "ICommand", true }
+                    { "ICommand", "System.Windows.Input", "ICommand", true }
                 }
             },
             {
                 "Windows.UI.Xaml.Interop",
                 {
-                    { "Windows.UI.Xaml.Interop", "TypeName", "System", "Type", true }
+                    { "TypeName", "System", "Type", true }
                 }
             }
         };

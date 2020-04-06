@@ -9,12 +9,12 @@ namespace WinRT
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public sealed class ProjectedRuntimeClassAttribute : Attribute
     {
-        public ProjectedRuntimeClassAttribute(string defaultInterfaceField)
+        public ProjectedRuntimeClassAttribute(string defaultInterfaceProp)
         {
-            DefaultInterfaceField = defaultInterfaceField;
+            DefaultInterfaceProperty = defaultInterfaceProp;
         }
 
-        public string DefaultInterfaceField { get; }
+        public string DefaultInterfaceProperty { get; }
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]

@@ -102,13 +102,7 @@ namespace ABI.Windows.Foundation
         public static void DisposeMarshaler(IObjectReference m) { m.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref abi); }
 
-        public static IEnumerable<string> GetGuidSignatures()
-        {
-            foreach (var signature in GuidGenerator.GetSignatures(typeof(T)))
-            {
-                yield return $"pinterface({{{typeof(IReferenceArray<T>).GUID}}};{signature})";
-            }
-        }
+        public static IEnumerable<string> GetGuidSignatures() => GuidGenerator.GetSignatures(typeof(IReferenceArray<T>));
 
         [Guid("61C17707-2D65-11E0-9AE8-D48564015472")]
         public struct Vftbl

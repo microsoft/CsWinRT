@@ -164,7 +164,17 @@ namespace WinRT
                 }
             }
 
-            if (ShouldProvideIReference(obj))
+            var objType = obj.GetType();
+            if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+            {
+                var ifaceAbiType = objType.FindHelperType();
+                entries.Add(new ComInterfaceEntry
+                {
+                    IID = GuidGenerator.GetIID(ifaceAbiType),
+                    Vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                });
+            }
+            else if (ShouldProvideIReference(obj))
             {
                 entries.Add(IPropertyValueEntry);
                 ProvideIReference(obj, entries);

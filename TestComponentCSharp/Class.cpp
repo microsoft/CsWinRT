@@ -15,13 +15,44 @@ namespace winrt::TestComponentCSharp::implementation
         static int _readWrite{};
     }
 
+    template <typename K, typename V>
+    struct key_value_pair : implements<key_value_pair<K, V>, Windows::Foundation::Collections::IKeyValuePair<K, V>>
+    {
+        key_value_pair(K key, V value) :
+            m_key(std::move(key)),
+            m_value(std::move(value))
+        {
+        }
+
+        K Key() const
+        {
+            return m_key;
+        }
+
+        V Value() const
+        {
+            return m_value;
+        }
+
+    private:
+
+        K m_key;
+        V m_value;
+    };
+
+    Class::Class() :
+        Class(0, L"")
+    {
+    }
     Class::Class(int32_t intProperty) :
         Class(intProperty, L"")
     {
     }
     Class::Class(int32_t intProperty, hstring const& stringProperty) :
         _int(intProperty),
-        _string(stringProperty)
+        _string(stringProperty),
+        _stringPair(make<key_value_pair<hstring, hstring>>(L"", L"")),
+        _uri(nullptr)
     {
         _nonBlittableStruct.refs.ref32 = 42;
         _syncHandle.attach(::CreateEventW(nullptr, false, false, nullptr));
@@ -29,6 +60,7 @@ namespace winrt::TestComponentCSharp::implementation
         {
             winrt::throw_last_error();
         }
+        _strings = winrt::single_threaded_vector<hstring>({ L"foo", L"bar" });
     }
     int32_t Class::StaticIntProperty()
     {
@@ -286,6 +318,31 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _objectChanged.remove(token);
     }
+    Windows::Foundation::Uri Class::UriProperty()
+    {
+        return _uri;
+    }
+    void Class::UriProperty(Windows::Foundation::Uri const& value)
+    {
+        _uri = value;
+    }
+    void Class::RaiseUriChanged()
+    {
+        _uriChanged(*this, _uri);
+    }
+    void Class::CallForUri(TestComponentCSharp::ProvideUri const& provideUri)
+    {
+        _uri = provideUri();
+    }
+    winrt::event_token Class::UriPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Uri> const& handler)
+    {
+        return _uriChanged.add(handler);
+    }
+    void Class::UriPropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _uriChanged.remove(token);
+    }
+
     Windows::Foundation::IAsyncOperation<int32_t> Class::GetIntAsync()
     {
         co_return _int;
@@ -293,6 +350,31 @@ namespace winrt::TestComponentCSharp::implementation
     Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> Class::GetStringAsync()
     {
         co_return _string;
+    }
+
+    Windows::Foundation::Collections::IKeyValuePair<hstring, hstring> Class::StringPairProperty()
+    {
+        return _stringPair;
+    }
+    void Class::StringPairProperty(Windows::Foundation::Collections::IKeyValuePair<hstring, hstring> const& value)
+    {
+        _stringPair = value;
+    }
+    void Class::RaiseStringPairChanged()
+    {
+        _stringPairChanged(*this, _stringPair);
+    }
+    void Class::CallForStringPair(TestComponentCSharp::ProvideStringPair const& provideStringPair)
+    {
+        _stringPair = provideStringPair();
+    }
+    winrt::event_token Class::StringPairPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IKeyValuePair<hstring, hstring>> const& handler)
+    {
+        return _stringPairChanged.add(handler);
+    }
+    void Class::StringPairPropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _stringPairChanged.remove(token);
     }
 
     BlittableStruct Class::BlittableStructProperty()
@@ -665,6 +747,15 @@ namespace winrt::TestComponentCSharp::implementation
         _int = value;
     }
 
+    Windows::Foundation::Collections::IIterable<int32_t> Class::GetIntIterable()
+    {
+        return _intColl;
+    }
+    void Class::SetIntIterable(Windows::Foundation::Collections::IIterable<int32_t> const& value)
+    {
+        _intColl = value;
+    }
+
     void Class::CopyProperties(winrt::TestComponentCSharp::IProperties1 const& src)
     {
         ReadWriteProperty(src.ReadWriteProperty());
@@ -741,91 +832,4 @@ namespace winrt::TestComponentCSharp::implementation
         return type.Name;
     }
 
-    // IVector<String>
-    //Windows::Foundation::Collections::IIterator<hstring> Class::First()
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //hstring Class::GetAt(uint32_t index)
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //uint32_t Class::Size()
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //Windows::Foundation::Collections::IVectorView<hstring> Class::GetView()
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //bool Class::IndexOf(hstring const& value, uint32_t& index)
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //void Class::SetAt(uint32_t index, hstring const& value)
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //void Class::InsertAt(uint32_t index, hstring const& value)
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //void Class::RemoveAt(uint32_t index)
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //void Class::Append(hstring const& value)
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //void Class::RemoveAtEnd()
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //void Class::Clear()
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //uint32_t Class::GetMany(uint32_t startIndex, array_view<hstring> items)
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //void Class::ReplaceAll(array_view<hstring const> items)
-    //{
-    //    throw hresult_not_implemented();
-    //}
-
-    // IMap<Int32, String>
-    //Windows::Foundation::Collections::IIterator<Windows::Foundation::Collections::IKeyValuePair<int32_t, hstring>> Class::First()
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //hstring Class::Lookup(int32_t const& key)
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //uint32_t Class::Size()
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //bool Class::HasKey(int32_t const& key)
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //Windows::Foundation::Collections::IMapView<int32_t, hstring> Class::GetView()
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //bool Class::Insert(int32_t const& key, hstring const& value)
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //void Class::Remove(int32_t const& key)
-    //{
-    //    throw hresult_not_implemented();
-    //}
-    //void Class::Clear()
-    //{
-    //    throw hresult_not_implemented();
-    //}
 }
