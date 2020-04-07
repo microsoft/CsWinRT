@@ -1091,14 +1091,26 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
         }
     }
 
-    void write_enumerable_members(writer& w, std::string_view target)
+    void write_nongeneric_enumerable_members(writer& w, std::string_view target)
+    {
+        w.write(R"(
+IEnumerator IEnumerable.GetEnumerator() => %.GetEnumerator();
+)",
+            target);
+    }
+
+    void write_enumerable_members(writer& w, std::string_view target, bool include_nongeneric)
     {
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
         w.write(R"(
 public IEnumerator<%> GetEnumerator() => %.GetEnumerator();
-IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 )",         
             element, target);
+
+        if (!include_nongeneric) return;
+        w.write(R"(
+IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+)");
     }
 
     void write_enumerator_members(writer& w, std::string_view target)
@@ -1210,6 +1222,53 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
             element, target);
     }
 
+    void write_nongeneric_list_members(writer& w, std::string_view target, bool include_enumerable)
+    {
+        auto element = w.write_temp("%", bind<write_generic_type_name>(0));
+        w.write(R"(
+public int Count => %.Count;
+public bool IsSynchronized => %.IsSynchronized;
+public object SyncRoot => %.SyncRoot;
+public void CopyTo(Array array, int index) => %.CopyTo(array, index);
+[global::System.Runtime.CompilerServices.IndexerName("NonGenericListItem")]
+public object this[int index]
+{
+get => %[index];
+set => %[index] = value;
+}
+public bool IsFixedSize => %.IsFixedSize;
+public bool IsReadOnly => %.IsReadOnly;
+public int Add(object value) => %.Add(value);
+public void Clear() => %.Clear();
+public bool Contains(object value) => %.Contains(value);
+public int IndexOf(object value) => %.IndexOf(value);
+public void Insert(int index, object value) => %.Insert(index, value);
+public void Remove(object value) => %.Remove(value);
+public void RemoveAt(int index) => %.RemoveAt(index);
+)", 
+            target,
+            target,
+            target,
+            target,
+            target,
+            target,
+            target,
+            target,
+            target,
+            target,
+            target,
+            target,
+            target,
+            target, 
+            target);
+        
+        if (!include_enumerable) return;
+        w.write(R"(
+IEnumerator IEnumerable.GetEnumerator() => %.GetEnumerator();
+)",
+            target);
+    }
+
     void write_list_members(writer& w, std::string_view target, bool include_enumerable)
     {
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
@@ -1263,7 +1322,7 @@ target);
     {
         if (mapping.abi_name == "IIterable`1") 
         {
-            write_enumerable_members(w, target);
+            write_enumerable_members(w, target, true);
         }
         else if (mapping.abi_name == "IIterator`1") 
         {
@@ -1284,6 +1343,14 @@ target);
         else if (mapping.abi_name == "IVector`1")
         {
             write_list_members(w, target, false);
+        }
+        else if (mapping.abi_name == "IBindableIterable")
+        {
+            write_nongeneric_enumerable_members(w, target);
+        }
+        else if (mapping.abi_name == "IBindableVector")
+        {
+            write_nongeneric_list_members(w, target, false);
         }
         else if (mapping.mapped_namespace == "System" && mapping.mapped_name == "IDisposable")
         {
@@ -2346,13 +2413,19 @@ remove => _%.Unsubscribe(value);
 
             if (auto mapping = get_mapped_type(iface.TypeNamespace(), iface.TypeName()))
             {
-                std::string remove_interface;
+                auto remove_enumerable = [&](std::string generic_enumerable = "")
+                {
+                    required_interfaces[std::move("global::System.Collections.IEnumerable")] = {};
+                    if(generic_enumerable.empty()) return;
+                    required_interfaces[std::move(generic_enumerable)] = {};
+                };
+
                 if (mapping->abi_name == "IIterable`1") // IEnumerable`1
                 {
                     auto element = w.write_temp("%", bind<write_generic_type_name>(0));
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_enumerable_members>("_iterableToEnumerable")),
+                        w.write_temp("%", bind<write_enumerable_members>("_iterableToEnumerable", false)),
                         w.write_temp("IEnumerable<%>", element),
                         "_iterableToEnumerable"
                     };
@@ -2377,7 +2450,7 @@ remove => _%.Unsubscribe(value);
                         w.write_temp("IReadOnlyDictionary<%, %>", key, value),
                         "_mapViewToReadOnlyDictionary"
                     };
-                    remove_interface = w.write_temp("global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<%, %>>", key, value);
+                    remove_enumerable(w.write_temp("global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<%, %>>", key, value));
                 }
                 else if (mapping->abi_name == "IMap`2") // IDictionary<TKey, TValue> 
                 {
@@ -2389,7 +2462,7 @@ remove => _%.Unsubscribe(value);
                         w.write_temp("IDictionary<%, %>", key, value),
                         "_mapToDictionary"
                     };
-                    remove_interface = w.write_temp("global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<%, %>>", key, value);
+                    remove_enumerable(w.write_temp("global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<%, %>>", key, value));
                 }
                 else if (mapping->abi_name == "IVectorView`1") // IReadOnlyList`1
                 {
@@ -2400,7 +2473,7 @@ remove => _%.Unsubscribe(value);
                         w.write_temp("IReadOnlyList<%>", element),
                         "_vectorViewToReadOnlyList"
                     };
-                    remove_interface = w.write_temp("global::System.Collections.Generic.IEnumerable<%>", element);
+                    remove_enumerable(w.write_temp("global::System.Collections.Generic.IEnumerable<%>", element));
                 }
                 else if (mapping->abi_name == "IVector`1") // IList`1
                 {
@@ -2411,18 +2484,33 @@ remove => _%.Unsubscribe(value);
                         w.write_temp("IList<%>", element),
                         "_vectorToList"
                     };
-                    remove_interface = w.write_temp("global::System.Collections.Generic.IEnumerable<%>", element);
+                    remove_enumerable(w.write_temp("global::System.Collections.Generic.IEnumerable<%>", element));
                 }
-                else if (mapping->mapped_namespace == "System" && mapping->mapped_name == "IDisposable")
+                else if (mapping->abi_name == "IBindableIterable") // IEnumerable
+                {
+                    required_interfaces[std::move(interface_name)] =
+                    {
+                        w.write_temp("%", bind<write_nongeneric_enumerable_members>("_bindableIterableToEnumerable")),
+                        "IEnumerable"
+                        "_bindableIterableToEnumerable"
+                    };
+                }
+                else if (mapping->abi_name == "IBindableVector") // IList
+                {
+                    required_interfaces[std::move(interface_name)] =
+                    {
+                        w.write_temp("%", bind<write_nongeneric_list_members>("_bindableVectorToList", true)),
+                        "IList",
+                        "_bindableVectorToList"
+                    };
+                    remove_enumerable();
+                }
+                else if (mapping->mapped_name == "IDisposable")
                 {
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_idisposable_members>("As<global::ABI.System.IDisposable>()"))
                     };
-                }
-                if (!remove_interface.empty())
-                {
-                    required_interfaces[std::move(remove_interface)] = {};
                 }
                 return;
             }

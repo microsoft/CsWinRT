@@ -396,7 +396,7 @@ namespace ABI.System.Collections.Generic
                     throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
                 }
 
-                IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
                 public global::System.Collections.Generic.IEnumerator<V> GetEnumerator()
                 {
@@ -834,7 +834,7 @@ namespace ABI.System.Collections.Generic
         public void CopyTo(global::System.Collections.Generic.KeyValuePair<K, V>[] array, int arrayIndex) => _FromMap.CopyTo(array, arrayIndex);
         public bool Remove(global::System.Collections.Generic.KeyValuePair<K, V> item) => _FromMap.Remove(item);
         public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator() => _FromMap.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
     public static class IDictionary_Delegates
     {

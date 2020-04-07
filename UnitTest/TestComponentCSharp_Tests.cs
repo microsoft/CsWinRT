@@ -593,6 +593,19 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestBindable()
+        {
+            var expected = new int[] { 0, 1, 2 };
+            TestObject.BindableVectorProperty = expected;
+            Assert.Equal(expected, TestObject.BindableVectorProperty);
+
+            TestObject.CallForBindableVector(() => expected);
+            TestObject.BindableVectorPropertyChanged +=
+                (object sender, System.Collections.IList value) => Assert.Equal(expected, value);
+            TestObject.RaiseBindableVectorChanged();
+        }
+
+        [Fact]
         public void TestClassGeneric()
         {
             var objs = TestObject.GetClassVector();

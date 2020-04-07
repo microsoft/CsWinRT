@@ -430,8 +430,7 @@ namespace cswinrt
         {
             // Make sure to keep this table consistent with the registrations in WinRT.Runtime/Projections.cs
             // NOTE: Must keep namespaces sorted (outer) and abi type names sorted (inner)
-            {
-                "Microsoft.UI.Xaml.Input",
+            { "Microsoft.UI.Xaml.Input",
                 {
                     { "ICommand", "System.Windows.Input", "ICommand", true }
                 }
@@ -449,6 +448,12 @@ namespace cswinrt
                     { "Point", "Windows.Foundation", "Point" },
                     { "TimeSpan", "System", "TimeSpan", true },
                     { "Uri", "System", "Uri", true }
+                }
+            },
+            { "Windows.Foundation",
+                {
+                    { "IBindableIterable", "System.Collections", "IEnumerable", true, true },
+                    { "IBindableVector", "System.Collections", "IList", true, true },
                 }
             },
             { "Windows.Foundation.Collections",
@@ -479,9 +484,15 @@ namespace cswinrt
                     { "ICommand", "System.Windows.Input", "ICommand", true }
                 }
             },
-            {
-                "Windows.UI.Xaml.Interop",
+            { "Windows.UI.Xaml.Interop",
                 {
+                    { "BindableVectorChangedEventHandler", "Windows.UI.Xaml.Interop", "BindableVectorChangedEventHandler", true },
+                    { "IBindableIterable", "System.Collections", "IEnumerable", true },
+                    { "IBindableIterator", "Windows.UI.Xaml.Interop", "IBindableIterator", true },
+                    { "IBindableObservableVector", "Windows.UI.Xaml.Interop", "IBindableObservableVector", true },
+                    { "IBindableVector", "System.Collections", "IList", true },
+                    { "IBindableVectorView", "Windows.UI.Xaml.Interop", "IBindableVectorView", true },
+                    { "TypeKind", "Windows.UI.Xaml.Interop", "TypeKind", true },
                     { "TypeName", "System", "Type", true }
                 }
             }

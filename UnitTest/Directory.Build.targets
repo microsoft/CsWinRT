@@ -21,7 +21,34 @@
   </Target>
 
   <Target Name="GenerateProjection" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)' == 'true'">
-    <Exec Command="$(CsWinrtExe) -verbose -in 10.0.18362.0 $(BuildOutDir)TestComponentCSharp\bin\TestComponentCSharp\TestComponentCSharp.winmd $(BuildOutDir)TestComponent\bin\TestComponent.winmd -out &quot;$(ProjectDir)Generated Files&quot; -include TestComponentCSharp TestComponent Windows.Foundation -exclude Windows.Foundation.Diagnostics -exclude Windows.Foundation.Metadata" />
+    <ItemGroup>
+      <UnitTestWinMDs Include="$(BuildOutDir)TestComponent\bin\TestComponent.winmd " />
+      <UnitTestWinMDs Include="$(BuildOutDir)TestComponentCSharp\bin\TestComponentCSharp\TestComponentCSharp.winmd" />
+    </ItemGroup>
+    <PropertyGroup>
+      <CsWinRTVerbosity>high</CsWinRTVerbosity>
+      <CsWinRTResponseFile>$(IntermediateOutputPath)cswinrt_unittest.rsp</CsWinRTResponseFile>
+      <CsWinRTCommand>$(CsWinrtExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+    </PropertyGroup>
+    <PropertyGroup>
+      <CsWinRTParams>
+-verbose
+-in 10.0.18362.0
+-in @(UnitTestWinMDs->'&quot;%(FullPath)&quot;', ' ')
+-out &quot;$(ProjectDir)Generated Files&quot;
+-include TestComponent
+-include TestComponentCSharp
+-include Windows.Foundation
+-include Windows.UI.Xaml.Interop
+-exclude Windows.Foundation.Diagnostics
+-exclude Windows.Foundation.Metadata
+      </CsWinRTParams>
+    </PropertyGroup>
+    <WriteLinesToFile
+        File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)"
+        Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
+    <Exec Command="$(CsWinRTCommand)" />
   </Target>
 
   <Target Name="IncludeProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateProjection">

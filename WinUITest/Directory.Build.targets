@@ -25,7 +25,7 @@
     </ItemGroup>
     <PropertyGroup>
       <CsWinRTVerbosity>high</CsWinRTVerbosity>
-      <CsWinRTResponseFile>$(IntermediateOutputPath)cswinrt_platform.rsp</CsWinRTResponseFile>
+      <CsWinRTResponseFile>$(IntermediateOutputPath)cswinrt_winuitest.rsp</CsWinRTResponseFile>
       <CsWinRTCommand>$(CsWinrtExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
     </PropertyGroup>
     <PropertyGroup>

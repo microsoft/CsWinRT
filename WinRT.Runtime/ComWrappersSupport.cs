@@ -144,6 +144,25 @@ namespace WinRT
                     IID = GuidGenerator.GetIID(ifaceAbiType),
                     Vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
                 });
+
+                if (ifaceAbiType == typeof(System.Collections.IEnumerable))
+                {
+                    var vftblType = typeof(global::ABI.System.Collections.IEnumerable.Vftbl);
+                    entries.Add(new ComInterfaceEntry
+                    {
+                        IID = GuidGenerator.GetIID(vftblType),
+                        Vtable = (IntPtr)vftblType.GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                    });
+                }
+                else if (ifaceAbiType == typeof(System.Collections.IList))
+                {
+                    var vftblType = typeof(global::ABI.System.Collections.IList.Vftbl);
+                    entries.Add(new ComInterfaceEntry
+                    {
+                        IID = GuidGenerator.GetIID(vftblType),
+                        Vtable = (IntPtr)vftblType.GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                    });
+                }
             }
 
             if (obj is Delegate)

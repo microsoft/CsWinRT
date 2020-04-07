@@ -756,6 +756,63 @@ namespace winrt::TestComponentCSharp::implementation
         _intColl = value;
     }
 
+    Windows::UI::Xaml::Interop::IBindableVector Class::BindableVectorProperty()
+    {
+        return _bindableVector;
+    }
+    void Class::BindableVectorProperty(Windows::UI::Xaml::Interop::IBindableVector const& value)
+    {
+        _bindableVector = value;
+    }
+    void Class::RaiseBindableVectorChanged()
+    {
+        _bindableVectorChanged(*this, _bindableVector);
+    }
+    void Class::CallForBindableVector(TestComponentCSharp::ProvideBindableVector const& provideBindableVector)
+    {
+        _bindableVector = provideBindableVector();
+    }
+    winrt::event_token Class::BindableVectorPropertyChanged(Windows::Foundation::EventHandler<Windows::UI::Xaml::Interop::IBindableVector> const& handler)
+    {
+        return _bindableVectorChanged.add(handler);
+    }
+    void Class::BindableVectorPropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _bindableVectorChanged.remove(token);
+    }
+    Windows::UI::Xaml::Interop::IBindableIterable Class::BindableIterableProperty()
+    {
+        throw hresult_not_implemented();
+    }
+    void Class::BindableIterableProperty(Windows::UI::Xaml::Interop::IBindableIterable const& value)
+    {
+        throw hresult_not_implemented();
+    }
+    Windows::UI::Xaml::Interop::IBindableIterator Class::BindableIteratorProperty()
+    {
+        throw hresult_not_implemented();
+    }
+    void Class::BindableIteratorProperty(Windows::UI::Xaml::Interop::IBindableIterator const& value)
+    {
+        throw hresult_not_implemented();
+    }
+    Windows::UI::Xaml::Interop::IBindableVectorView Class::BindableVectorViewProperty()
+    {
+        throw hresult_not_implemented();
+    }
+    void Class::BindableVectorViewProperty(Windows::UI::Xaml::Interop::IBindableVectorView const& value)
+    {
+        throw hresult_not_implemented();
+    }
+    Windows::UI::Xaml::Interop::IBindableObservableVector Class::BindableObservableVectorProperty()
+    {
+        throw hresult_not_implemented();
+    }
+    void Class::BindableObservableVectorProperty(Windows::UI::Xaml::Interop::IBindableObservableVector const& value)
+    {
+        throw hresult_not_implemented();
+    }
+
     void Class::CopyProperties(winrt::TestComponentCSharp::IProperties1 const& src)
     {
         ReadWriteProperty(src.ReadWriteProperty());

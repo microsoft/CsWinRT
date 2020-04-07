@@ -55,6 +55,7 @@ namespace TestComponentCSharp
     delegate Object ProvideObject();
     delegate Windows.Foundation.Uri ProvideUri();
     delegate Windows.Foundation.Collections.IKeyValuePair<String, String> ProvideStringPair();
+    delegate Windows.UI.Xaml.Interop.IBindableVector ProvideBindableVector();
 
     interface ICowboy
     {
@@ -216,7 +217,18 @@ namespace TestComponentCSharp
 
         Windows.Foundation.Collections.IIterable<Int32> GetIntIterable();
         void SetIntIterable(Windows.Foundation.Collections.IIterable<Int32> value);
- 
+        
+        // Bindable
+        Windows.UI.Xaml.Interop.IBindableIterable BindableIterableProperty;
+        Windows.UI.Xaml.Interop.IBindableIterator BindableIteratorProperty;
+        Windows.UI.Xaml.Interop.IBindableVectorView BindableVectorViewProperty;
+        Windows.UI.Xaml.Interop.IBindableObservableVector BindableObservableVectorProperty;
+        
+        Windows.UI.Xaml.Interop.IBindableVector BindableVectorProperty;
+        void RaiseBindableVectorChanged();
+        void CallForBindableVector(ProvideBindableVector provideBindableVector);
+        event Windows.Foundation.EventHandler<Windows.UI.Xaml.Interop.IBindableVector> BindableVectorPropertyChanged;
+
         void CopyProperties(IProperties1 src);
         void CopyPropertiesViaWeakReference(IProperties1 src);
         // Async

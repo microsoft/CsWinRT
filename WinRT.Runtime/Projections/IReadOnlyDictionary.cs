@@ -154,7 +154,7 @@ namespace ABI.System.Collections.Generic
 
             public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator() => _enumerable.GetEnumerator();
 
-            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+            IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
             private sealed class ReadOnlyDictionaryKeyCollection : global::System.Collections.Generic.IEnumerable<K>
             {
@@ -172,7 +172,7 @@ namespace ABI.System.Collections.Generic
                 {
                     return new ReadOnlyDictionaryKeyEnumerator(dictionary);
                 }
-                IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
                 private sealed class ReadOnlyDictionaryKeyEnumerator : global::System.Collections.Generic.IEnumerator<K>
                 {
@@ -689,7 +689,7 @@ namespace ABI.System.Collections.Generic
         public bool ContainsKey(K key) => _FromMapView.ContainsKey(key);
         public bool TryGetValue(K key, out V value) => _FromMapView.TryGetValue(key, out value);
         public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator() => _FromMapView.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
     public static class IReadOnlyDictionary_Delegates
     {
