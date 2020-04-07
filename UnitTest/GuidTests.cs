@@ -94,7 +94,7 @@ namespace UnitTest
         [Fact]
         public void TestGenericsMultipleIidsOneType()
         {
-            Guid[] iids = GuidGenerator.CreateIIDs(typeof(IVector<System.ComponentModel.PropertyChangedEventArgs>));
+            Guid[] iids = GuidGenerator.CreateIIDs(typeof(IList<System.ComponentModel.PropertyChangedEventArgs>));
             Assert.Equal(2, iids.Length);
         }
     }
