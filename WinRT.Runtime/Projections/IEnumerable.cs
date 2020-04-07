@@ -174,11 +174,11 @@ namespace ABI.System.Collections.Generic
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(ThisPtr, out __retval));
-                return MarshalInterface<global::Windows.Foundation.Collections.IIterator<T>>.FromAbi(__retval);
+                return ABI.System.Collections.Generic.IEnumerator<T>.FromAbiInternal(__retval);
             }
             finally
             {
-                MarshalInterface<global::Windows.Foundation.Collections.IIterator<T>>.DisposeAbi(__retval);
+                ABI.System.Collections.Generic.IEnumerator<T>.DisposeAbi(__retval);
             }
         }
 
@@ -200,6 +200,9 @@ namespace ABI.System.Collections.Generic
             objRef?.ThisPtr ?? IntPtr.Zero;
 
         public static global::System.Collections.Generic.IEnumerator<T> FromAbi(IntPtr thisPtr) =>
+            new IEnumerator<T>(ObjRefFromAbi(thisPtr));
+
+        internal static global::Windows.Foundation.Collections.IIterator<T> FromAbiInternal(IntPtr thisPtr) =>
             new IEnumerator<T>(ObjRefFromAbi(thisPtr));
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IEnumerator<T> value) =>
