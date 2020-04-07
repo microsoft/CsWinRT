@@ -49,7 +49,7 @@ namespace ABI.System.Collections.Generic
         public static void DisposeAbi(IntPtr abi) =>
             MarshalInterfaceHelper<global::Windows.Foundation.Collections.IVectorView<T>>.DisposeAbi(abi);
 
-        public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IReadOnlyList<T>));
+        public static global::System.Collections.Generic.IEnumerable<string> GetGuidSignatures() => GuidGenerator.GetSignatures(typeof(IReadOnlyList<T>));
 
         public class FromAbiHelper : global::System.Collections.Generic.IReadOnlyList<T>
         {

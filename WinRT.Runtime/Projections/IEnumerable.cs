@@ -54,7 +54,7 @@ namespace ABI.System.Collections.Generic
         public static void DisposeAbi(IntPtr abi) =>
             MarshalInterfaceHelper<global::Windows.Foundation.Collections.IIterable<T>>.DisposeAbi(abi);
 
-        public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable<T>));
+        public static global::System.Collections.Generic.IEnumerable<string> GetGuidSignatures() => GuidGenerator.GetSignatures(typeof(IEnumerable<T>));
 
         public class FromAbiHelper : global::System.Collections.Generic.IEnumerable<T>
         {
@@ -210,7 +210,7 @@ namespace ABI.System.Collections.Generic
         public static void DisposeAbi(IntPtr abi) =>
             MarshalInterfaceHelper<global::Windows.Foundation.Collections.IIterator<T>>.DisposeAbi(abi);
 
-        public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerator<T>));
+        public static global::System.Collections.Generic.IEnumerable<string> GetGuidSignatures() => GuidGenerator.GetSignatures(typeof(IEnumerator<T>));
 
         public class FromAbiHelper : global::System.Collections.Generic.IEnumerator<T>
         {

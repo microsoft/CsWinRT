@@ -13,7 +13,7 @@ namespace ABI.System
     [Guid("9DE1C535-6AE1-11E0-84E1-18A905BCC53F"), EditorBrowsable(EditorBrowsableState.Never)]
     public static class EventHandler<T>
     {
-        public static Guid PIID = GuidGenerator.CreateIID(typeof(global::System.EventHandler<T>));
+        public static Guid[] PIIDs = GuidGenerator.CreateIIDs(typeof(global::System.EventHandler<T>));
         private static readonly global::System.Type Abi_Invoke_Type = Expression.GetDelegateType(new global::System.Type[] { typeof(void*), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int) });
 
         private static readonly global::WinRT.Interop.IDelegateVftbl AbiToProjectionVftable;

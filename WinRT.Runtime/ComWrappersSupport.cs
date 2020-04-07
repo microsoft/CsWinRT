@@ -88,7 +88,7 @@ namespace WinRT
             if (projectedClass is object)
             {
                 return TryUnwrapObject(
-                    type.GetField(projectedClass.DefaultInterfaceField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).GetValue(o),
+                    type.GetProperty(projectedClass.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).GetValue(o),
                     out objRef);
             }
 

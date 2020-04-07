@@ -49,7 +49,7 @@ namespace ABI.System.Collections.Generic
         public static void DisposeAbi(IntPtr abi) =>
             MarshalInterfaceHelper<global::Windows.Foundation.Collections.IMapView<K, V>>.DisposeAbi(abi);
 
-        public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IReadOnlyDictionary<K, V>));
+        public static global::System.Collections.Generic.IEnumerable<string> GetGuidSignatures() => GuidGenerator.GetSignatures(typeof(IReadOnlyDictionary<K, V>));
 
 #nullable enable
         public class FromAbiHelper : global::System.Collections.Generic.IReadOnlyDictionary<K, V>
