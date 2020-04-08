@@ -39,8 +39,6 @@
         -exclude Windows.UI.Xaml
         -include Windows.UI.Xaml.Interop
         -exclude Windows.ApplicationModel.Store.Preview
-        -exclude Windows.Foundation.Collections.IVector
-        -include Windows.Foundation.Collections.IVectorChangedEventArgs
       </CsWinRTParams>
     </PropertyGroup>
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
