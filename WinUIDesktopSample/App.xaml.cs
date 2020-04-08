@@ -43,9 +43,9 @@ namespace WinUIDesktopSample
     {
         static void Main(string[] args)
         {
-			WinRT.ComWrappersSupport.InitializeComWrappers();
+            WinRT.ComWrappersSupport.InitializeComWrappers();
 
             Microsoft.UI.Xaml.Application.Start((e) => new App());
-		}
+        }
     }
 }
