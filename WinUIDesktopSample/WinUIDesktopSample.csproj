@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp5.0</TargetFramework>
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <GenerateTestProjection>true</GenerateTestProjection>
+
+    <!--
+    There seems to be a codegen bug when referencing the cswinrt interop assembly of the Win32XamlHost
+    project. Since we don't really need those metadata providers yet, this is just an easy workaround
+    -->
+    <XamlCodeGenerationControlFlags>DoNotGenerateOtherProviders</XamlCodeGenerationControlFlags>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x86;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.5" />
+   
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WinRT.Runtime\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\WinUIProjection\WinUIProjection.csproj" />
+  </ItemGroup>
+
+</Project>

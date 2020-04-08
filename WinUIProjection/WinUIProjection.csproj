@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp5.0</TargetFramework>
+    <Platforms>x64;x86</Platforms>
+    <MicrosoftWinUIVersion>3.0.0-preview1.200407.3-CI</MicrosoftWinUIVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\WinRT.Runtime\WinRT.Runtime.csproj" />
+    <!-- Exclude compile and build time assets so we don't think we're building a real WinUI App -->
+    <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
+      <ExcludeAssets>compile; build</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Generated Files\" />
+  </ItemGroup>
+
+  <Target Name="GenerateWinUIProjection" BeforeTargets="DispatchToInnerBuilds;Build">
+    <ItemGroup>
+      <!--PkgMicrosoft_UI_Xaml is defined by Nuget reference-->
+      <WinUIWinMDs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
+    </ItemGroup>
+    <PropertyGroup>
+      <CsWinRTVerbosity>high</CsWinRTVerbosity>
+      <CsWinRTResponseFile>$(IntermediateOutputPath)cswinrt_platform.rsp</CsWinRTResponseFile>
+      <CsWinRTCommand>$(CsWinrtExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+    </PropertyGroup>
+    <PropertyGroup>
+      <CsWinRTParams>
+        -verbose
+        -in 10.0.18362.0 @(WinUIWinMDs->'"%(FullPath)"', ' ')
+        -out "$(ProjectDir)Generated Files"
+        -include Microsoft Windows
+        -exclude Windows.UI.Xaml
+        -include Windows.UI.Xaml.Interop
+        -exclude Windows.ApplicationModel.Store.Preview
+        -exclude Windows.Foundation.Collections.IVector
+        -include Windows.Foundation.Collections.IVectorChangedEventArgs
+      </CsWinRTParams>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
+    <Exec Command="$(CsWinRTCommand)" />
+  </Target>
+
+  <Target Name="IncludeWinUIProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateWinUIProjection">
+    <ItemGroup>
+      <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
+    </ItemGroup>
+  </Target>
+</Project>
