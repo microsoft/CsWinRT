@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp5.0</TargetFramework>
     <Platforms>x64;x86</Platforms>
-    <MicrosoftWinUIVersion>3.0.0-preview1.200407.3-CI</MicrosoftWinUIVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -16,10 +15,6 @@
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
       <ExcludeAssets>compile; build</ExcludeAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Generated Files\" />
   </ItemGroup>
 
   <Target Name="GenerateWinUIProjection" BeforeTargets="DispatchToInnerBuilds;Build">
@@ -50,6 +45,12 @@
     <Exec Command="$(CsWinRTCommand)" />
   </Target>
 
+  <ItemGroup>
+    <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_WinUI)/runtimes/win10-$(Platform)/native/*.dll"/>
+    <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_WinUI)/runtimes/win10-$(Platform)/native/**/*.mui">
+      <DestinationSubDirectory>%(RecursiveDir)</DestinationSubDirectory>
+    </ReferenceCopyLocalPaths>
+  </ItemGroup>
   <Target Name="IncludeWinUIProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateWinUIProjection">
     <ItemGroup>
       <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />

@@ -18,7 +18,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.5" />
-   
+    <!-- Exclude compile time assets so we don't think we're building a real WinUI App -->
+    <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
+      <ExcludeAssets>compile;</ExcludeAssets>
+    </PackageReference>
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
@@ -26,5 +29,7 @@
     <ProjectReference Include="..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\WinUIProjection\WinUIProjection.csproj" />
   </ItemGroup>
+  
+  
 
 </Project>
