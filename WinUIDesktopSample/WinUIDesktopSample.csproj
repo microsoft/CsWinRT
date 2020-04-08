@@ -6,22 +6,21 @@
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <GenerateTestProjection>true</GenerateTestProjection>
-
+    <ApplicationManifest>WinUIDesktopSample.exe.manifest</ApplicationManifest>
     <!--
     There seems to be a codegen bug when referencing the cswinrt interop assembly of the Win32XamlHost
     project. Since we don't really need those metadata providers yet, this is just an easy workaround
     -->
     <XamlCodeGenerationControlFlags>DoNotGenerateOtherProviders</XamlCodeGenerationControlFlags>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x86;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="app.manifest" />
+    <None Remove="WinUIDesktopSample.exe.manifest" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="app.manifest" />
+    <Content Include="WinUIDesktopSample.exe.manifest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,7 +29,6 @@
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
       <ExcludeAssets>compile;</ExcludeAssets>
     </PackageReference>
-    <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
   <ItemGroup>
