@@ -17,6 +17,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="app.manifest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="app.manifest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.5" />
     <!-- Exclude compile time assets so we don't think we're building a real WinUI App -->
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">

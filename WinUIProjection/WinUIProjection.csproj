@@ -15,9 +15,12 @@
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
       <ExcludeAssets>compile; build</ExcludeAssets>
     </PackageReference>
+    
+    <!-- For WinRTModule-->
+    <InternalsVisibleTo Include="WinUITest"/>
   </ItemGroup>
 
-  <Target Name="GenerateWinUIProjection" BeforeTargets="DispatchToInnerBuilds;Build">
+  <Target Name="GenerateWinUIProjection" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)'=='true'">
     <ItemGroup>
       <!--PkgMicrosoft_UI_Xaml is defined by Nuget reference-->
       <WinUIWinMDs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />

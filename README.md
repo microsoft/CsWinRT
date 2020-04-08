@@ -67,6 +67,13 @@ The **/winuitest** is a simple test project that can be used for running automat
 
 The **/winuidesktopsample** is an end-to-end test app that uses the generated projection from the **/winuiprojection** project.
 
+**Note** in order to load .xbf files, you need to set the **WinUIDesktopSample.Package** property as the startup project. 
+
+## /winuidesktopsample.package
+
+The **/winuidesktopsample.package** project creates an .msix for the **/winuidesktopsample** project.
+This is currently required to test apps that need to load .xbf files.
+
 ## /TestWinRT
 
 C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/TestWinRT/) repository for general language projection test coverage.  This repo should be cloned into the root of the C#/WinRT repo, via get_testwinrt.cmd, so that the cswinrt.sln can resolve the reference to TestComponent.vcxproj.  The resulting TestComponent.dll,winmd files are consumed by the UnitTest project above.
