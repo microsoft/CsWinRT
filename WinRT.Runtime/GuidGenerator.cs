@@ -11,7 +11,7 @@ namespace WinRT
     public static class GuidGenerator
     {
         public static IEnumerable<string> GetAllPossibleSignatureCombinations(
-            this IEnumerable<IEnumerable<string>> memberSignatures)
+       this IEnumerable<IEnumerable<string>> memberSignatures)
         {
             // Implementation adapted from https://stackoverflow.com/a/4424005
             var accum = new List<string>();
@@ -48,37 +48,24 @@ namespace WinRT
             }
         }
 
-
         private static Type GetGuidType(Type type)
         {
-            if (type.IsDelegate())
-            {
-                return type.GetHelperType();
-            }
-
-            Type guidType = Projections.FindCustomHelperTypeMapping(type);
-            if (guidType is object)
-            {
-                return guidType;
-            }
-            return type;
+            return type.IsDelegate() ? type.GetHelperType() : type;
         }
 
         public static Guid GetGUID(Type type)
         {
-            return type.GetGuidType().GUID;
+            return GetGuidType(type).GUID;
         }
 
-        public static Guid GetIID(Type type) => GetIIDs(type)[0];
-
-        public static Guid[] GetIIDs(Type type)
+        public static Guid GetIID(Type type)
         {
-            type = type.GetGuidType();
+            type = GetGuidType(type);
             if (!type.IsGenericType)
             {
-                return new[] { type.GUID };
+                return type.GUID;
             }
-            return (Guid[])type.GetField("PIIDs")?.GetValue(null) ?? new[] { (Guid)type.GetField("PIID").GetValue(null) };
+            return (Guid)type.GetField("PIID").GetValue(null);
         }
 
         public static IEnumerable<string> GetSignatures(Type type)
@@ -89,79 +76,93 @@ namespace WinRT
                 var signaturesMethod = helperType.GetMethod("GetGuidSignatures", BindingFlags.Static | BindingFlags.Public);
                 if (signaturesMethod != null)
                 {
-                    return (IEnumerable<string>)signaturesMethod.Invoke(null, Type.EmptyTypes);
+                    foreach (var signature in (IEnumerable<string>)signaturesMethod.Invoke(null, Type.EmptyTypes))
+                    {
+                        yield return signature;
+                    }
+                    yield break;
                 }
-                var signatureMethod = helperType.GetMethod("GetGuidSignature", BindingFlags.Static | BindingFlags.Public);
+                var signatureMethod = helperType.GetMethod("GetGuidSignatures", BindingFlags.Static | BindingFlags.Public);
                 if (signatureMethod != null)
                 {
-                    return new[] { (string)signatureMethod.Invoke(null, Type.EmptyTypes) };
+                    yield return (string)signatureMethod.Invoke(null, Type.EmptyTypes);
+                    yield break;
                 }
             }
 
             if (type == typeof(object))
             {
-                return new[] { "cinterface(IInspectable)" };
+                yield return "cinterface(IInspectable)";
             }
-
-            if (type.IsGenericType)
+            else if (type.IsGenericType)
             {
                 var args = type.GetGenericArguments().Select(t => GetSignatures(t));
-                return GetAllPossibleSignatureCombinations(args)
-                    .Select(argsSignature => "pinterface({" + GetGUID(type) + "};" + argsSignature + ")");
-            }
-
-            if (type.IsValueType)
-            {
-                switch (type.Name)
+                foreach (var argSignature in GetAllPossibleSignatureCombinations(args))
                 {
-                    case "SByte": return new[] { "i1" };
-                    case "Byte": return new[] { "u1" };
-                    case "Int16": return new[] { "i2" };
-                    case "UInt16": return new[] { "u2" };
-                    case "Int32": return new[] { "i4" };
-                    case "UInt32": return new[] { "u4" };
-                    case "Int64": return new[] { "i8" };
-                    case "UInt64": return new[] { "u8" };
-                    case "Single": return new[] { "f4" };
-                    case "Double": return new[] { "f8" };
-                    case "Boolean": return new[] { "b1" };
-                    case "Char": return new[] { "c2" };
-                    case "Guid": return new[] { "g16" };
-                    default:
-                    {
-                        if (type.IsEnum)
-                        {
-                            var isFlags = type.CustomAttributes.Any(cad => cad.AttributeType == typeof(FlagsAttribute));
-                            return new[] { "enum(" + type.FullName + ";" + (isFlags ? "u4" : "i4") + ")" };
-                        }
-                        if (!type.IsPrimitive)
-                        {
-                            var args = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(fi => GetSignatures(fi.FieldType));
-                            return GetAllPossibleSignatureCombinations(args)
-                                    .Select(argsSignature => "struct(" + type.FullName + ";" + argsSignature + ")");
-                        }
-                        throw new InvalidOperationException("unsupported value type");
-                    }
+                    yield return "pinterface({" + GetGUID(type) + "};" + String.Join(";", argSignature) + ")";
                 }
             }
-
-            if (type == typeof(string))
+            else if (type.IsValueType)
             {
-                return new[] { "string" };
+                if (!type.IsPrimitive && !type.IsEnum && type != typeof(Guid))
+                {
+                    var args = type.GetFields(BindingFlags.Instance | BindingFlags.Public).Select(fi => GetSignatures(fi.FieldType));
+                    foreach (var argSignature in GetAllPossibleSignatureCombinations(args))
+                    {
+                        yield return "struct(" + type.FullName + ";" + String.Join(";", argSignature) + ")";
+                    }
+                }
+                else
+                {
+                    yield return ResolvePrimitiveSignature(type);
+                }
             }
-
-            if (Projections.TryGetDefaultInterfaceTypeForRuntimeClassType(type, out Type iface))
+            else if (type == typeof(string))
             {
-                return GetSignatures(iface)
-                    .Select(defaultSignature => "rc(" + type.FullName + ";" + defaultSignature + ")");
+                yield return "string";
             }
-
-            if (type.IsDelegate())
+            else if (Projections.TryGetDefaultInterfaceTypeForRuntimeClassType(type, out Type iface))
             {
-                return new[] { "delegate({" + GetGUID(type) + "})" };
+                foreach (var defaultSignature in GetSignatures(iface))
+                {
+                    yield return "rc(" + type.FullName + ";" + defaultSignature + ")";
+                }
             }
+            else if (type.IsDelegate())
+            {
+                yield return "delegate({" + GetGUID(type) + "})";
+            }
+            else
+            {
+                yield return "{" + type.GUID.ToString() + "}";
+            }
+        }
 
-            return new[] { "{" + type.GUID.ToString() + "}" };
+        private static string ResolvePrimitiveSignature(Type type)
+        {
+            switch (type.Name)
+            {
+                case "SByte": return "i1";
+                case "Byte": return "u1";
+                case "Int16": return "i2";
+                case "UInt16": return "u2";
+                case "Int32": return "i4";
+                case "UInt32": return "u4";
+                case "Int64": return "i8";
+                case "UInt64": return "u8";
+                case "Single": return "f4";
+                case "Double": return "f8";
+                case "Boolean": return "b1";
+                case "Char": return "c2";
+                case "Guid": return "g16";
+                default:
+                    if (type.IsEnum)
+                    {
+                        var isFlags = type.CustomAttributes.Any(cad => cad.AttributeType == typeof(FlagsAttribute));
+                        return "enum(" + type.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
+                    }
+                    throw new InvalidOperationException("unsupported value type");
+            }
         }
 
         private static Guid encode_guid(byte[] data)
@@ -195,18 +196,6 @@ namespace WinRT
 
         private static Guid wrt_pinterface_namespace = new Guid("d57af411-737b-c042-abae-878b1e16adee");
 
-        public static string GetSignature(Type type)
-        {
-            var sigs = GetSignatures(type).ToArray();
-
-            if (sigs.Length != 1)
-            {
-                throw new ArgumentException($"The provided type: '{type.FullName}' has multiple possible signatures. Call GetSignatures instead.", nameof(type));
-            }
-
-            return sigs[0];
-        }
-
         public static Guid CreateIID(Type type)
         {
             var iids = CreateIIDs(type);
@@ -229,14 +218,11 @@ namespace WinRT
                 {
                     guids[i] = new Guid(sigs[i]);
                 }
-                else
+                var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(sigs[i])).ToArray();
+                using (SHA1 sha = new SHA1CryptoServiceProvider())
                 {
-                    var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(sigs[i])).ToArray();
-                    using (SHA1 sha = new SHA1CryptoServiceProvider())
-                    {
-                        var hash = sha.ComputeHash(data);
-                        guids[i] = encode_guid(hash);
-                    } 
+                    var hash = sha.ComputeHash(data);
+                    guids[i] = encode_guid(hash);
                 }
             }
 
