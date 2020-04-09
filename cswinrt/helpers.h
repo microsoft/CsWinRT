@@ -450,12 +450,6 @@ namespace cswinrt
                     { "Uri", "System", "Uri", true }
                 }
             },
-            { "Windows.Foundation",
-                {
-                    { "IBindableIterable", "System.Collections", "IEnumerable", true, true },
-                    { "IBindableVector", "System.Collections", "IList", true, true },
-                }
-            },
             { "Windows.Foundation.Collections",
                 {
                     { "IIterable`1", "System.Collections.Generic", "IEnumerable`1", true, true },

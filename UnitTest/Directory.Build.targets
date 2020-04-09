@@ -39,7 +39,6 @@
 -include TestComponent
 -include TestComponentCSharp
 -include Windows.Foundation
--include Windows.UI.Xaml.Interop
 -exclude Windows.Foundation.Diagnostics
 -exclude Windows.Foundation.Metadata
       </CsWinRTParams>
