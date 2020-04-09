@@ -84,7 +84,7 @@ namespace WinRT
                     }
                     yield break;
                 }
-                var signatureMethod = helperType.GetMethod("GetGuidSignatures", BindingFlags.Static | BindingFlags.Public);
+                var signatureMethod = helperType.GetMethod("GetGuidSignature", BindingFlags.Static | BindingFlags.Public);
                 if (signatureMethod != null)
                 {
                     yield return (string)signatureMethod.Invoke(null, Type.EmptyTypes);
@@ -220,11 +220,14 @@ namespace WinRT
                 {
                     guids[i] = new Guid(sigs[i]);
                 }
-                var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(sigs[i])).ToArray();
-                using (SHA1 sha = new SHA1CryptoServiceProvider())
+                else
                 {
-                    var hash = sha.ComputeHash(data);
-                    guids[i] = encode_guid(hash);
+                    var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(sigs[i])).ToArray();
+                    using (SHA1 sha = new SHA1CryptoServiceProvider())
+                    {
+                        var hash = sha.ComputeHash(data);
+                        guids[i] = encode_guid(hash);
+                    }
                 }
             }
 
