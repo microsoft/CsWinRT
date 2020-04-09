@@ -286,6 +286,13 @@ namespace WinRT
         internal int QueryInterface(Guid iid, out IntPtr ptr)
         {
             const int E_NOINTERFACE = unchecked((int)0x80004002);
+            if (ManagedObject is ICustomQueryInterface customQI)
+            {
+                if (customQI.GetInterface(ref iid, out ptr) == CustomQueryInterfaceResult.Handled)
+                {
+                    return 0;
+                }
+            }
             if (_managedQITable.TryGetValue(iid, out ptr))
             {
                 AddRef();

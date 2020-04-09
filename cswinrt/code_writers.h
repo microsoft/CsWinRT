@@ -662,7 +662,7 @@ namespace cswinrt
             return;
         }
 
-        bool write_explicit_implementation = is_protected || is_overridable;
+        bool write_explicit_implementation = is_overridable || !is_exclusive_to(method.Parent());
         auto access_spec = is_protected ? "protected " : "public ";
         std::string method_spec = "";
 
@@ -826,7 +826,7 @@ remove => %.% -= value;
         }
         write_event(w, event.Name(), event, interface_member, visibility);
 
-        if (is_protected || is_overridable)
+        if (is_overridable || !is_exclusive_to(event.Parent()))
         {
             write_event(w, w.write_temp("%.%", bind<write_type_name>(event.Parent(), false, false), event.Name()), event, "this");
         }
@@ -1291,6 +1291,61 @@ target);
         }
     }
 
+    std::pair<std::string, bool> find_property_interface(writer& w, TypeDef const& setter_iface, std::string_view prop_name)
+    {
+        std::string getter_iface;
+
+        auto search_interface = [&](TypeDef const& type)
+        {
+            for (auto&& prop : type.PropertyList())
+            {
+                if (prop.Name() == prop_name)
+                {
+                    getter_iface = write_type_name_temp(w, type, "%", true);
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        std::function<bool(TypeDef const&)> search_interfaces = [&](TypeDef const& type)
+        {
+            for (auto&& iface : type.InterfaceImpl())
+            {
+                auto semantics = get_type_semantics(iface.Interface());
+                if (for_typedef(w, semantics, [&](auto&& type)
+                    {
+                        return (setter_iface != type) && (search_interface(type) || search_interfaces(type));
+                    })) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // first search base interfaces for property getter
+        if (search_interfaces(setter_iface))
+        {
+            return { getter_iface, true };
+        }
+
+        // then search peer exclusive-to interfaces and their bases
+        if (auto exclusive_to_attr = get_attribute(setter_iface, "Windows.Foundation.Metadata", "ExclusiveToAttribute"))
+        {
+            auto sig = exclusive_to_attr.Value();
+            auto const& fixed_args = sig.FixedArgs();
+            XLANG_ASSERT(fixed_args.size() == 1);
+            auto sys_type = std::get<ElemSig::SystemType>(std::get<ElemSig>(fixed_args[0].value).value);
+            auto exclusive_to_type = setter_iface.get_cache().find_required(sys_type.name);
+            if (search_interfaces(exclusive_to_type))
+            {
+                return { getter_iface, false };
+            }
+        }
+
+        throw_invalid("Could not find property getter interface");
+    }
+
     void write_class_members(writer& w, TypeDef const& type)
     {
         std::map<std::string_view, std::tuple<std::string, std::string, std::string, bool, bool>> properties;
@@ -1368,8 +1423,8 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.ObjRef);
                         XLANG_ASSERT(!getter_target.empty() || !setter_target.empty());
                     }
 
-                    // If this interface is overridable or protected then we need to emit an explicit implementation of the property for that interface.
-                    if (is_overridable_interface || is_protected_interface)
+                    // If this interface is overridable then we need to emit an explicit implementation of the property for that interface.
+                    if (is_overridable_interface || !is_exclusive_to(interface_type))
                     {
                         w.write("% %.% {%%}",
                             prop_type,
@@ -1377,7 +1432,7 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.ObjRef);
                             prop.Name(),
                             bind([&](writer& w)
                             {
-                                if (getter)
+                                if (getter || find_property_interface(w, interface_type, prop.Name()).second)
                                 {
                                     w.write("get => %; ", prop.Name());
                                 }
@@ -1446,61 +1501,6 @@ private EventSource<%> _%;)",
                 bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
                 evt.Name());
         }
-    }
-
-    std::pair<std::string, bool> find_property_interface(writer& w, TypeDef const& setter_iface, std::string_view prop_name)
-    {
-        std::string getter_iface;
-
-        auto search_interface = [&](TypeDef const& type)
-        {
-            for (auto&& prop : type.PropertyList())
-            {
-                if (prop.Name() == prop_name)
-                {
-                    getter_iface = write_type_name_temp(w, type, "%", true);
-                    return true;
-                }
-            }
-            return false;
-        };
-
-        std::function<bool(TypeDef const&)> search_interfaces = [&](TypeDef const& type)
-        {
-            for (auto&& iface : type.InterfaceImpl())
-            {
-                auto semantics = get_type_semantics(iface.Interface());
-                if (for_typedef(w, semantics, [&](auto&& type)
-                {
-                    return (setter_iface != type) && (search_interface(type) || search_interfaces(type));
-                })) {
-                    return true;
-                }
-            }
-            return false;
-        };
-
-        // first search base interfaces for property getter
-        if (search_interfaces(setter_iface))
-        {
-            return { getter_iface, true };
-        }
-
-        // then search peer exclusive-to interfaces and their bases
-        if (auto exclusive_to_attr = get_attribute(setter_iface, "Windows.Foundation.Metadata", "ExclusiveToAttribute"))
-        {
-            auto sig = exclusive_to_attr.Value();
-            auto const& fixed_args = sig.FixedArgs();
-            XLANG_ASSERT(fixed_args.size() == 1);
-            auto sys_type = std::get<ElemSig::SystemType>(std::get<ElemSig>(fixed_args[0].value).value);
-            auto exclusive_to_type = setter_iface.get_cache().find_required(sys_type.name);
-            if (search_interfaces(exclusive_to_type))
-            {
-                return { getter_iface, false };
-            }
-        }
-
-        throw_invalid("Could not find property getter interface");
     }
 
     void write_interface_member_signatures(writer& w, TypeDef const& type)
@@ -2486,7 +2486,7 @@ remove => _%.Unsubscribe(value);
             get<uint8_t>(get_arg(10)));
     }
 
-    void write_type_inheritance(writer& w, TypeDef const& type, type_semantics base_semantics)
+    void write_type_inheritance(writer& w, TypeDef const& type, type_semantics base_semantics, bool add_custom_qi)
     {
         auto delimiter{ " : " };
         auto write_delimiter = [&]()
@@ -2505,9 +2505,18 @@ remove => _%.Unsubscribe(value);
         {
             for_typedef(w, get_type_semantics(iface.Interface()), [&](auto type)
             {
-                write_delimiter();
-                w.write("%", bind<write_type_name>(type, false, false));
+                if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute") || !is_exclusive_to(type))
+                {
+                    write_delimiter();
+                    w.write("%", bind<write_type_name>(type, false, false));
+                }
             });
+        }
+
+        if (add_custom_qi)
+        {
+            write_delimiter();
+            w.write("global::System.Runtime.InteropServices.ICustomQueryInterface");
         }
     }
     
@@ -3428,7 +3437,7 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             bind<write_guid_attribute>(type),
             is_exclusive_to(type) ? "internal" : "public",
             type_name,
-            bind<write_type_inheritance>(type, object_type{}),
+            bind<write_type_inheritance>(type, object_type{}, false),
             bind<write_interface_member_signatures>(type)
         );
     }
@@ -3576,12 +3585,12 @@ _defaultLazy = new Lazy<%>(() => ifc);
 private struct InterfaceTag<I>{};
 
 private % AsInternal(InterfaceTag<%> _) => _default;
-%
+%%
 }
 )",
             bind<write_class_modifiers>(type),
             type_name,
-            bind<write_type_inheritance>(type, base_semantics),
+            bind<write_type_inheritance>(type, base_semantics, true),
             derived_new,
             default_interface_abi_name,
             default_interface_abi_name,
@@ -3630,7 +3639,26 @@ default_interface_abi_name);
             }),
             default_interface_name,
             default_interface_name,
-            bind<write_class_members>(type));
+            bind<write_class_members>(type),
+            bind([&](writer& w)
+            {
+                    w.write(R"(
+global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
+{
+ppv = IntPtr.Zero;
+_ = ComWrappersSupport.TryUnwrapObject(_default, out var reference);
+try
+{
+using IObjectReference objRef = reference.As<IUnknownVftbl>(iid);
+ppv = objRef.GetRef();
+return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.Handled;
+}
+catch (InvalidCastException)
+{
+return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
+}
+})");
+            }));
     }
 
     void write_abi_class(writer& w, TypeDef const& type)
@@ -3642,33 +3670,28 @@ default_interface_abi_name);
 
         auto abi_type_name = write_type_name_temp(w, type, "%", true);
         auto projected_type_name = write_type_name_temp(w, type);
-        auto default_interface_name = get_default_interface_name(w, type, false);
         auto default_interface_abi_name = get_default_interface_name(w, type, true);
 
         w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public struct %
 {
-public static IObjectReference CreateMarshaler(% obj) => MarshalInterface<%>.CreateMarshaler(obj);
-public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
+public static IObjectReference CreateMarshaler(% obj) => MarshalInspectable.CreateMarshaler(obj).As<%.Vftbl>();
+public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<object>.GetAbi(value);
 public static % FromAbi(IntPtr thisPtr) => (%)MarshalInspectable.FromAbi(thisPtr);
-public static IntPtr FromManaged(% obj) => MarshalInterface<%>.FromManaged(obj);
-public static (int length, IntPtr data) FromManagedArray(%[] obj) => MarshalInterface<%>.FromManagedArray(obj);
-public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<%>.DisposeMarshaler(value);
-public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<%>.DisposeAbi(abi);
+public static IntPtr FromManaged(% obj) => obj is null ? IntPtr.Zero : CreateMarshaler(obj).GetRef();
+public static (int length, IntPtr data) FromManagedArray(%[] array) => MarshalInterfaceHelper<%>.FromManagedArray(array, (o) => FromManaged(o));
+public static void DisposeMarshaler(IObjectReference value) => MarshalInspectable.DisposeMarshaler(value);
+public static void DisposeAbi(IntPtr abi) => MarshalInspectable.DisposeAbi(abi);
 }
 )",
             abi_type_name,
             projected_type_name,
-            default_interface_name,
-            default_interface_name,
+            default_interface_abi_name,
             projected_type_name,
             projected_type_name,
             projected_type_name,
-            default_interface_name,
             projected_type_name,
-            default_interface_name,
-            default_interface_name,
-            default_interface_name);
+            projected_type_name);
     }
 
     void write_delegate(writer& w, TypeDef const& type)
