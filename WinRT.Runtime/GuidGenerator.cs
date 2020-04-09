@@ -58,14 +58,16 @@ namespace WinRT
             return GetGuidType(type).GUID;
         }
 
-        public static Guid GetIID(Type type)
+        public static Guid GetIID(Type type) => GetIIDs(type)[0];
+
+        public static Guid[] GetIIDs(Type type)
         {
-            type = GetGuidType(type);
+            type = type.GetGuidType();
             if (!type.IsGenericType)
             {
-                return type.GUID;
+                return new[] { type.GUID };
             }
-            return (Guid)type.GetField("PIID").GetValue(null);
+            return (Guid[])type.GetField("PIIDs")?.GetValue(null) ?? new[] { (Guid)type.GetField("PIID").GetValue(null) };
         }
 
         public static IEnumerable<string> GetSignatures(Type type)
