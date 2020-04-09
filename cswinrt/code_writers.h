@@ -2425,10 +2425,11 @@ remove => _%.Unsubscribe(value);
                     auto element = w.write_temp("%", bind<write_generic_type_name>(0));
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_enumerable_members>("_iterableToEnumerable", false)),
+                        w.write_temp("%", bind<write_enumerable_members>("_iterableToEnumerable", true)),
                         w.write_temp("IEnumerable<%>", element),
                         "_iterableToEnumerable"
                     };
+                    remove_enumerable();
                 }
                 else if (mapping->abi_name == "IIterator`1") // IEnumerator`1
                 {
