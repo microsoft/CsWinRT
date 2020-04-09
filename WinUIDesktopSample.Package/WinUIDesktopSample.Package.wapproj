@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--  Beware Dragons:
+  There are many BuildingInsideVisualStudio checks in here because this project can't build from the
+  command line w/o doing more evil trickery. This is only needed for manual testing when in VS, so it
+  isn't the worst thing in the world.
+  -->
   <PropertyGroup Condition="'$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0'">
     <VisualStudioVersion>15.0</VisualStudioVersion>
   </PropertyGroup>
@@ -48,7 +53,7 @@
   <PropertyGroup>
     <WapProjPath Condition="'$(WapProjPath)'==''">$(MSBuildExtensionsPath)\Microsoft\DesktopBridge\</WapProjPath>
   </PropertyGroup>
-  <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.props" />
+  <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.props" Condition="'$(BuildingInsideVisualStudio)'=='true'" />
   <PropertyGroup>
     <ProjectGuid>9b7aea9c-47db-4b8f-966a-7c64c02febf7</ProjectGuid>
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
@@ -71,10 +76,11 @@
     <Content Include="Images\StoreLogo.png" />
     <Content Include="Images\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)'=='true'">
     <ProjectReference Include="..\WinUIDesktopSample\WinUIDesktopSample.csproj">
       <SkipGetTargetFrameworkProperties>True</SkipGetTargetFrameworkProperties>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" />
+  <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" Condition="'$(BuildingInsideVisualStudio)'=='true'" />
+  <Target Name="Build" Condition="'$(BuildingInsideVisualStudio)'!='true'" />
 </Project>
