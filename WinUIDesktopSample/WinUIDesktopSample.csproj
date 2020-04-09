@@ -16,16 +16,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="WinUIDesktopSample.exe.manifest" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="WinUIDesktopSample.exe.manifest" />
+    <Manifest Include="WinUIDesktopSample.exe.manifest">
+      <DeploymentContent>true</DeploymentContent>
+    </Manifest>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.5" />
-    <!-- Exclude compile time assets so we don't think we're building a real WinUI App -->
+    <!--
+      Exclude compile time assets so we don't pick up the interop assembly from the WinUI Nuget
+      since we are building our own in the WinUIProjection project
+    -->
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
       <ExcludeAssets>compile;</ExcludeAssets>
     </PackageReference>
@@ -35,7 +36,5 @@
     <ProjectReference Include="..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\WinUIProjection\WinUIProjection.csproj" />
   </ItemGroup>
-  
-  
 
 </Project>
