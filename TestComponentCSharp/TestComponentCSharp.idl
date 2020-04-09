@@ -55,6 +55,7 @@ namespace TestComponentCSharp
     delegate Object ProvideObject();
     delegate Windows.Foundation.Uri ProvideUri();
     delegate Windows.Foundation.Collections.IKeyValuePair<String, String> ProvideStringPair();
+    delegate Windows.UI.Xaml.Interop.IBindableIterable ProvideBindableIterable();
     delegate Windows.UI.Xaml.Interop.IBindableVector ProvideBindableVector();
 
     interface ICowboy
@@ -220,17 +221,20 @@ namespace TestComponentCSharp
         
         // Bindable
         Windows.UI.Xaml.Interop.IBindableIterable BindableIterableProperty;
-        Windows.UI.Xaml.Interop.IBindableIterator BindableIteratorProperty;
-        Windows.UI.Xaml.Interop.IBindableVectorView BindableVectorViewProperty;
-        Windows.UI.Xaml.Interop.IBindableObservableVector BindableObservableVectorProperty;
+        void RaiseBindableIterableChanged();
+        void CallForBindableIterable(ProvideBindableIterable provideBindableIterable);
+        event Windows.Foundation.EventHandler<Windows.UI.Xaml.Interop.IBindableIterable> BindableIterablePropertyChanged;
         
         Windows.UI.Xaml.Interop.IBindableVector BindableVectorProperty;
         void RaiseBindableVectorChanged();
         void CallForBindableVector(ProvideBindableVector provideBindableVector);
         event Windows.Foundation.EventHandler<Windows.UI.Xaml.Interop.IBindableVector> BindableVectorPropertyChanged;
+        
+        Windows.UI.Xaml.Interop.IBindableObservableVector BindableObservableVectorProperty;
 
         void CopyProperties(IProperties1 src);
         void CopyPropertiesViaWeakReference(IProperties1 src);
+
         // Async
         void CompleteAsync(); // Completes the in-flight async operation successfully
         void CompleteAsync(Int32 hr); // Completes the in-flight async operation with a failed HRESULT

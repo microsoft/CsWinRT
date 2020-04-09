@@ -4,19 +4,24 @@
 
 using namespace std::chrono;
 
+using namespace winrt;
+using namespace Windows::Foundation;
+using namespace Collections;
+using namespace Windows::UI::Xaml::Interop;
+
 namespace winrt::TestComponentCSharp::implementation
 {
     namespace statics
     {
         static int _int {};
-        static winrt::event<Windows::Foundation::EventHandler<int32_t>> _intChanged {};
+        static winrt::event<EventHandler<int32_t>> _intChanged {};
         static winrt::hstring _string;
-        static winrt::event<Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, hstring>> _stringChanged {};
+        static winrt::event<TypedEventHandler<TestComponentCSharp::Class, hstring>> _stringChanged {};
         static int _readWrite{};
     }
 
     template <typename K, typename V>
-    struct key_value_pair : implements<key_value_pair<K, V>, Windows::Foundation::Collections::IKeyValuePair<K, V>>
+    struct key_value_pair : implements<key_value_pair<K, V>, IKeyValuePair<K, V>>
     {
         key_value_pair(K key, V value) :
             m_key(std::move(key)),
@@ -38,6 +43,62 @@ namespace winrt::TestComponentCSharp::implementation
 
         K m_key;
         V m_value;
+    };
+	
+    struct bindable_vector : winrt::implements<bindable_vector, IBindableVector, IBindableIterable>
+    {
+        IBindableVector _wrapped;
+
+        bindable_vector(IBindableVector wrapped)
+        {
+            _wrapped = wrapped;
+        }
+
+        IBindableIterator First() const
+        {
+            return _wrapped.First();
+        }
+
+        IInspectable GetAt(uint32_t index) const
+        {
+            return _wrapped.GetAt(index);
+        }
+        uint32_t Size() const
+        {
+            return _wrapped.Size();
+        }
+        IBindableVectorView GetView() const
+        {
+            return _wrapped.GetView();
+        }
+        bool IndexOf(IInspectable const& value, uint32_t& index) const
+        {
+            return _wrapped.IndexOf(value, index);
+        }
+        void SetAt(uint32_t index, IInspectable const& value) const
+        {
+            _wrapped.SetAt(index, value);
+        }
+        void InsertAt(uint32_t index, IInspectable const& value) const
+        {
+            _wrapped.InsertAt(index, value);
+        }
+        void RemoveAt(uint32_t index) const
+        {
+            _wrapped.RemoveAt(index);
+        }
+        void Append(IInspectable const& value) const
+        {
+            _wrapped.Append(value);
+        }
+        void RemoveAtEnd() const
+        {
+            _wrapped.RemoveAtEnd();
+        }
+        void Clear() const
+        {
+            _wrapped.Clear();
+        }
     };
 
     Class::Class() :
@@ -71,7 +132,7 @@ namespace winrt::TestComponentCSharp::implementation
         statics::_int = value;
         statics::_intChanged(/*todo*/ nullptr, statics::_int);
     }
-    winrt::event_token Class::StaticIntPropertyChanged(Windows::Foundation::EventHandler<int32_t> const& handler)
+    winrt::event_token Class::StaticIntPropertyChanged(EventHandler<int32_t> const& handler)
     {
         return statics::_intChanged.add(handler);
     }
@@ -87,7 +148,7 @@ namespace winrt::TestComponentCSharp::implementation
     {
         statics::_string = value;
     }
-    winrt::event_token Class::StaticStringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, hstring> const& handler)
+    winrt::event_token Class::StaticStringPropertyChanged(TypedEventHandler<TestComponentCSharp::Class, hstring> const& handler)
     {
         return statics::_stringChanged.add(handler);
     }
@@ -111,11 +172,11 @@ namespace winrt::TestComponentCSharp::implementation
     {
         statics::_readWrite = value;
     }
-    Windows::Foundation::TimeSpan Class::FromSeconds(int32_t seconds)
+    TimeSpan Class::FromSeconds(int32_t seconds)
     {
         return std::chrono::seconds{seconds};
     }
-    Windows::Foundation::DateTime Class::Now()
+    DateTime Class::Now()
     {
         return winrt::clock::now();
     }
@@ -175,11 +236,11 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _collectionEvent.remove(token);
     }
-    void Class::InvokeCollectionEvent(TestComponentCSharp::Class const& sender, Windows::Foundation::Collections::IVector<int32_t> const& arg0, Windows::Foundation::Collections::IMap<int32_t, hstring> const& arg1)
+    void Class::InvokeCollectionEvent(TestComponentCSharp::Class const& sender, IVector<int32_t> const& arg0, IMap<int32_t, hstring> const& arg1)
     {
         _collectionEvent(sender, arg0, arg1);
     }
-    winrt::event_token Class::NestedEvent(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IVector<int32_t>> const& handler)
+    winrt::event_token Class::NestedEvent(EventHandler<IVector<int32_t>> const& handler)
     {
         return _nestedEvent.add(handler);
     }
@@ -187,11 +248,11 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _nestedEvent.remove(token);
     }
-    void Class::InvokeNestedEvent(TestComponentCSharp::Class const& sender, Windows::Foundation::Collections::IVector<int32_t> const& arg0)
+    void Class::InvokeNestedEvent(TestComponentCSharp::Class const& sender, IVector<int32_t> const& arg0)
     {
         _nestedEvent(sender, arg0);
     }
-    winrt::event_token Class::NestedTypedEvent(Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, Windows::Foundation::Collections::IVector<hstring>> const& handler)
+    winrt::event_token Class::NestedTypedEvent(TypedEventHandler<TestComponentCSharp::Class, IVector<hstring>> const& handler)
     {
         return _nestedTypedEvent.add(handler);
     }
@@ -199,7 +260,7 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _nestedTypedEvent.remove(token);
     }
-    void Class::InvokeNestedTypedEvent(TestComponentCSharp::Class const& sender, Windows::Foundation::Collections::IVector<hstring> const& arg0)
+    void Class::InvokeNestedTypedEvent(TestComponentCSharp::Class const& sender, IVector<hstring> const& arg0)
     {
         _nestedTypedEvent(sender, arg0);
     }
@@ -212,7 +273,7 @@ namespace winrt::TestComponentCSharp::implementation
         _int = value;
         _intChanged(*this, _int);
     }
-    winrt::event_token Class::IntPropertyChanged(Windows::Foundation::EventHandler<int32_t> const& handler)
+    winrt::event_token Class::IntPropertyChanged(EventHandler<int32_t> const& handler)
     {
         return _intChanged.add(handler);
     }
@@ -237,7 +298,7 @@ namespace winrt::TestComponentCSharp::implementation
         _bool = value;
         _boolChanged(*this, _bool);
     }
-    winrt::event_token Class::BoolPropertyChanged(Windows::Foundation::EventHandler<bool> const& handler)
+    winrt::event_token Class::BoolPropertyChanged(EventHandler<bool> const& handler)
     {
         return _boolChanged.add(handler);
     }
@@ -262,7 +323,7 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _string = value;
     }
-    winrt::event_token Class::StringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, hstring> const& handler)
+    winrt::event_token Class::StringPropertyChanged(TypedEventHandler<TestComponentCSharp::Class, hstring> const& handler)
     {
         return _stringChanged.add(handler);
     }
@@ -286,19 +347,19 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _string2 = value;
     }
-    Windows::Foundation::Collections::IVector<hstring> Class::StringsProperty()
+    IVector<hstring> Class::StringsProperty()
     {
         return _strings;
     }
-    void Class::StringsProperty(Windows::Foundation::Collections::IVector<hstring> const& value)
+    void Class::StringsProperty(IVector<hstring> const& value)
     {
         _strings = value;
     }
-    Windows::Foundation::IInspectable Class::ObjectProperty()
+    IInspectable Class::ObjectProperty()
     {
         return _object;
     }
-    void Class::ObjectProperty(Windows::Foundation::IInspectable const& value)
+    void Class::ObjectProperty(IInspectable const& value)
     {
         _object = value;
     }
@@ -310,7 +371,7 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _object = provideObject();
     }
-    winrt::event_token Class::ObjectPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::IInspectable> const& handler)
+    winrt::event_token Class::ObjectPropertyChanged(EventHandler<IInspectable> const& handler)
     {
         return _objectChanged.add(handler);
     }
@@ -318,11 +379,11 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _objectChanged.remove(token);
     }
-    Windows::Foundation::Uri Class::UriProperty()
+    Uri Class::UriProperty()
     {
         return _uri;
     }
-    void Class::UriProperty(Windows::Foundation::Uri const& value)
+    void Class::UriProperty(Uri const& value)
     {
         _uri = value;
     }
@@ -334,7 +395,7 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _uri = provideUri();
     }
-    winrt::event_token Class::UriPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Uri> const& handler)
+    winrt::event_token Class::UriPropertyChanged(EventHandler<Uri> const& handler)
     {
         return _uriChanged.add(handler);
     }
@@ -343,20 +404,20 @@ namespace winrt::TestComponentCSharp::implementation
         _uriChanged.remove(token);
     }
 
-    Windows::Foundation::IAsyncOperation<int32_t> Class::GetIntAsync()
+    IAsyncOperation<int32_t> Class::GetIntAsync()
     {
         co_return _int;
     }
-    Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> Class::GetStringAsync()
+    IAsyncOperationWithProgress<hstring, int32_t> Class::GetStringAsync()
     {
         co_return _string;
     }
 
-    Windows::Foundation::Collections::IKeyValuePair<hstring, hstring> Class::StringPairProperty()
+    IKeyValuePair<hstring, hstring> Class::StringPairProperty()
     {
         return _stringPair;
     }
-    void Class::StringPairProperty(Windows::Foundation::Collections::IKeyValuePair<hstring, hstring> const& value)
+    void Class::StringPairProperty(IKeyValuePair<hstring, hstring> const& value)
     {
         _stringPair = value;
     }
@@ -368,7 +429,7 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _stringPair = provideStringPair();
     }
-    winrt::event_token Class::StringPairPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IKeyValuePair<hstring, hstring>> const& handler)
+    winrt::event_token Class::StringPairPropertyChanged(EventHandler<IKeyValuePair<hstring, hstring>> const& handler)
     {
         return _stringPairChanged.add(handler);
     }
@@ -542,28 +603,28 @@ namespace winrt::TestComponentCSharp::implementation
         std::copy(_ints.begin(), _ints.end(), ints.begin());
     }
 
-    Windows::Foundation::Collections::IVectorView<int32_t> Class::GetIntVector()
+    IVectorView<int32_t> Class::GetIntVector()
     {
         return winrt::single_threaded_vector(std::vector{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }).GetView();
     }
 
-    Windows::Foundation::Collections::IVectorView<bool> Class::GetBoolVector()
+    IVectorView<bool> Class::GetBoolVector()
     {
         return winrt::single_threaded_vector(std::vector{ true, false, true, false }).GetView();
     }
 
-    Windows::Foundation::Collections::IVectorView<hstring> Class::GetStringVector()
+    IVectorView<hstring> Class::GetStringVector()
     {
         return winrt::single_threaded_vector(std::vector<hstring>{ L"String0", L"String1", L"String2", L"String3", L"String4" }).GetView();
     }
 
-    Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ComposedBlittableStruct> Class::GetBlittableStructVector()
+    IVectorView<TestComponentCSharp::ComposedBlittableStruct> Class::GetBlittableStructVector()
     {
         return winrt::single_threaded_vector(std::vector{ ComposedBlittableStruct{0}, ComposedBlittableStruct{1},
             ComposedBlittableStruct{2}, ComposedBlittableStruct{3}, ComposedBlittableStruct{4} }).GetView();
     }
 
-    Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ComposedNonBlittableStruct> Class::GetNonBlittableStructVector()
+    IVectorView<TestComponentCSharp::ComposedNonBlittableStruct> Class::GetNonBlittableStructVector()
     {
         return winrt::single_threaded_vector(std::vector
         {
@@ -573,17 +634,17 @@ namespace winrt::TestComponentCSharp::implementation
         }).GetView();
     }
 
-    Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> Class::GetObjectVector()
+    IVectorView<IInspectable> Class::GetObjectVector()
     {
         return winrt::single_threaded_vector(std::vector<IInspectable>{ winrt::box_value(0), winrt::box_value(1), winrt::box_value(2) }).GetView();
     }
 
-    Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> Class::GetInterfaceVector()
+    IVectorView<TestComponentCSharp::IProperties1> Class::GetInterfaceVector()
     {
         return winrt::single_threaded_vector(std::vector<IProperties1>{ *this, *this, *this }).GetView();
     }
 
-    Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> Class::GetClassVector()
+    IVectorView<TestComponentCSharp::Class> Class::GetClassVector()
     {
         return winrt::single_threaded_vector(std::vector<TestComponentCSharp::Class>{ *this, *this, *this }).GetView();
     }
@@ -607,7 +668,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::check_bool(::SetEvent(_syncHandle.get()));
     }
 
-    Windows::Foundation::IAsyncAction Class::DoitAsync()
+    IAsyncAction Class::DoitAsync()
     {
         _asyncResult = E_PENDING;
         co_await winrt::resume_background();
@@ -620,7 +681,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::check_hresult(_asyncResult);
     }
 
-    Windows::Foundation::IAsyncActionWithProgress<int32_t> Class::DoitAsyncWithProgress()
+    IAsyncActionWithProgress<int32_t> Class::DoitAsyncWithProgress()
     {
         _asyncResult = E_PENDING;
         _asyncProgress = 0;
@@ -641,7 +702,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::check_hresult(_asyncResult);
     }
 
-    Windows::Foundation::IAsyncOperation<int32_t> Class::AddAsync(int32_t lhs, int32_t rhs)
+    IAsyncOperation<int32_t> Class::AddAsync(int32_t lhs, int32_t rhs)
     {
         _asyncResult = E_PENDING;
         co_await winrt::resume_background();
@@ -655,7 +716,7 @@ namespace winrt::TestComponentCSharp::implementation
         co_return lhs + rhs;
     }
 
-    Windows::Foundation::IAsyncOperationWithProgress<int32_t, int32_t> Class::AddAsyncWithProgress(int32_t lhs, int32_t rhs)
+    IAsyncOperationWithProgress<int32_t, int32_t> Class::AddAsyncWithProgress(int32_t lhs, int32_t rhs)
     {
         _asyncResult = E_PENDING;
         _asyncProgress = 0;
@@ -677,47 +738,47 @@ namespace winrt::TestComponentCSharp::implementation
         co_return lhs + rhs;
     }
 
-    Windows::Foundation::Point Class::PointProperty()
+    Point Class::PointProperty()
     {
         return _point;
     }
 
-    void Class::PointProperty(Windows::Foundation::Point const& value)
+    void Class::PointProperty(Point const& value)
     {
         _point = value;
     }
 
-    Windows::Foundation::IReference<Windows::Foundation::Point> Class::GetPointReference()
+    IReference<Point> Class::GetPointReference()
     {
         return _point;
     }
 
-    Windows::Foundation::TimeSpan Class::TimeSpanProperty()
+    TimeSpan Class::TimeSpanProperty()
     {
         return _timeSpan;
     }
 
-    void Class::TimeSpanProperty(Windows::Foundation::TimeSpan const& value)
+    void Class::TimeSpanProperty(TimeSpan const& value)
     {
         _timeSpan = value;
     }
 
-    Windows::Foundation::IReference<Windows::Foundation::TimeSpan> Class::GetTimeSpanReference()
+    IReference<TimeSpan> Class::GetTimeSpanReference()
     {
         return _timeSpan;
     }
 
-    Windows::Foundation::DateTime Class::DateTimeProperty()
+    DateTime Class::DateTimeProperty()
     {
         return _dateTime;
     }
 
-    void Class::DateTimeProperty(Windows::Foundation::DateTime const& value)
+    void Class::DateTimeProperty(DateTime const& value)
     {
         _dateTime = value;
     }
 
-    Windows::Foundation::IReference<Windows::Foundation::DateTime> Class::GetDateTimeProperty()
+    IReference<DateTime> Class::GetDateTimeProperty()
     {
         return _dateTime;
     }
@@ -747,22 +808,66 @@ namespace winrt::TestComponentCSharp::implementation
         _int = value;
     }
 
-    Windows::Foundation::Collections::IIterable<int32_t> Class::GetIntIterable()
+    IIterable<int32_t> Class::GetIntIterable()
     {
         return _intColl;
     }
-    void Class::SetIntIterable(Windows::Foundation::Collections::IIterable<int32_t> const& value)
+    void Class::SetIntIterable(IIterable<int32_t> const& value)
     {
         _intColl = value;
     }
 
-    Windows::UI::Xaml::Interop::IBindableVector Class::BindableVectorProperty()
+    IBindableIterable Class::BindableIterableProperty()
+    {
+        return _bindableIterable;
+    }
+    void Class::BindableIterableProperty(IBindableIterable const& value)
+    {
+        _bindableIterable = value;
+        auto iterator = _bindableIterable.First();
+        int32_t expected = 0;
+        while (iterator.HasCurrent())
+        {
+            if (winrt::unbox_value<int32_t>(iterator.Current()) != expected++)
+            {
+                throw new winrt::hresult_invalid_argument();
+            }
+            iterator.MoveNext();
+        }
+    }
+    void Class::RaiseBindableIterableChanged()
+    {
+        _bindableIterableChanged(*this, _bindableIterable);
+    }
+    void Class::CallForBindableIterable(TestComponentCSharp::ProvideBindableIterable const& provideBindableIterable)
+    {
+        _bindableIterable = provideBindableIterable();
+    }
+    winrt::event_token Class::BindableIterablePropertyChanged(EventHandler<IBindableIterable> const& handler)
+    {
+        return _bindableIterableChanged.add(handler);
+    }
+    void Class::BindableIterablePropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _bindableIterableChanged.remove(token);
+    }
+    IBindableVector Class::BindableVectorProperty()
     {
         return _bindableVector;
     }
-    void Class::BindableVectorProperty(Windows::UI::Xaml::Interop::IBindableVector const& value)
+
+    void Class::BindableVectorProperty(IBindableVector const& value)
     {
-        _bindableVector = value;
+        _bindableVector = winrt::make<bindable_vector>(value);
+        auto view = _bindableVector.GetView();
+        int32_t expected = 0;
+        for (uint32_t i = 0; i < view.Size(); i++)
+        {
+            if (winrt::unbox_value<int32_t>(view.GetAt(i)) != expected++)
+            {
+                throw new winrt::hresult_invalid_argument();
+            }
+        }
     }
     void Class::RaiseBindableVectorChanged()
     {
@@ -772,7 +877,7 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _bindableVector = provideBindableVector();
     }
-    winrt::event_token Class::BindableVectorPropertyChanged(Windows::Foundation::EventHandler<Windows::UI::Xaml::Interop::IBindableVector> const& handler)
+    winrt::event_token Class::BindableVectorPropertyChanged(EventHandler<IBindableVector> const& handler)
     {
         return _bindableVectorChanged.add(handler);
     }
@@ -780,37 +885,23 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _bindableVectorChanged.remove(token);
     }
-    Windows::UI::Xaml::Interop::IBindableIterable Class::BindableIterableProperty()
+    IBindableObservableVector Class::BindableObservableVectorProperty()
     {
-        throw hresult_not_implemented();
+        return _bindableObservable;
     }
-    void Class::BindableIterableProperty(Windows::UI::Xaml::Interop::IBindableIterable const& value)
+    void Class::BindableObservableVectorProperty(IBindableObservableVector const& value)
     {
-        throw hresult_not_implemented();
-    }
-    Windows::UI::Xaml::Interop::IBindableIterator Class::BindableIteratorProperty()
-    {
-        throw hresult_not_implemented();
-    }
-    void Class::BindableIteratorProperty(Windows::UI::Xaml::Interop::IBindableIterator const& value)
-    {
-        throw hresult_not_implemented();
-    }
-    Windows::UI::Xaml::Interop::IBindableVectorView Class::BindableVectorViewProperty()
-    {
-        throw hresult_not_implemented();
-    }
-    void Class::BindableVectorViewProperty(Windows::UI::Xaml::Interop::IBindableVectorView const& value)
-    {
-        throw hresult_not_implemented();
-    }
-    Windows::UI::Xaml::Interop::IBindableObservableVector Class::BindableObservableVectorProperty()
-    {
-        throw hresult_not_implemented();
-    }
-    void Class::BindableObservableVectorProperty(Windows::UI::Xaml::Interop::IBindableObservableVector const& value)
-    {
-        throw hresult_not_implemented();
+        _bindableObservable = value;
+        _bindableObservable.VectorChanged(
+            [](IBindableObservableVector vector, IInspectable e) {
+                int32_t sum = 0;
+                auto view = vector.GetView();
+                for (uint32_t i = 0; i < view.Size(); i++)
+                {
+                    sum += winrt::unbox_value<int32_t>(view.GetAt(i));
+                }
+                e.as<IProperties2>().ReadWriteProperty(sum);
+        });
     }
 
     void Class::CopyProperties(winrt::TestComponentCSharp::IProperties1 const& src)
@@ -841,50 +932,50 @@ namespace winrt::TestComponentCSharp::implementation
 
     com_array<int32_t> Class::UnboxInt32Array(IInspectable const& obj)
     {
-        return obj.as<Windows::Foundation::IReferenceArray<int32_t>>().Value();
+        return obj.as<IReferenceArray<int32_t>>().Value();
     }
 
     com_array<bool> Class::UnboxBooleanArray(IInspectable const& obj)
     {
-        return obj.as<Windows::Foundation::IReferenceArray<bool>>().Value();
+        return obj.as<IReferenceArray<bool>>().Value();
     }
     
     com_array<hstring> Class::UnboxStringArray(IInspectable const& obj)
     {
-        return obj.as<Windows::Foundation::IReferenceArray<hstring>>().Value();
+        return obj.as<IReferenceArray<hstring>>().Value();
     }
 
-    Windows::UI::Xaml::Interop::TypeName Class::Int32Type()
+    TypeName Class::Int32Type()
     {
         return winrt::xaml_typename<int32_t>();
     }
 
-    Windows::UI::Xaml::Interop::TypeName Class::ReferenceInt32Type()
+    TypeName Class::ReferenceInt32Type()
     {
-        return winrt::xaml_typename<Windows::Foundation::IReference<int32_t>>();
+        return winrt::xaml_typename<IReference<int32_t>>();
     }
 
-    Windows::UI::Xaml::Interop::TypeName Class::ThisClassType()
+    TypeName Class::ThisClassType()
     {
         return winrt::xaml_typename<winrt::TestComponentCSharp::Class>();
     }
 
-    bool Class::VerifyTypeIsInt32Type(Windows::UI::Xaml::Interop::TypeName const& type_name)
+    bool Class::VerifyTypeIsInt32Type(TypeName const& type_name)
     {
         return winrt::xaml_typename<int32_t>() == type_name;
     }
 
-    bool Class::VerifyTypeIsReferenceInt32Type(Windows::UI::Xaml::Interop::TypeName const& type_name)
+    bool Class::VerifyTypeIsReferenceInt32Type(TypeName const& type_name)
     {
-        return winrt::xaml_typename<Windows::Foundation::IReference<int32_t>>() == type_name;
+        return winrt::xaml_typename<IReference<int32_t>>() == type_name;
     }
 
-    bool Class::VerifyTypeIsThisClassType(Windows::UI::Xaml::Interop::TypeName const& type_name)
+    bool Class::VerifyTypeIsThisClassType(TypeName const& type_name)
     {
         return winrt::xaml_typename<winrt::TestComponentCSharp::Class>() == type_name;
     }
 
-    hstring Class::GetTypeNameForType(Windows::UI::Xaml::Interop::TypeName const& type)
+    hstring Class::GetTypeNameForType(TypeName const& type)
     {
         return type.Name;
     }

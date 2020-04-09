@@ -34,13 +34,13 @@ namespace Windows.UI.Xaml.Interop
     }
     [global::WinRT.WindowsRuntimeType]
     [Guid("FE1EB536-7E7F-4F90-AC9A-474984AAE512")]
-    public interface IBindableObservableVector : IList, IEnumerable //IBindableVector, IBindableIterable
+    public interface IBindableObservableVector : IList, IEnumerable
     {
         event BindableVectorChangedEventHandler VectorChanged;
     }
     [global::WinRT.WindowsRuntimeType]
     [Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93")]
-    public interface IBindableVector : IEnumerable //IBindableIterable
+    public interface IBindableVector : IEnumerable
     {
         object GetAt(uint index);
         IBindableVectorView GetView();
@@ -55,7 +55,7 @@ namespace Windows.UI.Xaml.Interop
     }
     [global::WinRT.WindowsRuntimeType]
     [Guid("346DD6E7-976E-4BC3-815D-ECE243BC0F33")]
-    public interface IBindableVectorView : IEnumerable //IBindableIterable
+    public interface IBindableVectorView : IEnumerable
     {
         object GetAt(uint index);
         bool IndexOf(object value, out uint index);
@@ -126,7 +126,6 @@ namespace ABI.Windows.UI.Xaml.Interop
                     MarshalInterface<global::Windows.UI.Xaml.Interop.IBindableObservableVector>.DisposeMarshaler(__vector);
                     MarshalInspectable.DisposeMarshaler(__e);
                 }
-
             }
         }
 
@@ -138,15 +137,12 @@ namespace ABI.Windows.UI.Xaml.Interop
 
         private static unsafe int Do_Abi_Invoke(IntPtr thisPtr, IntPtr vector, IntPtr e)
         {
-
-
             try
             {
                 global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(thisPtr, (global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler invoke) =>
                 {
                     invoke(MarshalInterface<global::Windows.UI.Xaml.Interop.IBindableObservableVector>.FromAbi(vector), MarshalInspectable.FromAbi(e));
                 });
-
             }
             catch (Exception __exception__)
             {
@@ -188,14 +184,11 @@ namespace ABI.Windows.UI.Xaml.Interop
             private static unsafe int Do_Abi_MoveNext_2(IntPtr thisPtr, out byte result)
             {
                 bool __result = default;
-
                 result = default;
-
                 try
                 {
                     __result = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Interop.IBindableIterator>(thisPtr).MoveNext();
                     result = (byte)(__result ? 1 : 0);
-
                 }
                 catch (Exception __exception__)
                 {
@@ -207,14 +200,11 @@ namespace ABI.Windows.UI.Xaml.Interop
             private static unsafe int Do_Abi_get_Current_0(IntPtr thisPtr, out IntPtr value)
             {
                 object __value = default;
-
                 value = default;
-
                 try
                 {
                     __value = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Interop.IBindableIterator>(thisPtr).Current;
                     value = MarshalInspectable.FromManaged(__value);
-
                 }
                 catch (Exception __exception__)
                 {
@@ -226,14 +216,11 @@ namespace ABI.Windows.UI.Xaml.Interop
             private static unsafe int Do_Abi_get_HasCurrent_1(IntPtr thisPtr, out byte value)
             {
                 bool __value = default;
-
                 value = default;
-
                 try
                 {
                     __value = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Interop.IBindableIterator>(thisPtr).HasCurrent;
                     value = (byte)(__value ? 1 : 0);
-
                 }
                 catch (Exception __exception__)
                 {
@@ -290,6 +277,7 @@ namespace ABI.Windows.UI.Xaml.Interop
                 return __retval != 0;
             }
         }
+
     }
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static class IBindableIterator_Delegates
@@ -588,23 +576,6 @@ namespace ABI.System.Collections
     [Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F")]
     public class IEnumerable : global::System.Collections.IEnumerable, IBindableIterable
     {
-        public static IObjectReference CreateMarshaler(global::System.Collections.IEnumerable obj) =>
-            ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IEnumerable)));
-
-        public static IntPtr GetAbi(IObjectReference objRef) =>
-            objRef?.ThisPtr ?? IntPtr.Zero;
-
-        public static global::System.Collections.IEnumerable FromAbi(IntPtr thisPtr) =>
-            new IEnumerable(ObjRefFromAbi(thisPtr));
-
-        public static IntPtr FromManaged(global::System.Collections.IEnumerable value) =>
-            (value is null) ? IntPtr.Zero : CreateMarshaler(value).GetRef();
-
-        public static void DisposeMarshaler(IObjectReference objRef) => objRef?.Dispose();
-
-        public static void DisposeAbi(IntPtr abi) =>
-            MarshalInterfaceHelper<IBindableIterable>.DisposeAbi(abi);
-
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable));
 
         public class FromAbiHelper : global::System.Collections.IEnumerable
@@ -621,16 +592,19 @@ namespace ABI.System.Collections
                 _iterable = iterable;
             }
 
-            public global::System.Collections.IEnumerator GetEnumerator()
+            public global::System.Collections.IEnumerator GetEnumerator() =>
+                new Generic.IEnumerator<object>.FromAbiHelper(new NonGenericToGenericIterator(_iterable.First()));
+
+            private sealed class NonGenericToGenericIterator : global::Windows.Foundation.Collections.IIterator<object>
             {
-                var first = _iterable.First();
-                // translate ibindableiterator to iiterator<object>
-                // then convert generic iiterator to nongeneric enumerator
-                //if (first is global::ABI.System.Collections.IEnumerator iterable)
-                //{
-                //    return iterable;
-                //}
-                throw new InvalidOperationException("Unexpected type for enumerator");
+                private readonly IBindableIterator iterator;
+
+                public NonGenericToGenericIterator(IBindableIterator iterator) => this.iterator = iterator;
+
+                public object _Current => iterator.Current;
+                public bool HasCurrent => iterator.HasCurrent;
+                public bool _MoveNext() { return iterator.MoveNext(); }
+                public uint GetMany(ref object[] items) => throw new NotSupportedException();
             }
         }
 
@@ -684,7 +658,8 @@ namespace ABI.System.Collections
                 try
                 {
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.IEnumerable>(thisPtr);
-                    result = MarshalInterface<global::System.Collections.IEnumerator>.FromManaged(__this.GetEnumerator());
+                    var iterator = ToAbiHelper.MakeBindableIterator(__this.GetEnumerator());
+                    result = MarshalInterface<global::Windows.UI.Xaml.Interop.IBindableIterator>.FromManaged(iterator);
                 }
                 catch (Exception __exception__)
                 {
@@ -743,23 +718,6 @@ namespace ABI.System.Collections
     [Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93")]
     public class IList : global::System.Collections.IList
     {
-        public static IObjectReference CreateMarshaler(global::System.Collections.IList obj) =>
-            ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IList)));
-
-        public static IntPtr GetAbi(IObjectReference objRef) =>
-            objRef?.ThisPtr ?? IntPtr.Zero;
-
-        public static global::System.Collections.IList FromAbi(IntPtr thisPtr) =>
-            new IList(ObjRefFromAbi(thisPtr));
-
-        public static IntPtr FromManaged(global::System.Collections.IList value) =>
-            (value is null) ? IntPtr.Zero : CreateMarshaler(value).GetRef();
-
-        public static void DisposeMarshaler(IObjectReference objRef) => objRef?.Dispose();
-
-        public static void DisposeAbi(IntPtr abi) =>
-            MarshalInterfaceHelper<IBindableVector>.DisposeAbi(abi);
-
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IList));
 
         public class FromAbiHelper : global::System.Collections.IList
@@ -806,8 +764,6 @@ namespace ABI.System.Collections
                     throw new ArgumentException(ErrorStrings.Arg_RankMultiDimNotSupported);
 
                 int destLB = array.GetLowerBound(0);
-
-
                 int srcLen = Count;
                 int destLen = array.GetLength(0);
 
@@ -946,7 +902,6 @@ namespace ABI.System.Collections
                 {
                     if (ExceptionHelpers.E_BOUNDS == ex.HResult)
                         throw new ArgumentOutOfRangeException(nameof(index));
-
                     throw;
                 }
             }
@@ -964,7 +919,6 @@ namespace ABI.System.Collections
                 {
                     if (ExceptionHelpers.E_BOUNDS == ex.HResult)
                         throw new ArgumentOutOfRangeException(nameof(index));
-
                     throw;
                 }
             }
@@ -982,7 +936,6 @@ namespace ABI.System.Collections
                 {
                     if (ExceptionHelpers.E_BOUNDS == ex.HResult)
                         throw new ArgumentOutOfRangeException(nameof(index));
-
                     throw;
                 }
             }
@@ -1000,7 +953,6 @@ namespace ABI.System.Collections
                 {
                     if (ExceptionHelpers.E_BOUNDS == ex.HResult)
                         throw new ArgumentOutOfRangeException(nameof(index));
-
                     throw;
                 }
             }
@@ -1159,12 +1111,8 @@ namespace ABI.System.Collections
                     }
                 }
 
-                // IBindableIterable implementation:
-
                 public IBindableIterator First() =>
                     IEnumerable.ToAbiHelper.MakeBindableIterator(list.GetEnumerator());
-
-                // IBindableVectorView implementation:
 
                 public object GetAt(uint index)
                 {
@@ -1196,10 +1144,7 @@ namespace ABI.System.Collections
                     return true;
                 }
 
-                public IEnumerator GetEnumerator()
-                {
-                    throw new NotImplementedException();
-                }
+                public IEnumerator GetEnumerator() => list.GetEnumerator();
             }
         }
 
@@ -1253,9 +1198,7 @@ namespace ABI.System.Collections
             private static unsafe int Do_Abi_GetAt_0(IntPtr thisPtr, uint index, out IntPtr result)
             {
                 object __result = default;
-
                 result = default;
-
                 try
                 {
                     __result = FindAdapter(thisPtr).GetAt(index);
@@ -1272,9 +1215,7 @@ namespace ABI.System.Collections
             private static unsafe int Do_Abi_GetView_2(IntPtr thisPtr, out IntPtr result)
             {
                 global::Windows.UI.Xaml.Interop.IBindableVectorView __result = default;
-
                 result = default;
-
                 try
                 {
                     __result = FindAdapter(thisPtr).GetView();
@@ -1290,11 +1231,9 @@ namespace ABI.System.Collections
             private static unsafe int Do_Abi_IndexOf_3(IntPtr thisPtr, IntPtr value, out uint index, out byte returnValue)
             {
                 bool __returnValue = default;
-
                 index = default;
                 returnValue = default;
                 uint __index = default;
-
                 try
                 {
                     __returnValue = FindAdapter(thisPtr).IndexOf(MarshalInspectable.FromAbi(value), out __index);
@@ -1424,7 +1363,7 @@ namespace ABI.System.Collections
         internal IList(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
-            _vectorToList = new ABI.System.Collections.IList.FromAbiHelper(ObjRef);
+            _vectorToList = new ABI.System.Collections.IList.FromAbiHelper(this);
         }
         ABI.System.Collections.IList.FromAbiHelper _vectorToList;
 

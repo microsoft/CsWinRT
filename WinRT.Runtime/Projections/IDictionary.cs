@@ -54,7 +54,6 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IDictionary<K, V>));
 
-#nullable enable
         public class FromAbiHelper : global::System.Collections.Generic.IDictionary<K, V>
         {
             private readonly global::ABI.System.Collections.Generic.IDictionary<K, V> _map;
@@ -327,7 +326,7 @@ namespace ABI.System.Collections.Generic
                         return enumeration.MoveNext();
                     }
 
-                    object? IEnumerator.Current => Current;
+                    object IEnumerator.Current => Current;
 
                     public K Current => enumeration.Current.Key;
 
@@ -427,7 +426,7 @@ namespace ABI.System.Collections.Generic
                         return enumeration.MoveNext();
                     }
 
-                    object? IEnumerator.Current => Current;
+                    object IEnumerator.Current => Current;
 
                     public V Current => enumeration.Current.Value;
 
@@ -438,7 +437,6 @@ namespace ABI.System.Collections.Generic
                 }
             }
         }
-#nullable disable
 
         public class ToAbiHelper : global::Windows.Foundation.Collections.IMap<K, V>
         {

@@ -74,9 +74,9 @@ namespace ABI.System.Collections.Generic
             public global::System.Collections.Generic.IEnumerator<T> GetEnumerator()
             {
                 var first = _iterable.First();
-                if (first is global::ABI.System.Collections.Generic.IEnumerator<T> iterable)
+                if (first is global::ABI.System.Collections.Generic.IEnumerator<T> iterator)
                 {
-                    return iterable;
+                    return iterator;
                 }
                 throw new InvalidOperationException("Unexpected type for enumerator");
             }
@@ -218,14 +218,14 @@ namespace ABI.System.Collections.Generic
 
         public class FromAbiHelper : global::System.Collections.Generic.IEnumerator<T>
         {
-            private readonly global::ABI.System.Collections.Generic.IEnumerator<T> _iterator;
+            private readonly global::Windows.Foundation.Collections.IIterator<T> _iterator;
 
             public FromAbiHelper(IObjectReference obj) :
                 this(new global::ABI.System.Collections.Generic.IEnumerator<T>(obj))
             {
             }
 
-            public FromAbiHelper(global::ABI.System.Collections.Generic.IEnumerator<T> iterator)
+            public FromAbiHelper(global::Windows.Foundation.Collections.IIterator<T> iterator)
             {
                 _iterator = iterator;
             }
@@ -248,8 +248,7 @@ namespace ABI.System.Collections.Generic
                 }
             }
 
-#nullable enable
-            object? IEnumerator.Current
+            object IEnumerator.Current
             {
                 get
                 {
@@ -262,7 +261,6 @@ namespace ABI.System.Collections.Generic
                     return m_current;
                 }
             }
-#nullable disable
 
             public bool MoveNext()
             {

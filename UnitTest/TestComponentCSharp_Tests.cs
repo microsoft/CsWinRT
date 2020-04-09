@@ -16,6 +16,8 @@ using Windows.Foundation.Collections;
 
 using TestComponentCSharp;
 using System.Collections.Generic;
+using Windows.UI.Xaml.Interop;
+using System.Collections;
 
 namespace UnitTest
 {
@@ -592,17 +594,110 @@ namespace UnitTest
             Assert.True(ints_in.SequenceEqual(ints_out));
         }
 
+        class ManagedBindableObservable : IBindableObservableVector
+        {
+            private IList _list;
+
+            public class TObservation : IProperties2
+            {
+                private int _value = 0;
+
+                public int ReadWriteProperty { get => _value; set => _value = value; }
+
+                int IProperties1.ReadWriteProperty => ReadWriteProperty;
+            }
+            TObservation _observation;
+
+            public int Observation { get => _observation.ReadWriteProperty; }
+
+            public ManagedBindableObservable(IList list) => _list = new ArrayList(list);
+
+            private void OnChanged()
+            {
+                VectorChanged.Invoke(this, _observation = new TObservation());
+            } 
+
+            public event BindableVectorChangedEventHandler VectorChanged;
+
+            public object this[int index] 
+            { 
+                get => _list[index]; 
+                set{ _list[index] = value; OnChanged(); } 
+            }
+
+            public bool IsFixedSize => false;
+
+            public bool IsReadOnly => false;
+
+            public int Count => _list.Count;
+
+            public bool IsSynchronized => _list.IsSynchronized;
+
+            public object SyncRoot => _list;
+
+            public int Add(object value)
+            {
+                var result = _list.Add(value);
+                OnChanged();
+                return result;
+            }
+
+            public void Clear()
+            {
+                _list.Clear();
+                OnChanged();
+            }
+
+            public bool Contains(object value) => _list.Contains(value);
+
+            public void CopyTo(Array array, int index) => _list.CopyTo(array, index);
+
+            public IEnumerator GetEnumerator() => _list.GetEnumerator();
+
+            public int IndexOf(object value) => _list.IndexOf(value);
+
+            public void Insert(int index, object value)
+            {
+                _list.Insert(index, value);
+                OnChanged();
+            }
+
+            public void Remove(object value)
+            {
+                _list.Remove(value);
+                OnChanged();
+            }
+
+            public void RemoveAt(int index)
+            {
+                _list.RemoveAt(index);
+                OnChanged();
+            }
+        }
+
         [Fact]
         public void TestBindable()
         {
             var expected = new int[] { 0, 1, 2 };
+
+            TestObject.BindableIterableProperty = expected;
+            Assert.Equal(expected, TestObject.BindableIterableProperty);
+            TestObject.CallForBindableIterable(() => expected);
+            TestObject.BindableIterablePropertyChanged +=
+                (object sender, IEnumerable value) => Assert.Equal(expected, value);
+            TestObject.RaiseBindableIterableChanged();
+
             TestObject.BindableVectorProperty = expected;
             Assert.Equal(expected, TestObject.BindableVectorProperty);
-
             TestObject.CallForBindableVector(() => expected);
             TestObject.BindableVectorPropertyChanged +=
-                (object sender, System.Collections.IList value) => Assert.Equal(expected, value);
+                (object sender, IList value) => Assert.Equal(expected, value);
             TestObject.RaiseBindableVectorChanged();
+
+            var observable = new ManagedBindableObservable(expected);
+            TestObject.BindableObservableVectorProperty = observable;
+            observable.Add(3);
+            Assert.Equal(6, observable.Observation);
         }
 
         [Fact]
