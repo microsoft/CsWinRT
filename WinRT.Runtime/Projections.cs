@@ -101,12 +101,11 @@ namespace WinRT
             {
                 if (abiType.IsGenericType)
                 {
-                    // todo: should this be CustomAbiTypeToTypeMappings?
-                    return CustomTypeToHelperTypeMappings.TryGetValue(abiType.GetGenericTypeDefinition(), out Type publicTypeDefinition)
+                    return CustomAbiTypeToTypeMappings.TryGetValue(abiType.GetGenericTypeDefinition(), out Type publicTypeDefinition)
                         ? publicTypeDefinition.MakeGenericType(abiType.GetGenericArguments())
                         : null;
                 }
-                return CustomTypeToHelperTypeMappings.TryGetValue(abiType, out Type publicType) ? publicType : null;
+                return CustomAbiTypeToTypeMappings.TryGetValue(abiType, out Type publicType) ? publicType : null;
             }
             finally
             {
