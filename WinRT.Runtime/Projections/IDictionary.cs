@@ -54,7 +54,6 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IDictionary<K, V>));
 
-#nullable enable
         public class FromAbiHelper : global::System.Collections.Generic.IDictionary<K, V>
         {
             private readonly global::ABI.System.Collections.Generic.IDictionary<K, V> _map;
@@ -327,7 +326,7 @@ namespace ABI.System.Collections.Generic
                         return enumeration.MoveNext();
                     }
 
-                    object? IEnumerator.Current => Current;
+                    object IEnumerator.Current => Current;
 
                     public K Current => enumeration.Current.Key;
 
@@ -396,7 +395,7 @@ namespace ABI.System.Collections.Generic
                     throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
                 }
 
-                IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
                 public global::System.Collections.Generic.IEnumerator<V> GetEnumerator()
                 {
@@ -427,7 +426,7 @@ namespace ABI.System.Collections.Generic
                         return enumeration.MoveNext();
                     }
 
-                    object? IEnumerator.Current => Current;
+                    object IEnumerator.Current => Current;
 
                     public V Current => enumeration.Current.Value;
 
@@ -438,7 +437,6 @@ namespace ABI.System.Collections.Generic
                 }
             }
         }
-#nullable disable
 
         public class ToAbiHelper : global::Windows.Foundation.Collections.IMap<K, V>
         {
@@ -834,7 +832,7 @@ namespace ABI.System.Collections.Generic
         public void CopyTo(global::System.Collections.Generic.KeyValuePair<K, V>[] array, int arrayIndex) => _FromMap.CopyTo(array, arrayIndex);
         public bool Remove(global::System.Collections.Generic.KeyValuePair<K, V> item) => _FromMap.Remove(item);
         public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator() => _FromMap.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
     public static class IDictionary_Delegates
     {
