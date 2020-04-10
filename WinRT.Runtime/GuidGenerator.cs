@@ -198,6 +198,22 @@ namespace WinRT
 
         private static Guid wrt_pinterface_namespace = new Guid("d57af411-737b-c042-abae-878b1e16adee");
 
+        public static string GetSignature(Type type)
+        {
+            bool first = true;
+            string retVal = null;
+            foreach (var signature in GetSignatures(type))
+            {
+                if (!first)
+                {
+                    throw new ArgumentException($"The provided type: '{type.FullName}' has multiple possible signatures. Call GetSignatures instead.", nameof(type));
+                }
+                retVal = signature;
+                first = false;
+            }
+            return retVal;
+        }
+
         public static Guid CreateIID(Type type)
         {
             var iids = CreateIIDs(type);
