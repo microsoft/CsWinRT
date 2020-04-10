@@ -479,11 +479,12 @@ namespace System
             }
             finally
             {
-                // TODO:
                 // We may be called on an STA thread which we don't own, so make sure that the RCW is released right
                 // away. Otherwise, if we leave it up to the finalizer, the apartment may already be gone.
-                // if (Marshal.IsComObject(asyncInfo))
-                //     Marshal.ReleaseComObject(asyncInfo);
+                if (ComWrappersSupport.TryUnwrapObject(asyncInfo, out var objRef))
+                {
+                    objRef.Dispose();
+                }
             }
         }
     }
