@@ -6,6 +6,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <CppWinRTVerbosity>high</CppWinRTVerbosity>
+    <MicrosoftWinUIVersion>3.0.0-preview1.200407.3-CI</MicrosoftWinUIVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(VisualStudioVersion)' == '15.0'">
