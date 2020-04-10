@@ -334,7 +334,6 @@ namespace WinRT
 
         private static bool ShouldProvideIReference(object obj)
         {
-            // TODO: Handle types that are value-types in .NET and interfaces in WinRT and vice-versa
             return obj.GetType().IsValueType || obj is string;
         }
 
@@ -674,6 +673,14 @@ namespace WinRT
                     {
                         IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<global::System.Type>)),
                         Vtable = BoxedArrayIReferenceArrayImpl<global::System.Type>.AbiToProjectionVftablePtr
+                    };
+                }
+                if (obj.GetType().IsGenericType && obj.GetType().GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.KeyValuePair<,>))
+                {
+                    return new ComInterfaceEntry
+                    {
+                        IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<object>)),
+                        Vtable = BoxedArrayIReferenceArrayImpl<object>.AbiToProjectionVftablePtr
                     };
                 }
                 return null;
