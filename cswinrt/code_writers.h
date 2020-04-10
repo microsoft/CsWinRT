@@ -3646,10 +3646,9 @@ default_interface_abi_name);
 global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
 {
 ppv = IntPtr.Zero;
-_ = ComWrappersSupport.TryUnwrapObject(_default, out var reference);
 try
 {
-using IObjectReference objRef = reference.As<IUnknownVftbl>(iid);
+using IObjectReference objRef = _default.ObjRef.As<IUnknownVftbl>(iid);
 ppv = objRef.GetRef();
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.Handled;
 }
