@@ -216,38 +216,59 @@ namespace WinRT
 
         public static Guid CreateIID(Type type)
         {
-            var iids = CreateIIDs(type);
-
-            if (iids.Length != 1)
+            bool first = true;
+            Guid retVal = default;
+            foreach (var iid in CreateIIDsLazy(type))
             {
-                throw new ArgumentException($"The provided type: '{type.FullName}' has multiple possible IIDs. Call CreateIIDs instead.", nameof(type));
+                if (!first)
+                {
+                    throw new ArgumentException($"The provided type: '{type.FullName}' has multiple possible IIDs. Call CreateIIDs instead.", nameof(type));
+                }
+                retVal = iid;
+                first = false;
             }
-
-            return iids[0];
+            return retVal;
         }
 
         public static Guid[] CreateIIDs(Type type)
         {
-            var sigs = GetSignatures(type).ToArray();
-            var guids = new Guid[sigs.Length];
-            for (int i = 0; i < sigs.Length; i++)
+            return CreateIIDsLazy(type).ToArray();
+        }
+
+        private static IEnumerable<Guid> CreateIIDsLazy(Type type)
+        {
+            if(type.IsGenericType)
             {
-                if (!type.IsGenericType)
+                return GetIIDsGeneric(type);
+            }
+            else
+            {
+                return GetIIDsNonGeneric(type);
+            }
+
+            static IEnumerable<Guid> GetIIDsNonGeneric(Type type)
+            {
+                foreach (var signature in GetSignatures(type))
                 {
-                    guids[i] = new Guid(sigs[i]);
-                }
-                else
-                {
-                    var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(sigs[i])).ToArray();
-                    using (SHA1 sha = new SHA1CryptoServiceProvider())
-                    {
-                        var hash = sha.ComputeHash(data);
-                        guids[i] = encode_guid(hash);
-                    }
+                    yield return new Guid(signature);
                 }
             }
 
-            return guids;
-        }
+            static IEnumerable<Guid> GetIIDsGeneric(Type type)
+            {
+                foreach (var signature in GetSignatures(type))
+                {
+                    var signatureBytes = UTF8Encoding.UTF8.GetBytes(signature);
+                    var namespaceBytes =  wrt_pinterface_namespace.ToByteArray();
+                    var data = new byte[namespaceBytes.Length + signatureBytes.Length];
+                    Array.Copy(namespaceBytes, data, namespaceBytes.Length);
+                    Array.Copy(signatureBytes, 0, data, namespaceBytes.Length, signatureBytes.Length);
+                    using (SHA1 sha = new SHA1CryptoServiceProvider())
+                    {
+                        var hash = sha.ComputeHash(data);
+                        yield return encode_guid(hash);
+                    }
+                }
+            }
     }
 }
