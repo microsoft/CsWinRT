@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
 using System.Diagnostics;
+using Windows.UI.Xaml.Interop;
 
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
 #pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
@@ -73,9 +74,9 @@ namespace ABI.System.Collections.Generic
             public global::System.Collections.Generic.IEnumerator<T> GetEnumerator()
             {
                 var first = _iterable.First();
-                if (first is global::ABI.System.Collections.Generic.IEnumerator<T> iterable)
+                if (first is global::ABI.System.Collections.Generic.IEnumerator<T> iterator)
                 {
-                    return iterable;
+                    return iterator;
                 }
                 throw new InvalidOperationException("Unexpected type for enumerator");
             }
@@ -83,7 +84,7 @@ namespace ABI.System.Collections.Generic
             global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
         }
 
-        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterable<T> //, todo: IBindableIterable
+        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterable<T>
         {
             private readonly IEnumerable<T> m_enumerable;
 
@@ -183,7 +184,7 @@ namespace ABI.System.Collections.Generic
         }
 
         public global::System.Collections.Generic.IEnumerator<T> GetEnumerator() => _FromIterable.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
     public static class IEnumerable_Delegates
     {
@@ -217,14 +218,14 @@ namespace ABI.System.Collections.Generic
 
         public class FromAbiHelper : global::System.Collections.Generic.IEnumerator<T>
         {
-            private readonly global::ABI.System.Collections.Generic.IEnumerator<T> _iterator;
+            private readonly global::Windows.Foundation.Collections.IIterator<T> _iterator;
 
             public FromAbiHelper(IObjectReference obj) :
                 this(new global::ABI.System.Collections.Generic.IEnumerator<T>(obj))
             {
             }
 
-            public FromAbiHelper(global::ABI.System.Collections.Generic.IEnumerator<T> iterator)
+            public FromAbiHelper(global::Windows.Foundation.Collections.IIterator<T> iterator)
             {
                 _iterator = iterator;
             }
@@ -247,8 +248,7 @@ namespace ABI.System.Collections.Generic
                 }
             }
 
-#nullable enable
-            object? IEnumerator.Current
+            object IEnumerator.Current
             {
                 get
                 {
@@ -261,7 +261,6 @@ namespace ABI.System.Collections.Generic
                     return m_current;
                 }
             }
-#nullable disable
 
             public bool MoveNext()
             {
@@ -325,13 +324,11 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T> //, todo: IBindableIterator
+        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, IBindableIterator
         {
             private readonly global::System.Collections.Generic.IEnumerator<T> m_enumerator;
             private bool m_firstItem = true;
             private bool m_hasCurrent;
-
-            public global::System.Collections.Generic.IEnumerator<T> Enumerator { get => m_enumerator; }
 
             internal ToAbiHelper(global::System.Collections.Generic.IEnumerator<T> enumerator) => m_enumerator = enumerator;
 
@@ -355,8 +352,6 @@ namespace ABI.System.Collections.Generic
                     return m_enumerator.Current;
                 }
             }
-
-            //todo: object? IBindableIterator.Current => ((IIterator<T>)this).Current;
 
             public bool HasCurrent
             {
@@ -414,6 +409,10 @@ namespace ABI.System.Collections.Generic
 
                 return (uint)index;
             }
+
+            public object Current => _Current;
+
+            public bool MoveNext() => _MoveNext();
         }
 
         [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]

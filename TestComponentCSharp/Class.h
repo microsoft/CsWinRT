@@ -35,6 +35,11 @@ namespace winrt::TestComponentCSharp::implementation
         ComposedNonBlittableStruct _nonBlittableStruct{};
         std::vector<int32_t> _ints{ 1, 2, 3 };
         Windows::Foundation::Collections::IIterable<int32_t> _intColl;
+        Windows::UI::Xaml::Interop::IBindableIterable _bindableIterable;
+        Windows::UI::Xaml::Interop::IBindableVector _bindableVector;
+        Windows::UI::Xaml::Interop::IBindableObservableVector _bindableObservable;
+        winrt::event<Windows::Foundation::EventHandler<Windows::UI::Xaml::Interop::IBindableIterable>> _bindableIterableChanged;
+        winrt::event<Windows::Foundation::EventHandler<Windows::UI::Xaml::Interop::IBindableVector>> _bindableVectorChanged;
         winrt::handle _syncHandle;
         int32_t _asyncResult;
         int32_t _asyncProgress;
@@ -168,6 +173,21 @@ namespace winrt::TestComponentCSharp::implementation
 
         Windows::Foundation::Collections::IIterable<int32_t> GetIntIterable();
         void SetIntIterable(Windows::Foundation::Collections::IIterable<int32_t> const& value);
+
+        Windows::UI::Xaml::Interop::IBindableIterable BindableIterableProperty();
+        void BindableIterableProperty(Windows::UI::Xaml::Interop::IBindableIterable const& value);
+        void RaiseBindableIterableChanged();
+        void CallForBindableIterable(TestComponentCSharp::ProvideBindableIterable const& provideBindableIterable);
+        winrt::event_token BindableIterablePropertyChanged(Windows::Foundation::EventHandler<Windows::UI::Xaml::Interop::IBindableIterable> const& handler);
+        void BindableIterablePropertyChanged(winrt::event_token const& token) noexcept;
+        Windows::UI::Xaml::Interop::IBindableVector BindableVectorProperty();
+        void BindableVectorProperty(Windows::UI::Xaml::Interop::IBindableVector const& value);
+        void RaiseBindableVectorChanged();
+        void CallForBindableVector(TestComponentCSharp::ProvideBindableVector const& provideBindableVector);
+        winrt::event_token BindableVectorPropertyChanged(Windows::Foundation::EventHandler<Windows::UI::Xaml::Interop::IBindableVector> const& handler);
+        void BindableVectorPropertyChanged(winrt::event_token const& token) noexcept;
+        Windows::UI::Xaml::Interop::IBindableObservableVector BindableObservableVectorProperty();
+        void BindableObservableVectorProperty(Windows::UI::Xaml::Interop::IBindableObservableVector const& value);
 
         void CopyProperties(TestComponentCSharp::IProperties1 const& src);
         void CopyPropertiesViaWeakReference(TestComponentCSharp::IProperties1 const& src);

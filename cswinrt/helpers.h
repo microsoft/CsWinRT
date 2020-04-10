@@ -444,6 +444,8 @@ namespace cswinrt
             },
             { "Microsoft.UI.Xaml.Interop",
                 {
+                    { "IBindableIterable", "System.Collections", "IEnumerable", true },
+                    { "IBindableVector", "System.Collections", "IList", true },
                     { "TypeName", "System", "Type", true }
                 }
             },
@@ -490,9 +492,15 @@ namespace cswinrt
                     { "ICommand", "System.Windows.Input", "ICommand", true }
                 }
             },
-            {
-                "Windows.UI.Xaml.Interop",
+            { "Windows.UI.Xaml.Interop",
                 {
+                    { "BindableVectorChangedEventHandler", "Windows.UI.Xaml.Interop", "BindableVectorChangedEventHandler", true },
+                    { "IBindableIterable", "System.Collections", "IEnumerable", true },
+                    { "IBindableIterator", "Windows.UI.Xaml.Interop", "IBindableIterator", true },
+                    { "IBindableObservableVector", "Windows.UI.Xaml.Interop", "IBindableObservableVector", true },
+                    { "IBindableVector", "System.Collections", "IList", true },
+                    { "IBindableVectorView", "Windows.UI.Xaml.Interop", "IBindableVectorView", true },
+                    { "TypeKind", "Windows.UI.Xaml.Interop", "TypeKind", true },
                     { "TypeName", "System", "Type", true }
                 }
             }

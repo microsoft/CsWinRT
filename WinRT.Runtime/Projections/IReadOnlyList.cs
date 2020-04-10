@@ -434,7 +434,7 @@ namespace ABI.System.Collections.Generic
 
         public global::System.Collections.Generic.IEnumerator<T> GetEnumerator() => _FromVectorView.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
     public static class IReadOnlyList_Delegates
     {

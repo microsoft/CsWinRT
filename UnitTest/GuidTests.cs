@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -60,6 +61,10 @@ namespace UnitTest
             AssertGuid<IList<A>>("0e3f106f-a266-50a1-8043-c90fcf3844f6");
             AssertGuid<WFC.MapChangedEventHandler<A, B>>("19046f0b-cf81-5dec-bbb2-7cc250da8b8b");
             AssertGuid<WFC.VectorChangedEventHandler<A>>("a1e9acd7-e4df-5a79-aefa-de07934ab0fb");
+
+            // Bindable GUIDs
+            AssertGuid<IEnumerable>("036d2c08-df29-41af-8aa2-d774be62ba6f"); // IBindableIterable
+            AssertGuid<IList>("393de7de-6fd0-4c0d-bb71-47244a113e93"); // IBindableVector
 
             // Generated primitive GUIDs
             AssertGuid<bool?>("3c00fd60-2950-5939-a21a-2d12c5a01b8a");
