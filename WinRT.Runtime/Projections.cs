@@ -48,6 +48,7 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(IList), typeof(ABI.System.Collections.IList), "Windows.UI.Xaml.Interop.IBindableVector");
             RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedAction), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedAction), "Windows.UI.Xaml.Interop.NotifyCollectionChangedAction");
             RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedEventArgs), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs), "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs");
+            RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedEventHandler), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler), "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventHandler");
         }
 
         public static void RegisterCustomAbiTypeMapping(Type publicType, Type abiType, string winrtTypeName)

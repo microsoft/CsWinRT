@@ -488,6 +488,7 @@ namespace cswinrt
                     { "IBindableVectorView", "Windows.UI.Xaml.Interop", "IBindableVectorView", true },
                     { "NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction" },
                     { "NotifyCollectionChangedEventArgs", "System.Collections.Specialized", "NotifyCollectionChangedEventArgs", true },
+                    { "NotifyCollectionChangedEventHandler", "System.Collections.Specialized", "NotifyCollectionChangedEventHandler", true },
                     { "TypeKind", "Windows.UI.Xaml.Interop", "TypeKind", true },
                     { "TypeName", "System", "Type", true }
                 }
