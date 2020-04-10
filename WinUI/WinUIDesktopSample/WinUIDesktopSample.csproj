@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp5.0</TargetFramework>
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <GenerateTestProjection>true</GenerateTestProjection>
+    <ApplicationManifest>WinUIDesktopSample.exe.manifest</ApplicationManifest>
+    <!--
+    There seems to be a codegen bug when referencing the cswinrt interop assembly of the Win32XamlHost
+    project. Since we don't really need those metadata providers yet, this is just an easy workaround
+    -->
+    <XamlCodeGenerationControlFlags>DoNotGenerateOtherProviders</XamlCodeGenerationControlFlags>
+    <Platforms>x86;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Manifest Include="WinUIDesktopSample.exe.manifest">
+      <DeploymentContent>true</DeploymentContent>
+    </Manifest>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.5" />
+    <!--
+      Exclude compile time assets so we don't pick up the interop assembly from the WinUI Nuget
+      since we are building our own in the WinUIProjection project
+    -->
+    <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
+      <ExcludeAssets>compile;</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\WinUIProjection\WinUIProjection.csproj" />
+  </ItemGroup>
+
+</Project>

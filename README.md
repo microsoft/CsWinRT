@@ -52,9 +52,27 @@ The **/testcomp** folder contains an implementation of a WinRT test component, d
 
 The **/unittest** folder contains unit tests for validating the projection generated for the TestComp project (above), for the TestWinRT\TestComponent project (below), and for foundational parts of the Windows SDK.  All pull requests should ensure that this project executes without errors.
 
+## /winuiprojection
+
+The **/winuiprojection** folder contains a project for generating and building a complete Windows SDK and WinUI projection. It's used by both **/winuitest** and **/winuidesktopsample**.
+
+This is built into a separate project because the WinUI Xaml Compiler needs reference assemblies during Pass1 that contain definitions for platform types.
+These types don't exist if you try to build the projection directly into the test app, so we first go through this project.
+
 ## /winuitest
 
-The **/winuitest** folder contains a smoke test for generating and building a complete Windows SDK and WinUI projection, ensuring that most edge cases are validated.  All pull requests should ensure that this project builds without errors.
+The **/winuitest** is a simple test project that can be used for running automated tests with WinUI.
+
+## /winuidesktopsample
+
+The **/winuidesktopsample** is an end-to-end test app that uses the generated projection from the **/winuiprojection** project.
+
+**Note** in order to load .xbf files, you need to set the **WinUIDesktopSample.Package** property as the startup project. 
+
+## /winuidesktopsample.package
+
+The **/winuidesktopsample.package** project creates an .msix for the **/winuidesktopsample** project.
+This is currently required to test apps that need to load .xbf files.
 
 ## /TestWinRT
 

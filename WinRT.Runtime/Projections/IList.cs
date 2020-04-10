@@ -919,7 +919,7 @@ namespace ABI.System.Collections.Generic
         public void CopyTo(T[] array, int arrayIndex) => _FromVector.CopyTo(array, arrayIndex);
         public bool Remove(T item) => _FromVector.Remove(item);
         public global::System.Collections.Generic.IEnumerator<T> GetEnumerator() => _FromVector.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
     public static class IList_Delegates
     {

@@ -51,7 +51,6 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IReadOnlyDictionary<K, V>));
 
-#nullable enable
         public class FromAbiHelper : global::System.Collections.Generic.IReadOnlyDictionary<K, V>
         {
             private readonly global::ABI.System.Collections.Generic.IReadOnlyDictionary<K, V> _mapView;
@@ -154,7 +153,7 @@ namespace ABI.System.Collections.Generic
 
             public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator() => _enumerable.GetEnumerator();
 
-            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+            IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
             private sealed class ReadOnlyDictionaryKeyCollection : global::System.Collections.Generic.IEnumerable<K>
             {
@@ -172,7 +171,7 @@ namespace ABI.System.Collections.Generic
                 {
                     return new ReadOnlyDictionaryKeyEnumerator(dictionary);
                 }
-                IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
                 private sealed class ReadOnlyDictionaryKeyEnumerator : global::System.Collections.Generic.IEnumerator<K>
                 {
@@ -198,7 +197,7 @@ namespace ABI.System.Collections.Generic
                         return enumeration.MoveNext();
                     }
 
-                    object? IEnumerator.Current => Current;
+                    object IEnumerator.Current => Current;
 
                     public K Current => enumeration.Current.Key;
 
@@ -251,7 +250,7 @@ namespace ABI.System.Collections.Generic
                         return enumeration.MoveNext();
                     }
 
-                    object? IEnumerator.Current => Current;
+                    object IEnumerator.Current => Current;
 
                     public V Current => enumeration.Current.Value;
 
@@ -294,7 +293,7 @@ namespace ABI.System.Collections.Generic
 
             public bool HasKey(K key) => _dictionary.ContainsKey(key);
 
-            public void Split(out global::Windows.Foundation.Collections.IMapView<K, V>? first, out global::Windows.Foundation.Collections.IMapView<K, V>? second)
+            public void Split(out global::Windows.Foundation.Collections.IMapView<K, V> first, out global::Windows.Foundation.Collections.IMapView<K, V> second)
             {
                 if (_dictionary.Count < 2)
                 {
@@ -385,7 +384,7 @@ namespace ABI.System.Collections.Generic
                 private global::System.Collections.Generic.IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> GetEnumerator() =>
                     new Enumerator(items, firstItemIndex, lastItemIndex);
 
-                public void Split(out global::Windows.Foundation.Collections.IMapView<K, V>? firstPartition, out global::Windows.Foundation.Collections.IMapView<K, V>? secondPartition)
+                public void Split(out global::Windows.Foundation.Collections.IMapView<K, V> firstPartition, out global::Windows.Foundation.Collections.IMapView<K, V> secondPartition)
                 {
                     if (Count < 2)
                     {
@@ -451,7 +450,7 @@ namespace ABI.System.Collections.Generic
                     }
                 }
 
-                object? IEnumerator.Current => Current;
+                object IEnumerator.Current => Current;
 
                 void IEnumerator.Reset() =>
                     _current = _start - 1;
@@ -461,7 +460,6 @@ namespace ABI.System.Collections.Generic
                 }
             }
         }
-#nullable disable
 
         [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
         public struct Vftbl
@@ -689,7 +687,7 @@ namespace ABI.System.Collections.Generic
         public bool ContainsKey(K key) => _FromMapView.ContainsKey(key);
         public bool TryGetValue(K key, out V value) => _FromMapView.TryGetValue(key, out value);
         public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator() => _FromMapView.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
     public static class IReadOnlyDictionary_Delegates
     {

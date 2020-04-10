@@ -300,7 +300,6 @@ namespace WinRT
         }
     }
 
-#nullable enable
     internal static class ExceptionExtensions
     {
         public static void SetHResult(this Exception ex, int value)
@@ -308,9 +307,9 @@ namespace WinRT
             ex.GetType().GetProperty("HResult").SetValue(ex, value);
         }
 
-        internal static Exception GetExceptionForHR(this Exception? innerException, int hresult, string messageResource)
+        internal static Exception GetExceptionForHR(this Exception innerException, int hresult, string messageResource)
         {
-            Exception? e;
+            Exception e;
             if (innerException != null)
             {
                 string message = innerException.Message ?? messageResource;
@@ -324,7 +323,6 @@ namespace WinRT
             return e;
         }
     }
-#nullable disable
 
     internal class ErrorStrings
     {
@@ -333,6 +331,7 @@ namespace WinRT
         internal static readonly string Arg_IndexOutOfRangeException = "Index was outside the bounds of the array.";
         internal static readonly string Arg_KeyNotFound = "The given key was not present in the dictionary.";
         internal static readonly string Arg_KeyNotFoundWithKey = "The given key '{0}' was not present in the dictionary.";
+        internal static readonly string Arg_RankMultiDimNotSupported = "Only single dimensional arrays are supported for the requested action.";
         internal static readonly string Argument_AddingDuplicate = "An item with the same key has already been added.";
         internal static readonly string Argument_AddingDuplicateWithKey = "An item with the same key has already been added. Key: {0}";
         internal static readonly string Argument_IndexOutOfArrayBounds = "The specified index is out of bounds of the specified array.";

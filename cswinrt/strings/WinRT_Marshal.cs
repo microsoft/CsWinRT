@@ -695,7 +695,7 @@ namespace WinRT
         {
             if (ptr == IntPtr.Zero) return;
             // TODO: this should be a direct v-table call when function pointers are a thing
-            ObjectReference<IInspectable.Vftbl>.Attach(ref ptr).Dispose();
+            ObjectReference<WinRT.Interop.IUnknownVftbl>.Attach(ref ptr).Dispose();
         }
     }
 

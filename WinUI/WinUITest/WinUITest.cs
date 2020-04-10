@@ -18,13 +18,17 @@ namespace WinUITest
         {
         }
 
+        public class TestApp : Microsoft.UI.Xaml.Application
+        {
+
+        }
+
         [Fact]
         public void TestSomeWinUI()
         {
             WinrtModule module = new WinrtModule();
 
-            Microsoft.UI.Xaml.Controls.Frame frame = new Microsoft.UI.Xaml.Controls.Frame();
-
+            var app = new TestApp();
             // TODO: load up some MUX!
             //Assert.Equal(true, true);
         }
