@@ -9,8 +9,6 @@
     <LangVersion>8</LangVersion>
   </PropertyGroup>
 
-
-
   <PropertyGroup>
     <NoWarn>1701;1702;0436;1658</NoWarn>
   </PropertyGroup>
@@ -33,10 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\cswinrt\cswinrt.vcxproj" />
-    <ProjectReference Include="..\WinRT.Runtime\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\WinUIProjection\WinUIProjection.csproj" />
   </ItemGroup>
-
 
 </Project>

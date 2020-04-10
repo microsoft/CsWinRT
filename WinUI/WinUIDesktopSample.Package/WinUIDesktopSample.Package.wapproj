@@ -4,6 +4,9 @@
   There are many BuildingInsideVisualStudio checks in here because this project can't build from the
   command line w/o doing more evil trickery. This is only needed for manual testing when in VS, so it
   isn't the worst thing in the world.
+  
+  https://developercommunity.visualstudio.com/content/problem/954242/appx-packaging-project-fails-with-multi-targeted-l.html
+  
   -->
   <PropertyGroup Condition="'$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0'">
     <VisualStudioVersion>15.0</VisualStudioVersion>
