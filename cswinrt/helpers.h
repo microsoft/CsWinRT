@@ -486,6 +486,7 @@ namespace cswinrt
                     { "IBindableObservableVector", "Windows.UI.Xaml.Interop", "IBindableObservableVector", true },
                     { "IBindableVector", "System.Collections", "IList", true },
                     { "IBindableVectorView", "Windows.UI.Xaml.Interop", "IBindableVectorView", true },
+                    { "INotifyCollectionChanged", "System.Collections.Specialized", "INotifyCollectionChanged", true },
                     { "NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction" },
                     { "NotifyCollectionChangedEventArgs", "System.Collections.Specialized", "NotifyCollectionChangedEventArgs", true },
                     { "NotifyCollectionChangedEventHandler", "System.Collections.Specialized", "NotifyCollectionChangedEventHandler", true },
