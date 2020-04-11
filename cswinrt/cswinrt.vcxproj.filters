@@ -4,6 +4,11 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code_writers.h" />
@@ -32,6 +37,9 @@
     <Filter Include="strings\additions\Windows.UI.Xaml">
       <UniqueIdentifier>{8626e8bc-727e-4c4d-a7fa-fe90c02b3090}</UniqueIdentifier>
     </Filter>
+    <Filter Include="strings\additions\Windows.Storage.Streams">
+      <UniqueIdentifier>{4035db1f-9a59-42da-84a0-e3c3227fe586}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="strings\WinRT.cs">
@@ -49,6 +57,51 @@
     </None>
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.cs">
       <Filter>strings\additions\Windows.UI.Xaml</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\HANDLE_ACCESS_OPTIONS.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\HANDLE_CREATION_OPTIONS.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\HANDLE_OPTIONS.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\HANDLE_SHARING_OPTION.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\IStorageFolderHandleAccess.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\IStorageItemHandleAccess.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\NetFxToWinRtStreamAdapter.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\StreamOperationAsyncResult.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\StreamOperationsImplementation.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeStorageExtensions.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeStreamExtensions.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WinRtIOHelper.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WinRtToNetFxStreamAdapter.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBuffer.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferExtensions.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
     </None>
   </ItemGroup>
 </Project>

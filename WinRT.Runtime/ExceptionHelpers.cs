@@ -298,6 +298,58 @@ namespace WinRT
 
             return false;
         }
+
+        public static Exception AttachRestrictedErrorInfo(Exception e)
+        {
+            // If there is no exception, then the restricted error info doesn't apply to it
+            if (e != null)
+            {
+                try
+                {
+                    // Get the restricted error info for this thread and see if it may correlate to the current
+                    // exception object.  Note that in general the thread's IRestrictedErrorInfo is not meant for
+                    // exceptions that are marshaled Windows.Foundation.HResults and instead are intended for
+                    // HRESULT ABI return values.   However, in many cases async APIs will set the thread's restricted
+                    // error info as a convention in order to provide extended debugging information for the ErrorCode
+                    // property.
+                    Marshal.ThrowExceptionForHR(getRestrictedErrorInfo(out IntPtr restrictedErrorInfoPtr));
+
+                    if (restrictedErrorInfoPtr != IntPtr.Zero)
+                    {
+                        IObjectReference restrictedErrorInfoRef = ObjectReference<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>.Attach(ref restrictedErrorInfoPtr);
+
+                        ABI.WinRT.Interop.IRestrictedErrorInfo restrictedErrorInfo = new ABI.WinRT.Interop.IRestrictedErrorInfo(restrictedErrorInfoRef);
+
+                        restrictedErrorInfo.GetErrorDetails(out string description,
+                                                            out int restrictedErrorInfoHResult,
+                                                            out string restrictedDescription,
+                                                            out string capabilitySid);
+
+                        // Since this is a special case where by convention there may be a correlation, there is not a
+                        // guarantee that the restricted error info does belong to the async error code.  In order to
+                        // reduce the risk that we associate incorrect information with the exception object, we need
+                        // to apply a heuristic where we attempt to match the current exception's HRESULT with the
+                        // HRESULT the IRestrictedErrorInfo belongs to.  If it is a match we will assume association
+                        // for the IAsyncInfo case.
+                        if (e.HResult == restrictedErrorInfoHResult)
+                        {
+                            e.AddExceptionDataForRestrictedErrorInfo(description,
+                                                                    restrictedDescription,
+                                                                     restrictedErrorInfo.GetReference(),
+                                                                     capabilitySid,
+                                                                     restrictedErrorInfoRef.As<ABI.WinRT.Interop.IRestrictedErrorInfo.Vftbl>());
+                        }
+                    }
+                }
+                catch
+                {
+                    // If we can't get the restricted error info, then proceed as if it isn't associated with this
+                    // error.
+                }
+            }
+
+            return e;
+        }
     }
 
     internal static class ExceptionExtensions
