@@ -25,7 +25,7 @@ namespace Com
 namespace ABI.Com
 {
     using global::System;
-    using System.Runtime.InteropServices;
+    using global::System.Runtime.InteropServices;
 
     [Guid("00000003-0000-0000-c000-000000000046")]
     internal class IMarshal : global::Com.IMarshal
@@ -70,6 +70,7 @@ namespace ABI.Com
 
             private static int Do_Abi_GetUnmarshalClass_0(IntPtr thisPtr, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlFlags, out Guid pCid)
             {
+                pCid = default;
                 try
                 {
                     ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).GetUnmarshalClass(ref riid, pv, dwDestContext, pvDestContext, mshlFlags, out pCid);
@@ -78,34 +79,39 @@ namespace ABI.Com
                 {
                     return Marshal.GetHRForException(ex);
                 }
+                return 0;
             }
 
             private static int Do_Abi_GetMarshalSizeMax_1(IntPtr thisPtr, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags, out uint pSize)
             {
+                pSize = default;
                 try
                 {
-                    ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).GetMarshalSizeMax(ref riid, pv, dwDestContext, pvDestContext, mshlFlags, out pSize);
+                    ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).GetMarshalSizeMax(ref riid, pv, dwDestContext, pvDestContext, mshlflags, out pSize);
                 }
                 catch (Exception ex)
                 {
                     return Marshal.GetHRForException(ex);
                 }
+                return 0;
             }
 
             private static int Do_Abi_MarshalInterface_2(IntPtr thisPtr, IntPtr pStm, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags)
             {
                 try
                 {
-                    ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).MarshalInterface(pStm, ref riid, pv, dwDestContext, pvDestContext, mshlFlags);
+                    ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).MarshalInterface(pStm, ref riid, pv, dwDestContext, pvDestContext, mshlflags);
                 }
                 catch (Exception ex)
                 {
                     return Marshal.GetHRForException(ex);
                 }
+                return 0;
             }
 
             private static int Do_Abi_UnmarshalInterface_3(IntPtr thisPtr, IntPtr pStm, ref Guid riid, out IntPtr ppv)
             {
+                ppv = default;
                 try
                 {
                     ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).UnmarshalInterface(pStm, ref riid, out ppv);
@@ -114,6 +120,7 @@ namespace ABI.Com
                 {
                     return Marshal.GetHRForException(ex);
                 }
+                return 0;
             }
 
             private static int Do_Abi_ReleaseMarshalData_4(IntPtr thisPtr, IntPtr pStm)
@@ -126,6 +133,7 @@ namespace ABI.Com
                 {
                     return Marshal.GetHRForException(ex);
                 }
+                return 0;
             }
 
             private static int Do_Abi_DisconnectObject_5(IntPtr thisPtr, uint dwReserved)
@@ -138,6 +146,7 @@ namespace ABI.Com
                 {
                     return Marshal.GetHRForException(ex);
                 }
+                return 0;
             }
         }
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
@@ -154,32 +163,32 @@ namespace ABI.Com
             _obj = obj;
         }
 
-        public void GetUnmarshalClass(IntPtr thisPtr, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlFlags, out Guid pCid)
+        public void GetUnmarshalClass(ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlFlags, out Guid pCid)
         {
             Marshal.ThrowExceptionForHR(_obj.Vftbl.GetUnmarshalClass_0(ThisPtr, ref riid, pv, dwDestContext, pvDestContext, mshlFlags, out pCid));
         }
 
-        public void GetMarshalSizeMax(IntPtr thisPtr, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags, out uint pSize)
+        public void GetMarshalSizeMax(ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags, out uint pSize)
         {
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.GetMarshalSizeMax_1(ThisPtr, ref riid, pv, dwDestContext, pvDestContext, mshlFlags, out pSize));
+            Marshal.ThrowExceptionForHR(_obj.Vftbl.GetMarshalSizeMax_1(ThisPtr, ref riid, pv, dwDestContext, pvDestContext, mshlflags, out pSize));
         }
 
-        public void MarshalInterface(IntPtr thisPtr, IntPtr pStm, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags)
+        public void MarshalInterface(IntPtr pStm, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags)
         {
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.MarshalInterface_2(ThisPtr, pStm, ref riid, pv, dwDestContext, pvDestContext, mshlFlags));
+            Marshal.ThrowExceptionForHR(_obj.Vftbl.MarshalInterface_2(ThisPtr, pStm, ref riid, pv, dwDestContext, pvDestContext, mshlflags));
         }
 
-        public void UnmarshalInterface(IntPtr thisPtr, IntPtr pStm, ref Guid riid, out IntPtr ppv)
+        public void UnmarshalInterface(IntPtr pStm, ref Guid riid, out IntPtr ppv)
         {
             Marshal.ThrowExceptionForHR(_obj.Vftbl.UnmarshalInterface_3(ThisPtr, pStm, ref riid, out ppv));
         }
 
-        public void ReleaseMarshalData(IntPtr thisPtr, IntPtr pStm)
+        public void ReleaseMarshalData(IntPtr pStm)
         {
             Marshal.ThrowExceptionForHR(_obj.Vftbl.ReleaseMarshalData_4(ThisPtr, pStm));
         }
 
-        public void DisconnectObject(IntPtr thisPtr, uint dwReserved)
+        public void DisconnectObject(uint dwReserved)
         {
             Marshal.ThrowExceptionForHR(_obj.Vftbl.DisconnectObject_5(ThisPtr, dwReserved));
         }

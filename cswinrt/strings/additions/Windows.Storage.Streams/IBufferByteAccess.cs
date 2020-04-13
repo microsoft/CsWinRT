@@ -12,7 +12,7 @@ namespace Windows.Storage.Streams
 namespace ABI.Windows.Storage.Streams
 {
     using global::System;
-    using System.Runtime.InteropServices;
+    using global::System.Runtime.InteropServices;
 
     [Guid("00000003-0000-0000-c000-000000000046")]
     internal class IBufferByteAccess : global::Windows.Storage.Streams.IBufferByteAccess
@@ -42,14 +42,16 @@ namespace ABI.Windows.Storage.Streams
 
             private static int Do_Abi_get_Buffer_0(IntPtr thisPtr, out IntPtr buffer)
             {
+                buffer = default;
                 try
                 {
-                    buffer = ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).Buffer;
+                    buffer = ComWrappersSupport.FindObject<global::Windows.Storage.Streams.IBufferByteAccess>(thisPtr).Buffer;
                 }
                 catch (Exception ex)
                 {
                     return Marshal.GetHRForException(ex);
                 }
+                return 0;
             }
         }
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
