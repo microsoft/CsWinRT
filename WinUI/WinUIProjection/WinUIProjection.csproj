@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp5.0</TargetFramework>
     <Platforms>x64;x86</Platforms>
+    <MicrosoftWinUIVersion>3.0.0-preview1.200413.0-CI</MicrosoftWinUIVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -10,6 +11,7 @@
   </PropertyGroup>
   
   <ItemGroup>
+  
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <!-- Exclude compile and build time assets so we don't think we're building a real WinUI App -->
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">

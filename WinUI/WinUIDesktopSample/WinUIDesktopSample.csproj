@@ -13,6 +13,7 @@
     -->
     <XamlCodeGenerationControlFlags>DoNotGenerateOtherProviders</XamlCodeGenerationControlFlags>
     <Platforms>x86;x64</Platforms>
+    <MicrosoftWinUIVersion>3.0.0-preview1.200413.0-CI</MicrosoftWinUIVersion>
   </PropertyGroup>
 
   <ItemGroup>
