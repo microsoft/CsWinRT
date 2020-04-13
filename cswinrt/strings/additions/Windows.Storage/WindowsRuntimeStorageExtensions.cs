@@ -185,23 +185,16 @@ namespace System.IO
             HANDLE_SHARING_OPTIONS sharingOptions = FileShareToHandleSharingOptions(share);
             HANDLE_OPTIONS handleOptions = FileOptionsToHandleOptions(options);
 
-            IStorageItemHandleAccess handleAccess = ((object)windowsRuntimeFile) as IStorageItemHandleAccess;
+            IStorageItemHandleAccess handleAccess = windowsRuntimeFile.As<IStorageItemHandleAccess>();
 
             if (handleAccess == null)
                 return null;
 
-            SafeFileHandle handle;
-
-            int result = handleAccess.Create(
+            return handleAccess.Create(
                 accessOptions,
                 sharingOptions,
                 handleOptions,
-                IntPtr.Zero,
-                out handle);
-
-            ExceptionHelpers.ThrowExceptionForHR(result);
-
-            return handle;
+                IntPtr.Zero);
         }
 
         public static SafeFileHandle CreateSafeFileHandle(
@@ -230,25 +223,18 @@ namespace System.IO
             HANDLE_SHARING_OPTIONS sharingOptions = FileShareToHandleSharingOptions(share);
             HANDLE_OPTIONS handleOptions = FileOptionsToHandleOptions(options);
 
-            IStorageFolderHandleAccess handleAccess = ((object)rootDirectory) as IStorageFolderHandleAccess;
+            IStorageFolderHandleAccess handleAccess = rootDirectory.As<IStorageFolderHandleAccess>();
 
             if (handleAccess == null)
                 return null;
 
-            SafeFileHandle handle;
-
-            int result = handleAccess.Create(
+            return handleAccess.Create(
                 relativePath,
                 creationOptions,
                 accessOptions,
                 sharingOptions,
                 handleOptions,
-                IntPtr.Zero,
-                out handle);
-
-            ExceptionHelpers.ThrowExceptionForHR(result);
-
-            return handle;
+                IntPtr.Zero);
         }
 
         private static HANDLE_ACCESS_OPTIONS FileAccessToHandleAccessOptions(FileAccess access) =>

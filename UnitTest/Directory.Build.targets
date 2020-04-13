@@ -39,9 +39,6 @@
 -include TestComponent
 -include TestComponentCSharp
 -include Windows.Foundation
--include Windows.Storage
--include Windows.Storage.Streams
--include Windows.System
 -exclude Windows.Foundation.Diagnostics
 -exclude Windows.Foundation.Metadata
       </CsWinRTParams>
