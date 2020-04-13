@@ -85,42 +85,36 @@ namespace System.IO
 
         #region WinRt-to-NetFx conversion
 
-        [CLSCompliant(false)]
         public static Stream AsStreamForRead(this IInputStream windowsRuntimeStream)
         {
             return AsStreamInternal(windowsRuntimeStream, DefaultBufferSize, "AsStreamForRead", forceBufferSize: false);
         }
 
 
-        [CLSCompliant(false)]
         public static Stream AsStreamForRead(this IInputStream windowsRuntimeStream, int bufferSize)
         {
             return AsStreamInternal(windowsRuntimeStream, bufferSize, "AsStreamForRead", forceBufferSize: true);
         }
 
 
-        [CLSCompliant(false)]
         public static Stream AsStreamForWrite(this IOutputStream windowsRuntimeStream)
         {
             return AsStreamInternal(windowsRuntimeStream, DefaultBufferSize, "AsStreamForWrite", forceBufferSize: false);
         }
 
 
-        [CLSCompliant(false)]
         public static Stream AsStreamForWrite(this IOutputStream windowsRuntimeStream, int bufferSize)
         {
             return AsStreamInternal(windowsRuntimeStream, bufferSize, "AsStreamForWrite", forceBufferSize: true);
         }
 
 
-        [CLSCompliant(false)]
         public static Stream AsStream(this IRandomAccessStream windowsRuntimeStream)
         {
             return AsStreamInternal(windowsRuntimeStream, DefaultBufferSize, "AsStream", forceBufferSize: false);
         }
 
 
-        [CLSCompliant(false)]
         public static Stream AsStream(this IRandomAccessStream windowsRuntimeStream, int bufferSize)
         {
             return AsStreamInternal(windowsRuntimeStream, bufferSize, "AsStream", forceBufferSize: true);
@@ -229,7 +223,6 @@ namespace System.IO
 
         #region NetFx-to-WinRt conversion
 
-        [CLSCompliant(false)]
         public static IInputStream AsInputStream(this Stream stream)
         {
             if (stream == null)
@@ -247,7 +240,6 @@ namespace System.IO
         }
 
 
-        [CLSCompliant(false)]
         public static IOutputStream AsOutputStream(this Stream stream)
         {
             if (stream == null)
@@ -265,7 +257,6 @@ namespace System.IO
         }
 
 
-        [CLSCompliant(false)]
         public static IRandomAccessStream AsRandomAccessStream(this Stream stream)
         {
             if (stream == null)

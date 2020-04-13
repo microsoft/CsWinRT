@@ -17,7 +17,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     {
         #region (Byte []).AsBuffer extensions
 
-        [CLSCompliant(false)]
         public static IBuffer AsBuffer(this byte[] source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -26,7 +25,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        [CLSCompliant(false)]
         public static IBuffer AsBuffer(this byte[] source, int offset, int length)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -38,7 +36,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        [CLSCompliant(false)]
         public static IBuffer AsBuffer(this byte[] source, int offset, int length, int capacity)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -63,7 +60,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         /// </summary>
         /// <param name="source">Array to copy data from.</param>
         /// <param name="destination">The buffer to copy to.</param>
-        [CLSCompliant(false)]
         public static void CopyTo(this byte[] source, IBuffer destination)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -83,7 +79,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         /// <param name="destination">The buffer to copy to.</param>
         /// <param name="destinationIndex">Position in the buffer to where to start copying.</param>
         /// <param name="count">The number of bytes to copy.</param>
-        [CLSCompliant(false)]
         public static void CopyTo(this byte[] source, int sourceIndex, IBuffer destination, uint destinationIndex, int count)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -112,7 +107,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #region (IBuffer).ToArray extensions for copying to a new (Byte [])
 
-        [CLSCompliant(false)]
         public static byte[] ToArray(this IBuffer source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -121,7 +115,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        [CLSCompliant(false)]
         public static byte[] ToArray(this IBuffer source, uint sourceIndex, int count)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -142,7 +135,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #region (IBuffer).CopyTo extensions for copying to a (Byte [])
 
-        [CLSCompliant(false)]
         public static void CopyTo(this IBuffer source, byte[] destination)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -152,7 +144,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        [CLSCompliant(false)]
         public static void CopyTo(this IBuffer source, uint sourceIndex, byte[] destination, int destinationIndex, int count)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -182,7 +173,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #region (IBuffer).CopyTo extensions for copying to an (IBuffer)
 
-        [CLSCompliant(false)]
         public static void CopyTo(this IBuffer source, IBuffer destination)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -192,7 +182,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        [CLSCompliant(false)]
         public static void CopyTo(this IBuffer source, uint sourceIndex, IBuffer destination, uint destinationIndex, uint count)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -292,7 +281,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         /// <param name="otherBuffer">An <code>IBuffer</code> instance or <code>null</code>.</param>
         /// <returns><code>true</code> if the underlying <code>Buffer</code> memory pointer is the same for both specified
         /// <code>IBuffer</code> instances (i.e. if they are backed by the same memory); <code>false</code> otherwise.</returns>
-        [CLSCompliant(false)]
         public static bool IsSameData(this IBuffer buffer, IBuffer? otherBuffer)
         {
             if (buffer == null)
@@ -341,7 +329,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         // The naming inconsistency with (Byte []).AsBuffer is intentional: as this extension method will appear on
         // MemoryStream, consistency with method names on MemoryStream is more important. There we already have an API
         // called GetBuffer which returns the underlying array.
-        [CLSCompliant(false)]
         public static IBuffer GetWindowsRuntimeBuffer(this MemoryStream underlyingStream)
         {
             if (underlyingStream == null)
@@ -373,7 +360,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         /// <param name="positionInStream">The position of the shared memory region.</param>
         /// <param name="length">The maximum size of the shared memory region.</param>
         /// <returns>A new <code>IBuffer</code> backed by the same memory as this specified stream.</returns>
-        [CLSCompliant(false)]
         public static IBuffer GetWindowsRuntimeBuffer(this MemoryStream underlyingStream, int positionInStream, int length)
         {
             // The naming inconsistency with (Byte []).AsBuffer is intentional: as this extension method will appear on
@@ -406,7 +392,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        [CLSCompliant(false)]
         public static Stream AsStream(this IBuffer source)
         {
             if (source == null)
@@ -432,7 +417,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #region Extensions for direct by-offset access to buffer data elements
 
-        [CLSCompliant(false)]
         public static byte GetByte(this IBuffer source, uint byteOffset)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));

@@ -16,7 +16,6 @@ namespace System.IO
     /// </summary>
     public static class WindowsRuntimeStorageExtensions
     {
-        [CLSCompliant(false)]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFile windowsRuntimeFile)
         {
             if (windowsRuntimeFile == null)
@@ -44,7 +43,6 @@ namespace System.IO
             }
         }
 
-        [CLSCompliant(false)]
         public static Task<Stream> OpenStreamForWriteAsync(this IStorageFile windowsRuntimeFile)
         {
             if (windowsRuntimeFile == null)
@@ -74,7 +72,6 @@ namespace System.IO
             }
         }
 
-        [CLSCompliant(false)]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFolder rootDirectory, string relativePath)
         {
             if (rootDirectory == null)
@@ -110,7 +107,6 @@ namespace System.IO
             }
         }
 
-        [CLSCompliant(false)]
         public static Task<Stream> OpenStreamForWriteAsync(this IStorageFolder rootDirectory, string relativePath,
                                                            CreationCollisionOption creationCollisionOption)
         {
@@ -175,7 +171,6 @@ namespace System.IO
             }
         }
 
-        [CLSCompliant(false)]
         public static SafeFileHandle? CreateSafeFileHandle(
             this IStorageFile windowsRuntimeFile,
             FileAccess access = FileAccess.ReadWrite,
@@ -209,7 +204,6 @@ namespace System.IO
             return handle;
         }
 
-        [CLSCompliant(false)]
         public static SafeFileHandle? CreateSafeFileHandle(
             this IStorageFolder rootDirectory,
             string relativePath,
@@ -218,7 +212,6 @@ namespace System.IO
             return rootDirectory.CreateSafeFileHandle(relativePath, mode, (mode == FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite));
         }
 
-        [CLSCompliant(false)]
         public static SafeFileHandle? CreateSafeFileHandle(
             this IStorageFolder rootDirectory,
             string relativePath,

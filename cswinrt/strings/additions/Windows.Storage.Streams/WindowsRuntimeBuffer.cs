@@ -32,7 +32,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #region Static factory methods
 
-        [CLSCompliant(false)]
         public static IBuffer Create(int capacity)
         {
             if (capacity < 0) throw new ArgumentOutOfRangeException(nameof(capacity));
@@ -41,7 +40,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        [CLSCompliant(false)]
         public static IBuffer Create(byte[] data, int offset, int length, int capacity)
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
