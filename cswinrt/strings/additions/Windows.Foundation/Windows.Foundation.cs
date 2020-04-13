@@ -310,6 +310,11 @@ namespace System
     // Marker type since generic parameters cannot be 'void'
     struct VoidValueTypeParameter { }
 
+    /// <summary>This can be used instead of <code>VoidValueTypeParameter</code> when a reference type is required.
+    /// In case of an actual instantiation (e.g. through <code>default(T)</code>),
+    /// using <code>VoidValueTypeParameter</code> offers better performance.</summary>
+    internal class VoidReferenceTypeParameter { }
+
     sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletionSource<TResult>
     {
         private readonly CancellationToken _ct;
