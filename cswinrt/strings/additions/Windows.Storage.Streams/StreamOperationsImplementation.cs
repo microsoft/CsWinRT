@@ -3,16 +3,16 @@
 // See the LICENSE file in the project root for more information.
 
 
-namespace System.IO
+namespace Windows.Storage.Streams
 {
-    using System.Diagnostics;
-    using System.IO;
+    using global::System.Diagnostics;
+    using global::System.IO;
     
-    using System.Runtime.InteropServices;
-    using System.Threading.Tasks;
-    using System.Threading;
-    using global::Windows.Foundation;
-    using global::Windows.Storage.Streams;
+    using global::System.Runtime.InteropServices;
+    using global::System.Threading.Tasks;
+    using global::System.Threading;
+    using global::System.Runtime.InteropServices.WindowsRuntime;
+    using Windows.Foundation;
     /// <summary>Depending on the concrete type of the stream managed by a <c>NetFxToWinRtStreamAdapter</c>,
     /// we want the <c>ReadAsync</c> / <c>WriteAsync</c> / <c>FlushAsync</c> / etc. operation to be implemented
     /// differently. This is for best performance as we can take advantage of the specifics of particular stream
@@ -40,7 +40,7 @@ namespace System.IO
             // The user specified buffer will not have any data put into it:
             buffer.Length = 0;
 
-            MemoryStream? memStream = stream as MemoryStream;
+            MemoryStream memStream = stream as MemoryStream;
             Debug.Assert(memStream != null);
 
             try
@@ -69,7 +69,7 @@ namespace System.IO
             Debug.Assert(count <= buffer.Capacity);
             Debug.Assert(options == InputStreamOptions.None || options == InputStreamOptions.Partial || options == InputStreamOptions.ReadAhead);
 
-            int bytesRequested = (int)count;
+            int bytesrequested = (int)count;
 
             // Check if the buffer is our implementation.
             // IF YES: In that case, we can read directly into its data array.
@@ -104,16 +104,16 @@ namespace System.IO
                 // Loop until EOS, cancelled or read enough data according to options:
                 while (!done)
                 {
-                    int bytesRead = 0;
+                    int bytesread = 0;
 
                     try
                     {
                         // Read asynchronously:
-                        bytesRead = await stream.ReadAsync(data!, offset + bytesCompleted, bytesRequested - bytesCompleted, cancelToken)
+                        bytesread = await stream.ReadAsync(data!, offset + bytesCompleted, bytesrequested - bytesCompleted, cancelToken)
                                                 .ConfigureAwait(continueOnCapturedContext: false);
 
                         // We will continue here on a different thread when read async completed:
-                        bytesCompleted += bytesRead;
+                        bytesCompleted += bytesread;
                         // We will handle a cancelation exception and re-throw all others:
                     }
                     catch (OperationCanceledException)
@@ -124,19 +124,19 @@ namespace System.IO
 
                         // This is because if the cancellation came after we read some bytes we want to return the results we got instead
                         // of an empty cancelled task, so if we have not yet read anything at all, then we can throw cancellation:
-                        if (bytesCompleted == 0 && bytesRead == 0)
+                        if (bytesCompleted == 0 && bytesread == 0)
                             throw;
                     }
 
                     // Update target buffer:
                     dataBuffer.Length = (uint)bytesCompleted;
 
-                    Debug.Assert(bytesCompleted <= bytesRequested);
+                    Debug.Assert(bytesCompleted <= bytesrequested);
 
                     // Check if we are done:
                     done = options == InputStreamOptions.Partial  // If no complete read was requested, any amount of data is OK
-                            || bytesRead == 0                         // this implies EndOfStream
-                            || bytesCompleted == bytesRequested       // read all requested bytes
+                            || bytesread == 0                         // this implies EndOfStream
+                            || bytesCompleted == bytesrequested       // read all requested bytes
                             || cancelToken.IsCancellationRequested;   // operation was cancelled
 
                     // Call user Progress handler:

@@ -74,9 +74,9 @@ namespace System.IO
             if (requiredBufferSize != currentBufferSize)
             {
                 if (requiredBufferSize == 0)
-                    throw new InvalidOperationException(SR.Format(SR.InvalidOperation_CannotChangeBufferSizeOfWinRtStreamAdapterToZero, methodName));
+                    throw new InvalidOperationException(string.Format(global::Windows.Storage.Streams.SR.InvalidOperation_CannotChangeBufferSizeOfWinRtStreamAdapterToZero, methodName));
 
-                throw new InvalidOperationException(SR.Format(SR.InvalidOperation_CannotChangeBufferSizeOfWinRtStreamAdapter, methodName));
+                throw new InvalidOperationException(string.Format(global::Windows.Storage.Streams.SR.InvalidOperation_CannotChangeBufferSizeOfWinRtStreamAdapter, methodName));
             }
         }
 
@@ -85,49 +85,49 @@ namespace System.IO
 
         #region WinRt-to-NetFx conversion
 
-        public static Stream AsStreamForRead(this IInputStream windowsRuntimeStream)
+        public static Stream AsStreamForRead(this IInputStream windowsruntimeStream)
         {
-            return AsStreamInternal(windowsRuntimeStream, DefaultBufferSize, "AsStreamForRead", forceBufferSize: false);
+            return AsStreamInternal(windowsruntimeStream, DefaultBufferSize, "AsStreamForRead", forceBufferSize: false);
         }
 
 
-        public static Stream AsStreamForRead(this IInputStream windowsRuntimeStream, int bufferSize)
+        public static Stream AsStreamForRead(this IInputStream windowsruntimeStream, int bufferSize)
         {
-            return AsStreamInternal(windowsRuntimeStream, bufferSize, "AsStreamForRead", forceBufferSize: true);
+            return AsStreamInternal(windowsruntimeStream, bufferSize, "AsStreamForRead", forceBufferSize: true);
         }
 
 
-        public static Stream AsStreamForWrite(this IOutputStream windowsRuntimeStream)
+        public static Stream AsStreamForWrite(this IOutputStream windowsruntimeStream)
         {
-            return AsStreamInternal(windowsRuntimeStream, DefaultBufferSize, "AsStreamForWrite", forceBufferSize: false);
+            return AsStreamInternal(windowsruntimeStream, DefaultBufferSize, "AsStreamForWrite", forceBufferSize: false);
         }
 
 
-        public static Stream AsStreamForWrite(this IOutputStream windowsRuntimeStream, int bufferSize)
+        public static Stream AsStreamForWrite(this IOutputStream windowsruntimeStream, int bufferSize)
         {
-            return AsStreamInternal(windowsRuntimeStream, bufferSize, "AsStreamForWrite", forceBufferSize: true);
+            return AsStreamInternal(windowsruntimeStream, bufferSize, "AsStreamForWrite", forceBufferSize: true);
         }
 
 
-        public static Stream AsStream(this IRandomAccessStream windowsRuntimeStream)
+        public static Stream AsStream(this IRandomAccessStream windowsruntimeStream)
         {
-            return AsStreamInternal(windowsRuntimeStream, DefaultBufferSize, "AsStream", forceBufferSize: false);
+            return AsStreamInternal(windowsruntimeStream, DefaultBufferSize, "AsStream", forceBufferSize: false);
         }
 
 
-        public static Stream AsStream(this IRandomAccessStream windowsRuntimeStream, int bufferSize)
+        public static Stream AsStream(this IRandomAccessStream windowsruntimeStream, int bufferSize)
         {
-            return AsStreamInternal(windowsRuntimeStream, bufferSize, "AsStream", forceBufferSize: true);
+            return AsStreamInternal(windowsruntimeStream, bufferSize, "AsStream", forceBufferSize: true);
         }
 
 
-        private static Stream AsStreamInternal(object windowsRuntimeStream, int bufferSize, string invokedMethodName, bool forceBufferSize)
+        private static Stream AsStreamInternal(object windowsruntimeStream, int bufferSize, string invokedMethodName, bool forceBufferSize)
         {
-            if (windowsRuntimeStream == null)
-                throw new ArgumentNullException(nameof(windowsRuntimeStream));
+            if (windowsruntimeStream == null)
+                throw new ArgumentNullException(nameof(windowsruntimeStream));
 
             if (bufferSize < 0)
-                throw new ArgumentOutOfRangeException(nameof(bufferSize), SR.ArgumentOutOfRange_WinRtAdapterBufferSizeMayNotBeNegative);
+                throw new ArgumentOutOfRangeException(nameof(bufferSize), global::Windows.Storage.Streams.SR.ArgumentOutOfRange_WinRtAdapterBufferSizeMayNotBeNegative);
 
             Debug.Assert(!string.IsNullOrWhiteSpace(invokedMethodName));
 
@@ -136,12 +136,12 @@ namespace System.IO
 
             // We currently do capability-based adapter selection for WinRt->NetFx, but not vice versa (time constraints).
             // Once we added the reverse direction, we will be able replce this entire section with just a few lines.
-            NetFxToWinRtStreamAdapter? sAdptr = windowsRuntimeStream as NetFxToWinRtStreamAdapter;
+            NetFxToWinRtStreamAdapter? sAdptr = windowsruntimeStream as NetFxToWinRtStreamAdapter;
             if (sAdptr != null)
             {
                 Stream? wrappedNetFxStream = sAdptr.GetManagedStream();
                 if (wrappedNetFxStream == null)
-                    throw new ObjectDisposedException(nameof(windowsRuntimeStream), SR.ObjectDisposed_CannotPerformOperation);
+                    throw new ObjectDisposedException(nameof(windowsruntimeStream), global::Windows.Storage.Streams.SR.ObjectDisposed_CannotPerformOperation);
 
 #if DEBUG  // In Chk builds, verify that the original managed stream is correctly entered into the NetFx->WinRT map:
                 AssertMapContains(s_netFxToWinRtAdapterMap, wrappedNetFxStream, sAdptr,
@@ -154,7 +154,7 @@ namespace System.IO
             // We have a real WinRT stream.
 
             Stream? adapter;
-            bool adapterExists = s_winRtToNetFxAdapterMap.TryGetValue(windowsRuntimeStream, out adapter);
+            bool adapterExists = s_winRtToNetFxAdapterMap.TryGetValue(windowsruntimeStream, out adapter);
 
             // There is already an adapter:
             if (adapterExists)
@@ -172,7 +172,7 @@ namespace System.IO
             // Do that in a thread-safe manner in a separate method such that we only have to pay for the compiler allocating
             // the required closure if this code path is hit:
 
-            return AsStreamInternalFactoryHelper(windowsRuntimeStream, bufferSize, invokedMethodName, forceBufferSize);
+            return AsStreamInternalFactoryHelper(windowsruntimeStream, bufferSize, invokedMethodName, forceBufferSize);
         }
 
 
@@ -190,17 +190,17 @@ namespace System.IO
         }
 
 
-        private static Stream AsStreamInternalFactoryHelper(object windowsRuntimeStream, int bufferSize, string invokedMethodName, bool forceBufferSize)
+        private static Stream AsStreamInternalFactoryHelper(object windowsruntimeStream, int bufferSize, string invokedMethodName, bool forceBufferSize)
         {
-            Debug.Assert(windowsRuntimeStream != null);
+            Debug.Assert(windowsruntimeStream != null);
             Debug.Assert(bufferSize >= 0);
             Debug.Assert(!string.IsNullOrWhiteSpace(invokedMethodName));
 
-            // Get the adapter for this windowsRuntimeStream again (it may have been created concurrently).
+            // Get the adapter for this windowsruntimeStream again (it may have been created concurrently).
             // If none exists yet, create a new one:
             Stream adapter = (bufferSize == 0)
-                                ? WinRtToNetFxAdapterMap_GetValue(windowsRuntimeStream)
-                                : WinRtToNetFxAdapterMap_GetValue(windowsRuntimeStream, bufferSize);
+                                ? WinRtToNetFxAdapterMap_GetValue(windowsruntimeStream)
+                                : WinRtToNetFxAdapterMap_GetValue(windowsruntimeStream, bufferSize);
 
             Debug.Assert(adapter != null);
             Debug.Assert((adapter is BufferedStream && ((BufferedStream)adapter).UnderlyingStream is WinRtToNetFxStreamAdapter)
@@ -229,7 +229,7 @@ namespace System.IO
                 throw new ArgumentNullException(nameof(stream));
 
             if (!stream.CanRead)
-                throw new NotSupportedException(SR.NotSupported_CannotConvertNotReadableToInputStream);
+                throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotConvertNotReadableToInputStream);
 
             object adapter = AsWindowsRuntimeStreamInternal(stream);
 
@@ -246,7 +246,7 @@ namespace System.IO
                 throw new ArgumentNullException(nameof(stream));
 
             if (!stream.CanWrite)
-                throw new NotSupportedException(SR.NotSupported_CannotConvertNotWritableToOutputStream);
+                throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotConvertNotWritableToOutputStream);
 
             object adapter = AsWindowsRuntimeStreamInternal(stream);
 
@@ -257,13 +257,13 @@ namespace System.IO
         }
 
 
-        public static IRandomAccessStream AsRandomAccessStream(this Stream stream)
+        public static IRandomAccessStream AsrandomAccessStream(this Stream stream)
         {
             if (stream == null)
                 throw new ArgumentNullException(nameof(stream));
 
             if (!stream.CanSeek)
-                throw new NotSupportedException(SR.NotSupported_CannotConvertNotSeekableToRandomAccessStream);
+                throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotConvertNotSeekableToRandomAccessStream);
 
             object adapter = AsWindowsRuntimeStreamInternal(stream);
 
@@ -292,7 +292,7 @@ namespace System.IO
             {
                 object? wrappedWinRtStream = sAdptr.GetWindowsRuntimeStream<object>();
                 if (wrappedWinRtStream == null)
-                    throw new ObjectDisposedException(nameof(stream), SR.ObjectDisposed_CannotPerformOperation);
+                    throw new ObjectDisposedException(nameof(stream), global::Windows.Storage.Streams.SR.ObjectDisposed_CannotPerformOperation);
 
 #if DEBUG  // In Chk builds, verify that the original WinRT stream is correctly entered into the WinRT->NetFx map:
                 AssertMapContains(s_winRtToNetFxAdapterMap, wrappedWinRtStream, sAdptr, valueMayBeWrappedInBufferedStream: true);

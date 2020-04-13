@@ -30,7 +30,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (offset < 0) throw new ArgumentOutOfRangeException(nameof(offset));
             if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
-            if (source.Length - offset < length) throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
+            if (source.Length - offset < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
 
             return AsBuffer(source, offset, length, length);
         }
@@ -42,9 +42,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (offset < 0) throw new ArgumentOutOfRangeException(nameof(offset));
             if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
             if (capacity < 0) throw new ArgumentOutOfRangeException(nameof(capacity));
-            if (source.Length - offset < length) throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
-            if (source.Length - offset < capacity) throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
-            if (capacity < length) throw new ArgumentException(SR.Argument_InsufficientBufferCapacity);
+            if (source.Length - offset < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
+            if (source.Length - offset < capacity) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
+            if (capacity < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientBufferCapacity);
 
             return new WindowsRuntimeBuffer(source, offset, length, capacity);
         }
@@ -85,16 +85,16 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (destination == null) throw new ArgumentNullException(nameof(destination));
             if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
             if (sourceIndex < 0) throw new ArgumentOutOfRangeException(nameof(sourceIndex));
-            if (source.Length <= sourceIndex) throw new ArgumentException(SR.Argument_IndexOutOfArrayBounds, nameof(sourceIndex));
-            if (source.Length - sourceIndex < count) throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
-            if (destination.Capacity - destinationIndex < count) throw new ArgumentException(SR.Argument_InsufficientSpaceInTargetBuffer);
+            if (source.Length <= sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_IndexOutOfArrayBounds, nameof(sourceIndex));
+            if (source.Length - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
+            if (destination.Capacity - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
 
             // If destination is backed by a managed array, use the array instead of the pointer as it does not require pinning:
-            byte[]? destDataArr;
+            byte[] destDataArr;
             int destDataOffs;
             if (destination.TryGetUnderlyingData(out destDataArr, out destDataOffs))
             {
-                Buffer.BlockCopy(source, sourceIndex, destDataArr, (int)(destDataOffs + destinationIndex), count);
+                global::System.Buffer.BlockCopy(source, sourceIndex, destDataArr, (int)(destDataOffs + destinationIndex), count);
                 return;
             }
 
@@ -119,8 +119,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
-            if (source.Capacity <= sourceIndex) throw new ArgumentException(SR.Argument_BufferIndexExceedsCapacity);
-            if (source.Capacity - sourceIndex < count) throw new ArgumentException(SR.Argument_InsufficientSpaceInSourceBuffer);
+            if (source.Capacity <= sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
+            if (source.Capacity - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
 
             if (count == 0)
                 return Array.Empty<byte>();
@@ -150,17 +150,17 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (destination == null) throw new ArgumentNullException(nameof(destination));
             if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
             if (destinationIndex < 0) throw new ArgumentOutOfRangeException(nameof(destinationIndex));
-            if (source.Capacity <= sourceIndex) throw new ArgumentException(SR.Argument_BufferIndexExceedsCapacity);
-            if (source.Capacity - sourceIndex < count) throw new ArgumentException(SR.Argument_InsufficientSpaceInSourceBuffer);
-            if (destination.Length <= destinationIndex) throw new ArgumentException(SR.Argument_IndexOutOfArrayBounds);
-            if (destination.Length - destinationIndex < count) throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
+            if (source.Capacity <= sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
+            if (source.Capacity - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
+            if (destination.Length <= destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_IndexOutOfArrayBounds);
+            if (destination.Length - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
 
             // If source is backed by a managed array, use the array instead of the pointer as it does not require pinning:
-            byte[]? srcDataArr;
+            byte[] srcDataArr;
             int srcDataOffs;
             if (source.TryGetUnderlyingData(out srcDataArr, out srcDataOffs))
             {
-                Buffer.BlockCopy(srcDataArr, (int)(srcDataOffs + sourceIndex), destination, destinationIndex, count);
+                global::System.Buffer.BlockCopy(srcDataArr, (int)(srcDataOffs + sourceIndex), destination, destinationIndex, count);
                 return;
             }
 
@@ -186,13 +186,13 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
-            if (source.Capacity <= sourceIndex) throw new ArgumentException(SR.Argument_BufferIndexExceedsCapacity);
-            if (source.Capacity - sourceIndex < count) throw new ArgumentException(SR.Argument_InsufficientSpaceInSourceBuffer);
-            if (destination.Capacity <= destinationIndex) throw new ArgumentException(SR.Argument_BufferIndexExceedsCapacity);
-            if (destination.Capacity - destinationIndex < count) throw new ArgumentException(SR.Argument_InsufficientSpaceInTargetBuffer);
+            if (source.Capacity <= sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
+            if (source.Capacity - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
+            if (destination.Capacity <= destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
+            if (destination.Capacity - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
 
             // If source are destination are backed by managed arrays, use the arrays instead of the pointers as it does not require pinning:
-            byte[]? srcDataArr, destDataArr;
+            byte[] srcDataArr, destDataArr;
             int srcDataOffs, destDataOffs;
 
             bool srcIsManaged = source.TryGetUnderlyingData(out srcDataArr, out srcDataOffs);
@@ -204,7 +204,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 Debug.Assert(sourceIndex <= int.MaxValue);
                 Debug.Assert(destinationIndex <= int.MaxValue);
 
-                Buffer.BlockCopy(srcDataArr!, srcDataOffs + (int)sourceIndex, destDataArr!, destDataOffs + (int)destinationIndex, (int)count);
+                global::System.Buffer.BlockCopy(srcDataArr!, srcDataOffs + (int)sourceIndex, destDataArr!, destDataOffs + (int)destinationIndex, (int)count);
                 return;
             }
 
@@ -253,12 +253,12 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         /// <param name="underlyingDataArrayStartOffset">Will be set to the start offset of the buffer data in the backing array
         /// or to <code>-1</code>.</param>
         /// <returns>Whether the <code>IBuffer</code> is backed by a managed byte array.</returns>
-        internal static bool TryGetUnderlyingData(this IBuffer buffer, [NotNullWhen(true)] out byte[]? underlyingDataArray, out int underlyingDataArrayStartOffset)
+        internal static bool TryGetUnderlyingData(this IBuffer buffer, out byte[] underlyingDataArray, out int underlyingDataArrayStartOffset)
         {
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
-            WindowsRuntimeBuffer? winRtBuffer = buffer as WindowsRuntimeBuffer;
+            WindowsRuntimeBuffer winRtBuffer = buffer as WindowsRuntimeBuffer;
             if (winRtBuffer == null)
             {
                 underlyingDataArray = null;
@@ -281,7 +281,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         /// <param name="otherBuffer">An <code>IBuffer</code> instance or <code>null</code>.</param>
         /// <returns><code>true</code> if the underlying <code>Buffer</code> memory pointer is the same for both specified
         /// <code>IBuffer</code> instances (i.e. if they are backed by the same memory); <code>false</code> otherwise.</returns>
-        public static bool IsSameData(this IBuffer buffer, IBuffer? otherBuffer)
+        public static bool IsSameData(this IBuffer buffer, IBuffer otherBuffer)
         {
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
@@ -292,7 +292,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (buffer == otherBuffer)
                 return true;
 
-            byte[]? thisDataArr, otherDataArr;
+            byte[] thisDataArr, otherDataArr;
             int thisDataOffs, otherDataOffs;
 
             bool thisIsManaged = buffer.TryGetUnderlyingData(out thisDataArr, out thisDataOffs);
@@ -337,7 +337,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             ArraySegment<byte> streamData;
             if (!underlyingStream.TryGetBuffer(out streamData))
             {
-                throw new UnauthorizedAccessException(SR.UnauthorizedAccess_InternalBuffer);
+                throw new UnauthorizedAccessException(global::Windows.Storage.Streams.SR.UnauthorizedAccess_InternalBuffer);
             }
             return new WindowsRuntimeBuffer(streamData.Array!, (int)streamData.Offset, (int)underlyingStream.Length, underlyingStream.Capacity);
         }
@@ -376,13 +376,13 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 throw new ArgumentOutOfRangeException(nameof(length));
 
             if (underlyingStream.Capacity <= positionInStream)
-                throw new ArgumentException(SR.Argument_StreamPositionBeyondEOS);
+                throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_StreamPositionBeyondEOS);
 
             ArraySegment<byte> streamData;
 
             if (!underlyingStream.TryGetBuffer(out streamData))
             {
-                throw new UnauthorizedAccessException(SR.UnauthorizedAccess_InternalBuffer);
+                throw new UnauthorizedAccessException(global::Windows.Storage.Streams.SR.UnauthorizedAccess_InternalBuffer);
             }
 
             int originInStream = streamData.Offset;
@@ -397,7 +397,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            byte[]? dataArr;
+            byte[] dataArr;
             int dataOffs;
             if (source.TryGetUnderlyingData(out dataArr, out dataOffs))
             {
@@ -408,7 +408,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             unsafe
             {
                 IBufferByteAccess bufferByteAccess = source.As<IBufferByteAccess>();
-                return new WindowsRuntimeBufferUnmanagedMemoryStream(source, (byte*)bufferByteAccess.GetBuffer());
+                return new WindowsRuntimeBufferUnmanagedMemoryStream(source, (byte*)bufferByteAccess.Buffer);
             }
         }
 
@@ -420,9 +420,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         public static byte GetByte(this IBuffer source, uint byteOffset)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (source.Capacity <= byteOffset) throw new ArgumentException(SR.Argument_BufferIndexExceedsCapacity, nameof(byteOffset));
+            if (source.Capacity <= byteOffset) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity, nameof(byteOffset));
 
-            byte[]? srcDataArr;
+            byte[] srcDataArr;
             int srcDataOffs;
             if (source.TryGetUnderlyingData(out srcDataArr, out srcDataOffs))
             {
@@ -466,7 +466,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             unsafe
             {
-                IntPtr buffPtr = (buffer.As<IBufferByteAccess>()).GetBuffer();
+                IntPtr buffPtr = buffer.As<IBufferByteAccess>().Buffer;
                 return new IntPtr((byte*)buffPtr + offset);
             }
         }

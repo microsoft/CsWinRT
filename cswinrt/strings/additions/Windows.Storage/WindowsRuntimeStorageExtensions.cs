@@ -10,6 +10,7 @@ namespace System.IO
     using global::Windows.Storage;
     using global::Windows.Storage.FileProperties;
     using global::Windows.Storage.Streams;
+    using System.Runtime.InteropServices;
 
     /// <summary>
     /// Contains extension methods that provide convenience helpers for WinRT IO.
@@ -81,7 +82,7 @@ namespace System.IO
                 throw new ArgumentNullException(nameof(relativePath));
 
             if (string.IsNullOrWhiteSpace(relativePath))
-                throw new ArgumentException(SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
+                throw new ArgumentException(global::Windows.Storage.SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
 
             return OpenStreamForReadAsyncCore(rootDirectory, relativePath);
         }
@@ -117,7 +118,7 @@ namespace System.IO
                 throw new ArgumentNullException(nameof(relativePath));
 
             if (string.IsNullOrWhiteSpace(relativePath))
-                throw new ArgumentException(SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
+                throw new ArgumentException(global::Windows.Storage.SR.Argument_RelativePathMayNotBeWhitespaceOnly, nameof(relativePath));
 
             return OpenStreamForWriteAsyncCore(rootDirectory, relativePath, creationCollisionOption);
         }
@@ -171,7 +172,7 @@ namespace System.IO
             }
         }
 
-        public static SafeFileHandle? CreateSafeFileHandle(
+        public static SafeFileHandle CreateSafeFileHandle(
             this IStorageFile windowsRuntimeFile,
             FileAccess access = FileAccess.ReadWrite,
             FileShare share = FileShare.Read,
@@ -184,7 +185,7 @@ namespace System.IO
             HANDLE_SHARING_OPTIONS sharingOptions = FileShareToHandleSharingOptions(share);
             HANDLE_OPTIONS handleOptions = FileOptionsToHandleOptions(options);
 
-            IStorageItemHandleAccess? handleAccess = ((object)windowsRuntimeFile) as IStorageItemHandleAccess;
+            IStorageItemHandleAccess handleAccess = ((object)windowsRuntimeFile) as IStorageItemHandleAccess;
 
             if (handleAccess == null)
                 return null;
@@ -198,13 +199,12 @@ namespace System.IO
                 IntPtr.Zero,
                 out handle);
 
-            if (result != 0)
-                throw Win32Marshal.GetExceptionForWin32Error(Win32Marshal.TryMakeWin32ErrorCodeFromHR(result), windowsRuntimeFile.Name);
+            ExceptionHelpers.ThrowExceptionForHR(result);
 
             return handle;
         }
 
-        public static SafeFileHandle? CreateSafeFileHandle(
+        public static SafeFileHandle CreateSafeFileHandle(
             this IStorageFolder rootDirectory,
             string relativePath,
             FileMode mode)
@@ -212,7 +212,7 @@ namespace System.IO
             return rootDirectory.CreateSafeFileHandle(relativePath, mode, (mode == FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite));
         }
 
-        public static SafeFileHandle? CreateSafeFileHandle(
+        public static SafeFileHandle CreateSafeFileHandle(
             this IStorageFolder rootDirectory,
             string relativePath,
             FileMode mode,
@@ -230,7 +230,7 @@ namespace System.IO
             HANDLE_SHARING_OPTIONS sharingOptions = FileShareToHandleSharingOptions(share);
             HANDLE_OPTIONS handleOptions = FileOptionsToHandleOptions(options);
 
-            IStorageFolderHandleAccess? handleAccess = ((object)rootDirectory) as IStorageFolderHandleAccess;
+            IStorageFolderHandleAccess handleAccess = ((object)rootDirectory) as IStorageFolderHandleAccess;
 
             if (handleAccess == null)
                 return null;
@@ -246,8 +246,7 @@ namespace System.IO
                 IntPtr.Zero,
                 out handle);
 
-            if (result != 0)
-                throw Win32Marshal.GetExceptionForWin32Error(Win32Marshal.TryMakeWin32ErrorCodeFromHR(result), relativePath);
+            ExceptionHelpers.ThrowExceptionForHR(result);
 
             return handle;
         }
@@ -264,7 +263,7 @@ namespace System.IO
         private static HANDLE_SHARING_OPTIONS FileShareToHandleSharingOptions(FileShare share)
         {
             if ((share & FileShare.Inheritable) != 0)
-                throw new NotSupportedException(SR.NotSupported_Inheritable);
+                throw new NotSupportedException(global::Windows.Storage.SR.NotSupported_Inheritable);
             if (share < FileShare.None || share > (FileShare.ReadWrite | FileShare.Delete))
                 throw new ArgumentOutOfRangeException(nameof(share), share, null);
 
@@ -282,7 +281,7 @@ namespace System.IO
         private static HANDLE_OPTIONS FileOptionsToHandleOptions(FileOptions options)
         {
             if ((options & FileOptions.Encrypted) != 0)
-                throw new NotSupportedException(SR.NotSupported_Encrypted);
+                throw new NotSupportedException(global::Windows.Storage.SR.NotSupported_Encrypted);
             if (options != FileOptions.None && (options &
                 ~(FileOptions.WriteThrough | FileOptions.Asynchronous | FileOptions.RandomAccess | FileOptions.DeleteOnClose |
                   FileOptions.SequentialScan | (FileOptions)0x20000000 /* NoBuffering */)) != 0)

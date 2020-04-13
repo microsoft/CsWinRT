@@ -3,17 +3,17 @@
 // See the LICENSE file in the project root for more information.
 
 
-namespace System.IO
+namespace Windows.Storage.Streams
 {
-    using System.Diagnostics;
-    using System.Diagnostics.Contracts;
-    
-    using System.Runtime.InteropServices;
-    using System.Threading.Tasks;
-    using System.Threading;
-    using global::Windows.Foundation;
-    using global::Windows.Storage.Streams;
-    using System.Diagnostics.CodeAnalysis;
+    using global::System.Diagnostics;
+    using global::System.Diagnostics.Contracts;
+    using global::System.IO;
+    using global::System.Runtime.InteropServices;
+    using global::System.Runtime.InteropServices.WindowsRuntime;
+    using global::System.Threading.Tasks;
+    using global::System.Threading;
+    using Windows.Foundation;
+    using global::System.Diagnostics.CodeAnalysis;
     /// <summary>
     /// A <code>Stream</code> used to wrap a Windows Runtime stream to expose it as a managed steam.
     /// </summary>
@@ -21,28 +21,28 @@ namespace System.IO
     {
         #region Construction
 
-        internal static WinRtToNetFxStreamAdapter Create(object windowsRuntimeStream)
+        internal static WinRtToNetFxStreamAdapter Create(object windowsruntimeStream)
         {
-            if (windowsRuntimeStream == null)
-                throw new ArgumentNullException(nameof(windowsRuntimeStream));
+            if (windowsruntimeStream == null)
+                throw new ArgumentNullException(nameof(windowsruntimeStream));
 
-            bool canRead = windowsRuntimeStream is IInputStream;
-            bool canWrite = windowsRuntimeStream is IOutputStream;
-            bool canSeek = windowsRuntimeStream is IRandomAccessStream;
+            bool canRead = windowsruntimeStream is IInputStream;
+            bool canWrite = windowsruntimeStream is IOutputStream;
+            bool canSeek = windowsruntimeStream is IRandomAccessStream;
 
             if (!canRead && !canWrite && !canSeek)
-                throw new ArgumentException(SR.Argument_ObjectMustBeWinRtStreamToConvertToNetFxStream);
+                throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_ObjectMustBeWinRtStreamToConvertToNetFxStream);
 
             // Proactively guard against a non-conforming curstomer implementations:
             if (canSeek)
             {
-                IRandomAccessStream iras = (IRandomAccessStream)windowsRuntimeStream;
+                IRandomAccessStream iras = (IRandomAccessStream)windowsruntimeStream;
 
                 if (!canRead && iras.CanRead)
-                    throw new ArgumentException(SR.Argument_InstancesImplementingIRASThatCanReadMustImplementIIS);
+                    throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InstancesImplementingIRASThatCanReadMustImplementIIS);
 
                 if (!canWrite && iras.CanWrite)
-                    throw new ArgumentException(SR.Argument_InstancesImplementingIRASThatCanWriteMustImplementIOS);
+                    throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InstancesImplementingIRASThatCanWriteMustImplementIOS);
 
                 if (!iras.CanRead)
                     canRead = false;
@@ -52,9 +52,9 @@ namespace System.IO
             }
 
             if (!canRead && !canWrite)
-                throw new ArgumentException(SR.Argument_WinRtStreamCannotReadOrWrite);
+                throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_WinRtStreamCannotReadOrWrite);
 
-            return new WinRtToNetFxStreamAdapter(windowsRuntimeStream, canRead, canWrite, canSeek);
+            return new WinRtToNetFxStreamAdapter(windowsruntimeStream, canRead, canWrite, canSeek);
         }
 
 
@@ -94,10 +94,10 @@ namespace System.IO
 
         #region Instance variables
 
-        private byte[]? _oneByteBuffer = null;
+        private byte[] _oneByteBuffer = null;
         private bool _leaveUnderlyingStreamOpen = true;
 
-        private object? _winRtStream;
+        private object _winRtStream;
         private readonly bool _canRead;
         private readonly bool _canWrite;
         private readonly bool _canSeek;
@@ -120,9 +120,9 @@ namespace System.IO
         }
 
 
-        public TWinRtStream? GetWindowsRuntimeStream<TWinRtStream>() where TWinRtStream : class
+        public TWinRtStream GetWindowsRuntimeStream<TWinRtStream>() where TWinRtStream : class
         {
-            object? wrtStr = _winRtStream;
+            object wrtStr = _winRtStream;
 
             if (wrtStr == null)
                 return null;
@@ -139,19 +139,19 @@ namespace System.IO
         {
             get
             {
-                byte[]? obb = _oneByteBuffer;
+                byte[] obb = _oneByteBuffer;
                 if (obb == null)  // benign race for multiple init
                     _oneByteBuffer = obb = new byte[1];
                 return obb;
             }
         }
 
-        private TWinRtStream? EnsureNotDisposed<TWinRtStream>() where TWinRtStream : class
+        private TWinRtStream EnsureNotDisposed<TWinRtStream>() where TWinRtStream : class
         {
-            object? wrtStr = _winRtStream;
+            object wrtStr = _winRtStream;
 
             if (wrtStr == null)
-                throw new ObjectDisposedException(SR.ObjectDisposed_CannotPerformOperation);
+                throw new ObjectDisposedException(global::Windows.Storage.Streams.SR.ObjectDisposed_CannotPerformOperation);
 
             return (wrtStr as TWinRtStream);
         }
@@ -160,21 +160,21 @@ namespace System.IO
         private void EnsureNotDisposed()
         {
             if (_winRtStream == null)
-                throw new ObjectDisposedException(SR.ObjectDisposed_CannotPerformOperation);
+                throw new ObjectDisposedException(global::Windows.Storage.Streams.SR.ObjectDisposed_CannotPerformOperation);
         }
 
 
         private void EnsureCanRead()
         {
             if (!_canRead)
-                throw new NotSupportedException(SR.NotSupported_CannotReadFromStream);
+                throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotReadFromStream);
         }
 
 
         private void EnsureCanWrite()
         {
             if (!_canWrite)
-                throw new NotSupportedException(SR.NotSupported_CannotWriteToStream);
+                throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotWriteToStream);
         }
 
         #endregion Tools and Helpers
@@ -187,7 +187,7 @@ namespace System.IO
             // WinRT streams should implement IDisposable (IClosable in WinRT), but let's be defensive:
             if (disposing && _winRtStream != null && !_leaveUnderlyingStreamOpen)
             {
-                IDisposable? disposableWinRtStream = _winRtStream as IDisposable;  // benign race on winRtStream
+                IDisposable disposableWinRtStream = _winRtStream as IDisposable;  // benign race on winRtStream
                 if (disposableWinRtStream != null)
                     disposableWinRtStream.Dispose();
             }
@@ -229,10 +229,10 @@ namespace System.IO
         {
             get
             {
-                IRandomAccessStream? wrtStr = EnsureNotDisposed<IRandomAccessStream>();
+                IRandomAccessStream wrtStr = EnsureNotDisposed<IRandomAccessStream>();
 
                 if (!_canSeek)
-                    throw new NotSupportedException(SR.NotSupported_CannotUseLength_StreamNotSeekable);
+                    throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotUseLength_StreamNotSeekable);
 
                 Debug.Assert(wrtStr != null);
 
@@ -240,7 +240,7 @@ namespace System.IO
 
                 // These are over 8000 PetaBytes, we do not expect this to happen. However, let's be defensive:
                 if (size > (ulong)long.MaxValue)
-                    throw new IOException(SR.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
+                    throw new IOException(global::Windows.Storage.Streams.SR.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
 
                 return unchecked((long)size);
             }
@@ -251,10 +251,10 @@ namespace System.IO
         {
             get
             {
-                IRandomAccessStream? wrtStr = EnsureNotDisposed<IRandomAccessStream>();
+                IRandomAccessStream wrtStr = EnsureNotDisposed<IRandomAccessStream>();
 
                 if (!_canSeek)
-                    throw new NotSupportedException(SR.NotSupported_CannotUsePosition_StreamNotSeekable);
+                    throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotUsePosition_StreamNotSeekable);
 
                 Debug.Assert(wrtStr != null);
 
@@ -262,7 +262,7 @@ namespace System.IO
 
                 // These are over 8000 PetaBytes, we do not expect this to happen. However, let's be defensive:
                 if (pos > (ulong)long.MaxValue)
-                    throw new IOException(SR.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
+                    throw new IOException(global::Windows.Storage.Streams.SR.IO_UnderlyingWinRTStreamTooLong_CannotUseLengthOrPosition);
 
                 return unchecked((long)pos);
             }
@@ -270,12 +270,12 @@ namespace System.IO
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(Position), SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+                    throw new ArgumentOutOfRangeException(nameof(Position), global::Windows.Storage.Streams.SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
 
-                IRandomAccessStream? wrtStr = EnsureNotDisposed<IRandomAccessStream>();
+                IRandomAccessStream wrtStr = EnsureNotDisposed<IRandomAccessStream>();
 
                 if (!_canSeek)
-                    throw new NotSupportedException(SR.NotSupported_CannotUsePosition_StreamNotSeekable);
+                    throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotUsePosition_StreamNotSeekable);
 
                 Debug.Assert(wrtStr != null);
 
@@ -286,10 +286,10 @@ namespace System.IO
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            IRandomAccessStream? wrtStr = EnsureNotDisposed<IRandomAccessStream>();
+            IRandomAccessStream wrtStr = EnsureNotDisposed<IRandomAccessStream>();
 
             if (!_canSeek)
-                throw new NotSupportedException(SR.NotSupported_CannotSeekInStream);
+                throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotSeekInStream);
 
             Debug.Assert(wrtStr != null);
 
@@ -306,12 +306,12 @@ namespace System.IO
                         long curPos = Position;
 
                         if (long.MaxValue - curPos < offset)
-                            throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                            throw new IOException(global::Windows.Storage.Streams.SR.IO_CannotSeekBeyondInt64MaxValue);
 
                         long newPos = curPos + offset;
 
                         if (newPos < 0)
-                            throw new IOException(SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+                            throw new IOException(global::Windows.Storage.Streams.SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
 
                         Position = newPos;
                         return newPos;
@@ -325,7 +325,7 @@ namespace System.IO
                         if (size > (ulong)long.MaxValue)
                         {
                             if (offset >= 0)
-                                throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                                throw new IOException(global::Windows.Storage.Streams.SR.IO_CannotSeekBeyondInt64MaxValue);
 
                             Debug.Assert(offset < 0);
 
@@ -334,7 +334,7 @@ namespace System.IO
 
                             ulong np = size - absOffset;
                             if (np > (ulong)long.MaxValue)
-                                throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                                throw new IOException(global::Windows.Storage.Streams.SR.IO_CannotSeekBeyondInt64MaxValue);
 
                             newPos = (long)np;
                         }
@@ -345,12 +345,12 @@ namespace System.IO
                             long s = unchecked((long)size);
 
                             if (long.MaxValue - s < offset)
-                                throw new IOException(SR.IO_CannotSeekBeyondInt64MaxValue);
+                                throw new IOException(global::Windows.Storage.Streams.SR.IO_CannotSeekBeyondInt64MaxValue);
 
                             newPos = s + offset;
 
                             if (newPos < 0)
-                                throw new IOException(SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
+                                throw new IOException(global::Windows.Storage.Streams.SR.ArgumentOutOfRange_IO_CannotSeekToNegativePosition);
                         }
 
                         Position = newPos;
@@ -359,7 +359,7 @@ namespace System.IO
 
                 default:
                     {
-                        throw new ArgumentException(SR.Argument_InvalidSeekOrigin, nameof(origin));
+                        throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InvalidSeekOrigin, nameof(origin));
                     }
             }
         }
@@ -368,12 +368,12 @@ namespace System.IO
         public override void SetLength(long value)
         {
             if (value < 0)
-                throw new ArgumentOutOfRangeException(nameof(value), SR.ArgumentOutOfRange_CannotResizeStreamToNegative);
+                throw new ArgumentOutOfRangeException(nameof(value), global::Windows.Storage.Streams.SR.ArgumentOutOfRange_CannotResizeStreamToNegative);
 
-            IRandomAccessStream? wrtStr = EnsureNotDisposed<IRandomAccessStream>();
+            IRandomAccessStream wrtStr = EnsureNotDisposed<IRandomAccessStream>();
 
             if (!_canSeek)
-                throw new NotSupportedException(SR.NotSupported_CannotSeekInStream);
+                throw new NotSupportedException(global::Windows.Storage.Streams.SR.NotSupported_CannotSeekInStream);
 
             EnsureCanWrite();
 
@@ -392,7 +392,7 @@ namespace System.IO
 
         #region Reading
 
-        private IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state, bool usedByBlockingWrapper)
+        private IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state, bool usedByBlockingWrapper)
         {
             // This method is somewhat tricky: We could consider just calling ReadAsync (recall that Task implements IAsyncResult).
             // It would be OK for cases where BeginRead is invoked directly by the public user.
@@ -427,9 +427,9 @@ namespace System.IO
                 throw new ArgumentOutOfRangeException(nameof(count));
 
             if (buffer.Length - offset < count)
-                throw new ArgumentException(SR.Argument_InsufficientSpaceInTargetBuffer);
+                throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
 
-            IInputStream? wrtStr = EnsureNotDisposed<IInputStream>();
+            IInputStream wrtStr = EnsureNotDisposed<IInputStream>();
             EnsureCanRead();
 
             Debug.Assert(wrtStr != null);
@@ -459,9 +459,9 @@ namespace System.IO
             EnsureNotDisposed();
             EnsureCanRead();
 
-            StreamOperationAsyncResult? streamAsyncResult = asyncResult as StreamOperationAsyncResult;
+            StreamOperationAsyncResult streamAsyncResult = asyncResult as StreamOperationAsyncResult;
             if (streamAsyncResult == null)
-                throw new ArgumentException(SR.Argument_UnexpectedAsyncResult, nameof(asyncResult));
+                throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_UnexpectedAsyncResult, nameof(asyncResult));
 
             streamAsyncResult.Wait();
 
@@ -507,7 +507,7 @@ namespace System.IO
                 throw new ArgumentOutOfRangeException(nameof(count));
 
             if (buffer.Length - offset < count)
-                throw new ArgumentException(SR.Argument_InsufficientSpaceInTargetBuffer);
+                throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
 
             EnsureNotDisposed();
             EnsureCanRead();
@@ -525,8 +525,8 @@ namespace System.IO
             // Arguments validation and not-disposed validation are done in BeginRead.
 
             IAsyncResult asyncResult = BeginRead(buffer, offset, count, null, null, usedByBlockingWrapper: true);
-            int bytesRead = EndRead(asyncResult);
-            return bytesRead;
+            int bytesread = EndRead(asyncResult);
+            return bytesread;
         }
 
 
@@ -549,12 +549,12 @@ namespace System.IO
         #region Writing
 
 
-        public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state)
+        public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
         {
             return BeginWrite(buffer, offset, count, callback, state, usedByBlockingWrapper: false);
         }
 
-        private IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback? callback, object? state, bool usedByBlockingWrapper)
+        private IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state, bool usedByBlockingWrapper)
         {
             // See the large comment in BeginRead about why we are not using this.WriteAsync,
             // and instead using a custom implementation of IAsyncResult.
@@ -569,9 +569,9 @@ namespace System.IO
                 throw new ArgumentOutOfRangeException(nameof(count));
 
             if (buffer.Length - offset < count)
-                throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
+                throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
 
-            IOutputStream? wrtStr = EnsureNotDisposed<IOutputStream>();
+            IOutputStream wrtStr = EnsureNotDisposed<IOutputStream>();
             EnsureCanWrite();
 
             Debug.Assert(wrtStr != null);
@@ -600,9 +600,9 @@ namespace System.IO
             EnsureNotDisposed();
             EnsureCanWrite();
 
-            StreamOperationAsyncResult? streamAsyncResult = asyncResult as StreamOperationAsyncResult;
+            StreamOperationAsyncResult streamAsyncResult = asyncResult as StreamOperationAsyncResult;
             if (streamAsyncResult == null)
-                throw new ArgumentException(SR.Argument_UnexpectedAsyncResult, nameof(asyncResult));
+                throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_UnexpectedAsyncResult, nameof(asyncResult));
 
             streamAsyncResult.Wait();
 
@@ -641,9 +641,9 @@ namespace System.IO
                 throw new ArgumentOutOfRangeException(nameof(count));
 
             if (buffer.Length - offset < count)
-                throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
+                throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
 
-            IOutputStream? wrtStr = EnsureNotDisposed<IOutputStream>();
+            IOutputStream wrtStr = EnsureNotDisposed<IOutputStream>();
             EnsureCanWrite();
 
             Debug.Assert(wrtStr != null);
@@ -692,7 +692,7 @@ namespace System.IO
             // See the large comment in BeginRead about why we are not using this.FlushAsync,
             // and instead using a custom implementation of IAsyncResult.
 
-            IOutputStream? wrtStr = EnsureNotDisposed<IOutputStream>();
+            IOutputStream wrtStr = EnsureNotDisposed<IOutputStream>();
 
             // Calling Flush in a non-writable stream is a no-op, not an error:
             if (!_canWrite)
@@ -728,7 +728,7 @@ namespace System.IO
 
         public override Task FlushAsync(CancellationToken cancellationToken)
         {
-            IOutputStream? wrtStr = EnsureNotDisposed<IOutputStream>();
+            IOutputStream wrtStr = EnsureNotDisposed<IOutputStream>();
 
             // Calling Flush in a non-writable stream is a no-op, not an error:
             if (!_canWrite)
@@ -758,7 +758,7 @@ namespace System.IO
             Debug.Assert(buffer.Length - offset >= count);
             Debug.Assert(_canRead);
 
-            IInputStream? wrtStr = EnsureNotDisposed<IInputStream>();
+            IInputStream wrtStr = EnsureNotDisposed<IInputStream>();
 
             Debug.Assert(wrtStr != null);
 

@@ -23,6 +23,10 @@ namespace System.IO
     /// </summary>
     internal abstract class NetFxToWinRtStreamAdapter : IDisposable
     {
+        private const int E_ILLEGAL_METHOD_CALL = unchecked((int)0x8000000E);
+        private const int RO_E_CLOSED = unchecked((int)0x80000013);
+        private const int E_NOTIMPL = unchecked((int)0x80004001);
+        private const int E_INVALIDARG = unchecked((int)0x80070057);
         #region Construction
 
         #region Interface adapters
@@ -110,7 +114,7 @@ namespace System.IO
                 adapter = new OutputStream(stream, readOptimization);
 
             else
-                throw new ArgumentException(SR.Argument_NotSufficientCapabilitiesToConvertToWinRtStream);
+                throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_NotSufficientCapabilitiesToConvertToWinRtStream);
 
             return adapter;
         }
@@ -189,8 +193,8 @@ namespace System.IO
 
             if (str == null)
             {
-                ObjectDisposedException ex = new ObjectDisposedException(SR.ObjectDisposed_CannotPerformOperation);
-                ex.HResult = __HResults.RO_E_CLOSED;
+                ObjectDisposedException ex = new ObjectDisposedException(global::Windows.Storage.Streams.SR.ObjectDisposed_CannotPerformOperation);
+                ex.SetHResult(RO_E_CLOSED);
                 throw ex;
             }
 
@@ -231,22 +235,22 @@ namespace System.IO
             if (count < 0 || int.MaxValue < count)
             {
                 ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(count));
-                ex.HResult = __HResults.E_INVALIDARG;
+                ex.SetHResult(E_INVALIDARG);
                 throw ex;
             }
 
             if (buffer.Capacity < count)
             {
-                ArgumentException ex = new ArgumentException(SR.Argument_InsufficientBufferCapacity);
-                ex.HResult = __HResults.E_INVALIDARG;
+                ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientBufferCapacity);
+                ex.SetHResult(E_INVALIDARG);
                 throw ex;
             }
 
             if (!(options == InputStreamOptions.None || options == InputStreamOptions.Partial || options == InputStreamOptions.ReadAhead))
             {
                 ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(options),
-                                                                                 SR.ArgumentOutOfRange_InvalidInputStreamOptionsEnumValue);
-                ex.HResult = __HResults.E_INVALIDARG;
+                                                                                 global::Windows.Storage.Streams.SR.ArgumentOutOfRange_InvalidInputStreamOptionsEnumValue);
+                ex.SetHResult(E_INVALIDARG);
                 throw ex;
             }
 
@@ -292,8 +296,8 @@ namespace System.IO
 
             if (buffer.Capacity < buffer.Length)
             {
-                ArgumentException ex = new ArgumentException(SR.Argument_BufferLengthExceedsCapacity);
-                ex.HResult = __HResults.E_INVALIDARG;
+                ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferLengthExceedsCapacity);
+                ex.SetHResult(E_INVALIDARG);
                 throw ex;
             }
 
@@ -320,8 +324,8 @@ namespace System.IO
         {
             if (position > long.MaxValue)
             {
-                ArgumentException ex = new ArgumentException(SR.IO_CannotSeekBeyondInt64MaxValue);
-                ex.HResult = __HResults.E_INVALIDARG;
+                ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.IO_CannotSeekBeyondInt64MaxValue);
+                ex.SetHResult(E_INVALIDARG);
                 throw ex;
             }
 
@@ -378,8 +382,8 @@ namespace System.IO
             {
                 if (value > long.MaxValue)
                 {
-                    ArgumentException ex = new ArgumentException(SR.IO_CannotSetSizeBeyondInt64MaxValue);
-                    ex.HResult = __HResults.E_INVALIDARG;
+                    ArgumentException ex = new ArgumentException(global::Windows.Storage.Streams.SR.IO_CannotSetSizeBeyondInt64MaxValue);
+                    ex.SetHResult(E_INVALIDARG);
                     throw ex;
                 }
 
@@ -387,8 +391,8 @@ namespace System.IO
 
                 if (!str.CanWrite)
                 {
-                    InvalidOperationException ex = new InvalidOperationException(SR.InvalidOperation_CannotSetStreamSizeCannotWrite);
-                    ex.HResult = __HResults.E_ILLEGAL_METHOD_CALL;
+                    InvalidOperationException ex = new InvalidOperationException(global::Windows.Storage.Streams.SR.InvalidOperation_CannotSetStreamSizeCannotWrite);
+                    ex.SetHResult(E_ILLEGAL_METHOD_CALL);
                     throw ex;
                 }
 
@@ -413,11 +417,10 @@ namespace System.IO
         // for IRandonAccessStream.
         // Cloning can be added in future, however, it would be quite complex
         // to support it correctly for generic streams.
-        [DoesNotReturn]
         private static void ThrowCloningNotSupported(string methodName)
         {
-            NotSupportedException nse = new NotSupportedException(SR.Format(SR.NotSupported_CloningNotSupported, methodName));
-            nse.HResult = __HResults.E_NOTIMPL;
+            NotSupportedException nse = new NotSupportedException(string.Format(global::Windows.Storage.Streams.SR.NotSupported_CloningNotSupported, methodName));
+            nse.SetHResult(E_NOTIMPL);
             throw nse;
         }
 

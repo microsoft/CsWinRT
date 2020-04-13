@@ -177,15 +177,14 @@ namespace System.IO
 
         internal abstract void ProcessConcreteCompletedOperation(IAsyncInfo completedOperation, out long bytesCompleted);
 
-        [DoesNotReturn]
-        private static void ProcessCompletedOperation_InvalidOperationThrowHelper(ExceptionDispatchInfo? errInfo, string errMsg)
+         private static void ProcessCompletedOperation_InvalidOperationThrowHelper(ExceptionDispatchInfo? errInfo, string errMsg)
         {
-            Exception? errInfoSrc = (errInfo == null) ? null : errInfo.SourceException;
+            Exception? errInfosrc = (errInfo == null) ? null : errInfo.SourceException;
 
-            if (errInfoSrc == null)
+            if (errInfosrc == null)
                 throw new InvalidOperationException(errMsg);
             else
-                throw new InvalidOperationException(errMsg, errInfoSrc);
+                throw new InvalidOperationException(errMsg, errInfosrc);
         }
 
 
@@ -202,30 +201,30 @@ namespace System.IO
             // and only rethrow the errorInfo.
 
             if (!_callbackInvoked)
-                ProcessCompletedOperation_InvalidOperationThrowHelper(_errorInfo, SR.InvalidOperation_CannotCallThisMethodInCurrentState);
+                ProcessCompletedOperation_InvalidOperationThrowHelper(_errorInfo, global::Windows.Storage.Streams.SR.InvalidOperation_CannotCallThisMethodInCurrentState);
 
             if (!_processCompletedOperationInCallback && !_completed)
-                ProcessCompletedOperation_InvalidOperationThrowHelper(_errorInfo, SR.InvalidOperation_CannotCallThisMethodInCurrentState);
+                ProcessCompletedOperation_InvalidOperationThrowHelper(_errorInfo, global::Windows.Storage.Streams.SR.InvalidOperation_CannotCallThisMethodInCurrentState);
 
             if (_completedOperation == null)
             {
                 ExceptionDispatchInfo? errInfo = _errorInfo;
-                Exception? errInfoSrc = (errInfo == null) ? null : errInfo.SourceException;
+                Exception? errInfosrc = (errInfo == null) ? null : errInfo.SourceException;
 
                 // See if errorInfo is set because we observed completedOperation == null previously (being slow is Ok on error path):
-                if (errInfoSrc != null && errInfoSrc is NullReferenceException
-                        && SR.NullReference_IOCompletionCallbackCannotProcessNullAsyncInfo.Equals(errInfoSrc.Message))
+                if (errInfosrc != null && errInfosrc is NullReferenceException
+                        && global::Windows.Storage.Streams.SR.NullReference_IOCompletionCallbackCannotProcessNullAsyncInfo.Equals(errInfosrc.Message))
                 {
                     errInfo!.Throw();
                 }
                 else
                 {
-                    throw new InvalidOperationException(SR.InvalidOperation_CannotCallThisMethodInCurrentState);
+                    throw new InvalidOperationException(global::Windows.Storage.Streams.SR.InvalidOperation_CannotCallThisMethodInCurrentState);
                 }
             }
 
             if (_completedOperation.Id != _asyncStreamOperation!.Id)
-                ProcessCompletedOperation_InvalidOperationThrowHelper(_errorInfo, SR.InvalidOperation_UnexpectedAsyncOperationID);
+                ProcessCompletedOperation_InvalidOperationThrowHelper(_errorInfo, global::Windows.Storage.Streams.SR.InvalidOperation_UnexpectedAsyncOperationID);
 
             if (_completedOperation.Status == AsyncStatus.Error)
             {
@@ -242,7 +241,7 @@ namespace System.IO
             try
             {
                 if (_callbackInvoked)
-                    throw new InvalidOperationException(SR.InvalidOperation_MultipleIOCompletionCallbackInvocation);
+                    throw new InvalidOperationException(global::Windows.Storage.Streams.SR.InvalidOperation_MultipleIOCompletionCallbackInvocation);
 
                 _callbackInvoked = true;
 
@@ -252,7 +251,7 @@ namespace System.IO
                 // completedOperation later, or we will get an InvalidOperation when processing the Op. With the check, they will be
                 // aggregated and the user will know what went wrong.
                 if (completedOperation == null)
-                    throw new NullReferenceException(SR.NullReference_IOCompletionCallbackCannotProcessNullAsyncInfo);
+                    throw new NullReferenceException(global::Windows.Storage.Streams.SR.NullReference_IOCompletionCallbackCannotProcessNullAsyncInfo);
 
                 _completedOperation = completedOperation;
 

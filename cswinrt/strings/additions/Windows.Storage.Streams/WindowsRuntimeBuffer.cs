@@ -20,12 +20,12 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     /// </summary>
     public sealed class WindowsRuntimeBuffer : IBuffer, IBufferByteAccess, IMarshal
     {
-        private static readonly Guid IID_IMarshal = Guid.Parse("00000003-0000-0000-c000-000000000046");
         [DllImport("api-ms-win-core-winrt-robuffer-l1-1-0.dll")]
         private static extern int RoGetBufferMarshaler(out IntPtr bufferMarshalerPtr);
         #region Constants
 
         private const string WinTypesDLL = "WinTypes.dll";
+        private const int E_BOUNDS = unchecked((int)0x8000000B);
 
         #endregion Constants
 
@@ -46,9 +46,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (offset < 0) throw new ArgumentOutOfRangeException(nameof(offset));
             if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
             if (capacity < 0) throw new ArgumentOutOfRangeException(nameof(capacity));
-            if (data.Length - offset < length) throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
-            if (data.Length - offset < capacity) throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
-            if (capacity < length) throw new ArgumentException(SR.Argument_InsufficientBufferCapacity);
+            if (data.Length - offset < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
+            if (data.Length - offset < capacity) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
+            if (capacity < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientBufferCapacity);
 
             byte[] underlyingData = new byte[capacity];
             Array.Copy(data, offset, underlyingData, 0, length);
@@ -62,7 +62,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         // This object handles IMarshal calls for us:
         [ThreadStatic]
-        private static IMarshal? t_winRtMarshalProxy = null;
+        private static IMarshal t_winRtMarshalProxy = null;
 
         private static void EnsureHasMarshalProxy()
         {
@@ -72,22 +72,22 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             try
             {
                 int hr = RoGetBufferMarshaler(out IntPtr proxyPtr);
-                IMarshal proxy = new ABI.Com.IMarshal(ObjectReference<ABI.IMarshal.Vftbl>(ref proxyPtr));
+                IMarshal proxy = new ABI.Com.IMarshal(ObjectReference<ABI.Com.IMarshal.Vftbl>.Attach(ref proxyPtr));
                 t_winRtMarshalProxy = proxy;
 
                 if (hr != 0)
                 {
-                    Exception ex = new Exception(string.Format("{0} ({1}!RoGetBufferMarshaler)", SR.WinRtCOM_Error, WinTypesDLL));
+                    Exception ex = new Exception(string.Format("{0} ({1}!RoGetBufferMarshaler)", global::Windows.Storage.Streams.SR.WinRtCOM_Error, WinTypesDLL));
                     ex.SetHResult(hr);
                     throw ex;
                 }
 
                 if (proxy == null)
-                    throw new NullReferenceException(string.Format("{0} ({1}!RoGetBufferMarshaler)", SR.WinRtCOM_Error, WinTypesDLL));
+                    throw new NullReferenceException(string.Format("{0} ({1}!RoGetBufferMarshaler)", global::Windows.Storage.Streams.SR.WinRtCOM_Error, WinTypesDLL));
             }
             catch (DllNotFoundException ex)
             {
-                throw new NotImplementedException(SR.Format(SR.NotImplemented_NativeRoutineNotFound,
+                throw new NotImplementedException(string.Format(global::Windows.Storage.Streams.SR.NotImplemented_NativeRoutineNotFound,
                                                                string.Format("{0}!RoGetBufferMarshaler", WinTypesDLL)),
                                                   ex);
             }
@@ -131,9 +131,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (offset < 0) throw new ArgumentOutOfRangeException(nameof(offset));
             if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
             if (capacity < 0) throw new ArgumentOutOfRangeException(nameof(capacity));
-            if (data.Length - offset < length) throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
-            if (data.Length - offset < capacity) throw new ArgumentException(SR.Argument_InsufficientArrayElementsAfterOffset);
-            if (capacity < length) throw new ArgumentException(SR.Argument_InsufficientBufferCapacity);
+            if (data.Length - offset < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
+            if (data.Length - offset < capacity) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
+            if (capacity < length) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientBufferCapacity);
 
             _data = data;
             _dataStartOffs = offset;
@@ -147,9 +147,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #region Helpers
 
-        internal void GetUnderlyingData([NotNull] out byte[]? underlyingDataArray, out int underlyingDataArrayStartOffset)
+        internal void GetUnderlyingData(out byte[] underlyingDataArray, out int underlyingDataArrayStartOffset)
         {
-            underlyingDataArray = _data!;
+            underlyingDataArray = _data;
             underlyingDataArrayStartOffset = _dataStartOffs;
         }
 
@@ -224,8 +224,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             {
                 if (value > ((IBuffer)this).Capacity)
                 {
-                    ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(value), SR.Argument_BufferLengthExceedsCapacity);
-                    ex.HResult = __HResults.E_BOUNDS;
+                    ArgumentOutOfRangeException ex = new ArgumentOutOfRangeException(nameof(value), global::Windows.Storage.Streams.SR.Argument_BufferLengthExceedsCapacity);
+                    ex.SetHResult(E_BOUNDS);
                     throw ex;
                 }
 

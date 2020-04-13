@@ -352,7 +352,7 @@ namespace WinRT
         }
     }
 
-    internal static class ExceptionExtensions
+    public static class ExceptionExtensions
     {
         public static void SetHResult(this Exception ex, int value)
         {

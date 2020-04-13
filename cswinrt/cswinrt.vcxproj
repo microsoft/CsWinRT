@@ -67,24 +67,27 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="strings\additions\Windows.Foundation\AsyncInfo.cs" />
     <None Include="strings\additions\Windows.Foundation\Windows.Foundation.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\HANDLE_ACCESS_OPTIONS.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\HANDLE_CREATION_OPTIONS.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\HANDLE_OPTIONS.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\HANDLE_SHARING_OPTION.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\IBufferByteAccess.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\IMarshal.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\IStorageFolderHandleAccess.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\IStorageItemHandleAccess.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\NetFxToWinRtStreamAdapter.cs" />
+    <None Include="strings\additions\Windows.Storage.Streams\Windows.Storage.Streams.SR.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\StreamOperationAsyncResult.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\StreamOperationsImplementation.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBuffer.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferExtensions.cs" />
-    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeStorageExtensions.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeStreamExtensions.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WinRtIOHelper.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\WinRtToNetFxStreamAdapter.cs" />
+    <None Include="strings\additions\Windows.Storage\HANDLE_ACCESS_OPTIONS.cs" />
+    <None Include="strings\additions\Windows.Storage\HANDLE_CREATION_OPTIONS.cs" />
+    <None Include="strings\additions\Windows.Storage\HANDLE_OPTIONS.cs" />
+    <None Include="strings\additions\Windows.Storage\HANDLE_SHARING_OPTION.cs" />
+    <None Include="strings\additions\Windows.Storage\IStorageFolderHandleAccess.cs" />
+    <None Include="strings\additions\Windows.Storage\IStorageItemHandleAccess.cs" />
+    <None Include="strings\additions\Windows.Storage\Windows.Storage.SR.cs" />
+    <None Include="strings\additions\Windows.Storage\WindowsRuntimeStorageExtensions.cs" />
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.cs" />
     <None Include="strings\WinRT.cs" />
     <None Include="strings\WinRT_Interop.cs" />

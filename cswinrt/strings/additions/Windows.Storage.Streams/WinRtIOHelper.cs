@@ -3,13 +3,14 @@
 // See the LICENSE file in the project root for more information.
 
 
-namespace System.IO
+namespace Windows.Storage.Streams
 {
-    using System.Diagnostics;
-    using System.Runtime.ExceptionServices;
+    using global::System.Diagnostics;
+    using global::System.IO;
+    using global::System.Runtime.ExceptionServices;
     
-    using System.Runtime.InteropServices;
-    using global::Windows.Storage.Streams;
+    using global::System.Runtime.InteropServices;
+    using global::System.Runtime.InteropServices.WindowsRuntime;
     internal static class WinRtIOHelper
     {
         internal const int DefaultIOBufferSize = 0x3000;  // = 12 KBytes = 12288 Bytes
@@ -32,7 +33,7 @@ namespace System.IO
             // If we do not have a meaningful message, we use a general IO error message:
             string message = nativeException.Message;
             if (string.IsNullOrWhiteSpace(message))
-                message = SR.IO_General;
+                message = global::Windows.Storage.Streams.SR.IO_General;
 
             return ExceptionDispatchInfo.Capture(new IOException(message, nativeException));
         }
