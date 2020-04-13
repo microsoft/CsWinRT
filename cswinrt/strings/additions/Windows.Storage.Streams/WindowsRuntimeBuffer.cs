@@ -11,21 +11,21 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     using System.Runtime.InteropServices;
     using System.Security;
     using System.Threading;
-    using Windows.Foundation;
-    using Windows.Storage.Streams;
+    using global::Windows.Foundation;
+    using global::Windows.Storage.Streams;
+    using Com;
     /// <summary>
     /// Contains an implementation of the WinRT IBuffer interface that conforms to all requirements on classes that implement that interface,
     /// such as implementing additional interfaces.
     /// </summary>
     public sealed class WindowsRuntimeBuffer : IBuffer, IBufferByteAccess, IMarshal
     {
+        private static readonly Guid IID_IMarshal = Guid.Parse("00000003-0000-0000-c000-000000000046");
+        [DllImport("api-ms-win-core-winrt-robuffer-l1-1-0.dll")]
+        private static extern int RoGetBufferMarshaler(out IntPtr bufferMarshalerPtr);
         #region Constants
 
         private const string WinTypesDLL = "WinTypes.dll";
-
-        private enum MSHCTX : int { Local = 0, NoSharedMem = 1, DifferentMachine = 2, InProc = 3, CrossCtx = 4 }
-        private enum MSHLFLAGS : int { Normal = 0, TableStrong = 1, TableWeak = 2, NoPing = 4 }
-
 
         #endregion Constants
 
@@ -53,7 +53,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (capacity < length) throw new ArgumentException(SR.Argument_InsufficientBufferCapacity);
 
             byte[] underlyingData = new byte[capacity];
-            Buffer.BlockCopy(data, offset, underlyingData, 0, length);
+            Array.Copy(data, offset, underlyingData, 0, length);
             return new WindowsRuntimeBuffer(underlyingData, 0, length, capacity);
         }
 
@@ -73,14 +73,14 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             try
             {
-                IMarshal proxy;
-                int hr = Interop.mincore.RoGetBufferMarshaler(out proxy);
+                int hr = RoGetBufferMarshaler(out IntPtr proxyPtr);
+                IMarshal proxy = new ABI.Com.IMarshal(ObjectReference<ABI.IMarshal.Vftbl>(ref proxyPtr));
                 t_winRtMarshalProxy = proxy;
 
-                if (hr != __HResults.S_OK)
+                if (hr != 0)
                 {
                     Exception ex = new Exception(string.Format("{0} ({1}!RoGetBufferMarshaler)", SR.WinRtCOM_Error, WinTypesDLL));
-                    ex.HResult = hr;
+                    ex.SetHResult(hr);
                     throw ex;
                 }
 
@@ -242,21 +242,23 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         #region Implementation of IBufferByteAccess
 
-        unsafe IntPtr IBufferByteAccess.GetBuffer()
+        unsafe IntPtr IBufferByteAccess.Buffer
         {
-            // Get pin handle:
-            IntPtr buffPtr = Volatile.Read(ref _dataPtr);
+            get
+            {
+                // Get pin handle:
+                IntPtr buffPtr = Volatile.Read(ref _dataPtr);
 
-            // If we are already pinned, return the pointer and have a nice day:
-            if (buffPtr != IntPtr.Zero)
-                return buffPtr;
+                // If we are already pinned, return the pointer and have a nice day:
+                if (buffPtr != IntPtr.Zero)
+                    return buffPtr;
 
-            // Ok, we are not yet pinned. Let's do it.
-            return new IntPtr(PinUnderlyingData());
+                // Ok, we are not yet pinned. Let's do it.
+                return new IntPtr(PinUnderlyingData());
+            }
         }
 
         #endregion Implementation of IBufferByteAccess
-
 
         #region Implementation of IMarshal
 
@@ -267,21 +269,21 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        void IMarshal.GetMarshalSizeMax(ref Guid riid, IntPtr pv, uint dwDestContext, IntPtr pvDestContext, uint mshlflags, out uint pSize)
+        void IMarshal.GetMarshalSizeMax(ref Guid riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags, out uint pSize)
         {
             EnsureHasMarshalProxy();
             t_winRtMarshalProxy!.GetMarshalSizeMax(ref riid, pv, dwDestContext, pvDestContext, mshlflags, out pSize);
         }
 
 
-        void IMarshal.GetUnmarshalClass(ref Guid riid, IntPtr pv, uint dwDestContext, IntPtr pvDestContext, uint mshlFlags, out Guid pCid)
+        void IMarshal.GetUnmarshalClass(ref Guid riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlFlags, out Guid pCid)
         {
             EnsureHasMarshalProxy();
             t_winRtMarshalProxy!.GetUnmarshalClass(ref riid, pv, dwDestContext, pvDestContext, mshlFlags, out pCid);
         }
 
 
-        void IMarshal.MarshalInterface(IntPtr pStm, ref Guid riid, IntPtr pv, uint dwDestContext, IntPtr pvDestContext, uint mshlflags)
+        void IMarshal.MarshalInterface(IntPtr pStm, ref Guid riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags)
         {
             EnsureHasMarshalProxy();
             t_winRtMarshalProxy!.MarshalInterface(pStm, ref riid, pv, dwDestContext, pvDestContext, mshlflags);
@@ -301,7 +303,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             t_winRtMarshalProxy!.UnmarshalInterface(pStm, ref riid, out ppv);
         }
         #endregion Implementation of IMarshal
-
     }  // class WindowsRuntimeBuffer
 }  // namespace
 

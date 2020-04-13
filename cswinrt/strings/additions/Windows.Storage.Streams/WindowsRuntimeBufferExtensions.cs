@@ -8,8 +8,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
-    using Windows.Foundation;
-    using Windows.Storage.Streams;
+    using global::Windows.Foundation;
+    using global::Windows.Storage.Streams;
     /// <summary>
     /// Contains extension methods that expose operations on WinRT <code>Windows.Foundation.IBuffer</code>.
     /// </summary>

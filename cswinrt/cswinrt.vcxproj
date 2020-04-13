@@ -72,6 +72,8 @@
     <None Include="strings\additions\Windows.Storage.Streams\HANDLE_CREATION_OPTIONS.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\HANDLE_OPTIONS.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\HANDLE_SHARING_OPTION.cs" />
+    <None Include="strings\additions\Windows.Storage.Streams\IBufferByteAccess.cs" />
+    <None Include="strings\additions\Windows.Storage.Streams\IMarshal.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\IStorageFolderHandleAccess.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\IStorageItemHandleAccess.cs" />
     <None Include="strings\additions\Windows.Storage.Streams\NetFxToWinRtStreamAdapter.cs" />
