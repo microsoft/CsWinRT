@@ -1,9 +1,0 @@
-<!--NOTE: Directory.Build.* files are temporary until C#/WinRT nuget contains msbuild support-->  
-<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
-  <PropertyGroup>
-    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">$(IsCrossTargetingBuild)</GenerateTestProjection>
-  </PropertyGroup>
-
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
-</Project>
