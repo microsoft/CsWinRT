@@ -22,7 +22,7 @@ namespace Windows.Storage
 
 namespace ABI.Windows.Storage
 {
-    using Microsoft.Win32.SafeHandles;
+    using global::Microsoft.Win32.SafeHandles;
     using global::System;
     [Guid("DF19938F-5462-48A0-BE65-D2A3271A08D6")]
     internal class IStorageFolderHandleAccess : global::Windows.Storage.IStorageFolderHandleAccess

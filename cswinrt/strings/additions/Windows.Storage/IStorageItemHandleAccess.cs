@@ -19,7 +19,7 @@ namespace Windows.Storage
 
 namespace ABI.Windows.Storage
 {
-    using Microsoft.Win32.SafeHandles;
+    using global::Microsoft.Win32.SafeHandles;
     [Guid("5CA296B2-2C25-4D22-B785-B885C8201E6A")]
     internal class IStorageItemHandleAccess : global::Windows.Storage.IStorageItemHandleAccess
     {
