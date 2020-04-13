@@ -43,7 +43,7 @@ namespace ABI.Windows.UI.Xaml.Data
             _obj = obj;
         }
 
-        public unsafe IObjectReference CreateInstance(string name, object baseInterface, out object innerInterface)
+        public unsafe IObjectReference CreateInstance(string name, object baseInterface, out IObjectReference innerInterface)
         {
             MarshalString __name = default;
             IObjectReference __baseInterface = default;
@@ -54,7 +54,7 @@ namespace ABI.Windows.UI.Xaml.Data
                 __name = MarshalString.CreateMarshaler(name);
                 __baseInterface = MarshalInspectable.CreateMarshaler(baseInterface);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(__name), MarshalInspectable.GetAbi(__baseInterface), out __innerInterface, out __retval));
-                innerInterface = MarshalInspectable.FromAbi(__innerInterface);
+                innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
                 return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
             }
             finally
@@ -103,11 +103,11 @@ namespace ABI.System.ComponentModel
                 return null;
             }
 
-            using var uri = ObjectReference<ABI.Windows.UI.Xaml.Data.IPropertyChangedEventArgsVftbl>.FromAbi(ptr);
+            using var args = ObjectReference<ABI.Windows.UI.Xaml.Data.IPropertyChangedEventArgsVftbl>.FromAbi(ptr);
             IntPtr propertyName = IntPtr.Zero;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(uri.Vftbl.get_PropertyName_0(uri.ThisPtr, out propertyName));
+                ExceptionHelpers.ThrowExceptionForHR(args.Vftbl.get_PropertyName_0(args.ThisPtr, out propertyName));
                 return new global::System.ComponentModel.PropertyChangedEventArgs(MarshalString.FromAbi(propertyName));
             }
             finally
