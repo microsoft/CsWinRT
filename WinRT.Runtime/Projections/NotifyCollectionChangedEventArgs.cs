@@ -203,16 +203,20 @@ namespace ABI.System.Collections.Specialized
         }
 
         private static global::System.Collections.Specialized.NotifyCollectionChangedEventArgs CreateNotifyCollectionChangedEventArgs(
-    global::System.Collections.Specialized.NotifyCollectionChangedAction action, global::System.Collections.IList newItems, global::System.Collections.IList oldItems, int newStartingIndex, int oldStartingIndex) =>
-    action switch
-    {
-        global::System.Collections.Specialized.NotifyCollectionChangedAction.Add => new global::System.Collections.Specialized.NotifyCollectionChangedEventArgs(action, newItems, newStartingIndex),
-        global::System.Collections.Specialized.NotifyCollectionChangedAction.Remove => new global::System.Collections.Specialized.NotifyCollectionChangedEventArgs(action, oldItems, oldStartingIndex),
-        global::System.Collections.Specialized.NotifyCollectionChangedAction.Replace => new global::System.Collections.Specialized.NotifyCollectionChangedEventArgs(action, newItems, oldItems, newStartingIndex),
-        global::System.Collections.Specialized.NotifyCollectionChangedAction.Move => new global::System.Collections.Specialized.NotifyCollectionChangedEventArgs(action, newItems, newStartingIndex, oldStartingIndex),
-        global::System.Collections.Specialized.NotifyCollectionChangedAction.Reset => new global::System.Collections.Specialized.NotifyCollectionChangedEventArgs(global::System.Collections.Specialized.NotifyCollectionChangedAction.Reset),
-        _ => throw new ArgumentException(),
-    };
+            global::System.Collections.Specialized.NotifyCollectionChangedAction action,
+            global::System.Collections.IList newItems,
+            global::System.Collections.IList oldItems,
+            int newStartingIndex,
+            int oldStartingIndex) =>
+            action switch
+            {
+                global::System.Collections.Specialized.NotifyCollectionChangedAction.Add => new global::System.Collections.Specialized.NotifyCollectionChangedEventArgs(action, newItems, newStartingIndex),
+                global::System.Collections.Specialized.NotifyCollectionChangedAction.Remove => new global::System.Collections.Specialized.NotifyCollectionChangedEventArgs(action, oldItems, oldStartingIndex),
+                global::System.Collections.Specialized.NotifyCollectionChangedAction.Replace => new global::System.Collections.Specialized.NotifyCollectionChangedEventArgs(action, newItems, oldItems, newStartingIndex),
+                global::System.Collections.Specialized.NotifyCollectionChangedAction.Move => new global::System.Collections.Specialized.NotifyCollectionChangedEventArgs(action, newItems, newStartingIndex, oldStartingIndex),
+                global::System.Collections.Specialized.NotifyCollectionChangedAction.Reset => new global::System.Collections.Specialized.NotifyCollectionChangedEventArgs(global::System.Collections.Specialized.NotifyCollectionChangedAction.Reset),
+                _ => throw new ArgumentException(),
+            };
 
         public static unsafe void CopyManaged(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs o, IntPtr dest)
         {
