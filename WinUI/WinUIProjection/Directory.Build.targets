@@ -5,7 +5,5 @@
     <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">$(IsCrossTargetingBuild)</GenerateTestProjection>
   </PropertyGroup>
 
-
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
-
 </Project>

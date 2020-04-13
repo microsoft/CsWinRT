@@ -12,6 +12,8 @@
   
   <ItemGroup>
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+
     <!-- Exclude compile and build time assets so we don't think we're building a real WinUI App -->
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
       <ExcludeAssets>compile; build</ExcludeAssets>
@@ -21,7 +23,7 @@
     <InternalsVisibleTo Include="WinUITest"/>
   </ItemGroup>
 
-  <Target Name="GenerateWinUIProjection" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)'=='true'">
+  <Target Name="GenerateWinUIProjection" BeforeTargets="DispatchToInnerBuilds;Build">
     <ItemGroup>
       <!--PkgMicrosoft_UI_Xaml is defined by Nuget reference-->
       <WinUIWinMDs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
@@ -42,6 +44,7 @@
         -exclude Windows.ApplicationModel.Store.Preview
       </CsWinRTParams>
     </PropertyGroup>
+    <MakeDir Directories="$(ProjectDir)Generated Files"/>
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
     <Exec Command="$(CsWinRTCommand)" />
