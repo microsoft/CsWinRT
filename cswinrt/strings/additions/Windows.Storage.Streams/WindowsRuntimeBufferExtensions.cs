@@ -316,12 +316,12 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (thisIsManaged)
                 return (thisDataArr == otherDataArr) && (thisDataOffs == otherDataOffs);
 
-            IBufferByteAccess thisBuff = (IBufferByteAccess)buffer;
-            IBufferByteAccess otherBuff = (IBufferByteAccess)otherBuffer;
+            IBufferByteAccess thisBuff = buffer.As<IBufferByteAccess>();
+            IBufferByteAccess otherBuff = otherBuffer.As<IBufferByteAccess>();
 
             unsafe
             {
-                return (thisBuff.GetBuffer() == otherBuff.GetBuffer());
+                return (thisBuff.Buffer == otherBuff.Buffer);
             }
         }
 
@@ -422,7 +422,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             unsafe
             {
-                IBufferByteAccess bufferByteAccess = (IBufferByteAccess)source;
+                IBufferByteAccess bufferByteAccess = source.As<IBufferByteAccess>();
                 return new WindowsRuntimeBufferUnmanagedMemoryStream(source, (byte*)bufferByteAccess.GetBuffer());
             }
         }
@@ -482,7 +482,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             unsafe
             {
-                IntPtr buffPtr = ((IBufferByteAccess)buffer).GetBuffer();
+                IntPtr buffPtr = (buffer.As<IBufferByteAccess>()).GetBuffer();
                 return new IntPtr((byte*)buffPtr + offset);
             }
         }

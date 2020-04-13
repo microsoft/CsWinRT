@@ -31,7 +31,6 @@ namespace System.IO
             Debug.Assert(stream.CanRead);
             Debug.Assert(stream.CanSeek);
             Debug.Assert(buffer != null);
-            Debug.Assert(buffer is IBufferByteAccess);
             Debug.Assert(0 <= count);
             Debug.Assert(count <= int.MaxValue);
             Debug.Assert(count <= buffer.Capacity);
@@ -65,7 +64,6 @@ namespace System.IO
             Debug.Assert(stream != null);
             Debug.Assert(stream.CanRead);
             Debug.Assert(buffer != null);
-            Debug.Assert(buffer is IBufferByteAccess);
             Debug.Assert(0 <= count);
             Debug.Assert(count <= int.MaxValue);
             Debug.Assert(count <= buffer.Capacity);
