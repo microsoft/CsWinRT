@@ -2,15 +2,27 @@
 
 setlocal ENABLEDELAYEDEXPANSION
 
-rem Add per-user dotnet path to find pre-release versions
-set path=%LocalAppData%\Microsoft\dotnet;%path%
+set Net5SdkVersion=5.0.100-preview.4.20213.16
+
+rem Install required .NET 5 SDK version, if necessary
+powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
+"Write-Host \"##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}\"; ^
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
+&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
+-Version '%Net5SdkVersion%' -Architecture 'x64' -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet' "
+
+nuget update -self
+
+rem Set dotnet root and add to path 
+set DOTNET_ROOT=%LocalAppData%\Microsoft\dotnet
+set path=%DOTNET_ROOT%;%path%
 
 rem User expected to provide global.json with allowPrerelease=true
 if not exist %~dp0global.json (
   echo global.json not found, creating one to allowPrelease for unit test project builds
   echo { > global.json
   echo   "sdk": { >> global.json
-  echo     "version": "5.0.100-preview.3.20181.13", >> global.json
+  echo     "version": "%Net5SdkVersion%", >> global.json
   echo     "rollForward": "patch", >> global.json
   echo     "allowPrerelease": true >> global.json
   echo   } >> global.json
