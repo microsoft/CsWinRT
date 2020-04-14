@@ -655,18 +655,19 @@ namespace cswinrt
         );
     }
 
-    void write_class_method(writer& w, MethodDef const& method, bool is_overridable, bool is_protected, std::string_view interface_member)
+    void write_class_method(writer& w, MethodDef const& method, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member)
     {
         if (method.SpecialName())
         {
             return;
         }
 
-        bool write_explicit_implementation = is_overridable || !is_exclusive_to(method.Parent());
-        auto access_spec = is_protected ? "protected " : "public ";
+        auto access_spec = is_protected || is_overridable ? "protected " : "public ";
         std::string method_spec = "";
 
-        if (is_overridable)
+        // If this interface is overridable but the type is sealed, don't mark the member as virtual.
+        // The C# compiler errors out about declaring a virtual member in a sealed class.
+        if (is_overridable && !class_type.Flags().Sealed())
         {
             // All overridable methods in the WinRT type system have protected visibility.
             access_spec = "protected ";
@@ -701,7 +702,7 @@ namespace cswinrt
 
         write_method(w, signature, method.Name(), return_type, interface_member, access_spec, method_spec);
 
-        if (write_explicit_implementation)
+        if (is_overridable || !is_exclusive_to(method.Parent()))
         {
             w.write(R"(
 % %.%(%) => %(%);)",
@@ -1446,15 +1447,7 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.ObjRef);
                 auto is_overridable_interface = has_attribute(ii, "Windows.Foundation.Metadata", "OverridableAttribute");
                 auto is_protected_interface = has_attribute(ii, "Windows.Foundation.Metadata", "ProtectedAttribute");
 
-                // If this interface is overridable but the type is sealed, make the interface act as though it is protected.
-                // If we don't do this, then the C# compiler errors out about declaring a virtual member in a sealed class.
-                if (is_overridable_interface && type.Flags().Sealed())
-                {
-                    is_overridable_interface = false;
-                    is_protected_interface = true;
-                }
-
-                w.write_each<write_class_method>(interface_type.MethodList(), is_overridable_interface, is_protected_interface, target);
+                w.write_each<write_class_method>(interface_type.MethodList(), type, is_overridable_interface, is_protected_interface, target);
                 w.write_each<write_class_event>(interface_type.EventList(), is_overridable_interface, is_protected_interface, target);
 
                 // Merge property getters/setters, since such may be defined across interfaces
@@ -2538,8 +2531,11 @@ remove => _%.Unsubscribe(value);
         {
             for_typedef(w, get_type_semantics(iface.Interface()), [&](auto type)
             {
-                write_required_interface(type);
-                write_required_interface_members_for_abi_type(w, type, required_interfaces);
+                if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute") || !is_exclusive_to(type))
+                {
+                    write_required_interface(type);
+                    write_required_interface_members_for_abi_type(w, type, required_interfaces);
+                }
             });
         }
     }
