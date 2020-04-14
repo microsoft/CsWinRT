@@ -8,13 +8,7 @@
     <RunPostBuildEvent>Always</RunPostBuildEvent>
     <ProjectName>UnitTest</ProjectName>
     <LangVersion>8</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <NoWarn>1701;1702;0436;1658</NoWarn>
   </PropertyGroup>
 

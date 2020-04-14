@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>8305</NoWarn>
   </PropertyGroup>
   
   <ItemGroup>
@@ -20,10 +22,10 @@
     </PackageReference>
     
     <!-- For WinRTModule-->
-    <InternalsVisibleTo Include="WinUITest" />
+    <InternalsVisibleTo Include="WinUITest"/>
   </ItemGroup>
 
-  <Target Name="GenerateWinUIProjection" BeforeTargets="CoreCompile">
+  <Target Name="GenerateWinUIProjection" BeforeTargets="CoreCompile" Condition="'$(GenerateTestProjection)' == 'true'">
     <ItemGroup>
       <!--PkgMicrosoft_UI_Xaml is defined by Nuget reference-->
       <WinUIWinMDs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
@@ -35,26 +37,45 @@
     </PropertyGroup>
     <PropertyGroup>
       <CsWinRTParams>
-        -verbose
-        -in 10.0.18362.0
-        -in @(WinUIWinMDs->'"%(FullPath)"', ' ')
-        -out "$(ProjectDir)Generated Files"
-        -include Microsoft
+-verbose
+-in 10.0.18362.0 @(WinUIWinMDs->'"%(FullPath)"', ' ')
+-out "$(ProjectDir)Generated Files"
+-include Microsoft
+-include Windows
+-exclude Windows.UI.Xaml
+-include Windows.UI.Xaml.Interop
+-exclude Windows.ApplicationModel.Store.Preview
+# Note: WUX attribute definitions are hardcoded into the kit's WinRTBase.idl.
+# The WinUI nuget should provide a custom version of this file to produce MUX-only winmds.
+# In the meantime, we'll continue to project the WUX attributes.
+-include Windows.UI.Xaml.Markup.ContentPropertyAttribute
+-include Windows.UI.Xaml.StyleTypedPropertyAttribute 
+-include Windows.UI.Xaml.TemplatePartAttribute 
+-include Windows.UI.Xaml.TemplateVisualStateAttribute 
+-include Windows.UI.Xaml.Data.BindableAttribute 
+-include Windows.UI.Xaml.Markup.ContentPropertyAttribute 
+-include Windows.UI.Xaml.Markup.FullXamlMetadataProviderAttribute 
+-include Windows.UI.Xaml.Markup.MarkupExtensionReturnTypeAttribute 
+-include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute 
+-include Windows.UI.Xaml.Media.Animation.IndependentlyAnimatableAttribute 
+-include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute 
+# Because we pull in Windows.UI.Xaml attributes, the Duration addition is included,
+# which in turn requires the DurationType projection 
+-include Windows.UI.Xaml.DurationType
       </CsWinRTParams>
     </PropertyGroup>
-    <MakeDir Directories="$(ProjectDir)Generated Files" />
+    <MakeDir Directories="$(ProjectDir)Generated Files"/>
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
     <Exec Command="$(CsWinRTCommand)" />
   </Target>
 
   <ItemGroup>
-    <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_WinUI)/runtimes/win10-$(Platform)/native/*.dll" />
+    <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_WinUI)/runtimes/win10-$(Platform)/native/*.dll"/>
     <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_WinUI)/runtimes/win10-$(Platform)/native/**/*.mui">
       <DestinationSubDirectory>%(RecursiveDir)</DestinationSubDirectory>
     </ReferenceCopyLocalPaths>
   </ItemGroup>
-
   <Target Name="IncludeWinUIProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateWinUIProjection">
     <ItemGroup>
       <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />

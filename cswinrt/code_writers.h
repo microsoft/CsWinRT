@@ -3600,7 +3600,7 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
                     }
                     else if (auto bool_value = std::get_if<bool>(&arg_value.value))
                     {
-                        w.write(*bool_value);
+                        w.write(*bool_value ? "true" : "false");
                     }
                     else if (auto char_value = std::get_if<char16_t>(&arg_value.value))
                     {
@@ -3638,7 +3638,10 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         {
             auto [attribute_namespace, attribute_name] = attribute.TypeNamespaceAndName();
             attribute_name = attribute_name.substr(0, attribute_name.length() - "Attribute"sv.length());
+            // Guid and Flags are handled explicitly
             if (attribute_name == "Guid" || attribute_name == "Flags") continue;
+            // Deprecated is causing csc.exe to crash
+            if (attribute_name == "Deprecated") continue;
             auto attribute_full = (attribute_name == "AttributeUsage") ? "AttributeUsage" :
                 w.write_temp("%.%", attribute_namespace, attribute_name);
             std::vector<std::string> params;
