@@ -3731,6 +3731,7 @@ default_interface_abi_name);
 global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
 {
 ppv = IntPtr.Zero;
+%
 try
 {
 using IObjectReference objRef = _default.ObjRef.As<IUnknownVftbl>(iid);
@@ -3741,7 +3742,19 @@ catch (InvalidCastException)
 {
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
-})");
+})",
+                bind_each([&](writer& w, InterfaceImpl const& iface)
+                {
+                    if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute"))
+                    {
+                        w.write(R"(
+if (GuidGenerator.GetIID(typeof(%)) == iid)
+{
+return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
+})",
+                            bind<write_type_name>(get_type_semantics(iface.Interface()), false, false));
+                    }
+                }, type.InterfaceImpl()));
             }));
     }
 
