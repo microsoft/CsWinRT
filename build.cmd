@@ -10,7 +10,7 @@ if not exist %~dp0global.json (
   echo global.json not found, creating one to allowPrelease for unit test project builds
   echo { > global.json
   echo   "sdk": { >> global.json
-  echo     "version": "5.0.100-preview.3.20181.13", >> global.json
+  echo     "version": "5.0.100-preview.4.20213.16", >> global.json
   echo     "rollForward": "patch", >> global.json
   echo     "allowPrerelease": true >> global.json
   echo   } >> global.json
