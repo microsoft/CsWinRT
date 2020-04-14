@@ -13,21 +13,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
-
-    <!-- Exclude compile and build time assets so we don't think we're building a real WinUI App -->
-    <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
-      <ExcludeAssets>compile; build</ExcludeAssets>
-    </PackageReference>
     
     <!-- For WinRTModule-->
     <InternalsVisibleTo Include="WinUITest" />
   </ItemGroup>
 
-  <Target Name="GenerateWinUIProjection" BeforeTargets="CoreCompile">
-    <ItemGroup>
-      <!--PkgMicrosoft_UI_Xaml is defined by Nuget reference-->
-      <WinUIWinMDs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
-    </ItemGroup>
+  <Target Name="GenerateWindowsProjection" BeforeTargets="CoreCompile">
     <PropertyGroup>
       <CsWinRTVerbosity>high</CsWinRTVerbosity>
       <CsWinRTResponseFile>$(IntermediateOutputPath)cswinrt_platform.rsp</CsWinRTResponseFile>
@@ -36,10 +27,12 @@
     <PropertyGroup>
       <CsWinRTParams>
         -verbose
-        -in 10.0.18362.0
-        -in @(WinUIWinMDs->'"%(FullPath)"', ' ')
-        -out "$(ProjectDir)Generated Files"
-        -include Microsoft
+        -in 10.0.18362.0 
+		-out "$(ProjectDir)Generated Files"
+        -include Windows
+        -exclude Windows.UI.Xaml
+        -include Windows.UI.Xaml.Interop
+        -exclude Windows.ApplicationModel.Store.Preview
       </CsWinRTParams>
     </PropertyGroup>
     <MakeDir Directories="$(ProjectDir)Generated Files" />
@@ -49,16 +42,9 @@
   </Target>
 
   <ItemGroup>
-    <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_WinUI)/runtimes/win10-$(Platform)/native/*.dll" />
-    <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_WinUI)/runtimes/win10-$(Platform)/native/**/*.mui">
-      <DestinationSubDirectory>%(RecursiveDir)</DestinationSubDirectory>
-    </ReferenceCopyLocalPaths>
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Generated Files\" />
   </ItemGroup>
-  <Target Name="IncludeWinUIProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateWinUIProjection">
+  <Target Name="IncludeWindowsProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateWindowsProjection">
     <ItemGroup>
       <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
     </ItemGroup>
