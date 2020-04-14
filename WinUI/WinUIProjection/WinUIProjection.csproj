@@ -55,9 +55,6 @@
     </ReferenceCopyLocalPaths>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Generated Files\" />
-  </ItemGroup>
   <Target Name="IncludeWinUIProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateWinUIProjection">
     <ItemGroup>
       <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
