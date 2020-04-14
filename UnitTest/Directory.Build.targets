@@ -40,7 +40,6 @@
 -include TestComponentCSharp
 -include Windows.Foundation
 -exclude Windows.Foundation.Diagnostics
--exclude Windows.Foundation.Metadata
       </CsWinRTParams>
     </PropertyGroup>
     <WriteLinesToFile

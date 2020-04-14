@@ -246,6 +246,7 @@ namespace cswinrt
         call(semantics,
             [&](object_type) { w.write("object"); },
             [&](guid_type) { w.write("Guid"); },
+            [&](type_type) { w.write("Type"); },
             [&](type_definition const& type) { write_typedef_name(w, type); },
             [&](generic_type_index const& var) { write_generic_type_name(w, var.index); },
             [&](generic_type_instance const& type)
@@ -370,6 +371,7 @@ namespace cswinrt
         call(semantics,
             [&](object_type) { w.write("IntPtr"); },
             [&](guid_type) { w.write("Guid"); },
+            [&](type_type) { throw_invalid("System.Type not implemented"); },
             [&](type_definition const& type)
             {
                 switch (get_category(type))
@@ -2617,6 +2619,7 @@ remove => _%.Unsubscribe(value);
                 }
                 call(get_type_semantics(prop_type),
                     [&](guid_type) { suffix = "Guid"; },
+                    [&](type_type) { throw_invalid("System.Type not implemented"); },
                     [&](fundamental_type const& type) { suffix = get_delegate_type_suffix(type); },
                     [&](generic_type_index const& /*var*/) {},
                     [&](type_definition const& /*type*/) {},
@@ -3501,6 +3504,217 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         }
     }
 
+    void write_custom_attributes(writer& w, TypeDef const& type)
+    {
+        auto write_fixed_arg = [&](writer& w, FixedArgSig arg)
+        {
+            if (std::holds_alternative<std::vector<ElemSig>>(arg.value))
+            {
+                throw_invalid("ElemSig list unexpected");
+            }
+            auto&& arg_value = std::get<ElemSig>(arg.value);
+
+            call(arg_value.value,
+                [&](ElemSig::SystemType system_type)
+                {
+                    auto arg_type = type.get_cache().find_required(system_type.name);
+                    w.write("typeof(%)", bind<write_projection_type>(arg_type));
+                },
+                [&](ElemSig::EnumValue enum_value)
+                {
+                    if (enum_value.type.m_typedef.TypeName() == "AttributeTargets")
+                    {
+                        std::vector<std::string> values;
+                        auto value = std::get<uint32_t>(enum_value.value);
+                        if (value == 4294967295)
+                        {
+                            values.emplace_back("All");
+                        }
+                        else
+                        {
+                            static struct
+                            {
+                                uint32_t value;
+                                char const* name;
+                            }
+                            attribute_target_enums[] =
+                            {
+                                { 1, "Delegate" },
+                                { 2, "Enum" },
+                                { 4, "Event" },
+                                { 8, "Field" },
+                                { 16, "Interface" },
+                                { 64, "Method" },
+                                { 128, "Parameter" },
+                                { 256, "Property" },
+                                { 512, "Class" },   // "RuntimeClass"
+                                { 1024, "Struct" },
+                                { 2048, "All" },    // "InterfaceImpl"
+                                { 8192, "Struct" }, // "ApiContract"
+                            };
+                            for (auto&& target_enum : attribute_target_enums)
+                            {
+                                if (value & target_enum.value)
+                                {
+                                    values.emplace_back(target_enum.name);
+                                }
+                            }
+                        }
+                        w.write("%", 
+                            bind_list([](writer& w, auto&& value){ w.write("AttributeTargets.%", value); }, 
+                                " | ", values));
+                    }
+                    else for (auto field : enum_value.type.m_typedef.FieldList())
+                    {
+                        if (field.Name() == "value__") continue;
+                        auto field_value = field.Constant().Value();
+                        if (std::visit([&](auto&& v) { return Constant::constant_type{ v } == field_value; }, enum_value.value))
+                        {
+                            w.write("%.%", 
+                                bind<write_projection_type>(enum_value.type.m_typedef),
+                                field.Name());
+                        }
+                    }
+                },
+                [&](std::string_view type_name)
+                {
+                    w.write("\"%\"", type_name);
+                },
+                [&](auto&&)
+                {
+                    if (auto uint32_value = std::get_if<uint32_t>(&arg_value.value))
+                    {
+                        w.write(*uint32_value);
+                    }
+                    else if (auto int32_value = std::get_if<int32_t>(&arg_value.value))
+                    {
+                        w.write(*int32_value);
+                    }
+                    else if (auto uint64_value = std::get_if<uint64_t>(&arg_value.value))
+                    {
+                        w.write(*uint64_value);
+                    }
+                    else if (auto int64_value = std::get_if<int64_t>(&arg_value.value))
+                    {
+                        w.write(*int64_value);
+                    }
+                    else if (auto bool_value = std::get_if<bool>(&arg_value.value))
+                    {
+                        w.write(*bool_value ? "true" : "false");
+                    }
+                    else if (auto char_value = std::get_if<char16_t>(&arg_value.value))
+                    {
+                        w.write(*char_value);
+                    }
+                    else if (auto uint8_value = std::get_if<uint8_t>(&arg_value.value))
+                    {
+                        w.write(*uint8_value);
+                    }
+                    else if (auto int8_value = std::get_if<int8_t>(&arg_value.value))
+                    {
+                        w.write(*int8_value);
+                    }
+                    else if (auto uint16_value = std::get_if<uint16_t>(&arg_value.value))
+                    {
+                        w.write(*uint16_value);
+                    }
+                    else if (auto int16_value = std::get_if<int16_t>(&arg_value.value))
+                    {
+                        w.write(*int16_value);
+                    }
+                    else if (auto float_value = std::get_if<float>(&arg_value.value))
+                    {
+                        w.write_printf("f", *float_value);
+                    }
+                    else if (auto double_value = std::get_if<double>(&arg_value.value))
+                    {
+                        w.write_printf("f", *double_value);
+                    }
+                });
+        };
+
+        std::map<std::string, std::vector<std::string>> attributes;
+        for (auto&& attribute : type.CustomAttribute())
+        {
+            auto [attribute_namespace, attribute_name] = attribute.TypeNamespaceAndName();
+            attribute_name = attribute_name.substr(0, attribute_name.length() - "Attribute"sv.length());
+            // Guid and Flags are handled explicitly
+            if (attribute_name == "Guid" || attribute_name == "Flags") continue;
+            // Deprecated is causing csc.exe to crash
+            if (attribute_name == "Deprecated") continue;
+            auto attribute_full = (attribute_name == "AttributeUsage") ? "AttributeUsage" :
+                w.write_temp("%.%", attribute_namespace, attribute_name);
+            std::vector<std::string> params;
+            auto signature = attribute.Value();
+            for (auto&& arg : signature.FixedArgs())
+            {
+                params.push_back(w.write_temp("%", bind(write_fixed_arg, arg)));
+            }
+            for (auto&& arg : signature.NamedArgs())
+            {
+                params.push_back(w.write_temp("% = %", arg.name, bind(write_fixed_arg, arg.value)));
+            }
+            attributes[attribute_full] = std::move(params);
+        }
+        if (auto&& usage = attributes.find("AttributeUsage"); usage != attributes.end())
+        {
+            bool allow_multiple = attributes.find("Windows.Foundation.Metadata.AllowMultiple") != attributes.end();
+            usage->second.push_back(w.write_temp("AllowMultiple = %", allow_multiple ? "true" : "false"));
+        }
+
+        for (auto&& attribute : attributes)
+        {
+            w.write("[");
+            w.write(attribute.first);
+            if (!attribute.second.empty())
+            {
+                w.write("(%)", bind_list(", ", attribute.second));
+            }
+            w.write("]\n");
+        }
+    }
+
+    void write_contract(writer& w, TypeDef const& type)
+    {
+        auto type_name = write_type_name_temp(w, type);
+        w.write(R"(%public enum %
+{
+}
+)",
+            bind<write_custom_attributes>(type),
+            type_name);
+    }
+
+    void write_attribute(writer& w, TypeDef const& type)
+    {
+        auto type_name = write_type_name_temp(w, type);
+
+        w.write(R"(%public sealed class %: Attribute
+{
+%}
+)",
+            bind<write_custom_attributes>(type),
+            type_name,
+            [&](writer& w)
+            {
+                auto methods = type.MethodList();
+                for (auto&& method : methods)
+                {
+                    if (method.Name() != ".ctor") continue;
+                    method_signature signature{ method };
+                    w.write("public %(%){}\n",
+                        type_name,
+                        bind_list<write_projection_parameter>(", ", signature.params()));
+                }
+                for (auto&& field : type.FieldList())
+                {
+                    w.write("public % %;\n",
+                        bind<write_projection_type>(get_type_semantics(field.Signature().Type())),
+                        field.Name());
+                }
+            });
+    }
+
     void write_interface(writer& w, TypeDef const& type)
     {
         XLANG_ASSERT(get_category(type) == category::interface_type);
@@ -3509,12 +3723,13 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         uint32_t const vtable_base = type.MethodList().first.index();
         w.write(R"([global::WinRT.WindowsRuntimeType]
 %
-% interface %%
+%% interface %%
 {%
 }
 )",
             // Interface
             bind<write_guid_attribute>(type),
+            bind<write_custom_attributes>(type),
             is_exclusive_to(type) ? "internal" : "public",
             type_name,
             bind<write_type_inheritance>(type, object_type{}),
@@ -3630,6 +3845,7 @@ public static class %
         return true;
     }
 
+
     void write_class(writer& w, TypeDef const& type)
     {
         if (is_static(type))
@@ -3646,7 +3862,7 @@ public static class %
 
         w.write(R"([global::WinRT.WindowsRuntimeType]
 [global::WinRT.ProjectedRuntimeClass(nameof(_default))]
-public %class %%
+%public %class %%
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
 
@@ -3668,6 +3884,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 %
 }
 )",
+            bind<write_custom_attributes>(type),
             bind<write_class_modifiers>(type),
             type_name,
             bind<write_type_inheritance>(type, base_semantics),
@@ -3764,8 +3981,9 @@ public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<%>.DisposeAb
     {
         method_signature signature{ get_delegate_invoke(type) };
         w.write(R"([global::WinRT.WindowsRuntimeType]
-public delegate % %(%);
+%public delegate % %(%);
 )",
+            bind<write_custom_attributes>(type),
             bind<write_projection_return_type>(signature),
             bind<write_type_name>(type, false, false),
             bind_list<write_projection_parameter>(", ", signature.params()));
@@ -4014,7 +4232,12 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             w.write("[FlagsAttribute]\n");
         }
 
-        w.write("[global::WinRT.WindowsRuntimeType]\npublic enum % : %\n{\n", bind<write_type_name>(type, false, false), is_flags_enum(type) ? "uint" : "uint");
+        w.write(R"([global::WinRT.WindowsRuntimeType]
+%public enum % : %
+{
+)", 
+        bind<write_custom_attributes>(type),
+        bind<write_type_name>(type, false, false), is_flags_enum(type) ? "uint" : "uint");
         {
             for (auto&& field : type.FieldList())
             {
@@ -4056,7 +4279,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
         }
 
         w.write(R"([global::WinRT.WindowsRuntimeType]
-public struct %: IEquatable<%>
+%public struct %: IEquatable<%>
 {
 %
 public %(%)
@@ -4085,6 +4308,7 @@ return %;
 }
 )",
             // struct
+            bind<write_custom_attributes>(type),
             name,
             name,
             bind_each([](writer& w, auto&& field)
