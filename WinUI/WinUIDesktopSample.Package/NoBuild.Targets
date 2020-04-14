@@ -1,0 +1,8 @@
+<Project>
+  <!--
+    This target is only imported when building from the command line.
+    It defines an empty Build target because we skip building the
+    project from the command line.
+  -->
+  <Target Name="Build" />
+</Project>

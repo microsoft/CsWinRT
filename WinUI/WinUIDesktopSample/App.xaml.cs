@@ -19,23 +19,29 @@ namespace WinUIDesktopSample
         {
         }
 
+        Window myWindow;
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
+            var button = new Button
+            {
+                Content = "Click me to load MainPage",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            button.Click += Button_Click;
             var window = new Microsoft.UI.Xaml.Window
             {
-                // This will cause the InvalidCast exception. Once that is fixed, this can
-                // be removed and just use the new MainPage() line below for setting content
-                Content = new Microsoft.UI.Xaml.Shapes.Rectangle()
-                {
-                    Fill = new SolidColorBrush(Windows.UI.Colors.Red),
-                    Width = 200,
-                    Height = 200
-                }
+                Content = button
             };
 
-            window.Content = new MainPage();
-
             window.Activate();
+
+            myWindow = window;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            myWindow.Content = new MainPage();
         }
     }
 

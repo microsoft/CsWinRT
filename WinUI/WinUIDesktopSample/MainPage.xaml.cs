@@ -15,6 +15,7 @@ namespace WinUIDesktopSample
     {
         public MainPage()
         {
+            Application.LoadComponent(this, new System.Uri("ms-resource:///MainPage.xaml"));
         }
     }
 }
