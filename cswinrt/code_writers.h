@@ -3549,7 +3549,7 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
                                 { 256, "Property" },
                                 { 512, "Class" },   // "RuntimeClass"
                                 { 1024, "Struct" },
-                                { 2048, "Struct" }, // "InterfaceImpl"
+                                { 2048, "All" },    // "InterfaceImpl"
                                 { 8192, "Struct" }, // "ApiContract"
                             };
                             for (auto&& target_enum : attribute_target_enums)

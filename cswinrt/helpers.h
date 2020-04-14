@@ -464,7 +464,7 @@ namespace cswinrt
             { "Windows.Foundation.Metadata",
                 {
                     { "AttributeTargets", "System", "AttributeTargets" },
-                    { "AttributeUsageAttribute", "System", "AttributeUsage" },
+                    { "AttributeUsageAttribute", "System", "AttributeUsageAttribute" },
                 }
             },
             { "Windows.UI.Xaml",
