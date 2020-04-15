@@ -247,10 +247,19 @@ namespace TestComponentCSharp
         // Type mappings
         // "Simple" structs (blittable with changes to add properties/functions/constructors/etc.)
         Windows.Foundation.Point PointProperty;
+        Windows.Foundation.IReference<Windows.Foundation.Point> GetPointReference();
         Windows.Foundation.Rect RectProperty;
         Windows.Foundation.Size SizeProperty;
         Windows.UI.Color ColorProperty;
-        Windows.Foundation.IReference<Windows.Foundation.Point> GetPointReference();
+        Windows.UI.Xaml.CornerRadius CornerRadiusProperty;
+        Windows.UI.Xaml.Duration DurationProperty;
+        Windows.UI.Xaml.GridLength GridLengthProperty;
+        Windows.UI.Xaml.Thickness ThicknessProperty;
+        Windows.UI.Xaml.Controls.Primitives.GeneratorPosition GeneratorPositionProperty;
+        Windows.UI.Xaml.Media.Matrix MatrixProperty;
+        Windows.UI.Xaml.Media.Animation.KeyTime KeyTimeProperty;
+        Windows.UI.Xaml.Media.Animation.RepeatBehavior RepeatBehaviorProperty;
+        Windows.UI.Xaml.Media.Media3D.Matrix3D Matrix3DProperty;
         // Structs mapped to equivalent ones in the System namespace
         Windows.Foundation.TimeSpan TimeSpanProperty;
         Windows.Foundation.IReference<Windows.Foundation.TimeSpan> GetTimeSpanReference();

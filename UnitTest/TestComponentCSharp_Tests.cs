@@ -9,15 +9,18 @@ using System.Threading.Tasks;
 using Xunit;
 using WinRT;
 
-using WF = Windows.Foundation;
-using WFC = Windows.Foundation.Collections;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Interop;
+using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Xaml.Media.Media3D;
 
 using TestComponentCSharp;
 using System.Collections.Generic;
-using Windows.UI.Xaml.Interop;
 using System.Collections;
 
 namespace UnitTest
@@ -1055,6 +1058,122 @@ namespace UnitTest
             Assert.Equal(color.G, TestObject.ColorProperty.G);
             Assert.Equal(color.B, TestObject.ColorProperty.B);
             Assert.True(TestObject.ColorProperty == color);
+        }
+
+        [Fact]
+        public void TestCornerRadiusTypeMapping()
+        {
+            var cornerRadius = new CornerRadius { TopLeft = 1, TopRight = 2, BottomRight = 3, BottomLeft = 4 };
+            TestObject.CornerRadiusProperty = cornerRadius;
+            Assert.Equal(cornerRadius.TopLeft, TestObject.CornerRadiusProperty.TopLeft);
+            Assert.Equal(cornerRadius.TopRight, TestObject.CornerRadiusProperty.TopRight);
+            Assert.Equal(cornerRadius.BottomRight, TestObject.CornerRadiusProperty.BottomRight);
+            Assert.Equal(cornerRadius.BottomLeft, TestObject.CornerRadiusProperty.BottomLeft);
+            Assert.True(TestObject.CornerRadiusProperty == cornerRadius);
+        }
+
+        [Fact]
+        public void TestDurationTypeMapping()
+        {
+            var duration = new Duration(TimeSpan.FromTicks(42));
+            TestObject.DurationProperty = duration;
+            Assert.Equal(duration.TimeSpan, TestObject.DurationProperty.TimeSpan);
+            Assert.True(TestObject.DurationProperty == duration);
+        }
+
+        [Fact]
+        public void TestGridLengthTypeMapping()
+        {
+            var gridLength = new GridLength( 42, GridUnitType.Pixel );
+            TestObject.GridLengthProperty = gridLength;
+            Assert.Equal(gridLength.GridUnitType, TestObject.GridLengthProperty.GridUnitType);
+            Assert.Equal(gridLength.Value, TestObject.GridLengthProperty.Value);
+            Assert.True(TestObject.GridLengthProperty == gridLength);
+        }
+
+        [Fact]
+        public void TestThicknessTypeMapping()
+        {
+            var thickness = new Thickness { Left = 1, Top = 2, Right = 3, Bottom = 4 };
+            TestObject.ThicknessProperty = thickness;
+            Assert.Equal(thickness.Left, TestObject.ThicknessProperty.Left);
+            Assert.Equal(thickness.Top, TestObject.ThicknessProperty.Top);
+            Assert.Equal(thickness.Right, TestObject.ThicknessProperty.Right);
+            Assert.Equal(thickness.Bottom, TestObject.ThicknessProperty.Bottom);
+            Assert.True(TestObject.ThicknessProperty == thickness);
+        }
+
+        [Fact]
+        public void TestGeneratorPositionTypeMapping()
+        {
+            var generatorPosition = new GeneratorPosition { Index = 1, Offset = 2 };
+            TestObject.GeneratorPositionProperty = generatorPosition;
+            Assert.Equal(generatorPosition.Index, TestObject.GeneratorPositionProperty.Index);
+            Assert.Equal(generatorPosition.Offset, TestObject.GeneratorPositionProperty.Offset);
+            Assert.True(TestObject.GeneratorPositionProperty == generatorPosition);
+        }
+
+        [Fact]
+        public void TestMatrixTypeMapping()
+        {
+            var matrix = new Matrix { M11 = 11, M12 = 12, M21 = 21, M22 = 22, OffsetX = 3, OffsetY = 4 };
+            TestObject.MatrixProperty = matrix;
+            Assert.Equal(matrix.M11, TestObject.MatrixProperty.M11);
+            Assert.Equal(matrix.M12, TestObject.MatrixProperty.M12);
+            Assert.Equal(matrix.M21, TestObject.MatrixProperty.M21);
+            Assert.Equal(matrix.M22, TestObject.MatrixProperty.M22);
+            Assert.Equal(matrix.OffsetX, TestObject.MatrixProperty.OffsetX);
+            Assert.Equal(matrix.OffsetY, TestObject.MatrixProperty.OffsetY);
+            Assert.True(TestObject.MatrixProperty == matrix);
+        }
+
+        [Fact]
+        public void TestKeyTimeTypeMapping()
+        {
+            var keyTime = KeyTime.FromTimeSpan(TimeSpan.FromTicks(42));
+            TestObject.KeyTimeProperty = keyTime;
+            Assert.Equal(keyTime.TimeSpan, TestObject.KeyTimeProperty.TimeSpan);
+            Assert.True(TestObject.KeyTimeProperty == keyTime);
+        }
+
+        [Fact]
+        public void TestRepeatBehaviorTypeMapping()
+        {
+            var repeatBehavior = new RepeatBehavior { 
+                Count = 1, Duration = TimeSpan.FromTicks(42), Type = RepeatBehaviorType.Forever };
+            TestObject.RepeatBehaviorProperty = repeatBehavior;
+            Assert.Equal(repeatBehavior.Count, TestObject.RepeatBehaviorProperty.Count);
+            Assert.Equal(repeatBehavior.Duration, TestObject.RepeatBehaviorProperty.Duration);
+            Assert.Equal(repeatBehavior.Type, TestObject.RepeatBehaviorProperty.Type);
+            Assert.True(TestObject.RepeatBehaviorProperty == repeatBehavior);
+        }
+
+        [Fact]
+        public void TestMatrix3DTypeMapping()
+        {
+            var matrix3D = new Matrix3D { 
+                M11 = 11, M12 = 12, M13 = 13, M14 = 14,
+                M21 = 21, M22 = 22, M23 = 23, M24 = 24,
+                M31 = 31, M32 = 32, M33 = 33, M34 = 34,
+                OffsetX = 41, OffsetY = 42, OffsetZ = 43,M44 = 44 };
+            TestObject.Matrix3DProperty = matrix3D;
+            Assert.Equal(matrix3D.M11, TestObject.Matrix3DProperty.M11);
+            Assert.Equal(matrix3D.M12, TestObject.Matrix3DProperty.M12);
+            Assert.Equal(matrix3D.M13, TestObject.Matrix3DProperty.M13);
+            Assert.Equal(matrix3D.M14, TestObject.Matrix3DProperty.M14);
+            Assert.Equal(matrix3D.M21, TestObject.Matrix3DProperty.M21);
+            Assert.Equal(matrix3D.M22, TestObject.Matrix3DProperty.M22);
+            Assert.Equal(matrix3D.M23, TestObject.Matrix3DProperty.M23);
+            Assert.Equal(matrix3D.M24, TestObject.Matrix3DProperty.M24);
+            Assert.Equal(matrix3D.M31, TestObject.Matrix3DProperty.M31);
+            Assert.Equal(matrix3D.M32, TestObject.Matrix3DProperty.M32);
+            Assert.Equal(matrix3D.M33, TestObject.Matrix3DProperty.M33);
+            Assert.Equal(matrix3D.M34, TestObject.Matrix3DProperty.M34);
+            Assert.Equal(matrix3D.OffsetX, TestObject.Matrix3DProperty.OffsetX);
+            Assert.Equal(matrix3D.OffsetY, TestObject.Matrix3DProperty.OffsetY);
+            Assert.Equal(matrix3D.OffsetZ, TestObject.Matrix3DProperty.OffsetZ);
+            Assert.Equal(matrix3D.M44, TestObject.Matrix3DProperty.M44);
+            Assert.True(TestObject.Matrix3DProperty == matrix3D);
         }
 
         [Fact]

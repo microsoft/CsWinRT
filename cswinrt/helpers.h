@@ -472,11 +472,40 @@ namespace cswinrt
             { "Windows.UI",
                 {
                     { "Color", "Windows.UI", "Color" },
+                    { "ColorHelper" },
+                    { "IColorHelper" },
+                    { "IColorHelperStatics" },
+                    { "IColorHelperStatics2" },
                 }
             },
             { "Windows.UI.Xaml",
                 {
+                    { "CornerRadius", "Windows.UI.Xaml", "CornerRadius" },
+                    { "CornerRadiusHelper" },
                     { "Duration", "Windows.UI.Xaml", "Duration" },
+                    { "DurationHelper" },
+                    { "DurationType", "Windows.UI.Xaml", "DurationType" },
+                    { "GridLength", "Windows.UI.Xaml", "GridLength" },
+                    { "GridLengthHelper" },
+                    { "GridUnitType", "Windows.UI.Xaml", "GridUnitType" },
+                    { "ICornerRadiusHelper" },
+                    { "ICornerRadiusHelperStatics" },
+                    { "IDurationHelper" },
+                    { "IDurationHelperStatics" },
+                    { "IGridLengthHelper" },
+                    { "IGridLengthHelperStatics" },
+                    { "IThicknessHelper" },
+                    { "IThicknessHelperStatics" },
+                    { "Thickness", "Windows.UI.Xaml", "Thickness" },
+                    { "ThicknessHelper" },
+                }
+            },
+            { "Windows.UI.Xaml.Controls.Primitives",
+                {
+                    { "GeneratorPosition", "Windows.UI.Xaml.Controls.Primitives", "GeneratorPosition" },
+                    { "GeneratorPositionHelper" },
+                    { "IGeneratorPositionHelper" },
+                    { "IGeneratorPositionHelperStatics" },
                 }
             },
             { "Windows.UI.Xaml.Data",
@@ -505,6 +534,35 @@ namespace cswinrt
                     { "NotifyCollectionChangedEventHandler", "System.Collections.Specialized", "NotifyCollectionChangedEventHandler", true },
                     { "TypeKind", "Windows.UI.Xaml.Interop", "TypeKind", true },
                     { "TypeName", "System", "Type", true }
+                }
+            },
+            { "Windows.UI.Xaml.Media",
+                {
+                    { "IMatrixHelper" },
+                    { "IMatrixHelperStatics" },
+                    { "Matrix", "Windows.UI.Xaml.Media", "Matrix" },
+                    { "MatrixHelper" },
+                }
+            },
+            { "Windows.UI.Xaml.Media.Animation",
+                {
+                    { "IKeyTimeHelper" },
+                    { "IKeyTimeHelperStatics" },
+                    { "IRepeatBehaviorHelper" },
+                    { "IRepeatBehaviorHelperStatics" },
+                    { "KeyTime", "Windows.UI.Xaml.Media.Animation", "KeyTime" },
+                    { "KeyTimeHelper" },
+                    { "RepeatBehavior", "Windows.UI.Xaml.Media.Animation", "RepeatBehavior" },
+                    { "RepeatBehaviorHelper" },
+                    { "RepeatBehaviorType", "Windows.UI.Xaml.Media.Animation", "RepeatBehaviorType" }
+                }
+            },
+            { "Windows.UI.Xaml.Media.Media3D",
+                {
+                    { "IMatrix3DHelper" },
+                    { "IMatrix3DHelperStatics" },
+                    { "Matrix3D", "Windows.UI.Xaml.Media.Media3D", "Matrix3D" },
+                    { "Matrix3DHelper" },
                 }
             }
         };

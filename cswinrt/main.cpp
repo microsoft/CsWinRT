@@ -153,7 +153,11 @@ Where <spec> is one or more of:
                     for (auto&& [name, type] : members.types)
                     {
                         if (!settings.filter.includes(type)) { continue; }
-                        if (get_mapped_type(ns, name)) continue;
+                        if (get_mapped_type(ns, name))
+                        {
+                            written = true;
+                            continue;
+                        }
                         auto guard{ w.push_generic_params(type.GenericParam()) };
 
                         bool type_requires_abi = true;
