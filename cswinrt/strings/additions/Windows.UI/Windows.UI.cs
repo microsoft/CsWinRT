@@ -54,21 +54,21 @@ namespace Windows.UI
             return ConvertToString(null, null);
         }
 
-        public string ToString(IFormatProvider? provider)
+        public string ToString(IFormatProvider provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(null, provider);
         }
 
-        string IFormattable.ToString(string? format, IFormatProvider? provider)
+        string IFormattable.ToString(string format, IFormatProvider provider)
         {
             // Delegate to the internal method which implements all ToString calls.
             return ConvertToString(format, provider);
         }
 
-        internal string ConvertToString(string? format, IFormatProvider? provider)
+        internal string ConvertToString(string format, IFormatProvider provider)
         {
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            global::System.Text.StringBuilder sb = new global::System.Text.StringBuilder();
 
             if (format == null)
             {
@@ -95,7 +95,7 @@ namespace Windows.UI
             return _A.GetHashCode() ^ _R.GetHashCode() ^ _G.GetHashCode() ^ _B.GetHashCode();
         }
 
-        public override bool Equals(object? o)
+        public override bool Equals(object o)
         {
             return o is Color && this == (Color)o;
         }

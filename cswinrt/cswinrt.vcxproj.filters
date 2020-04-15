@@ -3,45 +3,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code_writers.h" />
@@ -78,6 +39,18 @@
     </Filter>
     <Filter Include="strings\additions\Windows.UI">
       <UniqueIdentifier>{8e05f8fe-6311-4726-998b-5cbe19398698}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml.Media">
+      <UniqueIdentifier>{b683f592-740c-4868-8ab3-67e3d7044588}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml.Media.Animation">
+      <UniqueIdentifier>{e3fd55b6-0467-4d57-ba01-e2caa59dd767}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml.Media.Media3D">
+      <UniqueIdentifier>{335b6163-2c84-4616-944e-c45b4ffeaed3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml.Controls.Primitives">
+      <UniqueIdentifier>{369a6d8a-43e6-48af-82c1-bb2e555909a4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -183,6 +156,21 @@
     </None>
     <None Include="strings\additions\Windows.UI\Windows.UI.cs">
       <Filter>strings\additions\Windows.UI</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml.Media.Media3D\Windows.UI.Xaml.Media.Media3D.cs">
+      <Filter>strings\additions\Windows.UI.Xaml.Media.Media3D</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml.Media.Animation\Windows.UI.Xaml.Media.Animation.cs">
+      <Filter>strings\additions\Windows.UI.Xaml.Media.Animation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml.Media\Windows.UI.Xaml.Media.cs">
+      <Filter>strings\additions\Windows.UI.Xaml.Media</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml.Controls.Primitives\Windows.UI.Xaml.Controls.Primitives.cs">
+      <Filter>strings\additions\Windows.UI.Xaml.Controls.Primitives</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.SR.cs">
+      <Filter>strings\additions\Windows.UI.Xaml</Filter>
     </None>
   </ItemGroup>
 </Project>
