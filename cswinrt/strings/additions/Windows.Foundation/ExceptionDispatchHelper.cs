@@ -10,7 +10,7 @@ namespace System.Threading.Tasks
     using System.Threading;
     internal static class ExceptionDispatchHelper
     {
-        internal static void ThrowAsync(Exception? exception, SynchronizationContext? targetContext)
+        internal static void ThrowAsync(Exception exception, SynchronizationContext targetContext)
         {
             if (exception == null)
                 return;

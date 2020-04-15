@@ -22,7 +22,7 @@ namespace System.Threading.Tasks
         }
 
 
-        internal TaskToAsyncOperationAdapter(Task underlyingTask, CancellationTokenSource? underlyingCancelTokenSource)
+        internal TaskToAsyncOperationAdapter(Task underlyingTask, CancellationTokenSource underlyingCancelTokenSource)
 
             : base(underlyingTask, underlyingCancelTokenSource, underlyingProgressDispatcher: null)
         {

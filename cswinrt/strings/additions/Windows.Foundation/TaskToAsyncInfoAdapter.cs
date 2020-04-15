@@ -347,7 +347,7 @@ namespace System.Threading.Tasks
 
         #region Infrastructure methods
 
-        private SynchronizationContext? GetStartingContext()
+        private SynchronizationContext GetStartingContext()
         {
 #if DESKTOP // as a reminder that on most platforms we want a different behavior
             return SynchronizationContext.CurrentNoFlow;
@@ -357,7 +357,7 @@ namespace System.Threading.Tasks
         }
 
 
-        internal Task? Task
+        internal Task Task
         {
             get
             {
@@ -366,12 +366,12 @@ namespace System.Threading.Tasks
                 if (CompletedSynchronously)
                     return null;
 
-                return (Task?)_dataContainer;
+                return (Task)_dataContainer;
             }
         }
 
 
-        internal CancellationTokenSource? CancelTokenSource
+        internal CancellationTokenSource CancelTokenSource
         {
             get { return _cancelTokenSource; }
         }
@@ -484,7 +484,7 @@ namespace System.Threading.Tasks
         }
 
 
-        private void OnReportChainedProgress(object? sender, TProgressInfo progressInfo)
+        private void OnReportChainedProgress(object sender, TProgressInfo progressInfo)
         {
             ((IProgress<TProgressInfo>)this).Report(progressInfo);
         }
@@ -582,7 +582,7 @@ namespace System.Threading.Tasks
             Debug.Assert(IsInRunningState);
             Debug.Assert(!CompletedSynchronously);
 
-            Task? task = _dataContainer as Task;
+            Task task = _dataContainer as Task;
             Debug.Assert(task != null);
             Debug.Assert(task.IsCompleted);
 
@@ -710,7 +710,7 @@ namespace System.Threading.Tasks
             // If this IAsyncInfo has actually faulted, GetResults will throw the same error as returned by ErrorCode:
             if (IsInErrorState)
             {
-                Exception? error = ErrorCode;
+                Exception error = ErrorCode;
                 Debug.Assert(error != null);
                 ExceptionDispatchInfo.Capture(error).Throw();
             }
@@ -725,7 +725,7 @@ namespace System.Threading.Tasks
                 return (TResult)_dataContainer!;
 
             // The operation is asynchronous:
-            Task<TResult>? task = _dataContainer as Task<TResult>;
+            Task<TResult> task = _dataContainer as Task<TResult>;
 
             // Since CompletedSynchronously is false and EnsureNotClosed() did not throw, task can only be null if:
             //  - this IAsyncInfo has completed synchronously, however we checked for this above;
