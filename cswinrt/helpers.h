@@ -469,6 +469,17 @@ namespace cswinrt
                     { "AttributeUsageAttribute", "System", "AttributeUsageAttribute" },
                 }
             },
+            { "Windows.Foundation.Numerics",
+                {
+                    { "Matrix3x2", "System.Numerics", "Matrix3x2" },
+                    { "Matrix4x4", "System.Numerics", "Matrix4x4" },
+                    { "Plane", "System.Numerics", "Plane" },
+                    { "Quaternion", "System.Numerics", "Quaternion" },
+                    { "Vector2", "System.Numerics", "Vector2" },
+                    { "Vector3", "System.Numerics", "Vector3" },
+                    { "Vector4", "System.Numerics", "Vector4" },
+                }
+            },
             { "Windows.UI",
                 {
                     { "Color", "Windows.UI", "Color" },

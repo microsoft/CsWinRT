@@ -1,9 +1,6 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -1174,6 +1171,113 @@ namespace UnitTest
             Assert.Equal(matrix3D.OffsetZ, TestObject.Matrix3DProperty.OffsetZ);
             Assert.Equal(matrix3D.M44, TestObject.Matrix3DProperty.M44);
             Assert.True(TestObject.Matrix3DProperty == matrix3D);
+        }
+
+        [Fact]
+        public void TestMatrix3x2TypeMapping()
+        {
+            var matrix3x2 = new Matrix3x2
+            {
+                M11 = 11,
+                M12 = 12,
+                M21 = 21,
+                M22 = 22,
+                M31 = 31,
+                M32 = 32,
+            };
+            TestObject.Matrix3x2Property = matrix3x2;
+            Assert.Equal(matrix3x2.M11, TestObject.Matrix3x2Property.M11);
+            Assert.Equal(matrix3x2.M12, TestObject.Matrix3x2Property.M12);
+            Assert.Equal(matrix3x2.M21, TestObject.Matrix3x2Property.M21);
+            Assert.Equal(matrix3x2.M22, TestObject.Matrix3x2Property.M22);
+            Assert.Equal(matrix3x2.M31, TestObject.Matrix3x2Property.M31);
+            Assert.Equal(matrix3x2.M32, TestObject.Matrix3x2Property.M32);
+            Assert.True(TestObject.Matrix3x2Property == matrix3x2);
+        }
+
+        [Fact]
+        public void TestMatrix4x4TypeMapping()
+        {
+            var matrix4x4 = new Matrix4x4
+            {
+                M11 = 11, M12 = 12, M13 = 13, M14 = 14,
+                M21 = 21, M22 = 22, M23 = 23, M24 = 24,
+                M31 = 31, M32 = 32, M33 = 33, M34 = 34,
+                M41 = 41, M42 = 42, M43 = 43, M44 = 44
+            };
+            TestObject.Matrix4x4Property = matrix4x4;
+            Assert.Equal(matrix4x4.M11, TestObject.Matrix4x4Property.M11);
+            Assert.Equal(matrix4x4.M12, TestObject.Matrix4x4Property.M12);
+            Assert.Equal(matrix4x4.M13, TestObject.Matrix4x4Property.M13);
+            Assert.Equal(matrix4x4.M14, TestObject.Matrix4x4Property.M14);
+            Assert.Equal(matrix4x4.M21, TestObject.Matrix4x4Property.M21);
+            Assert.Equal(matrix4x4.M22, TestObject.Matrix4x4Property.M22);
+            Assert.Equal(matrix4x4.M23, TestObject.Matrix4x4Property.M23);
+            Assert.Equal(matrix4x4.M24, TestObject.Matrix4x4Property.M24);
+            Assert.Equal(matrix4x4.M31, TestObject.Matrix4x4Property.M31);
+            Assert.Equal(matrix4x4.M32, TestObject.Matrix4x4Property.M32);
+            Assert.Equal(matrix4x4.M33, TestObject.Matrix4x4Property.M33);
+            Assert.Equal(matrix4x4.M34, TestObject.Matrix4x4Property.M34);
+            Assert.Equal(matrix4x4.M41, TestObject.Matrix4x4Property.M41);
+            Assert.Equal(matrix4x4.M42, TestObject.Matrix4x4Property.M42);
+            Assert.Equal(matrix4x4.M43, TestObject.Matrix4x4Property.M43);
+            Assert.Equal(matrix4x4.M44, TestObject.Matrix4x4Property.M44);
+            Assert.True(TestObject.Matrix4x4Property == matrix4x4);
+        }
+
+        [Fact]
+        public void TestPlaneTypeMapping()
+        {
+            var plane = new Plane { D = 3.14F, Normal = new Vector3(1, 2, 3) };
+            TestObject.PlaneProperty = plane;
+            Assert.Equal(plane.D, TestObject.PlaneProperty.D);
+            Assert.Equal(plane.Normal, TestObject.PlaneProperty.Normal);
+            Assert.True(TestObject.PlaneProperty == plane);
+        }
+
+        [Fact]
+        public void TestQuaternionTypeMapping()
+        {
+            var quaternion = new Quaternion { W = 3.14F, X = 1, Y = 42, Z = 1729 };
+            TestObject.QuaternionProperty = quaternion;
+            Assert.Equal(quaternion.W, TestObject.QuaternionProperty.W);
+            Assert.Equal(quaternion.X, TestObject.QuaternionProperty.X);
+            Assert.Equal(quaternion.Y, TestObject.QuaternionProperty.Y);
+            Assert.Equal(quaternion.Z, TestObject.QuaternionProperty.Z);
+            Assert.True(TestObject.QuaternionProperty == quaternion);
+        }
+
+        [Fact]
+        public void TestVector2TypeMapping()
+        {
+            var vector2 = new Vector2 { X = 1, Y = 42 };
+            TestObject.Vector2Property = vector2;
+            Assert.Equal(vector2.X, TestObject.Vector2Property.X);
+            Assert.Equal(vector2.Y, TestObject.Vector2Property.Y);
+            Assert.True(TestObject.Vector2Property == vector2);
+        }
+
+        [Fact]
+        public void TestVector3TypeMapping()
+        {
+            var vector3 = new Vector3 { X = 1, Y = 42, Z = 1729 };
+            TestObject.Vector3Property = vector3;
+            Assert.Equal(vector3.X, TestObject.Vector3Property.X);
+            Assert.Equal(vector3.Y, TestObject.Vector3Property.Y);
+            Assert.Equal(vector3.Z, TestObject.Vector3Property.Z);
+            Assert.True(TestObject.Vector3Property == vector3);
+        }
+
+        [Fact]
+        public void TestVector4TypeMapping()
+        {
+            var vector4 = new Vector4 { W = 3.14F, X = 1, Y = 42, Z = 1729 };
+            TestObject.Vector4Property = vector4;
+            Assert.Equal(vector4.W, TestObject.Vector4Property.W);
+            Assert.Equal(vector4.X, TestObject.Vector4Property.X);
+            Assert.Equal(vector4.Y, TestObject.Vector4Property.Y);
+            Assert.Equal(vector4.Z, TestObject.Vector4Property.Z);
+            Assert.True(TestObject.Vector4Property == vector4);
         }
 
         [Fact]

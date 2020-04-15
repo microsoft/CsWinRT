@@ -1,20 +1,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Numerics;
 using Xunit;
 using WinRT;
 
-using WF = Windows.Foundation;
 using WFC = Windows.Foundation.Collections;
 using Windows.Foundation;
-using Windows.Foundation.Collections;
+using Windows.UI;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Xaml.Media.Media3D;
+
 
 using TestComponentCSharp;
 
@@ -86,6 +85,23 @@ namespace UnitTest
             AssertGuid<Point?>("84f14c22-a00a-5272-8d3d-82112e66df00");
             AssertGuid<Rect?>("80423f11-054f-5eac-afd3-63b6ce15e77b");
             AssertGuid<Size?>("61723086-8e53-5276-9f36-2a4bb93e2b75");
+            AssertGuid<Color?>("ab8e5d11-b0c1-5a21-95ae-f16bf3a37624");
+            AssertGuid<CornerRadius?>("96d922e6-a7ca-5c21-b9f7-e4504e8c7112");
+            AssertGuid<Duration?>("47bd7ff2-5295-57bb-9212-2b0b8692aa13");
+            AssertGuid<GridLength?>("b5ecd72b-991b-5ec7-bacc-7ccd6bebe331");
+            AssertGuid<Thickness?>("a19f7ba8-d8cd-5df2-ab44-fefd26644484");
+            AssertGuid<GeneratorPosition?>("687a15ce-ae58-5e19-974e-34f17d92b941");
+            AssertGuid<Matrix?>("704b4ec9-0373-506c-8af3-57e9245f1c4e");
+            AssertGuid<KeyTime?>("9a16e097-f2e7-5bdc-b9f6-5a3f96ad3b59");
+            AssertGuid<RepeatBehavior?>("6588d2a6-3972-5247-a870-e217b76de89c");
+            AssertGuid<Matrix3D?>("e609698d-6aab-5adc-8b3f-a852f9e56fd0");
+            AssertGuid<Matrix3x2?>("76358cfd-2cbd-525b-a49e-90ee18247b71");
+            AssertGuid<Matrix4x4?>("dacbffdc-68ef-5fd0-b657-782d0ac9807e");
+            AssertGuid<Plane?>("46d542a1-52f7-58e7-acfc-9a6d364da022");
+            AssertGuid<Quaternion?>("b27004bb-c014-5dce-9a21-799c5a3c1461");
+            AssertGuid<Vector2?>("48f6a69e-8465-57ae-9400-9764087f65ad");
+            AssertGuid<Vector3?>("1ee770ff-c954-59ca-a754-6199a9be282c");
+            AssertGuid<Vector4?>("a5e843c9-ed20-5339-8f8d-9fe404cf3654");
 
             // Enums, structs, IInspectable, classes, and delegates
             AssertGuid<PropertyType?>("ecebde54-fac0-5aeb-9ba9-9e1fe17e31d5");
