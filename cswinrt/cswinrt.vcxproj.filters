@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="@(StaticStrings->'%(Source)')" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code_writers.h" />
@@ -32,6 +31,27 @@
     <Filter Include="strings\additions\Windows.UI.Xaml">
       <UniqueIdentifier>{8626e8bc-727e-4c4d-a7fa-fe90c02b3090}</UniqueIdentifier>
     </Filter>
+    <Filter Include="strings\additions\Windows.Storage.Streams">
+      <UniqueIdentifier>{4035db1f-9a59-42da-84a0-e3c3227fe586}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.Storage">
+      <UniqueIdentifier>{d939d5a3-d5f9-4802-a8f8-3c5ce8b3a07e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI">
+      <UniqueIdentifier>{8e05f8fe-6311-4726-998b-5cbe19398698}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml.Media">
+      <UniqueIdentifier>{b683f592-740c-4868-8ab3-67e3d7044588}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml.Media.Animation">
+      <UniqueIdentifier>{e3fd55b6-0467-4d57-ba01-e2caa59dd767}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml.Media.Media3D">
+      <UniqueIdentifier>{335b6163-2c84-4616-944e-c45b4ffeaed3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI.Xaml.Controls.Primitives">
+      <UniqueIdentifier>{369a6d8a-43e6-48af-82c1-bb2e555909a4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="strings\WinRT.cs">
@@ -48,6 +68,108 @@
       <Filter>strings\additions\Windows.Foundation</Filter>
     </None>
     <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.cs">
+      <Filter>strings\additions\Windows.UI.Xaml</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\NetFxToWinRtStreamAdapter.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\StreamOperationAsyncResult.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\StreamOperationsImplementation.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeStreamExtensions.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WinRtIOHelper.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WinRtToNetFxStreamAdapter.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBuffer.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\WindowsRuntimeBufferExtensions.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\IMarshal.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\IBufferByteAccess.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage\HANDLE_ACCESS_OPTIONS.cs">
+      <Filter>strings\additions\Windows.Storage</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage\HANDLE_CREATION_OPTIONS.cs">
+      <Filter>strings\additions\Windows.Storage</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage\HANDLE_OPTIONS.cs">
+      <Filter>strings\additions\Windows.Storage</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage\HANDLE_SHARING_OPTION.cs">
+      <Filter>strings\additions\Windows.Storage</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage\IStorageFolderHandleAccess.cs">
+      <Filter>strings\additions\Windows.Storage</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage\IStorageItemHandleAccess.cs">
+      <Filter>strings\additions\Windows.Storage</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage\WindowsRuntimeStorageExtensions.cs">
+      <Filter>strings\additions\Windows.Storage</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage.Streams\Windows.Storage.Streams.SR.cs">
+      <Filter>strings\additions\Windows.Storage.Streams</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Storage\Windows.Storage.SR.cs">
+      <Filter>strings\additions\Windows.Storage</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Foundation\AsyncInfo.cs">
+      <Filter>strings\additions\Windows.Foundation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Foundation\AsyncInfoIdGenerator.cs">
+      <Filter>strings\additions\Windows.Foundation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Foundation\ExceptionDispatchHelper.cs">
+      <Filter>strings\additions\Windows.Foundation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Foundation\TaskToAsyncActionAdapter.cs">
+      <Filter>strings\additions\Windows.Foundation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Foundation\TaskToAsyncActionWithProgressAdapter.cs">
+      <Filter>strings\additions\Windows.Foundation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Foundation\TaskToAsyncInfoAdapter.cs">
+      <Filter>strings\additions\Windows.Foundation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Foundation\TaskToAsyncOperationAdapter.cs">
+      <Filter>strings\additions\Windows.Foundation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Foundation\TaskToAsyncOperationWithProgressAdapter.cs">
+      <Filter>strings\additions\Windows.Foundation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.Foundation\Windows.Foundation.SR.cs">
+      <Filter>strings\additions\Windows.Foundation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI\Windows.UI.cs">
+      <Filter>strings\additions\Windows.UI</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml.Media.Media3D\Windows.UI.Xaml.Media.Media3D.cs">
+      <Filter>strings\additions\Windows.UI.Xaml.Media.Media3D</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml.Media.Animation\Windows.UI.Xaml.Media.Animation.cs">
+      <Filter>strings\additions\Windows.UI.Xaml.Media.Animation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml.Media\Windows.UI.Xaml.Media.cs">
+      <Filter>strings\additions\Windows.UI.Xaml.Media</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml.Controls.Primitives\Windows.UI.Xaml.Controls.Primitives.cs">
+      <Filter>strings\additions\Windows.UI.Xaml.Controls.Primitives</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI.Xaml\Windows.UI.Xaml.SR.cs">
       <Filter>strings\additions\Windows.UI.Xaml</Filter>
     </None>
   </ItemGroup>

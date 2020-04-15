@@ -748,6 +748,109 @@ namespace winrt::TestComponentCSharp::implementation
         _point = value;
     }
 
+    Windows::Foundation::Rect Class::RectProperty()
+    {
+        return _rect;
+    }
+
+    void Class::RectProperty(Windows::Foundation::Rect const& value)
+    {
+        _rect = value;
+    }
+
+    Windows::Foundation::Size Class::SizeProperty()
+    {
+        return _size;
+    }
+
+    void Class::SizeProperty(Windows::Foundation::Size const& value)
+    {
+        _size = value;
+    }
+
+    Windows::UI::Color Class::ColorProperty()
+    {
+        return _color;
+    }
+    
+    void Class::ColorProperty(Windows::UI::Color const& value)
+    {
+        _color = value;
+    }
+
+    Windows::UI::Xaml::CornerRadius Class::CornerRadiusProperty()
+    {
+        return _cornerRadius;
+    }
+    void Class::CornerRadiusProperty(Windows::UI::Xaml::CornerRadius const& value)
+    {
+        _cornerRadius = value;
+    }
+    Windows::UI::Xaml::Duration Class::DurationProperty()
+    {
+        return _duration;
+    }
+    void Class::DurationProperty(Windows::UI::Xaml::Duration const& value)
+    {
+        _duration = value;
+    }
+    Windows::UI::Xaml::GridLength Class::GridLengthProperty()
+    {
+        return _gridLength;
+    }
+    void Class::GridLengthProperty(Windows::UI::Xaml::GridLength const& value)
+    {
+        _gridLength = value;
+    }
+    Windows::UI::Xaml::Thickness Class::ThicknessProperty()
+    {
+        return _thickness;
+    }
+    void Class::ThicknessProperty(Windows::UI::Xaml::Thickness const& value)
+    {
+        _thickness = value;
+    }
+    Windows::UI::Xaml::Controls::Primitives::GeneratorPosition Class::GeneratorPositionProperty()
+    {
+        return _generatorPosition;
+    }
+    void Class::GeneratorPositionProperty(Windows::UI::Xaml::Controls::Primitives::GeneratorPosition const& value)
+    {
+        _generatorPosition = value;
+    }
+    Windows::UI::Xaml::Media::Matrix Class::MatrixProperty()
+    {
+        return _matrix;
+    }
+    void Class::MatrixProperty(Windows::UI::Xaml::Media::Matrix const& value)
+    {
+        _matrix = value;
+    }
+    Windows::UI::Xaml::Media::Animation::KeyTime Class::KeyTimeProperty()
+    {
+        return _keyTime;
+    }
+    void Class::KeyTimeProperty(Windows::UI::Xaml::Media::Animation::KeyTime const& value)
+    {
+        _keyTime = value;
+    }
+    Windows::UI::Xaml::Media::Animation::RepeatBehavior Class::RepeatBehaviorProperty()
+    {
+        return _repeatBehavior;
+    }
+    void Class::RepeatBehaviorProperty(Windows::UI::Xaml::Media::Animation::RepeatBehavior const& value)
+    {
+        _repeatBehavior = value;
+    }
+    Windows::UI::Xaml::Media::Media3D::Matrix3D Class::Matrix3DProperty()
+    {
+        return _matrix3D;
+    }
+    void Class::Matrix3DProperty(Windows::UI::Xaml::Media::Media3D::Matrix3D const& value)
+    {
+        _matrix3D = value;
+    }
+
     IReference<Point> Class::GetPointReference()
     {
         return _point;
