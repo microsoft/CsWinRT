@@ -23,17 +23,8 @@ namespace WinUIDesktopSample
         {
             var window = new Microsoft.UI.Xaml.Window
             {
-                // This will cause the InvalidCast exception. Once that is fixed, this can
-                // be removed and just use the new MainPage() line below for setting content
-                Content = new Microsoft.UI.Xaml.Shapes.Rectangle()
-                {
-                    Fill = new SolidColorBrush(Windows.UI.Colors.Red),
-                    Width = 200,
-                    Height = 200
-                }
+                Content = new MainPage()
             };
-
-            window.Content = new MainPage();
 
             window.Activate();
         }

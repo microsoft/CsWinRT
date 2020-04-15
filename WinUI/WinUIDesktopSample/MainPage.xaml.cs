@@ -15,6 +15,7 @@ namespace WinUIDesktopSample
     {
         public MainPage()
         {
+            InitializeComponent();
         }
     }
 }
