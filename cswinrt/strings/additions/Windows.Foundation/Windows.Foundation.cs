@@ -351,27 +351,6 @@ namespace Windows.Foundation
             return ConvertToString(format, provider);
         }
 
-        internal static class TokenizerHelper
-        {
-            internal static char GetNumericListSeparator(IFormatProvider? provider)
-            {
-                char numericSeparator = ',';
-
-                // Get the NumberFormatInfo out of the provider, if possible
-                // If the IFormatProvider doesn't not contain a NumberFormatInfo, then
-                // this method returns the current culture's NumberFormatInfo.
-                NumberFormatInfo numberFormat = NumberFormatInfo.GetInstance(provider);
-
-                // Is the decimal separator is the same as the list separator?
-                // If so, we use the ";".
-                if ((numberFormat.NumberDecimalSeparator.Length > 0) && (numericSeparator == numberFormat.NumberDecimalSeparator[0]))
-                {
-                    numericSeparator = ';';
-                }
-
-                return numericSeparator;
-            }
-        }
 
         internal string ConvertToString(string? format, IFormatProvider? provider)
         {
@@ -543,6 +522,28 @@ namespace Windows.Foundation
             }
 
             return string.Format("{0},{1}", _width, _height);
+        }
+    }
+
+    internal static class TokenizerHelper
+    {
+        internal static char GetNumericListSeparator(IFormatProvider? provider)
+        {
+            char numericSeparator = ',';
+
+            // Get the NumberFormatInfo out of the provider, if possible
+            // If the IFormatProvider doesn't not contain a NumberFormatInfo, then
+            // this method returns the current culture's NumberFormatInfo.
+            NumberFormatInfo numberFormat = NumberFormatInfo.GetInstance(provider);
+
+            // Is the decimal separator is the same as the list separator?
+            // If so, we use the ";".
+            if ((numberFormat.NumberDecimalSeparator.Length > 0) && (numericSeparator == numberFormat.NumberDecimalSeparator[0]))
+            {
+                numericSeparator = ';';
+            }
+
+            return numericSeparator;
         }
     }
 }

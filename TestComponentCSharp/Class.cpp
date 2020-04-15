@@ -768,6 +768,16 @@ namespace winrt::TestComponentCSharp::implementation
         _size = value;
     }
 
+    Windows::UI::Color Class::ColorProperty()
+    {
+        return _color;
+    }
+    
+    void Class::ColorProperty(Windows::UI::Color const& value)
+    {
+        _color = value;
+    }
+
     IReference<Point> Class::GetPointReference()
     {
         return _point;

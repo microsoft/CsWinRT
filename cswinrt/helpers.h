@@ -469,6 +469,11 @@ namespace cswinrt
                     { "AttributeUsageAttribute", "System", "AttributeUsageAttribute" },
                 }
             },
+            { "Windows.UI",
+                {
+                    { "Color", "Windows.UI", "Color" },
+                }
+            },
             { "Windows.UI.Xaml",
                 {
                     { "Duration", "Windows.UI.Xaml", "Duration" },

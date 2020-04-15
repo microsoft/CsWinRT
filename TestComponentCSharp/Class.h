@@ -46,6 +46,7 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Point _point{};
         Windows::Foundation::Rect _rect{};
         Windows::Foundation::Size _size{};
+        Windows::UI::Color _color{};
         Windows::Foundation::TimeSpan _timeSpan{};
         Windows::Foundation::DateTime _dateTime{};
         winrt::hresult _hr;
@@ -208,6 +209,8 @@ namespace winrt::TestComponentCSharp::implementation
         void RectProperty(Windows::Foundation::Rect const& value);
         Windows::Foundation::Size SizeProperty();
         void SizeProperty(Windows::Foundation::Size const& value);
+        Windows::UI::Color ColorProperty();
+        void ColorProperty(Windows::UI::Color const& value);
         Windows::Foundation::IReference<Windows::Foundation::Point> GetPointReference();
         Windows::Foundation::TimeSpan TimeSpanProperty();
         void TimeSpanProperty(Windows::Foundation::TimeSpan const& value);

@@ -249,6 +249,7 @@ namespace TestComponentCSharp
         Windows.Foundation.Point PointProperty;
         Windows.Foundation.Rect RectProperty;
         Windows.Foundation.Size SizeProperty;
+        Windows.UI.Color ColorProperty;
         Windows.Foundation.IReference<Windows.Foundation.Point> GetPointReference();
         // Structs mapped to equivalent ones in the System namespace
         Windows.Foundation.TimeSpan TimeSpanProperty;
