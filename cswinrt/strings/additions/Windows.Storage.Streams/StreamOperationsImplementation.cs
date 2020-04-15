@@ -80,7 +80,7 @@ namespace Windows.Storage.Streams
             //         Note: the allocation costs we are paying for the new buffer are unavoidable anyway, as we would need to create
             //         an array to read into either way.
 
-            IBuffer? dataBuffer = buffer as WindowsRuntimeBuffer;
+            IBuffer dataBuffer = buffer as WindowsRuntimeBuffer;
 
             if (dataBuffer == null)
                 dataBuffer = WindowsRuntimeBuffer.Create((int)Math.Min((uint)int.MaxValue, buffer.Capacity));
@@ -92,7 +92,7 @@ namespace Windows.Storage.Streams
                 dataBuffer.Length = 0;
 
                 // Get the buffer backing array:
-                byte[]? data;
+                byte[] data;
                 int offset;
                 bool managedBufferAssert = dataBuffer.TryGetUnderlyingData(out data, out offset);
                 Debug.Assert(managedBufferAssert);
@@ -164,7 +164,7 @@ namespace Windows.Storage.Streams
 
             // Choose the optimal writing strategy for the kind of buffer supplied:
             Func<CancellationToken, IProgress<uint>, Task<uint>> writeOperation;
-            byte[]? data;
+            byte[] data;
             int offset;
 
             // If buffer is backed by a managed array:

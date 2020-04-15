@@ -18,25 +18,25 @@ namespace System.IO
 
     internal abstract partial class StreamOperationAsyncResult : IAsyncResult
     {
-        private readonly AsyncCallback? _userCompletionCallback = null;
-        private readonly object? _userAsyncStateInfo = null;
+        private readonly AsyncCallback _userCompletionCallback = null;
+        private readonly object _userAsyncStateInfo = null;
 
-        private IAsyncInfo? _asyncStreamOperation = null;
+        private IAsyncInfo _asyncStreamOperation = null;
 
         private volatile bool _completed = false;
         private volatile bool _callbackInvoked = false;
-        private volatile ManualResetEvent? _waitHandle = null;
+        private volatile ManualResetEvent _waitHandle = null;
 
         private long _bytesCompleted = 0;
 
-        private ExceptionDispatchInfo? _errorInfo = null;
+        private ExceptionDispatchInfo _errorInfo = null;
 
         private readonly bool _processCompletedOperationInCallback;
-        private IAsyncInfo? _completedOperation = null;
+        private IAsyncInfo _completedOperation = null;
 
 
         protected internal StreamOperationAsyncResult(IAsyncInfo asyncStreamOperation,
-                                                      AsyncCallback? userCompletionCallback, object? userAsyncStateInfo,
+                                                      AsyncCallback userCompletionCallback, object userAsyncStateInfo,
                                                       bool processCompletedOperationInCallback)
         {
             if (asyncStreamOperation == null)
@@ -58,7 +58,7 @@ namespace System.IO
         }
 
 
-        public object? AsyncState
+        public object AsyncState
         {
             get { return _userAsyncStateInfo; }
         }
@@ -74,7 +74,7 @@ namespace System.IO
         {
             get
             {
-                ManualResetEvent? wh = _waitHandle;
+                ManualResetEvent wh = _waitHandle;
                 if (wh != null)
                     return wh;
 
@@ -82,7 +82,7 @@ namespace System.IO
                 // > Use 'completed' in the ctor - this way the handle wait will return as appropriate.
                 wh = new ManualResetEvent(_completed);
 
-                ManualResetEvent? otherHandle = Interlocked.CompareExchange(ref _waitHandle, wh, null);
+                ManualResetEvent otherHandle = Interlocked.CompareExchange(ref _waitHandle, wh, null);
 
                 // We lost the race. Dispose OUR handle and return OTHER handle:
                 if (otherHandle != null)
@@ -177,9 +177,9 @@ namespace System.IO
 
         internal abstract void ProcessConcreteCompletedOperation(IAsyncInfo completedOperation, out long bytesCompleted);
 
-         private static void ProcessCompletedOperation_InvalidOperationThrowHelper(ExceptionDispatchInfo? errInfo, string errMsg)
+         private static void ProcessCompletedOperation_InvalidOperationThrowHelper(ExceptionDispatchInfo errInfo, string errMsg)
         {
-            Exception? errInfosrc = (errInfo == null) ? null : errInfo.SourceException;
+            Exception errInfosrc = (errInfo == null) ? null : errInfo.SourceException;
 
             if (errInfosrc == null)
                 throw new InvalidOperationException(errMsg);
@@ -208,8 +208,8 @@ namespace System.IO
 
             if (_completedOperation == null)
             {
-                ExceptionDispatchInfo? errInfo = _errorInfo;
-                Exception? errInfosrc = (errInfo == null) ? null : errInfo.SourceException;
+                ExceptionDispatchInfo errInfo = _errorInfo;
+                Exception errInfosrc = (errInfo == null) ? null : errInfo.SourceException;
 
                 // See if errorInfo is set because we observed completedOperation == null previously (being slow is Ok on error path):
                 if (errInfosrc != null && errInfosrc is NullReferenceException
@@ -298,7 +298,7 @@ namespace System.IO
         private readonly IBuffer _userBuffer;
 
         internal StreamReadAsyncResult(IAsyncOperationWithProgress<IBuffer, uint> asyncStreamReadOperation, IBuffer buffer,
-                                       AsyncCallback? userCompletionCallback, object? userAsyncStateInfo,
+                                       AsyncCallback userCompletionCallback, object userAsyncStateInfo,
                                        bool processCompletedOperationInCallback)
 
             : base(asyncStreamReadOperation, userCompletionCallback, userAsyncStateInfo, processCompletedOperationInCallback)
@@ -335,7 +335,7 @@ namespace System.IO
     internal class StreamWriteAsyncResult : StreamOperationAsyncResult
     {
         internal StreamWriteAsyncResult(IAsyncOperationWithProgress<uint, uint> asyncStreamWriteOperation,
-                                        AsyncCallback? userCompletionCallback, object? userAsyncStateInfo,
+                                        AsyncCallback userCompletionCallback, object userAsyncStateInfo,
                                         bool processCompletedOperationInCallback)
 
             : base(asyncStreamWriteOperation, userCompletionCallback, userAsyncStateInfo, processCompletedOperationInCallback)

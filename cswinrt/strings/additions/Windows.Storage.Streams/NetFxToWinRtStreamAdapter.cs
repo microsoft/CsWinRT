@@ -133,7 +133,7 @@ namespace System.IO
 
         private static bool CanApplyReadMemoryStreamOptimization(Stream stream)
         {
-            MemoryStream? memStream = stream as MemoryStream;
+            MemoryStream memStream = stream as MemoryStream;
             if (memStream == null)
                 return false;
 
@@ -159,7 +159,7 @@ namespace System.IO
 
         #region Instance variables
 
-        private Stream? _managedStream = null;
+        private Stream _managedStream = null;
         private bool _leaveUnderlyingStreamOpen = true;
         private readonly StreamReadOperationOptimization _readOptimization;
 
@@ -181,7 +181,7 @@ namespace System.IO
         }
 
 
-        public Stream? GetManagedStream()
+        public Stream GetManagedStream()
         {
             return _managedStream;
         }
@@ -189,7 +189,7 @@ namespace System.IO
 
         private Stream EnsureNotDisposed()
         {
-            Stream? str = _managedStream;
+            Stream str = _managedStream;
 
             if (str == null)
             {
@@ -209,7 +209,7 @@ namespace System.IO
         /// <summary>Implements IDisposable.Dispose (IClosable.Close in WinRT)</summary>
         void IDisposable.Dispose()
         {
-            Stream? str = _managedStream;
+            Stream str = _managedStream;
             if (str == null)
                 return;
 
