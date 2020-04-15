@@ -748,6 +748,26 @@ namespace winrt::TestComponentCSharp::implementation
         _point = value;
     }
 
+    Windows::Foundation::Rect Class::RectProperty()
+    {
+        return _rect;
+    }
+
+    void Class::RectProperty(Windows::Foundation::Rect const& value)
+    {
+        _rect = value;
+    }
+
+    Windows::Foundation::Size Class::SizeProperty()
+    {
+        return _size;
+    }
+
+    void Class::SizeProperty(Windows::Foundation::Size const& value)
+    {
+        _size = value;
+    }
+
     IReference<Point> Class::GetPointReference()
     {
         return _point;
