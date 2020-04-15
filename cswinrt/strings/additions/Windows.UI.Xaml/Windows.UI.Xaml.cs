@@ -3,6 +3,7 @@ namespace Windows.UI.Xaml
 {
     using Windows.Foundation;
 
+    [global::WinRT.WindowsRuntimeType]
     [StructLayout(LayoutKind.Sequential)]
     public struct CornerRadius
     {
@@ -144,6 +145,7 @@ namespace Windows.UI.Xaml
         }
     }
 
+    [global::WinRT.WindowsRuntimeType]
     public enum GridUnitType
     {
         Auto = 0,
@@ -151,6 +153,7 @@ namespace Windows.UI.Xaml
         Star,
     }
 
+    [global::WinRT.WindowsRuntimeType]
     [StructLayout(LayoutKind.Sequential)]
     public struct GridLength
     {
@@ -262,6 +265,7 @@ namespace Windows.UI.Xaml
         }
     }
 
+    [global::WinRT.WindowsRuntimeType]
     [StructLayout(LayoutKind.Sequential)]
     public struct Thickness
     {
@@ -369,6 +373,7 @@ namespace Windows.UI.Xaml
         }
     }
 
+    [global::WinRT.WindowsRuntimeType]
     public enum DurationType
     {
         Automatic,
@@ -376,6 +381,7 @@ namespace Windows.UI.Xaml
         Forever
     }
 
+    [global::WinRT.WindowsRuntimeType]
     [StructLayout(LayoutKind.Sequential)]
     public struct Duration
     {
