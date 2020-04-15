@@ -1017,11 +1017,13 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 public %(%)%
 {
 object baseInspectable = this.GetType() != typeof(%) ? this : null;
-_ = %.%(%%baseInspectable, out IntPtr ptr);
-var defaultInterface = new %(ObjectReference<%.Vftbl>.Attach(ref ptr));
+IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
+using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
+_inner = ObjectReference<IInspectable.Vftbl>.Attach(ref ptr);
+var defaultInterface = new %(_inner);
 _defaultLazy = new Lazy<%>(() => defaultInterface);
 
-ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+ComWrappersSupport.RegisterObjectForInterface(this, _inner.ThisPtr);
 }
 )",
                 class_type.TypeName(),
@@ -1032,7 +1034,6 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
                 method.Name(),
                 bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
                 [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
-                default_interface_name,
                 default_interface_name,
                 default_interface_name);
         }
@@ -2236,10 +2237,22 @@ public unsafe new % %(%)
                 bind<write_parameter_name>(params[params.size() - 1]));
         };
 
+        auto write_raw_return_type = [](writer& w, method_signature const& sig)
+        {
+            if (auto return_sig = sig.return_signature())
+            {
+                write_abi_type(w, get_type_semantics(return_sig.Type()));
+            }
+            else
+            {
+                w.write("void");
+            }
+        };
+
         method_signature signature{ method };
         auto [invoke_target, is_generic] = get_method_info(method);
 
-        auto abi_marshalers = get_abi_marshalers(w, signature, is_generic, "", false);
+        auto abi_marshalers = get_abi_marshalers(w, signature, is_generic, "", true);
         // The last abi marshaler is the return value and the second-to-last one
         // is the inner object (which is the return value we want).
         size_t inner_inspectable_index = abi_marshalers.size() - 2;
@@ -2259,7 +2272,7 @@ public unsafe new % %(%)
 public unsafe % %(%)
 {%}
 )",
-            bind<write_projection_return_type>(signature),
+            bind(write_raw_return_type, signature),
             method.Name(),
             bind(write_composable_constructor_params, signature),
             bind<write_abi_method_call_marshalers>(invoke_target, is_generic, abi_marshalers));
@@ -3655,6 +3668,7 @@ public %class %%
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
 
+private IObjectReference _inner = null;
 private readonly Lazy<%> _defaultLazy;
 
 private % _default => _defaultLazy.Value;
@@ -3734,7 +3748,7 @@ ppv = IntPtr.Zero;
 %
 try
 {
-using IObjectReference objRef = _default.ObjRef.As<IUnknownVftbl>(iid);
+using IObjectReference objRef = (_inner ?? _default.ObjRef).As<IUnknownVftbl>(iid);
 ppv = objRef.GetRef();
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.Handled;
 }
