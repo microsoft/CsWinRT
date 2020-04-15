@@ -25,7 +25,7 @@ namespace Windows.UI.Xaml.Controls.Primitives
 
         public override string ToString()
         {
-            return string.Concat("GeneratorPosition (", _index.ToString(System.Globalization.CultureInfo.InvariantCulture), ",", _offset.ToString(System.Globalization.CultureInfo.InvariantCulture), ")");
+            return string.Concat("GeneratorPosition (", _index.ToString(global::System.Globalization.CultureInfo.InvariantCulture), ",", _offset.ToString(global::System.Globalization.CultureInfo.InvariantCulture), ")");
         }
 
         public override bool Equals(object o)

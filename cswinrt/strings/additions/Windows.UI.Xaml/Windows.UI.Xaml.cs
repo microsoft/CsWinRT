@@ -44,10 +44,10 @@ namespace Windows.UI.Xaml
 
         public override string ToString()
         {
-            return ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return ToString(global::System.Globalization.CultureInfo.InvariantCulture);
         }
 
-        internal string ToString(System.Globalization.CultureInfo cultureInfo)
+        internal string ToString(global::System.Globalization.CultureInfo cultureInfo)
         {
             char listSeparator = TokenizerHelper.GetNumericListSeparator(cultureInfo);
 
@@ -55,7 +55,7 @@ namespace Windows.UI.Xaml
             // 48 = 4x double (twelve digits is generous for the range of values likely)
             //  8 = 4x Unit Type string (approx two characters)
             //  4 = 4x separator characters
-            System.Text.StringBuilder sb = new System.Text.StringBuilder(64);
+            global::System.Text.StringBuilder sb = new global::System.Text.StringBuilder(64);
 
             sb.Append(InternalToString(_TopLeft, cultureInfo));
             sb.Append(listSeparator);
@@ -67,7 +67,7 @@ namespace Windows.UI.Xaml
             return sb.ToString();
         }
 
-        internal string InternalToString(double l, System.Globalization.CultureInfo cultureInfo)
+        internal string InternalToString(double l, global::System.Globalization.CultureInfo cultureInfo)
         {
             if (double.IsNaN(l)) return "Auto";
             return Convert.ToString(l, cultureInfo);
@@ -235,10 +235,10 @@ namespace Windows.UI.Xaml
 
         public override string ToString()
         {
-            return this.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return this.ToString(global::System.Globalization.CultureInfo.InvariantCulture);
         }
 
-        internal string ToString(System.Globalization.CultureInfo cultureInfo)
+        internal string ToString(global::System.Globalization.CultureInfo cultureInfo)
         {
             char listSeparator = TokenizerHelper.GetNumericListSeparator(cultureInfo);
 
@@ -309,10 +309,10 @@ namespace Windows.UI.Xaml
 
         public override string ToString()
         {
-            return ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return ToString(global::System.Globalization.CultureInfo.InvariantCulture);
         }
 
-        internal string ToString(System.Globalization.CultureInfo cultureInfo)
+        internal string ToString(global::System.Globalization.CultureInfo cultureInfo)
         {
             char listSeparator = TokenizerHelper.GetNumericListSeparator(cultureInfo);
 
@@ -320,7 +320,7 @@ namespace Windows.UI.Xaml
             // 48 = 4x double (twelve digits is generous for the range of values likely)
             //  8 = 4x Unit Type string (approx two characters)
             //  4 = 4x separator characters
-            System.Text.StringBuilder sb = new System.Text.StringBuilder(64);
+            global::System.Text.StringBuilder sb = new global::System.Text.StringBuilder(64);
 
             sb.Append(InternalToString(_Left, cultureInfo));
             sb.Append(listSeparator);
@@ -332,7 +332,7 @@ namespace Windows.UI.Xaml
             return sb.ToString();
         }
 
-        internal string InternalToString(double l, System.Globalization.CultureInfo cultureInfo)
+        internal string InternalToString(double l, global::System.Globalization.CultureInfo cultureInfo)
         {
             if (double.IsNaN(l)) return "Auto";
             return Convert.ToString(l, cultureInfo);

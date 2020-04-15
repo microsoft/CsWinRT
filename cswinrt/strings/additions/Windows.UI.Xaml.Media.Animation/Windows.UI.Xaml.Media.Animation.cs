@@ -184,7 +184,7 @@ namespace Windows.UI.Xaml.Media.Animation
 
                 case RepeatBehaviorType.Count:
 
-                    System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                    global::System.Text.StringBuilder sb = new global::System.Text.StringBuilder();
 
                     sb.AppendFormat(
                         formatProvider,
