@@ -446,6 +446,8 @@ namespace cswinrt
                     { "IReferenceArray`1", "Windows.Foundation", "IReferenceArray", true },
                     { "IReference`1", "System", "Nullable", true },
                     { "Point", "Windows.Foundation", "Point" },
+                    { "Rect", "Windows.Foundation", "Rect" },
+                    { "Size", "Windows.Foundation", "Size" },
                     { "TimeSpan", "System", "TimeSpan", true },
                     { "Uri", "System", "Uri", true }
                 }
@@ -465,6 +467,11 @@ namespace cswinrt
                 {
                     { "AttributeTargets", "System", "AttributeTargets" },
                     { "AttributeUsageAttribute", "System", "AttributeUsageAttribute" },
+                }
+            },
+            { "Windows.UI",
+                {
+                    { "Color", "Windows.UI", "Color" },
                 }
             },
             { "Windows.UI.Xaml",

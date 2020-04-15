@@ -9,6 +9,39 @@
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
     <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
+    <ClCompile Include="@(StaticStrings->'%(Source)')" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code_writers.h" />
@@ -42,6 +75,9 @@
     </Filter>
     <Filter Include="strings\additions\Windows.Storage">
       <UniqueIdentifier>{d939d5a3-d5f9-4802-a8f8-3c5ce8b3a07e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings\additions\Windows.UI">
+      <UniqueIdentifier>{8e05f8fe-6311-4726-998b-5cbe19398698}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -144,6 +180,9 @@
     </None>
     <None Include="strings\additions\Windows.Foundation\Windows.Foundation.SR.cs">
       <Filter>strings\additions\Windows.Foundation</Filter>
+    </None>
+    <None Include="strings\additions\Windows.UI\Windows.UI.cs">
+      <Filter>strings\additions\Windows.UI</Filter>
     </None>
   </ItemGroup>
 </Project>

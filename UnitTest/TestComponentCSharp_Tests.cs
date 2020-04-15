@@ -13,6 +13,7 @@ using WF = Windows.Foundation;
 using WFC = Windows.Foundation.Collections;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 
 using TestComponentCSharp;
 using System.Collections.Generic;
@@ -1020,6 +1021,40 @@ namespace UnitTest
             Assert.Equal(pt.Y, TestObject.PointProperty.Y);
             Assert.True(TestObject.PointProperty == pt);
             Assert.Equal(pt, TestObject.GetPointReference().Value);
+        }
+
+        [Fact]
+        public void TestRectTypeMapping()
+        {
+            var rect = new Rect { X = 3.14, Y = 42, Height = 3.14, Width = 42 };
+            TestObject.RectProperty = rect;
+            Assert.Equal(rect.X, TestObject.RectProperty.X);
+            Assert.Equal(rect.Y, TestObject.RectProperty.Y);
+            Assert.Equal(rect.Height, TestObject.RectProperty.Height);
+            Assert.Equal(rect.Width, TestObject.RectProperty.Width);
+            Assert.True(TestObject.RectProperty == rect);
+        }
+
+        [Fact]
+        public void TestSizeTypeMapping()
+        {
+            var size = new Size { Height = 3.14, Width = 42 };
+            TestObject.SizeProperty = size;
+            Assert.Equal(size.Height, TestObject.SizeProperty.Height);
+            Assert.Equal(size.Width, TestObject.SizeProperty.Width);
+            Assert.True(TestObject.SizeProperty == size);
+        }
+
+        [Fact]
+        public void TestColorTypeMapping()
+        {
+            var color = new Color { A = 0x20, R = 0x40, G = 0x60, B = 0x80 };
+            TestObject.ColorProperty = color;
+            Assert.Equal(color.A, TestObject.ColorProperty.A);
+            Assert.Equal(color.R, TestObject.ColorProperty.R);
+            Assert.Equal(color.G, TestObject.ColorProperty.G);
+            Assert.Equal(color.B, TestObject.ColorProperty.B);
+            Assert.True(TestObject.ColorProperty == color);
         }
 
         [Fact]
