@@ -5,7 +5,6 @@
     <TargetFramework>netcoreapp5.0</TargetFramework>
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
-    <GenerateTestProjection>true</GenerateTestProjection>
     <ApplicationManifest>WinUIDesktopSample.exe.manifest</ApplicationManifest>
     <!--
     There seems to be a codegen bug when referencing the cswinrt interop assembly of the Win32XamlHost
