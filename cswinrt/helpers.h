@@ -91,6 +91,7 @@ namespace cswinrt
     struct generic_type_instance;
     struct object_type {};
     struct guid_type {};
+    struct type_type {};
     using type_definition = TypeDef;
     using generic_type_index = GenericTypeIndex;
     using generic_type_param = GenericParam;
@@ -99,6 +100,7 @@ namespace cswinrt
         fundamental_type,
         object_type,
         guid_type,
+        type_type,
         type_definition,
         generic_type_instance,
         generic_type_index,
@@ -158,7 +160,7 @@ namespace cswinrt
 
             if (type_ref.TypeName() == "Type" && type_ref.TypeNamespace() == "System")
             {
-                throw_invalid("System.Type typeref not implemented");
+                return type_type{};
             }
 
             return find_required(type_ref);
@@ -317,15 +319,13 @@ namespace cswinrt
         }
         else
         {
-            if (param.first.Flags().In())
+            if (param.first.Flags().Out())
             {
-                XLANG_ASSERT(!param.first.Flags().Out());
-                return param_category::in;
+                return param_category::out;
             }
             else
             {
-                XLANG_ASSERT(param.first.Flags().Out());
-                return param_category::out;
+                return param_category::in;
             }
         }
     }
@@ -446,6 +446,8 @@ namespace cswinrt
                     { "IReferenceArray`1", "Windows.Foundation", "IReferenceArray", true },
                     { "IReference`1", "System", "Nullable", true },
                     { "Point", "Windows.Foundation", "Point" },
+                    { "Rect", "Windows.Foundation", "Rect" },
+                    { "Size", "Windows.Foundation", "Size" },
                     { "TimeSpan", "System", "TimeSpan", true },
                     { "Uri", "System", "Uri", true }
                 }
@@ -461,9 +463,49 @@ namespace cswinrt
                     { "IVector`1", "System.Collections.Generic", "IList`1", true, true },
                 }
             },
+            { "Windows.Foundation.Metadata",
+                {
+                    { "AttributeTargets", "System", "AttributeTargets" },
+                    { "AttributeUsageAttribute", "System", "AttributeUsageAttribute" },
+                }
+            },
+            { "Windows.UI",
+                {
+                    { "Color", "Windows.UI", "Color" },
+                    { "ColorHelper" },
+                    { "IColorHelper" },
+                    { "IColorHelperStatics" },
+                    { "IColorHelperStatics2" },
+                }
+            },
             { "Windows.UI.Xaml",
                 {
+                    { "CornerRadius", "Windows.UI.Xaml", "CornerRadius" },
+                    { "CornerRadiusHelper" },
                     { "Duration", "Windows.UI.Xaml", "Duration" },
+                    { "DurationHelper" },
+                    { "DurationType", "Windows.UI.Xaml", "DurationType" },
+                    { "GridLength", "Windows.UI.Xaml", "GridLength" },
+                    { "GridLengthHelper" },
+                    { "GridUnitType", "Windows.UI.Xaml", "GridUnitType" },
+                    { "ICornerRadiusHelper" },
+                    { "ICornerRadiusHelperStatics" },
+                    { "IDurationHelper" },
+                    { "IDurationHelperStatics" },
+                    { "IGridLengthHelper" },
+                    { "IGridLengthHelperStatics" },
+                    { "IThicknessHelper" },
+                    { "IThicknessHelperStatics" },
+                    { "Thickness", "Windows.UI.Xaml", "Thickness" },
+                    { "ThicknessHelper" },
+                }
+            },
+            { "Windows.UI.Xaml.Controls.Primitives",
+                {
+                    { "GeneratorPosition", "Windows.UI.Xaml.Controls.Primitives", "GeneratorPosition" },
+                    { "GeneratorPositionHelper" },
+                    { "IGeneratorPositionHelper" },
+                    { "IGeneratorPositionHelperStatics" },
                 }
             },
             { "Windows.UI.Xaml.Data",
@@ -492,6 +534,35 @@ namespace cswinrt
                     { "NotifyCollectionChangedEventHandler", "System.Collections.Specialized", "NotifyCollectionChangedEventHandler", true },
                     { "TypeKind", "Windows.UI.Xaml.Interop", "TypeKind", true },
                     { "TypeName", "System", "Type", true }
+                }
+            },
+            { "Windows.UI.Xaml.Media",
+                {
+                    { "IMatrixHelper" },
+                    { "IMatrixHelperStatics" },
+                    { "Matrix", "Windows.UI.Xaml.Media", "Matrix" },
+                    { "MatrixHelper" },
+                }
+            },
+            { "Windows.UI.Xaml.Media.Animation",
+                {
+                    { "IKeyTimeHelper" },
+                    { "IKeyTimeHelperStatics" },
+                    { "IRepeatBehaviorHelper" },
+                    { "IRepeatBehaviorHelperStatics" },
+                    { "KeyTime", "Windows.UI.Xaml.Media.Animation", "KeyTime" },
+                    { "KeyTimeHelper" },
+                    { "RepeatBehavior", "Windows.UI.Xaml.Media.Animation", "RepeatBehavior" },
+                    { "RepeatBehaviorHelper" },
+                    { "RepeatBehaviorType", "Windows.UI.Xaml.Media.Animation", "RepeatBehaviorType" }
+                }
+            },
+            { "Windows.UI.Xaml.Media.Media3D",
+                {
+                    { "IMatrix3DHelper" },
+                    { "IMatrix3DHelperStatics" },
+                    { "Matrix3D", "Windows.UI.Xaml.Media.Media3D", "Matrix3D" },
+                    { "Matrix3DHelper" },
                 }
             }
         };

@@ -36,11 +36,26 @@
 -in 10.0.18362.0
 -in @(UnitTestWinMDs->'&quot;%(FullPath)&quot;', ' ')
 -out &quot;$(ProjectDir)Generated Files&quot;
+-include TestComponentCSharp 
 -include TestComponent
--include TestComponentCSharp
--include Windows.Foundation
--exclude Windows.Foundation.Diagnostics
--exclude Windows.Foundation.Metadata
+-include Windows.Foundation 
+-include Windows.UI.Color
+-exclude Windows.UI.Colors
+-include Windows.UI.Xaml.CornerRadius
+-include Windows.UI.Xaml.Duration
+-include Windows.UI.Xaml.DurationType
+-include Windows.UI.Xaml.GridLength
+-include Windows.UI.Xaml.GridUnitType
+-include Windows.UI.Xaml.Thickness
+-include Windows.UI.Xaml.Controls.Primitives.GeneratorPosition
+-include Windows.UI.Xaml.Media.Matrix
+-exclude Windows.UI.Xaml.Media.MatrixTransform
+-exclude Windows.UI.Xaml.Media.Matrix3DProjection
+-include Windows.UI.Xaml.Media.Animation.KeyTime
+-include Windows.UI.Xaml.Media.Animation.RepeatBehavior
+-include Windows.UI.Xaml.Media.Animation.RepeatBehaviorType
+-include Windows.UI.Xaml.Media.Media3D.Matrix3D
+-exclude Windows.Foundation.Diagnostics 
       </CsWinRTParams>
     </PropertyGroup>
     <WriteLinesToFile

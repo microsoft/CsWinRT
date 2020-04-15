@@ -153,16 +153,25 @@ Where <spec> is one or more of:
                     for (auto&& [name, type] : members.types)
                     {
                         if (!settings.filter.includes(type)) { continue; }
-                        if (get_mapped_type(ns, name)) continue;
-                        if (is_api_contract_type(type)) { continue; }
-                        if (is_attribute_type(type)) { continue; }
+                        if (get_mapped_type(ns, name))
+                        {
+                            written = true;
+                            continue;
+                        }
                         auto guard{ w.push_generic_params(type.GenericParam()) };
 
                         bool type_requires_abi = true;
                         switch (get_category(type))
                         {
                         case category::class_type:
-                            write_class(w, type);
+                            if(is_attribute_type(type))
+                            {
+                                write_attribute(w, type);
+                            }
+                            else
+                            {
+                                write_class(w, type);
+                            }
                             break;
                         case category::delegate_type:
                             write_delegate(w, type);
@@ -175,8 +184,15 @@ Where <spec> is one or more of:
                             write_interface(w, type);
                             break;
                         case category::struct_type:
-                            write_struct(w, type);
-                            type_requires_abi = !is_type_blittable(type);
+                            if (is_api_contract_type(type))
+                            {
+                                write_contract(w, type);
+                            }
+                            else
+                            {
+                                write_struct(w, type);
+                                type_requires_abi = !is_type_blittable(type);
+                            }
                             break;
                         }
 
