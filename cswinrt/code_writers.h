@@ -1432,7 +1432,7 @@ target);
                 if (!is_default_interface)
                 {
                     w.write(R"(
-private % AsInternal(InterfaceTag<%> _) => new %(_default.ObjRef);
+private % AsInternal(InterfaceTag<%> _) => new %(GetReferenceForQI());
 )",
                         interface_name,
                         interface_name,
@@ -3735,20 +3735,32 @@ default_interface_abi_name);
                     access_spec,
                     override_spec);
 
+                w.write(R"(
+%%IObjectReference GetReferenceForQI() => _inner ?? _default.ObjRef;)",
+                    access_spec,
+                    override_spec);
             }),
             default_interface_name,
             default_interface_name,
             bind<write_class_members>(type),
             bind([&](writer& w)
             {
+                    bool has_base_class = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
+                    separator s{ w, " || " };
                     w.write(R"(
+%bool IsOverridableInterface(Guid iid) => %%;
+
 global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
 {
 ppv = IntPtr.Zero;
-%
+if (IsOverridableInterface(iid))
+{
+return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
+}
+
 try
 {
-using IObjectReference objRef = (_inner ?? _default.ObjRef).As<IUnknownVftbl>(iid);
+using IObjectReference objRef = GetReferenceForQI().As<IUnknownVftbl>(iid);
 ppv = objRef.GetRef();
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.Handled;
 }
@@ -3757,18 +3769,43 @@ catch (InvalidCastException)
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
 })",
+                bind([&](writer& w)
+                {
+                    auto visibility = "protected ";
+                    auto overridable = "virtual ";
+                    if (has_base_class)
+                    {
+                        overridable = "override ";
+                    }
+                    else if (type.Flags().Sealed())
+                    {
+                        visibility = "private ";
+                        overridable = "";
+                    }
+                    w.write(visibility);
+                    w.write(overridable);
+                }),
                 bind_each([&](writer& w, InterfaceImpl const& iface)
                 {
                     if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute"))
                     {
-                        w.write(R"(
-if (GuidGenerator.GetIID(typeof(%)) == iid)
-{
-return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
-})",
+                        s();
+                        w.write("GuidGenerator.GetIID(typeof(%)) == iid",
                             bind<write_type_name>(get_type_semantics(iface.Interface()), false, false));
                     }
-                }, type.InterfaceImpl()));
+                }, type.InterfaceImpl()),
+                bind([&](writer& w)
+                {
+                    if (has_base_class)
+                    {
+                        s();
+                        w.write("base.IsOverridableInterface(iid)");
+                    }
+                    if (s.first)
+                    {
+                        w.write("false");
+                    }
+                }));
             }));
     }
 
