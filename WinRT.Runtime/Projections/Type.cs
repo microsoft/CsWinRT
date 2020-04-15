@@ -72,11 +72,7 @@ namespace ABI.System
             {
                 return null;
             }
-            if (value.Kind != TypeKind.Custom)
-            {
-                return TypeNameSupport.FindTypeByName(name.AsSpan()).type;
-            }
-            return global::System.Type.GetType(name, throwOnError: true);
+            return TypeNameSupport.FindTypeByName(name.AsSpan()).type;
         }
 
         public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) =>
