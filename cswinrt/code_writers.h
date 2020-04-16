@@ -3595,7 +3595,7 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
                 {
                     if (auto uint32_value = std::get_if<uint32_t>(&arg_value.value))
                     {
-                        w.write(*uint32_value);
+                        w.write("%u", *uint32_value);
                     }
                     else if (auto int32_value = std::get_if<int32_t>(&arg_value.value))
                     {
@@ -3651,8 +3651,6 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             attribute_name = attribute_name.substr(0, attribute_name.length() - "Attribute"sv.length());
             // Guid and Flags are handled explicitly
             if (attribute_name == "Guid" || attribute_name == "Flags") continue;
-            // Deprecated is causing csc.exe to crash
-            if (attribute_name == "Deprecated") continue;
             auto attribute_full = (attribute_name == "AttributeUsage") ? "AttributeUsage" :
                 w.write_temp("%.%", attribute_namespace, attribute_name);
             std::vector<std::string> params;
@@ -4316,18 +4314,20 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             w.write("[FlagsAttribute]\n");
         }
 
+        auto enum_underlying_type = is_flags_enum(type) ? "uint" : "int";
+
         w.write(R"([global::WinRT.WindowsRuntimeType]
 %public enum % : %
 {
 )", 
         bind<write_custom_attributes>(type),
-        bind<write_type_name>(type, false, false), is_flags_enum(type) ? "uint" : "uint");
+        bind<write_type_name>(type, false, false), enum_underlying_type);
         {
             for (auto&& field : type.FieldList())
             {
                 if (auto constant = field.Constant())
                 {
-                    w.write("% = %,\n", field.Name(), bind<write_constant>(constant));
+                    w.write("% = unchecked((%)%),\n", field.Name(), enum_underlying_type, bind<write_constant>(constant));
                 }
             }
         }
