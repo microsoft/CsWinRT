@@ -1025,7 +1025,7 @@ _inner = ObjectReference<IInspectable.Vftbl>.Attach(ref ptr);
 var defaultInterface = new %(_inner);
 _defaultLazy = new Lazy<%>(() => defaultInterface);
 
-ComWrappersSupport.RegisterObjectForInterface(this, _inner.ThisPtr);
+ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
 )",
                 class_type.TypeName(),
@@ -1959,15 +1959,8 @@ event % %;)",
                 }
                 break;
             case category::class_type:
-                if(get_mapped_type(type.TypeNamespace(), type.TypeName()))
-                {
-                    m.marshaler_type = w.write_temp("%", bind<write_type_name>(type, true, true));
-                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
-                }
-                else
-                {
-                    m.local_type = "IntPtr";
-                }
+                m.marshaler_type = w.write_temp("%", bind<write_type_name>(semantics, true, true));
+                m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
                 break;
             case category::delegate_type:
                 m.marshaler_type = get_abi_type();
@@ -4037,21 +4030,30 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
         auto projected_type_name = write_type_name_temp(w, type);
         auto default_interface_abi_name = get_default_interface_name(w, type, true);
 
-        w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-public struct %
+        w.write(R"(internal struct %
 {
 public static IObjectReference CreateMarshaler(% obj) => MarshalInspectable.CreateMarshaler(obj).As<%.Vftbl>();
 public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<object>.GetAbi(value);
 public static % FromAbi(IntPtr thisPtr) => (%)MarshalInspectable.FromAbi(thisPtr);
 public static IntPtr FromManaged(% obj) => obj is null ? IntPtr.Zero : CreateMarshaler(obj).GetRef();
+public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArray(%[] array) => MarshalInterfaceHelper<%>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
+public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<%>.GetAbiArray(box);
+public static unsafe %[] FromAbiArray(object box) => MarshalInterfaceHelper<%>.FromAbiArray(box, FromAbi);
 public static (int length, IntPtr data) FromManagedArray(%[] array) => MarshalInterfaceHelper<%>.FromManagedArray(array, (o) => FromManaged(o));
 public static void DisposeMarshaler(IObjectReference value) => MarshalInspectable.DisposeMarshaler(value);
 public static void DisposeAbi(IntPtr abi) => MarshalInspectable.DisposeAbi(abi);
+public static unsafe void DisposeAbiArray(object box) => MarshalInspectable.DisposeAbiArray(box);
 }
 )",
             abi_type_name,
             projected_type_name,
             default_interface_abi_name,
+            projected_type_name,
+            projected_type_name,
+            projected_type_name,
+            projected_type_name,
+            projected_type_name,
+            projected_type_name,
             projected_type_name,
             projected_type_name,
             projected_type_name,
