@@ -51,11 +51,25 @@ namespace WinRT
         }
 
         public ObjectReference<T> As<T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
-        public virtual unsafe ObjectReference<T> As<T>(Guid iid)
+        public ObjectReference<T> As<T>(Guid iid)
         {
             ThrowIfDisposed();
             Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
             return ObjectReference<T>.Attach(ref thatPtr);
+        }
+
+        public int TryAs<T>(out ObjectReference<T> objRef) => TryAs<T>(GuidGenerator.GetIID(typeof(T)), out objRef);
+
+        public virtual unsafe int TryAs<T>(Guid iid, out ObjectReference<T> objRef)
+        {
+            objRef = null;
+            ThrowIfDisposed();
+            int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
+            if (hr >= 0)
+            {
+                objRef = ObjectReference<T>.Attach(ref thatPtr); 
+            }
+            return hr;
         }
 
         public unsafe IObjectReference As(Guid iid) => As<IUnknownVftbl>(iid);
@@ -230,14 +244,19 @@ namespace WinRT
             }, &data, IID_ICallbackWithNoReentrancyToApplicationSTA, 5);
         }
 
-        public override ObjectReference<U> As<U>(Guid iid)
+        public override int TryAs<U>(Guid iid, out ObjectReference<U> objRef)
         {
+            objRef = null;
             ThrowIfDisposed();
-            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
-            using (var contextCallbackReference = ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.FromAbi(_contextCallbackPtr))
+            int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
+            if (hr >= 0)
             {
-                return new ObjectReferenceWithContext<U>(thatPtr, contextCallbackReference.GetRef()); 
+                using (var contextCallbackReference = ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.FromAbi(_contextCallbackPtr))
+                {
+                    objRef = new ObjectReferenceWithContext<U>(thatPtr, contextCallbackReference.GetRef());
+                }
             }
+            return hr;
         }
     }
 }

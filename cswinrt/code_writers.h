@@ -3968,16 +3968,16 @@ if (IsOverridableInterface(iid))
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
 
-try
+if (GetReferenceForQI().TryAs<IUnknownVftbl>(iid, out IObjectReference objRef) >= 0)
 {
-using IObjectReference objRef = GetReferenceForQI().As<IUnknownVftbl>(iid);
+using (objRef)
+{
 ppv = objRef.GetRef();
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.Handled;
 }
-catch (InvalidCastException)
-{
-return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
+
+return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 })",
                 bind([&](writer& w)
                 {

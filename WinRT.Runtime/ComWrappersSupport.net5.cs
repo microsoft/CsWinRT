@@ -131,7 +131,7 @@ namespace WinRT
 
         protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
         {
-            IObjectReference objRef = ComWrappersSupport.GetObjectReferenceForIntPtr(externalComObject, true);
+            IObjectReference objRef = ComWrappersSupport.GetObjectReferenceForIntPtr(externalComObject);
             IInspectable inspectable;
             try
             {

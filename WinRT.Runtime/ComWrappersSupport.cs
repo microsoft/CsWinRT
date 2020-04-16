@@ -96,33 +96,21 @@ namespace WinRT
             return false;
         }
 
-        internal static IObjectReference GetObjectReferenceForIntPtr(IntPtr externalComObject, bool addRef)
+        internal static IObjectReference GetObjectReferenceForIntPtr(IntPtr externalComObject)
         {
-            IObjectReference objRefToReturn = null;
-            ObjectReference<IUnknownVftbl> unknownRef;
-            if (addRef)
+            using var unknownRef = ObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
+
+            if (unknownRef.TryAs<IUnknownVftbl>(IID_IAgileObject, out var agileRef) >= 0)
             {
-                unknownRef = ObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
+                agileRef.Dispose();
+                return unknownRef.As<IUnknownVftbl>();
             }
             else
             {
-                unknownRef = ObjectReference<IUnknownVftbl>.Attach(ref externalComObject);
+                return new ObjectReferenceWithContext<IUnknownVftbl>(
+                    unknownRef.GetRef(),
+                    Context.GetContextCallback());
             }
-
-            using (unknownRef)
-            {
-                try
-                {
-                    var agileObjectRef = unknownRef.As(IID_IAgileObject);
-                    agileObjectRef.Dispose();
-                    objRefToReturn = unknownRef.As<IUnknownVftbl>();
-                }
-                catch (Exception)
-                {
-                    objRefToReturn = new ObjectReferenceWithContext<IUnknownVftbl>(unknownRef.GetRef(), Context.GetContextCallback());
-                }
-            }
-            return objRefToReturn;
         }
 
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(object obj)

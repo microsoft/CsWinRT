@@ -76,7 +76,7 @@ namespace WinRT
                 return null;
             }
 
-            IObjectReference iErrorInfo = null;
+            ObjectReference<ABI.WinRT.Interop.IErrorInfo.Vftbl> iErrorInfo = null;
             IObjectReference restrictedErrorInfoToSave = null;
             Exception ex;
             string description = null;
@@ -97,40 +97,32 @@ namespace WinRT
                     ABI.WinRT.Interop.IRestrictedErrorInfo restrictedErrorInfo = new ABI.WinRT.Interop.IRestrictedErrorInfo(restrictedErrorInfoRef);
                     restrictedErrorInfo.GetErrorDetails(out description, out int hrLocal, out restrictedError, out restrictedCapabilitySid);
                     restrictedErrorReference = restrictedErrorInfo.GetReference();
-                    try
+                    if (restrictedErrorInfoRef.TryAs<ABI.WinRT.Interop.ILanguageExceptionErrorInfo.Vftbl>(out var languageErrorInfoRef) >= 0)
                     {
-                        ILanguageExceptionErrorInfo languageErrorInfo = restrictedErrorInfo.As<ABI.WinRT.Interop.ILanguageExceptionErrorInfo>();
-                        using (IObjectReference languageException = languageErrorInfo.GetLanguageException())
+                        ILanguageExceptionErrorInfo languageErrorInfo = new ABI.WinRT.Interop.ILanguageExceptionErrorInfo(languageErrorInfoRef);
+                        using IObjectReference languageException = languageErrorInfo.GetLanguageException();
+                        if (languageException is object)
                         {
-                            if (languageException is object)
+                            if (languageException.IsReferenceToManagedObject)
                             {
-                                if (languageException.IsReferenceToManagedObject)
+                                ex = ComWrappersSupport.FindObject<Exception>(languageException.ThisPtr);
+                                if (GetHRForException(ex) == hr)
                                 {
-                                    ex = ComWrappersSupport.FindObject<Exception>(languageException.ThisPtr);
-                                    if (GetHRForException(ex) == hr)
-                                    {
-                                        restoredExceptionFromGlobalState = true;
-                                        return ex;
-                                    }
+                                    restoredExceptionFromGlobalState = true;
+                                    return ex;
                                 }
-                                else
-                                {
-                                    hasOtherLanguageException = true;
-                                }
+                            }
+                            else
+                            {
+                                hasOtherLanguageException = true;
                             }
                         }
                     }
-                    catch (Exception)
+                    else
                     {
                         if (hr == hrLocal)
                         {
-                            try
-                            {
-                                iErrorInfo = restrictedErrorInfoRef.As<ABI.WinRT.Interop.IErrorInfo.Vftbl>();
-                            }
-                            catch (Exception)
-                            {
-                            }
+                            restrictedErrorInfoRef.TryAs<ABI.WinRT.Interop.IErrorInfo.Vftbl>(out iErrorInfo);
                         }
                     }
                 }
@@ -200,18 +192,14 @@ namespace WinRT
                         hstring = IntPtr.Zero;
                     }
 
-                    using (var managedExceptionWrapper = ComWrappersSupport.CreateCCWForObject(ex))
-                    {
-                        roOriginateLanguageException(GetHRForException(ex), hstring, managedExceptionWrapper.ThisPtr);
-                    }
+                    using var managedExceptionWrapper = ComWrappersSupport.CreateCCWForObject(ex);
+                    roOriginateLanguageException(GetHRForException(ex), hstring, managedExceptionWrapper.ThisPtr);
                 }
             }
             else
             {
-                using (var iErrorInfo = ComWrappersSupport.CreateCCWForObject(new ManagedExceptionErrorInfo(ex)))
-                {
-                    SetErrorInfo(0, iErrorInfo.ThisPtr);
-                }
+                using var iErrorInfo = ComWrappersSupport.CreateCCWForObject(new ManagedExceptionErrorInfo(ex));
+                SetErrorInfo(0, iErrorInfo.ThisPtr);
             }
         }
 
