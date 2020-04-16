@@ -236,7 +236,10 @@ namespace WinRT
                     UnmanagedObject* ifaceTearOff = (UnmanagedObject*)Marshal.AllocCoTaskMem(sizeof(UnmanagedObject));
                     ifaceTearOff->_vftblPtr = entry.Vtable;
                     ifaceTearOff->_gchandlePtr = GCHandle.ToIntPtr(WeakHandle);
-                    _managedQITable.Add(entry.IID, (IntPtr)ifaceTearOff);
+                    if (!_managedQITable.ContainsKey(entry.IID))
+                    {
+                        _managedQITable.Add(entry.IID, (IntPtr)ifaceTearOff);
+                    }
                 }
             }
         }
