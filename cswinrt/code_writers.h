@@ -971,7 +971,14 @@ internal static % Instance => _instance.Value;
                 w.write(R"(
 public %(%) : this(((Func<%>)(() => {
 IntPtr ptr = (%.%(%));
-return new %(ObjectReference<%.Vftbl>.Attach(ref ptr));
+try
+{
+return new %(ComWrappersSupport.GetObjectReferenceForInterface(ptr));
+}
+finally
+{
+MarshalInspectable.DisposeAbi(ptr);
+}
 }))())
 {
     ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
@@ -983,7 +990,6 @@ return new %(ObjectReference<%.Vftbl>.Attach(ref ptr));
                     cache_object,
                     method.Name(),
                     bind_list<write_parameter_name_with_modifier>(", ", signature.params()),
-                    default_interface_name,
                     default_interface_name);
             }
         }
@@ -1021,11 +1027,18 @@ public %(%)%
 object baseInspectable = this.GetType() != typeof(%) ? this : null;
 IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
 using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
-_inner = ObjectReference<IInspectable.Vftbl>.Attach(ref ptr);
+try
+{
+_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
 var defaultInterface = new %(_inner);
 _defaultLazy = new Lazy<%>(() => defaultInterface);
 
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+}
+finally
+{
+MarshalInspectable.DisposeAbi(ptr);
+}
 }
 )",
                 class_type.TypeName(),
@@ -3968,16 +3981,16 @@ if (IsOverridableInterface(iid))
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
 
-try
+if (GetReferenceForQI().TryAs<IUnknownVftbl>(iid, out ObjectReference<IUnknownVftbl> objRef) >= 0)
 {
-using IObjectReference objRef = GetReferenceForQI().As<IUnknownVftbl>(iid);
+using (objRef)
+{
 ppv = objRef.GetRef();
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.Handled;
 }
-catch (InvalidCastException)
-{
-return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
+
+return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 })",
                 bind([&](writer& w)
                 {
