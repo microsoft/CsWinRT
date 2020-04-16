@@ -657,18 +657,19 @@ namespace cswinrt
         );
     }
 
-    void write_class_method(writer& w, MethodDef const& method, bool is_overridable, bool is_protected, std::string_view interface_member)
+    void write_class_method(writer& w, MethodDef const& method, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member)
     {
         if (method.SpecialName())
         {
             return;
         }
 
-        bool write_explicit_implementation = is_protected || is_overridable;
-        auto access_spec = is_protected ? "protected " : "public ";
+        auto access_spec = is_protected || is_overridable ? "protected " : "public ";
         std::string method_spec = "";
 
-        if (is_overridable)
+        // If this interface is overridable but the type is sealed, don't mark the member as virtual.
+        // The C# compiler errors out about declaring a virtual member in a sealed class.
+        if (is_overridable && !class_type.Flags().Sealed())
         {
             // All overridable methods in the WinRT type system have protected visibility.
             access_spec = "protected ";
@@ -703,7 +704,7 @@ namespace cswinrt
 
         write_method(w, signature, method.Name(), return_type, interface_member, access_spec, method_spec);
 
-        if (write_explicit_implementation)
+        if (is_overridable || !is_exclusive_to(method.Parent()))
         {
             w.write(R"(
 % %.%(%) => %(%);)",
@@ -828,7 +829,7 @@ remove => %.% -= value;
         }
         write_event(w, event.Name(), event, interface_member, visibility);
 
-        if (is_protected || is_overridable)
+        if (is_overridable || !is_exclusive_to(event.Parent()))
         {
             write_event(w, w.write_temp("%.%", bind<write_type_name>(event.Parent(), false, false), event.Name()), event, "this");
         }
@@ -1018,8 +1019,10 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 public %(%)%
 {
 object baseInspectable = this.GetType() != typeof(%) ? this : null;
-_ = %.%(%%baseInspectable, out IntPtr ptr);
-var defaultInterface = new %(ObjectReference<%.Vftbl>.Attach(ref ptr));
+IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
+using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
+_inner = ObjectReference<IInspectable.Vftbl>.Attach(ref ptr);
+var defaultInterface = new %(_inner);
 _defaultLazy = new Lazy<%>(() => defaultInterface);
 
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
@@ -1033,7 +1036,6 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
                 method.Name(),
                 bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
                 [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
-                default_interface_name,
                 default_interface_name,
                 default_interface_name);
         }
@@ -1360,6 +1362,61 @@ target);
         }
     }
 
+    std::pair<std::string, bool> find_property_interface(writer& w, TypeDef const& setter_iface, std::string_view prop_name)
+    {
+        std::string getter_iface;
+
+        auto search_interface = [&](TypeDef const& type)
+        {
+            for (auto&& prop : type.PropertyList())
+            {
+                if (prop.Name() == prop_name)
+                {
+                    getter_iface = write_type_name_temp(w, type, "%", true);
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        std::function<bool(TypeDef const&)> search_interfaces = [&](TypeDef const& type)
+        {
+            for (auto&& iface : type.InterfaceImpl())
+            {
+                auto semantics = get_type_semantics(iface.Interface());
+                if (for_typedef(w, semantics, [&](auto&& type)
+                    {
+                        return (setter_iface != type) && (search_interface(type) || search_interfaces(type));
+                    })) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // first search base interfaces for property getter
+        if (search_interfaces(setter_iface))
+        {
+            return { getter_iface, true };
+        }
+
+        // then search peer exclusive-to interfaces and their bases
+        if (auto exclusive_to_attr = get_attribute(setter_iface, "Windows.Foundation.Metadata", "ExclusiveToAttribute"))
+        {
+            auto sig = exclusive_to_attr.Value();
+            auto const& fixed_args = sig.FixedArgs();
+            XLANG_ASSERT(fixed_args.size() == 1);
+            auto sys_type = std::get<ElemSig::SystemType>(std::get<ElemSig>(fixed_args[0].value).value);
+            auto exclusive_to_type = setter_iface.get_cache().find_required(sys_type.name);
+            if (search_interfaces(exclusive_to_type))
+            {
+                return { getter_iface, false };
+            }
+        }
+
+        throw_invalid("Could not find property getter interface");
+    }
+
     void write_class_members(writer& w, TypeDef const& type)
     {
         std::map<std::string_view, std::tuple<std::string, std::string, std::string, bool, bool>> properties;
@@ -1377,7 +1434,7 @@ target);
                 if (!is_default_interface)
                 {
                     w.write(R"(
-private % AsInternal(InterfaceTag<%> _) => new %(_default.ObjRef);
+private % AsInternal(InterfaceTag<%> _) => new %(GetReferenceForQI());
 )",
                         interface_name,
                         interface_name,
@@ -1393,15 +1450,7 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.ObjRef);
                 auto is_overridable_interface = has_attribute(ii, "Windows.Foundation.Metadata", "OverridableAttribute");
                 auto is_protected_interface = has_attribute(ii, "Windows.Foundation.Metadata", "ProtectedAttribute");
 
-                // If this interface is overridable but the type is sealed, make the interface act as though it is protected.
-                // If we don't do this, then the C# compiler errors out about declaring a virtual member in a sealed class.
-                if (is_overridable_interface && type.Flags().Sealed())
-                {
-                    is_overridable_interface = false;
-                    is_protected_interface = true;
-                }
-
-                w.write_each<write_class_method>(interface_type.MethodList(), is_overridable_interface, is_protected_interface, target);
+                w.write_each<write_class_method>(interface_type.MethodList(), type, is_overridable_interface, is_protected_interface, target);
                 w.write_each<write_class_event>(interface_type.EventList(), is_overridable_interface, is_protected_interface, target);
 
                 // Merge property getters/setters, since such may be defined across interfaces
@@ -1437,8 +1486,8 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.ObjRef);
                         XLANG_ASSERT(!getter_target.empty() || !setter_target.empty());
                     }
 
-                    // If this interface is overridable or protected then we need to emit an explicit implementation of the property for that interface.
-                    if (is_overridable_interface || is_protected_interface)
+                    // If this interface is overridable then we need to emit an explicit implementation of the property for that interface.
+                    if (is_overridable_interface || !is_exclusive_to(interface_type))
                     {
                         w.write("% %.% {%%}",
                             prop_type,
@@ -1446,7 +1495,7 @@ private % AsInternal(InterfaceTag<%> _) => new %(_default.ObjRef);
                             prop.Name(),
                             bind([&](writer& w)
                             {
-                                if (getter)
+                                if (getter || find_property_interface(w, interface_type, prop.Name()).second)
                                 {
                                     w.write("get => %; ", prop.Name());
                                 }
@@ -1515,61 +1564,6 @@ private EventSource<%> _%;)",
                 bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
                 evt.Name());
         }
-    }
-
-    std::pair<std::string, bool> find_property_interface(writer& w, TypeDef const& setter_iface, std::string_view prop_name)
-    {
-        std::string getter_iface;
-
-        auto search_interface = [&](TypeDef const& type)
-        {
-            for (auto&& prop : type.PropertyList())
-            {
-                if (prop.Name() == prop_name)
-                {
-                    getter_iface = write_type_name_temp(w, type, "%", true);
-                    return true;
-                }
-            }
-            return false;
-        };
-
-        std::function<bool(TypeDef const&)> search_interfaces = [&](TypeDef const& type)
-        {
-            for (auto&& iface : type.InterfaceImpl())
-            {
-                auto semantics = get_type_semantics(iface.Interface());
-                if (for_typedef(w, semantics, [&](auto&& type)
-                {
-                    return (setter_iface != type) && (search_interface(type) || search_interfaces(type));
-                })) {
-                    return true;
-                }
-            }
-            return false;
-        };
-
-        // first search base interfaces for property getter
-        if (search_interfaces(setter_iface))
-        {
-            return { getter_iface, true };
-        }
-
-        // then search peer exclusive-to interfaces and their bases
-        if (auto exclusive_to_attr = get_attribute(setter_iface, "Windows.Foundation.Metadata", "ExclusiveToAttribute"))
-        {
-            auto sig = exclusive_to_attr.Value();
-            auto const& fixed_args = sig.FixedArgs();
-            XLANG_ASSERT(fixed_args.size() == 1);
-            auto sys_type = std::get<ElemSig::SystemType>(std::get<ElemSig>(fixed_args[0].value).value);
-            auto exclusive_to_type = setter_iface.get_cache().find_required(sys_type.name);
-            if (search_interfaces(exclusive_to_type))
-            {
-                return { getter_iface, false };
-            }
-        }
-
-        throw_invalid("Could not find property getter interface");
     }
 
     void write_interface_member_signatures(writer& w, TypeDef const& type)
@@ -1965,15 +1959,8 @@ event % %;)",
                 }
                 break;
             case category::class_type:
-                if(get_mapped_type(type.TypeNamespace(), type.TypeName()))
-                {
-                    m.marshaler_type = w.write_temp("%", bind<write_type_name>(type, true, true));
-                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
-                }
-                else
-                {
-                    m.local_type = "IntPtr";
-                }
+                m.marshaler_type = w.write_temp("%", bind<write_type_name>(semantics, true, true));
+                m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
                 break;
             case category::delegate_type:
                 m.marshaler_type = get_abi_type();
@@ -2245,10 +2232,22 @@ public unsafe new % %(%)
                 bind<write_parameter_name>(params[params.size() - 1]));
         };
 
+        auto write_raw_return_type = [](writer& w, method_signature const& sig)
+        {
+            if (auto return_sig = sig.return_signature())
+            {
+                write_abi_type(w, get_type_semantics(return_sig.Type()));
+            }
+            else
+            {
+                w.write("void");
+            }
+        };
+
         method_signature signature{ method };
         auto [invoke_target, is_generic] = get_method_info(method);
 
-        auto abi_marshalers = get_abi_marshalers(w, signature, is_generic, "", false);
+        auto abi_marshalers = get_abi_marshalers(w, signature, is_generic, "", true);
         // The last abi marshaler is the return value and the second-to-last one
         // is the inner object (which is the return value we want).
         size_t inner_inspectable_index = abi_marshalers.size() - 2;
@@ -2268,7 +2267,7 @@ public unsafe new % %(%)
 public unsafe % %(%)
 {%}
 )",
-            bind<write_projection_return_type>(signature),
+            bind(write_raw_return_type, signature),
             method.Name(),
             bind(write_composable_constructor_params, signature),
             bind<write_abi_method_call_marshalers>(invoke_target, is_generic, abi_marshalers));
@@ -2540,8 +2539,11 @@ remove => _%.Unsubscribe(value);
         {
             for_typedef(w, get_type_semantics(iface.Interface()), [&](auto type)
             {
-                write_required_interface(type);
-                write_required_interface_members_for_abi_type(w, type, required_interfaces);
+                if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute") || !is_exclusive_to(type))
+                {
+                    write_required_interface(type);
+                    write_required_interface_members_for_abi_type(w, type, required_interfaces);
+                }
             });
         }
     }
@@ -2577,7 +2579,7 @@ remove => _%.Unsubscribe(value);
             get<uint8_t>(get_arg(10)));
     }
 
-    void write_type_inheritance(writer& w, TypeDef const& type, type_semantics base_semantics)
+    void write_type_inheritance(writer& w, TypeDef const& type, type_semantics base_semantics, bool add_custom_qi)
     {
         auto delimiter{ " : " };
         auto write_delimiter = [&]()
@@ -2596,9 +2598,18 @@ remove => _%.Unsubscribe(value);
         {
             for_typedef(w, get_type_semantics(iface.Interface()), [&](auto type)
             {
-                write_delimiter();
-                w.write("%", bind<write_type_name>(type, false, false));
+                if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute") || !is_exclusive_to(type))
+                {
+                    write_delimiter();
+                    w.write("%", bind<write_type_name>(type, false, false));
+                }
             });
+        }
+
+        if (add_custom_qi)
+        {
+            write_delimiter();
+            w.write("global::System.Runtime.InteropServices.ICustomQueryInterface");
         }
     }
     
@@ -3732,7 +3743,7 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             bind<write_custom_attributes>(type),
             is_exclusive_to(type) ? "internal" : "public",
             type_name,
-            bind<write_type_inheritance>(type, object_type{}),
+            bind<write_type_inheritance>(type, object_type{}, false),
             bind<write_interface_member_signatures>(type)
         );
     }
@@ -3866,6 +3877,7 @@ public static class %
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
 
+private IObjectReference _inner = null;
 private readonly Lazy<%> _defaultLazy;
 
 private % _default => _defaultLazy.Value;
@@ -3881,13 +3893,13 @@ _defaultLazy = new Lazy<%>(() => ifc);
 private struct InterfaceTag<I>{};
 
 private % AsInternal(InterfaceTag<%> _) => _default;
-%
+%%
 }
 )",
             bind<write_custom_attributes>(type),
             bind<write_class_modifiers>(type),
             type_name,
-            bind<write_type_inheritance>(type, base_semantics),
+            bind<write_type_inheritance>(type, base_semantics, true),
             derived_new,
             default_interface_abi_name,
             default_interface_abi_name,
@@ -3933,10 +3945,78 @@ default_interface_abi_name);
                     access_spec,
                     override_spec);
 
+                w.write(R"(
+%%IObjectReference GetReferenceForQI() => _inner ?? _default.ObjRef;)",
+                    access_spec,
+                    override_spec);
             }),
             default_interface_name,
             default_interface_name,
-            bind<write_class_members>(type));
+            bind<write_class_members>(type),
+            bind([&](writer& w)
+            {
+                    bool has_base_class = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
+                    separator s{ w, " || " };
+                    w.write(R"(
+%bool IsOverridableInterface(Guid iid) => %%;
+
+global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
+{
+ppv = IntPtr.Zero;
+if (IsOverridableInterface(iid))
+{
+return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
+}
+
+try
+{
+using IObjectReference objRef = GetReferenceForQI().As<IUnknownVftbl>(iid);
+ppv = objRef.GetRef();
+return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.Handled;
+}
+catch (InvalidCastException)
+{
+return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
+}
+})",
+                bind([&](writer& w)
+                {
+                    auto visibility = "protected ";
+                    auto overridable = "virtual ";
+                    if (has_base_class)
+                    {
+                        overridable = "override ";
+                    }
+                    else if (type.Flags().Sealed())
+                    {
+                        visibility = "private ";
+                        overridable = "";
+                    }
+                    w.write(visibility);
+                    w.write(overridable);
+                }),
+                bind_each([&](writer& w, InterfaceImpl const& iface)
+                {
+                    if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute"))
+                    {
+                        s();
+                        w.write("GuidGenerator.GetIID(typeof(%)) == iid",
+                            bind<write_type_name>(get_type_semantics(iface.Interface()), false, false));
+                    }
+                }, type.InterfaceImpl()),
+                bind([&](writer& w)
+                {
+                    if (has_base_class)
+                    {
+                        s();
+                        w.write("base.IsOverridableInterface(iid)");
+                    }
+                    if (s.first)
+                    {
+                        w.write("false");
+                    }
+                }));
+            }));
     }
 
     void write_abi_class(writer& w, TypeDef const& type)
@@ -3948,33 +4028,37 @@ default_interface_abi_name);
 
         auto abi_type_name = write_type_name_temp(w, type, "%", true);
         auto projected_type_name = write_type_name_temp(w, type);
-        auto default_interface_name = get_default_interface_name(w, type, false);
         auto default_interface_abi_name = get_default_interface_name(w, type, true);
 
-        w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-public struct %
+        w.write(R"(internal struct %
 {
-public static IObjectReference CreateMarshaler(% obj) => MarshalInterface<%>.CreateMarshaler(obj);
-public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
+public static IObjectReference CreateMarshaler(% obj) => MarshalInspectable.CreateMarshaler(obj).As<%.Vftbl>();
+public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<object>.GetAbi(value);
 public static % FromAbi(IntPtr thisPtr) => (%)MarshalInspectable.FromAbi(thisPtr);
-public static IntPtr FromManaged(% obj) => MarshalInterface<%>.FromManaged(obj);
-public static (int length, IntPtr data) FromManagedArray(%[] obj) => MarshalInterface<%>.FromManagedArray(obj);
-public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<%>.DisposeMarshaler(value);
-public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<%>.DisposeAbi(abi);
+public static IntPtr FromManaged(% obj) => obj is null ? IntPtr.Zero : CreateMarshaler(obj).GetRef();
+public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArray(%[] array) => MarshalInterfaceHelper<%>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
+public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<%>.GetAbiArray(box);
+public static unsafe %[] FromAbiArray(object box) => MarshalInterfaceHelper<%>.FromAbiArray(box, FromAbi);
+public static (int length, IntPtr data) FromManagedArray(%[] array) => MarshalInterfaceHelper<%>.FromManagedArray(array, (o) => FromManaged(o));
+public static void DisposeMarshaler(IObjectReference value) => MarshalInspectable.DisposeMarshaler(value);
+public static void DisposeAbi(IntPtr abi) => MarshalInspectable.DisposeAbi(abi);
+public static unsafe void DisposeAbiArray(object box) => MarshalInspectable.DisposeAbiArray(box);
 }
 )",
             abi_type_name,
             projected_type_name,
-            default_interface_name,
-            default_interface_name,
+            default_interface_abi_name,
             projected_type_name,
             projected_type_name,
             projected_type_name,
-            default_interface_name,
             projected_type_name,
-            default_interface_name,
-            default_interface_name,
-            default_interface_name);
+            projected_type_name,
+            projected_type_name,
+            projected_type_name,
+            projected_type_name,
+            projected_type_name,
+            projected_type_name,
+            projected_type_name);
     }
 
     void write_delegate(writer& w, TypeDef const& type)

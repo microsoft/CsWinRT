@@ -46,7 +46,7 @@ namespace WinRT
 
         public static IObjectReference CreateCCWForObject(object obj)
         {
-            IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.CallerDefinedIUnknown | CreateComInterfaceFlags.TrackerSupport);
+            IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);
             return ObjectReference<IUnknownVftbl>.Attach(ref ccw);
         }
 

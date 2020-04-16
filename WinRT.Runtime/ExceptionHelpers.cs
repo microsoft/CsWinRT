@@ -71,7 +71,7 @@ namespace WinRT
         private static Exception GetExceptionForHR(int hr, bool useGlobalErrorState, out bool restoredExceptionFromGlobalState)
         {
             restoredExceptionFromGlobalState = false;
-            if (hr == 0)
+            if (hr >= 0)
             {
                 return null;
             }

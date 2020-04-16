@@ -85,6 +85,5 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" Condition="'$(BuildingInsideVisualStudio)'=='true'" />
-  <Target Name="Build" Condition="'$(BuildingInsideVisualStudio)'!='true'" />
-  <Target Name="Clean" />
+  <Import Project="$(MSBuildThisFileDirectory)NoBuild.targets" Condition="'$(BuildingInsideVisualStudio)'!='true'" />
 </Project>
