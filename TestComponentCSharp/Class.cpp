@@ -850,7 +850,62 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _matrix3D = value;
     }
-
+    Windows::Foundation::Numerics::float3x2 Class::Matrix3x2Property()
+    {
+        return _matrix3x2;
+    }
+    void Class::Matrix3x2Property(Windows::Foundation::Numerics::float3x2 const& value)
+    {
+        _matrix3x2 = value;
+    }
+    Windows::Foundation::Numerics::float4x4 Class::Matrix4x4Property()
+    {
+        return _matrix4x4;
+    }
+    void Class::Matrix4x4Property(Windows::Foundation::Numerics::float4x4 const& value)
+    {
+        _matrix4x4 = value;
+    }
+    Windows::Foundation::Numerics::plane Class::PlaneProperty()
+    {
+        return _plane;
+    }
+    void Class::PlaneProperty(Windows::Foundation::Numerics::plane const& value)
+    {
+        _plane = value;
+    }
+    Windows::Foundation::Numerics::quaternion Class::QuaternionProperty()
+    {
+        return _quaternion;
+    }
+    void Class::QuaternionProperty(Windows::Foundation::Numerics::quaternion const& value)
+    {
+        _quaternion = value;
+    }
+    Windows::Foundation::Numerics::float2 Class::Vector2Property()
+    {
+        return _vector2;
+    }
+    void Class::Vector2Property(Windows::Foundation::Numerics::float2 const& value)
+    {
+        _vector2 = value;
+    }
+    Windows::Foundation::Numerics::float3 Class::Vector3Property()
+    {
+        return _vector3;
+    }
+    void Class::Vector3Property(Windows::Foundation::Numerics::float3 const& value)
+    {
+        _vector3 = value;
+    }
+    Windows::Foundation::Numerics::float4 Class::Vector4Property()
+    {
+        return _vector4;
+    }
+    void Class::Vector4Property(Windows::Foundation::Numerics::float4 const& value)
+    {
+        _vector4 = value;
+    }
     IReference<Point> Class::GetPointReference()
     {
         return _point;

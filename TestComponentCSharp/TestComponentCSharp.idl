@@ -260,6 +260,14 @@ namespace TestComponentCSharp
         Windows.UI.Xaml.Media.Animation.KeyTime KeyTimeProperty;
         Windows.UI.Xaml.Media.Animation.RepeatBehavior RepeatBehaviorProperty;
         Windows.UI.Xaml.Media.Media3D.Matrix3D Matrix3DProperty;
+        Windows.Foundation.Numerics.Matrix3x2 Matrix3x2Property;
+        Windows.Foundation.Numerics.Matrix4x4 Matrix4x4Property;
+        Windows.Foundation.Numerics.Plane PlaneProperty;
+        Windows.Foundation.Numerics.Quaternion QuaternionProperty;
+        Windows.Foundation.Numerics.Vector2 Vector2Property;
+        Windows.Foundation.Numerics.Vector3 Vector3Property;
+        Windows.Foundation.Numerics.Vector4 Vector4Property;
+
         // Structs mapped to equivalent ones in the System namespace
         Windows.Foundation.TimeSpan TimeSpanProperty;
         Windows.Foundation.IReference<Windows.Foundation.TimeSpan> GetTimeSpanReference();

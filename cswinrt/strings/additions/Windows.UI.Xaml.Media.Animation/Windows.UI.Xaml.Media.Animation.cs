@@ -280,7 +280,11 @@ namespace ABI.Windows.UI.Xaml.Media.Animation
 
     public static class RepeatBehavior
     {
-        public static string GetGuidSignature() => "enum(Windows.UI.Xaml.Media.Animation.RepeatBehavior;i4)";
+        public static string GetGuidSignature()
+        {
+            string timeSpanSignature = global::WinRT.GuidGenerator.GetSignature(typeof(global::System.TimeSpan));
+            return $"struct(Windows.UI.Xaml.Media.Animation.RepeatBehavior;f8;{timeSpanSignature};{RepeatBehaviorType.GetGuidSignature()})";
+        }
     }
 
     public static class RepeatBehaviorType
