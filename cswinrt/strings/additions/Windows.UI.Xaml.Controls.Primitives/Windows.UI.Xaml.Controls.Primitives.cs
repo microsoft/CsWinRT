@@ -3,6 +3,7 @@ namespace Windows.UI.Xaml.Controls.Primitives
 {
     using Windows.Foundation;
 
+    [global::WinRT.WindowsRuntimeType]
     [StructLayout(LayoutKind.Sequential)]
     public struct GeneratorPosition
     {

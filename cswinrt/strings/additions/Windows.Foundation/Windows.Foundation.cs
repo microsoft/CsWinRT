@@ -4,6 +4,7 @@ namespace Windows.Foundation
     using global::System;
     using global::System.Globalization;
 
+    [global::WinRT.WindowsRuntimeType]
     [StructLayout(LayoutKind.Sequential)]
     public struct Point : IFormattable
     {
@@ -88,6 +89,7 @@ namespace Windows.Foundation
         }
     }
 
+    [global::WinRT.WindowsRuntimeType]
     [StructLayout(LayoutKind.Sequential)]
     public struct Rect : IFormattable
     {
@@ -403,6 +405,7 @@ namespace Windows.Foundation
         }
     }
 
+    [global::WinRT.WindowsRuntimeType]
     [StructLayout(LayoutKind.Sequential)]
     public struct Size
     {

@@ -3,6 +3,7 @@ namespace Windows.UI.Xaml.Media.Media3D
 {
     using Windows.Foundation;
 
+    [global::WinRT.WindowsRuntimeType]
     [StructLayout(LayoutKind.Sequential)]
     public struct Matrix3D : IFormattable
     {
