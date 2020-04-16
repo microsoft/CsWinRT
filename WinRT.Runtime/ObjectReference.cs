@@ -127,7 +127,7 @@ namespace WinRT
             get
             {
                 using var unknownObjRef = As<IUnknownVftbl>();
-                return ((VftblPtr*)unknownObjRef.ThisPtr.ToPointer())->Vftbl == IUnknownVftbl.AbiToProjectionVftblPtr;
+                return unknownObjRef.VftblIUnknown.Equals(IUnknownVftbl.AbiToProjectionVftbl);
             }
         }
     }
