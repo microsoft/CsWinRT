@@ -96,7 +96,7 @@ namespace WinRT
             return false;
         }
 
-        internal static IObjectReference GetObjectReferenceForIntPtr(IntPtr externalComObject)
+        public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)
         {
             using var unknownRef = ObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
 

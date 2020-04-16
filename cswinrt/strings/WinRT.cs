@@ -252,9 +252,15 @@ namespace WinRT
 
         public unsafe ObjectReference<I> _ActivateInstance<I>()
         {
-            IntPtr instancePtr = IntPtr.Zero;
-            Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, out instancePtr));
-            return ObjectReference<IInspectable.Vftbl>.Attach(ref instancePtr).As<I>();
+            Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, out IntPtr instancePtr));
+            try
+            {
+                return ComWrappersSupport.GetObjectReferenceForInterface(instancePtr).As<I>();
+            }
+            finally
+            {
+                MarshalInspectable.DisposeAbi(instancePtr);
+            }
         }
 
         public ObjectReference<I> _As<I>() => _IActivationFactory.As<I>();
