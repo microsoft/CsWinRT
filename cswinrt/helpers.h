@@ -533,12 +533,8 @@ namespace cswinrt
             },
             { "Windows.UI.Xaml.Interop",
                 {
-                    { "BindableVectorChangedEventHandler", "Windows.UI.Xaml.Interop", "BindableVectorChangedEventHandler", true },
                     { "IBindableIterable", "System.Collections", "IEnumerable", true },
-                    { "IBindableIterator", "Windows.UI.Xaml.Interop", "IBindableIterator", true },
-                    { "IBindableObservableVector", "Windows.UI.Xaml.Interop", "IBindableObservableVector", true },
                     { "IBindableVector", "System.Collections", "IList", true },
-                    { "IBindableVectorView", "Windows.UI.Xaml.Interop", "IBindableVectorView", true },
                     { "INotifyCollectionChanged", "System.Collections.Specialized", "INotifyCollectionChanged", true },
                     { "NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction" },
                     { "NotifyCollectionChangedEventArgs", "System.Collections.Specialized", "NotifyCollectionChangedEventArgs", true },

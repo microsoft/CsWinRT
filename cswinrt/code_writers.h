@@ -1241,7 +1241,6 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     void write_nongeneric_list_members(writer& w, std::string_view target, bool include_enumerable)
     {
-        auto element = w.write_temp("%", bind<write_generic_type_name>(0));
         w.write(R"(
 public int Count => %.Count;
 public bool IsSynchronized => %.IsSynchronized;
@@ -2440,7 +2439,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_enumerable_members>("_iterableToEnumerable", true)),
-                        w.write_temp("IEnumerable<%>", element),
+                        w.write_temp("ABI.System.Collections.Generic.IEnumerable<%>", element),
                         "_iterableToEnumerable"
                     };
                     remove_enumerable();
@@ -2451,7 +2450,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_enumerator_members>("_iteratorToEnumerator")),
-                        w.write_temp("IEnumerator<%>", element),
+                        w.write_temp("ABI.System.Collections.Generic.IEnumerator<%>", element),
                         "_iteratorToEnumerator"
                     };
                 }
@@ -2462,7 +2461,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_readonlydictionary_members>("_mapViewToReadOnlyDictionary", true)),
-                        w.write_temp("IReadOnlyDictionary<%, %>", key, value),
+                        w.write_temp("ABI.System.Collections.Generic.IReadOnlyDictionary<%, %>", key, value),
                         "_mapViewToReadOnlyDictionary"
                     };
                     remove_enumerable(w.write_temp("global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<%, %>>", key, value));
@@ -2474,7 +2473,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_dictionary_members>("_mapToDictionary", true)),
-                        w.write_temp("IDictionary<%, %>", key, value),
+                        w.write_temp("ABI.System.Collections.Generic.IDictionary<%, %>", key, value),
                         "_mapToDictionary"
                     };
                     remove_enumerable(w.write_temp("global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<%, %>>", key, value));
@@ -2485,7 +2484,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_readonlylist_members>("_vectorViewToReadOnlyList", true)),
-                        w.write_temp("IReadOnlyList<%>", element),
+                        w.write_temp("ABI.System.Collections.Generic.IReadOnlyList<%>", element),
                         "_vectorViewToReadOnlyList"
                     };
                     remove_enumerable(w.write_temp("global::System.Collections.Generic.IEnumerable<%>", element));
@@ -2496,7 +2495,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_list_members>("_vectorToList", true)),
-                        w.write_temp("IList<%>", element),
+                        w.write_temp("ABI.System.Collections.Generic.IList<%>", element),
                         "_vectorToList"
                     };
                     remove_enumerable(w.write_temp("global::System.Collections.Generic.IEnumerable<%>", element));
@@ -2506,7 +2505,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_nongeneric_enumerable_members>("_bindableIterableToEnumerable")),
-                        "IEnumerable"
+                        "ABI.System.Collections.IEnumerable",
                         "_bindableIterableToEnumerable"
                     };
                 }
@@ -2515,7 +2514,7 @@ remove => _%.Unsubscribe(value);
                     required_interfaces[std::move(interface_name)] =
                     {
                         w.write_temp("%", bind<write_nongeneric_list_members>("_bindableVectorToList", true)),
-                        "IList",
+                        "ABI.System.Collections.IList",
                         "_bindableVectorToList"
                     };
                     remove_enumerable();
@@ -3827,7 +3826,7 @@ public static Guid PIID = Vftbl.PIID;
                 {
                     if (required_interface.second.helper_wrapper.empty()) 
                         continue;
-                    w.write("% = new ABI.System.Collections.Generic.%.FromAbiHelper(ObjRef);\n", 
+                    w.write("% = new %.FromAbiHelper(ObjRef);\n", 
                         required_interface.second.adapter,
                         required_interface.second.helper_wrapper);
                 }
@@ -3837,7 +3836,7 @@ public static Guid PIID = Vftbl.PIID;
                 {
                     if (required_interface.second.helper_wrapper.empty())
                         continue;
-                    w.write("ABI.System.Collections.Generic.%.FromAbiHelper %;\n",
+                    w.write("%.FromAbiHelper %;\n",
                         required_interface.second.helper_wrapper,
                         required_interface.second.adapter);
                 }

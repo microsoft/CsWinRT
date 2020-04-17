@@ -16,12 +16,12 @@ using Windows.UI.Xaml.Interop;
 namespace Windows.Foundation.Collections
 {
     [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
-    public interface IIterable<T>
+    internal interface IIterable<T>
     {
         IIterator<T> First();
     }
     [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
-    public interface IIterator<T>
+    internal interface IIterator<T>
     {
         bool _MoveNext();
         uint GetMany(ref T[] items);
@@ -73,7 +73,7 @@ namespace ABI.System.Collections.Generic
 
             public global::System.Collections.Generic.IEnumerator<T> GetEnumerator()
             {
-                var first = _iterable.First();
+                var first = ((global::Windows.Foundation.Collections.IIterable<T>)_iterable).First();
                 if (first is global::ABI.System.Collections.Generic.IEnumerator<T> iterator)
                 {
                     return iterator;
@@ -84,7 +84,7 @@ namespace ABI.System.Collections.Generic
             global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
         }
 
-        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterable<T>
+        internal sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterable<T>
         {
             private readonly IEnumerable<T> m_enumerable;
 
@@ -169,7 +169,7 @@ namespace ABI.System.Collections.Generic
         }
         FromAbiHelper _FromIterable;
 
-        public unsafe global::Windows.Foundation.Collections.IIterator<T> First()
+        unsafe global::Windows.Foundation.Collections.IIterator<T> global::Windows.Foundation.Collections.IIterable<T>.First()
         {
             IntPtr __retval = default;
             try
@@ -225,7 +225,7 @@ namespace ABI.System.Collections.Generic
             {
             }
 
-            public FromAbiHelper(global::Windows.Foundation.Collections.IIterator<T> iterator)
+            internal FromAbiHelper(global::Windows.Foundation.Collections.IIterator<T> iterator)
             {
                 _iterator = iterator;
             }

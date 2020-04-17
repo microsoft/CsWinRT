@@ -1395,7 +1395,7 @@ namespace UnitTest
         [Fact]
         public void TypeInfoGenerics()
         {
-            var typeName = Class.GetTypeNameForType(typeof(IVector<int>));
+            var typeName = Class.GetTypeNameForType(typeof(IList<int>));
 
             Assert.Equal("Windows.Foundation.Collections.IVector`1<Int32>", typeName);
         }

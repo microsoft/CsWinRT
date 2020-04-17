@@ -49,6 +49,7 @@
 -include Windows.UI.Xaml.Thickness
 -include Windows.UI.Xaml.Controls.Primitives.GeneratorPosition
 -include Windows.UI.Xaml.Media.Matrix
+-include Windows.UI.Xaml.Interop
 -exclude Windows.UI.Xaml.Media.MatrixTransform
 -exclude Windows.UI.Xaml.Media.Matrix3DProjection
 -include Windows.UI.Xaml.Media.Animation.KeyTime
