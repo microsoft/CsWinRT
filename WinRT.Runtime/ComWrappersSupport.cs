@@ -234,6 +234,14 @@ namespace WinRT
             return implementationType.FullName.StartsWith("Windows.Foundation.IReferenceArray`1");
         }
 
+        private static Func<IInspectable, object> CreateKeyValuePairFactory(Type type)
+        {
+            var parms = new[] { Expression.Parameter(typeof(IInspectable), "obj") };
+            return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.Call(type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static), 
+                    parms), parms).Compile();
+        }
+
         private static Func<IInspectable, object> CreateNullableTFactory(Type implementationType)
         {
             Type helperType = implementationType.GetHelperType();
@@ -264,7 +272,18 @@ namespace WinRT
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
         {
+            // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
+            if (runtimeClassName == "Windows.Foundation.IReference`1<String>")
+            {
+                return (IInspectable obj) => new ABI.System.Nullable<String>(obj.ObjRef).Value;
+            }
+
             var (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
+
+            if (implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+            {
+                return CreateKeyValuePairFactory(implementationType);
+            }
 
             if (implementationType.IsValueType)
             {

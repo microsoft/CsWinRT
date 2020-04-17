@@ -91,6 +91,7 @@ namespace WinRT
         public static implicit operator IInspectable(IObjectReference obj) => obj.As<Vftbl>();
         public static implicit operator IInspectable(ObjectReference<Vftbl> obj) => new IInspectable(obj);
         public ObjectReference<I> As<I>() => _obj.As<I>();
+        public IObjectReference ObjRef { get => _obj; }
         public IInspectable(IObjectReference obj) : this(obj.As<Vftbl>()) { }
         public IInspectable(ObjectReference<Vftbl> obj)
         {

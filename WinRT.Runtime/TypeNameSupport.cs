@@ -149,6 +149,10 @@ namespace WinRT
                 }
                 else if (remainingTypeName[0] == '>')
                 {
+                    // Skip the space after nested '>'
+                    var skip = (remainingTypeName.Length > 1 && remainingTypeName[1] == ' ') ? 2 : 1;
+                    remainingIndex += skip;
+                    remainingTypeName = remainingTypeName.Slice(skip);
                     break;
                 }
                 else

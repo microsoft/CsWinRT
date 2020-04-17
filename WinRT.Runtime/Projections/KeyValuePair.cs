@@ -36,6 +36,12 @@ namespace ABI.System.Collections.Generic
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
 
+        public static object CreateRcw(IInspectable obj)
+        {
+            var pair = new KeyValuePair<K, V>(obj.As<Vftbl>());
+            return (object)new global::System.Collections.Generic.KeyValuePair<K, V>(pair.Key, pair.Value);
+        }
+
         public static global::System.Collections.Generic.KeyValuePair<K, V> FromAbi(IntPtr thisPtr)
         {
             var pair = new KeyValuePair<K, V>(KeyValuePair<K, V>._FromAbi(thisPtr));
