@@ -6,12 +6,7 @@
         xmlns:local="NetCoreDesktopSample"
         mc:Ignorable="d"
         Height="450" Width="800">
-    <Page.Content>
-        <Grid>
-            <Grid.Children>
-                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Hello from WinUI Desktop!" />
-            </Grid.Children>
-        </Grid>
-    </Page.Content>
-    
+    <Grid>
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Hello from WinUI Desktop!" x:Name="text"/>
+    </Grid>
 </Page>
