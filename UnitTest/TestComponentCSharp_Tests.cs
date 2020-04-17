@@ -126,7 +126,7 @@ namespace UnitTest
             TestObject.RaiseStringPairChanged();
         }
 
-        [Fact(Skip = "System.ExecutionEngineException in Marshal.PtrToStructure<T>(vftblPtr.Vftbl)")]
+        [Fact]
         public void TestObjectCasting()
         {
             var expected = new KeyValuePair<string, string>("key", "value");
@@ -168,7 +168,7 @@ namespace UnitTest
             }
         }
 
-        [Fact(Skip = "System.ExecutionEngineException in Marshal.PtrToStructure<T>(vftblPtr.Vftbl)")]
+        [Fact]
         public void TestPropertySet()
         {
             var map = new Dictionary<string, string> { ["foo"] = "bar", ["hello"] = "world" };
@@ -184,7 +184,7 @@ namespace UnitTest
             }
         }
 
-        [Fact(Skip = "System.ExecutionEngineException in Marshal.PtrToStructure<T>(vftblPtr.Vftbl)")]
+        [Fact]
         public void TestValueSet()
         {
             var map = new Dictionary<string, string> { ["foo"] = "bar", ["hello"] = "world" };

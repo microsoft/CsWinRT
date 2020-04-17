@@ -5,4 +5,6 @@
     project from the command line.
   -->
   <Target Name="Build" />
+  <Target Name="Rebuild" />
+  <Target Name="Clean" />
 </Project>
