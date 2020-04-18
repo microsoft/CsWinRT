@@ -6,7 +6,7 @@ using System.Text;
 using WinRT;
 using WinRT.Interop;
 
-namespace ABI.Windows.UI.Xaml.Data
+namespace ABI.Microsoft.UI.Xaml.Data
 {
     [Guid("4F33A9A0-5CF4-47A4-B16F-D7FAAF17457E")]
     [StructLayout(LayoutKind.Sequential)]
@@ -78,7 +78,7 @@ namespace ABI.System.ComponentModel
 
         private class ActivationFactory : BaseActivationFactory
         {
-            public ActivationFactory() : base("Windows.UI.Xaml.Data", "Windows.UI.Xaml.Data.PropertyChangedEventArgs")
+            public ActivationFactory() : base("Microsoft.UI.Xaml.Data", "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs")
             {
             }
         }
@@ -90,7 +90,7 @@ namespace ABI.System.ComponentModel
                 return null;
             }
 
-            ABI.Windows.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory factory = _propertyChangedArgsFactory.Value._As<ABI.Windows.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory.Vftbl>();
+            ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory factory = _propertyChangedArgsFactory.Value._As<ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory.Vftbl>();
             return factory.CreateInstance(value.PropertyName, null, out _);
         }
 
@@ -103,7 +103,7 @@ namespace ABI.System.ComponentModel
                 return null;
             }
 
-            using var args = ObjectReference<ABI.Windows.UI.Xaml.Data.IPropertyChangedEventArgsVftbl>.FromAbi(ptr);
+            using var args = ObjectReference<ABI.Microsoft.UI.Xaml.Data.IPropertyChangedEventArgsVftbl>.FromAbi(ptr);
             IntPtr propertyName = IntPtr.Zero;
             try
             {
@@ -136,7 +136,7 @@ namespace ABI.System.ComponentModel
 
         public static string GetGuidSignature()
         {
-            return "rc(Windows.UI.Xaml.Data.NotifyPropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})";
+            return "rc(Microsoft.UI.Xaml.Data.NotifyPropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})";
         }
     }
 }

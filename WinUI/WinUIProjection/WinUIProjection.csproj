@@ -9,7 +9,7 @@
   <PropertyGroup>
     <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>8305</NoWarn>
+    <NoWarn>8305;0618</NoWarn>
   </PropertyGroup>
   
   <ItemGroup>
@@ -27,7 +27,7 @@
 
   <Target Name="GenerateWinUIProjection" BeforeTargets="CoreCompile" Condition="'$(GenerateTestProjection)' == 'true'">
     <ItemGroup>
-      <!--PkgMicrosoft_UI_Xaml is defined by Nuget reference-->
+      <!--PkgMicrosoft_WinUI is defined by Nuget reference-->
       <WinUIWinMDs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
     </ItemGroup>
     <PropertyGroup>
@@ -38,7 +38,8 @@
     <PropertyGroup>
       <CsWinRTParams>
 -verbose
--in 10.0.18362.0 @(WinUIWinMDs->'"%(FullPath)"', ' ')
+-in 10.0.18362.0 
+-in @(WinUIWinMDs->'"%(FullPath)"', ' ')
 -out "$(ProjectDir)Generated Files"
 -include Microsoft
 -include Windows

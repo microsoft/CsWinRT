@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Windows.UI.Xaml.Interop;
+using Microsoft.UI.Xaml.Interop;
 using WinRT;
 using WinRT.Interop;
 
@@ -14,7 +14,7 @@ using WinRT.Interop;
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
 #pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
 
-namespace Windows.UI.Xaml.Interop
+namespace Microsoft.UI.Xaml.Interop
 {
     [global::WinRT.WindowsRuntimeType]
     public delegate void BindableVectorChangedEventHandler(IBindableObservableVector vector, object e);
@@ -63,7 +63,7 @@ namespace Windows.UI.Xaml.Interop
     }
 }
 
-namespace ABI.Windows.UI.Xaml.Interop
+namespace ABI.Microsoft.UI.Xaml.Interop
 {
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     [Guid("624CD4E1-D007-43B1-9C03-AF4D3E6258C4")]
@@ -89,14 +89,14 @@ namespace ABI.Windows.UI.Xaml.Interop
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
-        public static unsafe IObjectReference CreateMarshaler(global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(BindableVectorChangedEventHandler)));
+        public static unsafe IObjectReference CreateMarshaler(global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(BindableVectorChangedEventHandler)));
 
-        public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler>.GetAbi(value);
+        public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler>.GetAbi(value);
 
-        public static unsafe global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler FromAbi(IntPtr nativeDelegate)
+        public static unsafe global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler FromAbi(IntPtr nativeDelegate)
         {
             var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(nativeDelegate);
-            return (global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+            return (global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -109,7 +109,7 @@ namespace ABI.Windows.UI.Xaml.Interop
                 _nativeDelegate = nativeDelegate;
             }
 
-            public void Invoke(global::Windows.UI.Xaml.Interop.IBindableObservableVector vector, object e)
+            public void Invoke(global::Microsoft.UI.Xaml.Interop.IBindableObservableVector vector, object e)
             {
                 IntPtr ThisPtr = _nativeDelegate.ThisPtr;
                 var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(_nativeDelegate.Vftbl.Invoke);
@@ -117,31 +117,31 @@ namespace ABI.Windows.UI.Xaml.Interop
                 IObjectReference __e = default;
                 try
                 {
-                    __vector = MarshalInterface<global::Windows.UI.Xaml.Interop.IBindableObservableVector>.CreateMarshaler(vector);
+                    __vector = MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableObservableVector>.CreateMarshaler(vector);
                     __e = MarshalInspectable.CreateMarshaler(e);
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInterface<global::Windows.UI.Xaml.Interop.IBindableObservableVector>.GetAbi(__vector), MarshalInspectable.GetAbi(__e)));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableObservableVector>.GetAbi(__vector), MarshalInspectable.GetAbi(__e)));
                 }
                 finally
                 {
-                    MarshalInterface<global::Windows.UI.Xaml.Interop.IBindableObservableVector>.DisposeMarshaler(__vector);
+                    MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableObservableVector>.DisposeMarshaler(__vector);
                     MarshalInspectable.DisposeMarshaler(__e);
                 }
             }
         }
 
-        public static IntPtr FromManaged(global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler managedDelegate) => CreateMarshaler(managedDelegate).GetRef();
+        public static IntPtr FromManaged(global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler managedDelegate) => CreateMarshaler(managedDelegate).GetRef();
 
-        public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler>.DisposeMarshaler(value);
+        public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler>.DisposeMarshaler(value);
 
-        public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler>.DisposeAbi(abi);
+        public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler>.DisposeAbi(abi);
 
         private static unsafe int Do_Abi_Invoke(IntPtr thisPtr, IntPtr vector, IntPtr e)
         {
             try
             {
-                global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(thisPtr, (global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler invoke) =>
+                global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(thisPtr, (global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler invoke) =>
                 {
-                    invoke(MarshalInterface<global::Windows.UI.Xaml.Interop.IBindableObservableVector>.FromAbi(vector), MarshalInspectable.FromAbi(e));
+                    invoke(MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableObservableVector>.FromAbi(vector), MarshalInspectable.FromAbi(e));
                 });
             }
             catch (Exception __exception__)
@@ -155,7 +155,7 @@ namespace ABI.Windows.UI.Xaml.Interop
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("6A1D6C07-076D-49F2-8314-F52C9C9A8331")]
-    public class IBindableIterator : global::Windows.UI.Xaml.Interop.IBindableIterator
+    public class IBindableIterator : global::Microsoft.UI.Xaml.Interop.IBindableIterator
     {
         [Guid("6A1D6C07-076D-49F2-8314-F52C9C9A8331")]
         public struct Vftbl
@@ -187,7 +187,7 @@ namespace ABI.Windows.UI.Xaml.Interop
                 result = default;
                 try
                 {
-                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Interop.IBindableIterator>(thisPtr).MoveNext();
+                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableIterator>(thisPtr).MoveNext();
                     result = (byte)(__result ? 1 : 0);
                 }
                 catch (Exception __exception__)
@@ -203,7 +203,7 @@ namespace ABI.Windows.UI.Xaml.Interop
                 value = default;
                 try
                 {
-                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Interop.IBindableIterator>(thisPtr).Current;
+                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableIterator>(thisPtr).Current;
                     value = MarshalInspectable.FromManaged(__value);
                 }
                 catch (Exception __exception__)
@@ -219,7 +219,7 @@ namespace ABI.Windows.UI.Xaml.Interop
                 value = default;
                 try
                 {
-                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Interop.IBindableIterator>(thisPtr).HasCurrent;
+                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableIterator>(thisPtr).HasCurrent;
                     value = (byte)(__value ? 1 : 0);
                 }
                 catch (Exception __exception__)
@@ -287,7 +287,7 @@ namespace ABI.Windows.UI.Xaml.Interop
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("FE1EB536-7E7F-4F90-AC9A-474984AAE512")]
-    public class IBindableObservableVector : global::Windows.UI.Xaml.Interop.IBindableObservableVector
+    public class IBindableObservableVector : global::Microsoft.UI.Xaml.Interop.IBindableObservableVector
     {
         [Guid("FE1EB536-7E7F-4F90-AC9A-474984AAE512")]
         public struct Vftbl
@@ -311,13 +311,13 @@ namespace ABI.Windows.UI.Xaml.Interop
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::Windows.UI.Xaml.Interop.IBindableObservableVector, global::WinRT.EventRegistrationTokenTable<global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler>> _VectorChanged_TokenTables = new global::System.Runtime.CompilerServices.ConditionalWeakTable<global::Windows.UI.Xaml.Interop.IBindableObservableVector, global::WinRT.EventRegistrationTokenTable<global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler>>();
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::Microsoft.UI.Xaml.Interop.IBindableObservableVector, global::WinRT.EventRegistrationTokenTable<global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler>> _VectorChanged_TokenTables = new global::System.Runtime.CompilerServices.ConditionalWeakTable<global::Microsoft.UI.Xaml.Interop.IBindableObservableVector, global::WinRT.EventRegistrationTokenTable<global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler>>();
             private static unsafe int Do_Abi_add_VectorChanged_0(IntPtr thisPtr, IntPtr handler, out global::WinRT.EventRegistrationToken token)
             {
                 token = default;
                 try
                 {
-                    var __this = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Interop.IBindableObservableVector>(thisPtr);
+                    var __this = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableObservableVector>(thisPtr);
                     var __handler = BindableVectorChangedEventHandler.FromAbi(handler);
                     token = _VectorChanged_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
                     __this.VectorChanged += __handler;
@@ -332,7 +332,7 @@ namespace ABI.Windows.UI.Xaml.Interop
             {
                 try
                 {
-                    var __this = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Interop.IBindableObservableVector>(thisPtr);
+                    var __this = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableObservableVector>(thisPtr);
                     if (_VectorChanged_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(token, out var __handler))
                     {
                         __this.VectorChanged -= __handler;
@@ -360,20 +360,20 @@ namespace ABI.Windows.UI.Xaml.Interop
             _obj = obj;
 
             _VectorChanged =
-                new EventSource<global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler>(_obj,
+                new EventSource<global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler>(_obj,
                 _obj.Vftbl.add_VectorChanged_0,
                 _obj.Vftbl.remove_VectorChanged_1);
             _vectorToList = new ABI.System.Collections.IList.FromAbiHelper(ObjRef);
         }
         ABI.System.Collections.IList.FromAbiHelper _vectorToList;
 
-        public event global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler VectorChanged
+        public event global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler VectorChanged
         {
             add => _VectorChanged.Subscribe(value);
             remove => _VectorChanged.Unsubscribe(value);
         }
 
-        private EventSource<global::Windows.UI.Xaml.Interop.BindableVectorChangedEventHandler> _VectorChanged;
+        private EventSource<global::Microsoft.UI.Xaml.Interop.BindableVectorChangedEventHandler> _VectorChanged;
 
         public object this[int index]
         {
@@ -412,7 +412,7 @@ namespace ABI.Windows.UI.Xaml.Interop
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("346DD6E7-976E-4BC3-815D-ECE243BC0F33")]
-    public class IBindableVectorView : global::Windows.UI.Xaml.Interop.IBindableVectorView
+    public class IBindableVectorView : global::Microsoft.UI.Xaml.Interop.IBindableVectorView
     {
         [Guid("346DD6E7-976E-4BC3-815D-ECE243BC0F33")]
         public struct Vftbl
@@ -446,7 +446,7 @@ namespace ABI.Windows.UI.Xaml.Interop
 
                 try
                 {
-                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Interop.IBindableVectorView>(thisPtr).GetAt(index);
+                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>(thisPtr).GetAt(index);
                     result = MarshalInspectable.FromManaged(__result);
 
                 }
@@ -467,7 +467,7 @@ namespace ABI.Windows.UI.Xaml.Interop
 
                 try
                 {
-                    __returnValue = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Interop.IBindableVectorView>(thisPtr).IndexOf(MarshalInspectable.FromAbi(value), out __index);
+                    __returnValue = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>(thisPtr).IndexOf(MarshalInspectable.FromAbi(value), out __index);
                     index = __index;
                     returnValue = (byte)(__returnValue ? 1 : 0);
 
@@ -487,7 +487,7 @@ namespace ABI.Windows.UI.Xaml.Interop
 
                 try
                 {
-                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Windows.UI.Xaml.Interop.IBindableVectorView>(thisPtr).Size;
+                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>(thisPtr).Size;
                     value = __value;
 
                 }
@@ -570,7 +570,7 @@ namespace ABI.System.Collections
 {
     using global::System;
     using global::System.Runtime.CompilerServices;
-    using global::Windows.UI.Xaml.Interop;
+    using global::Microsoft.UI.Xaml.Interop;
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F")]
@@ -659,7 +659,7 @@ namespace ABI.System.Collections
                 {
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.IEnumerable>(thisPtr);
                     var iterator = ToAbiHelper.MakeBindableIterator(__this.GetEnumerator());
-                    result = MarshalInterface<global::Windows.UI.Xaml.Interop.IBindableIterator>.FromManaged(iterator);
+                    result = MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableIterator>.FromManaged(iterator);
                 }
                 catch (Exception __exception__)
                 {
@@ -692,17 +692,17 @@ namespace ABI.System.Collections
         }
         FromAbiHelper _FromIterable;
 
-        public unsafe global::Windows.UI.Xaml.Interop.IBindableIterator First()
+        public unsafe global::Microsoft.UI.Xaml.Interop.IBindableIterator First()
         {
             IntPtr __retval = default;
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(ThisPtr, out __retval));
-                return MarshalInterface<global::Windows.UI.Xaml.Interop.IBindableIterator>.FromAbi(__retval);
+                return MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableIterator>.FromAbi(__retval);
             }
             finally
             {
-                MarshalInterface<global::Windows.UI.Xaml.Interop.IBindableIterator>.DisposeAbi(__retval);
+                MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableIterator>.DisposeAbi(__retval);
             }
         }
 
@@ -1214,12 +1214,12 @@ namespace ABI.System.Collections
             }
             private static unsafe int Do_Abi_GetView_2(IntPtr thisPtr, out IntPtr result)
             {
-                global::Windows.UI.Xaml.Interop.IBindableVectorView __result = default;
+                global::Microsoft.UI.Xaml.Interop.IBindableVectorView __result = default;
                 result = default;
                 try
                 {
                     __result = FindAdapter(thisPtr).GetView();
-                    result = MarshalInterface<global::Windows.UI.Xaml.Interop.IBindableVectorView>.FromManaged(__result);
+                    result = MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>.FromManaged(__result);
                 }
                 catch (Exception __exception__)
                 {
@@ -1381,17 +1381,17 @@ namespace ABI.System.Collections
             }
         }
 
-        public unsafe global::Windows.UI.Xaml.Interop.IBindableVectorView GetView()
+        public unsafe global::Microsoft.UI.Xaml.Interop.IBindableVectorView GetView()
         {
             IntPtr __retval = default;
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_2(ThisPtr, out __retval));
-                return MarshalInterface<global::Windows.UI.Xaml.Interop.IBindableVectorView>.FromAbi(__retval);
+                return MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>.FromAbi(__retval);
             }
             finally
             {
-                MarshalInterface<global::Windows.UI.Xaml.Interop.IBindableVectorView>.DisposeAbi(__retval);
+                MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>.DisposeAbi(__retval);
             }
         }
 

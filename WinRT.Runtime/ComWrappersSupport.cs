@@ -13,7 +13,7 @@ using System.Threading;
 using System.Linq.Expressions;
 using WinRT.Interop;
 using ABI.Windows.Foundation;
-using ABI.Windows.UI.Xaml.Data;
+using ABI.Microsoft.UI.Xaml.Data;
 
 #if !NETSTANDARD2_0
 using ComInterfaceEntry = System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry;

@@ -1,4 +1,4 @@
-﻿using ABI.Windows.UI.Xaml.Interop;
+﻿using ABI.Microsoft.UI.Xaml.Interop;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,7 +7,7 @@ using System.Text;
 using WinRT;
 using WinRT.Interop;
 
-namespace ABI.Windows.UI.Xaml.Interop
+namespace ABI.Microsoft.UI.Xaml.Interop
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("4CF68D33-E3F2-4964-B85E-945B4F7E2F21")]
@@ -173,7 +173,7 @@ namespace ABI.System.Collections.Specialized
 
         private class ActivationFactory : BaseActivationFactory
         {
-            public ActivationFactory() : base("Windows.UI.Xaml.Interop", "Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs")
+            public ActivationFactory() : base("Microsoft.UI.Xaml.Interop", "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs")
             {
             }
         }
@@ -238,7 +238,7 @@ namespace ABI.System.Collections.Specialized
 
         public static string GetGuidSignature()
         {
-            return "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})";
+            return "rc(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})";
         }
     }
 }

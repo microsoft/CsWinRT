@@ -21,6 +21,14 @@
   </Target>
 
   <Target Name="GenerateProjection" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)' == 'true'">
+    <PropertyGroup>
+      <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
+      <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$(NuGetPackageFolders)microsoft.winui\$(MicrosoftWinUIVersion)</PkgMicrosoft_WinUI>
+    </PropertyGroup>
+    <ItemGroup>
+      <!--PkgMicrosoft_WinUI is defined by Nuget reference-->
+      <WinUIWinMDs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
+    </ItemGroup>
     <ItemGroup>
       <UnitTestWinMDs Include="$(BuildOutDir)TestComponent\bin\TestComponent.winmd " />
       <UnitTestWinMDs Include="$(BuildOutDir)TestComponentCSharp\bin\TestComponentCSharp\TestComponentCSharp.winmd" />
@@ -34,27 +42,29 @@
       <CsWinRTParams>
 -verbose
 -in 10.0.18362.0
--in @(UnitTestWinMDs->'&quot;%(FullPath)&quot;', ' ')
--out &quot;$(ProjectDir)Generated Files&quot;
+-in @(WinUIWinMDs->'"%(FullPath)"', ' ')
+-in @(UnitTestWinMDs->'"%(FullPath)"', ' ')
+-out "$(ProjectDir)Generated Files"
 -include TestComponentCSharp 
 -include TestComponent
 -include Windows.Foundation 
+-include Windows.UI.Xaml.Interop
 -include Windows.UI.Color
 -exclude Windows.UI.Colors
--include Windows.UI.Xaml.CornerRadius
--include Windows.UI.Xaml.Duration
--include Windows.UI.Xaml.DurationType
--include Windows.UI.Xaml.GridLength
--include Windows.UI.Xaml.GridUnitType
--include Windows.UI.Xaml.Thickness
--include Windows.UI.Xaml.Controls.Primitives.GeneratorPosition
--include Windows.UI.Xaml.Media.Matrix
--exclude Windows.UI.Xaml.Media.MatrixTransform
--exclude Windows.UI.Xaml.Media.Matrix3DProjection
--include Windows.UI.Xaml.Media.Animation.KeyTime
--include Windows.UI.Xaml.Media.Animation.RepeatBehavior
--include Windows.UI.Xaml.Media.Animation.RepeatBehaviorType
--include Windows.UI.Xaml.Media.Media3D.Matrix3D
+-include Microsoft.UI.Xaml.CornerRadius
+-include Microsoft.UI.Xaml.Duration
+-include Microsoft.UI.Xaml.DurationType
+-include Microsoft.UI.Xaml.GridLength
+-include Microsoft.UI.Xaml.GridUnitType
+-include Microsoft.UI.Xaml.Thickness
+-include Microsoft.UI.Xaml.Controls.Primitives.GeneratorPosition
+-include Microsoft.UI.Xaml.Media.Matrix
+-exclude Microsoft.UI.Xaml.Media.MatrixTransform
+-exclude Microsoft.UI.Xaml.Media.Matrix3DProjection
+-include Microsoft.UI.Xaml.Media.Animation.KeyTime
+-include Microsoft.UI.Xaml.Media.Animation.RepeatBehavior
+-include Microsoft.UI.Xaml.Media.Animation.RepeatBehaviorType
+-include Microsoft.UI.Xaml.Media.Media3D.Matrix3D
 -exclude Windows.Foundation.Diagnostics 
       </CsWinRTParams>
     </PropertyGroup>
