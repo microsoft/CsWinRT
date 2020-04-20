@@ -50,7 +50,6 @@
 -include Windows.Foundation 
 -include Windows.UI.Xaml.Interop
 -include Windows.UI.Color
--exclude Windows.UI.Colors
 -include Microsoft.UI.Xaml.CornerRadius
 -include Microsoft.UI.Xaml.Duration
 -include Microsoft.UI.Xaml.DurationType
@@ -66,6 +65,11 @@
 -include Microsoft.UI.Xaml.Media.Animation.RepeatBehaviorType
 -include Microsoft.UI.Xaml.Media.Media3D.Matrix3D
 -exclude Windows.Foundation.Diagnostics 
+# Exclude types per Microsoft.Windows.SDK.WinUI.Contracts NuGet
+-exclude Windows.UI.Colors
+-exclude Windows.UI.IColors
+-exclude Windows.UI.ColorHelper
+-exclude Windows.UI.IColorHelper
       </CsWinRTParams>
     </PropertyGroup>
     <WriteLinesToFile

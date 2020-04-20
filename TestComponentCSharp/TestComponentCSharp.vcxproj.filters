@@ -15,6 +15,7 @@
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="StaticClass.h" />
+    <ClInclude Include="$(IntDir)strings.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />
