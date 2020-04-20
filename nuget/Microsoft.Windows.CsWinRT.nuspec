@@ -13,11 +13,16 @@
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <license type="file">LICENSE</license>
     <projectUrl>https://github.com/microsoft/cswinrt/tree/master/</projectUrl>
+    <dependencies>
+      <group targetFramework=".NETStandard2.0" />
+      <group targetFramework=".NETCoreApp5.0" />
+    </dependencies>
   </metadata>
   <files>
     <file src="LICENSE"/>
     <file src="$cswinrt_exe$"/>
-    <file src="Microsoft.Windows.CsWinRT.props"/>
+    <file src="Microsoft.Windows.CsWinRT.props" target="build"/>
+    <file src="Microsoft.Windows.CsWinRT.targets" target="build"/>
     <file src="readme.txt"/>
     <file src="$netstandard2_runtime$" target="lib\netstandard2.0\"/>
     <file src="$netcoreapp5_runtime$" target="lib\netcoreapp5.0\"/>

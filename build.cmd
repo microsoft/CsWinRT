@@ -1,7 +1,5 @@
 @echo off
 
-setlocal ENABLEDELAYEDEXPANSION
-
 set Net5SdkVersion=5.0.100-preview.4.20213.16
 
 rem Install required .NET 5 SDK version, if necessary
@@ -28,6 +26,8 @@ if not exist %~dp0global.json (
   echo   } >> global.json
   echo } >> global.json
 )
+
+setlocal ENABLEDELAYEDEXPANSION
 
 set cswinrt_platform=%1
 set cswinrt_configuration=%2
