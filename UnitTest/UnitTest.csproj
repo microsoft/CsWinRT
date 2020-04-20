@@ -52,8 +52,4 @@
     <Folder Include="Generated Files\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="C:\git\cswinrt3\TestComponentCSharp\Directory.Build.props" Link="Directory.Build.props" />
-  </ItemGroup>
-
 </Project>

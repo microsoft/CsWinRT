@@ -54,6 +54,7 @@
 # Allow Windows.UI.Text, Windows.UI.Xaml types used in other namespaces
 -include Windows.UI.Text.FontStretch
 -include Windows.UI.Text.FontStyle
+-include Windows.UI.Text.FontWeight
 -include Windows.UI.Text.UnderlineType
 # The current WinUI nuget incorrectly references several Windows.* types that should be
 # Microsoft.* types instead.  Temporarily include these to enable the build
