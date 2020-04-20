@@ -1,5 +1,5 @@
 
-namespace Windows.UI.Xaml
+namespace Microsoft.UI.Xaml
 {
     using Windows.Foundation;
 
@@ -667,11 +667,11 @@ namespace Windows.UI.Xaml
     }
 }
 
-namespace ABI.Windows.UI.Xaml
+namespace ABI.Microsoft.UI.Xaml
 {
     public static class CornerRadius
     {
-        public static string GetGuidSignature() => $"struct(Windows.UI.Xaml.CornerRadius;f8;f8;f8;f8)";
+        public static string GetGuidSignature() => $"struct(Microsoft.UI.Xaml.CornerRadius;f8;f8;f8;f8)";
     }
 
     public static class Duration
@@ -679,32 +679,32 @@ namespace ABI.Windows.UI.Xaml
         public static string GetGuidSignature()
         {
             string timeSpanSignature = global::WinRT.GuidGenerator.GetSignature(typeof(global::System.TimeSpan));
-            string durationTypeSignature = global::WinRT.GuidGenerator.GetSignature(typeof(global::Windows.UI.Xaml.DurationType));
-            return $"struct(Windows.UI.Xaml.Duration;{timeSpanSignature};{durationTypeSignature})";
+            string durationTypeSignature = global::WinRT.GuidGenerator.GetSignature(typeof(global::Microsoft.UI.Xaml.DurationType));
+            return $"struct(Microsoft.UI.Xaml.Duration;{timeSpanSignature};{durationTypeSignature})";
         }
     }
 
     public static class DurationType
     {
-        public static string GetGuidSignature() => "enum(Windows.UI.Xaml.DurationType;i4)";
+        public static string GetGuidSignature() => "enum(Microsoft.UI.Xaml.DurationType;i4)";
     }
 
     public static class GridLength
     {
         public static string GetGuidSignature()
         {
-            string unitTypeSignature = global::WinRT.GuidGenerator.GetSignature(typeof(global::Windows.UI.Xaml.GridUnitType));
-            return $"struct(Windows.UI.Xaml.GridLength;f8;{unitTypeSignature})";
+            string unitTypeSignature = global::WinRT.GuidGenerator.GetSignature(typeof(global::Microsoft.UI.Xaml.GridUnitType));
+            return $"struct(Microsoft.UI.Xaml.GridLength;f8;{unitTypeSignature})";
         }
     }
 
     public static class GridUnitType
     {
-        public static string GetGuidSignature() => "enum(Windows.UI.Xaml.GridUnitType;i4)";
+        public static string GetGuidSignature() => "enum(Microsoft.UI.Xaml.GridUnitType;i4)";
     }
 
     public static class Thickness
     {
-        public static string GetGuidSignature() => $"struct(Windows.UI.Xaml.Thickness;f8;f8;f8;f8)";
+        public static string GetGuidSignature() => $"struct(Microsoft.UI.Xaml.Thickness;f8;f8;f8;f8)";
     }
 }

@@ -6,7 +6,6 @@
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <ApplicationManifest>WinUIDesktopSample.exe.manifest</ApplicationManifest>
-    <DisableEmbeddedXbf>true</DisableEmbeddedXbf>
     <!--
     There seems to be a codegen bug when referencing the cswinrt interop assembly of the Win32XamlHost
     project. Since we don't really need those metadata providers yet, this is just an easy workaround

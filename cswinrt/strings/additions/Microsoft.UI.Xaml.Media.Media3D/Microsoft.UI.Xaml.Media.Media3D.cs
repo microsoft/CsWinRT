@@ -1,5 +1,5 @@
 
-namespace Windows.UI.Xaml.Media.Media3D
+namespace Microsoft.UI.Xaml.Media.Media3D
 {
     using Windows.Foundation;
 
@@ -690,11 +690,11 @@ namespace Windows.UI.Xaml.Media.Media3D
     }
 }
 
-namespace ABI.Windows.UI.Xaml.Media.Media3D
+namespace ABI.Microsoft.UI.Xaml.Media.Media3D
 {
     public static class Matrix3D
     {
         public static string GetGuidSignature() => 
-            $"struct(Windows.UI.Xaml.Media.Media3D.Matrix3D;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8)";
+            $"struct(Microsoft.UI.Xaml.Media.Media3D.Matrix3D;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8)";
     }
 }

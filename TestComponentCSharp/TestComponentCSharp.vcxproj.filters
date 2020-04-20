@@ -5,9 +5,6 @@
       <UniqueIdentifier>accd3aa8-1ba0-4223-9bbe-0c431709210b</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tga;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Generated Files">
-      <UniqueIdentifier>{926ab91d-31b4-48c3-b9a4-e681349f27f0}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -18,6 +15,7 @@
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="StaticClass.h" />
+    <ClInclude Include="$(IntDir)strings.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />
@@ -25,5 +23,6 @@
   <ItemGroup>
     <None Include="TestComponentCSharp.def" />
     <None Include="packages.config" />
+    <None Include="Directory.Build.props" />
   </ItemGroup>
 </Project>

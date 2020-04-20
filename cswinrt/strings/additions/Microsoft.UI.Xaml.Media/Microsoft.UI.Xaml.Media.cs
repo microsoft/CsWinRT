@@ -1,5 +1,5 @@
 
-namespace Windows.UI.Xaml.Media
+namespace Microsoft.UI.Xaml.Media
 {
     using Windows.Foundation;
 
@@ -243,10 +243,10 @@ namespace Windows.UI.Xaml.Media
     }
 }
 
-namespace ABI.Windows.UI.Xaml.Media
+namespace ABI.Microsoft.UI.Xaml.Media
 {
     public static class Matrix
     {
-        public static string GetGuidSignature() => $"struct(Windows.UI.Xaml.Media.Matrix;f8;f8;f8;f8;f8;f8)";
+        public static string GetGuidSignature() => $"struct(Microsoft.UI.Xaml.Media.Matrix;f8;f8;f8;f8;f8;f8)";
     }
 }

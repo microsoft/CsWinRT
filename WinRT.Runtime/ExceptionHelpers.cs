@@ -139,16 +139,16 @@ namespace WinRT
                         ex = new InvalidOperationException(description);
                         break;
                     case E_XAMLPARSEFAILED:
-                        ex = new Windows.UI.Xaml.Markup.XamlParseException();
+                        ex = new Microsoft.UI.Xaml.Markup.XamlParseException();
                         break;
                     case E_LAYOUTCYCLE:
-                        ex = new Windows.UI.Xaml.LayoutCycleException();
+                        ex = new Microsoft.UI.Xaml.LayoutCycleException();
                         break;
                     case E_ELEMENTNOTAVAILABLE:
-                        ex = new Windows.UI.Xaml.Automation.ElementNotAvailableException();
+                        ex = new Microsoft.UI.Xaml.Automation.ElementNotAvailableException();
                         break;
                     case E_ELEMENTNOTENABLED:
-                        ex = new Windows.UI.Xaml.Automation.ElementNotEnabledException();
+                        ex = new Microsoft.UI.Xaml.Automation.ElementNotEnabledException();
                         break;
                     default:
                         ex = Marshal.GetExceptionForHR(hr, iErrorInfo?.ThisPtr ?? (IntPtr)(-1));
@@ -389,7 +389,7 @@ namespace WinRT
     }
 }
 
-namespace Windows.UI.Xaml
+namespace Microsoft.UI.Xaml
 {
     using System.Runtime.Serialization;
     namespace Automation

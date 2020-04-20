@@ -7,7 +7,8 @@ using namespace std::chrono;
 using namespace winrt;
 using namespace Windows::Foundation;
 using namespace Collections;
-using namespace Windows::UI::Xaml::Interop;
+using namespace Microsoft::UI::Xaml::Interop;
+using Windows::UI::Xaml::Interop::TypeName;
 
 namespace winrt::TestComponentCSharp::implementation
 {
@@ -778,75 +779,75 @@ namespace winrt::TestComponentCSharp::implementation
         _color = value;
     }
 
-    Windows::UI::Xaml::CornerRadius Class::CornerRadiusProperty()
+    Microsoft::UI::Xaml::CornerRadius Class::CornerRadiusProperty()
     {
         return _cornerRadius;
     }
-    void Class::CornerRadiusProperty(Windows::UI::Xaml::CornerRadius const& value)
+    void Class::CornerRadiusProperty(Microsoft::UI::Xaml::CornerRadius const& value)
     {
         _cornerRadius = value;
     }
-    Windows::UI::Xaml::Duration Class::DurationProperty()
+    Microsoft::UI::Xaml::Duration Class::DurationProperty()
     {
         return _duration;
     }
-    void Class::DurationProperty(Windows::UI::Xaml::Duration const& value)
+    void Class::DurationProperty(Microsoft::UI::Xaml::Duration const& value)
     {
         _duration = value;
     }
-    Windows::UI::Xaml::GridLength Class::GridLengthProperty()
+    Microsoft::UI::Xaml::GridLength Class::GridLengthProperty()
     {
         return _gridLength;
     }
-    void Class::GridLengthProperty(Windows::UI::Xaml::GridLength const& value)
+    void Class::GridLengthProperty(Microsoft::UI::Xaml::GridLength const& value)
     {
         _gridLength = value;
     }
-    Windows::UI::Xaml::Thickness Class::ThicknessProperty()
+    Microsoft::UI::Xaml::Thickness Class::ThicknessProperty()
     {
         return _thickness;
     }
-    void Class::ThicknessProperty(Windows::UI::Xaml::Thickness const& value)
+    void Class::ThicknessProperty(Microsoft::UI::Xaml::Thickness const& value)
     {
         _thickness = value;
     }
-    Windows::UI::Xaml::Controls::Primitives::GeneratorPosition Class::GeneratorPositionProperty()
+    Microsoft::UI::Xaml::Controls::Primitives::GeneratorPosition Class::GeneratorPositionProperty()
     {
         return _generatorPosition;
     }
-    void Class::GeneratorPositionProperty(Windows::UI::Xaml::Controls::Primitives::GeneratorPosition const& value)
+    void Class::GeneratorPositionProperty(Microsoft::UI::Xaml::Controls::Primitives::GeneratorPosition const& value)
     {
         _generatorPosition = value;
     }
-    Windows::UI::Xaml::Media::Matrix Class::MatrixProperty()
+    Microsoft::UI::Xaml::Media::Matrix Class::MatrixProperty()
     {
         return _matrix;
     }
-    void Class::MatrixProperty(Windows::UI::Xaml::Media::Matrix const& value)
+    void Class::MatrixProperty(Microsoft::UI::Xaml::Media::Matrix const& value)
     {
         _matrix = value;
     }
-    Windows::UI::Xaml::Media::Animation::KeyTime Class::KeyTimeProperty()
+    Microsoft::UI::Xaml::Media::Animation::KeyTime Class::KeyTimeProperty()
     {
         return _keyTime;
     }
-    void Class::KeyTimeProperty(Windows::UI::Xaml::Media::Animation::KeyTime const& value)
+    void Class::KeyTimeProperty(Microsoft::UI::Xaml::Media::Animation::KeyTime const& value)
     {
         _keyTime = value;
     }
-    Windows::UI::Xaml::Media::Animation::RepeatBehavior Class::RepeatBehaviorProperty()
+    Microsoft::UI::Xaml::Media::Animation::RepeatBehavior Class::RepeatBehaviorProperty()
     {
         return _repeatBehavior;
     }
-    void Class::RepeatBehaviorProperty(Windows::UI::Xaml::Media::Animation::RepeatBehavior const& value)
+    void Class::RepeatBehaviorProperty(Microsoft::UI::Xaml::Media::Animation::RepeatBehavior const& value)
     {
         _repeatBehavior = value;
     }
-    Windows::UI::Xaml::Media::Media3D::Matrix3D Class::Matrix3DProperty()
+    Microsoft::UI::Xaml::Media::Media3D::Matrix3D Class::Matrix3DProperty()
     {
         return _matrix3D;
     }
-    void Class::Matrix3DProperty(Windows::UI::Xaml::Media::Media3D::Matrix3D const& value)
+    void Class::Matrix3DProperty(Microsoft::UI::Xaml::Media::Media3D::Matrix3D const& value)
     {
         _matrix3D = value;
     }
