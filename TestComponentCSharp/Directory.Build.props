@@ -1,0 +1,10 @@
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" >
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <!--Only need the WinUI winmd files for compiling idl, so stub out Xaml targets-->
+  <Target Name="MarkupCompilePass1" />
+  <Target Name="MarkupCompilePass2" />
+  <Target Name="Prep_ComputeProcessXamlFiles" />
+
+</Project>

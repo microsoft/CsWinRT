@@ -1,5 +1,5 @@
 
-namespace Windows.UI.Xaml.Controls.Primitives
+namespace Microsoft.UI.Xaml.Controls.Primitives
 {
     using Windows.Foundation;
 
@@ -53,10 +53,10 @@ namespace Windows.UI.Xaml.Controls.Primitives
     }
 }
 
-namespace ABI.Windows.UI.Xaml.Controls.Primitives
+namespace ABI.Microsoft.UI.Xaml.Controls.Primitives
 {
     public static class GeneratorPosition
     {
-        public static string GetGuidSignature() => $"struct(Windows.UI.Xaml.Controls.Primitives.GeneratorPosition;i4;i4)";
+        public static string GetGuidSignature() => $"struct(Microsoft.UI.Xaml.Controls.Primitives.GeneratorPosition;i4;i4)";
     }
 }

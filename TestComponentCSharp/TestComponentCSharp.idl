@@ -55,8 +55,8 @@ namespace TestComponentCSharp
     delegate Object ProvideObject();
     delegate Windows.Foundation.Uri ProvideUri();
     delegate Windows.Foundation.Collections.IKeyValuePair<String, String> ProvideStringPair();
-    delegate Windows.UI.Xaml.Interop.IBindableIterable ProvideBindableIterable();
-    delegate Windows.UI.Xaml.Interop.IBindableVector ProvideBindableVector();
+    delegate Microsoft.UI.Xaml.Interop.IBindableIterable ProvideBindableIterable();
+    delegate Microsoft.UI.Xaml.Interop.IBindableVector ProvideBindableVector();
 
     interface ICowboy
     {
@@ -220,17 +220,17 @@ namespace TestComponentCSharp
         void SetIntIterable(Windows.Foundation.Collections.IIterable<Int32> value);
         
         // Bindable
-        Windows.UI.Xaml.Interop.IBindableIterable BindableIterableProperty;
+        Microsoft.UI.Xaml.Interop.IBindableIterable BindableIterableProperty;
         void RaiseBindableIterableChanged();
         void CallForBindableIterable(ProvideBindableIterable provideBindableIterable);
-        event Windows.Foundation.EventHandler<Windows.UI.Xaml.Interop.IBindableIterable> BindableIterablePropertyChanged;
+        event Windows.Foundation.EventHandler<Microsoft.UI.Xaml.Interop.IBindableIterable> BindableIterablePropertyChanged;
         
-        Windows.UI.Xaml.Interop.IBindableVector BindableVectorProperty;
+        Microsoft.UI.Xaml.Interop.IBindableVector BindableVectorProperty;
         void RaiseBindableVectorChanged();
         void CallForBindableVector(ProvideBindableVector provideBindableVector);
-        event Windows.Foundation.EventHandler<Windows.UI.Xaml.Interop.IBindableVector> BindableVectorPropertyChanged;
+        event Windows.Foundation.EventHandler<Microsoft.UI.Xaml.Interop.IBindableVector> BindableVectorPropertyChanged;
         
-        Windows.UI.Xaml.Interop.IBindableObservableVector BindableObservableVectorProperty;
+        Microsoft.UI.Xaml.Interop.IBindableObservableVector BindableObservableVectorProperty;
 
         void CopyProperties(IProperties1 src);
         void CopyPropertiesViaWeakReference(IProperties1 src);
@@ -251,15 +251,15 @@ namespace TestComponentCSharp
         Windows.Foundation.Rect RectProperty;
         Windows.Foundation.Size SizeProperty;
         Windows.UI.Color ColorProperty;
-        Windows.UI.Xaml.CornerRadius CornerRadiusProperty;
-        Windows.UI.Xaml.Duration DurationProperty;
-        Windows.UI.Xaml.GridLength GridLengthProperty;
-        Windows.UI.Xaml.Thickness ThicknessProperty;
-        Windows.UI.Xaml.Controls.Primitives.GeneratorPosition GeneratorPositionProperty;
-        Windows.UI.Xaml.Media.Matrix MatrixProperty;
-        Windows.UI.Xaml.Media.Animation.KeyTime KeyTimeProperty;
-        Windows.UI.Xaml.Media.Animation.RepeatBehavior RepeatBehaviorProperty;
-        Windows.UI.Xaml.Media.Media3D.Matrix3D Matrix3DProperty;
+        Microsoft.UI.Xaml.CornerRadius CornerRadiusProperty;
+        Microsoft.UI.Xaml.Duration DurationProperty;
+        Microsoft.UI.Xaml.GridLength GridLengthProperty;
+        Microsoft.UI.Xaml.Thickness ThicknessProperty;
+        Microsoft.UI.Xaml.Controls.Primitives.GeneratorPosition GeneratorPositionProperty;
+        Microsoft.UI.Xaml.Media.Matrix MatrixProperty;
+        Microsoft.UI.Xaml.Media.Animation.KeyTime KeyTimeProperty;
+        Microsoft.UI.Xaml.Media.Animation.RepeatBehavior RepeatBehaviorProperty;
+        Microsoft.UI.Xaml.Media.Media3D.Matrix3D Matrix3DProperty;
         Windows.Foundation.Numerics.Matrix3x2 Matrix3x2Property;
         Windows.Foundation.Numerics.Matrix4x4 Matrix4x4Property;
         Windows.Foundation.Numerics.Plane PlaneProperty;
