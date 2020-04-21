@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp5.0</TargetFramework>
     <Platforms>x64;x86</Platforms>
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <CsWinrtExe Condition="'$(CsWinrtPath)'!=''">$(CsWinrtPath)cswinrt.exe</CsWinrtExe>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -22,7 +23,7 @@
     </PackageReference>
     
     <!-- For WinRTModule-->
-    <InternalsVisibleTo Include="WinUITest"/>
+    <InternalsVisibleTo Include="WinUITest" />
   </ItemGroup>
 
   <Target Name="GenerateWinUIProjection" BeforeTargets="CoreCompile" Condition="'$(GenerateTestProjection)' == 'true'">
@@ -73,14 +74,14 @@
 -include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
       </CsWinRTParams>
     </PropertyGroup>
-    <MakeDir Directories="$(ProjectDir)Generated Files"/>
+    <MakeDir Directories="$(ProjectDir)Generated Files" />
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
     <Exec Command="$(CsWinRTCommand)" />
   </Target>
 
   <ItemGroup>
-    <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_WinUI)/runtimes/win10-$(Platform)/native/*.dll"/>
+    <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_WinUI)/runtimes/win10-$(Platform)/native/*.dll" />
     <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_WinUI)/runtimes/win10-$(Platform)/native/**/*.mui">
       <DestinationSubDirectory>%(RecursiveDir)</DestinationSubDirectory>
     </ReferenceCopyLocalPaths>
