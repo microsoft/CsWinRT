@@ -48,7 +48,6 @@
 -include TestComponentCSharp 
 -include TestComponent
 -include Windows.Foundation 
--include Windows.UI.Xaml.Interop
 -include Windows.UI.Color
 -include Microsoft.UI.Xaml.CornerRadius
 -include Microsoft.UI.Xaml.Duration
@@ -57,6 +56,7 @@
 -include Microsoft.UI.Xaml.GridUnitType
 -include Microsoft.UI.Xaml.Thickness
 -include Microsoft.UI.Xaml.Controls.Primitives.GeneratorPosition
+-include Microsoft.UI.Xaml.Interop
 -include Microsoft.UI.Xaml.Media.Matrix
 -exclude Microsoft.UI.Xaml.Media.MatrixTransform
 -exclude Microsoft.UI.Xaml.Media.Matrix3DProjection
@@ -64,6 +64,7 @@
 -include Microsoft.UI.Xaml.Media.Animation.RepeatBehavior
 -include Microsoft.UI.Xaml.Media.Animation.RepeatBehaviorType
 -include Microsoft.UI.Xaml.Media.Media3D.Matrix3D
+-include Microsoft.UI.Xaml.WinUIContract
 -exclude Windows.Foundation.Diagnostics 
 # Exclude types per Microsoft.Windows.SDK.WinUI.Contracts NuGet
 -exclude Windows.UI.Colors

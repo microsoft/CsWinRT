@@ -16,7 +16,7 @@ using System.Runtime.CompilerServices;
 namespace Windows.Foundation.Collections
 { 
     [Guid("02B51929-C1C4-4A7E-8940-0312B5C18500")]
-    public interface IKeyValuePair<K, V>
+    interface IKeyValuePair<K, V>
     {
         K Key { get; }
         V Value { get; }

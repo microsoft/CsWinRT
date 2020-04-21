@@ -15,7 +15,7 @@ using System.Diagnostics;
 namespace Windows.Foundation.Collections
 {
     [Guid("913337E9-11A1-4345-A3A2-4E7F956E222D")]
-    public interface IVector<T> : IIterable<T>
+    interface IVector<T> : IIterable<T>
     {
         T GetAt(uint index);
         IVectorView<T> GetView();
@@ -265,7 +265,7 @@ namespace ABI.System.Collections.Generic
 
             public ToAbiHelper(global::System.Collections.Generic.IList<T> list) => _list = list;
 
-            public global::Windows.Foundation.Collections.IIterator<T> First() =>
+            global::Windows.Foundation.Collections.IIterator<T> global::Windows.Foundation.Collections.IIterable<T>.First() =>
                 new IEnumerator<T>.ToAbiHelper(_list.GetEnumerator());
 
             private static void EnsureIndexInt32(uint index, int limit = int.MaxValue)
@@ -296,7 +296,7 @@ namespace ABI.System.Collections.Generic
 
             public uint Size => (uint)_list.Count;
 
-            public global::Windows.Foundation.Collections.IVectorView<T> GetView()
+            global::Windows.Foundation.Collections.IVectorView<T> global::Windows.Foundation.Collections.IVector<T>.GetView()
             {
                 // Note: This list is not really read-only - you could QI for a modifiable
                 // list.  We gain some perf by doing this.  We believe this is acceptable.
@@ -528,7 +528,7 @@ namespace ABI.System.Collections.Generic
             private static ConditionalWeakTable<global::System.Collections.Generic.IList<T>, ToAbiHelper> _adapterTable =
                 new ConditionalWeakTable<global::System.Collections.Generic.IList<T>, ToAbiHelper>();
 
-            private static ToAbiHelper FindAdapter(IntPtr thisPtr)
+            private static global::Windows.Foundation.Collections.IVector<T> FindAdapter(IntPtr thisPtr)
             {
                 var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.Generic.IList<T>>(thisPtr);
                 return _adapterTable.GetValue(__this, (list) => new ToAbiHelper(list));
@@ -765,7 +765,7 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        public unsafe global::Windows.Foundation.Collections.IVectorView<T> GetView()
+        internal unsafe global::Windows.Foundation.Collections.IVectorView<T> GetView()
         {
             IntPtr __retval = default;
             try

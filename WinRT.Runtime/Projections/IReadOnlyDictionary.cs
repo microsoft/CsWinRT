@@ -15,7 +15,7 @@ using System.Diagnostics;
 namespace Windows.Foundation.Collections
 {
     [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
-    public interface IMapView<K, V> : IIterable<IKeyValuePair<K, V>>
+    interface IMapView<K, V> : IIterable<IKeyValuePair<K, V>>
     {
         V Lookup(K key);
         bool HasKey(K key);
@@ -270,7 +270,7 @@ namespace ABI.System.Collections.Generic
 
             uint global::Windows.Foundation.Collections.IMapView<K, V>.Size { get => (uint)_dictionary.Count; }
 
-            public global::Windows.Foundation.Collections.IIterator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> First() =>
+            global::Windows.Foundation.Collections.IIterator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> global::Windows.Foundation.Collections.IIterable<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.First() =>
                 new IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.ToAbiHelper(
                     new KeyValuePair<K, V>.Enumerator(_dictionary.GetEnumerator()));
 
@@ -293,7 +293,7 @@ namespace ABI.System.Collections.Generic
 
             public bool HasKey(K key) => _dictionary.ContainsKey(key);
 
-            public void Split(out global::Windows.Foundation.Collections.IMapView<K, V> first, out global::Windows.Foundation.Collections.IMapView<K, V> second)
+            void global::Windows.Foundation.Collections.IMapView<K, V>.Split(out global::Windows.Foundation.Collections.IMapView<K, V> first, out global::Windows.Foundation.Collections.IMapView<K, V> second)
             {
                 if (_dictionary.Count < 2)
                 {
@@ -509,7 +509,7 @@ namespace ABI.System.Collections.Generic
             private static ConditionalWeakTable<global::System.Collections.Generic.IReadOnlyDictionary<K, V>, ToAbiHelper> _adapterTable =
                 new ConditionalWeakTable<global::System.Collections.Generic.IReadOnlyDictionary<K, V>, ToAbiHelper>();
 
-            private static ToAbiHelper FindAdapter(IntPtr thisPtr)
+            private static global::Windows.Foundation.Collections.IMapView<K, V> FindAdapter(IntPtr thisPtr)
             {
                 var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.Generic.IReadOnlyDictionary<K, V>>(thisPtr);
                 return _adapterTable.GetValue(__this, (dictionary) => new ToAbiHelper(dictionary));
@@ -580,7 +580,7 @@ namespace ABI.System.Collections.Generic
 
                 try
                 {
-                    ____return_value__ = FindAdapter(thisPtr).Size();
+                    ____return_value__ = FindAdapter(thisPtr).Size;
                     __return_value__ = ____return_value__;
                 }
                 catch (Exception __exception__)
@@ -653,7 +653,7 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        public unsafe void Split(out global::Windows.Foundation.Collections.IMapView<K, V> first, out global::Windows.Foundation.Collections.IMapView<K, V> second)
+        internal unsafe void Split(out global::Windows.Foundation.Collections.IMapView<K, V> first, out global::Windows.Foundation.Collections.IMapView<K, V> second)
         {
             IntPtr __first = default;
             IntPtr __second = default;

@@ -15,7 +15,7 @@ using System.Diagnostics;
 namespace Windows.Foundation.Collections
 {
     [Guid("3C2925FE-8519-45C1-AA79-197B6718C1C1")]
-    public interface IMap<K, V> : IIterable<IKeyValuePair<K, V>>
+    interface IMap<K, V> : IIterable<IKeyValuePair<K, V>>
     {
         V Lookup(K key);
         bool HasKey(K key);
@@ -444,7 +444,7 @@ namespace ABI.System.Collections.Generic
 
             public ToAbiHelper(global::System.Collections.Generic.IDictionary<K, V> dictionary) => _dictionary = dictionary;
 
-            public global::Windows.Foundation.Collections.IIterator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> First() =>
+            global::Windows.Foundation.Collections.IIterator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> global::Windows.Foundation.Collections.IIterable<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.First() =>
                 new IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.ToAbiHelper(
                     new KeyValuePair<K,V>.Enumerator(_dictionary.GetEnumerator()));
 
@@ -468,7 +468,7 @@ namespace ABI.System.Collections.Generic
 
             public bool HasKey(K key) => _dictionary.ContainsKey(key);
 
-            public global::Windows.Foundation.Collections.IMapView<K, V> GetView()
+            global::Windows.Foundation.Collections.IMapView<K, V> global::Windows.Foundation.Collections.IMap<K, V>.GetView()
             {
                 if (!(_dictionary is global::System.Collections.Generic.IReadOnlyDictionary<K, V> roDictionary))
                 {
@@ -562,7 +562,7 @@ namespace ABI.System.Collections.Generic
             private static ConditionalWeakTable<global::System.Collections.Generic.IDictionary<K, V>, ToAbiHelper> _adapterTable =
                 new ConditionalWeakTable<global::System.Collections.Generic.IDictionary<K, V>, ToAbiHelper>();
 
-            private static ToAbiHelper FindAdapter(IntPtr thisPtr)
+            private static global::Windows.Foundation.Collections.IMap<K, V> FindAdapter(IntPtr thisPtr)
             {
                 var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.Generic.IDictionary<K, V>>(thisPtr);
                 return _adapterTable.GetValue(__this, (dictionary) => new ToAbiHelper(dictionary));
@@ -752,7 +752,7 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        public unsafe global::Windows.Foundation.Collections.IMapView<K, V> GetView()
+        internal unsafe global::Windows.Foundation.Collections.IMapView<K, V> GetView()
         {
             IntPtr __retval = default;
             try
