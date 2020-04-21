@@ -26,7 +26,10 @@ namespace WinRT
 
         public static Type GetHelperType(this Type type)
         {
-            return type.FindHelperType() ?? throw new InvalidOperationException("Target type is not a projected type.");
+            var helperType = type.FindHelperType();
+            if (helperType is object)
+                return helperType;
+            throw new InvalidOperationException($"Target type is not a projected type: {type.FullName}.");
         }
 
         public static Type GetGuidType(this Type type)
