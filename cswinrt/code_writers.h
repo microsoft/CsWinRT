@@ -1008,7 +1008,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
         }
     }
 
-    void write_composable_constructors(writer& w, TypeDef const& composable_type, TypeDef const& class_type)
+    void write_composable_constructors(writer& w, TypeDef const& composable_type, TypeDef const& class_type, std::string_view visibility)
     {
         auto cache_object = write_factory_cache_object<write_composing_factory_method>(w, composable_type, class_type);
         auto default_interface_name = get_default_interface_name(w, class_type);
@@ -1022,7 +1022,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
             params_without_objects.pop_back();
 
             w.write(R"(
-public %(%)%
+% %(%)%
 {
 object baseInspectable = this.GetType() != typeof(%) ? this : null;
 IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
@@ -1041,6 +1041,7 @@ MarshalInspectable.DisposeAbi(ptr);
 }
 }
 )",
+                visibility,
                 class_type.TypeName(),
                 bind_list<write_projection_parameter>(", ", params_without_objects),
                 has_base_type ? ":base(global::WinRT.DerivedComposed.Instance)" : "",
@@ -1097,9 +1098,9 @@ MarshalInspectable.DisposeAbi(ptr);
             {
                 write_factory_constructors(w, factory.type, type);
             }
-            else if (factory.composable && factory.visible)
+            else if (factory.composable)
             {
-                write_composable_constructors(w, factory.type, type);
+                write_composable_constructors(w, factory.type, type, factory.visible ? "public"sv : "protected"sv);
             }
             else if (factory.statics)
             {
