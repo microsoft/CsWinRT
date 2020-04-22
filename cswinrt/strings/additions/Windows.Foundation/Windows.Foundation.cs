@@ -783,6 +783,22 @@ namespace System
         {
             return AsTask(source).GetAwaiter();
         }
+
+        public static IAsyncAction AsAsyncAction(this Task source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return new TaskToAsyncActionAdapter(source, underlyingCancelTokenSource: null);
+        }
+
+        public static IAsyncOperation<TResult> AsAsyncOperation<TResult>(this Task<TResult> source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return new TaskToAsyncOperationAdapter<TResult>(source, underlyingCancelTokenSource: null);
+        }
     }
 
     // Marker type since generic parameters cannot be 'void'
@@ -867,7 +883,7 @@ namespace System
         {
             if (asyncInfo == null)
             {
-               throw new ArgumentNullException(nameof(asyncInfo));
+                throw new ArgumentNullException(nameof(asyncInfo));
             }
 
             // TODO: AsyncCausality?
