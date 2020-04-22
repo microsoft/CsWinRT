@@ -86,4 +86,9 @@
   </ItemGroup>
   <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" Condition="'$(BuildingInsideVisualStudio)'=='true'" />
   <Import Project="$(MSBuildThisFileDirectory)NoBuild.targets" Condition="'$(BuildingInsideVisualStudio)'!='true'" />
+  <PropertyGroup>
+    <_AddWinUIAssembliesToReferenceCopyLocalPaths>true</_AddWinUIAssembliesToReferenceCopyLocalPaths>
+  </PropertyGroup>
+  <Import Project="..\..\packages\Microsoft.WinUI.$(MicrosoftWinUIVersion)\build\Microsoft.WinUI.AppX.targets"  Condition="'$(BuildingInsideVisualStudio)'=='true'" />
+  <Import Project="..\..\packages\Microsoft.WinUI.$(MicrosoftWinUIVersion)\build\Microsoft.WinUI.References.targets"  Condition="'$(BuildingInsideVisualStudio)'=='true'" />
 </Project>

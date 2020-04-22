@@ -119,14 +119,14 @@ namespace WinRT
             var interfaces = obj.GetType().GetInterfaces();
             foreach (var iface in interfaces)
             {
-                var ifaceAbiType = iface.FindHelperType();
-                if (ifaceAbiType == null)
+                if (!IsWinRtType(iface))
                 {
                     // This interface isn't a WinRT interface.
                     // TODO: Handle WinRT -> .NET projected interfaces.
                     continue;
                 }
 
+                var ifaceAbiType = iface.FindHelperType();
                 entries.Add(new ComInterfaceEntry
                 {
                     IID = GuidGenerator.GetIID(ifaceAbiType),
@@ -189,6 +189,33 @@ namespace WinRT
                 Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
             });
             return entries;
+        }
+
+        private static bool IsWinRtType(Type type)
+        {
+            // If a type has generic type arguments, we'll require both the type itself
+            // and all of its generic type arguments to be WinRT types before we'll
+            // report that the whole type is a WinRT type.  Otherwise, we can end up
+            // trying and failing to retrieve the ABI counterpart to a non-WinRT type,
+            // which will throw an exception.
+            var abiType = type.FindHelperType();
+            if (abiType == null)
+            {
+                return false;
+            }
+
+            if (abiType.IsGenericType)
+            {
+                foreach (Type genericTypeArgument in abiType.GenericTypeArguments)
+                {
+                    if (!IsWinRtType(genericTypeArgument))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         internal static (InspectableInfo inspectableInfo, List<ComInterfaceEntry> interfaceTableEntries) PregenerateNativeTypeInformation(object obj)
