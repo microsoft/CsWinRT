@@ -970,21 +970,5 @@ namespace System
                 }
             }
         }
-
-        public static IAsyncAction AsAsyncAction(this Task source)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-
-            return new TaskToAsyncActionAdapter(source, underlyingCancelTokenSource: null);
-        }
-
-        public static IAsyncOperation<TResult> AsAsyncOperation<TResult>(this Task<TResult> source)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-
-            return new TaskToAsyncOperationAdapter<TResult>(source, underlyingCancelTokenSource: null);
-        }
     }
 }
