@@ -303,11 +303,6 @@ namespace cswinrt
         switch (get_param_category(param))
         {
         case param_category::out:
-            w.write("out ");
-            break;
-        case param_category::fill_array:
-            w.write("ref ");
-            break;
         case param_category::receive_array:
             w.write("out ");
             break;
@@ -330,10 +325,8 @@ namespace cswinrt
             w.write("out %", bind<write_projection_type>(semantics));
             break;
         case param_category::pass_array:
-            w.write("%[]", bind<write_projection_type>(semantics));
-            break;
         case param_category::fill_array:
-            w.write("ref %[]", bind<write_projection_type>(semantics));
+            w.write("%[]", bind<write_projection_type>(semantics));
             break;
         case param_category::receive_array:
             w.write("out %[]", bind<write_projection_type>(semantics));
@@ -435,8 +428,6 @@ namespace cswinrt
             w.write(", out % %", bind<write_abi_type>(semantics), param_name);
             break;
         case param_category::pass_array:
-            w.write(", int __%Size, IntPtr %", param_name, param_name);
-            break;
         case param_category::fill_array:
             w.write(", int __%Size, IntPtr %", param_name, param_name);
             break;
@@ -1873,6 +1864,18 @@ event % %;)",
         {
             if (!is_ref() && (!is_out() || local_type.empty()))
                 return;
+            if (is_ref())
+            {
+                if (!starts_with(marshaler_type, "MarshalBlittable"))
+                {
+                    w.write("%.CopyAbiArray(%, (__%_length, __%_data));\n",
+                        marshaler_type,
+                        bind<write_escaped_identifier>(param_name),
+                        param_name,
+                        param_name);
+                }
+                return;
+            }
             is_return ?
                 w.write("return ") :
                 w.write("% = ", bind<write_escaped_identifier>(param_name));
@@ -2886,7 +2889,7 @@ remove => _%.Unsubscribe(value);
             {
                 is_generic() ?
                     w.write("null") :
-                    w.write("% __%", is_out() ? "out" : "ref", param_name);
+                    w.write("% __%", is_out() ? "out" : "", param_name);
             }
             else if (marshaler_type.empty())
             {
@@ -2924,7 +2927,7 @@ remove => _%.Unsubscribe(value);
             if (!is_ref() && (!is_out() || local_type.empty()))
                 return;
             auto param_local = get_param_local(w);
-            if (category == param_category::fill_array)
+            if (is_ref())
             {
                 w.write("%.CopyManagedArray(%, %);\n",
                     marshaler_type,

@@ -36,7 +36,7 @@ namespace WinRT
 
     // TODO: minimize heap allocations for marshalers by eliminating explicit try/finally
     // and adopting ref structs with non-IDisposable Dispose and 'using var ...' pattern,
-    // as well as passing marshalers to FromAbi by ref so they can be disposed.
+    // as well as passing marshalers to FromAbi by ref so they can be conditionally disposed.
     class MarshalString
     {
         public unsafe struct HStringHeader // sizeof(HSTRING_HEADER)
@@ -175,6 +175,16 @@ namespace WinRT
                 array[i] = MarshalString.FromAbi(data[i]);
             }
             return array;
+        }
+
+        public static unsafe void CopyAbiArray(string[] array, object box)
+        {
+            var abi = ((int length, IntPtr data))box;
+            var data = (IntPtr*)abi.data.ToPointer();
+            for (int i = 0; i < abi.length; i++)
+            {
+                array[i] = MarshalString.FromAbi(data[i]);
+            }
         }
 
         public static unsafe (int length, IntPtr data) FromManagedArray(string[] array)
@@ -462,6 +472,19 @@ namespace WinRT
                 data += abi_element_size;
             }
             return array;
+        }
+
+        public static unsafe void CopyAbiArray(T[] array, object box)
+        {
+            var abi = ((int length, IntPtr data))box;
+            var data = (byte*)abi.data.ToPointer();
+            var abi_element_size = Marshal.SizeOf(HelperType);
+            for (int i = 0; i < abi.length; i++)
+            {
+                var abi_element = Marshal.PtrToStructure((IntPtr)data, HelperType);
+                array[i] = Marshaler<T>.FromAbi(abi_element);
+                data += abi_element_size;
+            }
         }
 
         public static unsafe (int length, IntPtr data) FromManagedArray(T[] array)
