@@ -145,7 +145,13 @@ namespace WinRT
                 return null;
             }
 
-            string runtimeClassName = inspectable.GetRuntimeClassName();
+            string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
+            if (runtimeClassName == null)
+            { 
+                // If the external IInspectable has not implemented GetRuntimeClassName, we can't
+                // look up the appropriate RCW, so fall back to default behavior here too.
+                return null;
+            }
             return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
         }
 

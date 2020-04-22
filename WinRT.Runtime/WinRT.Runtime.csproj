@@ -7,6 +7,11 @@
     <LangVersion>8</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="../cswinrt/strings/*.cs" Link="cswinrt/%(FileName)%(Extension)" />
   </ItemGroup>

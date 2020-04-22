@@ -65,12 +65,16 @@
 -include Microsoft.UI.Xaml.Media.Animation.RepeatBehaviorType
 -include Microsoft.UI.Xaml.Media.Media3D.Matrix3D
 -include Microsoft.UI.Xaml.WinUIContract
+# Exclude causality types colliding with those in System.Private.CoreLib.dll
 -exclude Windows.Foundation.Diagnostics 
 # Exclude types per Microsoft.Windows.SDK.WinUI.Contracts NuGet
 -exclude Windows.UI.Colors
 -exclude Windows.UI.IColors
 -exclude Windows.UI.ColorHelper
 -exclude Windows.UI.IColorHelper
+# The current WinUI nuget incorrectly references several Windows.* types that should be
+# Microsoft.* types instead.  Temporarily include these to enable the build
+-include Windows.UI.Xaml.Interop.NotifyCollectionChangedAction
       </CsWinRTParams>
     </PropertyGroup>
     <WriteLinesToFile

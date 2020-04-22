@@ -98,12 +98,18 @@ namespace WinRT
             _obj = obj;
         }
 
-        public unsafe string GetRuntimeClassName()
+        public unsafe string GetRuntimeClassName(bool noThrow = false)
         {
             IntPtr __retval = default;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetRuntimeClassName(ThisPtr, out __retval));
+                var hr = _obj.Vftbl.GetRuntimeClassName(ThisPtr, out __retval);
+                if (hr != 0)
+                {
+                    if (noThrow)
+                        return null;
+                    Marshal.ThrowExceptionForHR(hr);
+                }
                 uint length;
                 char* buffer = Platform.WindowsGetStringRawBuffer(__retval, &length);
                 return new string(buffer, 0, (int)length);

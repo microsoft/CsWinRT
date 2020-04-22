@@ -44,6 +44,8 @@
 -out "$(ProjectDir)Generated Files"
 -include Microsoft
 -include Windows
+# Exclude causality types colliding with those in System.Private.CoreLib.dll
+-exclude Windows.Foundation.Diagnostics 
 # Exclude Windows.UI, Windows.UI.Text, Windows.UI.Xaml per Microsoft.Windows.SDK.WinUI.Contracts NuGet
 -exclude Windows.UI.Colors
 -exclude Windows.UI.IColors
