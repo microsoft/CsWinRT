@@ -257,7 +257,7 @@ namespace System.IO
         }
 
 
-        public static IRandomAccessStream AsrandomAccessStream(this Stream stream)
+        public static IRandomAccessStream AsRandomAccessStream(this Stream stream)
         {
             if (stream == null)
                 throw new ArgumentNullException(nameof(stream));
