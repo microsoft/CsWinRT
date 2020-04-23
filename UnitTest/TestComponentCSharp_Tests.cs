@@ -1417,6 +1417,7 @@ namespace UnitTest
         public void CCWOfListOfManagedType()
         {
             using var ccw = ComWrappersSupport.CreateCCWForObject(new List<ManagedType>());
+            using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(ABI.System.Collections.Generic.IEnumerable<object>)));
         }
     }
 }
