@@ -119,13 +119,13 @@ namespace WinRT
             var interfaces = obj.GetType().GetInterfaces();
             foreach (var iface in interfaces)
             {
-                var ifaceAbiType = iface.FindHelperType();
-                if (ifaceAbiType == null)
+                if (!Projections.IsTypeWindowsRuntimeType(iface))
                 {
                     // This interface isn't a WinRT interface.
-                    // TODO: Handle WinRT -> .NET projected interfaces.
                     continue;
                 }
+
+                var ifaceAbiType = iface.FindHelperType();
 
                 entries.Add(new ComInterfaceEntry
                 {

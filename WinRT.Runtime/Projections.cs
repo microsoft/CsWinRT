@@ -159,11 +159,27 @@ namespace WinRT
             {
                 typeToTest = typeToTest.GetElementType();
             }
-            if (typeToTest.IsGenericType)
+            return IsTypeWindowsRuntimeTypeNoArray(typeToTest);
+        }
+
+        private static bool IsTypeWindowsRuntimeTypeNoArray(Type type)
+        {
+            if (type.IsConstructedGenericType)
             {
-                typeToTest = typeToTest.GetGenericTypeDefinition();
+                if(IsTypeWindowsRuntimeTypeNoArray(type.GetGenericTypeDefinition()))
+                {
+                    foreach (var arg in type.GetGenericArguments())
+                    {
+                        if (!IsTypeWindowsRuntimeTypeNoArray(arg))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                return false;
             }
-            return CustomTypeToAbiTypeNameMappings.ContainsKey(typeToTest) || typeToTest.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object;
+            return CustomTypeToAbiTypeNameMappings.ContainsKey(type) || type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object;
         }
 
         internal static bool TryGetDefaultInterfaceTypeForRuntimeClassType(Type runtimeClass, out Type defaultInterface)

@@ -1410,5 +1410,13 @@ namespace UnitTest
             Assert.Equal(string.Empty, (string)str1);
             Assert.Equal(string.Empty, (string)str2);
         }
+
+        internal class ManagedType { }
+
+        [Fact]
+        public void CCWOfListOfManagedType()
+        {
+            using var ccw = ComWrappersSupport.CreateCCWForObject(new List<ManagedType>());
+        }
     }
 }
