@@ -119,19 +119,26 @@ namespace WinRT
             var interfaces = obj.GetType().GetInterfaces();
             foreach (var iface in interfaces)
             {
-                var ifaceAbiType = iface.FindHelperType();
-                if (ifaceAbiType == null)
+                if (Projections.IsTypeWindowsRuntimeType(iface))
                 {
-                    // This interface isn't a WinRT interface.
-                    // TODO: Handle WinRT -> .NET projected interfaces.
-                    continue;
+                    var ifaceAbiType = iface.FindHelperType();
+                    entries.Add(new ComInterfaceEntry
+                    {
+                        IID = GuidGenerator.GetIID(ifaceAbiType),
+                        Vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                    });
                 }
 
-                entries.Add(new ComInterfaceEntry
+                if (iface.IsConstructedGenericType
+                    && Projections.TryGetCompatibleWindowsRuntimeTypeForVariantType(iface, out var compatibleIface))
                 {
-                    IID = GuidGenerator.GetIID(ifaceAbiType),
-                    Vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
-                });
+                    var compatibleIfaceAbiType = compatibleIface.FindHelperType();
+                    entries.Add(new ComInterfaceEntry
+                    {
+                        IID = GuidGenerator.GetIID(compatibleIfaceAbiType),
+                        Vtable = (IntPtr)compatibleIfaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                    });
+                }
             }
 
             if (obj is Delegate)

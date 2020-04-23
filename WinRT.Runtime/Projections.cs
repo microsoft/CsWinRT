@@ -159,11 +159,68 @@ namespace WinRT
             {
                 typeToTest = typeToTest.GetElementType();
             }
-            if (typeToTest.IsGenericType)
+            return IsTypeWindowsRuntimeTypeNoArray(typeToTest);
+        }
+
+        private static bool IsTypeWindowsRuntimeTypeNoArray(Type type)
+        {
+            if (type.IsConstructedGenericType)
             {
-                typeToTest = typeToTest.GetGenericTypeDefinition();
+                if(IsTypeWindowsRuntimeTypeNoArray(type.GetGenericTypeDefinition()))
+                {
+                    foreach (var arg in type.GetGenericArguments())
+                    {
+                        if (!IsTypeWindowsRuntimeTypeNoArray(arg))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                return false;
             }
-            return CustomTypeToAbiTypeNameMappings.ContainsKey(typeToTest) || typeToTest.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object;
+            return CustomTypeToAbiTypeNameMappings.ContainsKey(type) || type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object;
+        }
+
+        public static bool TryGetCompatibleWindowsRuntimeTypeForVariantType(Type type, out Type compatibleType)
+        {
+            compatibleType = null;
+            if (!type.IsConstructedGenericType)
+            {
+                throw new ArgumentException(nameof(type));
+            }
+
+            var definition = type.GetGenericTypeDefinition();
+
+            if (!IsTypeWindowsRuntimeTypeNoArray(definition))
+            {
+                return false;
+            }
+
+            var genericConstraints = definition.GetGenericArguments();
+            var genericArguments = type.GetGenericArguments();
+            var newArguments = new Type[genericArguments.Length];
+            for (int i = 0; i < genericArguments.Length; i++)
+            {
+                if (!IsTypeWindowsRuntimeTypeNoArray(genericArguments[i]))
+                {
+                    bool argumentCovariant = (genericConstraints[i].GenericParameterAttributes & GenericParameterAttributes.VarianceMask) == GenericParameterAttributes.Covariant;
+                    if (argumentCovariant && !genericArguments[i].IsValueType)
+                    {
+                        newArguments[i] = typeof(object);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    newArguments[i] = genericArguments[i];
+                }
+            }
+            compatibleType = definition.MakeGenericType(newArguments);
+            return true;
         }
 
         internal static bool TryGetDefaultInterfaceTypeForRuntimeClassType(Type runtimeClass, out Type defaultInterface)
