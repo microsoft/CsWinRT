@@ -1181,13 +1181,13 @@ set => %[key] = value;
 }
 public void Add(% key, % value) => %.Add(key, value);
 public bool ContainsKey(% key) => %.ContainsKey(key);
-bool IDictionary<%, %>.Remove(% key) => %.Remove(key);
+public bool Remove(% key) => %.Remove(key);
 public bool TryGetValue(% key, out % value) => %.TryGetValue(key, out value);
 public void Add(KeyValuePair<%, %> item) => %.Add(item);
 public void Clear() => %.Clear();
 public bool Contains(KeyValuePair<%, %> item) => %.Contains(item);
 public void CopyTo(KeyValuePair<%, %>[] array, int arrayIndex) => %.CopyTo(array, arrayIndex);
-public bool Remove(KeyValuePair<%, %> item) => %.Remove(item);
+bool ICollection<KeyValuePair<%, %>>.Remove(KeyValuePair<%, %> item) => %.Remove(item);
 )", 
             key, target, 
             value, target, 
@@ -1196,13 +1196,13 @@ public bool Remove(KeyValuePair<%, %> item) => %.Remove(item);
             value, key, target, target, 
             key, value, target, 
             key, target, 
-            key, value, key, target, 
+            key, target, 
             key, value, target,
             key, value, target,
             target,
             key, value, target,
             key, value, target,
-            key, value, target);
+            key, value, key, value, target);
         
         if (!include_enumerable) return;
         w.write(R"(
