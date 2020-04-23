@@ -62,6 +62,14 @@ namespace WinRT
 
                 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
+                    if (runtimeClassName.StartsWith("Windows.") && assembly == typeof(object).Assembly)
+                    {
+                        // WORKAROUND:
+                        // Some WinRT types currently are also defined privately in .NET.
+                        // These types are meant to support the old projections system.
+                        // Ignore them here.
+                        continue;
+                    }
                     Type type = assembly.GetType(runtimeClassName);
                     if (type is object)
                     {
