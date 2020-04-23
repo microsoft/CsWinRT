@@ -37,7 +37,8 @@ namespace WinRT
     // TODO: minimize heap allocations for marshalers by eliminating explicit try/finally
     // and adopting ref structs with non-IDisposable Dispose and 'using var ...' pattern,
     // as well as passing marshalers to FromAbi by ref so they can be conditionally disposed.
-    class MarshalString
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public class MarshalString
     {
         public unsafe struct HStringHeader // sizeof(HSTRING_HEADER)
         {
@@ -260,7 +261,8 @@ namespace WinRT
         }
     }
 
-    struct MarshalBlittable<T>
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public struct MarshalBlittable<T>
     {
         public struct MarshalerArray
         {
@@ -318,7 +320,8 @@ namespace WinRT
         }
     }
 
-    class MarshalGeneric<T>
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public class MarshalGeneric<T>
     {
         protected static readonly Type HelperType = typeof(T).GetHelperType();
         protected static readonly Type AbiType = typeof(T).GetAbiType();
@@ -403,7 +406,8 @@ namespace WinRT
         }
     }
 
-    class MarshalNonBlittable<T> : MarshalGeneric<T>
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public class MarshalNonBlittable<T> : MarshalGeneric<T>
     {
         public struct MarshalerArray
         {
@@ -566,7 +570,8 @@ namespace WinRT
         }
     }
 
-    class MarshalInterfaceHelper<T>
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public class MarshalInterfaceHelper<T>
     {
         public struct MarshalerArray
         {
@@ -722,7 +727,8 @@ namespace WinRT
         }
     }
 
-    struct MarshalInterface<T>
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public struct MarshalInterface<T>
     {
         private static readonly Type HelperType = typeof(T).GetHelperType();
         private static Func<T, IObjectReference> _ToAbi;
@@ -845,7 +851,8 @@ namespace WinRT
         }
     }
 
-    static class MarshalInspectable
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    static public class MarshalInspectable
     {
         public static IObjectReference CreateMarshaler(object o, bool unwrapObject = true)
         {
@@ -932,7 +939,8 @@ namespace WinRT
         public static unsafe void DisposeAbiArray(object box) => MarshalInterfaceHelper<object>.DisposeAbiArray(box);
     }
 
-    internal class Marshaler<T>
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public class Marshaler<T>
     {
         static Marshaler()
         {

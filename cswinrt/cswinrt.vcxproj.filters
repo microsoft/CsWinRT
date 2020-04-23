@@ -58,9 +58,6 @@
       <Filter>strings</Filter>
     </None>
     <None Include="packages.config" />
-    <None Include="strings\WinRT_Marshal.cs">
-      <Filter>strings</Filter>
-    </None>
     <None Include="strings\WinRT_Interop.cs">
       <Filter>strings</Filter>
     </None>
