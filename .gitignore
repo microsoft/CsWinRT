@@ -15,3 +15,4 @@ Generated Files
 TestWinRT
 _build/
 global.json
+.nuget
