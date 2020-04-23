@@ -33,6 +33,7 @@ namespace cswinrt
         { "exclude", 0, option::no_max, "<prefix>", "One or more prefixes to exclude from projection" },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
         { "help", 0, option::no_max, {}, "Show detailed help" },
+        { "?", 0, option::no_max, {}, {} },
     };
 
     static void print_usage(writer& w)
@@ -75,7 +76,7 @@ Where <spec> is one or more of:
     {
         reader args{ argc, argv, options };
 
-        if (!args || args.exists("help"))
+        if (!args || args.exists("help") || args.exists("?"))
         {
             throw usage_exception{};
         }

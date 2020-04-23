@@ -1,29 +1,41 @@
-[![Build status](https://dev.azure.com/microsoft/Dart/_apis/build/status/CsWinRT%20Nuget)](https://dev.azure.com/microsoft/Dart/_build/latest?definitionId=45187)
+[![Build status](https://dev.azure.com/microsoft/Dart/_apis/build/status/cswinrt%20Nuget)](https://dev.azure.com/microsoft/Dart/_build/latest?definitionId=45187)
 
 # The C#/WinRT Language Projection
 
-C#/WinRT provides WinRT projection support for the C# language. The projection allows the .NET runtime to interop with the Windows Runtime (WinRT). Windows Runtime APIs are defined in `*.winmd` format, and cswinrt includes tooling that generates .NET Standard 2.0 C# code that can be compiled into interop assemblies, similar to how [cppwinrt](https://github.com/Microsoft/cppwinrt) generates headers for the C++ language projection. This means that neither the C# compiler nor the .NET Runtime no longer need to have built-in knowledge of WinRT.
+See also:
+* Documentation: http://aka.ms/cswinrt
+* NuGet package: http://aka.ms/cswinrt/nuget
+
+C#/WinRT provides Windows Runtime (WinRT) projection support for the C# language. A "projection" is an adapter that enables programming the WinRT APIs in a natural and familiar way for the target language. For example, the C#/WinRT projection hides the details of interop between C# and WinRT interfaces, and provides mappings of many WinRT types to appropriate .NET equivalents, such as strings, URIs, common value types, and generic collections.  
+
+WinRT APIs are defined in `*.winmd` format, and C#/WinRT includes tooling that generates .NET Standard 2.0 C# code that can be compiled into interop assemblies, similar to how [C++/WinRT](https://github.com/Microsoft/cppwinrt) generates headers for the C++ language projection. This means that neither the C# compiler nor the .NET Runtime require built-in knowledge of WinRT any longer.
 
 C#/WinRT is part of the [xlang](https://github.com/microsoft/xlang) family of projects that help developers create APIs that can run on multiple platforms and be used with a variety of languages. 
 
 ### Motivation
-.NET Core is the focus for the .NET platform. It is an open-source, cross-platform runtime that and can be used to build device, cloud, and IoT applications. Previous versions of .NET Framework and .NET Core have built-in knowledge of WinRT which is a windows specific techology. By lifting this projection support out of the compiler and runtime, we are supporting efforts to make .NET more efficient for its .NET5 release. More information about .NET can be found at https://docs.microsoft.com/en-us/dotnet/core/
+.NET Core is the focus for the .NET platform. It is an open-source, cross-platform runtime that can be used to build device, cloud, and IoT applications. Previous versions of .NET Framework and .NET Core have built-in knowledge of WinRT which is a Windows-specific technology. By lifting this projection support out of the compiler and runtime, we are supporting efforts to make .NET more efficient for its .NET 5 release. More information about .NET can be found at https://docs.microsoft.com/en-us/dotnet/core/
 
 [WinUI3.0](https://github.com/Microsoft/microsoft-ui-xaml) is the effort to lift official native Microsoft UI controls and features out of the operating system, so app developers can use the latest controls and visuals on any in-market version of the OS. C#/WinRT is needed to support the changes required for lifting the XAML APIs out of Windows.UI.XAML and into Microsoft.UI.XAML.
 
-### Goals
-1. Create tooling that enables .net developers to consume `.winmds`
-    - includes adding a reference to winmd 
-    - includes component library authors to produce projection assemblies to redist with their libraries.
-2. Maintain compat with the existing .NET projection
-3. Production support as required for activation contract support (TBD)
+However, C#/WinRT is a general effort and is intended to support other scenarios and versions of the .NET runtime, compatible down to .NET Standard 2.0.
 
-#### Non-Goals
-1. Cross platform implementation of an api 
-2. Does not define how the project system will use the projection 
+# Usage
 
-### Release
-C#/WinRT will release with NET5, and be consumed by WinUI3.0. It will ship as a Nuget package on nuget.org.
+Unlike the [C++/WinRT NuGet Package](http://aka.ms/cppwinrt/nuget), which is referenced by application projects to generate their own projection sources, the [C#/WinRT NuGet Package](https://aka.ms/cswinrt/nuget) provides distinct support for both WinRT component projects and application projects.
+
+## Component Project
+A component project adds a NuGet reference to C#/WinRT to invoke cswinrt.exe at build time, generate projection sources, and compile these into an interop assembly. For an example of this, see the [UnitTest targets](https://github.com/microsoft/CsWinRT/blob/master/UnitTest/Directory.Build.targets). Command line options can be displayed by running **cswinrt -?**.  The interop assembly is then typically distributed as a NuGet package itself. 
+
+## Application Project
+An application project adds NuGet references to both the component interop assembly produced above, and to C#/WinRT to include the winrt.runtime assembly. If a third party WinRT component is distributed without an official interop assembly, an application project may add a reference to C#/WinRT to generate its own private component interop assembly.  There are versioning concerns related to this scenario, so the preferred solution is for the third party to publish an interop assembly directly.
+
+# Building
+
+C#/WinRT currently depends on a private prerelease WinUI 3 NuGet, which should be made public around //build.  C#/WinRT also uses the .NET 5 preview SDK.  This is public, but there are some related configuration steps.  The build.cmd script takes care of all this, and is the simplest way to get started building C#/WinRT. 
+
+The build script is intended to be executed from a Visual Studio Developer command prompt.  It installs prerequisites such as nuget and the .NET 5 SDK, configures the environment to use .NET 5 (creating a global.json if necessary), builds the compiler, and builds and executes the unit tests. 
+
+After a successful command-line build, the cswinrt.sln can be launched from the same command prompt, to inherit the necessary environment. By default, the UnitTest and WinUIProjection projections are only generated for Release configurations, where cswinrt.exe can execute in seconds.  For Debug configurations, projection generation must be turned on with the project property GenerateTestProjection.
 
 # Structure
 The C#/WinRT compiler and unit tests are all contained within the Visual Studio 2019 solution file, \cswinrt\cswinrt.sln.  
@@ -35,49 +47,34 @@ The **/cswinrt** folder contains the sources and cswinrt.vcxproj project file fo
 The compiler uses the [WinMD NuGet package](http://aka.ms/winmd/nuget) for parsing [ECMA-335 metadata](http://www.ecma-international.org/publications/standards/Ecma-335.htm) files.  The WinMD github repo includes a [winmd.natvis](https://github.com/microsoft/winmd/blob/master/vs/winmd.natvis) script for debugging metadata parsing.  A symlink can be used to install the script:
   > for /f "tokens=2*" %i in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Personal ^| findstr Personal') do @for /f "tokens=2" %k in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere" -latest ^| findstr catalog_productLineVersion') do @echo %j\Visual Studio %k\Visualizers| for /f "delims=" %l in ('more') do @md "%l" 2>nul & mklink "%l\winmd.natvis" "c:\git\winmd\vs\winmd.natvis" 
   
-The cswinrt project also contains a cswinrt.natvis script for debugging the C# projection writing, which can also be installed with a symlink:
+The C#/WinRT project also contains a cswinrt.natvis script for debugging the C# projection writing, which can also be installed with a symlink:
 > for /f "tokens=2*" %i in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v Personal ^| findstr Personal') do @for /f "tokens=2" %k in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere" -latest ^| findstr catalog_productLineVersion') do @echo %j\Visual Studio %k\Visualizers| for /f "delims=" %l in ('more') do @md "%l" 2>nul & mklink "%l\cswinrt.natvis" "c:\git\cswinrt\cswinrt\cswinrt.natvis"
 
 See also [Deploying .natvis files](https://docs.microsoft.com/en-us/visualstudio/debugger/create-custom-views-of-native-objects?view=vs-2015#BKMK_natvis_location).
 
+## /WinRT.Runtime
+
+The **/WinRT.Runtime** folder contains the WinRT.Runtime project for building the C#/WinRT runtime assembly, winrt.runtime.dll.  There are two versions of this assembly, providing an abstraction layer over both .NET Standard 2.0 and .NET 5 runtimes.  While all code generated by cswinrt.exe is compatible with .NET Standard 2.0, there are runtime differences which must be addressed.  The primary difference is that the .NET 5 winrt.runtime.dll provides Xaml reference tracking support, which is necessary for WinUI 3 applications to manage memory correctly.
+
 ## /nuget
 
-The **/nuget** folder contains source files for producing a C#/WinRT NuGet package, which is regularly built, signed, and published to nuget.org by Microsoft.
+The **/nuget** folder contains source files for producing a C#/WinRT NuGet package, which is regularly built, signed, and published to nuget.org by Microsoft.  The C#/WinRT NuGet package contains the cswinrt.exe compiler, and both versions of the winrt.runtime.dll.
 
-## /testcomp
+## /TestComponentCSharp
 
-The **/testcomp** folder contains an implementation of a WinRT test component, defined in class.idl and used by the UnitTest project.
+The **/TestComponentCSharp** folder contains an implementation of a WinRT test component, defined in class.idl and used by the UnitTest project.
 
-## /unittest
+## /UnitTest
 
-The **/unittest** folder contains unit tests for validating the projection generated for the TestComp project (above), for the TestWinRT\TestComponent project (below), and for foundational parts of the Windows SDK.  All pull requests should ensure that this project executes without errors.
+The **/UnitTest** folder contains unit tests for validating the projection generated for the TestComp project (above), for the TestWinRT\TestComponent project (below), and for foundational parts of the Windows SDK.  All pull requests should ensure that this project executes without errors.
 
-## /winuiprojection
+## /WinUI
 
-The **/winuiprojection** folder contains a project for generating and building a complete Windows SDK and WinUI projection. It's used by both **/winuitest** and **/winuidesktopsample**.
-
-This is built into a separate project because the WinUI Xaml Compiler needs reference assemblies during Pass1 that contain definitions for platform types.
-These types don't exist if you try to build the projection directly into the test app, so we first go through this project.
-
-## /winuitest
-
-The **/winuitest** is a simple test project that can be used for running automated tests with WinUI.
-
-## /winuidesktopsample
-
-The **/winuidesktopsample** is an end-to-end test app that uses the generated projection from the **/winuiprojection** project.
-
-**Note** in order to load .xbf files, you need to set the **WinUIDesktopSample.Package** property as the startup project. 
-
-## /winuidesktopsample.package
-
-The **/winuidesktopsample.package** project creates an .msix for the **/winuidesktopsample** project.
-This is currently required to test apps that need to load .xbf files.
+The **/WinUI** folder contains several related projects for generating and building a complete Windows SDK and WinUI projection, along with an  end-to-end sample app that uses the generated projection.  The projection is built out of **/winuiprojection**, which is consumed by both the sample app under **/winuidesktopsample**, and a simple test project under **/winuitest**.
 
 ## /TestWinRT
 
-C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/TestWinRT/) repository for general language projection test coverage.  This repo should be cloned into the root of the C#/WinRT repo, via get_testwinrt.cmd, so that the cswinrt.sln can resolve the reference to TestComponent.vcxproj.  The resulting TestComponent.dll,winmd files are consumed by the UnitTest project above.
-
+C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/TestWinRT/) repository for general language projection test coverage.  This repo should be cloned into the root of the C#/WinRT repo, via **get_testwinrt.cmd**, so that the cswinrt.sln can resolve its reference to TestComponent.vcxproj.  The resulting TestComponent.dll and TestComponent.winmd files are consumed by the UnitTest project above.
 
 # Contributing
 
