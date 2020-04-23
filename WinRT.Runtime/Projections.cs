@@ -179,7 +179,12 @@ namespace WinRT
                 }
                 return false;
             }
-            return CustomTypeToAbiTypeNameMappings.ContainsKey(type) || type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object;
+            return CustomTypeToAbiTypeNameMappings.ContainsKey(type)
+                || type.IsPrimitive
+                || type == typeof(string)
+                || type == typeof(Guid)
+                || type == typeof(object)
+                || type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object;
         }
 
         public static bool TryGetCompatibleWindowsRuntimeTypeForVariantType(Type type, out Type compatibleType)
