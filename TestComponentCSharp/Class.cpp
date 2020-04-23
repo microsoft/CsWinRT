@@ -1139,4 +1139,8 @@ namespace winrt::TestComponentCSharp::implementation
         return type.Name;
     }
 
+    Windows::Foundation::IInspectable Class::EmptyString()
+    {
+        return winrt::box_value(hstring{});
+    }
 }

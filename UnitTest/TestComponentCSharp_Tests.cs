@@ -1399,5 +1399,16 @@ namespace UnitTest
 
             Assert.Equal("Windows.Foundation.Collections.IVector`1<Int32>", typeName);
         }
+
+        [Fact]
+        public void TestStringUnboxing()
+        {
+            var str1 = Class.EmptyString;
+            var str2 = Class.EmptyString;
+            Assert.IsType<string>(str1);
+            Assert.IsType<string>(str2);
+            Assert.Equal(string.Empty, (string)str1);
+            Assert.Equal(string.Empty, (string)str2);
+        }
     }
 }

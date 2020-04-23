@@ -263,7 +263,7 @@ namespace WinRT
             // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
             if (runtimeClassName == "Windows.Foundation.IReference`1<String>")
             {
-                return (IInspectable obj) => new ABI.System.Nullable<String>(obj.ObjRef).Value;
+                return (IInspectable obj) => new ABI.System.Nullable<String>(obj.ObjRef);
             }
 
             var (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
