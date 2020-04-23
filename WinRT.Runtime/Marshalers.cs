@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Linq.Expressions;
 using System.Collections.Concurrent;
+using WinRT.Interop;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
 #pragma warning disable 0649 // Field 'xxx' is never assigned to, and will always have its default value
@@ -108,6 +109,10 @@ namespace WinRT
 
         public static unsafe IntPtr FromManaged(string value)
         {
+            if (value is null)
+            {
+                return IntPtr.Zero;
+            }
             IntPtr handle;
             Marshal.ThrowExceptionForHR(
                 Platform.WindowsCreateString(value, value.Length, &handle));
@@ -868,6 +873,12 @@ namespace WinRT
             if (ptr == IntPtr.Zero)
             {
                 return (object)null;
+            }
+            using var objRef = ObjectReference<IUnknownVftbl>.FromAbi(ptr);
+            using var unknownObjRef = objRef.As<IUnknownVftbl>();
+            if (unknownObjRef.IsReferenceToManagedObject)
+            {
+                return ComWrappersSupport.FindObject<object>(unknownObjRef.ThisPtr);
             }
             return ComWrappersSupport.CreateRcwForComObject(ptr);
         }
