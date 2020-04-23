@@ -4044,7 +4044,8 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
         auto projected_type_name = write_type_name_temp(w, type);
         auto default_interface_abi_name = get_default_interface_name(w, type, true);
 
-        w.write(R"(internal struct %
+        w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+public struct %
 {
 public static IObjectReference CreateMarshaler(% obj) => MarshalInspectable.CreateMarshaler(obj).As<%.Vftbl>();
 public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<object>.GetAbi(value);

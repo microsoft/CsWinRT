@@ -105,7 +105,6 @@
     <None Include="strings\additions\Windows.UI\Windows.UI.cs" />
     <None Include="strings\WinRT.cs" />
     <None Include="strings\WinRT_Interop.cs" />
-    <None Include="strings\WinRT_Marshal.cs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
