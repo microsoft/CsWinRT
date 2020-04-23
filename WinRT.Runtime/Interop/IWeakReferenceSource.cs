@@ -43,6 +43,7 @@ namespace WinRT.Interop
         }
     }
 
+    [WindowsRuntimeType]
     [Guid("00000037-0000-0000-C000-000000000046")]
     internal interface IWeakReference
     {
