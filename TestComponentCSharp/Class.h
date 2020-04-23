@@ -284,6 +284,8 @@ namespace winrt::TestComponentCSharp::implementation
         static bool VerifyTypeIsThisClassType(Windows::UI::Xaml::Interop::TypeName const& type_name);
         static hstring GetTypeNameForType(Windows::UI::Xaml::Interop::TypeName const& type);
 
+        static Windows::Foundation::IInspectable EmptyString();
+
         // IStringable
         hstring ToString();
 

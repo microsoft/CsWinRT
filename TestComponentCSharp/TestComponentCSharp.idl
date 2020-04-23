@@ -294,5 +294,7 @@ namespace TestComponentCSharp
         static Boolean VerifyTypeIsReferenceInt32Type(Windows.UI.Xaml.Interop.TypeName type);
 
         static String GetTypeNameForType(Windows.UI.Xaml.Interop.TypeName type);
+
+        static Object EmptyString { get; };
     }
 }

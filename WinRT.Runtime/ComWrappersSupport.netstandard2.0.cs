@@ -51,7 +51,13 @@ namespace WinRT
                 }).TryGetTarget(out object rcw);
 
             GC.KeepAlive(keepAliveSentinel);
-            return rcw;
+
+            // Because .NET will de-duplicate strings and WinRT doesn't,
+            // our RCW factory returns a wrapper of our string instance.
+            // This ensures that our cache never sees the same managed object for two different
+            // native pointers. We unwrap here to ensure that the user-experience is expected
+            // and consumers get a string object for a Windows.Foundation.IReference<String>.
+            return rcw is ABI.System.Nullable<string> ns ? ns.Value : rcw;
         }
     
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr)

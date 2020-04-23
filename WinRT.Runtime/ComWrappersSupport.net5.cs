@@ -38,7 +38,16 @@ namespace WinRT
             return InspectableInfoTable.GetValue(_this, o => PregenerateNativeTypeInformation(o).inspectableInfo);
         }
 
-        public static object CreateRcwForComObject(IntPtr ptr) => ComWrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.TrackerObject);
+        public static object CreateRcwForComObject(IntPtr ptr)
+        {
+            var rcw = ComWrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.TrackerObject);
+            // Because .NET will de-duplicate strings and WinRT doesn't,
+            // our RCW factory returns a wrapper of our string instance.
+            // This ensures that ComWrappers never sees the same managed object for two different
+            // native pointers. We unwrap here to ensure that the user-experience is expected
+            // and consumers get a string object for a Windows.Foundation.IReference<String>.
+            return rcw is ABI.System.Nullable<string> ns ? ns.Value : rcw;
+        }
 
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr) => TryRegisterObjectForInterface(obj, thisPtr);
 
