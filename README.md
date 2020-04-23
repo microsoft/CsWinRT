@@ -60,7 +60,7 @@ The **/nuget** folder contains source files for producing a C#/WinRT NuGet packa
 
 ## /UnitTest
 
-The **/UnitTest** folder contains unit tests for validating the projection generated for the TestComp project (above), for the TestWinRT\TestComponent project (below), and for foundational parts of the Windows SDK.  All pull requests should ensure that this project executes without errors.
+The **/UnitTest** folder contains unit tests for validating the projection generated for the TestComponentCSharp project (below), for the TestWinRT\TestComponent project (below), and for foundational parts of the Windows SDK.  All pull requests should ensure that this project executes without errors.
 
 ## /TestWinRT
 
