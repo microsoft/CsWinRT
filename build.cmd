@@ -83,7 +83,13 @@ if not exist %dotnet_exe% (
     set dotnet_exe="%ProgramFiles%\dotnet\dotnet.exe"
   )
 )
-%dotnet_exe% test --no-build --logger xunit;LogFilePath=%~dp0test_%cswinrt_version%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
+
+rem WinUI NuGet package's Microsoft.WinUI.AppX.targets attempts to import a file that does not exist, even when
+rem executing "dotnet test --no-build ...", which evidently still needs to parse and load the entire project.
+rem Work around by using a dummy targets file and assigning it to the MsAppxPackageTargets property.
+echo ^<Project/^> > %temp%\EmptyMsAppxPackage.Targets
+
+%dotnet_exe% test --no-build --logger xunit;LogFilePath=%~dp0test_%cswinrt_version%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets
 if ErrorLevel 1 (
   echo.
   echo ERROR: Unit test failed, skipping NuGet pack
