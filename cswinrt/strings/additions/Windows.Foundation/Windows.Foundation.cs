@@ -528,7 +528,7 @@ namespace Windows.Foundation
         }
     }
 
-    internal static class TokenizerHelper
+    public static class TokenizerHelper
     {
         internal static char GetNumericListSeparator(IFormatProvider provider)
         {
