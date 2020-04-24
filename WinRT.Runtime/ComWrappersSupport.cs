@@ -267,6 +267,11 @@ namespace WinRT
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
         {
+            // If we don't have a runtime class name, then we just use IInspectable.
+            if (string.IsNullOrEmpty(runtimeClassName))
+            {
+                return (IInspectable obj) => obj;
+            }
             // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
             if (runtimeClassName == "Windows.Foundation.IReference`1<String>")
             {
@@ -277,7 +282,18 @@ namespace WinRT
                 return (IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef);
             }
 
-            var (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
+            Type implementationType = null;
+
+            try
+            {
+                (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
+            }
+            catch (TypeLoadException)
+            {
+                // If we reach here, then we couldn't find a type that matches the runtime class name.
+                // Fall back to using IInspectable directly.
+                return (IInspectable obj) => obj;
+            }
 
             if (implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
