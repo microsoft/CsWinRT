@@ -68,6 +68,7 @@ if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dis
 .nuget\nuget.exe restore
 
 :build
+call get_testwinrt.cmd
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
 msbuild cswinrt.sln /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;GenerateTestProjection=true
 
