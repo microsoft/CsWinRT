@@ -4047,8 +4047,8 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
         w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public struct %
 {
-public static IObjectReference CreateMarshaler(% obj) => MarshalInspectable.CreateMarshaler(obj).As<%.Vftbl>();
-public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<object>.GetAbi(value);
+public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable.CreateMarshaler(obj).As<%.Vftbl>();
+public static IntPtr GetAbi(IObjectReference value) => value is null ? IntPtr.Zero : MarshalInterfaceHelper<object>.GetAbi(value);
 public static % FromAbi(IntPtr thisPtr) => (%)MarshalInspectable.FromAbi(thisPtr);
 public static IntPtr FromManaged(% obj) => obj is null ? IntPtr.Zero : CreateMarshaler(obj).GetRef();
 public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArray(%[] array) => MarshalInterfaceHelper<%>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
