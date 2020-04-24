@@ -272,6 +272,19 @@ namespace ABI.Windows.Foundation
             return coercedArray;
         }
 
+        private static bool IsCoercable(object value)
+        {
+            // String <--> Guid is allowed
+            // Converting from an object to a string, Guid, or numeric scalar is allowed.
+            if (value.GetType() == typeof(string) || value.GetType() == typeof(Guid) || value.GetType() != typeof(object))
+            {
+                return true;
+            }
+
+            // All numeric scalars can also be coerced
+            return NumericScalarTypes.TryGetValue(value.GetType(), out _);
+        }
+
         /// <summary>
         /// Coerce the managd object to an object of type <typeparamref name="T"/>.
         /// </summary>
@@ -283,42 +296,6 @@ namespace ABI.Windows.Foundation
             if (value is T u)
             {
                 return u;
-            }
-
-            // TODO: Check if the value can be coerced.
-
-            try
-            {
-                if (value is string str && typeof(T) == typeof(Guid))
-                {
-                    return (T)(object)Guid.Parse(str);
-                }
-                else if (value is Guid guid && typeof(T) == typeof(string))
-                {
-                    return (T)(object)guid.ToString("D", global::System.Globalization.CultureInfo.InvariantCulture);
-                }
-                else
-                {
-                    if (NumericScalarTypes.TryGetValue(typeof(T), out _))
-                    {
-                        return (T)Convert.ChangeType(value, typeof(T), global::System.Globalization.CultureInfo.InvariantCulture);
-                    }
-                }
-            }
-            catch (FormatException)
-            {
-                // throw new InvalidCastException(string.Format(SR.InvalidCast_WinRTIPropertyValueElement, value.GetType(), typeof(T).Name), TYPE_E_TYPEMISMATCH);
-                throw new InvalidCastException("", TYPE_E_TYPEMISMATCH);
-            }
-            catch (InvalidCastException)
-            {
-                // throw new InvalidCastException(string.Format(SR.InvalidCast_WinRTIPropertyValueElement, value.GetType(), typeof(T).Name), TYPE_E_TYPEMISMATCH);
-                throw new InvalidCastException("", TYPE_E_TYPEMISMATCH);
-            }
-            catch (OverflowException)
-            {
-                // throw new InvalidCastException(string.Format(SR.InvalidCast_WinRTIPropertyValueCoersion, value.GetType(), value, typeof(T).Name), DISP_E_OVERFLOW);
-                throw new InvalidCastException("", DISP_E_OVERFLOW);
             }
 
             if (value is global::Windows.Foundation.IPropertyValue ipv)
@@ -359,6 +336,45 @@ namespace ABI.Windows.Foundation
                 {
                     return (T)(object)ipv.GetDouble();
                 }
+            }
+
+            if (!IsCoercable(value))
+            {
+                throw new InvalidCastException();
+            }
+
+            try
+            {
+                if (value is string str && typeof(T) == typeof(Guid))
+                {
+                    return (T)(object)Guid.Parse(str);
+                }
+                else if (value is Guid guid && typeof(T) == typeof(string))
+                {
+                    return (T)(object)guid.ToString("D", global::System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    if (NumericScalarTypes.TryGetValue(typeof(T), out _))
+                    {
+                        return (T)Convert.ChangeType(value, typeof(T), global::System.Globalization.CultureInfo.InvariantCulture);
+                    }
+                }
+            }
+            catch (FormatException)
+            {
+                // throw new InvalidCastException(string.Format(SR.InvalidCast_WinRTIPropertyValueElement, value.GetType(), typeof(T).Name), TYPE_E_TYPEMISMATCH);
+                throw new InvalidCastException("", TYPE_E_TYPEMISMATCH);
+            }
+            catch (InvalidCastException)
+            {
+                // throw new InvalidCastException(string.Format(SR.InvalidCast_WinRTIPropertyValueElement, value.GetType(), typeof(T).Name), TYPE_E_TYPEMISMATCH);
+                throw new InvalidCastException("", TYPE_E_TYPEMISMATCH);
+            }
+            catch (OverflowException)
+            {
+                // throw new InvalidCastException(string.Format(SR.InvalidCast_WinRTIPropertyValueCoersion, value.GetType(), value, typeof(T).Name), DISP_E_OVERFLOW);
+                throw new InvalidCastException("", DISP_E_OVERFLOW);
             }
 
             throw new InvalidCastException();
@@ -582,7 +598,7 @@ namespace ABI.Windows.Foundation
             value = default;
             try
             {
-                value = CoerceValue<System.DateTimeOffset>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
+                value = ABI.System.DateTimeOffset.FromManaged(CoerceValue<global::System.DateTimeOffset>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr)));
             }
             catch (global::System.Exception __exception__)
             {
@@ -596,7 +612,7 @@ namespace ABI.Windows.Foundation
             value = default;
             try
             {
-                value = CoerceValue<System.TimeSpan>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
+                value = ABI.System.TimeSpan.FromManaged(CoerceValue<global::System.TimeSpan>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr)));
             }
             catch (global::System.Exception __exception__)
             {
@@ -1035,69 +1051,7 @@ namespace ABI.Windows.Foundation
             value = default;
             try
             {
-                global::System.Type managedType = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr).GetType();
-                bool isArray = managedType.IsArray;
-                if (isArray)
-                {
-                    managedType = managedType.GetElementType();
-                }
-                if (!NumericScalarTypes.TryGetValue(managedType, out value))
-                {
-                    if (managedType == typeof(string))
-                    {
-                        value = global::Windows.Foundation.PropertyType.String;
-                    }
-                    else if (managedType == typeof(char))
-                    {
-                        value = global::Windows.Foundation.PropertyType.Char16;
-                    }
-                    else if (managedType == typeof(bool))
-                    {
-                        value = global::Windows.Foundation.PropertyType.Boolean;
-                    }
-                    else if (managedType == typeof(global::System.DateTimeOffset))
-                    {
-                        value = global::Windows.Foundation.PropertyType.DateTime;
-                    }
-                    else if (managedType == typeof(global::System.TimeSpan))
-                    {
-                        value = global::Windows.Foundation.PropertyType.TimeSpan;
-                    }
-                    else if (managedType == typeof(global::System.Guid))
-                    {
-                        value = global::Windows.Foundation.PropertyType.Guid;
-                    }
-                    else if (managedType.FullName == "Windows.Foundation.Point")
-                    {
-                        value = global::Windows.Foundation.PropertyType.Point;
-                    }
-                    else if (managedType.FullName == "Windows.Foundation.Rect")
-                    {
-                        value = global::Windows.Foundation.PropertyType.Rect;
-                    }
-                    else if (managedType.FullName == "Windows.Foundation.Size")
-                    {
-                        value = global::Windows.Foundation.PropertyType.Size;
-                    }
-                    else if (managedType == typeof(object))
-                    {
-                        value = global::Windows.Foundation.PropertyType.Inspectable;
-                    }
-                    else if (!managedType.IsValueType && managedType != typeof(Type) && isArray)
-                    {
-                        // Treat arrays of interfaces as though they are arrays of object.
-                        value = global::Windows.Foundation.PropertyType.Inspectable;
-                    }
-                    else
-                    {
-                        value = global::Windows.Foundation.PropertyType.OtherType;
-                    }
-                }
-                if (isArray)
-                {
-                    // The array values for Windows.Foundation.PropertyType are all 1024 above their scalar equivalents
-                    value = (global::Windows.Foundation.PropertyType)((int)value + 1024);
-                }
+                value = GetPropertyTypeOfObject(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
             }
             catch (global::System.Exception __exception__)
             {
@@ -1105,6 +1059,76 @@ namespace ABI.Windows.Foundation
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
             }
             return 0;
+        }
+
+        private static unsafe global::Windows.Foundation.PropertyType GetPropertyTypeOfObject(object obj)
+        {
+            global::Windows.Foundation.PropertyType value;
+            global::System.Type managedType = obj.GetType();
+            bool isArray = managedType.IsArray;
+            if (isArray)
+            {
+                managedType = managedType.GetElementType();
+            }
+            if (!NumericScalarTypes.TryGetValue(managedType, out value))
+            {
+                if (managedType == typeof(string))
+                {
+                    value = global::Windows.Foundation.PropertyType.String;
+                }
+                else if (managedType == typeof(char))
+                {
+                    value = global::Windows.Foundation.PropertyType.Char16;
+                }
+                else if (managedType == typeof(bool))
+                {
+                    value = global::Windows.Foundation.PropertyType.Boolean;
+                }
+                else if (managedType == typeof(global::System.DateTimeOffset))
+                {
+                    value = global::Windows.Foundation.PropertyType.DateTime;
+                }
+                else if (managedType == typeof(global::System.TimeSpan))
+                {
+                    value = global::Windows.Foundation.PropertyType.TimeSpan;
+                }
+                else if (managedType == typeof(global::System.Guid))
+                {
+                    value = global::Windows.Foundation.PropertyType.Guid;
+                }
+                else if (managedType.FullName == "Windows.Foundation.Point")
+                {
+                    value = global::Windows.Foundation.PropertyType.Point;
+                }
+                else if (managedType.FullName == "Windows.Foundation.Rect")
+                {
+                    value = global::Windows.Foundation.PropertyType.Rect;
+                }
+                else if (managedType.FullName == "Windows.Foundation.Size")
+                {
+                    value = global::Windows.Foundation.PropertyType.Size;
+                }
+                else if (managedType == typeof(object))
+                {
+                    value = global::Windows.Foundation.PropertyType.Inspectable;
+                }
+                else if (!managedType.IsValueType && managedType != typeof(Type) && isArray)
+                {
+                    // Treat arrays of interfaces as though they are arrays of object.
+                    value = global::Windows.Foundation.PropertyType.Inspectable;
+                }
+                else
+                {
+                    value = global::Windows.Foundation.PropertyType.OtherType;
+                }
+            }
+            if (isArray)
+            {
+                // The array values for Windows.Foundation.PropertyType are all 1024 above their scalar equivalents
+                value = (global::Windows.Foundation.PropertyType)((int)value + 1024);
+            }
+
+            return value;
         }
     }
 
