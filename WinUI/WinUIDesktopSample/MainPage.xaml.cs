@@ -16,15 +16,6 @@ namespace WinUIDesktopSample
         public MainPage()
         {
             InitializeComponent();
-            this.Foo = "bar";
-        }
-
-        static DependencyProperty FooProperty = DependencyProperty.Register("Foo", typeof(string), typeof(MainPage), null);
-
-        public string Foo
-        {
-            get => (string)GetValue(FooProperty);
-            set => SetValue(FooProperty, value);
         }
     }
 }
