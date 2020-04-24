@@ -33,13 +33,13 @@ namespace ABI.System.Collections.Generic
     public class IReadOnlyList<T> : global::System.Collections.Generic.IReadOnlyList<T>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IReadOnlyList<T> obj) =>
-            ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IReadOnlyList<T>)));
+            obj is null ? null : ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IReadOnlyList<T>)));
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
 
         public static global::System.Collections.Generic.IReadOnlyList<T> FromAbi(IntPtr thisPtr) =>
-            new IReadOnlyList<T>(ObjRefFromAbi(thisPtr));
+            thisPtr == IntPtr.Zero ? null : new IReadOnlyList<T>(ObjRefFromAbi(thisPtr));
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IReadOnlyList<T> value) =>
             (value is null) ? IntPtr.Zero : CreateMarshaler(value).GetRef();

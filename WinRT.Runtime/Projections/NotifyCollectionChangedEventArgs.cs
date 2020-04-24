@@ -189,7 +189,7 @@ namespace ABI.System.Collections.Specialized
             return factory.CreateInstanceWithAllParameters(value.Action, value.NewItems, value.OldItems, value.NewStartingIndex, value.OldStartingIndex, null, out _);
         }
 
-        public static IntPtr GetAbi(IObjectReference m) => m.ThisPtr;
+        public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
 
         public static global::System.Collections.Specialized.NotifyCollectionChangedEventArgs FromAbi(IntPtr ptr)
         {
@@ -233,7 +233,7 @@ namespace ABI.System.Collections.Specialized
             return CreateMarshaler(value).GetRef();
         }
 
-        public static void DisposeMarshaler(IObjectReference m) { m.Dispose(); }
+        public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref abi); }
 
         public static string GetGuidSignature()

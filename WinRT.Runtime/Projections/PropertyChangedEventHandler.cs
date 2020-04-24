@@ -31,14 +31,15 @@ namespace ABI.System.ComponentModel
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
-        public static unsafe IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventHandler managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(PropertyChangedEventHandler)));
+        public static unsafe IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventHandler managedDelegate) =>
+            managedDelegate is null ? null : ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(PropertyChangedEventHandler)));
 
         public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.GetAbi(value);
 
         public static unsafe global::System.ComponentModel.PropertyChangedEventHandler FromAbi(IntPtr nativeDelegate)
         {
             var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(nativeDelegate);
-            return (global::System.ComponentModel.PropertyChangedEventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.ComponentModel.PropertyChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+            return abiDelegate is null ? null : (global::System.ComponentModel.PropertyChangedEventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.ComponentModel.PropertyChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -72,7 +73,8 @@ namespace ABI.System.ComponentModel
             }
         }
 
-        public static IntPtr FromManaged(global::System.ComponentModel.PropertyChangedEventHandler managedDelegate) => CreateMarshaler(managedDelegate).GetRef();
+        public static IntPtr FromManaged(global::System.ComponentModel.PropertyChangedEventHandler managedDelegate) =>
+            managedDelegate is null ? IntPtr.Zero : CreateMarshaler(managedDelegate).GetRef();
 
         public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.DisposeMarshaler(value);
 

@@ -4122,14 +4122,15 @@ AbiToProjectionVftablePtr = nativeVftbl;
 
 public static global::System.Delegate AbiInvokeDelegate { get ; }
 
-public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%)));
+public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => 
+managedDelegate is null ? null : ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%)));
 
 public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
 
 public static unsafe % FromAbi(IntPtr nativeDelegate)
 {
 var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(nativeDelegate);
-return (%)ComWrappersSupport.TryRegisterObjectForInterface(new %(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+return abiDelegate is null ? null : (%)ComWrappersSupport.TryRegisterObjectForInterface(new %(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
 }
 
 [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -4149,7 +4150,7 @@ var abiInvoke = Marshal.GetDelegateForFunctionPointer%(_nativeDelegate.Vftbl.Inv
 }
 }
 
-public static IntPtr FromManaged(% managedDelegate) => CreateMarshaler(managedDelegate).GetRef();
+public static IntPtr FromManaged(% managedDelegate) => CreateMarshaler(managedDelegate)?.GetRef() ?? IntPtr.Zero;
 
 public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<%>.DisposeMarshaler(value);
 

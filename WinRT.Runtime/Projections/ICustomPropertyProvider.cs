@@ -69,7 +69,8 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).GetValue(MarshalInspectable.FromAbi(target)); result = MarshalInspectable.FromManaged(__result);
+                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).GetValue(MarshalInspectable.FromAbi(target)); 
+                    result = MarshalInspectable.FromManaged(__result);
 
                 }
                 catch (Exception __exception__)
@@ -102,7 +103,8 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).GetIndexedValue(MarshalInspectable.FromAbi(target), MarshalInspectable.FromAbi(index)); result = MarshalInspectable.FromManaged(__result);
+                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).GetIndexedValue(MarshalInspectable.FromAbi(target), MarshalInspectable.FromAbi(index)); 
+                    result = MarshalInspectable.FromManaged(__result);
 
                 }
                 catch (Exception __exception__)
@@ -171,7 +173,8 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).Name; value = MarshalString.FromManaged(__value);
+                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).Name; 
+                    value = MarshalString.FromManaged(__value);
 
                 }
                 catch (Exception __exception__)
@@ -189,8 +192,8 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).Type; value = global::ABI.System.Type.FromManaged(__value);
-
+                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).Type; 
+                    value = global::ABI.System.Type.FromManaged(__value);
                 }
                 catch (Exception __exception__)
                 {

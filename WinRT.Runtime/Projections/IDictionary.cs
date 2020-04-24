@@ -36,7 +36,7 @@ namespace ABI.System.Collections.Generic
     public class IDictionary<K, V> : global::System.Collections.Generic.IDictionary<K, V>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IDictionary<K, V> obj) =>
-            ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IDictionary<K, V>)));
+            obj is null ? null : ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IDictionary<K, V>)));
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;

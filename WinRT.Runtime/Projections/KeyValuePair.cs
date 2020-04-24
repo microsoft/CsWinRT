@@ -49,7 +49,7 @@ namespace ABI.System.Collections.Generic
         }
 
         public static IntPtr FromManaged(global::System.Collections.Generic.KeyValuePair<K, V> obj) =>
-            CreateMarshaler(obj).GetRef();
+            CreateMarshaler(obj)?.GetRef() ?? IntPtr.Zero;
 
         public static (int length, IntPtr data) FromManagedArray(global::System.Collections.Generic.KeyValuePair<K, V>[] array) =>
             MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.FromManagedArray(array, (o) => FromManaged(o));

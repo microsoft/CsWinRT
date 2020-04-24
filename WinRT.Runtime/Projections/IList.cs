@@ -41,13 +41,13 @@ namespace ABI.System.Collections.Generic
     public class IList<T> : global::System.Collections.Generic.IList<T>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IList<T> obj) =>
-            ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IList<T>)));
+            obj is null ? null : ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IList<T>)));
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
 
         public static global::System.Collections.Generic.IList<T> FromAbi(IntPtr thisPtr) =>
-            new IList<T>(ObjRefFromAbi(thisPtr));
+            thisPtr == IntPtr.Zero ? null : new IList<T>(ObjRefFromAbi(thisPtr));
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IList<T> value) =>
             (value is null) ? IntPtr.Zero : CreateMarshaler(value).GetRef();
