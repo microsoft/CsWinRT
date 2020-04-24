@@ -1083,7 +1083,7 @@ namespace ABI.Windows.Foundation
                     {
                         value = global::Windows.Foundation.PropertyType.Inspectable;
                     }
-                    else if (!managedType.IsValueType && isArray)
+                    else if (!managedType.IsValueType && managedType != typeof(Type) && isArray)
                     {
                         // Treat arrays of interfaces as though they are arrays of object.
                         value = global::Windows.Foundation.PropertyType.Inspectable;
