@@ -279,6 +279,7 @@ namespace WinRT
                 }
                 finally
                 {
+                    inspectablePtr.Dispose();
                     rwlock.ExitReadLock();
                 }
             }
