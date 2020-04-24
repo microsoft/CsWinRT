@@ -20,7 +20,7 @@ C#/WinRT is part of the [xlang](https://github.com/microsoft/xlang) family of pr
 However, C#/WinRT is a general effort and is intended to support other scenarios and versions of the .NET runtime, compatible down to .NET Standard 2.0.
 
 # Usage
-Unlike the [C++/WinRT NuGet Package](http://aka.ms/cppwinrt/nuget), which is referenced by application projects to generate their own projection sources, the [C#/WinRT NuGet Package](https://aka.ms/cswinrt/nuget) provides distinct support for both WinRT component projects and application projects.
+The [C#/WinRT NuGet Package](https://aka.ms/cswinrt/nuget) provides distinct support for both WinRT component projects and application projects.
 
 ## Component Project
 A component project adds a NuGet reference to C#/WinRT to invoke cswinrt.exe at build time, generate projection sources, and compile these into an interop assembly. For an example of this, see the [UnitTest targets](https://github.com/microsoft/CsWinRT/blob/master/UnitTest/Directory.Build.targets). Command line options can be displayed by running **cswinrt -?**.  The interop assembly is then typically distributed as a NuGet package itself. 
@@ -28,6 +28,45 @@ A component project adds a NuGet reference to C#/WinRT to invoke cswinrt.exe at 
 ## Application Project
 An application project adds NuGet references to both the component interop assembly produced above, and to C#/WinRT to include the winrt.runtime assembly. If a third party WinRT component is distributed without an official interop assembly, an application project may add a reference to C#/WinRT to generate its own private component interop assembly.  There are versioning concerns related to this scenario, so the preferred solution is for the third party to publish an interop assembly directly.
 
+### Sample
+The following msbuild project fragment demonstrates a simple invocation of cswinrt to generate projection sources for types in the Contoso namespace.  These sources are then included in the project build.
+
+```
+  <Target Name="GenerateProjection" BeforeTargets="Build">
+    <PropertyGroup>
+      <CsWinRTParams>
+# This sample demonstrates using a response file for cswinrt execution.
+# Run "cswinrt -h" to see all command line options.
+-verbose
+# Include Windows SDK metadata to satisfy references to 
+# Windows types from project-specific metadata.
+-in 10.0.18362.0
+# Don't project referenced Windows types, as these are 
+# provided by the Windows interop assembly.
+-exclude Windows 
+# Reference project-specific winmd files, defined elsewhere,
+# such as from a NuGet package.
+-in @(ContosoWinMDs->'"%(FullPath)"', ' ')
+# Include project-specific namespaces/types in the projection
+-include Contoso 
+# Write projection sources to the "Generated Files" folder,
+# which should be excluded from checkin (e.g., .gitignored).
+-out "$(ProjectDir)Generated Files"
+      </CsWinRTParams>
+    </PropertyGroup>
+    <WriteLinesToFile
+        File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)"
+        Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
+    <Exec Command="$(CsWinRTCommand)" />
+  </Target>
+
+  <Target Name="IncludeProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateProjection">
+    <ItemGroup>
+      <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
+    </ItemGroup>
+  </Target>
+```
 # Building
 C#/WinRT currently depends on a private prerelease WinUI 3 NuGet, which should be made public around //build.  C#/WinRT also uses the .NET 5 preview SDK.  This is public, but there are some related configuration steps.  The build.cmd script takes care of all this, and is the simplest way to get started building C#/WinRT. 
 
