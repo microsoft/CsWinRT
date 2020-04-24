@@ -57,7 +57,14 @@ namespace WinRT
             // This ensures that our cache never sees the same managed object for two different
             // native pointers. We unwrap here to ensure that the user-experience is expected
             // and consumers get a string object for a Windows.Foundation.IReference<String>.
-            return rcw is ABI.System.Nullable<string> ns ? ns.Value : rcw;
+            // We need to do the same thing for System.Type because there can be multiple MUX.Interop.TypeName's
+            // for a single System.Type.
+            return rcw switch
+            {
+                ABI.System.Nullable<string> ns => ns.Value,
+                ABI.System.Nullable<Type> nt => nt.Value,
+                _ => rcw
+            };
         }
     
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr)

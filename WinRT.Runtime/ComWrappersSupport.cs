@@ -272,6 +272,10 @@ namespace WinRT
             {
                 return (IInspectable obj) => new ABI.System.Nullable<String>(obj.ObjRef);
             }
+            else if (runtimeClassName == "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>")
+            {
+                return (IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef);
+            }
 
             var (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
 
@@ -339,7 +343,7 @@ namespace WinRT
 
         private static bool ShouldProvideIReference(object obj)
         {
-            return obj.GetType().IsValueType || obj is string;
+            return obj.GetType().IsValueType || obj is string || obj is Type;
         }
 
 
@@ -634,12 +638,12 @@ namespace WinRT
                     Vtable = BoxedArrayIReferenceArrayImpl<object>.AbiToProjectionVftablePtr
                 };
             }
-            if (obj is global::System.Type)
+            if (obj is Type)
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<global::System.Type>)),
-                    Vtable = BoxedArrayIReferenceArrayImpl<global::System.Type>.AbiToProjectionVftablePtr
+                    IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<Type>)),
+                    Vtable = BoxedArrayIReferenceArrayImpl<Type>.AbiToProjectionVftablePtr
                 };
             }
             return new ComInterfaceEntry
