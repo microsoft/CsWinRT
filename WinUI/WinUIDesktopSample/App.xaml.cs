@@ -22,6 +22,7 @@ namespace WinUIDesktopSample
         Window myWindow;
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
+            var value = DependencyProperty.UnsetValue;
             var button = new Button
             {
                 Content = "Click me to load MainPage",
