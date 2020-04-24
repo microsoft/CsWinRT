@@ -71,7 +71,7 @@ namespace ABI.Windows.Foundation
             return ComWrappersSupport.CreateCCWForObject(value).As(PIID);
         }
 
-        public static IntPtr GetAbi(IObjectReference m) => m.ThisPtr;
+        public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
 
         public static object FromAbi(IntPtr ptr)
         {
@@ -99,7 +99,7 @@ namespace ABI.Windows.Foundation
             return CreateMarshaler(value).GetRef();
         }
 
-        public static void DisposeMarshaler(IObjectReference m) { m.Dispose(); }
+        public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref abi); }
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IReferenceArray<T>));

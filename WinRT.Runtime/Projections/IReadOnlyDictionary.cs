@@ -33,13 +33,13 @@ namespace ABI.System.Collections.Generic
     public class IReadOnlyDictionary<K, V> : global::System.Collections.Generic.IReadOnlyDictionary<K, V>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IReadOnlyDictionary<K, V> obj) =>
-            ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IReadOnlyDictionary<K, V>)));
+            obj is null ? null : ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IReadOnlyDictionary<K, V>)));
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
 
         public static global::System.Collections.Generic.IReadOnlyDictionary<K, V> FromAbi(IntPtr thisPtr) =>
-            new IReadOnlyDictionary<K, V>(ObjRefFromAbi(thisPtr));
+            thisPtr == IntPtr.Zero ? null : new IReadOnlyDictionary<K, V>(ObjRefFromAbi(thisPtr));
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IReadOnlyDictionary<K, V> value) =>
             (value is null) ? IntPtr.Zero : CreateMarshaler(value).GetRef();

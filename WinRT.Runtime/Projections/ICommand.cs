@@ -34,9 +34,11 @@ namespace ABI.System.Windows.Input
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
-        public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(CanExecuteChangedEventHandler)));
+        public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler managedDelegate) =>
+            managedDelegate is null ? null : ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(CanExecuteChangedEventHandler)));
 
-        public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<global::System.EventHandler<object>>.GetAbi(value);
+        public static IntPtr GetAbi(IObjectReference value) => 
+            value is null ? IntPtr.Zero : MarshalInterfaceHelper<global::System.EventHandler<object>>.GetAbi(value);
 
         public static unsafe global::System.EventHandler FromAbi(IntPtr nativeDelegate)
         {
@@ -78,7 +80,8 @@ namespace ABI.System.Windows.Input
             }
         }
 
-        public static IntPtr FromManaged(global::System.EventHandler managedDelegate) => CreateMarshaler(managedDelegate).GetRef();
+        public static IntPtr FromManaged(global::System.EventHandler managedDelegate) =>
+            CreateMarshaler(managedDelegate)?.GetRef() ?? IntPtr.Zero;
 
         public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::System.EventHandler<object>>.DisposeMarshaler(value);
 
@@ -110,20 +113,14 @@ namespace ABI.System.Windows.Input
         {
         }
 
-        protected override IObjectReference CreateMarshaler(EventHandler del)
-        {
-            return CanExecuteChangedEventHandler.CreateMarshaler(del);
-        }
+        protected override IObjectReference CreateMarshaler(EventHandler del) =>
+            del is null ? null : CanExecuteChangedEventHandler.CreateMarshaler(del);
 
-        protected override void DisposeMarshaler(IObjectReference marshaler)
-        {
+        protected override void DisposeMarshaler(IObjectReference marshaler) =>
             CanExecuteChangedEventHandler.DisposeMarshaler(marshaler);
-        }
 
-        protected override IntPtr GetAbi(IObjectReference marshaler)
-        {
-            return CanExecuteChangedEventHandler.GetAbi(marshaler);
-        }
+        protected override IntPtr GetAbi(IObjectReference marshaler) =>
+            marshaler is null ? IntPtr.Zero : CanExecuteChangedEventHandler.GetAbi(marshaler);
     }
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]

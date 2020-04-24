@@ -32,14 +32,15 @@ namespace ABI.System.Collections.Specialized
 
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
-        public static unsafe IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler managedDelegate) => ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(NotifyCollectionChangedEventHandler)));
+        public static unsafe IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler managedDelegate) =>
+            managedDelegate is null ? null : ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(NotifyCollectionChangedEventHandler)));
 
         public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.GetAbi(value);
 
         public static unsafe global::System.Collections.Specialized.NotifyCollectionChangedEventHandler FromAbi(IntPtr nativeDelegate)
         {
             var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(nativeDelegate);
-            return (global::System.Collections.Specialized.NotifyCollectionChangedEventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+            return abiDelegate is null ? null : (global::System.Collections.Specialized.NotifyCollectionChangedEventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -73,7 +74,8 @@ namespace ABI.System.Collections.Specialized
             }
         }
 
-        public static IntPtr FromManaged(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler managedDelegate) => CreateMarshaler(managedDelegate).GetRef();
+        public static IntPtr FromManaged(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler managedDelegate) =>
+            managedDelegate is null ? IntPtr.Zero : CreateMarshaler(managedDelegate).GetRef();
 
         public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.DisposeMarshaler(value);
 

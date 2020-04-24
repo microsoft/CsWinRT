@@ -54,6 +54,33 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestNulls()
+        {
+            TestObject.StringProperty = null;
+            Assert.Equal("", TestObject.StringProperty);
+            TestObject.CallForString(() => null);
+            TestObject.StringPropertyChanged +=
+                (Class sender, string value) => Assert.Equal("", value);
+            TestObject.RaiseStringChanged();
+
+            TestObject.UriProperty = null;
+            Assert.Null(TestObject.UriProperty);
+            TestObject.CallForUri(() => null);
+            TestObject.UriPropertyChanged +=
+                (object sender, Uri value) => Assert.Null(value);
+            TestObject.RaiseUriChanged();
+
+            TestObject.ObjectProperty = null;
+            Assert.Null(TestObject.ObjectProperty);
+            TestObject.CallForObject(() => null);
+            TestObject.ObjectPropertyChanged +=
+                (object sender, Object value) => Assert.Null(value);
+            TestObject.RaiseObjectChanged();
+
+            // todo: arrays, delegates, event args, mapped types...
+        }
+
+        [Fact]
         public void TestEvents()
         {
             int events_expected = 0;

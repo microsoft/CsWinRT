@@ -122,7 +122,7 @@ namespace ABI.System
             return factory.CreateUri(value.OriginalString);
         }
 
-        public static IntPtr GetAbi(IObjectReference m) => m.ThisPtr;
+        public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
 
         public static global::System.Uri FromAbi(IntPtr ptr)
         {
@@ -159,7 +159,7 @@ namespace ABI.System
             return CreateMarshaler(value).GetRef();
         }
 
-        public static void DisposeMarshaler(IObjectReference m) { m.Dispose(); }
+        public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
         public static void DisposeAbi(IntPtr abi) { using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref abi); }
 
         public static string GetGuidSignature()
