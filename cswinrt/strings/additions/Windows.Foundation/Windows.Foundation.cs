@@ -530,7 +530,7 @@ namespace Windows.Foundation
 
     public static class TokenizerHelper
     {
-        internal static char GetNumericListSeparator(IFormatProvider provider)
+        public static char GetNumericListSeparator(IFormatProvider provider)
         {
             char numericSeparator = ',';
 
