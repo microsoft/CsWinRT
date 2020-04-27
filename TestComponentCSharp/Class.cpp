@@ -380,6 +380,33 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _objectChanged.remove(token);
     }
+    Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> Class::ObjectIterableProperty()
+    {
+        return _objectIterable;
+    }
+    void Class::ObjectIterableProperty(Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> const& value)
+    {
+        for (auto element : value)
+        {
+        }
+        _objectIterable = value;
+    }
+    void Class::RaiseObjectIterableChanged()
+    {
+        _objectIterableChanged(*this, _objectIterable);
+    }
+    void Class::CallForObjectIterable(TestComponentCSharp::ProvideObjectIterable const& provideObjectIterable)
+    {
+        _objectIterable = provideObjectIterable();
+    }
+    winrt::event_token Class::ObjectIterablePropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>> const& handler)
+    {
+        return _objectIterableChanged.add(handler);
+    }
+    void Class::ObjectIterablePropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _objectIterableChanged.remove(token);
+    }
     Uri Class::UriProperty()
     {
         return _uri;

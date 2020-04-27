@@ -1113,6 +1113,8 @@ namespace WinRT
                 CreateMarshaler = (T value) => MarshalInspectable.CreateMarshaler(value);
                 GetAbi = (object objRef) => MarshalInspectable.GetAbi((IObjectReference)objRef);
                 FromAbi = (object box) => (T)MarshalInspectable.FromAbi((IntPtr)box);
+                FromManaged = (T value) => MarshalInspectable.FromManaged(value);
+                CopyManaged = (T value, IntPtr dest) => MarshalInspectable.CopyManaged(value, dest);
                 DisposeMarshaler = (object objRef) => MarshalInspectable.DisposeMarshaler((IObjectReference)objRef);
                 DisposeAbi = (object box) => MarshalInspectable.DisposeAbi((IntPtr)box);
             }

@@ -177,6 +177,10 @@ namespace UnitTest
             TestObject.ObjectProperty = strings_in;
             strings_out = (string[])TestObject.ObjectProperty;
             Assert.True(strings_out.SequenceEqual(strings_in));
+
+            var objects = new List<ManagedType>() { new ManagedType(), new ManagedType() };
+            var query = from item in objects select item;
+            TestObject.ObjectIterableProperty = query;
         }
 
         [Fact]
