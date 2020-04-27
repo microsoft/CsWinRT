@@ -359,7 +359,7 @@ namespace WinRT
 
         private static bool ShouldProvideIReference(object obj)
         {
-            return obj.GetType().IsValueType || obj is string || obj is Type;
+            return obj.GetType().IsValueType || obj is string || obj is Type || obj is Delegate;
         }
 
 

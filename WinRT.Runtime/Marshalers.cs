@@ -1136,6 +1136,8 @@ namespace WinRT
                 CreateMarshaler = MarshalGeneric<T>.CreateMarshaler;
                 GetAbi = MarshalGeneric<T>.GetAbi;
                 FromAbi = MarshalGeneric<T>.FromAbi;
+                FromManaged = MarshalGeneric<T>.FromManaged;
+                CopyManaged = MarshalGeneric<T>.CopyManaged;
                 DisposeMarshaler = MarshalGeneric<T>.DisposeMarshaler;
                 DisposeAbi = (object box) => { };
             }
