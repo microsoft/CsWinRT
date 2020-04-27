@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -115,6 +116,13 @@ namespace WinRT
 
         protected override unsafe ComInterfaceEntry* ComputeVtables(object obj, CreateComInterfaceFlags flags, out int count)
         {
+            if (IsRuntimeImplementedRCW(obj))
+            {
+                // If the object is a runtime-implemented RCW, let the runtime create a CCW.
+                count = 0;
+                return null;
+            }
+
             var entries = ComWrappersSupport.GetInterfaceTableEntries(obj);
 
             if (flags.HasFlag(CreateComInterfaceFlags.CallerDefinedIUnknown))
@@ -143,6 +151,24 @@ namespace WinRT
             ComInterfaceEntryCleanupTable.Add(obj, new VtableEntriesCleanupScout(nativeEntries));
 
             return nativeEntries;
+        }
+
+        private static unsafe bool IsRuntimeImplementedRCW(object obj)
+        {
+            Type t = obj.GetType();
+            bool isRcw = t.IsCOMObject;
+            if (t.IsGenericType)
+            {
+                foreach (var arg in t.GetGenericArguments())
+                {
+                    if (arg.IsCOMObject)
+                    {
+                        isRcw = true;
+                        break;
+                    }
+                }
+            }
+            return isRcw;
         }
 
         protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
