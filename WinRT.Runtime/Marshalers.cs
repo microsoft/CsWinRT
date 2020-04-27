@@ -945,7 +945,19 @@ namespace WinRT
             {
                 return ComWrappersSupport.FindObject<object>(unknownObjRef.ThisPtr);
             }
-            return ComWrappersSupport.CreateRcwForComObject(ptr);
+            else if (Projections.TryGetMarshalerTypeForProjectedRuntimeClass(objRef, out Type type))
+            {
+                var fromAbiMethod = type.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                if (fromAbiMethod is null)
+                {
+                    throw new MissingMethodException();
+                }
+                return fromAbiMethod.Invoke(null, new object[] { ptr });
+            }
+            else
+            {
+                return ComWrappersSupport.CreateRcwForComObject(ptr);
+            }
         }
 
         public static void DisposeMarshaler(IObjectReference objRef) => MarshalInterfaceHelper<object>.DisposeMarshaler(objRef);

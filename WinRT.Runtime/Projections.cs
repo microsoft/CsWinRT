@@ -17,6 +17,7 @@ namespace WinRT
         private static readonly Dictionary<Type, Type> CustomAbiTypeToTypeMappings = new Dictionary<Type, Type>();
         private static readonly Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>();
         private static readonly Dictionary<Type, string> CustomTypeToAbiTypeNameMappings = new Dictionary<Type, string>();
+        private static readonly HashSet<string> ProjectedRuntimeClassNames = new HashSet<string>();
 
         static Projections()
         {
@@ -28,8 +29,8 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(DateTimeOffset), typeof(ABI.System.DateTimeOffset), "Windows.Foundation.DateTime");
             RegisterCustomAbiTypeMappingNoLock(typeof(Exception), typeof(ABI.System.Exception), "Windows.Foundation.HResult");
             RegisterCustomAbiTypeMappingNoLock(typeof(TimeSpan), typeof(ABI.System.TimeSpan), "Windows.Foundation.TimeSpan");
-            RegisterCustomAbiTypeMappingNoLock(typeof(Uri), typeof(ABI.System.Uri), "Windows.Foundation.Uri");
-            RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventArgs), typeof(ABI.System.ComponentModel.PropertyChangedEventArgs), "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs");
+            RegisterCustomAbiTypeMappingNoLock(typeof(Uri), typeof(ABI.System.Uri), "Windows.Foundation.Uri", isRuntimeClass: true);
+            RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventArgs), typeof(ABI.System.ComponentModel.PropertyChangedEventArgs), "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", isRuntimeClass: true);
             RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventHandler), typeof(ABI.System.ComponentModel.PropertyChangedEventHandler), "Microsoft.UI.Xaml.Data.PropertyChangedEventHandler");
             RegisterCustomAbiTypeMappingNoLock(typeof(INotifyPropertyChanged), typeof(ABI.System.ComponentModel.INotifyPropertyChanged), "Microsoft.UI.Xaml.Data.INotifyPropertyChanged");
             RegisterCustomAbiTypeMappingNoLock(typeof(ICommand), typeof(ABI.System.Windows.Input.ICommand), "Microsoft.UI.Xaml.Interop.ICommand");
@@ -48,7 +49,7 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(IList), typeof(ABI.System.Collections.IList), "Microsoft.UI.Xaml.Interop.IBindableVector");
             RegisterCustomAbiTypeMappingNoLock(typeof(INotifyCollectionChanged), typeof(ABI.System.Collections.Specialized.INotifyCollectionChanged), "Microsoft.UI.Xaml.Interop.INotifyCollectionChanged");
             RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedAction), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedAction), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction");
-            RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedEventArgs), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs");
+            RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedEventArgs), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", isRuntimeClass: true);
             RegisterCustomAbiTypeMappingNoLock(typeof(NotifyCollectionChangedEventHandler), typeof(ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler), "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler");
 
             RegisterCustomAbiTypeMappingNoLock(typeof(Matrix3x2), typeof(ABI.System.Numerics.Matrix3x2), "Windows.Foundation.Numerics.Matrix3x2");
@@ -60,12 +61,12 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(Vector4), typeof(ABI.System.Numerics.Vector4), "Windows.Foundation.Numerics.Vector4");
         }
 
-        public static void RegisterCustomAbiTypeMapping(Type publicType, Type abiType, string winrtTypeName)
+        public static void RegisterCustomAbiTypeMapping(Type publicType, Type abiType, string winrtTypeName, bool isRuntimeClass = false)
         {
             rwlock.EnterWriteLock();
             try
             {
-                RegisterCustomAbiTypeMappingNoLock(publicType, abiType, winrtTypeName);
+                RegisterCustomAbiTypeMappingNoLock(publicType, abiType, winrtTypeName, isRuntimeClass);
             }
             finally
             {
@@ -73,18 +74,15 @@ namespace WinRT
             }
         }
 
-        private static void RegisterCustomAbiTypeMappingNoLock(Type publicType, Type abiType, string winrtTypeName, params string[] additionalWinrtTypeNames)
+        private static void RegisterCustomAbiTypeMappingNoLock(Type publicType, Type abiType, string winrtTypeName, bool isRuntimeClass = false)
         {
             CustomTypeToHelperTypeMappings.Add(publicType, abiType);
             CustomAbiTypeToTypeMappings.Add(abiType, publicType);
             CustomTypeToAbiTypeNameMappings.Add(publicType, winrtTypeName);
             CustomAbiTypeNameToTypeMappings.Add(winrtTypeName, publicType);
-            if (additionalWinrtTypeNames is object)
+            if (isRuntimeClass)
             {
-                foreach (var name in additionalWinrtTypeNames)
-                {
-                    CustomAbiTypeNameToTypeMappings.Add(name, publicType);
-                }
+                ProjectedRuntimeClassNames.Add(winrtTypeName);
             }
         }
 
@@ -248,6 +246,34 @@ namespace WinRT
                 throw new ArgumentException($"The provided type '{runtimeClass.FullName}' is not a WinRT projected runtime class.", nameof(runtimeClass));
             }
             return defaultInterface;
+        }
+
+        internal static bool TryGetMarshalerTypeForProjectedRuntimeClass(IObjectReference objectReference, out Type type)
+        {
+            if(objectReference.TryAs<IInspectable.Vftbl>(out var inspectablePtr) == 0)
+            {
+                rwlock.EnterReadLock();
+                try
+                {
+                    IInspectable inspectable = inspectablePtr;
+                    string runtimeClassName = inspectable.GetRuntimeClassName(true);
+                    if (runtimeClassName is object)
+                    {
+                        if (ProjectedRuntimeClassNames.Contains(runtimeClassName))
+                        {
+                            type = CustomTypeToHelperTypeMappings[CustomAbiTypeNameToTypeMappings[runtimeClassName]];
+                            return true;
+                        }
+                    }
+                }
+                finally
+                {
+                    inspectablePtr.Dispose();
+                    rwlock.ExitReadLock();
+                }
+            }
+            type = null;
+            return false;
         }
     }
 }

@@ -51,6 +51,10 @@ namespace UnitTest
             TestObject.UriPropertyChanged +=
                 (object sender, Uri value) => Assert.Equal(managedUri, value);
             TestObject.RaiseUriChanged();
+
+            var uri2 = MarshalInspectable.FromAbi(ABI.System.Uri.FromManaged(managedUri));
+            var str2 = uri2.ToString();
+            Assert.Equal(full_uri, str2);
         }
 
         [Fact]
