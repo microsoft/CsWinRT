@@ -27,6 +27,8 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVector<hstring> _strings;
         Windows::Foundation::IInspectable _object;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::IInspectable>> _objectChanged;
+        Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> _objectIterable;
+        winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>>> _objectIterableChanged;
         Windows::Foundation::Uri _uri;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Uri>> _uriChanged;
         Windows::Foundation::Collections::IKeyValuePair<hstring, hstring> _stringPair;
@@ -131,6 +133,12 @@ namespace winrt::TestComponentCSharp::implementation
         void RaiseObjectChanged();
         void CallForObject(TestComponentCSharp::ProvideObject const& provideObject);
         winrt::event_token ObjectPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::IInspectable> const& handler);
+        Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> ObjectIterableProperty();
+        void ObjectIterableProperty(Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> const& value);
+        void RaiseObjectIterableChanged();
+        void CallForObjectIterable(TestComponentCSharp::ProvideObjectIterable const& provideObjectIterable);
+        winrt::event_token ObjectIterablePropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>> const& handler);
+        void ObjectIterablePropertyChanged(winrt::event_token const& token) noexcept;
         Windows::Foundation::Uri UriProperty();
         void UriProperty(Windows::Foundation::Uri const& value);
         void RaiseUriChanged();

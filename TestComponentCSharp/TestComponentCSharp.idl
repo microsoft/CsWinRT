@@ -53,6 +53,7 @@ namespace TestComponentCSharp
     delegate Boolean ProvideBool();
     delegate String ProvideString();
     delegate Object ProvideObject();
+    delegate Windows.Foundation.Collections.IIterable<Object> ProvideObjectIterable();
     delegate Windows.Foundation.Uri ProvideUri();
     delegate Windows.Foundation.Collections.IKeyValuePair<String, String> ProvideStringPair();
     delegate Microsoft.UI.Xaml.Interop.IBindableIterable ProvideBindableIterable();
@@ -158,6 +159,11 @@ namespace TestComponentCSharp
         void CallForObject(ProvideObject provideObject);
         event Windows.Foundation.EventHandler<Object> ObjectPropertyChanged;
 
+        Windows.Foundation.Collections.IIterable<Object> ObjectIterableProperty;
+        void RaiseObjectIterableChanged();
+        void CallForObjectIterable(ProvideObjectIterable provideObjectIterable);
+        event Windows.Foundation.EventHandler<Windows.Foundation.Collections.IIterable<Object> > ObjectIterablePropertyChanged;
+
         Windows.Foundation.Uri UriProperty;
         void RaiseUriChanged();
         void CallForUri(ProvideUri provideUri);
@@ -218,7 +224,7 @@ namespace TestComponentCSharp
 
         Windows.Foundation.Collections.IIterable<Int32> GetIntIterable();
         void SetIntIterable(Windows.Foundation.Collections.IIterable<Int32> value);
-        
+
         // Bindable
         Microsoft.UI.Xaml.Interop.IBindableIterable BindableIterableProperty;
         void RaiseBindableIterableChanged();
