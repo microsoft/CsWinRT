@@ -22,7 +22,6 @@ namespace WinUIDesktopSample
 
         private void Foo_PointerTapped(object sender, TappedRoutedEventArgs e)
         {
-            throw new NotImplementedException();
         }
     }
 }
