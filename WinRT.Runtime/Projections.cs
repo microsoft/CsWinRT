@@ -61,7 +61,7 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(Vector4), typeof(ABI.System.Numerics.Vector4), "Windows.Foundation.Numerics.Vector4");
         }
 
-        public static void RegisterCustomAbiTypeMapping(Type publicType, Type abiType, bool isRuntimeClass, string winrtTypeName)
+        public static void RegisterCustomAbiTypeMapping(Type publicType, Type abiType, string winrtTypeName, bool isRuntimeClass = false)
         {
             rwlock.EnterWriteLock();
             try
