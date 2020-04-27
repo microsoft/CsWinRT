@@ -14,10 +14,10 @@ namespace ABI.Windows.Storage.Streams
     using global::System;
     using global::System.Runtime.InteropServices;
 
-    [Guid("00000003-0000-0000-c000-000000000046")]
+    [Guid("905a0fef-bc53-11df-8c49-001e4fc686da")]
     internal class IBufferByteAccess : global::Windows.Storage.Streams.IBufferByteAccess
     {
-        [Guid("00000003-0000-0000-c000-000000000046")]
+        [Guid("905a0fef-bc53-11df-8c49-001e4fc686da")]
         public struct Vftbl
         {
             public delegate int _get_Buffer_0(IntPtr thisPtr, out IntPtr buffer);
