@@ -25,6 +25,7 @@ namespace Microsoft.UI.Xaml.Data
 
 namespace ABI.Microsoft.UI.Xaml.Data
 {
+    [Guid("30DA92C0-23E8-42A0-AE7C-734A0E5D2782")]
     internal class ICustomProperty
     {
         [Guid("30DA92C0-23E8-42A0-AE7C-734A0E5D2782")]
