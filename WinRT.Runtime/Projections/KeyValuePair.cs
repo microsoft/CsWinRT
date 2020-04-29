@@ -44,6 +44,10 @@ namespace ABI.System.Collections.Generic
 
         public static global::System.Collections.Generic.KeyValuePair<K, V> FromAbi(IntPtr thisPtr)
         {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return default;
+            }
             var pair = new KeyValuePair<K, V>(KeyValuePair<K, V>._FromAbi(thisPtr));
             return new global::System.Collections.Generic.KeyValuePair<K, V>(pair.Key, pair.Value);
         }

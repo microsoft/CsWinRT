@@ -42,7 +42,7 @@ namespace ABI.System.Collections.Generic
             objRef?.ThisPtr ?? IntPtr.Zero;
 
         public static global::System.Collections.Generic.IDictionary<K, V> FromAbi(IntPtr thisPtr) =>
-            new IDictionary<K, V>(ObjRefFromAbi(thisPtr));
+            thisPtr == IntPtr.Zero ? null : new IDictionary<K, V>(ObjRefFromAbi(thisPtr));
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IDictionary<K, V> value) =>
             (value is null) ? IntPtr.Zero : CreateMarshaler(value).GetRef();
