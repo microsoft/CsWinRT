@@ -1454,5 +1454,41 @@ namespace UnitTest
             using var ccw = ComWrappersSupport.CreateCCWForObject(new List<ManagedType>());
             using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(ABI.System.Collections.Generic.IEnumerable<object>)));
         }
+
+        [Fact]
+        public void WeakReferenceOfManagedObject()
+        {
+            var properties = new ManagedProperties(42);
+            WinRT.WeakReference<IProperties1> weakReference = new WinRT.WeakReference<IProperties1>(properties);
+            weakReference.TryGetTarget(out var propertiesStrong);
+            Assert.Same(properties, propertiesStrong);
+        }
+
+        [Fact]
+        public void WeakReferenceOfNativeObject()
+        {
+            var weakReference = new WinRT.WeakReference<Class>(TestObject);
+            weakReference.TryGetTarget(out var classStrong);
+            Assert.Same(TestObject, classStrong);
+        }
+
+        [Fact]
+        public void WeakReferenceOfNativeObjectRehydratedAfterWrapperIsCollected()
+        {
+            static (WinRT.WeakReference<Class> winrt, WeakReference net, IObjectReference objRef) GetWeakReferences()
+            {
+                var obj = new Class();
+                ComWrappersSupport.TryUnwrapObject(obj, out var objRef);
+                return (new WinRT.WeakReference<Class>(obj), new WeakReference(obj), objRef);
+            }
+
+            var (winrt, net, objRef) = GetWeakReferences();
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.False(net.IsAlive);
+            Assert.True(winrt.TryGetTarget(out _));
+            GC.KeepAlive(objRef);
+        }
     }
 }
