@@ -45,7 +45,7 @@ namespace ABI.System.Collections.Generic
             objRef?.ThisPtr ?? IntPtr.Zero;
 
         public static global::System.Collections.Generic.IEnumerable<T> FromAbi(IntPtr thisPtr) =>
-            new IEnumerable<T>(ObjRefFromAbi(thisPtr));
+            thisPtr == IntPtr.Zero ? null : new IEnumerable<T>(ObjRefFromAbi(thisPtr));
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IEnumerable<T> value) =>
             (value is null) ? IntPtr.Zero : CreateMarshaler(value).GetRef();
@@ -201,7 +201,7 @@ namespace ABI.System.Collections.Generic
             objRef?.ThisPtr ?? IntPtr.Zero;
 
         public static global::System.Collections.Generic.IEnumerator<T> FromAbi(IntPtr thisPtr) =>
-            new IEnumerator<T>(ObjRefFromAbi(thisPtr));
+            thisPtr == IntPtr.Zero ? null : new IEnumerator<T>(ObjRefFromAbi(thisPtr));
 
         internal static global::Windows.Foundation.Collections.IIterator<T> FromAbiInternal(IntPtr thisPtr) =>
             new IEnumerator<T>(ObjRefFromAbi(thisPtr));
