@@ -221,7 +221,6 @@ namespace System.IO
         }
 
         #endregion WinRt-to-NetFx conversion
-#endif
 
         #region NetFx-to-WinRt conversion
 
@@ -333,6 +332,8 @@ namespace System.IO
             return adapter;
         }
         #endregion NetFx-to-WinRt conversion
+
+#endif
 
     }  // class WindowsRuntimeStreamExtensions
 }  // namespace
