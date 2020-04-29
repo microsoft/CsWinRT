@@ -185,8 +185,8 @@ namespace WinRT
 
             entries.Add(new ComInterfaceEntry
             {
-                IID = typeof(IWeakReferenceSourceVftbl).GUID,
-                Vtable = IWeakReferenceSourceVftbl.AbiToProjectionVftablePtr
+                IID = typeof(ABI.WinRT.Interop.IWeakReferenceSource.Vftbl).GUID,
+                Vtable = ABI.WinRT.Interop.IWeakReferenceSource.Vftbl.AbiToProjectionVftablePtr
             });
 
             // Add IAgileObject to all CCWs

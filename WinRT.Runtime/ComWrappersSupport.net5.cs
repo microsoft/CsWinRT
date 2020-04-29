@@ -174,27 +174,30 @@ namespace WinRT
         protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
         {
             IObjectReference objRef = ComWrappersSupport.GetObjectReferenceForInterface(externalComObject);
-            IInspectable inspectable;
-            try
-            {
-                inspectable = new IInspectable(objRef);
-            }
-            catch (InvalidCastException)
-            {
-                // If the external COM object isn't IInspectable, we can't handle it.
-                // If we're registered globally, we want to let the runtime fall back for IUnknown and IDispatch support.
-                // Return null so the runtime can fall back gracefully in IUnknown and IDispatch scenarios.
-                return null;
-            }
 
-            string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
-            if (runtimeClassName == null)
-            { 
-                // If the external IInspectable has not implemented GetRuntimeClassName, we can't
-                // look up the appropriate RCW, so fall back to default behavior here too.
-                return null;
+            if (objRef.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
+            {
+                IInspectable inspectable = new IInspectable(inspectableRef);
+
+                string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
+                if (runtimeClassName == null)
+                {
+                    // If the external IInspectable has not implemented GetRuntimeClassName,
+                    // we use the Inspectable wrapper directly.
+                    return inspectable;
+                }
+                return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
             }
-            return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
+            else if (objRef.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
+            {
+                // IWeakReference is IUnknown-based, so implementations of it may not (and likely won't) implement
+                // IInspectable. As a result, we need to check for them explicitly.
+                return new ABI.WinRT.Interop.IWeakReference(weakRef);
+            }
+            // If the external COM object isn't IInspectable or IWeakReference, we can't handle it.
+            // If we're registered globally, we want to let the runtime fall back for IUnknown and IDispatch support.
+            // Return null so the runtime can fall back gracefully in IUnknown and IDispatch scenarios.
+            return null;
         }
 
         protected override void ReleaseObjects(IEnumerable objects)

@@ -12,7 +12,7 @@ namespace WinRT
     {
         private static ConditionalWeakTable<object, ComCallableWrapper> ComWrapperCache = new ConditionalWeakTable<object, ComCallableWrapper>();
 
-        private static ConcurrentDictionary<IntPtr, WeakReference<object>> RuntimeWrapperCache = new ConcurrentDictionary<IntPtr, WeakReference<object>>();
+        private static ConcurrentDictionary<IntPtr, System.WeakReference<object>> RuntimeWrapperCache = new ConcurrentDictionary<IntPtr, System.WeakReference<object>>();
 
         internal static InspectableInfo GetInspectableInfo(IntPtr pThis) => UnmanagedObject.FindObject<ComCallableWrapper>(pThis).InspectableInfo;
 
@@ -27,13 +27,21 @@ namespace WinRT
 
             object keepAliveSentinel = null;
 
-            Func<IntPtr, WeakReference<object>> rcwFactory = (_) =>
+            Func<IntPtr, System.WeakReference<object>> rcwFactory = (_) =>
             {
-                var inspectable = new IInspectable(identity);
-                string runtimeClassName = inspectable.GetRuntimeClassName();
-                var runtimeWrapper = TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
+                object runtimeWrapper = null;
+                if (identity.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
+                {
+                    var inspectable = new IInspectable(identity);
+                    string runtimeClassName = inspectable.GetRuntimeClassName();
+                    runtimeWrapper = TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
+                }
+                else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
+                {
+                    runtimeWrapper = new ABI.WinRT.Interop.IWeakReference(weakRef);
+                }
                 keepAliveSentinel = runtimeWrapper; // We don't take a strong reference on runtimeWrapper at any point, so we need to make sure it lives until it can get assigned to rcw.
-                var runtimeWrapperReference = new WeakReference<object>(runtimeWrapper);
+                var runtimeWrapperReference = new System.WeakReference<object>(runtimeWrapper);
                 var cleanupSentinel = new RuntimeWrapperCleanup(identity.ThisPtr, runtimeWrapperReference);
                 return runtimeWrapperReference;
             };
@@ -69,7 +77,7 @@ namespace WinRT
     
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr)
         {
-            var referenceWrapper = new WeakReference<object>(obj);
+            var referenceWrapper = new System.WeakReference<object>(obj);
             var _ = new RuntimeWrapperCleanup(thisPtr, referenceWrapper);
             RuntimeWrapperCache.TryAdd(thisPtr, referenceWrapper);
         }
@@ -81,7 +89,7 @@ namespace WinRT
         public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr)
         {
             object registered = obj;
-            var referenceWrapper = new WeakReference<object>(obj);
+            var referenceWrapper = new System.WeakReference<object>(obj);
             RuntimeWrapperCache.AddOrUpdate(thisPtr, referenceWrapper, (_, value) =>
             {
                 value.TryGetTarget(out registered);
@@ -139,9 +147,9 @@ namespace WinRT
         private class RuntimeWrapperCleanup
         {
             public IntPtr _identityComObject;
-            public WeakReference<object> _runtimeWrapper;
+            public System.WeakReference<object> _runtimeWrapper;
 
-            public RuntimeWrapperCleanup(IntPtr identityComObject, WeakReference<object> runtimeWrapper)
+            public RuntimeWrapperCleanup(IntPtr identityComObject, System.WeakReference<object> runtimeWrapper)
             {
                 _identityComObject = identityComObject;
                 _runtimeWrapper = runtimeWrapper;
@@ -156,7 +164,7 @@ namespace WinRT
                 }
                 else
                 {
-                    ((ICollection<KeyValuePair<IntPtr, WeakReference<object>>>)RuntimeWrapperCache).Remove(new KeyValuePair<IntPtr, WeakReference<object>>(_identityComObject, _runtimeWrapper));
+                    ((ICollection<KeyValuePair<IntPtr, System.WeakReference<object>>>)RuntimeWrapperCache).Remove(new KeyValuePair<IntPtr, System.WeakReference<object>>(_identityComObject, _runtimeWrapper));
                 }
             }
         }
