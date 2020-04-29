@@ -61,6 +61,10 @@ namespace System.IO
         }
 #endif  // DEBUG
 
+        #endregion Helpers
+
+#if !NETSTANDARD2_0
+
         private static void EnsureAdapterBufferSize(Stream adapter, int requiredBufferSize, string methodName)
         {
             Debug.Assert(adapter != null);
@@ -79,8 +83,6 @@ namespace System.IO
                 throw new InvalidOperationException(string.Format(global::Windows.Storage.Streams.SR.InvalidOperation_CannotChangeBufferSizeOfWinRtStreamAdapter, methodName));
             }
         }
-
-        #endregion Helpers
 
 
         #region WinRt-to-NetFx conversion
@@ -220,7 +222,6 @@ namespace System.IO
 
         #endregion WinRt-to-NetFx conversion
 
-
         #region NetFx-to-WinRt conversion
 
         public static IInputStream AsInputStream(this Stream stream)
@@ -331,6 +332,8 @@ namespace System.IO
             return adapter;
         }
         #endregion NetFx-to-WinRt conversion
+
+#endif
 
     }  // class WindowsRuntimeStreamExtensions
 }  // namespace
