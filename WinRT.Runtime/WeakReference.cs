@@ -10,7 +10,7 @@ namespace WinRT
     /// The lifetime of the weak reference is the lifetime of the native object instead of the C#/WinRT wrapper.
     /// </summary>
     /// <typeparam name="T">The type of object the weak reference points to.</typeparam>
-    public class WeakReference<T>
+    public sealed class WeakReference<T>
         where T : class
     {
         private System.WeakReference<T> _managedWeakReference;
