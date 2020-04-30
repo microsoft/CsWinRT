@@ -23,7 +23,7 @@
   <Target Name="GenerateProjection" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)' == 'true'">
     <PropertyGroup>
       <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
-      <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageFolders)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
+      <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
     </PropertyGroup>
     <ItemGroup>
       <!--PkgMicrosoft_WinUI is defined by Nuget reference-->
