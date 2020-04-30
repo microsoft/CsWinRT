@@ -442,9 +442,10 @@ namespace cswinrt
         if (auto return_sig = signature.return_signature())
         {
             auto semantics = get_type_semantics(return_sig.Type());
+            auto return_param = w.write_temp("%", bind<write_escaped_identifier>(signature.return_param_name()));
             return_sig.Type().is_szarray() ?
-                w.write(", out int __%Size, out IntPtr %", signature.return_param_name(), signature.return_param_name()) :
-                w.write(", out % %", bind<write_abi_type>(semantics), signature.return_param_name());
+                w.write(", out int __%Size, out IntPtr %", signature.return_param_name(), return_param) :
+                w.write(", out % %", bind<write_abi_type>(semantics), return_param);
         }
     }
 
@@ -2793,7 +2794,8 @@ remove => _%.Unsubscribe(value);
             auto generic_type = generic_abi_types[index++].second;
             if (!return_sig.Type().is_szarray() && !generic_type.empty())
             {
-                w.write(", out % %", generic_type, signature.return_param_name());
+                w.write(", out % %", generic_type, 
+                    bind<write_escaped_identifier>(signature.return_param_name()));
             }
             else
             {
@@ -2876,7 +2878,7 @@ remove => _%.Unsubscribe(value);
         void write_out_initialize(writer& w) const
         {
             XLANG_ASSERT(is_out());
-            w.write("% = default;\n", param_name);
+            w.write("% = default;\n", bind<write_escaped_identifier>(param_name));
             if (is_array())
             {
                 w.write("__%Size = default;\n", param_name);
