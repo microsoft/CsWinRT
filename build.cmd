@@ -66,11 +66,9 @@ if "%cswinrt_configuration%"=="" (
 
 :restore
 if not exist .nuget md .nuget
-if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile .nuget\nuget.exe"
+if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.6.0-preview3/nuget.exe -OutFile .nuget\nuget.exe"
 .nuget\nuget update -self
-rem .nuget\nuget.exe restore
-for /f %%i in ('dir *.csproj /b /s') do @msbuild /t:restore %%i
-for /f %%i in ('dir *.vcxproj /b /s') do @nuget restore %%i -SolutionDirectory %cd%
+.nuget\nuget.exe restore
 
 :build
 call get_testwinrt.cmd
