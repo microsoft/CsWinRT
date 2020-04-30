@@ -33,6 +33,9 @@ namespace WinRT
         internal delegate int RoOriginateLanguageException(int error, IntPtr message, IntPtr langaugeException);
         private static RoOriginateLanguageException roOriginateLanguageException;
 
+        internal delegate int RoReportUnhandledError(IntPtr pRestrictedErrorInfo);
+        private static RoReportUnhandledError roReportUnhandledError;
+
         static ExceptionHelpers()
         {
             IntPtr winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
@@ -41,6 +44,7 @@ namespace WinRT
                 getRestrictedErrorInfo = Platform.GetProcAddress<GetRestrictedErrorInfo>(winRTErrorModule);
                 setRestrictedErrorInfo = Platform.GetProcAddress<SetRestrictedErrorInfo>(winRTErrorModule);
                 roOriginateLanguageException = Platform.GetProcAddress<RoOriginateLanguageException>(winRTErrorModule);
+                roReportUnhandledError = Platform.GetProcAddress<RoReportUnhandledError>(winRTErrorModule);
             }
             else
             {
@@ -175,7 +179,10 @@ namespace WinRT
                 // as our error so as to propagate the error through WinRT end-to-end.
                 if (ex.TryGetRestrictedLanguageErrorObject(out var restrictedErrorObject))
                 {
-                    setRestrictedErrorInfo(restrictedErrorObject.GetRef());
+                    using (restrictedErrorObject)
+                    {
+                        setRestrictedErrorInfo(restrictedErrorObject.ThisPtr);
+                    }
                 }
                 else
                 {
@@ -200,6 +207,17 @@ namespace WinRT
             {
                 using var iErrorInfo = ComWrappersSupport.CreateCCWForObject(new ManagedExceptionErrorInfo(ex));
                 SetErrorInfo(0, iErrorInfo.ThisPtr);
+            }
+        }
+
+        public static void ReportUnhandledError(Exception ex)
+        {
+            SetErrorInfo(ex);
+            if (getRestrictedErrorInfo != null && roReportUnhandledError != null)
+            {
+                Marshal.ThrowExceptionForHR(getRestrictedErrorInfo(out IntPtr ppRestrictedErrorInfo));
+                using var restrictedErrorRef = ObjectReference<IUnknownVftbl>.Attach(ref ppRestrictedErrorInfo);
+                roReportUnhandledError(restrictedErrorRef.ThisPtr);
             }
         }
 
