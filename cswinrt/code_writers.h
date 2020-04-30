@@ -1977,11 +1977,25 @@ event % %;)",
                 break;
             case category::class_type:
                 m.marshaler_type = w.write_temp("%", bind<write_type_name>(semantics, true, true));
-                m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                if (m.is_array())
+                {
+                    m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
+                }
+                else
+                {
+                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                }
                 break;
             case category::delegate_type:
                 m.marshaler_type = get_abi_type();
-                m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                if (m.is_array())
+                {
+                    m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
+                }
+                else
+                {
+                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                }
                 break;
             }
         };
@@ -4058,6 +4072,7 @@ public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterf
 public static unsafe %[] FromAbiArray(object box) => MarshalInterfaceHelper<%>.FromAbiArray(box, FromAbi);
 public static (int length, IntPtr data) FromManagedArray(%[] array) => MarshalInterfaceHelper<%>.FromManagedArray(array, (o) => FromManaged(o));
 public static void DisposeMarshaler(IObjectReference value) => MarshalInspectable.DisposeMarshaler(value);
+public static void DisposeMarshalerArray(MarshalInterfaceHelper<%>.MarshalerArray array) => MarshalInterfaceHelper<%>.DisposeMarshalerArray(array);
 public static void DisposeAbi(IntPtr abi) => MarshalInspectable.DisposeAbi(abi);
 public static unsafe void DisposeAbiArray(object box) => MarshalInspectable.DisposeAbiArray(box);
 }
@@ -4065,6 +4080,8 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable.Disp
             abi_type_name,
             projected_type_name,
             default_interface_abi_name,
+            projected_type_name,
+            projected_type_name,
             projected_type_name,
             projected_type_name,
             projected_type_name,
