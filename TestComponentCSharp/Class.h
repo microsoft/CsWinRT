@@ -294,6 +294,8 @@ namespace winrt::TestComponentCSharp::implementation
 
         static Windows::Foundation::IInspectable EmptyString();
 
+        hstring Catch(hstring const& params, hstring& locks);
+
         // IStringable
         hstring ToString();
 
