@@ -1,0 +1,6 @@
+<!--NOTE: Directory.Build.* files are temporary until C#/WinRT nuget contains msbuild support-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+</Project>

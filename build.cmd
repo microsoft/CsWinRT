@@ -34,11 +34,10 @@ setlocal ENABLEDELAYEDEXPANSION
 
 set cswinrt_platform=%1
 set cswinrt_configuration=%2
-set cswinrt_version=%3
+set cswinrt_version_number=%3
+set cswinrt_version_string=%4
 
 if "%cswinrt_platform%"=="" set cswinrt_platform=x64
-
-if "%cswinrt_version%"=="" set cswinrt_version=1.0.0.0
 
 if /I "%cswinrt_platform%" equ "all" (
   if "%cswinrt_configuration%"=="" (
@@ -61,6 +60,9 @@ if "%cswinrt_configuration%"=="" (
   set cswinrt_configuration=Release
 )
 
+if "%cswinrt_version_number%"=="" set cswinrt_version_number=0.0.0.0
+if "%cswinrt_version_string%"=="" set cswinrt_version_string=0.0.0-private.0
+
 :restore
 if not exist .nuget md .nuget
 if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile .nuget\nuget.exe"
@@ -70,7 +72,7 @@ if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dis
 :build
 call get_testwinrt.cmd
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-msbuild cswinrt.sln /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;GenerateTestProjection=true
+msbuild cswinrt.sln /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;GenerateTestProjection=true
 
 :test
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
@@ -89,7 +91,7 @@ rem executing "dotnet test --no-build ...", which evidently still needs to parse
 rem Work around by using a dummy targets file and assigning it to the MsAppxPackageTargets property.
 echo ^<Project/^> > %temp%\EmptyMsAppxPackage.Targets
 
-%dotnet_exe% test --no-build --logger xunit;LogFilePath=%~dp0test_%cswinrt_version%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets
+%dotnet_exe% test --no-build --logger xunit;LogFilePath=%~dp0test_%cswinrt_version_string%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets
 if ErrorLevel 1 (
   echo.
   echo ERROR: Unit test failed, skipping NuGet pack
@@ -101,4 +103,4 @@ set cswinrt_bin_dir=%~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\cswin
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
 set netstandard2_runtime=%~dp0WinRT.Runtime\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Runtime.dll
 set netcoreapp5_runtime=%~dp0WinRT.Runtime\bin\%cswinrt_configuration%\netcoreapp5.0\WinRT.Runtime.dll
-.nuget\nuget pack nuget/Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;netstandard2_runtime=%netstandard2_runtime%;netcoreapp5_runtime=%netcoreapp5_runtime% -Version %cswinrt_version% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed
+.nuget\nuget pack nuget/Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;netstandard2_runtime=%netstandard2_runtime%;netcoreapp5_runtime=%netcoreapp5_runtime%;cswinrt_nuget_version=%cswinrt_version_string% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
