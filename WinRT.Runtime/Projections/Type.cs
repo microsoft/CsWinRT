@@ -91,7 +91,7 @@ namespace ABI.System
 
         public static string GetGuidSignature()
         {
-            return "struct(Microsoft.UI.Xaml.Interop.TypeName;string;enum(Microsoft.UI.Xaml.Interop.TypeKind;i4))";
+            return "struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))";
         }
     }
 }
