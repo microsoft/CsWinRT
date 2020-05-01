@@ -1023,7 +1023,7 @@ namespace WinRT
                 DisposeMarshaler = MarshalGeneric<T>.DisposeMarshaler;
                 DisposeAbi = (object box) => { };
             }
-            else if (type.IsValueType)
+            else if (type.IsValueType || type == typeof(Type))
             {
                 AbiType = type.FindHelperType();
                 if (AbiType != null)

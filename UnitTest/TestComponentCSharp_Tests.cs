@@ -1436,6 +1436,12 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestGenericTypeMarshalling()
+        {
+            Assert.Equal(typeof(ABI.System.Type), Marshaler<Type>.AbiType);
+        }
+
+        [Fact]
         public void TestStringUnboxing()
         {
             var str1 = Class.EmptyString;
