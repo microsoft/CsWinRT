@@ -3903,7 +3903,7 @@ public static class %
 
         w.write(R"([global::WinRT.WindowsRuntimeType]
 [global::WinRT.ProjectedRuntimeClass(nameof(_default))]
-%public %class %%
+%public %class %%, IEquatable<%>
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
 
@@ -3918,6 +3918,12 @@ public static %% FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new
 {
 _defaultLazy = new Lazy<%>(() => ifc);
 }
+
+public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
+public static bool operator !=(% x, % y) => !(x == y);
+public bool Equals(% other) => this == other;
+public override bool Equals(object obj) => obj is % that && this == that;
+public override int GetHashCode() => ThisPtr.GetHashCode();
 %
 
 private struct InterfaceTag<I>{};
@@ -3930,6 +3936,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             bind<write_class_modifiers>(type),
             type_name,
             bind<write_type_inheritance>(type, base_semantics, true),
+            type_name,
             derived_new,
             default_interface_abi_name,
             default_interface_abi_name,
@@ -3944,6 +3951,12 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             default_interface_abi_name,
             bind<write_base_constructor_dispatch>(base_semantics),
             default_interface_abi_name,
+            type_name,
+            type_name,
+            type_name,
+            type_name,
+            type_name,
+            type_name,
             bind([&](writer& w)
             {
                 bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
@@ -4408,24 +4421,11 @@ public %(%)
 %
 }
 
-public static bool operator ==(% x, % y)
-{
-return %;
-}
-
+public static bool operator ==(% x, % y) => %;
 public static bool operator !=(% x, % y) => !(x == y);
-
 public bool Equals(% other) => this == other;
-
-public override bool Equals(object obj)
-{
-return obj is % that && this == that;
-}
-
-public override int GetHashCode()
-{
-return %;
-}
+public override bool Equals(object obj) => obj is % that && this == that;
+public override int GetHashCode() => %;
 }
 )",
             // struct
