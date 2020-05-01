@@ -25,14 +25,6 @@ namespace WinRT
                 handle.Free();
             }
         }
-
-        // TEMP: used by TestComponent_Tests
-        // TODO: implement ==, !=, Equals, IEquatable for projected objects
-        public static bool ObjectEquals<T>(this T x, T y)
-        {
-            return MarshalInterface<T>.CreateMarshaler(x).ThisPtr ==
-                MarshalInterface<T>.CreateMarshaler(y).ThisPtr;
-        }
     }
 
     // TODO: minimize heap allocations for marshalers by eliminating explicit try/finally
