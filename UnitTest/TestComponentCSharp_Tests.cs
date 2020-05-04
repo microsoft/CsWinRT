@@ -1050,7 +1050,7 @@ namespace UnitTest
         [Fact]
         public void TestPointTypeMapping()
         {
-            var pt = new Point { X = 3.14, Y = 42 };
+            var pt = new Point { X = 3.14F, Y = 42 };
             TestObject.PointProperty = pt;
             Assert.Equal(pt.X, TestObject.PointProperty.X);
             Assert.Equal(pt.Y, TestObject.PointProperty.Y);
@@ -1061,7 +1061,7 @@ namespace UnitTest
         [Fact]
         public void TestRectTypeMapping()
         {
-            var rect = new Rect { X = 3.14, Y = 42, Height = 3.14, Width = 42 };
+            var rect = new Rect { X = 3.14F, Y = 42, Height = 3.14F, Width = 42 };
             TestObject.RectProperty = rect;
             Assert.Equal(rect.X, TestObject.RectProperty.X);
             Assert.Equal(rect.Y, TestObject.RectProperty.Y);
@@ -1073,7 +1073,7 @@ namespace UnitTest
         [Fact]
         public void TestSizeTypeMapping()
         {
-            var size = new Size { Height = 3.14, Width = 42 };
+            var size = new Size { Height = 3.14F, Width = 42 };
             TestObject.SizeProperty = size;
             Assert.Equal(size.Height, TestObject.SizeProperty.Height);
             Assert.Equal(size.Width, TestObject.SizeProperty.Width);
