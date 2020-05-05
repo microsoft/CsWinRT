@@ -304,14 +304,13 @@ namespace WinRT
         {
             lock (this)
             {
-                if (_event == null)
+                if (_event is null)
                 {
                     var marshaler = CreateMarshaler((TDelegate)EventInvoke);
                     try
                     {
                         var nativeDelegate = GetAbi(marshaler);
-                        Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out EventRegistrationToken token));
-                        _token = token;
+                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out _token));
                     }
                     finally
                     {
@@ -328,11 +327,12 @@ namespace WinRT
         {
             lock (this)
             {
+                var oldEvent = _event;
                 _event = (TDelegate)global::System.Delegate.Remove(_event, del);
-            }
-            if (_event == null)
-            {
-                _UnsubscribeFromNative();
+                if (oldEvent is object && _event is null)
+                {
+                    _UnsubscribeFromNative();
+                }
             }
         }
 
@@ -377,7 +377,7 @@ namespace WinRT
 
         void _UnsubscribeFromNative()
         {
-            Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
+            ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
             _token.Value = 0;
         }
     }
