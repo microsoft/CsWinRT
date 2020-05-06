@@ -110,6 +110,7 @@ namespace WinRT
                 "Double" => typeof(double),
                 "Guid" => typeof(Guid),
                 "Object" => typeof(object),
+                "TimeSpan" => typeof(TimeSpan),
                 _ => null
             };
         }
@@ -199,7 +200,7 @@ namespace WinRT
 
         private static bool TryAppendSimpleTypeName(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
         {
-            if (type.IsPrimitive || type == typeof(string) || type == typeof(Guid))
+            if (type.IsPrimitive || type == typeof(string) || type == typeof(Guid) || type == typeof(TimeSpan))
             {
                 if ((flags & TypeNameGenerationFlags.GenerateBoxedName) != 0)
                 {
