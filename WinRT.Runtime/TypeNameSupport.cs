@@ -110,6 +110,7 @@ namespace WinRT
                 "Double" => typeof(double),
                 "Guid" => typeof(Guid),
                 "Object" => typeof(object),
+                "TimeSpan" => typeof(TimeSpan),
                 _ => null
             };
         }
