@@ -36,6 +36,7 @@ set cswinrt_platform=%1
 set cswinrt_configuration=%2
 set cswinrt_version_number=%3
 set cswinrt_version_string=%4
+set cswinrt_label=%5
 
 if "%cswinrt_platform%"=="" set cswinrt_platform=x64
 
@@ -62,6 +63,8 @@ if "%cswinrt_configuration%"=="" (
 
 if "%cswinrt_version_number%"=="" set cswinrt_version_number=0.0.0.0
 if "%cswinrt_version_string%"=="" set cswinrt_version_string=0.0.0-private.0
+
+if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
 if not exist .nuget md .nuget
