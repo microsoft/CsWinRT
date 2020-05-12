@@ -31,6 +31,10 @@ namespace WinRT
         /// <returns>A tuple containing the resolved type and the index of the end of the resolved type name.</returns>
         public static (Type type, int remaining) FindTypeByName(ReadOnlySpan<char> runtimeClassName)
         {
+            if(runtimeClassName.StartsWith("<>f__AnonymousType".AsSpan()))
+            {
+                return (typeof(System.Object), 0);
+            }
             var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
             return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
         }
