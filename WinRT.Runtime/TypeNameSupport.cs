@@ -33,7 +33,7 @@ namespace WinRT
         {
             if(runtimeClassName.StartsWith("<>f__AnonymousType".AsSpan()))
             {
-                return (typeof(System.Object), 0);
+                return (typeof(System.Dynamic.ExpandoObject), 0);
             }
             var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
             return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
