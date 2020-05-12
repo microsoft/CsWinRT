@@ -31,6 +31,7 @@ namespace WinRT
         /// <returns>A tuple containing the resolved type and the index of the end of the resolved type name.</returns>
         public static (Type type, int remaining) FindTypeByName(ReadOnlySpan<char> runtimeClassName)
         {
+            // Assume that anonymous types are expand objects, whether declared 'dynamic' or not
             if(runtimeClassName.StartsWith("<>f__AnonymousType".AsSpan()))
             {
                 return (typeof(System.Dynamic.ExpandoObject), 0);
