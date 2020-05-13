@@ -1496,5 +1496,12 @@ namespace UnitTest
             Assert.True(winrt.TryGetTarget(out _));
             GC.KeepAlive(objRef);
         }
+
+        [Fact]
+        public void TestUnwrapInspectable()
+        {
+            var inspectable = IInspectable.FromAbi(TestObject.ThisPtr);
+            Assert.True(ComWrappersSupport.TryUnwrapObject(inspectable, out _));
+        }
     }
 }
