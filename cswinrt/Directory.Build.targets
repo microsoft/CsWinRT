@@ -1,0 +1,24 @@
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <cswinrt_exe>$(OutDir)cswinrt.exe</cswinrt_exe>
+    <netstandard2_runtime>$(SolutionDir)WinRT.Runtime\bin\$(Configuration)\netstandard2.0\WinRT.Runtime.dll</netstandard2_runtime>
+    <netcoreapp5_runtime>$(SolutionDir)WinRT.Runtime\bin\$(Configuration)\netcoreapp5.0\WinRT.Runtime.dll</netcoreapp5_runtime>
+  </PropertyGroup>
+
+  <Target Name="CreatePackage" AfterTargets="Build" 
+          Inputs="$(cswinrt_exe);$(netstandard2_runtime);$(netcoreapp5_runtime)"
+          Outputs="$(SolutionDir)Microsoft.Windows.CsWinRT.$(NugetTestVersion).nupkg">
+    <PropertyGroup>
+      <!--Include cswinrt.pdb and winrt.runtime.pdb files-->
+      <NugetProperties>cswinrt_exe=$(cswinrt_exe);netstandard2_runtime=$(netstandard2_runtime);netcoreapp5_runtime=$(netcoreapp5_runtime);cswinrt_nuget_version=$(NugetTestVersion)</NugetProperties>
+      <NugetProperties>$(NugetProperties.Replace('.exe','.???').Replace('.dll','.???'))</NugetProperties>
+      <NugetCommandLine>nuget pack $(SolutionDir)\nuget\Microsoft.Windows.CsWinRT.nuspec  -OutputDirectory $(SolutionDir).nuget\build -Properties $(NugetProperties) -NonInteractive -Verbosity Detailed -NoPackageAnalysis</NugetCommandLine>
+    </PropertyGroup>
+    <Exec Command="$(NugetCommandLine)" />
+    <!--<Exec Command='rd /s/q "$(NugetCacheDir)Microsoft.Windows.CsWinRT\$(NugetTestVersion)"'/>-->
+  </Target>
+  
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+
+</Project>

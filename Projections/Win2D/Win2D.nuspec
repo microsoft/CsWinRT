@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>Win2D</id>
+    <title>Win2D</title>
+    <description>Win2D</description>
+    <version>$version$</version>
+    <authors>cswinrt</authors>
+    <dependencies>
+      <group>
+        <dependency id="Microsoft.Windows.CsWinRT" version="$version$" />
+        <dependency id="Win2D.uwp" version="$Win2DVersion$" />
+      </group>
+      <group targetFramework=".NETCoreApp5.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\$platform$\$configuration$\netcoreapp5.0\Win2D.dll" target="lib\netcoreapp5.0\"/>
+    <file src="bin\$platform$\$configuration$\netcoreapp5.0\Win2D.pdb" target="lib\netcoreapp5.0\"/>
+  </files>
+</package>

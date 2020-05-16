@@ -1,4 +1,3 @@
-// WinUI projection smoke test (compile only)
 using System;
 using System.Diagnostics;
 using System.Linq;

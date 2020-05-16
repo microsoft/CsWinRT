@@ -1,0 +1,95 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netcoreapp5.0</TargetFrameworks>
+    <Platforms>x64;x86</Platforms>
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <LangVersion>8</LangVersion>
+    <CsWinrtExe Condition="'$(CsWinrtPath)'!=''">$(CsWinrtPath)cswinrt.exe</CsWinrtExe>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>8305;0618</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(NugetTestVersion)" />
+    <PackageReference Include="Windows" Version="$(NugetTestVersion)" />
+    <!-- Exclude compile and build time assets so we don't think we're building a real WinUI App -->
+    <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
+      <ExcludeAssets>compile; build</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <Target Name="GenerateProjection" AfterTargets="ResolveAssemblyReferences" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)' == 'true'">
+    <PropertyGroup>
+      <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
+      <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
+    </PropertyGroup>
+    <ItemGroup>
+      <!--Explicitly reference WinUI winmds from TFM uap10.0-->
+      <ReferenceWinMDs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
+      <ReferenceWinMDs Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
+    </ItemGroup>
+    <PropertyGroup>
+      <CsWinRTVerbosity>high</CsWinRTVerbosity>
+      <CsWinRTResponseFile>$(IntermediateOutputPath)cswinrt_winui.rsp</CsWinRTResponseFile>
+      <CsWinRTCommand>$(CsWinrtExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+    </PropertyGroup>
+    <PropertyGroup>
+      <CsWinRTParams>
+-verbose
+-in 10.0.18362.0
+-in @(ReferenceWinMDs->'"%(FullPath)"', ' ')
+-out "$(ProjectDir)Generated Files"
+-exclude Windows
+-include Microsoft
+# The current WinUI nuget incorrectly references several Windows.* types that should be
+# Microsoft.* types instead.  Temporarily include these to enable the build
+-include Windows.UI.Xaml.Interop.Type
+-include Windows.UI.Xaml.Interop.NotifyCollectionChangedAction
+-include Windows.UI.Xaml.Markup.ContentPropertyAttribute
+-include Windows.UI.Xaml.StyleTypedPropertyAttribute
+-include Windows.UI.Xaml.TemplatePartAttribute
+-include Windows.UI.Xaml.TemplateVisualStateAttribute
+-include Windows.UI.Xaml.Data.BindableAttribute
+-include Windows.UI.Xaml.Markup.ContentPropertyAttribute
+-include Windows.UI.Xaml.Markup.FullXamlMetadataProviderAttribute
+-include Windows.UI.Xaml.Markup.MarkupExtensionReturnTypeAttribute
+-include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
+-include Windows.UI.Xaml.Media.Animation.IndependentlyAnimatableAttribute
+-include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
+      </CsWinRTParams>
+    </PropertyGroup>
+    <MakeDir Directories="$(ProjectDir)Generated Files" />
+    <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
+    <Exec Command="$(CsWinRTCommand)" />
+  </Target>
+
+  <Target Name="IncludeProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateProjection">
+    <ItemGroup>
+      <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
+      <!--Remove references to projection source winmds to prevent compile conflict warnings-->
+      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.TargetPath) == 'TestComponent.winmd'" />
+      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.TargetPath) == 'TestComponentCSharp.winmd'" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CreatePackage" AfterTargets="Build" Condition="'$(IsInnerBuild)' != 'true'" Inputs="$(OutDir)\netstandard2.0\WinUI.dll;$(OutDir)\netcoreapp5.0\WinUI.dll" Outputs="$(NugetBuildDir)WinUI.$(NugetTestVersion).nupkg">
+    <PropertyGroup>
+      <NugetCommandLine>$(SolutionDir).nuget\nuget pack WinUI.nuspec -Version $(NugetTestVersion) -OutputDirectory $(NugetBuildDir) -Properties Configuration=$(Configuration);Platform=$(Platform);MicrosoftWinUIVersion=$(MicrosoftWinUIVersion) -NonInteractive -Verbosity Detailed -NoPackageAnalysis</NugetCommandLine>
+    </PropertyGroup>
+    <Exec Command="$(NugetCommandLine)" />
+    <Exec Command='rd /s/q "$(NugetCacheDir)WinUI\$(NugetTestVersion)"'/>
+  </Target>
+
+</Project>

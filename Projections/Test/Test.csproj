@@ -1,0 +1,88 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netcoreapp5.0</TargetFrameworks>
+    <Platforms>x64;x86</Platforms>
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <LangVersion>8</LangVersion>
+    <CsWinrtExe Condition="'$(CsWinrtPath)'!=''">$(CsWinrtPath)cswinrt.exe</CsWinrtExe>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>8305;0618</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\TestComponentCSharp\TestComponentCSharp.vcxproj" />
+    <ProjectReference Include="..\..\TestWinRT\TestComponent\TestComponent.vcxproj" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(NugetTestVersion)" />
+    <PackageReference Include="Windows" Version="$(NugetTestVersion)" />
+    <PackageReference Include="WinUI" Version="$(NugetTestVersion)" />
+    <InternalsVisibleTo Include="UnitTest" />
+  </ItemGroup>
+  
+  <Target Name="GenerateProjection" AfterTargets="ResolveAssemblyReferences" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)' == 'true'">
+    <PropertyGroup>
+      <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
+      <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
+    </PropertyGroup>
+    <ItemGroup>
+      <!--Explicitly reference WinUI winmds from TFM uap10.0-->
+      <ReferenceWinMDs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
+      <ReferenceWinMDs Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
+    </ItemGroup>
+    <PropertyGroup>
+      <CsWinRTVerbosity>high</CsWinRTVerbosity>
+      <CsWinRTResponseFile>$(IntermediateOutputPath)cswinrt_test.rsp</CsWinRTResponseFile>
+      <CsWinRTCommand>$(CsWinrtExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+    </PropertyGroup>
+    <PropertyGroup>
+      <CsWinRTParams>
+-verbose
+-in 10.0.18362.0
+-in @(ReferenceWinMDs->'"%(FullPath)"', ' ')
+-out "$(ProjectDir)Generated Files"
+-exclude Windows
+-exclude Microsoft
+-include TestComponent
+-include TestComponentCSharp
+      </CsWinRTParams>
+    </PropertyGroup>
+    <MakeDir Directories="$(ProjectDir)Generated Files" />
+    <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
+    <Exec Command="$(CsWinRTCommand)" />
+  </Target>
+
+  <Target Name="IncludeProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateProjection">
+    <PropertyGroup>
+      <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
+      <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
+    </PropertyGroup>
+    <ItemGroup>
+      <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
+      <!--Remove references to projection source winmds to prevent compile conflict warnings-->
+      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'TestComponent'" />
+      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'TestComponentCSharp'" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CreatePackage" AfterTargets="Build" Condition="'$(IsInnerBuild)' != 'true'" Inputs="$(OutDir)\netstandard2.0\Test.dll;$(OutDir)\netcoreapp5.0\Test.dll" Outputs="$(NugetBuildDir)Test.$(NugetTestVersion).nupkg">
+    <PropertyGroup>
+      <TestComponentDir>$(BuildOutDir)TestComponent\bin</TestComponentDir>
+      <TestComponentCSharpDir>$(BuildOutDir)TestComponentCSharp\bin\TestComponentCSharp</TestComponentCSharpDir>
+      <NugetCommandLine>$(SolutionDir).nuget\nuget pack Test.nuspec -Version $(NugetTestVersion) -OutputDirectory $(NugetBuildDir) -Properties Configuration=$(Configuration);Platform=$(Platform);TestComponentDir=$(TestComponentDir);TestComponentCSharpDir=$(TestComponentCSharpDir) -NonInteractive -Verbosity Detailed -NoPackageAnalysis</NugetCommandLine>
+    </PropertyGroup>
+    <Exec Command="$(NugetCommandLine)" />
+    <Exec Command='rd /s/q "$(NugetCacheDir)Test\$(NugetTestVersion)"'/>
+  </Target>
+
+</Project>
