@@ -3912,7 +3912,12 @@ private readonly Lazy<%> _defaultLazy;
 
 private % _default => _defaultLazy.Value;
 %
-public static %% FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(global::WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
+public static %% FromAbi(IntPtr thisPtr)
+{
+if (thisPtr == IntPtr.Zero) return null;
+var obj = MarshalInspectable.FromAbi(thisPtr);
+return obj is % ? (%)obj : new %((%)obj);
+}
 
 % %(% ifc)%
 {
@@ -3944,7 +3949,8 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             derived_new,
             type_name,
             type_name,
-            default_interface_abi_name,
+            type_name,
+            type_name,
             default_interface_abi_name,
             type.Flags().Sealed() ? "internal" : "protected internal",
             type_name,
@@ -4078,7 +4084,7 @@ public struct %
 {
 public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable.CreateMarshaler(obj).As<%.Vftbl>();
 public static IntPtr GetAbi(IObjectReference value) => value is null ? IntPtr.Zero : MarshalInterfaceHelper<object>.GetAbi(value);
-public static % FromAbi(IntPtr thisPtr) => (%)MarshalInspectable.FromAbi(thisPtr);
+public static % FromAbi(IntPtr thisPtr) => %.FromAbi(thisPtr);
 public static IntPtr FromManaged(% obj) => obj is null ? IntPtr.Zero : CreateMarshaler(obj).GetRef();
 public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArray(%[] array) => MarshalInterfaceHelper<%>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
 public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<%>.GetAbiArray(box);
