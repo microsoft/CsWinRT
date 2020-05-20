@@ -32,6 +32,8 @@ namespace System.IO
         #endregion Constants and static Fields
 
 
+#if !NETSTANDARD2_0
+
         #region Helpers
 
 #if DEBUG
@@ -62,8 +64,6 @@ namespace System.IO
 #endif  // DEBUG
 
         #endregion Helpers
-
-#if !NETSTANDARD2_0
 
         private static void EnsureAdapterBufferSize(Stream adapter, int requiredBufferSize, string methodName)
         {
