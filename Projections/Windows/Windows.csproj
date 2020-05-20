@@ -25,12 +25,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(NugetTestVersion)" />
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
-    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+    <!--<ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />-->
   </ItemGroup>
 
   <Target Name="GenerateProjection" AfterTargets="ResolveAssemblyReferences" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)' == 'true'">
