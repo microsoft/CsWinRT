@@ -1390,9 +1390,9 @@ target);
         }
     }
 
-    std::pair<std::string, bool> find_property_interface(writer& w, TypeDef const& setter_iface, std::string_view prop_name)
+    std::pair<TypeDef, bool> find_property_interface(writer& w, TypeDef const& setter_iface, std::string_view prop_name)
     {
-        std::string getter_iface;
+        TypeDef getter_iface;
 
         auto search_interface = [&](TypeDef const& type)
         {
@@ -1400,7 +1400,7 @@ target);
             {
                 if (prop.Name() == prop_name)
                 {
-                    getter_iface = write_type_name_temp(w, type, "%", true);
+                    getter_iface = type;
                     return true;
                 }
             }
@@ -1616,11 +1616,19 @@ private EventSource<%> _%;)",
         for (auto&& prop : type.PropertyList())
         {
             auto [getter, setter] = get_property_methods(prop);
-            // "new" required if overriding a getter in a base interface
-            auto new_keyword = (!getter && setter && find_property_interface(w, type, prop.Name()).second) ? "new " : "";
+            bool override_getter = false;
+            // "new" required if overriding a getter in a base interface and is a interface which another would inherit.
+            if (!getter && setter)
+            {
+                auto getter_interface = find_property_interface(w, type, prop.Name());
+                override_getter = getter_interface.second &&
+                    (has_attribute(getter_interface.first, "Windows.Foundation.Metadata", "OverridableAttribute") ||
+                        !is_exclusive_to(getter_interface.first));
+            }
+
             w.write(R"(
 %% % {%% })",
-                new_keyword,
+                override_getter ? "new " : "",
                 write_prop_type(w, prop),
                 prop.Name(),
                 getter || setter ? " get;" : "",
@@ -2417,7 +2425,9 @@ public unsafe % %
                 if (!getter)
                 {
                     auto getter_interface = find_property_interface(w, type, prop.Name());
-                    w.write("get{ return As<%>().%; }\n", getter_interface.first, prop.Name());
+                    w.write("get{ return As<%>().%; }\n",
+                        bind<write_type_name>(getter_interface.first, true, false),
+                        prop.Name());
                 }
                 auto [invoke_target, is_generic] = get_method_info(setter);
                 auto signature = method_signature(setter);
