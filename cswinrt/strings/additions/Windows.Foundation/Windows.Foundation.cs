@@ -17,7 +17,7 @@ namespace Windows.Foundation
             _y = y;
         }
 
-        public Point(double x, double y) => this((float)x, (float)y);
+        public Point(double x, double y) : this((float)x, (float)y) { }
 
         public double X
         {
@@ -126,7 +126,7 @@ namespace Windows.Foundation
         public Rect(double x,
                     double y,
                     double width,
-                    double height) => this((float)x, (float)y, (float)width, (float)height);
+                    double height) : this((float)x, (float)y, (float)width, (float)height){}
 
         public Rect(Point point1,
                     Point point2)
@@ -429,7 +429,7 @@ namespace Windows.Foundation
             _height = height;
         }
 
-        public Size(double width, double height) => this((float)width, (float)height);
+        public Size(double width, double height) : this((float)width, (float)height){}
 
         public double Width
         {
