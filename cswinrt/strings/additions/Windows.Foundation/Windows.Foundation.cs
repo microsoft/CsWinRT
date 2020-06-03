@@ -11,22 +11,22 @@ namespace Windows.Foundation
         float _x;
         float _y;
 
-        public Point(float x, float y)
+        public Point(double x, double y)
         {
-            _x = x;
-            _y = y;
+            _x = (float)x;
+            _y = (float)y;
         }
 
-        public float X
+        public double X
         {
             get { return _x; }
-            set { _x = value; }
+            set { _x = (float)value; }
         }
 
-        public float Y
+        public double Y
         {
             get { return _y; }
-            set { _y = value; }
+            set { _y = (float)value; }
         }
 
         public override string ToString()
@@ -98,37 +98,37 @@ namespace Windows.Foundation
         private float _width;
         private float _height;
 
-        private const float EmptyX = float.PositiveInfinity;
-        private const float EmptyY = float.PositiveInfinity;
-        private const float EmptyWidth = float.NegativeInfinity;
-        private const float EmptyHeight = float.NegativeInfinity;
+        private const double EmptyX = double.PositiveInfinity;
+        private const double EmptyY = double.PositiveInfinity;
+        private const double EmptyWidth = double.NegativeInfinity;
+        private const double EmptyHeight = double.NegativeInfinity;
 
         private static readonly Rect s_empty = CreateEmptyRect();
 
-        public Rect(float x,
-                    float y,
-                    float width,
-                    float height)
+        public Rect(double x,
+                    double y,
+                    double width,
+                    double height)
         {
             if (width < 0)
                 throw new ArgumentOutOfRangeException(nameof(width), SR.ArgumentOutOfRange_NeedNonNegNum);
             if (height < 0)
                 throw new ArgumentOutOfRangeException(nameof(height), SR.ArgumentOutOfRange_NeedNonNegNum);
 
-            _x = x;
-            _y = y;
-            _width = width;
-            _height = height;
+            _x = (float)x;
+            _y = (float)y;
+            _width = (float)width;
+            _height = (float)height;
         }
 
         public Rect(Point point1,
                     Point point2)
         {
-            _x = Math.Min(point1.X, point2.X);
-            _y = Math.Min(point1.Y, point2.Y);
+            _x = (float)Math.Min(point1.X, point2.X);
+            _y = (float)Math.Min(point1.Y, point2.Y);
 
-            _width = Math.Max(Math.Max(point1.X, point2.X) - _x, 0);
-            _height = Math.Max(Math.Max(point1.Y, point2.Y) - _y, 0);
+            _width = (float)Math.Max(Math.Max(point1.X, point2.X) - _x, 0);
+            _height = (float)Math.Max(Math.Max(point1.Y, point2.Y) - _y, 0);
         }
 
         public Rect(Point location, Size size)
@@ -139,26 +139,26 @@ namespace Windows.Foundation
             }
             else
             {
-                _x = location.X;
-                _y = location.Y;
-                _width = size.Width;
-                _height = size.Height;
+                _x = (float)location.X;
+                _y = (float)location.Y;
+                _width = (float)size.Width;
+                _height = (float)size.Height;
             }
         }
 
-        public float X
+        public double X
         {
             get { return _x; }
-            set { _x = value; }
+            set { _x = (float)value; }
         }
 
-        public float Y
+        public double Y
         {
             get { return _y; }
-            set { _y = value; }
+            set { _y = (float)value; }
         }
 
-        public float Width
+        public double Width
         {
             get { return _width; }
             set
@@ -166,11 +166,11 @@ namespace Windows.Foundation
                 if (value < 0)
                     throw new ArgumentOutOfRangeException(nameof(Width), SR.ArgumentOutOfRange_NeedNonNegNum);
 
-                _width = value;
+                _width = (float)value;
             }
         }
 
-        public float Height
+        public double Height
         {
             get { return _height; }
             set
@@ -178,40 +178,40 @@ namespace Windows.Foundation
                 if (value < 0)
                     throw new ArgumentOutOfRangeException(nameof(Height), SR.ArgumentOutOfRange_NeedNonNegNum);
 
-                _height = value;
+                _height = (float)value;
             }
         }
 
-        public float Left
+        public double Left
         {
             get { return _x; }
         }
 
-        public float Top
+        public double Top
         {
             get { return _y; }
         }
 
-        public float Right
+        public double Right
         {
             get
             {
                 if (IsEmpty)
                 {
-                    return float.NegativeInfinity;
+                    return double.NegativeInfinity;
                 }
 
                 return _x + _width;
             }
         }
 
-        public float Bottom
+        public double Bottom
         {
             get
             {
                 if (IsEmpty)
                 {
-                    return float.NegativeInfinity;
+                    return double.NegativeInfinity;
                 }
 
                 return _y + _height;
@@ -241,10 +241,10 @@ namespace Windows.Foundation
             }
             else
             {
-                float left = Math.Max(X, rect.X);
-                float top = Math.Max(Y, rect.Y);
+                double left = Math.Max(X, rect.X);
+                double top = Math.Max(Y, rect.Y);
 
-                //  Max with 0 to prevent float weirdness from causing us to be (-epsilon..0)
+                //  Max with 0 to prevent double weirdness from causing us to be (-epsilon..0)
                 Width = Math.Max(Math.Min(X + Width, rect.X + rect.Width) - left, 0);
                 Height = Math.Max(Math.Min(Y + Height, rect.Y + rect.Height) - top, 0);
 
@@ -261,31 +261,31 @@ namespace Windows.Foundation
             }
             else if (!rect.IsEmpty)
             {
-                float left = Math.Min(Left, rect.Left);
-                float top = Math.Min(Top, rect.Top);
+                double left = Math.Min(Left, rect.Left);
+                double top = Math.Min(Top, rect.Top);
 
 
                 // We need this check so that the math does not result in NaN
-                if ((rect.Width == float.PositiveInfinity) || (Width == float.PositiveInfinity))
+                if ((rect.Width == double.PositiveInfinity) || (Width == double.PositiveInfinity))
                 {
-                    Width = float.PositiveInfinity;
+                    Width = double.PositiveInfinity;
                 }
                 else
                 {
-                    //  Max with 0 to prevent float weirdness from causing us to be (-epsilon..0)
-                    float maxRight = Math.Max(Right, rect.Right);
+                    //  Max with 0 to prevent double weirdness from causing us to be (-epsilon..0)
+                    double maxRight = Math.Max(Right, rect.Right);
                     Width = Math.Max(maxRight - left, 0);
                 }
 
                 // We need this check so that the math does not result in NaN
-                if ((rect.Height == float.PositiveInfinity) || (Height == float.PositiveInfinity))
+                if ((rect.Height == double.PositiveInfinity) || (Height == double.PositiveInfinity))
                 {
-                    Height = float.PositiveInfinity;
+                    Height = double.PositiveInfinity;
                 }
                 else
                 {
-                    //  Max with 0 to prevent float weirdness from causing us to be (-epsilon..0)
-                    float maxBottom = Math.Max(Bottom, rect.Bottom);
+                    //  Max with 0 to prevent double weirdness from causing us to be (-epsilon..0)
+                    double maxBottom = Math.Max(Bottom, rect.Bottom);
                     Height = Math.Max(maxBottom - top, 0);
                 }
 
@@ -299,7 +299,7 @@ namespace Windows.Foundation
             Union(new Rect(point, point));
         }
 
-        private bool ContainsInternal(float x, float y)
+        private bool ContainsInternal(double x, double y)
         {
             return ((x >= X) && (x - Width <= X) &&
                     (y >= Y) && (y - Height <= Y));
@@ -329,8 +329,8 @@ namespace Windows.Foundation
 
             // the width and height properties prevent assignment of
             // negative numbers so assign directly to the backing fields.
-            rect._width = EmptyWidth;
-            rect._height = EmptyHeight;
+            rect._width = (float)EmptyWidth;
+            rect._height = (float)EmptyHeight;
 
             return rect;
         }
@@ -414,17 +414,17 @@ namespace Windows.Foundation
 
         private static readonly Size s_empty = CreateEmptySize();
 
-        public Size(float width, float height)
+        public Size(double width, double height)
         {
             if (width < 0)
                 throw new ArgumentOutOfRangeException(nameof(width), SR.ArgumentOutOfRange_NeedNonNegNum);
             if (height < 0)
                 throw new ArgumentOutOfRangeException(nameof(height), SR.ArgumentOutOfRange_NeedNonNegNum);
-            _width = width;
-            _height = height;
+            _width = (float)width;
+            _height = (float)height;
         }
 
-        public float Width
+        public double Width
         {
             get { return _width; }
             set
@@ -432,11 +432,11 @@ namespace Windows.Foundation
                 if (value < 0)
                     throw new ArgumentOutOfRangeException(nameof(Width), SR.ArgumentOutOfRange_NeedNonNegNum);
 
-                _width = value;
+                _width = (float)value;
             }
         }
 
-        public float Height
+        public double Height
         {
             get { return _height; }
             set
@@ -444,7 +444,7 @@ namespace Windows.Foundation
                 if (value < 0)
                     throw new ArgumentOutOfRangeException(nameof(Height), SR.ArgumentOutOfRange_NeedNonNegNum);
 
-                _height = value;
+                _height = (float)value;
             }
         }
 
