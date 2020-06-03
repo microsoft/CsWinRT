@@ -8,14 +8,16 @@ namespace Windows.Foundation
     [StructLayout(LayoutKind.Sequential)]
     public struct Point : IFormattable
     {
-        float _x;
-        float _y;
+        public float _x;
+        public float _y;
 
-        public Point(double x, double y)
+        public Point(float x, float y)
         {
-            _x = (float)x;
-            _y = (float)y;
+            _x = x;
+            _y = y;
         }
+
+        public Point(double x, double y) => this((float)x, (float)y);
 
         public double X
         {
@@ -65,7 +67,7 @@ namespace Windows.Foundation
 
         public static bool operator==(Point point1, Point point2)
         {
-            return point1.X == point2.X && point1.Y == point2.Y;
+            return point1._x == point2._x && point1._y == point2._y;
         }
 
         public static bool operator!=(Point point1, Point point2)
@@ -93,10 +95,10 @@ namespace Windows.Foundation
     [StructLayout(LayoutKind.Sequential)]
     public struct Rect : IFormattable
     {
-        private float _x;
-        private float _y;
-        private float _width;
-        private float _height;
+        public float _x;
+        public float _y;
+        public float _width;
+        public float _height;
 
         private const double EmptyX = double.PositiveInfinity;
         private const double EmptyY = double.PositiveInfinity;
@@ -105,30 +107,35 @@ namespace Windows.Foundation
 
         private static readonly Rect s_empty = CreateEmptyRect();
 
-        public Rect(double x,
-                    double y,
-                    double width,
-                    double height)
+        public Rect(float x,
+                    float y,
+                    float width,
+                    float height)
         {
             if (width < 0)
                 throw new ArgumentOutOfRangeException(nameof(width), SR.ArgumentOutOfRange_NeedNonNegNum);
             if (height < 0)
                 throw new ArgumentOutOfRangeException(nameof(height), SR.ArgumentOutOfRange_NeedNonNegNum);
 
-            _x = (float)x;
-            _y = (float)y;
-            _width = (float)width;
-            _height = (float)height;
+            _x = x;
+            _y = y;
+            _width = width;
+            _height = height;
         }
+
+        public Rect(double x,
+                    double y,
+                    double width,
+                    double height) => this((float)x, (float)y, (float)width, (float)height);
 
         public Rect(Point point1,
                     Point point2)
         {
-            _x = (float)Math.Min(point1.X, point2.X);
-            _y = (float)Math.Min(point1.Y, point2.Y);
+            _x = Math.Min(point1._x, point2._x);
+            _y = Math.Min(point1._y, point2._y);
 
-            _width = (float)Math.Max(Math.Max(point1.X, point2.X) - _x, 0);
-            _height = (float)Math.Max(Math.Max(point1.Y, point2.Y) - _y, 0);
+            _width = Math.Max(Math.Max(point1._x, point2._x) - _x, 0f);
+            _height = Math.Max(Math.Max(point1._y, point2._y) - _y, 0f);
         }
 
         public Rect(Point location, Size size)
@@ -139,10 +146,10 @@ namespace Windows.Foundation
             }
             else
             {
-                _x = (float)location.X;
-                _y = (float)location.Y;
-                _width = (float)size.Width;
-                _height = (float)size.Height;
+                _x = location._x;
+                _y = location._y;
+                _width = size._width;
+                _height = size._height;
             }
         }
 
@@ -230,7 +237,7 @@ namespace Windows.Foundation
 
         public bool Contains(Point point)
         {
-            return ContainsInternal(point.X, point.Y);
+            return ContainsInternal(point._x, point._y);
         }
 
         public void Intersect(Rect rect)
@@ -299,33 +306,31 @@ namespace Windows.Foundation
             Union(new Rect(point, point));
         }
 
-        private bool ContainsInternal(double x, double y)
+        private bool ContainsInternal(float x, float y)
         {
-            return ((x >= X) && (x - Width <= X) &&
-                    (y >= Y) && (y - Height <= Y));
+            return ((x >= _x) && (x - _width <= _x) &&
+                    (y >= _y) && (y - _height <= _y));
         }
 
         internal bool IntersectsWith(Rect rect)
         {
-            if (Width < 0 || rect.Width < 0)
+            if (_width < 0 || rect._width < 0)
             {
                 return false;
             }
 
-            return (rect.X <= X + Width) &&
-                   (rect.X + rect.Width >= X) &&
-                   (rect.Y <= Y + Height) &&
-                   (rect.Y + rect.Height >= Y);
+            return (rect._x <= _x + _width) &&
+                   (rect._x + rect._width >= _x) &&
+                   (rect._y <= _y + _height) &&
+                   (rect._y + rect._height >= _y);
         }
 
         private static Rect CreateEmptyRect()
         {
             Rect rect = default;
 
-            // TODO: for consistency with width/height we should change these
-            //       to assign directly to the backing fields.
-            rect.X = EmptyX;
-            rect.Y = EmptyY;
+            rect._x = (float)EmptyX;
+            rect._y = (float)EmptyY;
 
             // the width and height properties prevent assignment of
             // negative numbers so assign directly to the backing fields.
@@ -379,10 +384,10 @@ namespace Windows.Foundation
 
         public static bool operator ==(Rect rect1, Rect rect2)
         {
-            return rect1.X == rect2.X &&
-                   rect1.Y == rect2.Y &&
-                   rect1.Width == rect2.Width &&
-                   rect1.Height == rect2.Height;
+            return rect1._x == rect2._x &&
+                   rect1._y == rect2._y &&
+                   rect1._width == rect2._width &&
+                   rect1._height == rect2._height;
         }
 
         public static bool operator !=(Rect rect1, Rect rect2)
@@ -409,20 +414,22 @@ namespace Windows.Foundation
     [StructLayout(LayoutKind.Sequential)]
     public struct Size
     {
-        private float _width;
-        private float _height;
+        public float _width;
+        public float _height;
 
         private static readonly Size s_empty = CreateEmptySize();
 
-        public Size(double width, double height)
+        public Size(float width, float height)
         {
             if (width < 0)
                 throw new ArgumentOutOfRangeException(nameof(width), SR.ArgumentOutOfRange_NeedNonNegNum);
             if (height < 0)
                 throw new ArgumentOutOfRangeException(nameof(height), SR.ArgumentOutOfRange_NeedNonNegNum);
-            _width = (float)width;
-            _height = (float)height;
+            _width = width;
+            _height = height;
         }
+
+        public Size(double width, double height) => this((float)width, (float)height);
 
         public double Width
         {
@@ -471,8 +478,8 @@ namespace Windows.Foundation
 
         public static bool operator ==(Size size1, Size size2)
         {
-            return size1.Width == size2.Width &&
-                   size1.Height == size2.Height;
+            return size1._width == size2._width &&
+                   size1._height == size2._height;
         }
 
         public static bool operator !=(Size size1, Size size2)
@@ -512,8 +519,8 @@ namespace Windows.Foundation
             }
             else
             {
-                return size1.Width.Equals(size2.Width) &&
-                       size1.Height.Equals(size2.Height);
+                return size1._width.Equals(size2._width) &&
+                       size1._height.Equals(size2._height);
             }
         }
 
