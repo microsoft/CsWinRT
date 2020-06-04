@@ -32,9 +32,8 @@
     <BuildPlatform>$(Platform)</BuildPlatform>
     <BuildPlatform Condition="'$(Platform)'=='Win32'">x86</BuildPlatform>
     <BuildOutDir Condition="'$(BuildOutDir)'==''">$([MSBuild]::NormalizeDirectory('$(SolutionDir)_build', '$(BuildPlatform)', '$(Configuration)'))</BuildOutDir>
-    <CsWinRTDir>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', 'cswinrt', 'bin'))</CsWinRTDir>
-    <CsWinRTDir Condition="'$(Platform)'=='ARM' or '$(Platform)'=='ARM64'">$([MSBuild]::NormalizeDirectory('$(SolutionDir)_build', 'x86', '$(Configuration)', 'cswinrt', 'bin'))</CsWinRTDir>
-    <CsWinRTExe>$(CsWinRTDir)cswinrt.exe</CsWinRTExe>
+    <CsWinRTPath>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', 'cswinrt', 'bin'))</CsWinRTPath>
+    <CsWinRTPath Condition="'$(Platform)'=='ARM' or '$(Platform)'=='ARM64'">$([MSBuild]::NormalizeDirectory('$(SolutionDir)_build', 'x86', '$(Configuration)', 'cswinrt', 'bin'))</CsWinRTPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.vcxproj'">
@@ -85,5 +84,7 @@
   </ItemDefinitionGroup>
 
   <Import Project="Strings.props" />
+
+  <Import Project="nuget\Microsoft.Windows.CsWinRT.props" />
 
 </Project>

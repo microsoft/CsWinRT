@@ -39,11 +39,20 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "Projections\Test\Te
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Projections", "Projections", "{6D41796B-9904-40B8-BBCB-40B2D1BAE44B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Win2D", "Projections\Win2D\Win2D.csproj", "{2FCD9D63-7D5D-421D-A396-061829108AE9}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Windows", "Projections\Windows\Windows.csproj", "{FFA9A78B-F53F-43EE-AF87-24A80F4C330A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinUI", "Projections\WinUI\WinUI.csproj", "{0A991D5F-BFEE-4D2F-9AAD-6AD06470A5DF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nuget", "Nuget", "{5A94EFDF-A6AC-494D-A731-A0A8A37F1F6C}"
+	ProjectSection(SolutionItems) = preProject
+		nuget\LICENSE = nuget\LICENSE
+		nuget\Microsoft.Windows.CsWinRT.nuspec = nuget\Microsoft.Windows.CsWinRT.nuspec
+		nuget\Microsoft.Windows.CsWinRT.props = nuget\Microsoft.Windows.CsWinRT.props
+		nuget\Microsoft.Windows.CsWinRT.targets = nuget\Microsoft.Windows.CsWinRT.targets
+		nuget\readme.md = nuget\readme.md
+		nuget\readme.txt = nuget\readme.txt
+		nuget\SignConfig.xml = nuget\SignConfig.xml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -171,20 +180,6 @@ Global
 		{C6D580C5-7037-4733-B933-916FF400AFE2}.Release|x64.Build.0 = Release|x64
 		{C6D580C5-7037-4733-B933-916FF400AFE2}.Release|x86.ActiveCfg = Release|x86
 		{C6D580C5-7037-4733-B933-916FF400AFE2}.Release|x86.Build.0 = Release|x86
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Debug|ARM.ActiveCfg = Debug|x86
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Debug|ARM64.ActiveCfg = Debug|x86
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Debug|x64.ActiveCfg = Debug|x64
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Debug|x64.Build.0 = Debug|x64
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Debug|x86.ActiveCfg = Debug|x86
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Debug|x86.Build.0 = Debug|x86
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Release|Any CPU.ActiveCfg = Release|x86
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Release|ARM.ActiveCfg = Release|x86
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Release|ARM64.ActiveCfg = Release|x86
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Release|x64.ActiveCfg = Release|x64
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Release|x64.Build.0 = Release|x64
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Release|x86.ActiveCfg = Release|x86
-		{2FCD9D63-7D5D-421D-A396-061829108AE9}.Release|x86.Build.0 = Release|x86
 		{FFA9A78B-F53F-43EE-AF87-24A80F4C330A}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{FFA9A78B-F53F-43EE-AF87-24A80F4C330A}.Debug|ARM.ActiveCfg = Debug|x86
 		{FFA9A78B-F53F-43EE-AF87-24A80F4C330A}.Debug|ARM64.ActiveCfg = Debug|x86
@@ -219,7 +214,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C6D580C5-7037-4733-B933-916FF400AFE2} = {6D41796B-9904-40B8-BBCB-40B2D1BAE44B}
-		{2FCD9D63-7D5D-421D-A396-061829108AE9} = {6D41796B-9904-40B8-BBCB-40B2D1BAE44B}
 		{FFA9A78B-F53F-43EE-AF87-24A80F4C330A} = {6D41796B-9904-40B8-BBCB-40B2D1BAE44B}
 		{0A991D5F-BFEE-4D2F-9AAD-6AD06470A5DF} = {6D41796B-9904-40B8-BBCB-40B2D1BAE44B}
 	EndGlobalSection

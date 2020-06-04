@@ -21,10 +21,17 @@
 
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(NugetTestVersion)" />
-    <PackageReference Include="Windows" Version="$(NugetTestVersion)" />
-    <PackageReference Include="WinUI" Version="$(NugetTestVersion)" />
-    <PackageReference Include="Win2D.uwp" Version="$(Win2DVersion)" />
+    <!--<PackageReference Include="Microsoft.Windows.CsWinRT" Version="[$(NugetTestVersion)]" />
+    <PackageReference Include="Windows" Version="[$(NugetTestVersion)]" />
+    <PackageReference Include="WinUI" Version="[$(NugetTestVersion)]" />-->
+    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+    <ProjectReference Include="..\Windows\Windows.csproj" />
+    <PackageReference Include="Win2D.uwp" Version="[$(Win2DVersion)]" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Generated Files\" />
   </ItemGroup>
   
   <Target Name="GenerateProjection" AfterTargets="ResolveAssemblyReferences" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)' == 'true'">
@@ -42,8 +49,14 @@
 -in 10.0.18362.0
 -in @(ReferenceWinMDs->'"%(FullPath)"', ' ')
 -out "$(ProjectDir)Generated Files"
--exclude Windows
 -include Microsoft
+-exclude Windows
+# Include types excluded per Microsoft.Windows.SDK.WinUI.Contracts NuGet
+#-include Windows.UI.Colors
+#-include Windows.UI.IColors
+#-include Windows.UI.ColorHelper
+#-include Windows.UI.IColorHelper
+-include Windows.UI.Xaml
       </CsWinRTParams>
     </PropertyGroup>
     <MakeDir Directories="$(ProjectDir)Generated Files" />
@@ -60,12 +73,12 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="CreatePackage" AfterTargets="Build" Condition="'$(IsInnerBuild)' != 'true'" Inputs="$(OutDir)\netstandard2.0\Win2D.dll;$(OutDir)\netcoreapp5.0\Win2D.dll" Outputs="$(NugetBuildDir)Win2D.$(NugetTestVersion).nupkg">
+  <!--<Target Name="CreatePackage" AfterTargets="Build" Condition="'$(IsInnerBuild)' != 'true'" Inputs="$(OutDir)\netstandard2.0\Win2D.dll;$(OutDir)\netcoreapp5.0\Win2D.dll" Outputs="$(NugetBuildDir)Win2D.$(NugetTestVersion).nupkg">
     <PropertyGroup>
       <NugetCommandLine>$(SolutionDir).nuget\nuget pack Win2D.nuspec -Version $(NugetTestVersion) -OutputDirectory $(NugetBuildDir) -Properties Configuration=$(Configuration);Platform=$(Platform);Win2DVersion=$(Win2DVersion) -NonInteractive -Verbosity Detailed -NoPackageAnalysis</NugetCommandLine>
     </PropertyGroup>
     <Exec Command="$(NugetCommandLine)" />
     <Exec Command="rd /s/q &quot;$(NugetCacheDir)Win2D\$(NugetTestVersion)&quot;" />
-  </Target>
+  </Target>-->
   
 </Project>

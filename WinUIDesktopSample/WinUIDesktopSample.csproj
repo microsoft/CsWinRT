@@ -21,11 +21,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.5" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(NugetTestVersion)" />
-    <PackageReference Include="Windows" Version="$(NugetTestVersion)" />
-    <PackageReference Include="WinUI" Version="$(NugetTestVersion)" />
-    <PackageReference Include="Test" Version="$(NugetTestVersion)" />
+    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
+    <ProjectReference Include="..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\Projections\WinUI\WinUI.csproj" />
+    <!--<PackageReference Include="Microsoft.Windows.CsWinRT" Version="[$(NugetTestVersion)]" />
+    <PackageReference Include="Windows" Version="[$(NugetTestVersion)]" />
+    <PackageReference Include="WinUI" Version="[$(NugetTestVersion)]" />-->
+    <!--<PackageReference Include="Test" Version="[$(NugetTestVersion)]" />-->
   </ItemGroup>
 
   <!--

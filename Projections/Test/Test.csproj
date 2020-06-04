@@ -5,7 +5,6 @@
     <Platforms>x64;x86</Platforms>
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
     <LangVersion>8</LangVersion>
-    <CsWinrtExe Condition="'$(CsWinrtPath)'!=''">$(CsWinrtPath)cswinrt.exe</CsWinrtExe>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -23,9 +22,13 @@
     <ProjectReference Include="..\..\TestComponentCSharp\TestComponentCSharp.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\TestComponent\TestComponent.vcxproj" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(NugetTestVersion)" />
-    <PackageReference Include="Windows" Version="$(NugetTestVersion)" />
-    <PackageReference Include="WinUI" Version="$(NugetTestVersion)" />
+    <!--<PackageReference Include="Microsoft.Windows.CsWinRT" Version="[$(NugetTestVersion)]" />
+    <PackageReference Include="Windows" Version="[$(NugetTestVersion)]" />
+    <PackageReference Include="WinUI" Version="[$(NugetTestVersion)]" />-->
+    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+    <ProjectReference Include="..\Windows\Windows.csproj" />
+    <ProjectReference Include="..\WinUI\WinUI.csproj" />
     <InternalsVisibleTo Include="UnitTest" />
   </ItemGroup>
   
@@ -38,11 +41,14 @@
       <!--Explicitly reference WinUI winmds from TFM uap10.0-->
       <ReferenceWinMDs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
       <ReferenceWinMDs Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
+      <!--Do not publish projection source winmds -->
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'TestComponent'" />
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'TestComponentCSharp'" />
     </ItemGroup>
     <PropertyGroup>
       <CsWinRTVerbosity>high</CsWinRTVerbosity>
       <CsWinRTResponseFile>$(IntermediateOutputPath)cswinrt_test.rsp</CsWinRTResponseFile>
-      <CsWinRTCommand>$(CsWinrtExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+      <CsWinRTCommand>$(CsWinRTExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
     </PropertyGroup>
     <PropertyGroup>
       <CsWinRTParams>
@@ -75,7 +81,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="CreatePackage" AfterTargets="Build" Condition="'$(IsInnerBuild)' != 'true'" Inputs="$(OutDir)\netstandard2.0\Test.dll;$(OutDir)\netcoreapp5.0\Test.dll" Outputs="$(NugetBuildDir)Test.$(NugetTestVersion).nupkg">
+  <!--<Target Name="CreatePackage" AfterTargets="Build" Condition="'$(IsInnerBuild)' != 'true'" Inputs="$(OutDir)\netstandard2.0\Test.dll;$(OutDir)\netcoreapp5.0\Test.dll" Outputs="$(NugetBuildDir)Test.$(NugetTestVersion).nupkg">
     <PropertyGroup>
       <TestComponentDir>$(BuildOutDir)TestComponent\bin</TestComponentDir>
       <TestComponentCSharpDir>$(BuildOutDir)TestComponentCSharp\bin\TestComponentCSharp</TestComponentCSharpDir>
@@ -83,6 +89,6 @@
     </PropertyGroup>
     <Exec Command="$(NugetCommandLine)" />
     <Exec Command='rd /s/q "$(NugetCacheDir)Test\$(NugetTestVersion)"'/>
-  </Target>
+  </Target>-->
 
 </Project>
