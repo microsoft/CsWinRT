@@ -2,7 +2,7 @@
   "profiles": {
     "UnitTest": {
       "commandName": "Project",
-      "nativeDebugging": false
+      "nativeDebugging": true
     }
   }
 }

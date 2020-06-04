@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using Windows.Web.Http;
 
 namespace WinUIDesktopSample
 {
@@ -40,9 +41,18 @@ namespace WinUIDesktopSample
             myWindow = window;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            myWindow.Content = new MainPage();
+            const string _root = "https://api.github.com";
+            const string _repoName = "WindowsCommunityToolkit";
+            const string _repoOwner = "Microsoft";
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.TryAppendWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko");
+
+                var uri = $"{_root}/repos/{_repoOwner}/{_repoName}/releases";
+                var result = await client.GetStringAsync(new Uri(uri));
+            }
         }
     }
 

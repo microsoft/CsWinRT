@@ -22,14 +22,14 @@ namespace WinRT
                 if (_comWrappers is null)
                 {
                     _comWrappers = new DefaultComWrappers();
-                    _comWrappers.RegisterAsGlobalInstance();
+                    ComWrappers.RegisterForTrackerSupport(_comWrappers);
                 }
                 return _comWrappers;
             }
             set
             {
                 _comWrappers = value;
-                _comWrappers.RegisterAsGlobalInstance();
+                ComWrappers.RegisterForTrackerSupport(_comWrappers);
             }
         }
 

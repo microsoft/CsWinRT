@@ -2,7 +2,7 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">$(IsCrossTargetingBuild)</GenerateTestProjection>
+    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,7 +20,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="GenerateProjection" BeforeTargets="DispatchToInnerBuilds;Build" Condition="'$(GenerateTestProjection)' == 'true'">
+  <Target Name="GenerateProjection" Condition="'$(GenerateTestProjection)' == 'true'">
     <PropertyGroup>
       <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
       <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
@@ -37,14 +37,16 @@
       <CsWinRTVerbosity>high</CsWinRTVerbosity>
       <CsWinRTResponseFile>$(IntermediateOutputPath)cswinrt_unittest.rsp</CsWinRTResponseFile>
       <CsWinRTCommand>$(CsWinrtExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+      <CsWinRTNetStandardArg Condition="'$(TargetFramework)' == 'netcoreapp2.0'">-netstandard</CsWinRTNetStandardArg>
     </PropertyGroup>
     <PropertyGroup>
       <CsWinRTParams>
 -verbose
+$(CsWinRTNetStandardArg)
 -in 10.0.18362.0
 -in @(WinUIWinMDs->'"%(FullPath)"', ' ')
 -in @(UnitTestWinMDs->'"%(FullPath)"', ' ')
--out "$(ProjectDir)Generated Files"
+-out "$(ProjectDir)/Generated Files/$(TargetFramework)"
 -include TestComponentCSharp 
 -include TestComponent
 -include Windows.Foundation 
@@ -84,11 +86,17 @@
     <Exec Command="$(CsWinRTCommand)" />
   </Target>
 
-  <Target Name="IncludeProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateProjection">
+  <Target Name="IncludeProjection" BeforeTargets="CoreCompile" DependsOnTargets="GenerateProjection">
     <ItemGroup>
-      <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
+      <Compile Include="$(ProjectDir)Generated Files/$(TargetFramework)/*.cs" Exclude="@(Compile)" />
     </ItemGroup>
   </Target>
+  
+  <ItemGroup>
+    <Compile Remove="$(ProjectDir)Generated Files/**/*.cs"/>
+    <Compile Include="$(ProjectDir)Generated Files/$(TargetFramework)/*.cs" Condition="'$(TargetFramework)' != ''" />
+    <None Include="$(ProjectDir)Generated Files/**/*.cs" />
+  </ItemGroup>
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
 

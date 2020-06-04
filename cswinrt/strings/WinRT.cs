@@ -286,12 +286,12 @@ namespace WinRT
         public static ObjectReference<I> ActivateInstance<I>() => _factory.Value._ActivateInstance<I>();
     }
 
-    internal class EventSource<TDelegate>
+    internal unsafe class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
     {
         readonly IObjectReference _obj;
-        readonly _add_EventHandler _addHandler;
-        readonly _remove_EventHandler _removeHandler;
+        readonly delegate* stdcall<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
+        readonly delegate* stdcall<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
 
         private EventRegistrationToken _token;
         private TDelegate _event;
@@ -379,7 +379,9 @@ namespace WinRT
             }
         }
 
-        internal EventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler)
+        internal EventSource(IObjectReference obj,
+            delegate* stdcall<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+            delegate* stdcall<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler)
         {
             _obj = obj;
             _addHandler = addHandler;

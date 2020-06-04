@@ -31,6 +31,7 @@ namespace cswinrt
         { "output", 0, 1, "<path>", "Location of generated projection" },
         { "include", 0, option::no_max, "<prefix>", "One or more prefixes to include in projection" },
         { "exclude", 0, option::no_max, "<prefix>", "One or more prefixes to exclude from projection" },
+        { "netstandard", 0, 0, {}, "Generate code compatible with .NET Standard 2.0" },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
@@ -82,6 +83,7 @@ Where <spec> is one or more of:
         }
 
         settings.verbose = args.exists("verbose");
+        settings.netstandard_compat = args.exists("netstandard");
         settings.input = args.files("input", database::is_database);
 
         for (auto && include : args.values("include"))
