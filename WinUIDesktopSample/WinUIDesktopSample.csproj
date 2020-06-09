@@ -21,13 +21,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
+    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.5" />
     <ProjectReference Include="..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\Projections\WinUI\WinUI.csproj" />
-    <!--<PackageReference Include="Microsoft.Windows.CsWinRT" Version="[$(NugetTestVersion)]" />
-    <PackageReference Include="Windows" Version="[$(NugetTestVersion)]" />
-    <PackageReference Include="WinUI" Version="[$(NugetTestVersion)]" />-->
-    <!--<PackageReference Include="Test" Version="[$(NugetTestVersion)]" />-->
+    <!--
+      Exclude compile time assets so we don't pick up the interop assembly from the WinUI Nuget
+      since we are building our own in the WinUIProjection project
+    -->
+    <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
+      <ExcludeAssets>compile;</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <!--

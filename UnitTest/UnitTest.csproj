@@ -15,10 +15,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!--<PackageReference Include="Microsoft.Windows.CsWinRT" Version="$(NugetTestVersion)" />
-    <PackageReference Include="Windows" Version="$(NugetTestVersion)" />
-    <PackageReference Include="WinUI" Version="$(NugetTestVersion)" />
-    <PackageReference Include="Test" Version="$(NugetTestVersion)" />-->
     <ProjectReference Include="..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\Projections\WinUI\WinUI.csproj" />
     <ProjectReference Include="..\Projections\Test\Test.csproj" />
@@ -45,6 +41,16 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="XunitXml.TestLogger" Version="2.1.26" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+    <Compile Remove="**/*.net5.cs" />
+    <None Include="**/*.net5.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp5.0'">
+    <Compile Remove="**/*.netcoreapp2.0.cs" />
+    <None Include="**/*.netcoreapp2.0.cs" />
   </ItemGroup>
 
   <Target Name="FilterProjection" BeforeTargets="CoreCompile">

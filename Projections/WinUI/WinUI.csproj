@@ -23,11 +23,8 @@
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
-    <!--<PackageReference Include="Microsoft.Windows.CsWinRT" Version="[$(NugetTestVersion)]" />
-    <PackageReference Include="Windows" Version="[$(NugetTestVersion)]" />-->
-    <!-- Exclude compile and build time assets so we don't think we're building a real WinUI App -->
     <PackageReference Include="Microsoft.WinUI" Version="[$(MicrosoftWinUIVersion)]" GeneratePathProperty="true">
-      <ExcludeAssets>compile; build</ExcludeAssets>
+      <ExcludeAssets>compile; build; runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
 
@@ -82,13 +79,5 @@
       <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
     </ItemGroup>
   </Target>
-
-  <!--<Target Name="CreatePackage" AfterTargets="Build" Condition="'$(IsInnerBuild)' != 'true'" Inputs="$(OutDir)\netstandard2.0\WinUI.dll;$(OutDir)\netcoreapp5.0\WinUI.dll" Outputs="$(NugetBuildDir)WinUI.$(NugetTestVersion).nupkg">
-    <PropertyGroup>
-      <NugetCommandLine>$(SolutionDir).nuget\nuget pack WinUI.nuspec -Version $(NugetTestVersion) -OutputDirectory $(NugetBuildDir) -Properties Configuration=$(Configuration);Platform=$(Platform);MicrosoftWinUIVersion=$(MicrosoftWinUIVersion) -NonInteractive -Verbosity Detailed -NoPackageAnalysis</NugetCommandLine>
-    </PropertyGroup>
-    <Exec Command="$(NugetCommandLine)" />
-    <Exec Command='rd /s/q "$(NugetCacheDir)WinUI\$(NugetTestVersion)"'/>
-  </Target>-->
 
 </Project>

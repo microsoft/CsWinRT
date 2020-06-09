@@ -72,12 +72,4 @@
     </ItemGroup>
   </Target>
 
-  <!--<Target Name="CreatePackage" AfterTargets="Build" Condition="'$(IsInnerBuild)' != 'true'" Inputs="$(OutDir)\netstandard2.0\Windows.dll;$(OutDir)\netcoreapp5.0\Windows.dll" Outputs="$(NugetBuildDir)Windows.$(NugetTestVersion).nupkg">
-    <PropertyGroup>
-      <NugetCommandLine>$(SolutionDir).nuget\nuget pack Windows.nuspec -Version $(NugetTestVersion) -OutputDirectory $(NugetBuildDir) -Properties Configuration=$(Configuration);Platform=$(Platform) -NonInteractive -Verbosity Detailed -NoPackageAnalysis</NugetCommandLine>
-    </PropertyGroup>
-    <Exec Command="$(NugetCommandLine)" />
-    <Exec Command='rd /s/q "$(NugetCacheDir)Windows\$(NugetTestVersion)"'/>
-  </Target>-->
-
 </Project>

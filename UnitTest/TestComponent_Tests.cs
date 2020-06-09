@@ -9,11 +9,11 @@ using Xunit;
 
 namespace UnitTest
 {
-    public class TestComponent
+    public class TestWinRT
     {
         public ITests Tests { get; private set; }
 
-        public TestComponent()
+        public TestWinRT()
         {
             Tests = TestRunner.MakeTests();
         }

@@ -24,11 +24,11 @@ using WinRT.Interop;
 
 namespace UnitTest
 {
-    public class TestComponentCSharp
+    public class TestCSharp
     {
         public Class TestObject { get; private set; }
 
-        public TestComponentCSharp()
+        public TestCSharp()
         {
             TestObject = new Class();
         }
