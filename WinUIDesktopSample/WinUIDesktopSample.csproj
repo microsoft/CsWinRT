@@ -29,7 +29,8 @@
       since we are building our own in the WinUIProjection project
     -->
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
-      <ExcludeAssets>compile;</ExcludeAssets>
+      <ExcludeAssets>compile; runtime</ExcludeAssets>
+      <!--<ExcludeAssets>compile;</ExcludeAssets>-->
     </PackageReference>
   </ItemGroup>
 
