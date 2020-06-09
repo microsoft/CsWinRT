@@ -11,11 +11,13 @@
     <ClCompile Include="Class.cpp" />
     <ClCompile Include="StaticClass.cpp" />
     <ClCompile Include="Generated Files\module.g.cpp" />
+    <ClCompile Include="NonAgileClass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="StaticClass.h" />
     <ClInclude Include="$(IntDir)strings.h" />
+    <ClInclude Include="NonAgileClass.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />

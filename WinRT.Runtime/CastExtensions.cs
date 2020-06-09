@@ -44,6 +44,23 @@ namespace WinRT
             }
         }
 
+        public static AgileReference<T> AsAgile<T>(this T value) where T : class
+        {
+            var marshal = Marshaler<T>.CreateMarshaler(value);
+            try
+            {
+                if (marshal is IObjectReference objref)
+                {
+                    return new AgileReference<T>(objref);
+                }
+            }
+            finally
+            {
+                Marshaler<T>.DisposeMarshaler(marshal);
+            }
+            return null;
+        }
+
         private static bool TryGetRefForObject(object value, bool allowComposed, out IObjectReference reference)
         {
             if (ComWrappersSupport.TryUnwrapObject(value, out var objRef))

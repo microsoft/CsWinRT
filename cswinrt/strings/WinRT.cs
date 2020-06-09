@@ -85,6 +85,15 @@ namespace WinRT
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
         internal static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* length);
+
+        internal enum AgileReferenceOptions : uint
+        {
+            AGILEREFERENCE_DEFAULT = 0x0,
+            AGILEREFERENCE_DELAYEDMARSHAL = 0x1
+        }
+
+        [DllImport("api-ms-win-core-com-l1-1-1.dll", CallingConvention = CallingConvention.StdCall)]
+        internal static extern unsafe int RoGetAgileReference(AgileReferenceOptions options, ref Guid iid, IntPtr unknown, IntPtr* agileReference);
     }
 
     internal struct VftblPtr
