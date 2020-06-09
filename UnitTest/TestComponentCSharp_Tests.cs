@@ -1540,6 +1540,8 @@ namespace UnitTest
                 agileReference = nonAgileObject.AsAgile();
                 objectAcquired.Set();
                 valueAcquired.WaitOne();
+
+                // Call to proxy object acquired from MTA which should throw
                 Assert.ThrowsAny<System.Exception>(() => proxyObject.Commands.Count);
             }
 

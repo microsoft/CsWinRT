@@ -44,6 +44,17 @@ namespace WinRT
             }
         }
 
+        /// <summary>
+        /// Create an agile reference for a given WinRT object.  The agile reference can be passed to another apartment
+        /// within the process from which the original object can be retrieved even if it wasn't agile.
+        /// </summary>
+        /// <typeparam name="T">Type of WinRT object.</typeparam>
+        /// <param name="value">The object.</param>
+        /// <returns>
+        /// If <paramref name="value"/> is a WinRT object, returns a AgileReference for it.
+        /// Otherwise, returns null.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">Thrown if the runtime type of <paramref name="value"/> is not a projected type.</exception>
         public static AgileReference<T> AsAgile<T>(this T value) where T : class
         {
             var marshal = Marshaler<T>.CreateMarshaler(value);
@@ -58,7 +69,7 @@ namespace WinRT
             {
                 Marshaler<T>.DisposeMarshaler(marshal);
             }
-            return null;
+            throw new InvalidOperationException($"Object type is not a projected type: {nameof(value)}.");
         }
 
         private static bool TryGetRefForObject(object value, bool allowComposed, out IObjectReference reference)
