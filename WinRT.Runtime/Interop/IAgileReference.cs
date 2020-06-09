@@ -17,6 +17,15 @@ namespace WinRT.Interop
     public interface IAgileObject
     {
     }
+
+    [WindowsRuntimeType]
+    [Guid("00000146-0000-0000-C000-000000000046")]
+    internal interface IGlobalInterfaceTable
+    {
+        IntPtr RegisterInterfaceInGlobal(IObjectReference objRef, Guid riid);
+        void RevokeInterfaceFromGlobal(IntPtr cookie);
+        IObjectReference GetInterfaceFromGlobal(IntPtr cookie, Guid riid);
+    }
 }
 
 namespace ABI.WinRT.Interop
@@ -132,6 +141,63 @@ namespace ABI.WinRT.Interop
         public IAgileObject(ObjectReference<Vftbl> obj)
         {
             _obj = obj;
+        }
+    }
+
+    [Guid("00000146-0000-0000-C000-000000000046")]
+    internal class IGlobalInterfaceTable : global::WinRT.Interop.IGlobalInterfaceTable
+    {
+        [Guid("00000146-0000-0000-C000-000000000046")]
+        public struct Vftbl
+        {
+            public delegate int _RegisterInterfaceInGlobal(IntPtr thisPtr, IntPtr objRef, ref Guid riid, out IntPtr cookie);
+            public delegate int _RevokeInterfaceFromGlobal(IntPtr thisPtr, IntPtr cookie);
+            public delegate int _GetInterfaceFromGlobal(IntPtr thisPtr, IntPtr cookie, ref Guid riid, out IntPtr objectReference);
+
+            public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
+            public _RegisterInterfaceInGlobal RegisterInterfaceInGlobal;
+            public _RevokeInterfaceFromGlobal RevokeInterfaceFromGlobal;
+            public _GetInterfaceFromGlobal GetInterfaceFromGlobal;
+        }
+
+        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+
+        public static implicit operator IGlobalInterfaceTable(IObjectReference obj) => (obj != null) ? new IGlobalInterfaceTable(obj) : null;
+        public static implicit operator IGlobalInterfaceTable(ObjectReference<Vftbl> obj) => (obj != null) ? new IGlobalInterfaceTable(obj) : null;
+        protected readonly ObjectReference<Vftbl> _obj;
+        public IntPtr ThisPtr => _obj.ThisPtr;
+        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
+        public A As<A>() => _obj.AsType<A>();
+
+        public IGlobalInterfaceTable(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public IGlobalInterfaceTable(ObjectReference<Vftbl> obj)
+        {
+            _obj = obj;
+        }
+
+        public IntPtr RegisterInterfaceInGlobal(IObjectReference objRef, Guid riid)
+        {
+            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RegisterInterfaceInGlobal(ThisPtr, objRef.ThisPtr, ref riid, out IntPtr cookie));
+            return cookie;
+
+        }
+
+        public void RevokeInterfaceFromGlobal(IntPtr cookie)
+        {
+            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RevokeInterfaceFromGlobal(ThisPtr, cookie));
+        }
+
+        public IObjectReference GetInterfaceFromGlobal(IntPtr cookie, Guid riid)
+        {
+            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInterfaceFromGlobal(ThisPtr, cookie, ref riid, out IntPtr ptr));
+            try
+            {
+                return ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+            }
+            finally
+            {
+                MarshalInspectable.DisposeAbi(ptr);
+            }
         }
     }
 }

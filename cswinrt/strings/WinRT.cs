@@ -37,6 +37,9 @@ namespace WinRT
     internal class Platform
     {
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
+        internal static extern unsafe int CoCreateInstance(ref Guid clsid, IntPtr outer, uint clsContext, ref Guid iid, IntPtr* instance);
+
+        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         internal static extern int CoDecrementMTAUsage(IntPtr cookie);
 
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]

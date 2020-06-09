@@ -1514,12 +1514,12 @@ namespace UnitTest
         [Fact]
         public void TestManagedAgileObject()
         {
-            var testObjectAgileRef = TestObject.AsAgile();
+            using var testObjectAgileRef = TestObject.AsAgile();
             var agileTestObject = testObjectAgileRef.Get();
             Assert.Equal(TestObject, agileTestObject);
 
             IProperties1 properties = new ManagedProperties(42);
-            var propertiesAgileRef = properties.AsAgile();
+            using var propertiesAgileRef = properties.AsAgile();
             var agileProperties = propertiesAgileRef.Get();
             Assert.Equal(properties.ReadWriteProperty, agileProperties.ReadWriteProperty);
 
@@ -1543,6 +1543,7 @@ namespace UnitTest
 
                 // Call to proxy object acquired from MTA which should throw
                 Assert.ThrowsAny<System.Exception>(() => proxyObject.Commands.Count);
+                agileReference.Dispose();
             }
 
             public void CheckValue()
