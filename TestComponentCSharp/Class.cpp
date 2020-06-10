@@ -1170,4 +1170,10 @@ namespace winrt::TestComponentCSharp::implementation
     {
         return winrt::box_value(hstring{});
     }
+
+    hstring Class::Catch(hstring const& /*params*/, hstring& /*lock*/)
+    {
+        // Compile-only test for keyword escaping
+        throw hresult_not_implemented();
+    }
 }

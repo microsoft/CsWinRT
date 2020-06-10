@@ -31,6 +31,17 @@
     </PackageReference>
   </ItemGroup>
 
+  <!--
+    In additon to excluding the WinUI interop assembly above, also need to exclude 
+    its transitive Microsoft.Windows.CsWinRT Nuget's winrt.runtime.dll assembly.
+    But PackageReference metadata doesn't appear to support that, so removing it here.
+  -->
+  <Target Name="RemoveTransitivePackageAssets" AfterTargets="ResolvePackageAssets">
+    <ItemGroup>
+      <RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="'%(RuntimeCopyLocalItems.NugetPackageId)' != '' And $([System.String]::Copy(%(RuntimeCopyLocalItems.NugetPackageId)).Contains('Microsoft.Windows.CsWinRT'))" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\WinUIProjection\WinUIProjection.csproj" />

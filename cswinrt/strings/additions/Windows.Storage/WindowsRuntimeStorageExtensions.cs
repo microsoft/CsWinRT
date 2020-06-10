@@ -17,6 +17,9 @@ namespace System.IO
     /// </summary>
     public static class WindowsRuntimeStorageExtensions
     {
+
+#if !NETSTANDARD2_0
+
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFile windowsRuntimeFile)
         {
             if (windowsRuntimeFile == null)
@@ -171,6 +174,7 @@ namespace System.IO
                 return null;
             }
         }
+#endif
 
         public static SafeFileHandle CreateSafeFileHandle(
             this IStorageFile windowsRuntimeFile,

@@ -20,7 +20,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <BuildVersion Condition="'$(BuildVersion)'==''">1.0.0.0</BuildVersion>
+    <VersionNumber Condition="'$(VersionNumber)'==''">0.0.0.0</VersionNumber>
+    <VersionString Condition="'$(VersionString)'==''">0.0.0-private.0</VersionString>
     <BuildPlatform>$(Platform)</BuildPlatform>
     <BuildPlatform Condition="'$(Platform)'=='Win32'">x86</BuildPlatform>
     <BuildOutDir Condition="'$(BuildOutDir)'==''">$([MSBuild]::NormalizeDirectory('$(SolutionDir)_build', '$(BuildPlatform)', '$(Configuration)'))</BuildOutDir>
@@ -53,7 +54,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>VERSION_STRING="$(BuildVersion)";NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VERSION_NUMBER="$(VersionNumber)";VERSION_STRING="$(VersionString)";NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
@@ -72,7 +73,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
     </Link>
     <ResourceCompile>
-      <PreprocessorDefinitions>VERSION_STRING="$(BuildVersion)";VERSION_COMMAS=$(BuildVersion.Replace('.', ','));%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>VERSION_NUMBER=\"$(VersionNumber)\";VERSION_COMMAS=$(VersionNumber.Replace('.', ','));FILE_DESCRIPTION=\"C#/WinRT v$(VersionString)\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
   </ItemDefinitionGroup>
 

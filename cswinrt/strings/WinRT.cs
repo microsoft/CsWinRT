@@ -132,6 +132,17 @@ namespace WinRT
             // Explicitly look for module in the same directory as this one, and
             // use altered search path to ensure any dependencies in the same directory are found.
             _moduleHandle = Platform.LoadLibraryExW(System.IO.Path.Combine(_currentModuleDirectory, fileName), IntPtr.Zero, /* LOAD_WITH_ALTERED_SEARCH_PATH */ 8);
+#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+            if (_moduleHandle == IntPtr.Zero)
+            {
+                try 
+	            {	        
+                    // Allow runtime to find module in RID-specific relative subfolder
+                    _moduleHandle = NativeLibrary.Load(fileName, Assembly.GetExecutingAssembly(), null);
+	            }
+                catch (Exception) { }
+            }
+#endif
             if (_moduleHandle == IntPtr.Zero)
             {
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
@@ -304,14 +315,13 @@ namespace WinRT
         {
             lock (this)
             {
-                if (_event == null)
+                if (_event is null)
                 {
                     var marshaler = CreateMarshaler((TDelegate)EventInvoke);
                     try
                     {
                         var nativeDelegate = GetAbi(marshaler);
-                        Marshal.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out EventRegistrationToken token));
-                        _token = token;
+                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out _token));
                     }
                     finally
                     {
@@ -328,11 +338,12 @@ namespace WinRT
         {
             lock (this)
             {
+                var oldEvent = _event;
                 _event = (TDelegate)global::System.Delegate.Remove(_event, del);
-            }
-            if (_event == null)
-            {
-                _UnsubscribeFromNative();
+                if (oldEvent is object && _event is null)
+                {
+                    _UnsubscribeFromNative();
+                }
             }
         }
 
@@ -377,7 +388,7 @@ namespace WinRT
 
         void _UnsubscribeFromNative()
         {
-            Marshal.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
+            ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
             _token.Value = 0;
         }
     }

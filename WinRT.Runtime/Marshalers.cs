@@ -25,14 +25,6 @@ namespace WinRT
                 handle.Free();
             }
         }
-
-        // TEMP: used by TestComponent_Tests
-        // TODO: implement ==, !=, Equals, IEquatable for projected objects
-        public static bool ObjectEquals<T>(this T x, T y)
-        {
-            return MarshalInterface<T>.CreateMarshaler(x).ThisPtr ==
-                MarshalInterface<T>.CreateMarshaler(y).ThisPtr;
-        }
     }
 
     // TODO: minimize heap allocations for marshalers by eliminating explicit try/finally
@@ -923,7 +915,7 @@ namespace WinRT
                 return null;
             }
 
-            if (unwrapObject && TryUnwrapObject(o, out var objRef))
+            if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
             {
                 return objRef.As<IInspectable.Vftbl>();
             }
@@ -973,36 +965,6 @@ namespace WinRT
         {
             var objRef = CreateMarshaler(o, unwrapObject);
             *(IntPtr*)dest.ToPointer() = objRef?.GetRef() ?? IntPtr.Zero;
-        }
-
-        private static bool TryUnwrapObject(object o, out IObjectReference objRef)
-        {
-            // The unwrapping here needs to be in exact type match in case the user
-            // has implemented a WinRT interface or inherited from a WinRT class
-            // in a .NET (non-projected) type.
-
-            // TODO: Define and output attributes defining that a type is a projected interface
-            // or class type to avoid accidental collisions.
-            // Also, it might be a good idea to add a property to get the IObjectReference
-            // that is marked [EditorBrowsable(EditorBrowsableState.Never)] to hide it from most IDEs
-            // to help avoid using private implementation details.
-            Type type = o.GetType();
-            // Projected interface types have fields name _obj that hold their object reference.
-            objRef = (IObjectReference)type.GetField("_obj", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)?.GetValue(o);
-            if (objRef != null)
-            {
-                return true;
-            }
-
-            // If we get here, we're either a class or a non-WinRT type. If we're a class, we'll have a _default field holding a reference to our default interface.
-            object defaultInterface = type.GetField("_default", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)?.GetValue(o);
-            if (defaultInterface != null)
-            {
-                return TryUnwrapObject(defaultInterface, out objRef);
-            }
-
-            objRef = null;
-            return false;
         }
 
         public static unsafe MarshalInterfaceHelper<object>.MarshalerArray CreateMarshalerArray(object[] array) => MarshalInterfaceHelper<object>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
@@ -1061,7 +1023,7 @@ namespace WinRT
                 DisposeMarshaler = MarshalGeneric<T>.DisposeMarshaler;
                 DisposeAbi = (object box) => { };
             }
-            else if (type.IsValueType)
+            else if (type.IsValueType || type == typeof(Type))
             {
                 AbiType = type.FindHelperType();
                 if (AbiType != null)

@@ -301,6 +301,10 @@ namespace TestComponentCSharp
 
         static String GetTypeNameForType(Windows.UI.Xaml.Interop.TypeName type);
 
+        // Other
         static Object EmptyString { get; };
+
+        // Keyword escapes
+        String Catch(String params, out String lock);
     }
 }

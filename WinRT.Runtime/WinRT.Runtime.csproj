@@ -12,6 +12,21 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <Authors>Microsoft Corporation</Authors>
+    <Company>Microsoft Corporation</Company>
+    <Product>C#/WinRT</Product>
+    <PackageId>WinRT.Runtime</PackageId>
+    <FileVersion>$(VersionNumber)</FileVersion>
+    <Version>$(VersionNumber)</Version>
+    <AssemblyVersion>$(VersionNumber)</AssemblyVersion>
+    <InformationalVersion>$(VersionNumber)</InformationalVersion>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Description>C#/WinRT Runtime v$(VersionString)</Description>
+    <AssemblyTitle>C#/WinRT Runtime v$(VersionString)</AssemblyTitle>
+    <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
+  </PropertyGroup>
+    
   <ItemGroup>
     <Compile Include="../cswinrt/strings/*.cs" Link="cswinrt/%(FileName)%(Extension)" />
   </ItemGroup>

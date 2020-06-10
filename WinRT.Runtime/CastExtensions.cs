@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using WinRT.Interop;
 
@@ -21,22 +22,15 @@ namespace WinRT
         /// <exception cref="ArgumentException">Thrown if the runtime type of <paramref name="value"/> is not a projected type (if the object is a managed object).</exception>
         public static TInterface As<TInterface>(this object value)
         {
-            IObjectReference GetRefForObject()
-            {
-                if (ComWrappersSupport.TryUnwrapObject(value, out var objRef))
-                {
-                    return objRef.As<IUnknownVftbl>();
-                }
-                else
-                {
-                    throw new ArgumentException("Source object type is not a projected type.", nameof(value));
-                }
-            }
-
             if (typeof(TInterface) == typeof(object))
             {
-                using var objRef = GetRefForObject();
-                return (TInterface)ComWrappersSupport.CreateRcwForComObject(objRef.ThisPtr);
+                if (TryGetRefForObject(value, allowComposed: false, out IObjectReference objRef))
+                {
+                    using (objRef)
+                    {
+                        return (TInterface)ComWrappersSupport.CreateRcwForComObject(objRef.ThisPtr);
+                    }
+                }
             }
 
             if (value is TInterface convertableInMetadata)
@@ -44,11 +38,44 @@ namespace WinRT
                 return convertableInMetadata;
             }
 
-            using (var objRef = GetRefForObject())
+            using (var objRef = GetRefForObject(value))
             {
-                return (TInterface)typeof(TInterface).GetHelperType().GetConstructor(new [] { typeof(IObjectReference) }).Invoke(new object[] { objRef });
+                return (TInterface)typeof(TInterface).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { objRef });
             }
         }
-    }
 
+        private static bool TryGetRefForObject(object value, bool allowComposed, out IObjectReference reference)
+        {
+            if (ComWrappersSupport.TryUnwrapObject(value, out var objRef))
+            {
+                reference = objRef.As<IUnknownVftbl>();
+                return true;
+            }
+            else if (allowComposed && TryGetComposedRefForQI(value, out objRef))
+            {
+                reference = objRef.As<IUnknownVftbl>();
+                return true;
+            }
+            reference = null;
+            return false;
+        }
+        
+        private static IObjectReference GetRefForObject(object value)
+        {
+            return TryGetRefForObject(value, allowComposed: true, out var objRef) ? objRef
+                : throw new ArgumentException("Source object type is not a projected type and does not inherit from a projected type.", nameof(value));
+        }
+
+        private static bool TryGetComposedRefForQI(object value, out IObjectReference objRef)
+        {
+            var getReferenceMethod = value.GetType().GetMethod("GetDefaultReference", BindingFlags.NonPublic | BindingFlags.Instance).MakeGenericMethod(typeof(IUnknownVftbl));
+            if (getReferenceMethod is null)
+            {
+                objRef = null;
+                return false;
+            }
+            objRef = (IObjectReference)getReferenceMethod.Invoke(value, Array.Empty<object>());
+            return true;
+        }
+    }
 }

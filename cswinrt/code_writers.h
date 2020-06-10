@@ -442,9 +442,10 @@ namespace cswinrt
         if (auto return_sig = signature.return_signature())
         {
             auto semantics = get_type_semantics(return_sig.Type());
+            auto return_param = w.write_temp("%", bind<write_escaped_identifier>(signature.return_param_name()));
             return_sig.Type().is_szarray() ?
-                w.write(", out int __%Size, out IntPtr %", signature.return_param_name(), signature.return_param_name()) :
-                w.write(", out % %", bind<write_abi_type>(semantics), signature.return_param_name());
+                w.write(", out int __%Size, out IntPtr %", signature.return_param_name(), return_param) :
+                w.write(", out % %", bind<write_abi_type>(semantics), return_param);
         }
     }
 
@@ -1976,11 +1977,25 @@ event % %;)",
                 break;
             case category::class_type:
                 m.marshaler_type = w.write_temp("%", bind<write_type_name>(semantics, true, true));
-                m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                if (m.is_array())
+                {
+                    m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
+                }
+                else
+                {
+                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                }
                 break;
             case category::delegate_type:
                 m.marshaler_type = get_abi_type();
-                m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                if (m.is_array())
+                {
+                    m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
+                }
+                else
+                {
+                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                }
                 break;
             }
         };
@@ -2793,7 +2808,8 @@ remove => _%.Unsubscribe(value);
             auto generic_type = generic_abi_types[index++].second;
             if (!return_sig.Type().is_szarray() && !generic_type.empty())
             {
-                w.write(", out % %", generic_type, signature.return_param_name());
+                w.write(", out % %", generic_type, 
+                    bind<write_escaped_identifier>(signature.return_param_name()));
             }
             else
             {
@@ -2876,7 +2892,7 @@ remove => _%.Unsubscribe(value);
         void write_out_initialize(writer& w) const
         {
             XLANG_ASSERT(is_out());
-            w.write("% = default;\n", param_name);
+            w.write("% = default;\n", bind<write_escaped_identifier>(param_name));
             if (is_array())
             {
                 w.write("__%Size = default;\n", param_name);
@@ -3887,7 +3903,7 @@ public static class %
 
         w.write(R"([global::WinRT.WindowsRuntimeType]
 [global::WinRT.ProjectedRuntimeClass(nameof(_default))]
-%public %class %%
+%public %class %%, IEquatable<%>
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
 
@@ -3896,12 +3912,23 @@ private readonly Lazy<%> _defaultLazy;
 
 private % _default => _defaultLazy.Value;
 %
-public static %% FromAbi(IntPtr thisPtr) => (thisPtr != IntPtr.Zero) ? new %(new %(global::WinRT.ObjectReference<%.Vftbl>.FromAbi(thisPtr))) : null;
+public static %% FromAbi(IntPtr thisPtr)
+{
+if (thisPtr == IntPtr.Zero) return null;
+var obj = MarshalInspectable.FromAbi(thisPtr);
+return obj is % ? (%)obj : new %((%)obj);
+}
 
 % %(% ifc)%
 {
 _defaultLazy = new Lazy<%>(() => ifc);
 }
+
+public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
+public static bool operator !=(% x, % y) => !(x == y);
+public bool Equals(% other) => this == other;
+public override bool Equals(object obj) => obj is % that && this == that;
+public override int GetHashCode() => ThisPtr.GetHashCode();
 %
 
 private struct InterfaceTag<I>{};
@@ -3914,6 +3941,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             bind<write_class_modifiers>(type),
             type_name,
             bind<write_type_inheritance>(type, base_semantics, true),
+            type_name,
             derived_new,
             default_interface_abi_name,
             default_interface_abi_name,
@@ -3921,13 +3949,20 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             derived_new,
             type_name,
             type_name,
-            default_interface_abi_name,
+            type_name,
+            type_name,
             default_interface_abi_name,
             type.Flags().Sealed() ? "internal" : "protected internal",
             type_name,
             default_interface_abi_name,
             bind<write_base_constructor_dispatch>(base_semantics),
             default_interface_abi_name,
+            type_name,
+            type_name,
+            type_name,
+            type_name,
+            type_name,
+            type_name,
             bind([&](writer& w)
             {
                 bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
@@ -4049,13 +4084,14 @@ public struct %
 {
 public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable.CreateMarshaler(obj).As<%.Vftbl>();
 public static IntPtr GetAbi(IObjectReference value) => value is null ? IntPtr.Zero : MarshalInterfaceHelper<object>.GetAbi(value);
-public static % FromAbi(IntPtr thisPtr) => (%)MarshalInspectable.FromAbi(thisPtr);
+public static % FromAbi(IntPtr thisPtr) => %.FromAbi(thisPtr);
 public static IntPtr FromManaged(% obj) => obj is null ? IntPtr.Zero : CreateMarshaler(obj).GetRef();
 public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArray(%[] array) => MarshalInterfaceHelper<%>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
 public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<%>.GetAbiArray(box);
 public static unsafe %[] FromAbiArray(object box) => MarshalInterfaceHelper<%>.FromAbiArray(box, FromAbi);
 public static (int length, IntPtr data) FromManagedArray(%[] array) => MarshalInterfaceHelper<%>.FromManagedArray(array, (o) => FromManaged(o));
 public static void DisposeMarshaler(IObjectReference value) => MarshalInspectable.DisposeMarshaler(value);
+public static void DisposeMarshalerArray(MarshalInterfaceHelper<%>.MarshalerArray array) => MarshalInterfaceHelper<%>.DisposeMarshalerArray(array);
 public static void DisposeAbi(IntPtr abi) => MarshalInspectable.DisposeAbi(abi);
 public static unsafe void DisposeAbiArray(object box) => MarshalInspectable.DisposeAbiArray(box);
 }
@@ -4063,6 +4099,8 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable.Disp
             abi_type_name,
             projected_type_name,
             default_interface_abi_name,
+            projected_type_name,
+            projected_type_name,
             projected_type_name,
             projected_type_name,
             projected_type_name,
@@ -4389,24 +4427,11 @@ public %(%)
 %
 }
 
-public static bool operator ==(% x, % y)
-{
-return %;
-}
-
+public static bool operator ==(% x, % y) => %;
 public static bool operator !=(% x, % y) => !(x == y);
-
 public bool Equals(% other) => this == other;
-
-public override bool Equals(object obj)
-{
-return obj is % that && this == that;
-}
-
-public override int GetHashCode()
-{
-return %;
-}
+public override bool Equals(object obj) => obj is % that && this == that;
+public override int GetHashCode() => %;
 }
 )",
             // struct

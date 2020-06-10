@@ -31,6 +31,12 @@ namespace WinRT
         /// <returns>A tuple containing the resolved type and the index of the end of the resolved type name.</returns>
         public static (Type type, int remaining) FindTypeByName(ReadOnlySpan<char> runtimeClassName)
         {
+            // Assume that anonymous types are expando objects, whether declared 'dynamic' or not.
+            // It may be necessary to detect otherwise and return System.Object.
+            if(runtimeClassName.StartsWith("<>f__AnonymousType".AsSpan()))
+            {
+                return (typeof(System.Dynamic.ExpandoObject), 0);
+            }
             var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
             return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
         }
@@ -110,6 +116,7 @@ namespace WinRT
                 "Double" => typeof(double),
                 "Guid" => typeof(Guid),
                 "Object" => typeof(object),
+                "TimeSpan" => typeof(TimeSpan),
                 _ => null
             };
         }
@@ -199,7 +206,7 @@ namespace WinRT
 
         private static bool TryAppendSimpleTypeName(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
         {
-            if (type.IsPrimitive || type == typeof(string) || type == typeof(Guid))
+            if (type.IsPrimitive || type == typeof(string) || type == typeof(Guid) || type == typeof(TimeSpan))
             {
                 if ((flags & TypeNameGenerationFlags.GenerateBoxedName) != 0)
                 {
