@@ -28,6 +28,7 @@
     -->
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
       <ExcludeAssets>compile;</ExcludeAssets>
+      <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
     </PackageReference>
   </ItemGroup>
 

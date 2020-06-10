@@ -19,6 +19,7 @@
     <!-- Exclude compile and build time assets so we don't think we're building a real WinUI App -->
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
       <ExcludeAssets>compile; build</ExcludeAssets>
+      <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
     </PackageReference>
     <PackageReference Include="System.Collections" Version="4.3.0" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
