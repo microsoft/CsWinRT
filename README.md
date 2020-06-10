@@ -32,7 +32,7 @@ An application project adds NuGet references to both the component interop assem
 The following msbuild project fragment demonstrates a simple invocation of cswinrt to generate projection sources for types in the Contoso namespace.  These sources are then included in the project build.
 
 ```
-  <Target Name="GenerateProjection" BeforeTargets="Build">
+  <Target Name="GenerateProjection">
     <PropertyGroup>
       <CsWinRTParams>
 # This sample demonstrates using a response file for cswinrt execution.
@@ -61,7 +61,7 @@ The following msbuild project fragment demonstrates a simple invocation of cswin
     <Exec Command="$(CsWinRTCommand)" />
   </Target>
 
-  <Target Name="IncludeProjection" BeforeTargets="CoreCompile" AfterTargets="GenerateProjection">
+  <Target Name="IncludeProjection" BeforeTargets="CoreCompile" DependsOnTargets="GenerateProjection">
     <ItemGroup>
       <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
     </ItemGroup>
