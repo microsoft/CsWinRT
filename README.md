@@ -51,7 +51,7 @@ The following msbuild project fragment demonstrates a simple invocation of cswin
 -include Contoso 
 # Write projection sources to the "Generated Files" folder,
 # which should be excluded from checkin (e.g., .gitignored).
--out "$(ProjectDir)Generated Files"
+-out "$(IntermediateOutputPath)/Generated Files"
       </CsWinRTParams>
     </PropertyGroup>
     <WriteLinesToFile
@@ -63,7 +63,7 @@ The following msbuild project fragment demonstrates a simple invocation of cswin
 
   <Target Name="IncludeProjection" BeforeTargets="CoreCompile" DependsOnTargets="GenerateProjection">
     <ItemGroup>
-      <Compile Include="$(ProjectDir)Generated Files/*.cs" Exclude="@(Compile)" />
+      <Compile Include="$(IntermediateOutputPath)/Generated Files/*.cs" Exclude="@(Compile)" />
     </ItemGroup>
   </Target>
 ```
