@@ -45,6 +45,7 @@
 # Exclude causality types colliding with those in System.Private.CoreLib.dll
 -exclude Windows.Foundation.Diagnostics 
 # Exclude Windows.UI, Windows.UI.Text, Windows.UI.Xaml per Microsoft.Windows.SDK.WinUI.Contracts NuGet
+-include Windows.UI.Popups
 -exclude Windows.UI.Colors
 -exclude Windows.UI.IColors
 -exclude Windows.UI.ColorHelper
