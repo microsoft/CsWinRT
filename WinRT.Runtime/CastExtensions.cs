@@ -57,6 +57,11 @@ namespace WinRT
         /// <exception cref="InvalidOperationException">Thrown if the runtime type of <paramref name="value"/> is not a projected type.</exception>
         public static AgileReference<T> AsAgile<T>(this T value) where T : class
         {
+            if(value == null)
+            {
+                return new AgileReference<T>(null);
+            }
+
             var marshal = Marshaler<T>.CreateMarshaler(value);
             try
             {

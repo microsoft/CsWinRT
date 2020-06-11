@@ -1525,6 +1525,11 @@ namespace UnitTest
 
             var agileObject = TestObject.As<IAgileObject>();
             Assert.NotNull(agileObject);
+
+            IProperties1 properties2 = null;
+            using var properties2AgileRef = properties2.AsAgile();
+            var agileProperties2 = properties2AgileRef.Get();
+            Assert.Null(agileProperties2);
         }
 
         class NonAgileClassCaller

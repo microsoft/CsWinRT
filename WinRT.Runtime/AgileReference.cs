@@ -7,8 +7,8 @@ namespace WinRT
     public class AgileReference : IDisposable
     {
         private readonly static Guid CLSID_StdGlobalInterfaceTable = Guid.Parse("00000323-0000-0000-c000-000000000046");
+        private readonly static Lazy<IGlobalInterfaceTable> Git = new Lazy<IGlobalInterfaceTable>(() => GetGitTable());
         private readonly IAgileReference _agileReference;
-        private readonly IGlobalInterfaceTable _git;
         private readonly IntPtr _cookie;
         private bool disposed;
 
@@ -32,8 +32,7 @@ namespace WinRT
             }
             catch(TypeLoadException)
             {
-                _git = GetGitTable();
-                _cookie = _git.RegisterInterfaceInGlobal(instance, iid);
+                _cookie = Git.Value.RegisterInterfaceInGlobal(instance, iid);
             }
             finally
             {
@@ -41,7 +40,7 @@ namespace WinRT
             }
         }
 
-        public IObjectReference Get() => _agileReference?.Resolve(typeof(IUnknownVftbl).GUID) ?? _git?.GetInterfaceFromGlobal(_cookie, typeof(IUnknownVftbl).GUID);
+        public IObjectReference Get() => _cookie == IntPtr.Zero ? _agileReference?.Resolve(typeof(IUnknownVftbl).GUID) : Git.Value?.GetInterfaceFromGlobal(_cookie, typeof(IUnknownVftbl).GUID);
 
         protected virtual void Dispose(bool disposing)
         {
@@ -49,15 +48,13 @@ namespace WinRT
             {
                 if (_cookie != IntPtr.Zero)
                 {
-                    // Obtaining new reference to git table in finalizer case to avoid race with finalizer cleaning up instance variables.
-                    var git = disposing ? _git : GetGitTable();
-                    git.RevokeInterfaceFromGlobal(_cookie);
+                    Git.Value.RevokeInterfaceFromGlobal(_cookie);
                 }
                 disposed = true;
             }
         }
 
-        private unsafe IGlobalInterfaceTable GetGitTable()
+        private static unsafe IGlobalInterfaceTable GetGitTable()
         {
             Guid gitClsid = CLSID_StdGlobalInterfaceTable;
             Guid gitIid = typeof(IGlobalInterfaceTable).GUID;
