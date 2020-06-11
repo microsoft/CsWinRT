@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netcoreapp5.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
     <RootNamespace>WinRT</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>8</LangVersion>
@@ -36,7 +36,7 @@
     <None Include="**/*.net5.cs" />
   </ItemGroup>
   
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp5.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
     <Compile Remove="**/*.netstandard2.0.cs" />
     <None Include="**/*.netstandard2.0.cs" />
   </ItemGroup>

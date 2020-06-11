@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!--Target .NET Core 2.0 to ensure .NET Standard 2.0 compatibility-->
-    <TargetFrameworks>netcoreapp2.0;netcoreapp5.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.0;net5.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
@@ -11,6 +11,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>1701;1702;0436;1658</NoWarn>
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
   </PropertyGroup>
 
   <ItemGroup>

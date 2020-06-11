@@ -1,7 +1,8 @@
 @echo off
 
-set Net5SdkVersion=5.0.100-preview.4.20217.5
+set Net5SdkVersion=5.0.100-preview.4.20227.10
 
+:dotnet
 rem Install required .NET 5 SDK version and add to environment
 set DOTNET_ROOT=%LocalAppData%\Microsoft\dotnet
 set DOTNET_ROOT(86)=%LocalAppData%\Microsoft\dotnet\x86
@@ -17,6 +18,7 @@ powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 -Version '%Net5SdkVersion%' -InstallDir "%DOTNET_ROOT(86)%" -Architecture 'x86' ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet' "
 
+:globaljson
 rem User expected to provide global.json with allowPrerelease=true
 if not exist %~dp0global.json (
   echo global.json not found, creating one to allowPrelease for unit test project builds
@@ -32,6 +34,7 @@ if not exist %~dp0global.json (
 rem Preserve above for Visual Studio launch inheritance
 setlocal ENABLEDELAYEDEXPANSION
 
+:params
 set cswinrt_platform=%1
 set cswinrt_configuration=%2
 set cswinrt_version_number=%3
@@ -68,7 +71,7 @@ if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
 if not exist .nuget md .nuget
-if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile .nuget\nuget.exe"
+if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.6.0/nuget.exe -OutFile .nuget\nuget.exe"
 .nuget\nuget update -self
 .nuget\nuget.exe restore
 
@@ -105,5 +108,5 @@ if ErrorLevel 1 (
 set cswinrt_bin_dir=%~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
 set netstandard2_runtime=%~dp0WinRT.Runtime\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Runtime.dll
-set netcoreapp5_runtime=%~dp0WinRT.Runtime\bin\%cswinrt_configuration%\netcoreapp5.0\WinRT.Runtime.dll
-.nuget\nuget pack nuget/Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;netstandard2_runtime=%netstandard2_runtime%;netcoreapp5_runtime=%netcoreapp5_runtime%;cswinrt_nuget_version=%cswinrt_version_string% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
+set net5_runtime=%~dp0WinRT.Runtime\bin\%cswinrt_configuration%\net5.0\WinRT.Runtime.dll
+.nuget\nuget pack nuget/Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;netstandard2_runtime=%netstandard2_runtime%;net5_runtime=%net5_runtime%;cswinrt_nuget_version=%cswinrt_version_string% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis

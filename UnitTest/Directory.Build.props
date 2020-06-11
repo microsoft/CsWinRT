@@ -3,7 +3,7 @@
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
-  <PropertyGroup Condition="'$(TargetFramework)' != 'netcoreapp5.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' != 'net5.0'">
     <DefineConstants>$(DefineConstants);MANUAL_IUNKNOWN</DefineConstants>
   </PropertyGroup>
 </Project>

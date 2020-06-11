@@ -3,6 +3,6 @@
   <job platform="" configuration="" dest="__OUTPATHROOT__" jobname="CsWinRT Binaries" approvers=""> 
     <file src="__INPATHROOT__\cswinrt.exe" signType="400" dest="__OUTPATHROOT__\cswinrt.exe" /> 
     <file src="__INPATHROOT__\netstandard2.0\winrt.runtime.dll" signType="400" dest="__OUTPATHROOT__\netstandard2.0\winrt.runtime.dll" /> 
-    <file src="__INPATHROOT__\netcoreapp5.0\winrt.runtime.dll" signType="400" dest="__OUTPATHROOT__\netcoreapp5.0\winrt.runtime.dll" /> 
+    <file src="__INPATHROOT__\net5.0\winrt.runtime.dll" signType="400" dest="__OUTPATHROOT__\net5.0\winrt.runtime.dll" /> 
   </job> 
 </SignConfigXML> 
