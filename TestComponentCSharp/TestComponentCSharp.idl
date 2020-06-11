@@ -307,4 +307,11 @@ namespace TestComponentCSharp
         // Keyword escapes
         String Catch(String params, out String lock);
     }
+
+    [threading(sta), marshaling_behavior(standard)]
+    runtimeclass NonAgileClass
+    {
+        NonAgileClass();
+        void Observe(Microsoft.UI.Xaml.Interop.IBindableObservableVector vector);
+    }
 }

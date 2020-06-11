@@ -4175,16 +4175,27 @@ return abiDelegate is null ? null : (%)ComWrappersSupport.TryRegisterObjectForIn
 private class NativeDelegateWrapper
 {
 private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
+private readonly AgileReference _agileReference = default;
 
 public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
 {
 _nativeDelegate = nativeDelegate;
+if (_nativeDelegate.TryAs<ABI.WinRT.Interop.IAgileObject.Vftbl>(out var objRef) < 0)
+{
+_agileReference = new AgileReference(_nativeDelegate);
+}
+else
+{
+objRef.Dispose();
+}
 }
 
 public % Invoke(%)
 {
-IntPtr ThisPtr = _nativeDelegate.ThisPtr;
-var abiInvoke = Marshal.GetDelegateForFunctionPointer%(_nativeDelegate.Vftbl.Invoke%);%
+using var agileDelegate = _agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%))); 
+var delegateToInvoke = agileDelegate ?? _nativeDelegate;
+IntPtr ThisPtr = delegateToInvoke.ThisPtr;
+var abiInvoke = Marshal.GetDelegateForFunctionPointer%(delegateToInvoke.Vftbl.Invoke%);%
 }
 }
 
@@ -4265,6 +4276,8 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             // NativeDelegateWrapper.Invoke
             bind<write_projection_return_type>(signature),
             bind_list<write_projection_parameter>(", ", signature.params()),
+            type.TypeName(),
+            type_params,
             is_generic ? "" : "<Abi_Invoke>",
             is_generic ? ", Abi_Invoke_Type" : "",
             bind<write_abi_method_call>(signature, "abiInvoke", is_generic, false),

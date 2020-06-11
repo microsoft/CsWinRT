@@ -47,16 +47,27 @@ namespace ABI.System.Collections.Specialized
         private class NativeDelegateWrapper
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
+            private readonly AgileReference _agileReference = default;
 
             public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
             {
                 _nativeDelegate = nativeDelegate;
+                if (_nativeDelegate.TryAs<ABI.WinRT.Interop.IAgileObject.Vftbl>(out var objRef) < 0)
+                {
+                    _agileReference = new AgileReference(_nativeDelegate);
+                }
+                else
+                {
+                    objRef.Dispose();
+                }
             }
 
             public void Invoke(object sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
             {
-                IntPtr ThisPtr = _nativeDelegate.ThisPtr;
-                var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(_nativeDelegate.Vftbl.Invoke);
+                using var agileDelegate = _agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(NotifyCollectionChangedEventHandler)));
+                var delegateToInvoke = agileDelegate ?? _nativeDelegate;
+                IntPtr ThisPtr = delegateToInvoke.ThisPtr;
+                var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(delegateToInvoke.Vftbl.Invoke);
                 IObjectReference __sender = default;
                 IObjectReference __e = default;
                 try

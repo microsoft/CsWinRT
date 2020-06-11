@@ -48,6 +48,7 @@
 -include TestComponentCSharp 
 -include TestComponent
 -include Windows.Foundation 
+-include Windows.UI.Popups
 -include Windows.UI.Color
 -include Microsoft.UI.Xaml.CornerRadius
 -include Microsoft.UI.Xaml.Duration

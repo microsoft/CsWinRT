@@ -69,6 +69,7 @@
     <ClInclude Include="Class.h">
       <DependentUpon>TestComponentCSharp.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="NonAgileClass.h" />
     <ClInclude Include="StaticClass.h" />
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +80,7 @@
     <ClCompile Include="Class.cpp">
       <DependentUpon>TestComponentCSharp.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="NonAgileClass.cpp" />
     <ClCompile Include="StaticClass.cpp" />
   </ItemGroup>
   <ItemGroup>
