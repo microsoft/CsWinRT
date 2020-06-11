@@ -71,7 +71,7 @@ if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
 if not exist .nuget md .nuget
-if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.6.0-preview3/nuget.exe -OutFile .nuget\nuget.exe"
+if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.6.0/nuget.exe -OutFile .nuget\nuget.exe"
 .nuget\nuget update -self
 .nuget\nuget.exe restore
 
