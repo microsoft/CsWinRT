@@ -30,7 +30,6 @@
     -->
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
       <ExcludeAssets>compile; runtime</ExcludeAssets>
-      <!--<ExcludeAssets>compile;</ExcludeAssets>-->
     </PackageReference>
   </ItemGroup>
 

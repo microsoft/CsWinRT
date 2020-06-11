@@ -11,7 +11,7 @@
     <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' != 'netcoreapp5.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' != 'net5.0'">
     <DefineConstants>$(DefineConstants);MANUAL_IUNKNOWN</DefineConstants>
   </PropertyGroup>
 
@@ -26,9 +26,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <NugetTestVersion>0.0.0-private.0</NugetTestVersion>
     <VersionNumber Condition="'$(VersionNumber)'==''">0.0.0.0</VersionNumber>
-    <VersionString Condition="'$(VersionString)'==''">$(NugetTestVersion)</VersionString>
+    <VersionString Condition="'$(VersionString)'==''">0.0.0-private.0</VersionString>
     <BuildPlatform>$(Platform)</BuildPlatform>
     <BuildPlatform Condition="'$(Platform)'=='Win32'">x86</BuildPlatform>
     <BuildOutDir Condition="'$(BuildOutDir)'==''">$([MSBuild]::NormalizeDirectory('$(SolutionDir)_build', '$(BuildPlatform)', '$(Configuration)'))</BuildOutDir>
