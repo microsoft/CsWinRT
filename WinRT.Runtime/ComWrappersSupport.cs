@@ -28,8 +28,6 @@ namespace WinRT
     {
         private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
 
-        private readonly static Guid IID_IAgileObject = Guid.Parse("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90");
-
         static ComWrappersSupport()
         {
             PlatformSpecificInitialize();
@@ -100,7 +98,7 @@ namespace WinRT
         {
             using var unknownRef = ObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
 
-            if (unknownRef.TryAs<IUnknownVftbl>(IID_IAgileObject, out var agileRef) >= 0)
+            if (unknownRef.TryAs<IUnknownVftbl>(typeof(ABI.WinRT.Interop.IAgileObject.Vftbl).GUID, out var agileRef) >= 0)
             {
                 agileRef.Dispose();
                 return unknownRef.As<IUnknownVftbl>();
@@ -192,7 +190,7 @@ namespace WinRT
             // Add IAgileObject to all CCWs
             entries.Add(new ComInterfaceEntry
             {
-                IID = IID_IAgileObject,
+                IID = typeof(ABI.WinRT.Interop.IAgileObject.Vftbl).GUID,
                 Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
             });
             return entries;

@@ -14,13 +14,17 @@ namespace WinRT
 
         public unsafe AgileReference(IObjectReference instance)
         {
+            if(instance?.ThisPtr == null)
+            {
+                return;
+            }   
+
             IntPtr agileReference = default;
-            IntPtr gitPtr = default;
             Guid iid = typeof(IUnknownVftbl).GUID;
             try
             {
                 Marshal.ThrowExceptionForHR(Platform.RoGetAgileReference(
-                    Platform.AgileReferenceOptions.AGILEREFERENCE_DEFAULT,
+                    0 /*AGILEREFERENCE_DEFAULT*/,
                     ref iid,
                     instance.ThisPtr,
                     &agileReference));
@@ -28,22 +32,12 @@ namespace WinRT
             }
             catch(TypeLoadException)
             {
-                Guid gitClsid = CLSID_StdGlobalInterfaceTable;
-                Guid gitIid = typeof(IGlobalInterfaceTable).GUID;
-                Marshal.ThrowExceptionForHR(Platform.CoCreateInstance(
-                    ref gitClsid,
-                    IntPtr.Zero,
-                    1 /*CLSCTX_INPROC_SERVER*/,
-                    ref gitIid,
-                    &gitPtr));
-                _git = ABI.WinRT.Interop.IGlobalInterfaceTable.FromAbi(gitPtr).AsType<ABI.WinRT.Interop.IGlobalInterfaceTable>();
+                _git = GetGitTable();
                 _cookie = _git.RegisterInterfaceInGlobal(instance, iid);
-
             }
             finally
             {
                 MarshalInterface<IAgileReference>.DisposeAbi(agileReference);
-                MarshalInterface<IGlobalInterfaceTable>.DisposeAbi(gitPtr);
             }
         }
 
@@ -53,18 +47,35 @@ namespace WinRT
         {
             if (!disposed)
             {
-                try
+                if (_cookie != IntPtr.Zero)
                 {
-                    if (_git != null && _cookie != IntPtr.Zero)
-                    {
-                        _git.RevokeInterfaceFromGlobal(_cookie);
-                    }
-                }
-                catch(ObjectDisposedException)
-                {
-                    // TODO: How to handle removing from git when it has already been disposed.
+                    // Obtaining new reference to git table in finalizer case to avoid race with finalizer cleaning up instance variables.
+                    var git = disposing ? _git : GetGitTable();
+                    git.RevokeInterfaceFromGlobal(_cookie);
                 }
                 disposed = true;
+            }
+        }
+
+        private unsafe IGlobalInterfaceTable GetGitTable()
+        {
+            Guid gitClsid = CLSID_StdGlobalInterfaceTable;
+            Guid gitIid = typeof(IGlobalInterfaceTable).GUID;
+            IntPtr gitPtr = default;
+
+            try
+            {
+                Marshal.ThrowExceptionForHR(Platform.CoCreateInstance(
+                    ref gitClsid,
+                    IntPtr.Zero,
+                    1 /*CLSCTX_INPROC_SERVER*/,
+                    ref gitIid,
+                    &gitPtr));
+                return ABI.WinRT.Interop.IGlobalInterfaceTable.FromAbi(gitPtr).AsType<ABI.WinRT.Interop.IGlobalInterfaceTable>();
+            }
+            finally
+            {
+                MarshalInterface<IGlobalInterfaceTable>.DisposeAbi(gitPtr);
             }
         }
 

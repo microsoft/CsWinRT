@@ -27,63 +27,32 @@ namespace
 
         HRESULT __stdcall GetUnmarshalClass(REFIID riid, void* pv, DWORD dwDestContext, void* pvDestContext, DWORD mshlflags, CLSID* pCid) noexcept final
         {
-            if (m_marshaler)
-            {
-                return m_marshaler->GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext, mshlflags, pCid);
-            }
-
-            return E_OUTOFMEMORY;
+            return m_marshaler->GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext, mshlflags, pCid);
         }
 
         HRESULT __stdcall GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext, void* pvDestContext, DWORD mshlflags, DWORD* pSize) noexcept final
         {
-            if (m_marshaler)
-            {
-                return m_marshaler->GetMarshalSizeMax(riid, pv, dwDestContext, pvDestContext, mshlflags, pSize);
-            }
-
-            return E_OUTOFMEMORY;
+            return m_marshaler->GetMarshalSizeMax(riid, pv, dwDestContext, pvDestContext, mshlflags, pSize);
         }
 
         HRESULT __stdcall MarshalInterface(IStream* pStm, REFIID riid, void* pv, DWORD dwDestContext, void* pvDestContext, DWORD mshlflags) noexcept final
         {
-            if (m_marshaler)
-            {
-                return m_marshaler->MarshalInterface(pStm, riid, pv, dwDestContext, pvDestContext, mshlflags);
-            }
-
-            return E_OUTOFMEMORY;
+            return m_marshaler->MarshalInterface(pStm, riid, pv, dwDestContext, pvDestContext, mshlflags);
         }
 
         HRESULT __stdcall UnmarshalInterface(IStream* pStm, REFIID riid, void** ppv) noexcept final
         {
-            if (m_marshaler)
-            {
-                return m_marshaler->UnmarshalInterface(pStm, riid, ppv);
-            }
-
-            *ppv = nullptr;
-            return E_OUTOFMEMORY;
+            return m_marshaler->UnmarshalInterface(pStm, riid, ppv);
         }
 
         HRESULT __stdcall ReleaseMarshalData(IStream* pStm) noexcept final
         {
-            if (m_marshaler)
-            {
-                return m_marshaler->ReleaseMarshalData(pStm);
-            }
-
-            return E_OUTOFMEMORY;
+            return m_marshaler->ReleaseMarshalData(pStm);
         }
 
         HRESULT __stdcall DisconnectObject(DWORD dwReserved) noexcept final
         {
-            if (m_marshaler)
-            {
-                return m_marshaler->DisconnectObject(dwReserved);
-            }
-
-            return E_OUTOFMEMORY;
+            return m_marshaler->DisconnectObject(dwReserved);
         }
 
         void VectorChanged(Microsoft::UI::Xaml::Interop::IBindableObservableVector vector, Windows::Foundation::IInspectable e)
