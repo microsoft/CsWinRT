@@ -104,6 +104,7 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
+rem todo remove all this
 :package
 set cswinrt_bin_dir=%~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe

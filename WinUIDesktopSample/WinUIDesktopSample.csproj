@@ -22,12 +22,14 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.5" />
+    <ProjectReference Include="..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\Projections\WinUI\WinUI.csproj" />
     <!--
       Exclude compile time assets so we don't pick up the interop assembly from the WinUI Nuget
       since we are building our own in the WinUIProjection project
     -->
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
-      <ExcludeAssets>compile;</ExcludeAssets>
+      <ExcludeAssets>compile; runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
 
@@ -41,10 +43,5 @@
       <RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="'%(RuntimeCopyLocalItems.NugetPackageId)' != '' And $([System.String]::Copy(%(RuntimeCopyLocalItems.NugetPackageId)).Contains('Microsoft.Windows.CsWinRT'))" />
     </ItemGroup>
   </Target>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
-    <ProjectReference Include="..\WinUIProjection\WinUIProjection.csproj" />
-  </ItemGroup>
 
 </Project>

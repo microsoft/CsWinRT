@@ -15,12 +15,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\Projections\WinUI\WinUI.csproj" />
+    <ProjectReference Include="..\Projections\Test\Test.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
-    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.1-rc" />
-    <!-- Exclude compile and build time assets so we don't think we're building a real WinUI App -->
-    <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
-      <ExcludeAssets>compile; build</ExcludeAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.5" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.Debug" Version="4.3.0" />
@@ -44,15 +43,22 @@
     <PackageReference Include="XunitXml.TestLogger" Version="2.1.26" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\cswinrt\cswinrt.vcxproj" />
-    <ProjectReference Include="..\TestComponentCSharp\TestComponentCSharp.vcxproj" />
-    <ProjectReference Include="..\TestWinRT\TestComponent\TestComponent.vcxproj" />
-    <ProjectReference Include="..\WinRT.Runtime\WinRT.Runtime.csproj" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+    <Compile Remove="**/*.net5.cs" />
+    <None Include="**/*.net5.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Generated Files\" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp5.0'">
+    <Compile Remove="**/*.netcoreapp2.0.cs" />
+    <None Include="**/*.netcoreapp2.0.cs" />
   </ItemGroup>
+
+  <Target Name="FilterProjection" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <!--Remove references to projection source winmds to prevent compile conflict warnings-->
+      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'TestComponent'" />
+      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'TestComponentCSharp'" />
+    </ItemGroup>
+  </Target>
 
 </Project>

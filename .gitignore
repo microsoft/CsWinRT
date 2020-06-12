@@ -16,3 +16,4 @@ TestWinRT
 _build/
 global.json
 .nuget
+.nupkg
