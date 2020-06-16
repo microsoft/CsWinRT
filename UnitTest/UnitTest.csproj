@@ -61,6 +61,8 @@
       <!--Also remove ReferencePath winmds to prevent error NETSDK1130 false positive-->
       <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'TestComponent'" />
       <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'TestComponentCSharp'" />
+      <!--Remove any ReferenceDependencyPaths winmds to prevent deps.json from failing unit test-->
+      <ReferenceDependencyPaths Remove="@(ReferenceDependencyPaths)" Condition="%(ReferenceDependencyPaths.Extension) == '.winmd'" />
     </ItemGroup>
   </Target>
 
