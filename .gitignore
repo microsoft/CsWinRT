@@ -17,3 +17,4 @@ _build/
 global.json
 .nuget
 .nupkg
+nuget/Microsoft.Windows.CsWinRT.Prerelease.targets

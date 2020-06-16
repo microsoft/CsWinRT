@@ -1,6 +1,7 @@
 @echo off
 
-set Net5SdkVersion=5.0.100-preview.4.20227.10
+set CsWinRTNet5SdkVersion=5.0.100-preview.6.20314.3
+set CsWinRTMSBuildVersion=16.6.0
 
 :dotnet
 rem Install required .NET 5 SDK version and add to environment
@@ -10,21 +11,21 @@ set path=%DOTNET_ROOT%;%path%
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%Net5SdkVersion%' -InstallDir "%DOTNET_ROOT%" -Architecture 'x64' ^
+-Version '%CsWinRTNet5SdkVersion%' -InstallDir "%DOTNET_ROOT%" -Architecture 'x64' ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet' "
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%Net5SdkVersion%' -InstallDir "%DOTNET_ROOT(86)%" -Architecture 'x86' ^
+-Version '%CsWinRTNet5SdkVersion%' -InstallDir "%DOTNET_ROOT(86)%" -Architecture 'x86' ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet' "
 
 :globaljson
 rem User expected to provide global.json with allowPrerelease=true
 if not exist %~dp0global.json (
-  echo global.json not found, creating one to allowPrelease for unit test project builds
+  echo Creating default global.json to allowPrelease for unit test project builds
   echo { > global.json
   echo   "sdk": { >> global.json
-  echo     "version": "%Net5SdkVersion%", >> global.json
+  echo     "version": "%CsWinRTNet5SdkVersion%", >> global.json
   echo     "rollForward": "patch", >> global.json
   echo     "allowPrerelease": true >> global.json
   echo   } >> global.json
@@ -39,7 +40,7 @@ set cswinrt_platform=%1
 set cswinrt_configuration=%2
 set cswinrt_version_number=%3
 set cswinrt_version_string=%4
-set cswinrt_label=%5
+set "%5"!="" set cswinrt_label=%5
 
 if "%cswinrt_platform%"=="" set cswinrt_platform=x64
 
@@ -67,6 +68,18 @@ if "%cswinrt_configuration%"=="" (
 if "%cswinrt_version_number%"=="" set cswinrt_version_number=0.0.0.0
 if "%cswinrt_version_string%"=="" set cswinrt_version_string=0.0.0-private.0
 
+rem Generate prerelease targets file to exercise build warnings
+set prerelease_targets=nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
+if not exist %prerelease_targets% (
+  echo Creating default %prerelease_targets%
+  echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="CsWinRTVerifyPrerelease"^> > %prerelease_targets%
+  echo   ^<Target Name="CsWinRTVerifyPrerelease" >> %prerelease_targets%
+  echo     ^Condition="'$(Net5SdkVersion)' ^!= '%CsWinRTNet5SdkVersion%' or '$(MSBuildVersion)' ^!= '%CsWinRTMSBuildVersion%'"^> >> %prerelease_targets%
+  echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK %CsWinRTNet5SdkVersion% and MSBuild %CsWinRTMSBuildVersion%. Other prerelease combinations may be incompatible due to breaking changes." /^> >> %prerelease_targets%
+  echo   ^</Target^> >> %prerelease_targets%
+  echo ^</Project^> >> %prerelease_targets%
+)
+
 if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
@@ -78,7 +91,7 @@ if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dis
 :build
 call get_testwinrt.cmd
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-msbuild cswinrt.sln /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;GenerateTestProjection=true
+msbuild cswinrt.sln %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;GenerateTestProjection=true
 
 :test
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
