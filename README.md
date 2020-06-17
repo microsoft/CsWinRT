@@ -70,9 +70,15 @@ The following msbuild project fragment demonstrates a simple invocation of cswin
   </Target>
 ```
 # Building
-C#/WinRT currently depends on a private prerelease WinUI 3 NuGet, which should be made public around //build.  C#/WinRT also uses the .NET 5 preview SDK.  This is public, but there are some related configuration steps.  The build.cmd script takes care of all this, and is the simplest way to get started building C#/WinRT. 
 
-The build script is intended to be executed from a Visual Studio Developer command prompt.  It installs prerequisites such as nuget and the .NET 5 SDK, configures the environment to use .NET 5 (creating a global.json if necessary), builds the compiler, and builds and executes the unit tests. 
+C#/WinRT currently requires the following packages to build:
+- Visual Studio 16.6 (more specifically, MSBuild 16.6.0 for "net5.0" TFM support)
+- .NET 5 SDK 5.0.100-preview.6.20314.3
+- WinUI 3 3.0.0-preview1.200515.3 
+
+**Note:** As prereleases may make breaking changes before final release, any other combinations above may work but are not supported and will generate a build warning.
+
+The build.cmd script takes care of all related configuration steps and is the simplest way to get started building C#/WinRT. The build script is intended to be executed from a Visual Studio Developer command prompt.  It installs prerequisites such as nuget and the .NET 5 SDK, configures the environment to use .NET 5 (creating a global.json if necessary), builds the compiler, and builds and executes the unit tests.
 
 After a successful command-line build, the cswinrt.sln can be launched from the same command prompt, to inherit the necessary environment. By default, the UnitTest and WinUIProjection projections are only generated for Release configurations, where cswinrt.exe can execute in seconds.  For Debug configurations, projection generation must be turned on with the project property GenerateTestProjection.
 
@@ -99,10 +105,6 @@ The **/WinRT.Runtime** folder contains the WinRT.Runtime project for building th
 
 The **/nuget** folder contains source files for producing a C#/WinRT NuGet package, which is regularly built, signed, and published to nuget.org by Microsoft.  The C#/WinRT NuGet package contains the cswinrt.exe compiler, and both versions of the winrt.runtime.dll.
 
-## /UnitTest
-
-The **/UnitTest** folder contains unit tests for validating the projection generated for the TestComponentCSharp project (below), for the TestWinRT\TestComponent project (below), and for foundational parts of the Windows SDK.  All pull requests should ensure that this project executes without errors.
-
 ## /TestWinRT
 
 C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/TestWinRT/) repository for general language projection test coverage.  This repo should be cloned into the root of the C#/WinRT repo, via **get_testwinrt.cmd**, so that the cswinrt.sln can resolve its reference to TestComponent.vcxproj.  The resulting TestComponent.dll and TestComponent.winmd files are consumed by the UnitTest project above.
@@ -111,9 +113,17 @@ C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/Te
 
 The **/TestComponentCSharp** folder contains an implementation of a WinRT test component, defined in class.idl and used by the UnitTest project.  To complement the general TestComponent above, the TestComponentCSharp  tests scenarios specific to the C#/WinRT language projection.
 
-## /WinUI
+## /Projections
 
-The **/WinUI** folder contains several related projects for generating and building a complete Windows SDK and WinUI projection, along with an  end-to-end sample app that uses the generated projection.  The projection is built out of **/winuiprojection**, which is consumed by both the sample app under **/winuidesktopsample**, and a simple test project under **/winuitest**.
+The **/Projections** folder contains several projects for generating and building projections from the Windows SDK, WinUI, and Test metadata (produced by the TestWinRT and TestComponentCSharp projects).
+
+## /UnitTest
+
+The **/UnitTest** folder contains unit tests for validating the Windows SDK, WinUI, and Test projections generated above.  All pull requests should ensure that this project executes without errors.
+
+## /WinUIDesktopSample
+
+The **/WinUIDesktopSample** contains an end-to-end sample app that uses the Windows SDK and WinUI projections generated above.
 
 # Contributing
 
