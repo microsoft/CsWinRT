@@ -1,6 +1,6 @@
 @echo off
 
-set CsWinRTNet5SdkVersion=5.0.100-preview.6.20314.3
+set CsWinRTNet5SdkVersion=5.0.100-preview.5.20279.10
 set CsWinRTMSBuildVersion=16.6.0
 
 :dotnet
