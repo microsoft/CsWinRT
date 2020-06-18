@@ -6,7 +6,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <CppWinRTVerbosity>high</CppWinRTVerbosity>
-    <MicrosoftWinUIVersion>3.0.0-preview1.200419.0-CI</MicrosoftWinUIVersion>
+    <MicrosoftWinUIVersion>3.0.0-preview1.200515.3</MicrosoftWinUIVersion>
     <!-- Temporary fallback until Microsoft.WinUI nuget supports Net5 TFM -->
     <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
   </PropertyGroup>
