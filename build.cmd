@@ -1,7 +1,6 @@
 @echo off
 
 set CsWinRTNet5SdkVersion=5.0.100-preview.5.20279.10
-set CsWinRTMSBuildVersion=16.6.0
 
 :dotnet
 rem Install required .NET 5 SDK version and add to environment
@@ -26,7 +25,6 @@ if not exist %~dp0global.json (
   echo { > global.json
   echo   "sdk": { >> global.json
   echo     "version": "%CsWinRTNet5SdkVersion%", >> global.json
-  echo     "rollForward": "patch", >> global.json
   echo     "allowPrerelease": true >> global.json
   echo   } >> global.json
   echo } >> global.json
@@ -74,8 +72,8 @@ if not exist %prerelease_targets% (
   echo Creating default %prerelease_targets%
   echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="CsWinRTVerifyPrerelease"^> > %prerelease_targets%
   echo   ^<Target Name="CsWinRTVerifyPrerelease" >> %prerelease_targets%
-  echo     ^Condition="'$(Net5SdkVersion)' ^!= '%CsWinRTNet5SdkVersion%' or '$(MSBuildVersion)' ^!= '%CsWinRTMSBuildVersion%'"^> >> %prerelease_targets%
-  echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK %CsWinRTNet5SdkVersion% and MSBuild %CsWinRTMSBuildVersion%. Other prerelease combinations may be incompatible due to breaking changes." /^> >> %prerelease_targets%
+  echo     Condition="'$(NetCoreSdkVersion)' ^!= '%CsWinRTNet5SdkVersion%' and '$(Net5SdkVersion)' ^!= '%CsWinRTNet5SdkVersion%'"^> >> %prerelease_targets%
+  echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK %CsWinRTNet5SdkVersion%. Other prereleases may be incompatible due to breaking changes." /^> >> %prerelease_targets%
   echo   ^</Target^> >> %prerelease_targets%
   echo ^</Project^> >> %prerelease_targets%
 )
@@ -117,7 +115,6 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
-rem todo remove all this
 :package
 set cswinrt_bin_dir=%~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe

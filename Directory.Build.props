@@ -84,6 +84,6 @@
 
   <Import Project="Strings.props" />
 
-  <Import Project="nuget\Microsoft.Windows.CsWinRT.props" />
+  <Import Condition="'$(MSBuildProjectExtension)' == '.csproj'" Project="nuget\Microsoft.Windows.CsWinRT.props" />
 
 </Project>

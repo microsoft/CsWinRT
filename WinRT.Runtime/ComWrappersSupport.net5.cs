@@ -23,7 +23,6 @@ namespace WinRT
                 {
                     _comWrappers = new DefaultComWrappers();
                     ComWrappers.RegisterForTrackerSupport(_comWrappers);
-                    ComWrappers.RegisterForMarshalling(_comWrappers);
                 }
                 return _comWrappers;
             }
@@ -31,7 +30,6 @@ namespace WinRT
             {
                 _comWrappers = value;
                 ComWrappers.RegisterForTrackerSupport(_comWrappers);
-                ComWrappers.RegisterForMarshalling(_comWrappers);
             }
         }
 
