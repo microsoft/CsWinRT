@@ -5,10 +5,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <!--Remove Windows.Winmd reference to prevent compile collisions-->
   <PropertyGroup>
+    <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
     <ResolveAssemblyReferencesDependsOn Condition="'$(RemoveWindowsReference)'=='true'">$(ResolveAssemblyReferencesDependsOn);RemoveWindowsReference</ResolveAssemblyReferencesDependsOn>
   </PropertyGroup>
+  
+  <!--Remove Windows.Winmd reference to prevent compile collisions-->
   <Target Name="RemoveWindowsReference" Outputs="@(Reference)">
     <ItemGroup>
       <Reference Remove="Windows"/>

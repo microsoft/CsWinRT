@@ -33,14 +33,14 @@
   <Target Name="GenerateProjection" Condition="'$(GenerateTestProjection)' == 'true'">
     <PropertyGroup>
       <CsWinRTVerbosity>high</CsWinRTVerbosity>
-      <CsWinRTResponseFile>$(IntermediateOutputPath)cswinrt_windows.rsp</CsWinRTResponseFile>
+      <CsWinRTResponseFile>$(GeneratedFilesDir)cswinrt_windows.rsp</CsWinRTResponseFile>
       <CsWinRTCommand>$(CsWinrtExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
     </PropertyGroup>
     <PropertyGroup>
       <CsWinRTParams>
 -verbose
 -in 10.0.18362.0
--out "$(IntermediateOutputPath)Generated Files"
+-out "$(GeneratedFilesDir.TrimEnd('\'))"
 -include Windows
 # Exclude causality types colliding with those in System.Private.CoreLib.dll
 -exclude Windows.Foundation.Diagnostics 
@@ -61,7 +61,7 @@
 -include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
       </CsWinRTParams>
     </PropertyGroup>
-    <MakeDir Directories="$(IntermediateOutputPath)Generated Files" />
+    <MakeDir Directories="$(GeneratedFilesDir)" />
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
     <Exec Command="$(CsWinRTCommand)" />
@@ -69,7 +69,7 @@
 
   <Target Name="IncludeProjection" DependsOnTargets="GenerateProjection" BeforeTargets="CoreCompile">
     <ItemGroup>
-      <Compile Include="$(IntermediateOutputPath)Generated Files/*.cs" Exclude="@(Compile)" />
+      <Compile Include="$(GeneratedFilesDir)*.cs" Exclude="@(Compile)" />
     </ItemGroup>
   </Target>
 

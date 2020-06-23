@@ -80,7 +80,9 @@ C#/WinRT currently requires the following packages to build:
 
 The build.cmd script takes care of all related configuration steps and is the simplest way to get started building C#/WinRT. The build script is intended to be executed from a Visual Studio Developer command prompt.  It installs prerequisites such as nuget and the .NET 5 SDK, configures the environment to use .NET 5 (creating a global.json if necessary), builds the compiler, and builds and executes the unit tests.
 
-After a successful command-line build, the cswinrt.sln can be launched from the same command prompt, to inherit the necessary environment. By default, the UnitTest and WinUIProjection projections are only generated for Release configurations, where cswinrt.exe can execute in seconds.  For Debug configurations, projection generation must be turned on with the project property GenerateTestProjection.
+After a successful command-line build, the cswinrt.sln can be launched from the same command prompt, to inherit the necessary environment. 
+
+**Note:**  By default, projection projects only generate source files for Release configurations, where cswinrt.exe can execute in seconds.  To generate projection sources for Debug configurations, set the project property GenerateTestProjection to 'true'.  In either case, existing projection sources under the "Generated Files" folder will still be compiled into the projection assembly.  This configuration permits a faster inner loop in Visual Studio.
 
 # Structure
 The C#/WinRT compiler and unit tests are all contained within the Visual Studio 2019 solution file, \cswinrt\cswinrt.sln.  
