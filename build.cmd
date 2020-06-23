@@ -72,7 +72,7 @@ rem Generate prerelease targets file to exercise build warnings
 set prerelease_targets=nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
 if not exist %prerelease_targets% (
   echo Creating default %prerelease_targets%
-  echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="CsWinRTVerifyPrerelease"^> > %prerelease_targets%
+  echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="CsWinRTVerifyPrerelease"^> > %prerelease_targets%
   echo   ^<Target Name="CsWinRTVerifyPrerelease" >> %prerelease_targets%
   echo     ^Condition="'$(Net5SdkVersion)' ^!= '%CsWinRTNet5SdkVersion%' or '$(MSBuildVersion)' ^!= '%CsWinRTMSBuildVersion%'"^> >> %prerelease_targets%
   echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK %CsWinRTNet5SdkVersion% and MSBuild %CsWinRTMSBuildVersion%. Other prerelease combinations may be incompatible due to breaking changes." /^> >> %prerelease_targets%
