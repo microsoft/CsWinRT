@@ -8,10 +8,10 @@ using WinRT.Interop;
 namespace ABI.System.ComponentModel
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    [Guid("CF75D69C-F2F4-486B-B302-BB4C09BAEBFA")]
+    [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
     public class INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
     {
-        [Guid("CF75D69C-F2F4-486B-B302-BB4C09BAEBFA")]
+        [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
         [StructLayout(LayoutKind.Sequential)]
         public struct Vftbl
         {
@@ -34,7 +34,8 @@ namespace ABI.System.ComponentModel
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, global::WinRT.EventRegistrationTokenTable<global::System.ComponentModel.PropertyChangedEventHandler>> _PropertyChanged_TokenTables;
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, global::WinRT.EventRegistrationTokenTable<global::System.ComponentModel.PropertyChangedEventHandler>> _PropertyChanged_TokenTables = new global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, global::WinRT.EventRegistrationTokenTable<global::System.ComponentModel.PropertyChangedEventHandler>>();
+
             private static unsafe int Do_Abi_add_PropertyChanged_0(IntPtr thisPtr, IntPtr handler, out global::WinRT.EventRegistrationToken token)
             {
                 token = default;
