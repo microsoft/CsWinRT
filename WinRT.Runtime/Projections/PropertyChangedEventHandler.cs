@@ -8,7 +8,7 @@ using WinRT.Interop;
 namespace ABI.System.ComponentModel
 {
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    [Guid("50F19C16-0A22-4D8E-A089-1EA9951657D2")]
+    [Guid("E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D")]
     public static class PropertyChangedEventHandler
     {
         private unsafe delegate int Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr e);
