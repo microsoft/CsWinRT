@@ -5,7 +5,15 @@
     <Platforms>x64;x86</Platforms>
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
     <LangVersion>8</LangVersion>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
 
   <PropertyGroup>
     <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
