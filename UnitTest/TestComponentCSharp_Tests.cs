@@ -1643,8 +1643,7 @@ namespace UnitTest
             TestImports();
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            // TODO: refcount leaks for ComImports
-            // Assert.Equal(0, ComImports.NumObjects);
+            Assert.Equal(0, ComImports.NumObjects);
         }
     }
 }

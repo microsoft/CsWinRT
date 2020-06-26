@@ -46,13 +46,25 @@ namespace WinRT
                 {
                     unsafe
                     {
-                        var vftblPtr = Unsafe.AsRef<WinRT.VftblPtr>(objRef.ThisPtr.ToPointer());
-                        var vftblIUnknown = Marshal.PtrToStructure<WinRT.Interop.IUnknownVftbl>(vftblPtr.Vftbl);
-                        IntPtr vftbl;
+                        static WinRT.Interop.IUnknownVftbl MarshalIUnknown(IntPtr thisPtr)
+                        { 
+                            var vftblPtr = Unsafe.AsRef<WinRT.VftblPtr>(thisPtr.ToPointer());
+                            var vftblIUnknown = Marshal.PtrToStructure<WinRT.Interop.IUnknownVftbl>(vftblPtr.Vftbl);
+                            return vftblIUnknown;
+                        }
+
                         Guid iid = typeof(TInterface).GUID;
-                        vftblIUnknown.QueryInterface(objRef.ThisPtr, ref iid, out vftbl);
-                        var obj = Marshal.GetObjectForIUnknown(vftbl);
-                        return (TInterface)obj;
+                        IntPtr comPtr;
+                        MarshalIUnknown(objRef.ThisPtr).QueryInterface(objRef.ThisPtr, ref iid, out comPtr);
+                        try
+                        {
+                            var obj = Marshal.GetObjectForIUnknown(comPtr);
+                            return (TInterface)obj;
+                        }
+                        finally 
+                        {
+                            MarshalIUnknown(comPtr).Release(comPtr);
+                        }
                     }
                 }
 
