@@ -25,7 +25,7 @@ However, C#/WinRT is a general effort and is intended to support other scenarios
 The [C#/WinRT NuGet Package](https://aka.ms/cswinrt/nuget) provides distinct support for both WinRT component projects and application projects.
 
 ## Component Project
-A component project adds a NuGet reference to C#/WinRT to invoke cswinrt.exe at build time, generate projection sources, and compile these into an interop assembly. For an example of this, see the [UnitTest targets](https://github.com/microsoft/CsWinRT/blob/master/UnitTest/Directory.Build.targets). Command line options can be displayed by running **cswinrt -?**.  The interop assembly is then typically distributed as a NuGet package itself. 
+A component project adds a NuGet reference to C#/WinRT to invoke cswinrt.exe at build time, generate projection sources, and compile these into an interop assembly. For an example of this, see the [Test Projection](https://github.com/microsoft/CsWinRT/blob/master/Projections/Test/Test.csproj). Command line options can be displayed by running **cswinrt -?**.  The interop assembly is then typically distributed as a NuGet package itself. 
 
 ## Application Project
 An application project adds NuGet references to both the component interop assembly produced above, and to C#/WinRT to include the winrt.runtime assembly. If a third party WinRT component is distributed without an official interop assembly, an application project may add a reference to C#/WinRT to generate its own private component interop assembly.  There are versioning concerns related to this scenario, so the preferred solution is for the third party to publish an interop assembly directly.
