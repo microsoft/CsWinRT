@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
+    <GenerateTestProjection>true</GenerateTestProjection>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>8305;0618</NoWarn>
   </PropertyGroup>

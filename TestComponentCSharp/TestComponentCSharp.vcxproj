@@ -70,7 +70,7 @@
       <DependentUpon>TestComponentCSharp.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="NonAgileClass.h" />
-    <ClInclude Include="StaticClass.h" />
+    <ClInclude Include="ComImports.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
@@ -81,7 +81,7 @@
       <DependentUpon>TestComponentCSharp.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="NonAgileClass.cpp" />
-    <ClCompile Include="StaticClass.cpp" />
+    <ClCompile Include="ComImports.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />
