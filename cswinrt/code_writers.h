@@ -3247,7 +3247,7 @@ private static unsafe int Do_Abi_%%
 {
 %
 })",
-            !settings.netstandard_compat ? "[UnmanagedCallersOnly(CallingConvention = CallingConvention.StdCall)]" : "",
+            !settings.netstandard_compat ? "[UnmanagedCallersOnly]" : "",
             vmethod_name,
             bind<write_abi_signature>(method),
             bind<write_managed_method_call>(
@@ -3282,7 +3282,7 @@ private static unsafe int Do_Abi_%%
 {
 %
 })",
-            !settings.netstandard_compat ? "[UnmanagedCallersOnly(CallingConvention = CallingConvention.StdCall)]" : "",
+            !settings.netstandard_compat ? "[UnmanagedCallersOnly]" : "",
             vmethod_name,
             bind<write_abi_signature>(setter),
             bind<write_managed_method_call>(
@@ -3312,7 +3312,7 @@ private static unsafe int Do_Abi_%%
 {
 %
 })",
-                !settings.netstandard_compat ? "[UnmanagedCallersOnly(CallingConvention = CallingConvention.StdCall)]" : "",
+                !settings.netstandard_compat ? "[UnmanagedCallersOnly]" : "",
                 vmethod_name,
                 bind<write_abi_signature>(getter),
                 bind<write_managed_method_call>(
@@ -3363,7 +3363,7 @@ catch (Exception __ex)
 return __ex.HResult;
 }
 })",
-            !settings.netstandard_compat ? "[UnmanagedCallersOnly(CallingConvention = CallingConvention.StdCall)]" : "",
+            !settings.netstandard_compat ? "[UnmanagedCallersOnly]" : "",
             get_vmethod_name(w, add_method.Parent(), add_method),
             bind<write_abi_signature>(add_method),
             add_handler_event_token_name,
@@ -3392,7 +3392,7 @@ catch (Exception __ex)
 return __ex.HResult;
 }
 })",
-            !settings.netstandard_compat ? "[UnmanagedCallersOnly(CallingConvention = CallingConvention.StdCall)]" : "",
+            !settings.netstandard_compat ? "[UnmanagedCallersOnly]" : "",
             get_vmethod_name(w, remove_method.Parent(), remove_method),
             bind<write_abi_signature>(remove_method),
             type_name,
@@ -3449,18 +3449,29 @@ internal IInspectable.Vftbl IInspectableVftbl;
                         if (settings.netstandard_compat)
                         {
                             nongeneric_delegates.push_back(delegate_definition);
+                            vtable_field_type = w.write_temp("delegate* unmanaged[Stdcall]<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
                         }
-                        vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                        else
+                        {
+                            vtable_field_type = w.write_temp("delegate* unmanaged<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                        }
                         function_pointer = true;
                     }
                 }
                 else
                 {
                     // We're a well-known delegate type, but we still need to get the function pointer type.
-                    vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                    if (settings.netstandard_compat)
+                    {
+                        vtable_field_type = w.write_temp("delegate* unmanaged[Stdcall]<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                    }
+                    else
+                    {
+                        vtable_field_type = w.write_temp("delegate* unmanaged<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                    }
                     function_pointer = true;
                 }
-                if (function_pointer)
+                if (function_pointer && settings.netstandard_compat)
                 {
                     // Work around https://github.com/dotnet/runtime/issues/37295
                     w.write("private void* _%;\n", vmethod_name);
@@ -3475,9 +3486,9 @@ internal IInspectable.Vftbl IInspectableVftbl;
                 if (is_generic)
                 {
                     method_marshals_to_abi.emplace_back(signature_has_generic_parameters ?
-                        w.write_temp("% = Marshal.GetDelegateForFunctionPointer(vftbl[%], %_Type);\n",
+                        w.write_temp("_% = (void*)Marshal.GetDelegateForFunctionPointer(vftbl[%], %_Type);\n",
                             vmethod_name, vtable_index, vmethod_name) :
-                        w.write_temp("_% = (void*)(vftbl[%]);\n",
+                        w.write_temp("% = (vftbl[%]);\n",
                             vmethod_name, vtable_index)
                         );
 
@@ -3530,7 +3541,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
                     else
                     {
                         method_create_delegates_to_projection.emplace_back(
-                            w.write_temp("_% = (void*)&Do_Abi_%",
+                            w.write_temp("% = &Do_Abi_%",
                                 vmethod_name, vmethod_name)
                         );
                     }
@@ -3547,7 +3558,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
                 else
                 {
                     method_create_delegates_to_projection.emplace_back(
-                        w.write_temp("_% = (void*)&Do_Abi_%",
+                        w.write_temp("% = &Do_Abi_%",
                             vmethod_name, vmethod_name)
                     );
                 }
