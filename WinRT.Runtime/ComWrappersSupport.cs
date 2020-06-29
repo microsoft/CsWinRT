@@ -265,8 +265,8 @@ namespace WinRT
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
         {
-            // If we don't have a runtime class name, then we just use IInspectable.
-            if (string.IsNullOrEmpty(runtimeClassName))
+            // If runtime class name is empty or "Object", then just use IInspectable.
+            if (string.IsNullOrEmpty(runtimeClassName) || runtimeClassName == "Object")
             {
                 return (IInspectable obj) => obj;
             }

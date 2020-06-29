@@ -7,7 +7,6 @@ using Xunit;
 using WinRT;
 
 using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -19,8 +18,8 @@ using Microsoft.UI.Xaml.Media.Media3D;
 using TestComponentCSharp;
 using System.Collections.Generic;
 using System.Collections;
-using TestComponent;
 using WinRT.Interop;
+using System.Runtime.InteropServices;
 
 namespace UnitTest
 {
@@ -258,14 +257,6 @@ namespace UnitTest
 
             Class.StaticStringProperty = "foo";
             Assert.Equal("foo", Class.StaticStringProperty);
-        }
-
-        [Fact]
-        public void TestStaticClass()
-        {
-            Assert.Equal(0, StaticClass.NumClasses);
-            var obj = StaticClass.MakeClass();
-            Assert.Equal(1, StaticClass.NumClasses);
         }
 
         [Fact]
@@ -1593,6 +1584,66 @@ namespace UnitTest
             nonAgileClass.Observe(observable);
             observable.Add(3);
             Assert.Equal(6, observable.Observation);
+        }
+
+        [ComImport]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        [Guid("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB")]
+        internal interface IWindowNative
+        {
+            IntPtr WindowHandle { get; }
+        }
+
+        [ComImport]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        [Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
+        internal interface IInitializeWithWindow
+        {
+            void Initialize(IntPtr hwnd);
+        }
+
+        [Fact]
+        unsafe public void TestComImports()
+        {
+            static Object MakeObject()
+            {
+                Assert.Equal(0, ComImports.NumObjects);
+                var obj = ComImports.MakeObject();
+                Assert.Equal(1, ComImports.NumObjects);
+                return obj;
+            }
+
+            static void TestObject() => MakeObject();
+
+            static (IInitializeWithWindow, IWindowNative) MakeImports() 
+            { 
+                var obj = MakeObject();
+                var initializeWithWindow = obj.As<IInitializeWithWindow>();
+                var windowNative = obj.As<IWindowNative>();
+                return (initializeWithWindow, windowNative);
+            }
+
+            static void TestImports()
+            {
+                var (initializeWithWindow, windowNative) = MakeImports();
+                
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                var hwnd = new IntPtr(0x12345678);
+                initializeWithWindow.Initialize(hwnd);
+                Assert.Equal(windowNative.WindowHandle, hwnd);
+            }
+
+            TestObject();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.Equal(0, ComImports.NumObjects);
+
+            TestImports();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.Equal(0, ComImports.NumObjects);
         }
     }
 }

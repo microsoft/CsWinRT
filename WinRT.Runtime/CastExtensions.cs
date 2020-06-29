@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using WinRT.Interop;
 
@@ -40,6 +42,32 @@ namespace WinRT
 
             using (var objRef = GetRefForObject(value))
             {
+                if (typeof(TInterface).GetCustomAttribute(typeof(System.Runtime.InteropServices.ComImportAttribute)) is object)
+                {
+                    unsafe
+                    {
+                        static WinRT.Interop.IUnknownVftbl MarshalIUnknown(IntPtr thisPtr)
+                        { 
+                            var vftblPtr = Unsafe.AsRef<WinRT.VftblPtr>(thisPtr.ToPointer());
+                            var vftblIUnknown = Marshal.PtrToStructure<WinRT.Interop.IUnknownVftbl>(vftblPtr.Vftbl);
+                            return vftblIUnknown;
+                        }
+
+                        Guid iid = typeof(TInterface).GUID;
+                        IntPtr comPtr;
+                        MarshalIUnknown(objRef.ThisPtr).QueryInterface(objRef.ThisPtr, ref iid, out comPtr);
+                        try
+                        {
+                            var obj = Marshal.GetObjectForIUnknown(comPtr);
+                            return (TInterface)obj;
+                        }
+                        finally 
+                        {
+                            MarshalIUnknown(comPtr).Release(comPtr);
+                        }
+                    }
+                }
+
                 return (TInterface)typeof(TInterface).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { objRef });
             }
         }
