@@ -752,6 +752,29 @@ set => %.% = value;
             bind<write_type_name>(iface, as_abi, false));
     }
 
+    void write_lazy_interface_initialization(writer& w, TypeDef const& type)
+    {
+        for (auto&& ii : type.InterfaceImpl())
+        {
+            if (has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute"))
+            {
+                continue;
+            }
+
+            for_typedef(w, get_type_semantics(ii.Interface()), [&](auto interface_type)
+            {
+                auto interface_name = write_type_name_temp(w, interface_type);
+                auto interface_abi_name = write_type_name_temp(w, interface_type, "%", true);
+
+                w.write(R"(
+{typeof(%), new Lazy<%>(() => new %(GetReferenceForQI()))},)",
+                    interface_name,
+                    interface_abi_name,
+                    interface_abi_name);
+            });
+        }
+    }
+
     std::string write_explicit_name(writer& w, TypeDef const& iface, std::string_view name)
     {
         return w.write_temp("%.%", write_type_name_temp(w, iface), name);
@@ -1439,11 +1462,12 @@ target);
                 if (!is_default_interface)
                 {
                     w.write(R"(
-private % AsInternal(InterfaceTag<%> _) => new %(GetReferenceForQI());
+private % AsInternal(InterfaceTag<%> _) => ((Lazy<%>)_lazyInterfaces[typeof(%)]).Value;
 )",
                         interface_name,
                         interface_name,
-                        interface_abi_name);
+                        interface_abi_name,
+                        interface_name);
                 }
 
                 if(auto mapping = get_mapped_type(interface_type.TypeNamespace(), interface_type.TypeName()); mapping && mapping->has_custom_members_output)
@@ -3909,6 +3933,7 @@ public %IntPtr ThisPtr => _default.ThisPtr;
 
 private IObjectReference _inner = null;
 private readonly Lazy<%> _defaultLazy;
+private readonly Dictionary<Type, object> _lazyInterfaces;
 
 private % _default => _defaultLazy.Value;
 %
@@ -3922,6 +3947,9 @@ return obj is % ? (%)obj : new %((%)obj);
 % %(% ifc)%
 {
 _defaultLazy = new Lazy<%>(() => ifc);
+_lazyInterfaces = new Dictionary<Type, object>()
+{%
+};
 }
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
@@ -3957,6 +3985,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             default_interface_abi_name,
             bind<write_base_constructor_dispatch>(base_semantics),
             default_interface_abi_name,
+            bind<write_lazy_interface_initialization>(type),
             type_name,
             type_name,
             type_name,
