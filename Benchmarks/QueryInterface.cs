@@ -4,6 +4,7 @@ using Windows.ApplicationModel.Chat;
 
 namespace Benchmarks
 {
+    [MemoryDiagnoser]
     public class QueryInterfacePerf
     {
         ClassWithMultipleInterfaces instance;
