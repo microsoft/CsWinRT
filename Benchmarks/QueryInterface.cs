@@ -20,31 +20,31 @@ namespace Benchmarks
         [Benchmark]
         public int QueryDefaultInterface()
         {
-            return instance.Property1;
+            return instance.DefaultIntProperty;
         }
 
         [Benchmark]
         public int QueryNonDefaultInterface()
         {
-            return instance.IntProperty1;
+            return instance.IntProperty;
         }
 
         [Benchmark]
         public bool QueryNonDefaultInterface2()
         {
-            return instance.BoolProperty1;
+            return instance.BoolProperty;
         }
 
         [Benchmark]
         public void QueryDefaultInterfaceSetProperty()
         {
-            instance.Property1 = 4;
+            instance.DefaultIntProperty = 4;
         }
 
         [Benchmark]
         public void QueryNonDefaultInterfaceSetProperty()
         {
-            instance.IntProperty1 = 4;
+            instance.IntProperty = 4;
         }
 
         [Benchmark]
@@ -66,14 +66,14 @@ namespace Benchmarks
         public int ConstructAndQueryDefaultInterfaceFirstCall()
         {
             ClassWithMultipleInterfaces instance2 = new ClassWithMultipleInterfaces();
-            return instance2.Property1;
+            return instance2.DefaultIntProperty;
         }
 
         [Benchmark]
         public int ConstructAndQueryNonDefaultInterfaceFirstCall()
         {
             ClassWithMultipleInterfaces instance2 = new ClassWithMultipleInterfaces();
-            return instance2.IntProperty1;
+            return instance2.IntProperty;
         }
     }
 }

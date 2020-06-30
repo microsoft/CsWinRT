@@ -20,7 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Projections\Windows\Windows.csproj" Condition="$(UseWinmd) == false" />
     <ProjectReference Include="..\Projections\Benchmark\Benchmark.csproj" Condition="$(UseWinmd) == false" />
-    <ProjectReference Include="..\BenchmarkComponent\BenchmarkComponent.vcxproj" Condition="$(UseWinmd) == true" />
+    <ProjectReference Include="..\TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj" Condition="$(UseWinmd) == true" />
 
     <!-- The Benchmark / BenchmarkCompnent reference doesn't seem to bring over the dll when building with dotnet cli, so including both dll and winmd as includes. -->
     <None Include="$(MSBuildThisFileDirectory)..\_build\$(Platform)\$(Configuration)\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.dll">
