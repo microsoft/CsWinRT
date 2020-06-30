@@ -42,8 +42,6 @@
 -in 10.0.18362.0
 -out "$(GeneratedFilesDir.TrimEnd('\'))"
 -include Windows
-# Exclude causality types colliding with those in System.Private.CoreLib.dll
--exclude Windows.Foundation.Diagnostics 
 # Exclude Windows.UI, Windows.UI.Text, Windows.UI.Xaml per Microsoft.Windows.SDK.WinUI.Contracts NuGet
 -include Windows.UI.Popups
 -exclude Windows.UI.Colors

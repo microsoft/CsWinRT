@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.5" />
+    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
     <ProjectReference Include="..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\Projections\WinUI\WinUI.csproj" />
     <!--
