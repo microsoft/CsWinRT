@@ -30,8 +30,6 @@
     <ItemGroup>
       <ReferenceWinMDs Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
       <!--Do not publish projection source winmds -->
-      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'TestComponent'" />
-      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'TestComponentCSharp'" />
       <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'BenchmarkComponent'" />
     </ItemGroup>
     <PropertyGroup>
@@ -59,9 +57,9 @@
     <ItemGroup>
       <Compile Include="$(GeneratedFilesDir)*.cs" Exclude="@(Compile)" />
       <!--Remove references to projection source winmds to prevent compile conflict warnings-->
-      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'TestComponent'" />
-      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'TestComponentCSharp'" />
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'BenchmarkComponent'" />
+      <!--Also remove ReferencePath winmds to prevent error NETSDK1130 false positive-->
+      <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'BenchmarkComponent'" />
     </ItemGroup>
   </Target>
 
