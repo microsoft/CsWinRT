@@ -57,6 +57,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "Benchmarks\Benchmarks.csproj", "{B34C96F4-3660-4B2D-8ABD-A4B428166DC7}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BenchmarkComponent", "TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj", "{78D85F23-7CB1-44A1-9238-6DF2C76754E4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6ACFD2B2-E8AA-4CD4-AAD8-213CE8BB2637} = {6ACFD2B2-E8AA-4CD4-AAD8-213CE8BB2637}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark", "Projections\Benchmark\Benchmark.csproj", "{03EEF460-2F10-4FBE-AFFA-53477D3FC8D5}"
 EndProject
