@@ -125,7 +125,7 @@ The **/UnitTest** folder contains unit tests for validating the Windows SDK, Win
 
 ## /Benchmarks
 
-The **/Benchmarks** folder contains benchmarks written using BenchmarkDotNet to track the performance of scenarios in the generated projection.  To run the benchmarks using the CsWinRT projection, run **benchmark.cmd**.  To run the same benchmarks using the built-in WinMD support in NET Core 3.1 to compare against as a basline, run **benchmark_winmd.cmd**.
+The **/Benchmarks** folder contains benchmarks written using BenchmarkDotNet to track the performance of scenarios in the generated projection.  To run the benchmarks using the CsWinRT projection, run **benchmark.cmd**.  To run the same benchmarks using the built-in WinMD support in NET Core 3.1 to compare against as a baseline, run **benchmark_winmd.cmd**.
 
 ## /WinUIDesktopSample
 
