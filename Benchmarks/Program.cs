@@ -33,8 +33,8 @@ namespace Benchmarks
 
                 // Test WinMD support
 #if NETCOREAPP3_1
-                // BenchmarkDotNet will rebuild the project with a project reference when this exe is ran and
-                // in the same folder as it we have the application manifest binplaced which we want to embed in the new exe.
+                // BenchmarkDotNet will rebuild the project with a project reference to this project when this project's output exe is ran.  It
+                // will be ran from the same folder as where we have the application manifest binplaced which we want to embed in the new exe.
                 string manifestFile = Path.Combine(
                     Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
                     "Benchmarks.manifest");
@@ -62,8 +62,8 @@ namespace Benchmarks
 
         // Custom tool chain for building the benchmark with WinMDs as we need to execute the
         // exe version of the benchmark rather than the dll version which runs under dotnet cli.
-        // This is becuase we need to be able to embed a side by side manifest for reg free winrt
-        // and to enable COM to find the WinMDs.
+        // This is because we need to be able to embed a side by side manifest for reg free winrt
+        // and we need COM to be able to find the WinMDs.
         private class NetCore3ToolChainWithNativeExecution : Toolchain
         {
             public NetCore3ToolChainWithNativeExecution()
