@@ -42,6 +42,7 @@
 
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">

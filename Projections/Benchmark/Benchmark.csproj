@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <GenerateTestProjection>true</GenerateTestProjection>
+    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>8305;0618</NoWarn>
   </PropertyGroup>
@@ -18,32 +18,22 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\TestComponentCSharp\TestComponentCSharp.vcxproj" />
-    <ProjectReference Include="..\..\TestWinRT\TestComponent\TestComponent.vcxproj" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <ProjectReference Include="..\..\TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
-    <ProjectReference Include="..\WinUI\WinUI.csproj" />
-    <InternalsVisibleTo Include="UnitTest" />
   </ItemGroup>
-  
+
   <Target Name="GenerateProjection" Condition="'$(GenerateTestProjection)' == 'true'">
-    <PropertyGroup>
-      <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
-      <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
-    </PropertyGroup>
     <ItemGroup>
-      <!--Explicitly reference WinUI winmds from TFM uap10.0-->
-      <ReferenceWinMDs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
       <ReferenceWinMDs Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
       <!--Do not publish projection source winmds -->
-      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'TestComponent'" />
-      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'TestComponentCSharp'" />
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'BenchmarkComponent'" />
     </ItemGroup>
     <PropertyGroup>
       <CsWinRTVerbosity>high</CsWinRTVerbosity>
-      <CsWinRTResponseFile>$(GeneratedFilesDir)cswinrt_test.rsp</CsWinRTResponseFile>
+      <CsWinRTResponseFile>$(GeneratedFilesDir)cswinrt_benchmark.rsp</CsWinRTResponseFile>
       <CsWinRTCommand>$(CsWinRTExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
     </PropertyGroup>
     <PropertyGroup>
@@ -53,9 +43,7 @@
 -in @(ReferenceWinMDs->'"%(FullPath)"', ' ')
 -out "$(GeneratedFilesDir.TrimEnd('\'))"
 -exclude Windows
--exclude Microsoft
--include TestComponent
--include TestComponentCSharp
+-include BenchmarkComponent
       </CsWinRTParams>
     </PropertyGroup>
     <MakeDir Directories="$(GeneratedFilesDir)" />
@@ -65,18 +53,12 @@
   </Target>
 
   <Target Name="IncludeProjection" DependsOnTargets="GenerateProjection" BeforeTargets="CoreCompile">
-    <PropertyGroup>
-      <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
-      <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
-    </PropertyGroup>
     <ItemGroup>
       <Compile Include="$(GeneratedFilesDir)*.cs" Exclude="@(Compile)" />
       <!--Remove references to projection source winmds to prevent compile conflict warnings-->
-      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'TestComponent'" />
-      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'TestComponentCSharp'" />
+      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'BenchmarkComponent'" />
       <!--Also remove ReferencePath winmds to prevent error NETSDK1130 false positive-->
-      <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'TestComponent'" />
-      <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'TestComponentCSharp'" />
+      <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'BenchmarkComponent'" />
     </ItemGroup>
   </Target>
 

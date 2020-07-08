@@ -117,11 +117,15 @@ The **/TestComponentCSharp** folder contains an implementation of a WinRT test c
 
 ## /Projections
 
-The **/Projections** folder contains several projects for generating and building projections from the Windows SDK, WinUI, and Test metadata (produced by the TestWinRT and TestComponentCSharp projects).
+The **/Projections** folder contains several projects for generating and building projections from the Windows SDK, WinUI, Benchmark (produced by the BenchmarkComponent project), and Test metadata (produced by the TestWinRT and TestComponentCSharp projects).
 
 ## /UnitTest
 
 The **/UnitTest** folder contains unit tests for validating the Windows SDK, WinUI, and Test projections generated above.  All pull requests should ensure that this project executes without errors.
+
+## /Benchmarks
+
+The **/Benchmarks** folder contains benchmarks written using BenchmarkDotNet to track the performance of scenarios in the generated projection.  To run the benchmarks using the CsWinRT projection, run **benchmark.cmd**.  To run the same benchmarks using the built-in WinMD support in NET Core 3.1 to compare against as a baseline, run **benchmark_winmd.cmd**.
 
 ## /WinUIDesktopSample
 
