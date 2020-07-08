@@ -26,8 +26,7 @@ namespace Benchmarks
                     .WithPlatform(BenchmarkDotNet.Environments.Platform.X64)
                     .WithArguments(
                         new Argument[] {
-                            new MsBuildArgument("/p:platform=x64"),
-                            new MsBuildArgument("/p:MsAppxPackageTargets=%temp%\\EmptyMsAppxPackage.Targets")
+                            new MsBuildArgument("/p:platform=x64")
                         }
                     ).AsDefault();
 
