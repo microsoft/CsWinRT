@@ -87,10 +87,10 @@ namespace TestComponentCSharp
         //String DistinctProperty{ get; set; };
     }
 
-    static runtimeclass StaticClass
+    static runtimeclass ComImports
     {
-        static Class MakeClass();
-        static Int32 NumClasses{ get; };
+        static Object MakeObject();
+        static Int32 NumObjects{ get; };
     }
 
     [default_interface]
@@ -306,5 +306,12 @@ namespace TestComponentCSharp
 
         // Keyword escapes
         String Catch(String params, out String lock);
+    }
+
+    [threading(sta), marshaling_behavior(standard)]
+    runtimeclass NonAgileClass
+    {
+        NonAgileClass();
+        void Observe(Microsoft.UI.Xaml.Interop.IBindableObservableVector vector);
     }
 }

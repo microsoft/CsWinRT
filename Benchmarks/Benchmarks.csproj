@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Platforms>x64;x86</Platforms>
+    <TargetFrameworks>netcoreapp2.0;net5.0;netcoreapp3.1</TargetFrameworks>
+    <UseWinmd>false</UseWinmd>
+    <BenchmarkWinmdSupport Condition="'$(BenchmarkWinmdSupport)' == ''">false</BenchmarkWinmdSupport>
+    <!-- Controls whether to build using WinMDs or the projection. -->
+    <UseWinmd Condition="'$(TargetFramework)' == 'netcoreapp3.1' And $(BenchmarkWinmdSupport) == true">true</UseWinmd>
+    <ApplicationManifest Condition="$(UseWinmd) == true">Benchmarks.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.18362.2005" Condition="$(UseWinmd) == true"/>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" Condition="$(UseWinmd) == false"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Projections\Windows\Windows.csproj" Condition="$(UseWinmd) == false" />
+    <ProjectReference Include="..\Projections\Benchmark\Benchmark.csproj" Condition="$(UseWinmd) == false" />
+    <ProjectReference Include="..\TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj" Condition="$(UseWinmd) == true" />
+
+    <!-- The Benchmark / BenchmarkCompnent reference doesn't seem to bring over the dll when building with dotnet cli, so including both dll and winmd as includes. -->
+    <None Include="$(MSBuildThisFileDirectory)..\_build\$(Platform)\$(Configuration)\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.dll">
+      <Link>BenchmarkComponent.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>True</Visible>
+    </None>
+
+    <Reference Include="BenchmarkComponent.winmd" Condition="$(UseWinmd) == true">
+      <HintPath>$(MSBuildThisFileDirectory)..\_build\$(Platform)\$(Configuration)\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.winmd</HintPath>
+      <IsWinMDFile>true</IsWinMDFile>
+    </Reference>
+
+    <!-- When building for NetCoreApp 3.1, we test the WinMD scenario via reg free winrt, so it needs to be in the bin folder for the generated project to reference it. -->
+    <None Include="Benchmarks.manifest" Condition="$(UseWinmd) == true">
+      <Link>Benchmarks.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>True</Visible>
+    </None>
+
+  </ItemGroup>
+  
+  <Target Name="FilterProjection" BeforeTargets="CoreCompile" Condition="$(UseWinmd) == false">
+    <ItemGroup>
+      <!--Remove references to projection source winmds to prevent compile conflict warnings-->
+      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'BenchmarkComponent'" />
+      <!--Also remove ReferencePath winmds to prevent error NETSDK1130 false positive-->
+      <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'BenchmarkComponent'" />
+    </ItemGroup>
+  </Target>
+
+</Project>

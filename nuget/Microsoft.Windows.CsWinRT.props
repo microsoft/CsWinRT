@@ -5,8 +5,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <PropertyGroup>
-      <CsWinRTPath Condition="'$(CsWinRTPath)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</CsWinRTPath>
-    </PropertyGroup>
+  <PropertyGroup>
+    <CsWinRTPath Condition="'$(CsWinRTPath)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</CsWinRTPath>
+    <CsWinRTExe>$(CsWinRTPath)cswinrt.exe</CsWinRTExe>
+  </PropertyGroup>
 
 </Project>

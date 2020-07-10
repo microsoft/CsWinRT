@@ -169,5 +169,6 @@
     <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.SR.cs">
       <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
     </None>
+    <None Include="Directory.Build.targets" />
   </ItemGroup>
 </Project>

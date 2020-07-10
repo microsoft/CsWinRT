@@ -37,6 +37,9 @@ namespace WinRT
     internal class Platform
     {
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
+        internal static extern unsafe int CoCreateInstance(ref Guid clsid, IntPtr outer, uint clsContext, ref Guid iid, IntPtr* instance);
+
+        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         internal static extern int CoDecrementMTAUsage(IntPtr cookie);
 
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
@@ -85,6 +88,9 @@ namespace WinRT
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
         internal static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* length);
+
+        [DllImport("api-ms-win-core-com-l1-1-1.dll", CallingConvention = CallingConvention.StdCall)]
+        internal static extern unsafe int RoGetAgileReference(uint options, ref Guid iid, IntPtr unknown, IntPtr* agileReference);
     }
 
     internal struct VftblPtr

@@ -7,40 +7,6 @@ using WinRT.Interop;
 
 namespace Windows.Foundation
 {
-    internal struct Point
-    {
-        float _x;
-        float _y;
-
-        public double X
-        {
-            get { return _x; }
-            set { _x = (float)value; }
-        }
-
-        public double Y
-        {
-            get { return _y; }
-            set { _y = (float)value; }
-        }
-    }
-
-#pragma warning disable CS0169
-    internal struct Size
-    {
-        float Width;
-        float Height;
-    }
-
-    internal struct Rect
-    {
-        float X;
-        float Y;
-        float Width;
-        float Height;
-    }
-#pragma warning restore CS0169
-
     internal enum PropertyType : uint
     {
         Empty = 0,

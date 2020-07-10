@@ -1,4 +1,3 @@
-// WinUI projection smoke test (compile only)
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -10,25 +9,25 @@ using WinRT;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 
-namespace WinUITest
+namespace UnitTest
 {
-    public class TestProjection
+    public class TestWinUI
     {
-        public TestProjection()
+        public TestWinUI()
         {
         }
 
-        public class TestApp : Microsoft.UI.Xaml.Application
+        public class App : Microsoft.UI.Xaml.Application
         {
 
         }
 
         [Fact]
-        public void TestSomeWinUI()
+        public void TestApp()
         {
             WinrtModule module = new WinrtModule();
 
-            var app = new TestApp();
+            var app = new App();
             // TODO: load up some MUX!
             //Assert.Equal(true, true);
         }

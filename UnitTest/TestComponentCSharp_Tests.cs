@@ -7,7 +7,6 @@ using Xunit;
 using WinRT;
 
 using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -19,14 +18,16 @@ using Microsoft.UI.Xaml.Media.Media3D;
 using TestComponentCSharp;
 using System.Collections.Generic;
 using System.Collections;
+using WinRT.Interop;
+using System.Runtime.InteropServices;
 
 namespace UnitTest
 {
-    public class TestComp
+    public class TestCSharp
     {
         public Class TestObject { get; private set; }
 
-        public TestComp()
+        public TestCSharp()
         {
             TestObject = new Class();
         }
@@ -256,14 +257,6 @@ namespace UnitTest
 
             Class.StaticStringProperty = "foo";
             Assert.Equal("foo", Class.StaticStringProperty);
-        }
-
-        [Fact]
-        public void TestStaticClass()
-        {
-            Assert.Equal(0, StaticClass.NumClasses);
-            var obj = StaticClass.MakeClass();
-            Assert.Equal(1, StaticClass.NumClasses);
         }
 
         [Fact]
@@ -651,14 +644,14 @@ namespace UnitTest
             private void OnChanged()
             {
                 VectorChanged.Invoke(this, _observation = new TObservation());
-            } 
+            }
 
             public event BindableVectorChangedEventHandler VectorChanged;
 
-            public object this[int index] 
-            { 
-                get => _list[index]; 
-                set{ _list[index] = value; OnChanged(); } 
+            public object this[int index]
+            {
+                get => _list[index];
+                set { _list[index] = value; OnChanged(); }
             }
 
             public bool IsFixedSize => false;
@@ -1116,7 +1109,7 @@ namespace UnitTest
         [Fact]
         public void TestGridLengthTypeMapping()
         {
-            var gridLength = new GridLength( 42, GridUnitType.Pixel );
+            var gridLength = new GridLength(42, GridUnitType.Pixel);
             TestObject.GridLengthProperty = gridLength;
             Assert.Equal(gridLength.GridUnitType, TestObject.GridLengthProperty.GridUnitType);
             Assert.Equal(gridLength.Value, TestObject.GridLengthProperty.Value);
@@ -1171,8 +1164,12 @@ namespace UnitTest
         [Fact]
         public void TestRepeatBehaviorTypeMapping()
         {
-            var repeatBehavior = new RepeatBehavior { 
-                Count = 1, Duration = TimeSpan.FromTicks(42), Type = RepeatBehaviorType.Forever };
+            var repeatBehavior = new RepeatBehavior
+            {
+                Count = 1,
+                Duration = TimeSpan.FromTicks(42),
+                Type = RepeatBehaviorType.Forever
+            };
             TestObject.RepeatBehaviorProperty = repeatBehavior;
             Assert.Equal(repeatBehavior.Count, TestObject.RepeatBehaviorProperty.Count);
             Assert.Equal(repeatBehavior.Duration, TestObject.RepeatBehaviorProperty.Duration);
@@ -1183,11 +1180,12 @@ namespace UnitTest
         [Fact]
         public void TestMatrix3DTypeMapping()
         {
-            var matrix3D = new Matrix3D { 
+            var matrix3D = new Matrix3D {
                 M11 = 11, M12 = 12, M13 = 13, M14 = 14,
                 M21 = 21, M22 = 22, M23 = 23, M24 = 24,
                 M31 = 31, M32 = 32, M33 = 33, M34 = 34,
                 OffsetX = 41, OffsetY = 42, OffsetZ = 43,M44 = 44 };
+
             TestObject.Matrix3DProperty = matrix3D;
             Assert.Equal(matrix3D.M11, TestObject.Matrix3DProperty.M11);
             Assert.Equal(matrix3D.M12, TestObject.Matrix3DProperty.M12);
@@ -1502,6 +1500,150 @@ namespace UnitTest
         {
             var inspectable = IInspectable.FromAbi(TestObject.ThisPtr);
             Assert.True(ComWrappersSupport.TryUnwrapObject(inspectable, out _));
+        }
+
+        [Fact]
+        public void TestManagedAgileObject()
+        {
+            using var testObjectAgileRef = TestObject.AsAgile();
+            var agileTestObject = testObjectAgileRef.Get();
+            Assert.Equal(TestObject, agileTestObject);
+
+            IProperties1 properties = new ManagedProperties(42);
+            using var propertiesAgileRef = properties.AsAgile();
+            var agileProperties = propertiesAgileRef.Get();
+            Assert.Equal(properties.ReadWriteProperty, agileProperties.ReadWriteProperty);
+
+            var agileObject = TestObject.As<IAgileObject>();
+            Assert.NotNull(agileObject);
+
+            IProperties1 properties2 = null;
+            using var properties2AgileRef = properties2.AsAgile();
+            var agileProperties2 = properties2AgileRef.Get();
+            Assert.Null(agileProperties2);
+        }
+
+        class NonAgileClassCaller
+        {
+            public void AcquireObject()
+            {
+                Assert.Equal(ApartmentState.STA, Thread.CurrentThread.GetApartmentState());
+                nonAgileObject = new Windows.UI.Popups.PopupMenu();
+                nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test"));
+                nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test2"));
+                Assert.ThrowsAny<System.Exception>(() => nonAgileObject.As<IAgileObject>());
+
+                agileReference = nonAgileObject.AsAgile();
+                objectAcquired.Set();
+                valueAcquired.WaitOne();
+
+                // Call to proxy object acquired from MTA which should throw
+                Assert.ThrowsAny<System.Exception>(() => proxyObject.Commands.Count);
+                agileReference.Dispose();
+            }
+
+            public void CheckValue()
+            {
+                objectAcquired.WaitOne();
+
+                Assert.Equal(ApartmentState.MTA, Thread.CurrentThread.GetApartmentState());
+                proxyObject = agileReference.Get();
+                Assert.Equal(2, proxyObject.Commands.Count);
+                valueAcquired.Set();
+            }
+
+            private Windows.UI.Popups.PopupMenu nonAgileObject;
+            private Windows.UI.Popups.PopupMenu proxyObject;
+            private AgileReference<Windows.UI.Popups.PopupMenu> agileReference;
+            private readonly AutoResetEvent objectAcquired = new AutoResetEvent(false);
+            private readonly AutoResetEvent valueAcquired = new AutoResetEvent(false);
+        }
+
+
+        [Fact]
+        public void TestNonAgileObjectCall()
+        {
+            NonAgileClassCaller caller = new NonAgileClassCaller();
+            Thread staThread = new Thread(new ThreadStart(caller.AcquireObject));
+            staThread.SetApartmentState(ApartmentState.STA);
+            staThread.Start();
+
+            Thread mtaThread = new Thread(new ThreadStart(caller.CheckValue));
+            mtaThread.SetApartmentState(ApartmentState.MTA);
+            mtaThread.Start();
+            mtaThread.Join();
+            staThread.Join();
+        }
+
+        [Fact]
+        public void TestNonAgileDelegateCall()
+        {
+            var expected = new int[] { 0, 1, 2 };
+            var observable = new ManagedBindableObservable(expected);
+            var nonAgileClass = new NonAgileClass();
+            nonAgileClass.Observe(observable);
+            observable.Add(3);
+            Assert.Equal(6, observable.Observation);
+        }
+
+        [ComImport]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        [Guid("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB")]
+        internal interface IWindowNative
+        {
+            IntPtr WindowHandle { get; }
+        }
+
+        [ComImport]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        [Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
+        internal interface IInitializeWithWindow
+        {
+            void Initialize(IntPtr hwnd);
+        }
+
+        [Fact]
+        unsafe public void TestComImports()
+        {
+            static Object MakeObject()
+            {
+                Assert.Equal(0, ComImports.NumObjects);
+                var obj = ComImports.MakeObject();
+                Assert.Equal(1, ComImports.NumObjects);
+                return obj;
+            }
+
+            static void TestObject() => MakeObject();
+
+            static (IInitializeWithWindow, IWindowNative) MakeImports() 
+            { 
+                var obj = MakeObject();
+                var initializeWithWindow = obj.As<IInitializeWithWindow>();
+                var windowNative = obj.As<IWindowNative>();
+                return (initializeWithWindow, windowNative);
+            }
+
+            static void TestImports()
+            {
+                var (initializeWithWindow, windowNative) = MakeImports();
+                
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                var hwnd = new IntPtr(0x12345678);
+                initializeWithWindow.Initialize(hwnd);
+                Assert.Equal(windowNative.WindowHandle, hwnd);
+            }
+
+            TestObject();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.Equal(0, ComImports.NumObjects);
+
+            TestImports();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.Equal(0, ComImports.NumObjects);
         }
     }
 }

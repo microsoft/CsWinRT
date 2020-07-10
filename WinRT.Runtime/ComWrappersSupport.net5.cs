@@ -41,6 +41,11 @@ namespace WinRT
 
         public static object CreateRcwForComObject(IntPtr ptr)
         {
+            if (ptr == IntPtr.Zero)
+            {
+                return null;
+            }
+
             var rcw = ComWrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.TrackerObject);
             // Because .NET will de-duplicate strings and WinRT doesn't,
             // our RCW factory returns a wrapper of our string instance.
