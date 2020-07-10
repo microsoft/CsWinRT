@@ -3480,7 +3480,11 @@ internal IInspectable.Vftbl IInspectableVftbl;
                 }
                 else
                 {
-                    w.write("public % %;\n", vtable_field_type, vmethod_name);
+                    // Work around C# compiler's lack of support for UnmanagedCallersOnly
+                    w.write("private delegate*<%, int> _%;\n", bind<write_abi_parameter_types>(method_signature{ method }), vmethod_name);
+                    w.write("public % % { get => (%)_%; set => _%=(delegate*<%, int>*)value; }\n",
+                        vtable_field_type, vmethod_name, vtable_field_type, vmethod_name, vmethod_name,
+                        bind<write_abi_parameter_types>(method_signature{ method }));
                 }
                 uint32_t const vtable_index = method.index() - methods.first.index() + 6;
                 if (is_generic)
@@ -3488,14 +3492,14 @@ internal IInspectable.Vftbl IInspectableVftbl;
                     method_marshals_to_abi.emplace_back(signature_has_generic_parameters ?
                         w.write_temp("_% = (void*)Marshal.GetDelegateForFunctionPointer(vftbl[%], %_Type);\n",
                             vmethod_name, vtable_index, vmethod_name) :
-                        w.write_temp("% = (vftbl[%]);\n",
+                        w.write_temp("_% = (vftbl[%]);\n",
                             vmethod_name, vtable_index)
                         );
 
                     method_marshals_to_projection.emplace_back(signature_has_generic_parameters ?
                         w.write_temp("nativeVftbl[%] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.%);\n",
                             vtable_index, vmethod_name) :
-                        w.write_temp("nativeVftbl[%] = AbiToProjectionVftable._%;", vtable_index, vmethod_name)
+                        w.write_temp("nativeVftbl[%] = (void*)AbiToProjectionVftable._%;", vtable_index, vmethod_name)
                         );
 
                     if (have_generic_type_parameters)
