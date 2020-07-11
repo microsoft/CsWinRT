@@ -51,7 +51,7 @@ namespace WinRT
         }
 
         public ObjectReference<T> As<T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
-        public ObjectReference<T> As<T>(Guid iid)
+        public unsafe ObjectReference<T> As<T>(Guid iid)
         {
             ThrowIfDisposed();
             Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
@@ -113,12 +113,12 @@ namespace WinRT
             disposed = true;
         }
 
-        protected virtual void AddRef()
+        protected virtual unsafe void AddRef()
         {
             VftblIUnknown.AddRef(ThisPtr);
         }
 
-        protected virtual void Release()
+        protected virtual unsafe void Release()
         {
             VftblIUnknown.Release(ThisPtr);
         }
@@ -167,7 +167,7 @@ namespace WinRT
         {
         }
 
-        public static ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT)
+        public static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT)
         {
             if (thisPtr == IntPtr.Zero)
             {
@@ -240,7 +240,7 @@ namespace WinRT
             }, &data, IID_ICallbackWithNoReentrancyToApplicationSTA, 5);
         }
 
-        public override int TryAs<U>(Guid iid, out ObjectReference<U> objRef)
+        public override unsafe int TryAs<U>(Guid iid, out ObjectReference<U> objRef)
         {
             objRef = null;
             ThrowIfDisposed();

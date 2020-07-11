@@ -3981,7 +3981,7 @@ if (thisPtr == IntPtr.Zero)
 return null;
 }
 var vftblT = new Vftbl(thisPtr);
-return ObjectReference<Vftbl>.FromAbi(thisPtr, vftblT.IInspectableVftbl.IUnknownVftbl, vftblT);
+return ObjectReference<Vftbl>.FromAbi(thisPtr, vftblT);
 }
 public static Guid PIID = Vftbl.PIID;
 )");

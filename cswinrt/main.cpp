@@ -31,7 +31,7 @@ namespace cswinrt
         { "output", 0, 1, "<path>", "Location of generated projection" },
         { "include", 0, option::no_max, "<prefix>", "One or more prefixes to include in projection" },
         { "exclude", 0, option::no_max, "<prefix>", "One or more prefixes to exclude from projection" },
-        { "netstandard", 0, 0, {}, "Generate code compatible with .NET Standard 2.0" },
+        { "target", 0, 1, "<tfm>", "Target TFM for projection. Leave empty for code compatible with newest supported TFM. Currently supported: netstandard2.0, net5.0." },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
@@ -83,7 +83,12 @@ Where <spec> is one or more of:
         }
 
         settings.verbose = args.exists("verbose");
-        settings.netstandard_compat = args.exists("netstandard");
+        auto target = args.value("target");
+        if (!target.empty() && target != "netstandard2.0" && target != "net5.0")
+        {
+            throw usage_exception();
+        }
+        settings.netstandard_compat = target == "netstandard2.0";
         settings.input = args.files("input", database::is_database);
 
         for (auto && include : args.values("include"))

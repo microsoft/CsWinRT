@@ -108,14 +108,14 @@ namespace WinRT
         private static ConditionalWeakTable<object, VtableEntriesCleanupScout> ComInterfaceEntryCleanupTable = new ConditionalWeakTable<object, VtableEntriesCleanupScout>();
         public static IUnknownVftbl IUnknownVftbl { get; }
 
-        static DefaultComWrappers()
+        static unsafe DefaultComWrappers()
         {
             GetIUnknownImpl(out var qi, out var addRef, out var release);
             IUnknownVftbl = new IUnknownVftbl
             {
-                QueryInterface = Marshal.GetDelegateForFunctionPointer<IUnknownVftbl._QueryInterface>(qi),
-                AddRef = Marshal.GetDelegateForFunctionPointer<IUnknownVftbl._AddRef>(addRef),
-                Release = Marshal.GetDelegateForFunctionPointer<IUnknownVftbl._Release>(release),
+                QueryInterface = (delegate* stdcall<IntPtr, ref Guid, out IntPtr, int>)qi,
+                AddRef = (delegate* stdcall<IntPtr, uint>)addRef,
+                Release = (delegate* stdcall<IntPtr, uint>)release,
             };
         }
 
