@@ -3514,7 +3514,8 @@ internal IInspectable.Vftbl IInspectableVftbl;
                         vtable_field_type, vmethod_name, vtable_field_type, vmethod_name, vmethod_name,
                         bind<write_abi_parameter_types>(method_signature{ method }));
                 }
-                uint32_t const vtable_index = method.index() - methods.first.index() + 6;
+                uint32_t const delegate_cache_index = method.index() - methods.first.index();
+                uint32_t const vtable_index = delegate_cache_index + 6;
                 if (is_generic)
                 {
                     method_marshals_to_abi.emplace_back(signature_has_generic_parameters ?
@@ -3565,7 +3566,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
                         method_create_delegates_to_projection.emplace_back(
                             w.write_temp("_% = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[%] = new %(Do_Abi_%))",
                                 vmethod_name,
-                                vtable_index,
+                                delegate_cache_index,
                                 delegate_type,
                                 vmethod_name));
                     }
@@ -3583,7 +3584,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
                     method_create_delegates_to_projection.emplace_back(
                         w.write_temp("_% = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[%] = new %(Do_Abi_%))",
                             vmethod_name,
-                            vtable_index,
+                            delegate_cache_index,
                             delegate_type,
                             vmethod_name));
                 }
