@@ -3473,11 +3473,11 @@ internal IInspectable.Vftbl IInspectableVftbl;
                         if (settings.netstandard_compat)
                         {
                             nongeneric_delegates.push_back(delegate_definition);
-                            vtable_field_type = w.write_temp("delegate* unmanaged[Stdcall]<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                            vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
                         }
                         else
                         {
-                            vtable_field_type = w.write_temp("delegate* unmanaged<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                            vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
                         }
                         function_pointer = true;
                     }
@@ -3487,15 +3487,19 @@ internal IInspectable.Vftbl IInspectableVftbl;
                     // We're a well-known delegate type, but we still need to get the function pointer type.
                     if (settings.netstandard_compat)
                     {
-                        vtable_field_type = w.write_temp("delegate* unmanaged[Stdcall]<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                        vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
                     }
                     else
                     {
-                        vtable_field_type = w.write_temp("delegate* unmanaged<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                        vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
                     }
                     function_pointer = true;
                 }
-                if (function_pointer && settings.netstandard_compat)
+                if (!function_pointer)
+                {
+                    w.write("public % %;", vtable_field_type, vmethod_name);
+                }
+                else if (settings.netstandard_compat)
                 {
                     // Work around https://github.com/dotnet/runtime/issues/37295
                     w.write("private void* _%;\n", vmethod_name);
@@ -3506,7 +3510,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
                 {
                     // Work around C# compiler's lack of support for UnmanagedCallersOnly
                     w.write("private delegate*<%, int> _%;\n", bind<write_abi_parameter_types>(method_signature{ method }), vmethod_name);
-                    w.write("public % % { get => (%)_%; set => _%=(delegate*<%, int>*)value; }\n",
+                    w.write("public % % { get => (%)_%; set => _%=(delegate*<%, int>)value; }\n",
                         vtable_field_type, vmethod_name, vtable_field_type, vmethod_name, vmethod_name,
                         bind<write_abi_parameter_types>(method_signature{ method }));
                 }
@@ -3514,21 +3518,20 @@ internal IInspectable.Vftbl IInspectableVftbl;
                 if (is_generic)
                 {
                     method_marshals_to_abi.emplace_back(signature_has_generic_parameters ?
-                        w.write_temp("_% = (void*)Marshal.GetDelegateForFunctionPointer(vftbl[%], %_Type);\n",
+                        w.write_temp("% = Marshal.GetDelegateForFunctionPointer(vftbl[%], %_Type);\n",
                             vmethod_name, vtable_index, vmethod_name) :
-                        w.write_temp("_% = (vftbl[%]);\n",
-                            vmethod_name, vtable_index)
+                        w.write_temp("% = (%)(vftbl[%]);\n",
+                            vmethod_name, vtable_field_type, vtable_index)
                         );
 
                     method_marshals_to_projection.emplace_back(signature_has_generic_parameters ?
                         w.write_temp("nativeVftbl[%] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.%);\n",
                             vtable_index, vmethod_name) :
-                        w.write_temp("nativeVftbl[%] = (void*)AbiToProjectionVftable._%;", vtable_index, vmethod_name)
+                        w.write_temp("nativeVftbl[%] = (IntPtr)AbiToProjectionVftable._%;", vtable_index, vmethod_name)
                         );
 
                     if (have_generic_type_parameters)
                     {
-
                         method_create_delegates_to_projection.emplace_back(
                             w.write_temp(R"(% = %global::System.Delegate.CreateDelegate(%, typeof(Vftbl).GetMethod("Do_Abi_%", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(%)))",
                                 vmethod_name,
@@ -3568,8 +3571,9 @@ internal IInspectable.Vftbl IInspectableVftbl;
                     }
                     else
                     {
+                        // Work around C# compiler's lack of support for UnmanagedCallersOnly
                         method_create_delegates_to_projection.emplace_back(
-                            w.write_temp("% = &Do_Abi_%",
+                            w.write_temp("_% = &Do_Abi_%",
                                 vmethod_name, vmethod_name)
                         );
                     }
@@ -3585,8 +3589,9 @@ internal IInspectable.Vftbl IInspectableVftbl;
                 }
                 else
                 {
+                    // Work around C# compiler's lack of support for UnmanagedCallersOnly
                     method_create_delegates_to_projection.emplace_back(
-                        w.write_temp("% = &Do_Abi_%",
+                        w.write_temp("_% = &Do_Abi_%",
                             vmethod_name, vmethod_name)
                     );
                 }
@@ -3596,7 +3601,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
                 if (!is_generic) return;
                 w.write("public static Guid PIID = GuidGenerator.CreateIID(typeof(%));\n", type_name);
                 w.write(R"(%
-internal unsafe Vftbl(IntPtr thisPtr)
+internal unsafe Vftbl(IntPtr thisPtr) : this()
 {
 var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
 var vftbl = (IntPtr*)vftblPtr.Vftbl;
