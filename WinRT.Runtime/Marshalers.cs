@@ -919,7 +919,10 @@ namespace WinRT
             {
                 return objRef.As<IInspectable.Vftbl>();
             }
-            return ComWrappersSupport.CreateCCWForObject(o);
+            using (var ccw = ComWrappersSupport.CreateCCWForObject(o))
+            { 
+                return ccw.As<IInspectable.Vftbl>();
+            }
         }
 
         public static IntPtr GetAbi(IObjectReference objRef) => 
