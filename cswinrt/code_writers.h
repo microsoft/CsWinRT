@@ -425,14 +425,14 @@ namespace cswinrt
             w.write(", % %", bind<write_abi_type>(semantics), param_name);
             break;
         case param_category::out:
-            w.write(", out % %", bind<write_abi_type>(semantics), param_name);
+            w.write(settings.netstandard_compat ? ", out % %" : ", %* %", bind<write_abi_type>(semantics), param_name);
             break;
         case param_category::pass_array:
         case param_category::fill_array:
             w.write(", int __%Size, IntPtr %", param_name, param_name);
             break;
         case param_category::receive_array:
-            w.write(", out int __%Size, out IntPtr %", param_name, param_name);
+            w.write(settings.netstandard_compat ? ", out int __%Size, out IntPtr %" : ", int* __%Size, IntPtr* %", param_name, param_name);
             break;
         }
     }
@@ -456,6 +456,27 @@ namespace cswinrt
             w.write(", out int, out IntPtr");
             break;
         }
+    } 
+
+    void write_abi_parameter_type_pointer(writer& w, method_signature::param_t const& param)
+    {
+        auto semantics = get_type_semantics(param.second->Type());
+        switch (get_param_category(param))
+        {
+        case param_category::in:
+            w.write(", %", bind<write_abi_type>(semantics));
+            break;
+        case param_category::out:
+            w.write(", %*", bind<write_abi_type>(semantics));
+            break;
+        case param_category::pass_array:
+        case param_category::fill_array:
+            w.write(", int, IntPtr");
+            break;
+        case param_category::receive_array:
+            w.write(", int*, IntPtr*");
+            break;
+        }
     }
 
     void write_abi_return(writer& w, method_signature const& signature)
@@ -464,9 +485,18 @@ namespace cswinrt
         {
             auto semantics = get_type_semantics(return_sig.Type());
             auto return_param = w.write_temp("%", bind<write_escaped_identifier>(signature.return_param_name()));
-            return_sig.Type().is_szarray() ?
-                w.write(", out int __%Size, out IntPtr %", signature.return_param_name(), return_param) :
-                w.write(", out % %", bind<write_abi_type>(semantics), return_param);
+            if (settings.netstandard_compat)
+            {
+                return_sig.Type().is_szarray() ?
+                    w.write(", out int __%Size, out IntPtr %", signature.return_param_name(), return_param) :
+                    w.write(", out % %", bind<write_abi_type>(semantics), return_param);
+            }
+            else
+            {
+                return_sig.Type().is_szarray() ?
+                    w.write(", int* __%Size, IntPtr* %", signature.return_param_name(), return_param) :
+                    w.write(", %* %", bind<write_abi_type>(semantics), return_param);
+            }
         }
     }
 
@@ -478,6 +508,17 @@ namespace cswinrt
             return_sig.Type().is_szarray() ?
                 w.write(", out int, out IntPtr") :
                 w.write(", out %", bind<write_abi_type>(semantics));
+        }
+    }
+
+    void write_abi_return_type_pointer(writer& w, method_signature const& signature)
+    {
+        if (auto return_sig = signature.return_signature())
+        {
+            auto semantics = get_type_semantics(return_sig.Type());
+            return_sig.Type().is_szarray() ?
+                w.write(", int*, IntPtr*") :
+                w.write(", %*", bind<write_abi_type>(semantics));
         }
     }
 
@@ -499,6 +540,16 @@ namespace cswinrt
             write_abi_parameter_type(w, param);
         }
         write_abi_return_type(w, signature);
+    }
+
+    void write_abi_parameter_types_pointer(writer& w, method_signature const& signature)
+    {
+        w.write("IntPtr");
+        for (auto&& param : signature.params())
+        {
+            write_abi_parameter_type_pointer(w, param);
+        }
+        write_abi_return_type_pointer(w, signature);
     }
 
     bool abi_signature_has_generic_parameters(writer& w, method_signature const& signature)
@@ -1813,7 +1864,7 @@ event % %;)",
 
                 if (is_out())
                 {
-                    w.write("out __%", param_name);
+                    w.write("%__%", "out ", param_name);
                     return;
                 }
 
@@ -2859,9 +2910,24 @@ remove => _%.Unsubscribe(value);
             auto param_cat = get_param_category(param);
             if (!generic_type.empty() && (param_cat <= param_category::out))
             {
-                w.write(", %% %",
-                    param_cat == param_category::out ? "out " : "",
+                std::string_view param_prefix = "";
+                std::string_view param_suffix = "";
+                if (param_cat == param_category::out)
+                {
+                    if (settings.netstandard_compat)
+                    {
+                        param_prefix = "out ";
+                    }
+                    else
+                    {
+                        param_suffix = "*";
+                    }
+                }
+
+                w.write(", %%% %",
+                    param_prefix,
                     generic_type,
+                    param_suffix,
                     bind<write_parameter_name>(param));
             }
             else
@@ -2874,8 +2940,16 @@ remove => _%.Unsubscribe(value);
             auto generic_type = generic_abi_types[index++].second;
             if (!return_sig.Type().is_szarray() && !generic_type.empty())
             {
-                w.write(", out % %", generic_type, 
-                    bind<write_escaped_identifier>(signature.return_param_name()));
+                if (settings.netstandard_compat || have_generic_params)
+                {
+                    w.write(", out % %", generic_type, 
+                        bind<write_escaped_identifier>(signature.return_param_name()));
+                }
+                else
+                {
+                    w.write(", %* %", generic_type, 
+                        bind<write_escaped_identifier>(signature.return_param_name()));
+                }
             }
             else
             {
@@ -2894,6 +2968,7 @@ remove => _%.Unsubscribe(value);
         std::string local_type;
         std::string marshaler_type;
         bool abi_boxed;
+        bool use_pointers;
 
         bool is_out() const
         {
@@ -2958,10 +3033,21 @@ remove => _%.Unsubscribe(value);
         void write_out_initialize(writer& w) const
         {
             XLANG_ASSERT(is_out());
-            w.write("% = default;\n", bind<write_escaped_identifier>(param_name));
-            if (is_array())
+            if (!use_pointers)
             {
-                w.write("__%Size = default;\n", param_name);
+                w.write("% = default;\n", bind<write_escaped_identifier>(param_name));
+                if (is_array())
+                {
+                    w.write("__%Size = default;\n", param_name);
+                }
+            }
+            else
+            {
+                w.write("*% = default;\n", bind<write_escaped_identifier>(param_name));
+                if (is_array())
+                {
+                    w.write("*__%Size = default;\n", param_name);
+                }
             }
         }
 
@@ -3017,9 +3103,18 @@ remove => _%.Unsubscribe(value);
                     bind<write_escaped_identifier>(param_name));
                 return;
             }
-            is_array() ?
-                w.write("(__%Size, %) = ", param_name, bind<write_escaped_identifier>(param_name)) :
-                w.write("% = ", bind<write_escaped_identifier>(param_name));
+            if (!use_pointers)
+            {
+                is_array() ?
+                    w.write("(__%Size, %) = ", param_name, bind<write_escaped_identifier>(param_name)) :
+                    w.write("% = ", bind<write_escaped_identifier>(param_name));
+            }
+            else
+            {
+                is_array() ?
+                    w.write("(*__%Size, *%) = ", param_name, bind<write_escaped_identifier>(param_name)) :
+                    w.write("*% = ", bind<write_escaped_identifier>(param_name));
+            }
             auto param_cast = is_generic() ? w.write_temp("(%)", param_type) : "";
             if (marshaler_type.empty())
             {
@@ -3062,7 +3157,7 @@ remove => _%.Unsubscribe(value);
     {
         std::vector<managed_marshaler> marshalers;
 
-        auto set_marshaler = [](writer& w, type_semantics const& semantics, managed_marshaler& m)
+        auto set_marshaler = [is_generic](writer& w, type_semantics const& semantics, managed_marshaler& m)
         {
             m.param_type = w.write_temp("%", bind<write_projection_type>(semantics));
 
@@ -3155,6 +3250,7 @@ remove => _%.Unsubscribe(value);
                 }
                 m.local_type = (m.local_type.empty() ? m.param_type : m.local_type) + "[]";
             }
+            m.use_pointers = !settings.netstandard_compat && !is_generic;
         };
 
         for (auto&& param : signature.params())
@@ -3184,7 +3280,10 @@ remove => _%.Unsubscribe(value);
 
     void write_managed_method_call(writer& w, method_signature signature, std::string invoke_expression_format)
     {
-        auto managed_marshalers = get_managed_marshalers(w, signature, false);
+        auto generic_abi_types = get_generic_abi_types(w, signature);
+        bool have_generic_params = std::find_if(generic_abi_types.begin(), generic_abi_types.end(),
+            [](auto&& pair) { return !pair.second.empty(); }) != generic_abi_types.end();
+        auto managed_marshalers = get_managed_marshalers(w, signature, have_generic_params);
         auto marshalers = managed_marshalers.first;
         auto return_marshaler = managed_marshalers.second;
         auto return_sig = signature.return_signature();
@@ -3271,7 +3370,7 @@ private static unsafe int Do_Abi_%%
 {
 %
 })",
-            !settings.netstandard_compat ? "[UnmanagedCallersOnly]" : "",
+            !settings.netstandard_compat && !have_generic_params ? "[UnmanagedCallersOnly]" : "",
             vmethod_name,
             bind<write_abi_signature>(method),
             bind<write_managed_method_call>(
@@ -3373,12 +3472,12 @@ private static unsafe int Do_Abi_%%
 %
 private static unsafe int Do_Abi_%%
 {
-% = default;
+%% = default;
 try
 {
 var __this = global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
 var __handler = %.FromAbi(%);
-% = _%_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
+%% = _%_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
 __this.% += __handler;
 return 0;
 }
@@ -3390,10 +3489,12 @@ return __ex.HResult;
             !settings.netstandard_compat ? "[UnmanagedCallersOnly]" : "",
             get_vmethod_name(w, add_method.Parent(), add_method),
             bind<write_abi_signature>(add_method),
+            settings.netstandard_compat ? "" : "*",
             add_handler_event_token_name,
             type_name,
             bind<write_type_name>(semantics, true, false),
             handler_parameter_name,
+            settings.netstandard_compat ?  "" : "*",
             add_handler_event_token_name,
             evt.Name(),
             evt.Name());
@@ -3509,10 +3610,10 @@ internal IInspectable.Vftbl IInspectableVftbl;
                 else
                 {
                     // Work around C# compiler's lack of support for UnmanagedCallersOnly
-                    w.write("private delegate*<%, int> _%;\n", bind<write_abi_parameter_types>(method_signature{ method }), vmethod_name);
+                    w.write("private delegate*<%, int> _%;\n", bind<write_abi_parameter_types_pointer>(method_signature{ method }), vmethod_name);
                     w.write("public % % { get => (%)_%; set => _%=(delegate*<%, int>)value; }\n",
                         vtable_field_type, vmethod_name, vtable_field_type, vmethod_name, vmethod_name,
-                        bind<write_abi_parameter_types>(method_signature{ method }));
+                        bind<write_abi_parameter_types_pointer>(method_signature{ method }));
                 }
                 uint32_t const delegate_cache_index = method.index() - methods.first.index();
                 uint32_t const vtable_index = delegate_cache_index + 6;
@@ -4306,21 +4407,18 @@ public static class @%
 private static readonly global::WinRT.Interop.IDelegateVftbl AbiToProjectionVftable;
 public static readonly IntPtr AbiToProjectionVftablePtr;
 
-static @()
-{
-AbiInvokeDelegate = %;
+static unsafe @()
+{%
 AbiToProjectionVftable = new global::WinRT.Interop.IDelegateVftbl
 {
 IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-Invoke = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate)
+Invoke = %
 };
 var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(@%), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
 Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
 AbiToProjectionVftablePtr = nativeVftbl;
 }
-
-public static global::System.Delegate AbiInvokeDelegate { get ; }
-
+%
 public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => 
 managedDelegate is null ? null : ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%)));
 
@@ -4351,12 +4449,12 @@ objRef.Dispose();
 }
 }
 
-public % Invoke(%)
+public unsafe % Invoke(%)
 {
 using var agileDelegate = _agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%))); 
 var delegateToInvoke = agileDelegate ?? _nativeDelegate;
 IntPtr ThisPtr = delegateToInvoke.ThisPtr;
-var abiInvoke = Marshal.GetDelegateForFunctionPointer%(delegateToInvoke.Vftbl.Invoke%);%
+%%
 }
 }
 
@@ -4365,7 +4463,7 @@ public static IntPtr FromManaged(% managedDelegate) => CreateMarshaler(managedDe
 public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<%>.DisposeMarshaler(value);
 
 public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<%>.DisposeAbi(abi);
-
+%
 private static unsafe int Do_Abi_Invoke%
 {
 %
@@ -4386,8 +4484,11 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             [&](writer& w) {
                 if (!is_generic)
                 {
-                    w.write("private unsafe delegate int Abi_Invoke(%);\n",
-                        bind<write_abi_parameters>(signature));
+                    if (settings.netstandard_compat)
+                    {
+                        w.write("private unsafe delegate int Abi_Invoke(%);\n",
+                            bind<write_abi_parameters>(signature));
+                    }
                     return;
                 }
                 w.write(R"(private static readonly Type Abi_Invoke_Type = Expression.GetDelegateType(new Type[] { typeof(void*), %typeof(int) });
@@ -4402,10 +4503,13 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             [&](writer& w) {
                 if (!is_generic)
                 {
-                    w.write("new Abi_Invoke(Do_Abi_Invoke)");
+                    if (settings.netstandard_compat)
+                    {
+                        w.write("\nAbiInvokeDelegate = new Abi_Invoke(Do_Abi_Invoke);");
+                    }
                     return;
                 }
-                w.write("global::System.Delegate.CreateDelegate(Abi_Invoke_Type, typeof(@%).GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic)%)",
+                w.write("\nAbiInvokeDelegate = global::System.Delegate.CreateDelegate(Abi_Invoke_Type, typeof(@%).GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic)%);",
                     type.TypeName(),
                     type_params,
                     [&](writer& w) {
@@ -4422,8 +4526,20 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                             });
                     });
             },
+            bind([&](writer& w)
+            {
+                if (settings.netstandard_compat || is_generic)
+                {
+                    w.write("Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate)");
+                }
+                else
+                {
+                    w.write("(IntPtr)(delegate*<%, int>)&Do_Abi_Invoke", bind<write_abi_parameter_types_pointer>(signature));
+                }
+            }),
             type.TypeName(),
             type_params,
+            settings.netstandard_compat || is_generic ? "\npublic static global::System.Delegate AbiInvokeDelegate { get; }\n" : "",
             // CreateMarshaler
             type_name,
             type.TypeName(),
@@ -4439,8 +4555,20 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             bind_list<write_projection_parameter>(", ", signature.params()),
             type.TypeName(),
             type_params,
-            is_generic ? "" : "<Abi_Invoke>",
-            is_generic ? ", Abi_Invoke_Type" : "",
+            bind([&](writer& w)
+            {
+                if (is_generic || settings.netstandard_compat)
+                {
+                    w.write("var abiInvoke = Marshal.GetDelegateForFunctionPointer%(delegateToInvoke.Vftbl.Invoke%);",
+                        is_generic ? "" : "<Abi_Invoke>",
+                        is_generic ? ", Abi_Invoke_Type" : "");
+                }
+                else
+                {
+                    w.write("var abiInvoke = (delegate* stdcall<%, int>)(delegateToInvoke.Vftbl.Invoke);",
+                        bind<write_abi_parameter_types>(signature));
+                }
+            }),
             bind<write_abi_method_call>(signature, "abiInvoke", is_generic, false),
             // FromManaged
             type_name,
@@ -4449,6 +4577,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             // DisposeAbi
             type_name,
             // Do_Abi_Invoke
+            !is_generic && !settings.netstandard_compat ? "\n[UnmanagedCallersOnly]" : "",
             [&](writer& w) {
                 if (!is_generic)
                 {
