@@ -78,14 +78,9 @@ namespace WinRT
         private static T FindDelegate<T>(IntPtr thisPtr)
             where T : class, System.Delegate => FindObject<T>(thisPtr);
 
-        public static IUnknownVftbl IUnknownVftbl { get; private set; }
+        public static IUnknownVftbl IUnknownVftbl => DefaultComWrappers.IUnknownVftbl;
 
         public static IntPtr AllocateVtableMemory(Type vtableType, int size) => RuntimeHelpers.AllocateTypeAssociatedMemory(vtableType, size);
-
-        static partial void PlatformSpecificInitialize()
-        {
-            IUnknownVftbl = DefaultComWrappers.IUnknownVftbl;
-        }
 
         /// <summary>
         /// Initialize the global <see cref="System.Runtime.InteropServices.ComWrappers"/> instance to use for WinRT.

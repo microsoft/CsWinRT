@@ -134,7 +134,7 @@ namespace WinRT
 
     public class ObjectReference<T> : IObjectReference
     {
-        protected override IUnknownVftbl VftblIUnknownUnsafe => Unsafe.As<T, IUnknownVftbl>(ref Unsafe.AsRef(_vftbl));
+        protected override unsafe IUnknownVftbl VftblIUnknownUnsafe => **(IUnknownVftbl**)ThisPtr;
         private readonly T _vftbl;
         public T Vftbl
         {

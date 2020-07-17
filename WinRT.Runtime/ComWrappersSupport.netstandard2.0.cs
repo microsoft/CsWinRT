@@ -120,7 +120,7 @@ namespace WinRT
             where T : class =>
             (T)UnmanagedObject.FindObject<ComCallableWrapper>(thisPtr).ManagedObject;
 
-        public static unsafe IUnknownVftbl IUnknownVftbl { get; } = new IUnknownVftbl
+        public static unsafe IUnknownVftbl IUnknownVftbl => new IUnknownVftbl
         {
             QueryInterface = (delegate* stdcall<IntPtr, ref Guid, out IntPtr, int>)Marshal.GetFunctionPointerForDelegate(Abi_QueryInterface),
             AddRef = (delegate* stdcall<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_AddRef),
