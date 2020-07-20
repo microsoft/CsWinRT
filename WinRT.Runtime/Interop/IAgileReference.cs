@@ -34,40 +34,50 @@ namespace ABI.WinRT.Interop
     using WinRT.Interop;
 
     [Guid("C03F6A43-65A4-9818-987E-E0B810D2A6F2")]
-    internal class IAgileReference : global::WinRT.Interop.IAgileReference
+    internal unsafe class IAgileReference : global::WinRT.Interop.IAgileReference
     {
         [Guid("C03F6A43-65A4-9818-987E-E0B810D2A6F2")]
         public struct Vftbl
         {
-            public delegate int _Resolve(IntPtr thisPtr, ref Guid riid, out IntPtr objectReference);
-
             public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            public _Resolve Resolve;
+            private void* _Resolve;
+            public delegate* stdcall<IntPtr, ref Guid, out IntPtr, int> Resolve { get => (delegate* stdcall<IntPtr, ref Guid, out IntPtr, int>)_Resolve; set => _Resolve = value; }
 
             public static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
+#if NETSTANDARD2_0
+            public delegate int ResolveDelegate(IntPtr thisPtr, Guid* riid, IntPtr* objectReference);
+            private static readonly Delegate[] DelegateCache = new Delegate[1];
+#endif
             static Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-                    Resolve = Do_Abi_Resolve
+#if NETSTANDARD2_0
+                    _Resolve = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ResolveDelegate(Do_Abi_Resolve)).ToPointer(),
+#else
+                    _Resolve = (delegate*<IntPtr, Guid*, IntPtr*, int>)&Do_Abi_Resolve
+#endif
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
                 Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
             }
 
-            private static int Do_Abi_Resolve(IntPtr thisPtr, ref Guid riid, out IntPtr objectReference)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static int Do_Abi_Resolve(IntPtr thisPtr, Guid* riid, IntPtr* objectReference)
             {
                 IObjectReference _objectReference = default;
 
-                objectReference = default;
+                *objectReference = default;
 
                 try
                 {
-                    _objectReference = global::WinRT.ComWrappersSupport.FindObject<global::WinRT.Interop.IAgileReference>(thisPtr).Resolve(riid);
-                    objectReference = _objectReference?.GetRef() ?? IntPtr.Zero;
+                    _objectReference = global::WinRT.ComWrappersSupport.FindObject<global::WinRT.Interop.IAgileReference>(thisPtr).Resolve(*riid);
+                    *objectReference = _objectReference?.GetRef() ?? IntPtr.Zero;
                 }
                 catch (Exception __exception__)
                 {

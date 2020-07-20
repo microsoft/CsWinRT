@@ -25,16 +25,14 @@ namespace WinRT
             }
         }
 
-        protected IUnknownVftbl VftblIUnknown
+        protected  unsafe IUnknownVftbl VftblIUnknown
         {
             get
             {
                 ThrowIfDisposed();
-                return VftblIUnknownUnsafe;
+                return **(IUnknownVftbl**)ThisPtr;
             }
         }
-
-        protected virtual IUnknownVftbl VftblIUnknownUnsafe { get; }
 
         protected IObjectReference(IntPtr thisPtr)
         {
@@ -134,7 +132,6 @@ namespace WinRT
 
     public class ObjectReference<T> : IObjectReference
     {
-        protected override unsafe IUnknownVftbl VftblIUnknownUnsafe => **(IUnknownVftbl**)ThisPtr;
         private readonly T _vftbl;
         public T Vftbl
         {
@@ -174,7 +171,7 @@ namespace WinRT
                 return null;
             }
             var obj = new ObjectReference<T>(thisPtr, vftblT);
-            obj.VftblIUnknownUnsafe.AddRef(obj.ThisPtr);
+            obj.VftblIUnknown.AddRef(obj.ThisPtr);
             return obj;
         }
 
@@ -243,7 +240,6 @@ namespace WinRT
         public override unsafe int TryAs<U>(Guid iid, out ObjectReference<U> objRef)
         {
             objRef = null;
-            ThrowIfDisposed();
             int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
             if (hr >= 0)
             {

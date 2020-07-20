@@ -2962,7 +2962,6 @@ remove => _%.Unsubscribe(value);
     struct managed_marshaler
     {
         std::string param_name;
-        int param_index;
         param_category category;
         std::string param_type;
         std::string local_type;
@@ -2981,11 +2980,6 @@ remove => _%.Unsubscribe(value);
             return (category == param_category::fill_array);
         }
 
-        bool is_generic() const
-        {
-            return param_index > -1;
-        }
-
         bool is_array() const
         {
             return category >= param_category::pass_array;
@@ -2993,14 +2987,11 @@ remove => _%.Unsubscribe(value);
 
         std::string get_param_local(writer& w) const
         {
-            return is_generic() ?
-                w.write_temp("__params[%]", param_index) :
-                w.write_temp("__%", param_name);
+            return w.write_temp("__%", param_name);
         }
 
         void write_local(writer& w) const
         {
-            XLANG_ASSERT(!is_generic());
             if ((category == param_category::in) || (category == param_category::pass_array))
                 return;
             if (category == param_category::fill_array)
@@ -3055,20 +3046,18 @@ remove => _%.Unsubscribe(value);
         {
             if (is_out() || is_ref())
             {
-                is_generic() ?
-                    w.write("null") :
-                    w.write("% __%", is_out() ? "out" : "", param_name);
+                w.write("% __%", is_out() ? "out" : "", param_name);
             }
             else if (marshaler_type.empty())
             {
                 std::string_view format_string;
                 if (param_type == "bool")
                 {
-                    format_string = is_generic() ? "(byte)% != 0" : "% != 0";
+                    format_string = "% != 0";
                 } 
                 else if (param_type == "char")
                 {
-                    format_string = is_generic() ? "(char)(ushort)%" : "(char)%";
+                    format_string = "(char)%";
                 }
                 else
                 {
@@ -3115,7 +3104,6 @@ remove => _%.Unsubscribe(value);
                     w.write("(*__%Size, *%) = ", param_name, bind<write_escaped_identifier>(param_name)) :
                     w.write("*% = ", bind<write_escaped_identifier>(param_name));
             }
-            auto param_cast = is_generic() ? w.write_temp("(%)", param_type) : "";
             if (marshaler_type.empty())
             {
                 if (local_type == "IntPtr")
@@ -3136,7 +3124,7 @@ remove => _%.Unsubscribe(value);
                     }
                     else
                     {
-                        w.write("%%;", param_cast, param_local);
+                        w.write("%;", param_local);
                     }
                 }
             }
@@ -3256,8 +3244,7 @@ remove => _%.Unsubscribe(value);
         for (auto&& param : signature.params())
         {
             managed_marshaler m{
-                std::string(param.first.Name()),
-                is_generic ? (int)marshalers.size() : -1
+                std::string(param.first.Name())
             };
             m.category = get_param_category(param);
             set_marshaler(w, get_type_semantics(param.second->Type()), m);
@@ -3268,7 +3255,6 @@ remove => _%.Unsubscribe(value);
         {
             managed_marshaler m{
                 std::string(signature.return_param_name()),
-                -1,
                 ret.Type().is_szarray() ? param_category::receive_array : param_category::out
             };
             set_marshaler(w, get_type_semantics(ret.Type()), m);
