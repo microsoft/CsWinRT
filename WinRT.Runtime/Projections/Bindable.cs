@@ -487,7 +487,7 @@ namespace ABI.System.Collections
 #endif
             private static unsafe int Do_Abi_First_0(IntPtr thisPtr, IntPtr* result)
             {
-                result = default;
+                *result = default;
                 try
                 {
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.IEnumerable>(thisPtr);
