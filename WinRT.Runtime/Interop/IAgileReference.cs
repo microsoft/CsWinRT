@@ -155,19 +155,19 @@ namespace ABI.WinRT.Interop
     }
 
     [Guid("00000146-0000-0000-C000-000000000046")]
-    internal class IGlobalInterfaceTable : global::WinRT.Interop.IGlobalInterfaceTable
+    internal unsafe class IGlobalInterfaceTable : global::WinRT.Interop.IGlobalInterfaceTable
     {
         [Guid("00000146-0000-0000-C000-000000000046")]
+        [StructLayout(LayoutKind.Sequential)]
         public struct Vftbl
         {
-            public delegate int _RegisterInterfaceInGlobal(IntPtr thisPtr, IntPtr objRef, ref Guid riid, out IntPtr cookie);
-            public delegate int _RevokeInterfaceFromGlobal(IntPtr thisPtr, IntPtr cookie);
-            public delegate int _GetInterfaceFromGlobal(IntPtr thisPtr, IntPtr cookie, ref Guid riid, out IntPtr objectReference);
-
             public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            public _RegisterInterfaceInGlobal RegisterInterfaceInGlobal;
-            public _RevokeInterfaceFromGlobal RevokeInterfaceFromGlobal;
-            public _GetInterfaceFromGlobal GetInterfaceFromGlobal;
+            private void* _RegisterInterfaceInGlobal;
+            public delegate* stdcall<IntPtr, IntPtr, ref Guid, out IntPtr, int> RegisterInterfaceInGlobal => (delegate* stdcall<IntPtr, IntPtr, ref Guid, out IntPtr, int>)_RegisterInterfaceInGlobal;
+            private void* _RevokeInterfaceFromGlobal;
+            public delegate* stdcall<IntPtr, IntPtr, int> RevokeInterfaceFromGlobal => (delegate* stdcall<IntPtr, IntPtr, int>)_RevokeInterfaceFromGlobal;
+            private void* _GetInterfaceFromGlobal;
+            public delegate* stdcall<IntPtr, IntPtr, ref Guid, out IntPtr, int> GetInterfaceFromGlobal => (delegate* stdcall<IntPtr, IntPtr, ref Guid, out IntPtr, int>)_GetInterfaceFromGlobal;
         }
 
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);

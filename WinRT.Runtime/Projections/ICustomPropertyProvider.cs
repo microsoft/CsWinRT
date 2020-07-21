@@ -26,52 +26,69 @@ namespace Microsoft.UI.Xaml.Data
 namespace ABI.Microsoft.UI.Xaml.Data
 {
     [Guid("30DA92C0-23E8-42A0-AE7C-734A0E5D2782")]
-    internal class ICustomProperty
+    internal unsafe class ICustomProperty
     {
         [Guid("30DA92C0-23E8-42A0-AE7C-734A0E5D2782")]
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            public ICustomProperty_Delegates.get_Type_0 get_Type_0;
-            public _get_PropertyAsString get_Name_1;
-            public ICustomProperty_Delegates.GetValue_2 GetValue_2;
-            public ICustomProperty_Delegates.SetValue_3 SetValue_3;
-            public ICustomProperty_Delegates.GetIndexedValue_4 GetIndexedValue_4;
-            public ICustomProperty_Delegates.SetIndexedValue_5 SetIndexedValue_5;
-            public _get_PropertyAsBoolean get_CanWrite_6;
-            public _get_PropertyAsBoolean get_CanRead_7;
+            public void* get_Type_0;
+            public void* get_Name_1;
+            public void* GetValue_2;
+            public void* SetValue_3;
+            public void* GetIndexedValue_4;
+            public void* SetIndexedValue_5;
+            public void* get_CanWrite_6;
+            public void* get_CanRead_7;
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+#if NETSTANDARD2_0
+            private static readonly Delegate[] DelegateCache = new Delegate[8];
+#endif
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    get_Type_0 = Do_Abi_get_Type_0,
-                    get_Name_1 = Do_Abi_get_Name_1,
-                    GetValue_2 = Do_Abi_GetValue_2,
-                    SetValue_3 = Do_Abi_SetValue_3,
-                    GetIndexedValue_4 = Do_Abi_GetIndexedValue_4,
-                    SetIndexedValue_5 = Do_Abi_SetIndexedValue_5,
-                    get_CanWrite_6 = Do_Abi_get_CanWrite_6,
-                    get_CanRead_7 = Do_Abi_get_CanRead_7
+#if NETSTANDARD2_0
+                    get_Type_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ICustomProperty_Delegates.get_Type_0(Do_Abi_get_Type_0)).ToPointer(),
+                    get_Name_1 = Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new ICustomProperty_Delegates.get_Name_1(Do_Abi_get_Name_1)).ToPointer(),
+                    GetValue_2 = Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new ICustomProperty_Delegates.GetValue_2(Do_Abi_GetValue_2)).ToPointer(),
+                    SetValue_3 = Marshal.GetFunctionPointerForDelegate(DelegateCache[3] = new ICustomProperty_Delegates.SetValue_3(Do_Abi_SetValue_3)).ToPointer(),
+                    GetIndexedValue_4 = Marshal.GetFunctionPointerForDelegate(DelegateCache[4] = new ICustomProperty_Delegates.GetIndexedValue_4(Do_Abi_GetIndexedValue_4)).ToPointer(),
+                    SetIndexedValue_5 = Marshal.GetFunctionPointerForDelegate(DelegateCache[5] = new ICustomProperty_Delegates.SetIndexedValue_5(Do_Abi_SetIndexedValue_5)).ToPointer(),
+                    get_CanWrite_6 = Marshal.GetFunctionPointerForDelegate(DelegateCache[6] = new ICustomProperty_Delegates.get_CanWrite_6(Do_Abi_get_CanWrite_6)).ToPointer(),
+                    get_CanRead_7 = Marshal.GetFunctionPointerForDelegate(DelegateCache[7] = new ICustomProperty_Delegates.get_CanRead_7(Do_Abi_get_CanRead_7)).ToPointer(),
+#else
+                    get_Type_0 = (delegate*<IntPtr, ABI.System.Type*, int>)&Do_Abi_get_Type_0,
+                    get_Name_1 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_get_Name_1,
+                    GetValue_2 = (delegate*<IntPtr, IntPtr, IntPtr*, int>)&Do_Abi_GetValue_2,
+                    SetValue_3 = (delegate*<IntPtr, IntPtr, IntPtr, int>)&Do_Abi_SetValue_3,
+                    GetIndexedValue_4 = (delegate*<IntPtr, IntPtr, IntPtr, IntPtr*, int>)&Do_Abi_GetIndexedValue_4,
+                    SetIndexedValue_5 = (delegate*<IntPtr, IntPtr, IntPtr, IntPtr, int>)&Do_Abi_SetIndexedValue_5,
+                    get_CanWrite_6 = (delegate*<IntPtr, byte*, int>)&Do_Abi_get_CanWrite_6,
+                    get_CanRead_7 = (delegate*<IntPtr, byte*, int>)&Do_Abi_get_CanRead_7
+#endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 8);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-            private static unsafe int Do_Abi_GetValue_2(IntPtr thisPtr, IntPtr target, out IntPtr result)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_GetValue_2(IntPtr thisPtr, IntPtr target, IntPtr* result)
             {
                 object __result = default;
 
-                result = default;
+                *result = default;
 
                 try
                 {
                     __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).GetValue(MarshalInspectable.FromAbi(target)); 
-                    result = MarshalInspectable.FromManaged(__result);
+                    *result = MarshalInspectable.FromManaged(__result);
 
                 }
                 catch (Exception __exception__)
@@ -81,6 +98,9 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 }
                 return 0;
             }
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static unsafe int Do_Abi_SetValue_3(IntPtr thisPtr, IntPtr target, IntPtr value)
             {
 
@@ -96,16 +116,17 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_GetIndexedValue_4(IntPtr thisPtr, IntPtr target, IntPtr index, out IntPtr result)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_GetIndexedValue_4(IntPtr thisPtr, IntPtr target, IntPtr index, IntPtr* result)
             {
                 object __result = default;
-
-                result = default;
 
                 try
                 {
                     __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).GetIndexedValue(MarshalInspectable.FromAbi(target), MarshalInspectable.FromAbi(index)); 
-                    result = MarshalInspectable.FromManaged(__result);
+                    *result = MarshalInspectable.FromManaged(__result);
 
                 }
                 catch (Exception __exception__)
@@ -115,6 +136,9 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 }
                 return 0;
             }
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static unsafe int Do_Abi_SetIndexedValue_5(IntPtr thisPtr, IntPtr target, IntPtr value, IntPtr index)
             {
 
@@ -130,15 +154,16 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_get_CanRead_7(IntPtr thisPtr, out byte value)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_get_CanRead_7(IntPtr thisPtr, byte* value)
             {
                 bool __value = default;
 
-                value = default;
-
                 try
                 {
-                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).CanRead; value = (byte)(__value ? 1 : 0);
+                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).CanRead; *value = (byte)(__value ? 1 : 0);
 
                 }
                 catch (Exception __exception__)
@@ -148,15 +173,16 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_get_CanWrite_6(IntPtr thisPtr, out byte value)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_get_CanWrite_6(IntPtr thisPtr, byte* value)
             {
                 bool __value = default;
 
-                value = default;
-
                 try
                 {
-                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).CanWrite; value = (byte)(__value ? 1 : 0);
+                    __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).CanWrite; *value = (byte)(__value ? 1 : 0);
 
                 }
                 catch (Exception __exception__)
@@ -166,16 +192,17 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_get_Name_1(IntPtr thisPtr, out IntPtr value)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_get_Name_1(IntPtr thisPtr, IntPtr* value)
             {
                 string __value = default;
-
-                value = default;
 
                 try
                 {
                     __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).Name; 
-                    value = MarshalString.FromManaged(__value);
+                    *value = MarshalString.FromManaged(__value);
 
                 }
                 catch (Exception __exception__)
@@ -185,16 +212,17 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_get_Type_0(IntPtr thisPtr, out global::ABI.System.Type value)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_get_Type_0(IntPtr thisPtr, global::ABI.System.Type* value)
             {
                 global::System.Type __value = default;
-
-                value = default;
 
                 try
                 {
                     __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).Type; 
-                    value = global::ABI.System.Type.FromManaged(__value);
+                    *value = global::ABI.System.Type.FromManaged(__value);
                 }
                 catch (Exception __exception__)
                 {
@@ -207,11 +235,14 @@ namespace ABI.Microsoft.UI.Xaml.Data
     }
     internal static class ICustomProperty_Delegates
     {
-        public unsafe delegate int get_Type_0(IntPtr thisPtr, out global::ABI.System.Type value);
-        public unsafe delegate int GetValue_2(IntPtr thisPtr, IntPtr target, out IntPtr result);
+        public unsafe delegate int get_Type_0(IntPtr thisPtr, global::ABI.System.Type* value);
+        public unsafe delegate int get_Name_1(IntPtr thisPtr, IntPtr* value);
+        public unsafe delegate int GetValue_2(IntPtr thisPtr, IntPtr target, IntPtr* result);
         public unsafe delegate int SetValue_3(IntPtr thisPtr, IntPtr target, IntPtr value);
-        public unsafe delegate int GetIndexedValue_4(IntPtr thisPtr, IntPtr target, IntPtr index, out IntPtr result);
+        public unsafe delegate int GetIndexedValue_4(IntPtr thisPtr, IntPtr target, IntPtr index, IntPtr* result);
         public unsafe delegate int SetIndexedValue_5(IntPtr thisPtr, IntPtr target, IntPtr value, IntPtr index);
+        public unsafe delegate int get_CanWrite_6(IntPtr thisPtr, byte* value);
+        public unsafe delegate int get_CanRead_7(IntPtr thisPtr, byte* value);
     }
 
     internal class ManagedCustomProperty : global::Microsoft.UI.Xaml.Data.ICustomProperty
@@ -254,37 +285,47 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
     [Guid("7C925755-3E48-42B4-8677-76372267033F")]
     [StructLayout(LayoutKind.Sequential)]
-    internal struct ManagedCustomPropertyProviderVftbl
+    internal unsafe struct ManagedCustomPropertyProviderVftbl
     {
         internal IInspectable.Vftbl IInspectableVftbl;
-        internal ICustomPropertyProvider_Delegates.GetCustomProperty_0 GetCustomProperty_0;
-        internal ICustomPropertyProvider_Delegates.GetIndexedProperty_1 GetIndexedProperty_1;
-        internal ICustomPropertyProvider_Delegates.GetStringRepresentation_2 GetStringRepresentation_2;
-        internal ICustomPropertyProvider_Delegates.get_Type_3 get_Type_3;
+        private void* GetCustomProperty_0;
+        private void* GetIndexedProperty_1;
+        private void* GetStringRepresentation_2;
+        private void* get_Type_3;
 
         private static readonly ManagedCustomPropertyProviderVftbl AbiToProjectionVftable;
         public static readonly IntPtr AbiToProjectionVftablePtr;
+#if NETSTANDARD2_0
+        private static readonly Delegate[] DelegateCache = new Delegate[4];
+#endif
         static unsafe ManagedCustomPropertyProviderVftbl()
         {
             AbiToProjectionVftable = new ManagedCustomPropertyProviderVftbl
             {
                 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                GetCustomProperty_0 = Do_Abi_GetCustomProperty_0,
-                GetIndexedProperty_1 = Do_Abi_GetIndexedProperty_1,
-                GetStringRepresentation_2 = Do_Abi_GetStringRepresentation_2,
-                get_Type_3 = Do_Abi_get_Type_3
+#if NETSTANDARD2_0
+                GetCustomProperty_0 = Marshal.GetFunctionPointerForDelegate(new ICustomPropertyProvider_Delegates.GetCustomProperty_0(Do_Abi_GetCustomProperty_0)).ToPointer(),
+                GetIndexedProperty_1 = Marshal.GetFunctionPointerForDelegate(new ICustomPropertyProvider_Delegates.GetIndexedProperty_1(Do_Abi_GetIndexedProperty_1)).ToPointer(),
+                GetStringRepresentation_2 = Marshal.GetFunctionPointerForDelegate(new ICustomPropertyProvider_Delegates.GetStringRepresentation_2(Do_Abi_GetStringRepresentation_2)).ToPointer(),
+                get_Type_3 = Marshal.GetFunctionPointerForDelegate(new ICustomPropertyProvider_Delegates.get_Type_3(Do_Abi_get_Type_3)).ToPointer(),
+#else
+                GetCustomProperty_0 = (delegate*<IntPtr, IntPtr, IntPtr*, int>)&Do_Abi_GetCustomProperty_0,
+                GetIndexedProperty_1 = (delegate*<IntPtr, IntPtr, global::ABI.System.Type, IntPtr*, int>)&Do_Abi_GetIndexedProperty_1,
+                GetStringRepresentation_2 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetStringRepresentation_2,
+                get_Type_3 = (delegate*<IntPtr, global::ABI.System.Type*, int>)&Do_Abi_get_Type_3
+#endif
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedCustomPropertyProviderVftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
             Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
             AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         }
 
-        private static unsafe int Do_Abi_GetCustomProperty_0(IntPtr thisPtr, IntPtr name, out IntPtr result)
+#if !NETSTANDARD2_0
+        [UnmanagedCallersOnly]
+#endif
+        private static unsafe int Do_Abi_GetCustomProperty_0(IntPtr thisPtr, IntPtr name, IntPtr* result)
         {
             global::Microsoft.UI.Xaml.Data.ICustomProperty __result = default;
-
-            result = default;
-
             try
             {
                 string _name = MarshalString.FromAbi(name);
@@ -298,7 +339,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     __result = new ManagedCustomProperty(propertyInfo);
                 }
                 
-                result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
 
             }
             catch (Exception __exception__)
@@ -308,12 +349,12 @@ namespace ABI.Microsoft.UI.Xaml.Data
             }
             return 0;
         }
-        private static unsafe int Do_Abi_GetIndexedProperty_1(IntPtr thisPtr, IntPtr name, global::ABI.System.Type type, out IntPtr result)
+#if !NETSTANDARD2_0
+        [UnmanagedCallersOnly]
+#endif
+        private static unsafe int Do_Abi_GetIndexedProperty_1(IntPtr thisPtr, IntPtr name, global::ABI.System.Type type, IntPtr* result)
         {
             global::Microsoft.UI.Xaml.Data.ICustomProperty __result = default;
-
-            result = default;
-
             try
             {
                 string _name = MarshalString.FromAbi(name);
@@ -332,7 +373,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     __result = new ManagedCustomProperty(propertyInfo);
                 }
 
-                result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
+                *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
             }
             catch (Exception __exception__)
             {
@@ -341,16 +382,16 @@ namespace ABI.Microsoft.UI.Xaml.Data
             }
             return 0;
         }
-        private static unsafe int Do_Abi_GetStringRepresentation_2(IntPtr thisPtr, out IntPtr result)
+#if !NETSTANDARD2_0
+        [UnmanagedCallersOnly]
+#endif
+        private static unsafe int Do_Abi_GetStringRepresentation_2(IntPtr thisPtr, IntPtr* result)
         {
             string __result = default;
-
-            result = default;
-
             try
             {
                 __result = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr).ToString();
-                result = MarshalString.FromManaged(__result);
+                *result = MarshalString.FromManaged(__result);
             }
             catch (Exception __exception__)
             {
@@ -359,16 +400,16 @@ namespace ABI.Microsoft.UI.Xaml.Data
             }
             return 0;
         }
-        private static unsafe int Do_Abi_get_Type_3(IntPtr thisPtr, out global::ABI.System.Type value)
+#if !NETSTANDARD2_0
+        [UnmanagedCallersOnly]
+#endif
+        private static unsafe int Do_Abi_get_Type_3(IntPtr thisPtr, global::ABI.System.Type* value)
         {
             global::System.Type __value = default;
-
-            value = default;
-
             try
             {
                 __value = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr).GetType();
-                value = global::ABI.System.Type.FromManaged(__value);
+                *value = global::ABI.System.Type.FromManaged(__value);
 
             }
             catch (Exception __exception__)
@@ -382,10 +423,10 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
     internal static class ICustomPropertyProvider_Delegates
     {
-        public unsafe delegate int GetCustomProperty_0(IntPtr thisPtr, IntPtr name, out IntPtr result);
-        public unsafe delegate int GetIndexedProperty_1(IntPtr thisPtr, IntPtr name, global::ABI.System.Type type, out IntPtr result);
-        public unsafe delegate int GetStringRepresentation_2(IntPtr thisPtr, out IntPtr result);
-        public unsafe delegate int get_Type_3(IntPtr thisPtr, out global::ABI.System.Type value);
+        public unsafe delegate int GetCustomProperty_0(IntPtr thisPtr, IntPtr name, IntPtr* result);
+        public unsafe delegate int GetIndexedProperty_1(IntPtr thisPtr, IntPtr name, global::ABI.System.Type type, IntPtr* result);
+        public unsafe delegate int GetStringRepresentation_2(IntPtr thisPtr, IntPtr* result);
+        public unsafe delegate int get_Type_3(IntPtr thisPtr, global::ABI.System.Type* value);
     }
 
 }

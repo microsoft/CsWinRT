@@ -8,29 +8,41 @@ namespace ABI.System
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E")]
-    public class IDisposable : global::System.IDisposable
+    public unsafe class IDisposable : global::System.IDisposable
     {
         [Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E")]
         public struct Vftbl
         {
-            public unsafe delegate int _Close_0(IntPtr thisPtr);
+            private delegate int CloseDelegate(IntPtr thisPtr);
             internal IInspectable.Vftbl IInspectableVftbl;
-            public _Close_0 Close_0;
+            private void* _Close_0;
+            public delegate* stdcall<IntPtr, int> Close_0 { get => (delegate* stdcall<IntPtr, int>)_Close_0; set => _Close_0 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+
+#if NETSTANDARD2_0
+            private static CloseDelegate closeDelegate;
+#endif
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    Close_0 = Do_Abi_Close_0
+#if NETSTANDARD2_0
+                    _Close_0 = Marshal.GetFunctionPointerForDelegate(closeDelegate = Do_Abi_Close_0).ToPointer()
+#else
+                    _Close_0 = (delegate*<IntPtr, int>)&Do_Abi_Close_0
+#endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static unsafe int Do_Abi_Close_0(IntPtr thisPtr)
             {
 

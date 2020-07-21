@@ -23,22 +23,22 @@ namespace WinRT
         {
             public IUnknownVftbl IUnknownVftbl;
             private void* _GetIids;
-            public delegate* stdcall<IntPtr, out int, out IntPtr, int> GetIids { get => (delegate* stdcall<IntPtr, out int, out IntPtr, int>)_GetIids; set => _GetIids = (void*)value; }
+            public delegate* stdcall<IntPtr, int*, IntPtr*, int> GetIids { get => (delegate* stdcall<IntPtr, int*, IntPtr*, int>)_GetIids; set => _GetIids = (void*)value; }
             
             private void* _GetRuntimeClassName;
-            public delegate* stdcall<IntPtr, out IntPtr, int> GetRuntimeClassName { get => (delegate* stdcall<IntPtr, out IntPtr, int>)_GetRuntimeClassName; set => _GetRuntimeClassName = (void*)value; }
+            public delegate* stdcall<IntPtr, IntPtr*, int> GetRuntimeClassName { get => (delegate* stdcall<IntPtr, IntPtr*, int>)_GetRuntimeClassName; set => _GetRuntimeClassName = (void*)value; }
             
             private void* _GetTrustLevel;
-            public delegate* stdcall<IntPtr, out TrustLevel, int> GetTrustLevel { get => (delegate* stdcall<IntPtr, out TrustLevel, int>)_GetTrustLevel; set => _GetTrustLevel = (void*)value; }
+            public delegate* stdcall<IntPtr, TrustLevel*, int> GetTrustLevel { get => (delegate* stdcall<IntPtr, TrustLevel*, int>)_GetTrustLevel; set => _GetTrustLevel = (void*)value; }
 
             public static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
 #if NETSTANDARD2_0
             private static readonly Delegate[] DelegateCache = new Delegate[3];
-            private delegate int _GetIidsDelegate(IntPtr pThis, out int iidCount, out IntPtr iids);
-            private delegate int _GetRuntimeClassNameDelegate(IntPtr pThis, out IntPtr className);
-            private delegate int _GetTrustLevelDelegate(IntPtr pThis, out TrustLevel trustLevel);
+            private delegate int _GetIidsDelegate(IntPtr pThis, int* iidCount, IntPtr* iids);
+            private delegate int _GetRuntimeClassNameDelegate(IntPtr pThis, IntPtr* className);
+            private delegate int _GetTrustLevelDelegate(IntPtr pThis, TrustLevel* trustLevel);
 #endif
 
             static Vftbl()
@@ -51,9 +51,9 @@ namespace WinRT
                     _GetRuntimeClassName = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new _GetRuntimeClassNameDelegate(Do_Abi_GetRuntimeClassName)),
                     _GetTrustLevel = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new _GetTrustLevelDelegate(Do_Abi_GetTrustLevel))
 #else
-                    _GetIids = (void*)(delegate*<IntPtr, out int, out IntPtr, int>)&Do_Abi_GetIids,
-                    _GetRuntimeClassName = (void*)(delegate*<IntPtr, out IntPtr, int>)&Do_Abi_GetRuntimeClassName,
-                    _GetTrustLevel = (void*)(delegate*<IntPtr, out TrustLevel, int>)&Do_Abi_GetTrustLevel
+                    _GetIids = (void*)(delegate*<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetIids,
+                    _GetRuntimeClassName = (void*)(delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetRuntimeClassName,
+                    _GetTrustLevel = (void*)(delegate*<IntPtr, TrustLevel*, int>)&Do_Abi_GetTrustLevel
 #endif
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
@@ -63,13 +63,13 @@ namespace WinRT
 #if !NETSTANDARD2_0
             [UnmanagedCallersOnly]
 #endif
-            private static int Do_Abi_GetIids(IntPtr pThis, out int iidCount, out IntPtr iids)
+            private static int Do_Abi_GetIids(IntPtr pThis, int* iidCount, IntPtr* iids)
             {
-                iidCount = 0;
-                iids = IntPtr.Zero;
+                *iidCount = 0;
+                *iids = IntPtr.Zero;
                 try
                 {
-                    (iidCount, iids) = MarshalBlittable<Guid>.FromManagedArray(ComWrappersSupport.GetInspectableInfo(pThis).IIDs);
+                    (*iidCount, *iids) = MarshalBlittable<Guid>.FromManagedArray(ComWrappersSupport.GetInspectableInfo(pThis).IIDs);
                 }
                 catch (Exception ex)
                 {
@@ -81,13 +81,13 @@ namespace WinRT
 #if !NETSTANDARD2_0
             [UnmanagedCallersOnly]
 #endif
-            private unsafe static int Do_Abi_GetRuntimeClassName(IntPtr pThis, out IntPtr className)
+            private unsafe static int Do_Abi_GetRuntimeClassName(IntPtr pThis, IntPtr* className)
             {
-                className = default;
+                *className = default;
                 try
                 {
                     string runtimeClassName = ComWrappersSupport.GetInspectableInfo(pThis).RuntimeClassName;
-                    className = MarshalString.FromManaged(runtimeClassName);
+                    *className = MarshalString.FromManaged(runtimeClassName);
                 }
                 catch (Exception ex)
                 {
@@ -99,9 +99,9 @@ namespace WinRT
 #if !NETSTANDARD2_0
             [UnmanagedCallersOnly]
 #endif
-            private static int Do_Abi_GetTrustLevel(IntPtr pThis, out TrustLevel trustLevel)
+            private static int Do_Abi_GetTrustLevel(IntPtr pThis, TrustLevel* trustLevel)
             {
-                trustLevel = TrustLevel.BaseTrust;
+                *trustLevel = TrustLevel.BaseTrust;
                 return 0;
             }
         }
@@ -126,7 +126,7 @@ namespace WinRT
             IntPtr __retval = default;
             try
             {
-                var hr = _obj.Vftbl.GetRuntimeClassName(ThisPtr, out __retval);
+                var hr = _obj.Vftbl.GetRuntimeClassName(ThisPtr, &__retval);
                 if (hr != 0)
                 {
                     if (noThrow)
