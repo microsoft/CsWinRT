@@ -41,18 +41,9 @@ namespace WinUIDesktopSample
             myWindow = window;
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
-            const string _root = "https://api.github.com";
-            const string _repoName = "WindowsCommunityToolkit";
-            const string _repoOwner = "Microsoft";
-            using (var client = new HttpClient())
-            {
-                client.DefaultRequestHeaders.TryAppendWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko");
-
-                var uri = $"{_root}/repos/{_repoOwner}/{_repoName}/releases";
-                var result = await client.GetStringAsync(new Uri(uri));
-            }
+            myWindow.Content = new MainPage();
         }
     }
 
