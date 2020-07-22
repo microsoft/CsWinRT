@@ -40,6 +40,11 @@ namespace ABI.Windows.Storage.Streams
                 Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
             }
 
+            public Vftbl(IntPtr ptr)
+            {
+                this = Marshal.PtrToStructure<Vftbl>(ptr);
+            }
+
             private static int Do_Abi_get_Buffer_0(IntPtr thisPtr, out IntPtr buffer)
             {
                 buffer = default;
