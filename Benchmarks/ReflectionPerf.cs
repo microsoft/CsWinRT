@@ -15,37 +15,37 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public object ExecuteComWrappersCreateKeyValuePairsFactoryWithNewObject()
+        public object ExecuteMarshalingForNewKeyValuePair()
         {
             return instance.NewTypeErasedKeyValuePairObject;
         }
 
         [Benchmark]
-        public object ExecuteComWrappersCreateArrayFactoryWithNewObject()
+        public object ExecuteMarshalingForNewArray()
         {
             return instance.NewTypeErasedArrayObject;
         }
 
         [Benchmark]
-        public object ExecuteComWrappersCreateNullableFactoryWithNewObject()
+        public object ExecuteMarshalingForNewNullable()
         {
             return instance.NewTypeErasedNullableObject;
         }
 
         [Benchmark]
-        public object ExecuteComWrappersCreateKeyValuePairsFactoryWithExistingObject()
+        public object ExecuteMarshalingForExistingKeyvaluePair()
         {
             return instance.ExistingTypeErasedKeyValuePairObject;
         }
 
         [Benchmark]
-        public object ExecuteComWrappersCreateArrayFactoryWithExistingObject()
+        public object ExecuteMarshalingForExistingArray()
         {
             return instance.ExistingTypeErasedArrayObject;
         }
 
         [Benchmark]
-        public object ExecuteComWrappersCreateNullableFactoryWithExistingObject()
+        public object ExecuteMarshalingForExistingNullable()
         {
             return instance.ExistingTypeErasedNullableObject;
         }
