@@ -142,10 +142,10 @@ namespace WinRT
             if (_moduleHandle == IntPtr.Zero)
             {
                 try 
-	            {	        
+                {	        
                     // Allow runtime to find module in RID-specific relative subfolder
                     _moduleHandle = NativeLibrary.Load(fileName, Assembly.GetExecutingAssembly(), null);
-	            }
+                }
                 catch (Exception) { }
             }
 #endif
@@ -269,7 +269,8 @@ namespace WinRT
 
         public unsafe ObjectReference<I> _ActivateInstance<I>()
         {
-            Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, out IntPtr instancePtr));
+            IntPtr instancePtr;
+            Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, &instancePtr));
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface(instancePtr).As<I>();

@@ -20,7 +20,8 @@ namespace WinRT.Interop
     internal unsafe struct IActivationFactoryVftbl
     {
         public IInspectable.Vftbl IInspectableVftbl;
-        public delegate* stdcall<IntPtr, out IntPtr, int> ActivateInstance;
+        private void* _ActivateInstance;
+        public delegate* stdcall<IntPtr, IntPtr*, int> ActivateInstance => (delegate* stdcall<IntPtr, IntPtr*, int>)_ActivateInstance;
     }
 
     // IDelegate
