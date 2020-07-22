@@ -51,13 +51,13 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public object ExecuteCachedReflectionUsingStringMarshaling()
+        public object ExecuteMarshalingForString()
         {
             return instance.DefaultStringProperty;
         }
 
         [Benchmark]
-        public object ExecuteCachedReflectionUsingCustomObjectInterfaceMarshaling()
+        public object ExecuteMarshalingForCustomObject()
         {
             return instance.NewWrappedClassObject;
         }
