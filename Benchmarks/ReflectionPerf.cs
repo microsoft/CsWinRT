@@ -15,21 +15,51 @@ namespace Benchmarks
         }
 
         [Benchmark]
-        public void ExecuteComWrappersCreateKeyValuePairsFactory()
+        public object ExecuteComWrappersCreateKeyValuePairsFactoryWithNewObject()
         {
-            var value = instance.DefaultKeyValuePairProperty;
+            return instance.NewTypeErasedKeyValuePairObject;
         }
 
         [Benchmark]
-        public void ExecuteComWrappersCreateArrayFactory()
+        public object ExecuteComWrappersCreateArrayFactoryWithNewObject()
         {
-            var value = instance.DefaultArrayProperty;
+            return instance.NewTypeErasedArrayObject;
         }
 
         [Benchmark]
-        public void ExecuteComWrappersCreateNullableFactory()
+        public object ExecuteComWrappersCreateNullableFactoryWithNewObject()
         {
-            var value = instance.DefaultNullableProperty;
+            return instance.NewTypeErasedNullableObject;
+        }
+
+        [Benchmark]
+        public object ExecuteComWrappersCreateKeyValuePairsFactoryWithExistingObject()
+        {
+            return instance.ExistingTypeErasedKeyValuePairObject;
+        }
+
+        [Benchmark]
+        public object ExecuteComWrappersCreateArrayFactoryWithExistingObject()
+        {
+            return instance.ExistingTypeErasedArrayObject;
+        }
+
+        [Benchmark]
+        public object ExecuteComWrappersCreateNullableFactoryWithExistingObject()
+        {
+            return instance.ExistingTypeErasedNullableObject;
+        }
+
+        [Benchmark]
+        public object ExecuteCachedReflectionUsingStringMarshaling()
+        {
+            return instance.DefaultStringProperty;
+        }
+
+        [Benchmark]
+        public object ExecuteCachedReflectionUsingCustomObjectInterfaceMarshaling()
+        {
+            return instance.NewWrappedClassObject;
         }
     }
 }
