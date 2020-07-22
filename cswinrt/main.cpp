@@ -31,7 +31,7 @@ namespace cswinrt
         { "output", 0, 1, "<path>", "Location of generated projection" },
         { "include", 0, option::no_max, "<prefix>", "One or more prefixes to include in projection" },
         { "exclude", 0, option::no_max, "<prefix>", "One or more prefixes to exclude from projection" },
-        { "target", 0, 1, "<tfm>", "Target TFM for projection. Leave empty for code compatible with newest supported TFM. Currently supported: netstandard2.0, net5.0." },
+        { "target", 0, 1, "<net5.0 | netstandard2.0>", "Target TFM for projection. Leave empty for code compatible with newest supported TFM (net5.0)." },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
