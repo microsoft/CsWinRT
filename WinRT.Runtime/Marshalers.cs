@@ -685,6 +685,20 @@ namespace WinRT
             return array;
         }
 
+        public static unsafe void CopyAbiArray(T[] array, object box, Func<IntPtr, T> fromAbi)
+        {
+            if (box is null)
+            {
+                return;
+            }
+            var abi = ((int length, IntPtr data))box;
+            var data = (IntPtr*)abi.data.ToPointer();
+            for (int i = 0; i < abi.length; i++)
+            {
+                array[i] = fromAbi(data[i]);
+            }
+        }
+
         public static unsafe (int length, IntPtr data) FromManagedArray(T[] array, Func<T, IntPtr> fromManaged)
         {
             if (array is null)
@@ -866,6 +880,8 @@ namespace WinRT
         public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<T>.GetAbiArray(box);
 
         public static unsafe T[] FromAbiArray(object box) => MarshalInterfaceHelper<T>.FromAbiArray(box, FromAbi);
+
+        public static unsafe void CopyAbiArray(T[] array, object box) => MarshalInterfaceHelper<T>.CopyAbiArray(array, box, FromAbi);
 
         public static unsafe (int length, IntPtr data) FromManagedArray(T[] array) => MarshalInterfaceHelper<T>.FromManagedArray(array, (o) => FromManaged(o));
 
