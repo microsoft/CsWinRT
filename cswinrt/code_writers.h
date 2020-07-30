@@ -3718,7 +3718,9 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
             },
             bind([&](writer& w)
             {
-                w.write(R"(
+                if (is_generic)
+                {
+                    w.write(R"(
 private static readonly Vftbl AbiToProjectionVftable;
 public static readonly IntPtr AbiToProjectionVftablePtr;
 %
@@ -3734,31 +3736,58 @@ var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl)
 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
 }
 )",
-                    bind([&](writer& w)
-                        {   
-                            if (settings.netstandard_compat)
+                        bind([&](writer& w)
+                            {   
+                                if (settings.netstandard_compat)
+                                {
+                                    w.write("private static Delegate[] DelegateCache = new Delegate[%];", std::to_string(distance(methods)));
+                                }
+                            }),
+                        bind_list(",\n", method_create_delegates_to_projection),
+                        std::to_string(distance(methods)),
+                        bind([&](writer& w)
                             {
-                                w.write("private static Delegate[] DelegateCache = new Delegate[%];", std::to_string(distance(methods)));
-                            }
-                        }),
-                    bind_list(",\n", method_create_delegates_to_projection),
-                    std::to_string(distance(methods)),
-                    bind([&](writer& w)
-                        {
-                            if (!is_generic)
-                            {
-                                w.write("Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);");
-                            }
-                            else
-                            {
-                                w.write("Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);\n");
-                                w.write("%", bind_each(method_marshals_to_projection));
-                            }
-                        }));
-            }),
-            bind_each<write_method_abi_invoke>(methods),
-            bind_each<write_property_abi_invoke>(type.PropertyList()),
-            bind_each<write_event_abi_invoke>(type.EventList())
+                                if (!is_generic)
+                                {
+                                    w.write("Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);");
+                                }
+                                else
+                                {
+                                    w.write("Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);\n");
+                                    w.write("%", bind_each(method_marshals_to_projection));
+                                }
+                            }));
+                    }
+                    else
+                    {
+                        w.write(R"(
+public static readonly IntPtr AbiToProjectionVftablePtr;
+%
+static unsafe Vftbl()
+{
+AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * %);
+(*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
+{
+IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable, 
+%
+};
+}
+)",
+                            bind([&](writer& w)
+                            {   
+                                if (settings.netstandard_compat)
+                                {
+                                    w.write("private static Delegate[] DelegateCache = new Delegate[%];", std::to_string(distance(methods)));
+                                }
+                            }),
+                            std::to_string(distance(methods)),
+                            bind_list(",\n", method_create_delegates_to_projection)
+                            );
+                    }
+                }),
+                bind_each<write_method_abi_invoke>(methods),
+                bind_each<write_property_abi_invoke>(type.PropertyList()),
+                bind_each<write_event_abi_invoke>(type.EventList())
         );
     }
 
