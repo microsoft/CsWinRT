@@ -124,7 +124,7 @@ namespace
         {
             sizeof(hostfxr_initialize_parameters),
             host_path,
-            nullptr//dotnet_root.c_str()
+            nullptr
         };
 
         HRESULT hr = hostfxr_initialize_for_runtime_config(target_config, /*&parameters*/nullptr, &context);
@@ -157,7 +157,6 @@ namespace
 
 extern "C" HRESULT STDMETHODCALLTYPE DllGetActivationFactory(void* hstr_class_id, void** activation_factory)
 {
-    //winrt::hstring class_id(hstr_class_id, winrt::take_ownership_from_abi_t{});
     // Assumes the managed assembly to load and its runtime configuration file are next to the host
     HRESULT hr;
     wchar_t buffer[MAX_PATH];
@@ -179,12 +178,7 @@ extern "C" HRESULT STDMETHODCALLTYPE DllGetActivationFactory(void* hstr_class_id
         OutputDebugString(message);
     };
     hostfxr_set_error_writer(error_writer);
-    //propagate_error_writer_t propagate_error_writer_to_hostfxr(set_error_writer_fn);
 
-    // Probe for target assembly by:
-    // - runtime class name
-    // - host name (if renamed)
-    // - runtimeconfig.json entry? (vs. forwarders)
     winrt::hstring class_id_hstr(hstr_class_id, winrt::take_ownership_from_abi_t{});
     auto target_path = host_path.wstring() + std::wstring(class_id_hstr.c_str());
     winrt::detach_abi(class_id_hstr);
@@ -263,7 +257,7 @@ extern "C" HRESULT STDMETHODCALLTYPE DllGetActivationFactory(void* hstr_class_id
 
     if (target_path.empty())
     {
-        // now what?
+        // TODO: look for runtimeconfig.json mapping
     }
 
     // Probe for target assembly's runtimeconfig.json, default to winrt.host.runtimeconfig.json 
@@ -296,26 +290,16 @@ extern "C" HRESULT STDMETHODCALLTYPE DllGetActivationFactory(void* hstr_class_id
     }
     //assert(load_assembly_and_get_function_pointer != nullptr && "Failure: get_dotnet_load_assembly()");
 
-    // load managed assembly bootstrapper from resource, to avoid needing to know 
-    // fully qualified assembly display name of target
-
-
     // Load managed assembly and get function pointer to a managed method
     auto target_file = std::filesystem::path(target_path).replace_extension().filename();
-    auto target_type = L"WinRT.Module, " + target_file.wstring(); // NOTE: assembly is case-sensitive!
-    target_type = L"WinRT.Module, WinRT.Host.Shim";
-    //target_type = L"WinRT.Module";
-    //auto delegate_type_name = L"System.Func`2[[System.IntPtr],[System.IntPtr]]";
-    auto delegate_type_name = L"WinRT.Module+GetActivationFactoryDelegate, " + target_file.wstring();
-    delegate_type_name = L"WinRT.Module+GetActivationFactoryDelegate, WinRT.Host.Shim";
-    //delegate_type_name = L"WinRT.Module+GetActivationFactoryDelegate";
     typedef int (CORECLR_DELEGATE_CALLTYPE* get_activation_factory_fn)(void* hstr_target, void* hstr_class_id, void** activation_factory);
     get_activation_factory_fn get_activation_factory = nullptr;
     hr = load_assembly_and_get_function_pointer(
-        target_path.c_str(),
-        target_type.c_str(),
+        L"WinRT.Host.Shim.dll",
+        L"WinRT.Module, WinRT.Host.Shim",
         L"GetActivationFactory",
-        delegate_type_name.c_str(),     // TODO: UNMANAGEDCALLERSONLY_METHOD 
+        // TODO: UNMANAGEDCALLERSONLY_METHOD 
+        L"WinRT.Module+GetActivationFactoryDelegate, WinRT.Host.Shim",     
         nullptr,
         (void**)&get_activation_factory);
     if (hr != ERROR_SUCCESS)
@@ -328,85 +312,7 @@ extern "C" HRESULT STDMETHODCALLTYPE DllGetActivationFactory(void* hstr_class_id
     return get_activation_factory(winrt::get_abi(hstr_target), hstr_class_id, activation_factory);
 }
 
-
 extern "C" HRESULT STDMETHODCALLTYPE DllCanUnloadNow(void)
 {
     return S_FALSE;
 }
-
-
-#if false
-#include "redirected_error_writer.h"
-#include "hostfxr.h"
-#include "fxr_resolver.h"
-#include "pal.h"
-#include "trace.h"
-#include "error_codes.h"
-#include "utils.h"
-#include <hstring.h>
-
-#if defined(_WIN32)
-
-// WinRT entry points are defined without the __declspec(dllexport) attribute.
-// The issue here is that the compiler will throw an error regarding linkage
-// redefinion. The solution here is to the use a .def file on Windows.
-#define WINRT_API extern "C"
-
-#else
-
-#define WINRT_API SHARED_API
-
-#endif // _WIN32
-
-using winrt_activation_fn = pal::hresult_t(STDMETHODCALLTYPE*)(const pal::wchar_t* appPath, HSTRING activatableClassId, IActivationFactory** factory);
-
-namespace
-{
-    int get_winrt_activation_delegate(pal::std::wstring* app_path, winrt_activation_fn* delegate)
-    {
-        return load_fxr_and_get_delegate(
-            hostfxr_delegate_type::hdt_winrt_activation,
-            [app_path](const pal::std::wstring& host_path, pal::std::wstring* target_config_out)
-        {
-            // Change the extension to get the 'app' and config
-            size_t idx = host_path.rfind(_X(".dll"));
-            assert(idx != pal::std::wstring::npos);
-
-            pal::std::wstring app_path_local{ host_path };
-            app_path_local.replace(app_path_local.begin() + idx, app_path_local.end(), _X(".winmd"));
-            *app_path = std::move(app_path_local);
-
-            pal::std::wstring target_config_local{ host_path };
-            target_config_local.replace(target_config_local.begin() + idx, target_config_local.end(), _X(".runtimeconfig.json"));
-            *target_config_out = std::move(target_config_local);
-
-            return StatusCode::Success;
-        },
-            delegate
-            );
-    }
-}
-
-
-WINRT_API HRESULT STDMETHODCALLTYPE DllGetActivationFactory(_In_ HSTRING activatableClassId, _Out_ IActivationFactory** factory)
-{
-    HRESULT hr;
-    pal::std::wstring app_path;
-    winrt_activation_fn activator;
-    {
-        trace::setup();
-        reset_redirected_error_writer();
-        error_writer_scope_t writer_scope(redirected_error_writer);
-
-        int ec = get_winrt_activation_delegate(&app_path, &activator);
-        if (ec != StatusCode::Success)
-        {
-            RoOriginateErrorW(__HRESULT_FROM_WIN32(ec), 0 /* message is null-terminated */, get_redirected_error_string().c_str());
-            return __HRESULT_FROM_WIN32(ec);
-        }
-    }
-
-    return activator(app_path.c_str(), activatableClassId, factory);
-}
-#endif
-
