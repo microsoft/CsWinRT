@@ -12,12 +12,14 @@
     <ClCompile Include="NonAgileClass.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
     <ClCompile Include="ComImports.cpp" />
+    <ClCompile Include="ManagedClass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="$(IntDir)strings.h" />
     <ClInclude Include="NonAgileClass.h" />
     <ClInclude Include="ComImports.h" />
+    <ClInclude Include="ManagedClass.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />

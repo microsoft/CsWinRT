@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+     <TargetFramework>net5.0</TargetFramework> 
+  </PropertyGroup>
+
+  <Target Name="GetNetHostDir" Outputs="$(NetHostDir)">
+    <PropertyGroup>
+      <NetHostDir>$(NetCoreTargetingPackRoot)/Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)/$(BundledNETCoreAppPackageVersion)/runtimes/$(NETCoreSdkRuntimeIdentifier)/native</NetHostDir>
+    </PropertyGroup>
+  </Target>
+
+</Project>

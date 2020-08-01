@@ -17,6 +17,19 @@ using Microsoft.UI.Xaml.Media.Media3D;
 
 using TestComponentCSharp;
 
+namespace WinRT
+{
+    public static class Module
+    {
+        // For HostTest: provide pass-through of activation factory
+        public static IntPtr GetActivationFactory(IntPtr hstrRuntimeClassId)
+        {
+            return IntPtr.Zero;
+        }
+    }
+}
+
+
 namespace UnitTest
 {
     using A = IEnumerable<IStringable>;
@@ -33,6 +46,14 @@ namespace UnitTest
         [Fact]
         public void TestGenerics()
         {
+            Func<IntPtr, IntPtr> del = WinRT.Module.GetActivationFactory;
+            var name = del.GetType().Name;
+
+            //System.Func`2[[System.IntPtr, System.Private.CoreLib, Version = 4.0.0.0, Culture = neutral, PublicKeyToken = 7cec85d7bea7798e],[System.IntPtr, System.Private.CoreLib, Version= 4.0.0.0, Culture = neutral, PublicKeyToken = 7cec85d7bea7798e]]
+            //System.Func`2[[System.IntPtr],[System.IntPtr]]
+            var t = Type.GetType("System.Func`2[[System.IntPtr],[System.IntPtr]]");
+
+
             AssertGuid<IStringable>("96369f54-8eb6-48f0-abce-c1b211e627c3");
 
             // Generated Windows.Foundation GUIDs

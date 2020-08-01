@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
+    <BuildPassReferences>true</BuildPassReferences>
+    <NetHostUseAsStatic>true</NetHostUseAsStatic>
+    <NetHostDefines Condition="'$(NetHostUseAsStatic)'=='true'">NETHOST_USE_AS_STATIC</NetHostDefines>
+    <NetHostLib Condition="'$(NetHostUseAsStatic)'=='true'">libnethost.lib</NetHostLib>
+    <NetHostLib Condition="'$(NetHostUseAsStatic)'!='true'">nethost.lib</NetHostLib>
+  </PropertyGroup>
+  <Target Name="SetNetHostDir" Outputs="NetHostDir">
+    <MSBuild Projects="NetHostDir.csproj" Targets="GetNetHostDir" Properties="Platform=$(Platform);Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" ItemName="NetHostDir" />
+    </MSBuild>
+    <PropertyGroup>
+      <NetHostDir>@(NetHostDir)</NetHostDir>
+    </PropertyGroup>
+    <Message Text="NetHostDir: $(NetHostDir)" Importance="high" />
+  </Target>
+  <Target Name="BeforeClCompile" DependsOnTargets="SetNetHostDir">
+    <ItemGroup>
+      <ClCompile>
+        <PreprocessorDefinitions>$(NetHostDefines);%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
+        <AdditionalIncludeDirectories>$(NetHostDir);%(ClCompile.AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      </ClCompile>
+    </ItemGroup>
+  </Target>
+  <Target Name="BeforeLink" Condition="'@(Link)' != ''" BeforeTargets="Link" DependsOnTargets="SetNetHostDir">
+    <ItemGroup>
+      <Link>
+        <AdditionalDependencies>$(NetHostLib);%(Link.AdditionalDependencies)</AdditionalDependencies>
+        <AdditionalLibraryDirectories>$(NetHostDir);%(Link.AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      </Link>
+    </ItemGroup>
+  </Target>
+  <Target Name="CopyNetHostDll" Condition="'$(NetHostUseAsStatic)'!='true'" AfterTargets="Build">
+    <Copy SourceFiles="$(NetHostDir)/nethost.dll" DestinationFolder="$(BinRoot)/$(Configuration)" SkipUnchangedFiles="True" />
+  </Target>
+</Project>
