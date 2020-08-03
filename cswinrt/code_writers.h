@@ -1047,6 +1047,9 @@ try
 _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
 var defaultInterface = new %(_inner);
 _defaultLazy = new Lazy<%>(() => defaultInterface);
+_lazyInterfaces = new Dictionary<Type, object>()
+{%
+};
 
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
@@ -1066,7 +1069,8 @@ MarshalInspectable.DisposeAbi(ptr);
                 bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
                 [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
                 default_interface_name,
-                default_interface_name);
+                default_interface_name,
+                bind<write_lazy_interface_initialization>(class_type));
         }
     }
 
@@ -4001,11 +4005,15 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 protected %(global::WinRT.DerivedComposed _)%
 {
 _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
+_lazyInterfaces = new Dictionary<Type, object>()
+{%
+};
 })",
 type.TypeName(),
 has_base_type ? ":base(_)" : "",
 default_interface_abi_name,
-default_interface_abi_name);
+default_interface_abi_name,
+bind<write_lazy_interface_initialization>(type));
                 }
 
 
