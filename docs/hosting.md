@@ -7,7 +7,7 @@ This document describes the behavior and implementation of winrt.host.dll, a nat
 To mininmize the need for explicit mapping data, a set of file naming conventions flows across the activation path, from class to host to target:
 *  If the client is using manifest-free, the host name is derived from the class name.  In turn, the target name is also derived from the class name. 
 * If the client is using a manifest, the host name is explicitly specified and can be anything.  The target name may then be derived from either the class name or the host name (if renamed).
-* If the host and target file names are fixed, a forwarder or runtimeconfig.json entry can be used to provide the mapping.
+* If the host and target file names are fixed, a runtimeconfig.json entry can be used to provide an explicit mapping from class ID to target assembly.
 
 ## Glossary
 For brevity, the following terms are used throughout:
@@ -15,7 +15,6 @@ For brevity, the following terms are used throughout:
 * __Target__: the managed assembly implementing the runtime class
 * __Class__: the activatable runtime class
 * __Host__: an activation adapter that hosts a managed implementation
-* __Forwarder__: a secondary host for resolving file naming conflicts
 
 ## Probing
 Probing is the algorithm for finding a target assembly, based on the runtime class name or the host file name.  It is designed to maximize availability of the "good name" for a target assembly (__"Acme.Controls.Widget.dll"__ in the examples below).  
@@ -82,36 +81,13 @@ __DllGetActivationFactoryFromAssembly__:
        1. Implements ActivateInstance by constructing the target type
        1. Creates a CCW for the factory and returns it as an IntPtr
 	
-## Forwarder
-_Note: This approach  is still under discussion.  It might make more sense for the user to provide .runtimeconfig.json entries to achieve the same result._
-
-A forwarder is a kind of host.  It is designed to provide explicit target mapping, when both the host and target file names are fixed and cannot be changed.  While multiple uniquely named host DLLs could also be used to implement unique registrations, a forwarder minimizes disk space.  Note that both techniques are supported, but are mutually exclusive:
-* While the host winrt.host.dll may be renamed, a forwarder must always be.  Its sole purpose is to provide an implicit mapping to the target.
-* A forwarder relies on (implicitly links with) a host with the well-known name "winrt.host.dll", to which it forwards the target name that is has deduced.
-
-### Exports:
-Per WinRT activation contract, the forwarder exports:
-* DllCanUnloadNow 
-* DllGetActivationFactory
-
-__DllCanUnloadNow__:
-
-As with the host discussion above, DllCanUnloadNow always returns false
-
-__DllGetActivationFactory__:
-1. Searches for target assembly based on: 
-   1. Class Name Probing (see above), or
-   1. Host Name Probing (see above)
-1. If target found, 
-   1. Forwards to winrt.host!DllGetActivationFactoryFromAssembly with target name
-
 ## Examples
 
 ### Reg-Free Activation with Generic Host
 
 Class | Host | Target
 - | - | -
-"Acme.Controls.Widget" | winrt.host.dll | Acme.Controls.Widget.dll
+"Acme.Controls.Widget" | WinRT.Host.dll | Acme.Controls.Widget.dll
 
 1. Client registers class with generic host, via fusion or appx manifest:
    1. Fusion
@@ -128,8 +104,8 @@ Class | Host | Target
    1. "Acme.Controls.Widget.Server.dll",
    1. "Acme.Controls.Widget.dll"
 
-### Reg-Free Activation with Forwarder (or Renamed Host)
-This example demonstrates how a target DLL that has already taken the "good name" can be supported, by using an appropriately named forwarder (or renamed host).
+### Reg-Free Activation with Renamed Host
+This example demonstrates how a target DLL that has already taken the "good name" can be supported, by using an appropriately renamed host.
 
 Class | Host | Target
 - | - | -
@@ -156,6 +132,23 @@ Class | Host | Target
    1. "Acme.Controls.Widget.Server.dll",
    1. "Acme.Controls.Widget.dll"
 
+### Reg-Free Activation with Target Assembly Mapping
+This example demonstrates how an activatableClass entry can be added to the host runtimeconfig.json to provide an explicit mapping from class ID to target assembly.  This is useful when both the host dll and the target assembly have fixed names.
+
+Class | Host | Target
+- | - | -
+"Acme.Controls.Widget" | WinRT.Host.dll | Widget.dll
+
+This scenario follows a procedure similar to __Reg-Free Activation with Generic Host__ above.  In addition, the host dll's runtimeconfig.json contains an activatableClass section, similar to the following:
+```json
+    {
+      "runtimeOptions": { ... },
+      "activatableClasses": {
+        "Acme.Controls.Widget": "Widget.dll"
+      }
+    }
+```
+
 ### Manifest-Free Activation
 This example demonstrates support for client code using manifest-free activation, which constrains the host name to match the class name.
 
@@ -175,7 +168,7 @@ Class | Host | Target
 ## Other Considerations
 
 ### Non-Goals
-The Host and Forwarder dlls  are neutral with respect to:
+The Host is neutral with respect to:
 * ThreadingModel
 * InProc/OOP
 In both cases, support is assumed to be provided by the component and/or activation logic
@@ -183,14 +176,6 @@ In both cases, support is assumed to be provided by the component and/or activat
 ### Performance
 The examples above demonstrate that in typical cases, only a few probes are needed to find the target assembly.
 Even so, caching of probing results can be used to minimize steady-state overhead.
-
-### Target Mapping Config 
-An alternative to using forwarders for providing the implicit name mapping to the target, is to use a config file with a well-known name. For example, a .runtimeconfig.json can contain user-defined elements.  This contradicts the goal of manifest-free execution, but may have more appeal to the app developer, as it swaps a set of forwarder dlls for a set of config file entries.
-
-### Manifested Target Assembly
-The appx manifest schema supports attributes on activatable class registrations, via 
-InProcessServer.ActivatableClass.ActivatableClassAttribute.  This could potentially be used as another means to supply the name of the target assembly (for example, [see here](https://dev.azure.com/microsoft/OS/_git/os?path=%2Fonecore%2Fprintscan%2Fdox%2FOPC%2Flib%2Fexternal%2FAppxXmlPreprocessor%2Ftest%2FTestData%2FGoodManifest_Large.xml&version=GBofficial%2Frsmaster&line=368&lineEnd=369&lineStartColumn=1&lineEndColumn=1&lineStyle=plain)).  It's not clear whether the added value would justify the added complexity.
-
 
 ## See also
 

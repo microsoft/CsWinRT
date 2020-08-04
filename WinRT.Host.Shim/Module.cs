@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Windows.Foundation;
@@ -24,7 +26,7 @@ namespace ABI.Windows.Foundation
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("00000035-0000-0000-c000-000000000046")]
-    public class IActivationFactory : global::Windows.Foundation.IActivationFactory
+    internal class IActivationFactory : global::Windows.Foundation.IActivationFactory
     {
         public unsafe delegate int ActivateInstance_0(IntPtr thisPtr, out IntPtr instance);
 
@@ -95,12 +97,10 @@ namespace ABI.Windows.Foundation
     }
 }
 
-namespace WinRT
+namespace WinRT.Host
 {
     internal class ActivationFactory : IActivationFactory
     {
-        //private const int CLASS_E_CLASSNOTAVAILABLE = unchecked((int)0x80040111);
-
         public ConstructorInfo Constructor { get; private set; }
 
         public ActivationFactory(ConstructorInfo constructor) => Constructor = constructor;
@@ -108,8 +108,9 @@ namespace WinRT
         public object ActivateInstance() => Constructor.Invoke(null);
     }
 
-    public static class Module
+    public static class Shim
     {
+        private const int S_OK = 0;
         private const int REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
 
         public unsafe delegate int GetActivationFactoryDelegate(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory);
@@ -134,7 +135,7 @@ namespace WinRT
                         {
                             var factory = new ActivationFactory(ctor);
                             *activationFactory = MarshalInspectable.FromManaged(factory);
-                            return 0;
+                            return S_OK;
                         }
                     }
                 }

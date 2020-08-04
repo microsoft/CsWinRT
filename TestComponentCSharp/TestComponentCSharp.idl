@@ -98,6 +98,11 @@ namespace TestComponentCSharp
         ManagedClass();
     }
 
+    runtimeclass ManagedClassNotFound : [default] Windows.Foundation.IStringable
+    {
+        ManagedClassNotFound();
+    }
+
     [default_interface]
     runtimeclass Class :
         Windows.Foundation.IStringable

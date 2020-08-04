@@ -3,6 +3,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#undef GetCurrentTime
+
 #define WINRT_LEAN_AND_MEAN
 #include "winrt/Windows.Foundation.h"
 

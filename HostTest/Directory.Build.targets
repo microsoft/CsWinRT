@@ -16,15 +16,21 @@
   <Target Name="CopyTestAssets">
     <Copy SourceFiles="
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
-            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.runtimeconfig.json;
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(SolutionDir)Projections\Test\bin\$(BuildPlatform)\$(Configuration)\net5.0\Test.dll" 
           DestinationFiles="
             $(OutDir)WinRT.Host.dll;
-            $(OutDir)WinRT.Host.runtimeconfig.json;
             $(OutDir)Test.Host.dll;
-            $(OutDir)TestComponentCSharp.Server.dll" 
-          UseHardlinksIfPossible="true" SkipUnchangedFiles="true" />
+            $(OutDir)MappedTarget.Host.dll;
+            $(OutDir)ClassNotFound.Host.dll;
+            $(OutDir)BadRuntimeConfig.Host.dll;
+            $(OutDir)NoRuntimeConfig.Host.dll;
+            $(OutDir)TestComponentCSharp.ManagedClass.dll" 
+          UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>  
   
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />

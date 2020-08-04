@@ -11,10 +11,28 @@
     <None Include="Directory.Build.targets" />
     <None Include="DoNotImport_MsAppxPackageTargets.targets" />
     <None Include="packages.config" />
+    <None Include="WinRT.Host.runtimeconfig.json">
+      <Filter>TestConfigs</Filter>
+    </None>
+    <None Include="MappedTarget.runtimeconfig.json">
+      <Filter>TestConfigs</Filter>
+    </None>
+    <None Include="BadRuntimeConfig.Host.runtimeconfig.json">
+      <Filter>TestConfigs</Filter>
+    </None>
+    <None Include="Test.Host.runtimeconfig.json">
+      <Filter>TestConfigs</Filter>
+    </None>
+    <None Include="ClassNotFound.Host.runtimeconfig.json">
+      <Filter>TestConfigs</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="TestManifests">
       <UniqueIdentifier>{4b00e42e-8b0b-4002-9799-7d97856e027a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TestConfigs">
+      <UniqueIdentifier>{a4254425-e0b3-4e52-8493-9429424e91de}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -24,5 +42,22 @@
     <Manifest Include="ProbeByClass.manifest">
       <Filter>TestManifests</Filter>
     </Manifest>
+    <Manifest Include="MappedTarget.manifest">
+      <Filter>TestManifests</Filter>
+    </Manifest>
+    <Manifest Include="NoRuntimeConfig.manifest">
+      <Filter>TestManifests</Filter>
+    </Manifest>
+    <Manifest Include="BadRuntimeConfig.manifest">
+      <Filter>TestManifests</Filter>
+    </Manifest>
+    <Manifest Include="ClassNotFound.manifest">
+      <Filter>TestManifests</Filter>
+    </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="TargetNotFound.manifest">
+      <Filter>TestManifests</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>
