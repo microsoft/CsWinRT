@@ -131,7 +131,7 @@ namespace ABI.System
                 return null;
             }
 
-            using var uri = ObjectReference<ABI.Windows.Foundation.IUriRuntimeClassVftbl>.FromAbi(ptr);
+            using var uri = ObjectReference<IUnknownVftbl>.FromAbi(ptr).As<ABI.Windows.Foundation.IUriRuntimeClassVftbl>();
             IntPtr rawUri = IntPtr.Zero;
             try
             {
