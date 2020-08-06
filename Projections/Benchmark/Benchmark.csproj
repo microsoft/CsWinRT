@@ -27,7 +27,6 @@
 
   <Target Name="GenerateProjection" Condition="'$(GenerateTestProjection)' == 'true'">
     <ItemGroup>
-      <ReferenceWinMDs Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
       <!--Do not publish projection source winmds -->
       <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'BenchmarkComponent'" />
     </ItemGroup>
@@ -59,6 +58,13 @@
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'BenchmarkComponent'" />
       <!--Also remove ReferencePath winmds to prevent error NETSDK1130 false positive-->
       <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'BenchmarkComponent'" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="RemoveWinMDReferences" BeforeTargets="ResolveReferences" AfterTargets="AfterResolveReferences">
+    <ItemGroup>
+      <ReferenceWinMDs Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
+      <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
     </ItemGroup>
   </Target>
 

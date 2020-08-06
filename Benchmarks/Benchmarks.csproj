@@ -47,8 +47,12 @@
     <ItemGroup>
       <!--Remove references to projection source winmds to prevent compile conflict warnings-->
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'BenchmarkComponent'" />
-      <!--Also remove ReferencePath winmds to prevent error NETSDK1130 false positive-->
-      <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'BenchmarkComponent'" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="RemoveWinMDReferences" BeforeTargets="ResolveReferences" AfterTargets="AfterResolveReferences" Condition="$(UseWinmd) == false">
+    <ItemGroup>
+      <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
     </ItemGroup>
   </Target>
 

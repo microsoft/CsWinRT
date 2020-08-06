@@ -1,6 +1,6 @@
 @echo off
 
-set CsWinRTNet5SdkVersion=5.0.100-preview.7.20329.1
+set CsWinRTNet5SdkVersion=5.0.100-preview.7.20366.6
 
 :dotnet
 rem Install required .NET 5 SDK version and add to environment
