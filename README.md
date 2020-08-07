@@ -40,6 +40,7 @@ The following msbuild project fragment demonstrates a simple invocation of cswin
 # This sample demonstrates using a response file for cswinrt execution.
 # Run "cswinrt -h" to see all command line options.
 -verbose
+-target $(TargetFramework)
 # Include Windows SDK metadata to satisfy references to 
 # Windows types from project-specific metadata.
 -in 10.0.18362.0
