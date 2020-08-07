@@ -14,8 +14,12 @@
     <license type="file">LICENSE</license>
     <projectUrl>https://github.com/microsoft/cswinrt/tree/master/</projectUrl>
     <dependencies>
-      <group targetFramework=".NETStandard2.0" />
-      <group targetFramework=".NET5.0" />
+      <group targetFramework=".NETStandard2.0" >
+        <dependency id="Microsoft.Net.Compilers.Toolset" version="3.7.0" />
+      </group>
+      <group targetFramework=".NET5.0">
+        <dependency id="Microsoft.Net.Compilers.Toolset" version="3.7.0" />
+      </group>
     </dependencies>
   </metadata>
   <files>
