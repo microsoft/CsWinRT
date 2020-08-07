@@ -79,6 +79,7 @@ namespace WinRT
             where T : class, System.Delegate => FindObject<T>(thisPtr);
 
         public static IUnknownVftbl IUnknownVftbl => DefaultComWrappers.IUnknownVftbl;
+        public static IntPtr IUnknownVftblPtr => DefaultComWrappers.IUnknownVftblPtr;
 
         public static IntPtr AllocateVtableMemory(Type vtableType, int size) => RuntimeHelpers.AllocateTypeAssociatedMemory(vtableType, size);
 
@@ -101,12 +102,16 @@ namespace WinRT
     public class DefaultComWrappers : ComWrappers
     {
         private static ConditionalWeakTable<object, VtableEntriesCleanupScout> ComInterfaceEntryCleanupTable = new ConditionalWeakTable<object, VtableEntriesCleanupScout>();
-        public static IUnknownVftbl IUnknownVftbl { get; }
+        public static unsafe IUnknownVftbl IUnknownVftbl => Unsafe.AsRef<IUnknownVftbl>(IUnknownVftblPtr.ToPointer());
+
+        internal static IntPtr IUnknownVftblPtr { get; }
 
         static unsafe DefaultComWrappers()
         {
             GetIUnknownImpl(out var qi, out var addRef, out var release);
-            IUnknownVftbl = new IUnknownVftbl
+
+            IUnknownVftblPtr = RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(IUnknownVftbl), sizeof(IUnknownVftbl));
+            (*(IUnknownVftbl*)IUnknownVftblPtr) = new IUnknownVftbl
             {
                 QueryInterface = (delegate* stdcall<IntPtr, ref Guid, out IntPtr, int>)qi,
                 AddRef = (delegate* stdcall<IntPtr, uint>)addRef,

@@ -15,19 +15,7 @@ namespace WinRT.Interop
         private void* _Release;
         public delegate* stdcall<IntPtr, uint> Release { get => (delegate* stdcall<IntPtr, uint>)_Release; set => _Release = (void*)value; }
 
-        public static readonly IUnknownVftbl AbiToProjectionVftbl;
-        public static readonly IntPtr AbiToProjectionVftblPtr;
-
-        static IUnknownVftbl()
-        {
-            AbiToProjectionVftbl = GetVftbl();
-            AbiToProjectionVftblPtr = Marshal.AllocHGlobal(sizeof(IUnknownVftbl));
-            Marshal.StructureToPtr(AbiToProjectionVftbl, AbiToProjectionVftblPtr, false);
-        }
-
-        private static IUnknownVftbl GetVftbl()
-        {
-            return ComWrappersSupport.IUnknownVftbl;
-        }
+        public static IUnknownVftbl AbiToProjectionVftbl => ComWrappersSupport.IUnknownVftbl;
+        public static IntPtr AbiToProjectionVftblPtr => ComWrappersSupport.IUnknownVftblPtr;
     }
 }

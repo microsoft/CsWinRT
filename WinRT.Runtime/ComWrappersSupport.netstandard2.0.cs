@@ -120,12 +120,20 @@ namespace WinRT
             where T : class =>
             (T)UnmanagedObject.FindObject<ComCallableWrapper>(thisPtr).ManagedObject;
 
-        public static unsafe IUnknownVftbl IUnknownVftbl => new IUnknownVftbl
+        public static unsafe IUnknownVftbl IUnknownVftbl => Unsafe.AsRef<IUnknownVftbl>(IUnknownVftblPtr.ToPointer());
+
+        internal static IntPtr IUnknownVftblPtr { get; }
+
+        static unsafe ComWrappersSupport()
         {
-            QueryInterface = (delegate* stdcall<IntPtr, ref Guid, out IntPtr, int>)Marshal.GetFunctionPointerForDelegate(Abi_QueryInterface),
-            AddRef = (delegate* stdcall<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_AddRef),
-            Release = (delegate* stdcall<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_Release),
-        };
+            IUnknownVftblPtr = Marshal.AllocHGlobal(sizeof(IUnknownVftbl));
+            (*(IUnknownVftbl*)IUnknownVftblPtr) = new IUnknownVftbl
+            {
+                QueryInterface = (delegate* stdcall<IntPtr, ref Guid, out IntPtr, int>)Marshal.GetFunctionPointerForDelegate(Abi_QueryInterface),
+                AddRef = (delegate* stdcall<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_AddRef),
+                Release = (delegate* stdcall<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_Release),
+            };
+        }
         
         public static IntPtr AllocateVtableMemory(Type vtableType, int size) => Marshal.AllocCoTaskMem(size);
 
