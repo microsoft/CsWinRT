@@ -25,22 +25,14 @@ namespace ABI.Windows.Storage
     using global::Microsoft.Win32.SafeHandles;
     using global::System;
     [Guid("DF19938F-5462-48A0-BE65-D2A3271A08D6")]
-    internal class IStorageFolderHandleAccess : global::Windows.Storage.IStorageFolderHandleAccess
+    internal unsafe class IStorageFolderHandleAccess : global::Windows.Storage.IStorageFolderHandleAccess
     {
         [Guid("DF19938F-5462-48A0-BE65-D2A3271A08D6")]
         public struct Vftbl
         {
-            public delegate int _Create_0(
-                IntPtr thisPtr,
-                IntPtr fileName,
-                global::Windows.Storage.HANDLE_CREATION_OPTIONS creationOptions,
-                global::Windows.Storage.HANDLE_ACCESS_OPTIONS accessOptions,
-                global::Windows.Storage.HANDLE_SHARING_OPTIONS sharingOptions,
-                global::Windows.Storage.HANDLE_OPTIONS options,
-                IntPtr oplockBreakingHandler,
-                out IntPtr interopHandle);
             public IUnknownVftbl IUnknownVftbl;
-            public _Create_0 Create_0;
+            private void* _Create_0;
+            public delegate* stdcall<IntPtr, IntPtr, global::Windows.Storage.HANDLE_CREATION_OPTIONS, global::Windows.Storage.HANDLE_ACCESS_OPTIONS, global::Windows.Storage.HANDLE_SHARING_OPTIONS, global::Windows.Storage.HANDLE_OPTIONS, IntPtr, out IntPtr, int> Create_0 => (delegate* stdcall<IntPtr, IntPtr, global::Windows.Storage.HANDLE_CREATION_OPTIONS, global::Windows.Storage.HANDLE_ACCESS_OPTIONS, global::Windows.Storage.HANDLE_SHARING_OPTIONS, global::Windows.Storage.HANDLE_OPTIONS, IntPtr, out IntPtr, int>)_Create_0;
         }
 
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);

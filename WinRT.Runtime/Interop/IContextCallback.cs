@@ -36,20 +36,18 @@ namespace WinRT.Interop
 namespace ABI.WinRT.Interop
 {
     [Guid("000001da-0000-0000-C000-000000000046")]
-    class IContextCallback : global::WinRT.Interop.IContextCallback
+    unsafe class IContextCallback : global::WinRT.Interop.IContextCallback
     {
         [Guid("000001da-0000-0000-C000-000000000046")]
         public struct Vftbl
         {
-            public unsafe delegate int _ContextCallback(
-                IntPtr pThis,
-                PFNCONTEXTCALL pfnCallback,
-                ComCallData* pData,
-                ref Guid riid,
-                int iMethod,
-                IntPtr pUnk);
             global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            public _ContextCallback ContextCallback_4;
+            private void* _ContextCallback;
+            public delegate* stdcall<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int> ContextCallback_4
+            {
+                get => (delegate* stdcall<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int>)_ContextCallback;
+                set => _ContextCallback = (void*)value;
+            }
         }
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
@@ -75,7 +73,9 @@ namespace ABI.WinRT.Interop
 
         public unsafe void ContextCallback(global::WinRT.Interop.PFNCONTEXTCALL pfnCallback, ComCallData* pParam, Guid riid, int iMethod)
         {
-            var result = _obj.Vftbl.ContextCallback_4(ThisPtr, pfnCallback, pParam, ref riid, iMethod, IntPtr.Zero);
+            var callback = Marshal.GetFunctionPointerForDelegate(pfnCallback);
+            var result = _obj.Vftbl.ContextCallback_4(ThisPtr, callback, pParam, &riid, iMethod, IntPtr.Zero);
+            GC.KeepAlive(pfnCallback);
             if (result != RPC_E_DISCONNECTED)
             {
                 Marshal.ThrowExceptionForHR(result);

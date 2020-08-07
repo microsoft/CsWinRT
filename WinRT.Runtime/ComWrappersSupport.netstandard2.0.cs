@@ -120,25 +120,38 @@ namespace WinRT
             where T : class =>
             (T)UnmanagedObject.FindObject<ComCallableWrapper>(thisPtr).ManagedObject;
 
-        public static IUnknownVftbl IUnknownVftbl { get; } = new IUnknownVftbl
+        public static unsafe IUnknownVftbl IUnknownVftbl => Unsafe.AsRef<IUnknownVftbl>(IUnknownVftblPtr.ToPointer());
+
+        internal static IntPtr IUnknownVftblPtr { get; }
+
+        static unsafe ComWrappersSupport()
         {
-            QueryInterface = Do_Abi_QueryInterface,
-            AddRef = Do_Abi_AddRef,
-            Release = Do_Abi_Release
-        };
+            IUnknownVftblPtr = Marshal.AllocHGlobal(sizeof(IUnknownVftbl));
+            (*(IUnknownVftbl*)IUnknownVftblPtr) = new IUnknownVftbl
+            {
+                QueryInterface = (delegate* stdcall<IntPtr, ref Guid, out IntPtr, int>)Marshal.GetFunctionPointerForDelegate(Abi_QueryInterface),
+                AddRef = (delegate* stdcall<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_AddRef),
+                Release = (delegate* stdcall<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_Release),
+            };
+        }
         
         public static IntPtr AllocateVtableMemory(Type vtableType, int size) => Marshal.AllocCoTaskMem(size);
 
+        private delegate int QueryInterface(IntPtr pThis, ref Guid iid, out IntPtr ptr);
+        private static QueryInterface Abi_QueryInterface = Do_Abi_QueryInterface; 
         private static int Do_Abi_QueryInterface(IntPtr pThis, ref Guid iid, out IntPtr ptr)
         {
             return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).QueryInterface(iid, out ptr);
         }
 
+        private delegate uint AddRefRelease(IntPtr pThis);
+        private static AddRefRelease Abi_AddRef = Do_Abi_AddRef; 
         private static uint Do_Abi_AddRef(IntPtr pThis)
         {
             return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).AddRef();
         }
 
+        private static AddRefRelease Abi_Release = Do_Abi_Release;
         private static uint Do_Abi_Release(IntPtr pThis)
         {
             return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).Release();

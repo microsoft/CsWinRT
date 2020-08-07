@@ -75,7 +75,7 @@ namespace ABI.System
                 return null;
             }
             var vftblT = new Vftbl(ptr);
-            var wrapper = new Nullable<T>(ObjectReference<Vftbl>.FromAbi(ptr, vftblT.IInspectableVftbl.IUnknownVftbl, vftblT));
+            var wrapper = new Nullable<T>(ObjectReference<Vftbl>.FromAbi(ptr, vftblT));
             return wrapper.Value;
         }
 
