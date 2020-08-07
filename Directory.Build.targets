@@ -22,5 +22,8 @@
     </RestoreSources>
   </PropertyGroup>
 
+ <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+   <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.7.0" />
+ </ItemGroup>
 
 </Project>
