@@ -296,6 +296,8 @@ namespace winrt::TestComponentCSharp::implementation
 
         hstring Catch(hstring const& params, hstring& locks);
 
+        static IProperties1 NativeProperties1();
+
         // IStringable
         hstring ToString();
 

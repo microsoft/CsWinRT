@@ -306,6 +306,9 @@ namespace TestComponentCSharp
 
         // Keyword escapes
         String Catch(String params, out String lock);
+
+        // Interface projections
+        static IProperties1 NativeProperties1 { get; };
     }
 
     [threading(sta), marshaling_behavior(standard)]
