@@ -230,7 +230,14 @@ Where <spec> is one or more of:
                                     write_abi_delegate(w, type);
                                     break;
                                 case category::interface_type:
-                                    write_abi_interface(w, type);
+                                    if (settings.netstandard_compat)
+                                    {
+                                        write_abi_interface_netstandard(w, type);
+                                    }
+                                    else
+                                    {
+                                        write_abi_interface(w, type);
+                                    }
                                     break;
                                 case category::struct_type:
                                     if (!is_type_blittable(type))

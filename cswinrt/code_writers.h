@@ -841,8 +841,15 @@ set => %.% = value;
 
     std::string write_as_cast(writer& w, TypeDef const& iface, bool as_abi)
     {
-        return w.write_temp(as_abi ? "As<%>()" : "AsInternal(new InterfaceTag<%>())",
-            bind<write_type_name>(iface, as_abi, false));
+        if (settings.netstandard_compat)
+        {
+            return w.write_temp(as_abi ? "As<%>()" : "AsInternal(new InterfaceTag<%>())",
+                bind<write_type_name>(iface, as_abi, false));
+        }
+        else
+        {
+            return w.write_temp("((%)(IWinRTObject)this)", bind<write_type_name>(iface, false, false));
+        }
     }
 
     void write_lazy_interface_initialization(writer& w, TypeDef const& type)
@@ -1664,7 +1671,6 @@ private % AsInternal(InterfaceTag<%> _) => ((Lazy<%>)_lazyInterfaces[typeof(%)])
 
     void write_event_source_ctors(writer& w, TypeDef const& type)
     {
-        uint32_t const vtable_base = type.MethodList().first.index();
         for (auto&& evt : type.EventList())
         {
             auto [add, remove] = get_event_methods(evt);
@@ -2676,7 +2682,15 @@ remove => _%.Unsubscribe(value);
                 {
                     if (!method.SpecialName())
                     {
-                        auto method_target = w.write_temp("As<%>()", bind<write_type_name>(iface, true, false));
+                        std::string_view method_target;
+                        if (settings.netstandard_compat)
+                        {
+                            method_target = w.write_temp("As<%>()", bind<write_type_name>(iface, true, false));
+                        }
+                        else
+                        {
+                            method_target = w.write_temp("((%)(IWinRTObject)this)", bind<write_type_name>(iface, false, false));
+                        }
                         auto return_type = w.write_temp("%", bind<write_projection_return_type>(method_signature{ method }));
                         write_explicitly_implemented_method(w, method, return_type, iface, method_target);
                     }
@@ -4054,7 +4068,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         );
     }
 
-    bool write_abi_interface(writer& w, TypeDef const& type)
+    bool write_abi_interface_netstandard(writer& w, TypeDef const& type)
     {
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", true);
@@ -4062,8 +4076,6 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         auto is_generic = distance(type.GenericParam()) > 0;
         std::set<std::string> generic_methods;
         std::vector<std::string> nongeneric_delegates;
-
-        uint32_t const vtable_base = type.MethodList().first.index();
 
         std::map<std::string, required_interface> required_interfaces;
         write_required_interface_members_for_abi_type(w, type, required_interfaces);
@@ -4162,6 +4174,54 @@ public static class %
         return true;
     }
 
+    bool write_abi_interface(writer& w, TypeDef const& type)
+    {
+        XLANG_ASSERT(get_category(type) == category::interface_type);
+        auto type_name = write_type_name_temp(w, type, "%", true);
+        auto is_generic = distance(type.GenericParam()) > 0;
+        std::set<std::string> generic_methods;
+        std::vector<std::string> nongeneric_delegates;
+
+        std::map<std::string, required_interface> required_interfaces;
+        write_required_interface_members_for_abi_type(w, type, required_interfaces);
+
+        w.write(R"([DynamicInterfaceCastableImplementation]
+%
+internal unsafe interface % : %
+{
+%%%%%}
+)",
+            // Interface abi implementation
+            bind<write_guid_attribute>(type),
+            type_name,
+            bind<write_type_name>(type, false, false),
+            // Vftbl
+            bind<write_vtable>(type, type_name, generic_methods, "", nongeneric_delegates),
+            [&](writer& w) {
+                for (auto required_interface : required_interfaces)
+                {
+                    if (required_interface.second.helper_wrapper.empty())
+                        continue;
+                    w.write("%.FromAbiHelper %;\n",
+                        required_interface.second.helper_wrapper,
+                        required_interface.second.adapter);
+                }
+            },
+            bind<write_interface_members>(type, generic_methods),
+            bind<write_event_sources>(type),
+            [&](writer& w) {
+                for (auto required_interface : required_interfaces)
+                {
+                    w.write("%", required_interface.second.members);
+                }
+            }
+        );
+
+        XLANG_ASSERT(nongeneric_delegates.empty());
+        w.write("\n");
+
+        return true;
+    }
 
     void write_class(writer& w, TypeDef const& type)
     {
