@@ -19,11 +19,12 @@
       https://api.nuget.org/v3/index.json;
       https://dotnet.myget.org/F/roslyn/api/v3/index.json;
       https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json;
+      https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json;
     </RestoreSources>
   </PropertyGroup>
 
  <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
-   <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.7.0" />
+   <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.8.0-3.20412.9" />
  </ItemGroup>
 
 </Project>

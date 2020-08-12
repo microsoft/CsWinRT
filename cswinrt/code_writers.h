@@ -3564,11 +3564,11 @@ internal IInspectable.Vftbl IInspectableVftbl;
                         if (settings.netstandard_compat)
                         {
                             nongeneric_delegates.push_back(delegate_definition);
-                            vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                            vtable_field_type = w.write_temp("delegate* unmanaged[Stdcall]<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
                         }
                         else
                         {
-                            vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                            vtable_field_type = w.write_temp("delegate* unmanaged<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
                         }
                         function_pointer = true;
                     }
@@ -3578,11 +3578,11 @@ internal IInspectable.Vftbl IInspectableVftbl;
                     // We're a well-known delegate type, but we still need to get the function pointer type.
                     if (settings.netstandard_compat)
                     {
-                        vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                        vtable_field_type = w.write_temp("delegate* unmanaged[Stdcall]<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
                     }
                     else
                     {
-                        vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                        vtable_field_type = w.write_temp("delegate* unmanaged<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
                     }
                     function_pointer = true;
                 }
@@ -4588,7 +4588,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                 }
                 else
                 {
-                    w.write("var abiInvoke = (delegate* stdcall<%, int>)(delegateToInvoke.Vftbl.Invoke);",
+                    w.write("var abiInvoke = (delegate* unmanaged[Stdcall]<%, int>)(delegateToInvoke.Vftbl.Invoke);",
                         bind<write_abi_parameter_types>(signature));
                 }
             }),

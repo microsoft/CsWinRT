@@ -297,8 +297,8 @@ namespace WinRT
         where TDelegate : class, MulticastDelegate
     {
         readonly IObjectReference _obj;
-        readonly delegate* stdcall<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
-        readonly delegate* stdcall<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
+        readonly delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
+        readonly delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
 
         private EventRegistrationToken _token;
         private TDelegate _event;
@@ -387,8 +387,8 @@ namespace WinRT
         }
 
         internal EventSource(IObjectReference obj,
-            delegate* stdcall<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-            delegate* stdcall<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler)
+            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler)
         {
             _obj = obj;
             _addHandler = addHandler;

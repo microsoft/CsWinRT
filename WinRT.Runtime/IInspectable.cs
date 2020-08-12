@@ -23,13 +23,13 @@ namespace WinRT
         {
             public IUnknownVftbl IUnknownVftbl;
             private void* _GetIids;
-            public delegate* stdcall<IntPtr, int*, IntPtr*, int> GetIids { get => (delegate* stdcall<IntPtr, int*, IntPtr*, int>)_GetIids; set => _GetIids = (void*)value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int> GetIids { get => (delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>)_GetIids; set => _GetIids = (void*)value; }
             
             private void* _GetRuntimeClassName;
-            public delegate* stdcall<IntPtr, IntPtr*, int> GetRuntimeClassName { get => (delegate* stdcall<IntPtr, IntPtr*, int>)_GetRuntimeClassName; set => _GetRuntimeClassName = (void*)value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetRuntimeClassName { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetRuntimeClassName; set => _GetRuntimeClassName = (void*)value; }
             
             private void* _GetTrustLevel;
-            public delegate* stdcall<IntPtr, TrustLevel*, int> GetTrustLevel { get => (delegate* stdcall<IntPtr, TrustLevel*, int>)_GetTrustLevel; set => _GetTrustLevel = (void*)value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, TrustLevel*, int> GetTrustLevel { get => (delegate* unmanaged[Stdcall]<IntPtr, TrustLevel*, int>)_GetTrustLevel; set => _GetTrustLevel = (void*)value; }
 
             public static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
