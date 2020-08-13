@@ -15,7 +15,6 @@ namespace WinRT
             {
                 return false;
             }
-            var vftblType = helperType.GetNestedType("Vftbl");
             int hr = NativeObject.TryAs<IUnknownVftbl>(GuidGenerator.GetIID(helperType), out var objRef);
             if (hr < 0)
             {
@@ -24,6 +23,20 @@ namespace WinRT
                     ExceptionHelpers.ThrowExceptionForHR(hr);
                 }
                 return false;
+            }
+            var vftblType = helperType.GetNestedType("Vftbl");
+            if (vftblType is null)
+            {
+                // The helper type might not have a vftbl type if it was linked away.
+                // The only time the Vftbl type would be linked away is when we don't actually use
+                // any of the methods on the interface (it was just a type cast/"is Type" check).
+                // In that case, we can use the IUnknownVftbl-typed ObjectReference since
+                // it has all of the information we'll need.
+                if (!QueryInterfaceCache.TryAdd(interfaceType, objRef))
+                {
+                    objRef.Dispose();
+                }
+                return true;
             }
             using (objRef)
             {
