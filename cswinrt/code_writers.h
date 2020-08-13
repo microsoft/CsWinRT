@@ -1565,13 +1565,25 @@ target);
                 auto target = is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())");
                 if (!is_default_interface)
                 {
-                    w.write(R"(
+                    if (settings.netstandard_compat)
+                    {
+                        w.write(R"(
 private % AsInternal(InterfaceTag<%> _) => ((Lazy<%>)_lazyInterfaces[typeof(%)]).Value;
 )",
-                        interface_name,
-                        interface_name,
-                        interface_abi_name,
-                        interface_name);
+                            interface_name,
+                            interface_name,
+                            interface_abi_name,
+                            interface_name);
+                    }
+                    else
+                    {
+                        w.write(R"(
+private % AsInternal(InterfaceTag<%> _) => (%)(object)this;
+)",
+                            interface_name,
+                            interface_name,
+                            interface_name);
+                    }
                 }
 
                 if(auto mapping = get_mapped_type(interface_type.TypeNamespace(), interface_type.TypeName()); mapping && mapping->has_custom_members_output)
@@ -1669,22 +1681,16 @@ private % AsInternal(InterfaceTag<%> _) => ((Lazy<%>)_lazyInterfaces[typeof(%)])
         );
     }
 
-    void write_event_source_ctors(writer& w, TypeDef const& type)
+    void write_event_source_ctor(writer& w, Event const& evt)
     {
-        for (auto&& evt : type.EventList())
-        {
-            auto [add, remove] = get_event_methods(evt);
-            w.write(R"(
-
-_% =
+        auto [add, remove] = get_event_methods(evt);
+        w.write(R"(
     new EventSource<%>(_obj,
     _obj.Vftbl.%,
-    _obj.Vftbl.%);)",
-                evt.Name(),
-                bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
-                get_vmethod_name(w, type, add),
-                get_vmethod_name(w, type, remove));
-        }
+    _obj.Vftbl.%))",
+            bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
+            get_vmethod_name(w, evt.Parent(), add),
+            get_vmethod_name(w, evt.Parent(), remove));
     }
 
     void write_event_sources(writer& w, TypeDef const& type)
@@ -1693,8 +1699,19 @@ _% =
         {
             w.write(R"(
 private EventSource<%> _%;)",
-                bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
-                evt.Name());
+bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
+evt.Name());
+        }
+    }
+
+    void write_event_source_tables(writer& w, TypeDef const& type)
+    {
+        for (auto&& evt : type.EventList())
+        {
+            w.write(R"(
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<IWinRTObject, EventSource<%>> _% = new();)",
+bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
+evt.Name());
         }
     }
 
@@ -2471,20 +2488,20 @@ internal static _% Instance => _instance.Value;
     {
         auto get_method_info = [&](MethodDef const& method)
         {
-            std::string obj_target;
-            if (settings.netstandard_compat)
-            {
-                obj_target = "_obj";
-            }
-            else
-            {
-                obj_target = w.write_temp("((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(%))",
-                    bind<write_type_name>(type, false, false));
-            }
             auto vmethod_name = get_vmethod_name(w, type, method);
             return std::pair{
-                obj_target + ".Vftbl." + vmethod_name,
+                "_obj.Vftbl." + vmethod_name,
                 generic_methods.find(vmethod_name) != generic_methods.end()};
+        };
+
+        auto init_call_variables = [&](writer& w)
+        {
+            if (!settings.netstandard_compat)
+            {
+                w.write("\nvar _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(%).TypeHandle));\n",
+                    bind<write_type_name>(type, false, false));
+                w.write("var ThisPtr = _obj.ThisPtr;\n");
+            }
         };
 
         for (auto&& method : type.MethodList())
@@ -2497,7 +2514,7 @@ internal static _% Instance => _instance.Value;
             auto [invoke_target, is_generic] = get_method_info(method);
             w.write(R"(
 %unsafe %% %%(%)
-{%}
+{%%}
 )",
                 settings.netstandard_compat ? "public " : "",
                 (method.Name() == "ToString"sv) ? "override " : "",
@@ -2511,6 +2528,7 @@ internal static _% Instance => _instance.Value;
                 }),
                 method.Name(),
                 bind_list<write_projection_parameter>(", ", signature.params()),
+                bind(init_call_variables),
                 bind<write_abi_method_call>(signature, invoke_target, is_generic, false));
         }
 
@@ -2537,8 +2555,9 @@ internal static _% Instance => _instance.Value;
                 auto signature = method_signature(getter);
                 auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
                 w.write(R"(get
-{%}
+{%%}
 )",
+                    bind(init_call_variables),
                     bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers));
             }
             if (setter)
@@ -2547,15 +2566,16 @@ internal static _% Instance => _instance.Value;
                 {
                     auto getter_interface = find_property_interface(w, type, prop.Name());
                     auto getter_cast = settings.netstandard_compat ? "As<%>()"s : "((%)(IWinRTObject)this)"s;
-                    w.write("get{ return " + getter_cast + "().%; }\n", getter_interface.first, prop.Name());
+                    w.write("get{ return " + getter_cast + ".%; }\n", getter_interface.first, prop.Name());
                 }
                 auto [invoke_target, is_generic] = get_method_info(setter);
                 auto signature = method_signature(setter);
                 auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
                 marshalers[0].param_name = "value";
                 w.write(R"(set
-{%}
+{%%}
 )",
+                    bind(init_call_variables),
                     bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers));
             }
             w.write("}\n");
@@ -2564,13 +2584,17 @@ internal static _% Instance => _instance.Value;
         for (auto&& evt : type.EventList())
         {
             auto semantics = get_type_semantics(evt.EventType());
+            auto event_source = settings.netstandard_compat ? 
+                w.write_temp("_%", evt.Name())
+                : w.write_temp("_%.GetValue((IWinRTObject)this, (key) => { var _obj = (ObjectReference<Vftbl>)key.GetObjectReferenceForType(typeof(%).TypeHandle); return %; })", evt.Name(), bind<write_type_name>(type, false, false), bind<write_event_source_ctor>(evt));
             w.write(R"(
-public event % %%
+%event % %%
 {
-add => _%.Subscribe(value);
-remove => _%.Unsubscribe(value);
+add => %.Subscribe(value);
+remove => %.Unsubscribe(value);
 }
 )",
+                settings.netstandard_compat ? "public " : "",
                 bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
                 bind([&](writer& w)
                 {
@@ -2580,8 +2604,8 @@ remove => _%.Unsubscribe(value);
                     }
                 }),
                 evt.Name(),
-                evt.Name(),
-                evt.Name());
+                event_source,
+                event_source);
         }
     }
 
@@ -2716,7 +2740,7 @@ remove => _%.Unsubscribe(value);
                 {
                     if (!method.SpecialName())
                     {
-                        std::string_view method_target;
+                        std::string method_target;
                         if (settings.netstandard_compat)
                         {
                             method_target = w.write_temp("As<%>()", bind<write_type_name>(iface, true, false));
@@ -3843,6 +3867,34 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         );
     }
 
+    void write_base_constructor_dispatch_netstandard(writer& w, type_semantics type)
+    {
+        std::string base_default_interface_name;
+        call(type,
+            [&](object_type) {},
+            [&](type_definition const& def)
+            {
+                base_default_interface_name = get_default_interface_name(w, def);
+            },
+            [&](generic_type_instance const& inst)
+            {
+                auto guard{ w.push_generic_args(inst) };
+                base_default_interface_name = get_default_interface_name(w, inst.generic_type);
+            },
+                [](auto)
+            {
+                throw_invalid("Invalid base class type.");
+            });
+
+        if (!std::holds_alternative<object_type>(type))
+        {
+            w.write(R"(
+    : base(ifc.As<%>())
+)",
+                base_default_interface_name);
+        }
+    }
+
     void write_base_constructor_dispatch(writer& w, type_semantics type)
     {
         std::string base_default_interface_name;
@@ -3857,7 +3909,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
                 auto guard{ w.push_generic_args(inst) };
                 base_default_interface_name = get_default_interface_name(w, inst.generic_type);
             },
-            [](auto)
+                [](auto)
             {
                 throw_invalid("Invalid base class type.");
             });
@@ -3865,9 +3917,8 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         if (!std::holds_alternative<object_type>(type))
         {
             w.write(R"(
-    : base(ifc.As<%>())
-)",
-                base_default_interface_name);
+    : base(objRef)
+)");
         }
     }
 
@@ -4162,7 +4213,11 @@ public static Guid PIID = Vftbl.PIID;
             type_name,
             type.TypeName(),
             type.TypeName(),
-            bind<write_event_source_ctors>(type),
+            bind_each([&](writer& w, Event const& evt)
+            {
+                w.write("_% = %;\n", evt.Name(), bind<write_event_source_ctor>(evt));
+            },
+                type.EventList()),
             [&](writer& w) {
                 for (auto required_interface : required_interfaces)
                 {
@@ -4231,7 +4286,7 @@ internal unsafe interface % : %
             // Vftbl
             bind<write_vtable>(type, type_name, generic_methods, "", nongeneric_delegates),
             bind<write_interface_members>(type, generic_methods),
-            bind<write_event_sources>(type),
+            bind<write_event_source_tables>(type),
             [&](writer& w) {
                 for (auto required_interface : required_interfaces)
                 {
@@ -4246,7 +4301,73 @@ internal unsafe interface % : %
         return true;
     }
 
-    void write_class(writer& w, TypeDef const& type)
+    void write_custom_query_interface_impl(writer& w, TypeDef const& type)
+    {
+
+        bool has_base_class = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
+        separator s{ w, " || " };
+        w.write(R"(
+%bool IsOverridableInterface(Guid iid) => %%;
+
+global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
+{
+ppv = IntPtr.Zero;
+if (IsOverridableInterface(iid) || typeof(global::WinRT.IInspectable).GUID == iid)
+{
+return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
+}
+
+if (GetReferenceForQI().TryAs<IUnknownVftbl>(iid, out ObjectReference<IUnknownVftbl> objRef) >= 0)
+{
+using (objRef)
+{
+ppv = objRef.GetRef();
+return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.Handled;
+}
+}
+
+return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
+})",
+            bind([&](writer& w)
+            {
+                auto visibility = "protected ";
+                auto overridable = "virtual ";
+                if (has_base_class)
+                {
+                    overridable = "override ";
+                }
+                else if (type.Flags().Sealed())
+                {
+                    visibility = "private ";
+                    overridable = "";
+                }
+                w.write(visibility);
+                w.write(overridable);
+            }),
+            bind_each([&](writer& w, InterfaceImpl const& iface)
+            {
+                if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute"))
+                {
+                    s();
+                    w.write("GuidGenerator.GetIID(typeof(%)) == iid",
+                        bind<write_type_name>(get_type_semantics(iface.Interface()), false, false));
+                }
+            }, type.InterfaceImpl()),
+            bind([&](writer& w)
+            {
+                if (has_base_class)
+                {
+                    s();
+                    w.write("base.IsOverridableInterface(iid)");
+                }
+                if (s.first)
+                {
+                    w.write("false");
+                }
+            }));
+    }
+
+    void write_class_netstandard(writer& w, TypeDef const& type)
     {
         if (is_static(type))
         {
@@ -4318,7 +4439,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             type.Flags().Sealed() ? "internal" : "protected internal",
             type_name,
             default_interface_abi_name,
-            bind<write_base_constructor_dispatch>(base_semantics),
+            bind<write_base_constructor_dispatch_netstandard>(base_semantics),
             default_interface_abi_name,
             bind<write_lazy_interface_initialization>(type),
             type_name,
@@ -4340,13 +4461,12 @@ _lazyInterfaces = new Dictionary<Type, object>()
 {%
 };
 })",
-type.TypeName(),
-has_base_type ? ":base(_)" : "",
-default_interface_abi_name,
-default_interface_abi_name,
-bind<write_lazy_interface_initialization>(type));
+                        type.TypeName(),
+                        has_base_type ? ":base(_)" : "",
+                        default_interface_abi_name,
+                        default_interface_abi_name,
+                        bind<write_lazy_interface_initialization>(type));
                 }
-
 
                 std::string_view access_spec = "protected ";
                 std::string_view override_spec = has_base_type ? "override " : "virtual ";
@@ -4370,70 +4490,115 @@ bind<write_lazy_interface_initialization>(type));
             default_interface_name,
             default_interface_name,
             bind<write_class_members>(type),
+            bind<write_custom_query_interface_impl>(type));
+    }
+
+    void write_class(writer& w, TypeDef const& type)
+    {
+        if (is_static(type))
+        {
+            write_static_class(w, type);
+            return;
+        }
+
+        auto type_name = write_type_name_temp(w, type);
+        auto default_interface_name = get_default_interface_name(w, type, false);
+        auto default_interface_abi_name = get_default_interface_name(w, type, true);
+        auto base_semantics = get_type_semantics(type.Extends());
+        auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
+
+        w.write(R"([global::WinRT.WindowsRuntimeType]
+[global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
+%public %class %%, IWinRTObject, IEquatable<%>
+{
+public %IntPtr ThisPtr => _inner.ThisPtr;
+
+private IObjectReference _inner = null;
+private readonly Lazy<%> _defaultLazy;
+
+private % _default => _defaultLazy.Value;
+%
+public static %% FromAbi(IntPtr thisPtr)
+{
+if (thisPtr == IntPtr.Zero) return null;
+var obj = MarshalInspectable.FromAbi(thisPtr);
+return obj is % ? (%)obj : new %((%)obj);
+}
+
+% %(IObjectReference objRef)%
+{
+_inner = objRef;
+_defaultLazy = new Lazy<%>(() => (%)(object)this);
+}
+
+public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
+public static bool operator !=(% x, % y) => !(x == y);
+public bool Equals(% other) => this == other;
+public override bool Equals(object obj) => obj is % that && this == that;
+public override int GetHashCode() => ThisPtr.GetHashCode();
+%
+
+private struct InterfaceTag<I>{};
+
+private % AsInternal(InterfaceTag<%> _) => _default;
+%%
+}
+)",
+            bind<write_custom_attributes>(type),
+            bind<write_class_modifiers>(type),
+            type_name,
+            bind<write_type_inheritance>(type, base_semantics, true),
+            type_name,
+            derived_new,
+            default_interface_name,
+            default_interface_name,
+            bind<write_attributed_types>(type),
+            derived_new,
+            type_name,
+            type_name,
+            type_name,
+            type_name,
+            default_interface_abi_name,
+            // ObjectReference constructor
+            type.Flags().Sealed() ? "internal" : "protected internal",
+            type_name,
+            bind<write_base_constructor_dispatch>(base_semantics),
+            default_interface_name,
+            default_interface_name,
+            // Equality operators
+            type_name,
+            type_name,
+            type_name,
+            type_name,
+            type_name,
+            type_name,
             bind([&](writer& w)
             {
-                    bool has_base_class = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
-                    separator s{ w, " || " };
+                bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
+                if (!type.Flags().Sealed())
+                {
                     w.write(R"(
-%bool IsOverridableInterface(Guid iid) => %%;
-
-global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
+protected %(global::WinRT.DerivedComposed _)%
 {
-ppv = IntPtr.Zero;
-if (IsOverridableInterface(iid) || typeof(global::WinRT.IInspectable).GUID == iid)
-{
-return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
-}
-
-if (GetReferenceForQI().TryAs<IUnknownVftbl>(iid, out ObjectReference<IUnknownVftbl> objRef) >= 0)
-{
-using (objRef)
-{
-ppv = objRef.GetRef();
-return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.Handled;
-}
-}
-
-return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
+_defaultLazy = new Lazy<%>(() => (%)(object)this);
 })",
-                bind([&](writer& w)
-                {
-                    auto visibility = "protected ";
-                    auto overridable = "virtual ";
-                    if (has_base_class)
-                    {
-                        overridable = "override ";
-                    }
-                    else if (type.Flags().Sealed())
-                    {
-                        visibility = "private ";
-                        overridable = "";
-                    }
-                    w.write(visibility);
-                    w.write(overridable);
-                }),
-                bind_each([&](writer& w, InterfaceImpl const& iface)
-                {
-                    if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute"))
-                    {
-                        s();
-                        w.write("GuidGenerator.GetIID(typeof(%)) == iid",
-                            bind<write_type_name>(get_type_semantics(iface.Interface()), false, false));
-                    }
-                }, type.InterfaceImpl()),
-                bind([&](writer& w)
-                {
-                    if (has_base_class)
-                    {
-                        s();
-                        w.write("base.IsOverridableInterface(iid)");
-                    }
-                    if (s.first)
-                    {
-                        w.write("false");
-                    }
-                }));
-            }));
+type.TypeName(),
+has_base_type ? ":base(_)" : "",
+default_interface_name,
+default_interface_name);
+                }
+
+                w.write(R"(
+private IObjectReference GetReferenceForQI() => _inner;
+
+IObjectReference IWinRTObject.NativeObject => GetReferenceForQI();
+
+global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();)");
+            }),
+            default_interface_name,
+            default_interface_name,
+            bind<write_class_members>(type),
+            bind<write_custom_query_interface_impl>(type));
     }
 
     void write_abi_class(writer& w, TypeDef const& type)

@@ -178,7 +178,14 @@ Where <spec> is one or more of:
                             }
                             else
                             {
-                                write_class(w, type);
+                                if (settings.netstandard_compat)
+                                {
+                                    write_class_netstandard(w, type);
+                                }
+                                else
+                                {
+                                    write_class(w, type);
+                                }
                             }
                             break;
                         case category::delegate_type:
