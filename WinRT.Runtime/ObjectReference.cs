@@ -56,7 +56,7 @@ namespace WinRT
             return ObjectReference<T>.Attach(ref thatPtr);
         }
 
-        public int TryAs<T>(out ObjectReference<T> objRef) => TryAs<T>(GuidGenerator.GetIID(typeof(T)), out objRef);
+        public int TryAs<T>(out ObjectReference<T> objRef) => TryAs(GuidGenerator.GetIID(typeof(T)), out objRef);
 
         public virtual unsafe int TryAs<T>(Guid iid, out ObjectReference<T> objRef)
         {

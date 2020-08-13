@@ -2471,9 +2471,19 @@ internal static _% Instance => _instance.Value;
     {
         auto get_method_info = [&](MethodDef const& method)
         {
+            std::string obj_target;
+            if (settings.netstandard_compat)
+            {
+                obj_target = "_obj";
+            }
+            else
+            {
+                obj_target = w.write_temp("((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(%))",
+                    bind<write_type_name>(type, false, false));
+            }
             auto vmethod_name = get_vmethod_name(w, type, method);
             return std::pair{
-                "_obj.Vftbl." + vmethod_name,
+                obj_target + ".Vftbl." + vmethod_name,
                 generic_methods.find(vmethod_name) != generic_methods.end()};
         };
 
@@ -2486,11 +2496,19 @@ internal static _% Instance => _instance.Value;
             method_signature signature{ method };
             auto [invoke_target, is_generic] = get_method_info(method);
             w.write(R"(
-public unsafe %% %(%)
+%unsafe %% %%(%)
 {%}
 )",
+                settings.netstandard_compat ? "public " : "",
                 (method.Name() == "ToString"sv) ? "override " : "",
                 bind<write_projection_return_type>(signature),
+                bind([&](writer& w)
+                {
+                    if (!settings.netstandard_compat)
+                    {
+                        w.write("%.", bind<write_type_name>(type, false, false));
+                    }
+                }),
                 method.Name(),
                 bind_list<write_projection_parameter>(", ", signature.params()),
                 bind<write_abi_method_call>(signature, invoke_target, is_generic, false));
@@ -2500,10 +2518,18 @@ public unsafe %% %(%)
         {
             auto [getter, setter] = get_property_methods(prop);
             w.write(R"(
-public unsafe % %
+%unsafe % %%
 {
 )",
+                settings.netstandard_compat ? "public " : "",
                 write_prop_type(w, prop),
+                bind([&](writer& w)
+                {
+                    if (!settings.netstandard_compat)
+                    {
+                        w.write("%.", bind<write_type_name>(type, false, false));
+                    }
+                }),
                 prop.Name());
             if (getter)
             {
@@ -2520,7 +2546,8 @@ public unsafe % %
                 if (!getter)
                 {
                     auto getter_interface = find_property_interface(w, type, prop.Name());
-                    w.write("get{ return As<%>().%; }\n", getter_interface.first, prop.Name());
+                    auto getter_cast = settings.netstandard_compat ? "As<%>()"s : "((%)(IWinRTObject)this)"s;
+                    w.write("get{ return " + getter_cast + "().%; }\n", getter_interface.first, prop.Name());
                 }
                 auto [invoke_target, is_generic] = get_method_info(setter);
                 auto signature = method_signature(setter);
@@ -2538,13 +2565,20 @@ public unsafe % %
         {
             auto semantics = get_type_semantics(evt.EventType());
             w.write(R"(
-public event % %
+public event % %%
 {
 add => _%.Subscribe(value);
 remove => _%.Unsubscribe(value);
 }
 )",
                 bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
+                bind([&](writer& w)
+                {
+                    if (!settings.netstandard_compat)
+                    {
+                        w.write("%.", bind<write_type_name>(type, false, false));
+                    }
+                }),
                 evt.Name(),
                 evt.Name(),
                 evt.Name());
@@ -2559,7 +2593,7 @@ remove => _%.Unsubscribe(value);
     };
 
     void write_required_interface_members_for_abi_type(writer& w, TypeDef const& type, 
-        std::map<std::string, required_interface>& required_interfaces)
+        std::map<std::string, required_interface>& required_interfaces, bool emit_mapped_type_helpers)
     {
         auto write_required_interface = [&](TypeDef const& iface)
         {
@@ -2570,7 +2604,7 @@ remove => _%.Unsubscribe(value);
                 return;
             }
 
-            if (auto mapping = get_mapped_type(iface.TypeNamespace(), iface.TypeName()))
+            if (auto mapping = get_mapped_type(iface.TypeNamespace(), iface.TypeName()); mapping && emit_mapped_type_helpers)
             {
                 auto remove_enumerable = [&](std::string generic_enumerable = "")
                 {
@@ -2708,7 +2742,7 @@ remove => _%.Unsubscribe(value);
                 if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute") || !is_exclusive_to(type))
                 {
                     write_required_interface(type);
-                    write_required_interface_members_for_abi_type(w, type, required_interfaces);
+                    write_required_interface_members_for_abi_type(w, type, required_interfaces, emit_mapped_type_helpers);
                 }
             });
         }
@@ -4078,7 +4112,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         std::vector<std::string> nongeneric_delegates;
 
         std::map<std::string, required_interface> required_interfaces;
-        write_required_interface_members_for_abi_type(w, type, required_interfaces);
+        write_required_interface_members_for_abi_type(w, type, required_interfaces, true);
 
         w.write(R"([global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
 %
@@ -4178,18 +4212,17 @@ public static class %
     {
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", true);
-        auto is_generic = distance(type.GenericParam()) > 0;
         std::set<std::string> generic_methods;
         std::vector<std::string> nongeneric_delegates;
 
         std::map<std::string, required_interface> required_interfaces;
-        write_required_interface_members_for_abi_type(w, type, required_interfaces);
+        write_required_interface_members_for_abi_type(w, type, required_interfaces, false);
 
         w.write(R"([DynamicInterfaceCastableImplementation]
 %
 internal unsafe interface % : %
 {
-%%%%%}
+%%%%}
 )",
             // Interface abi implementation
             bind<write_guid_attribute>(type),
@@ -4197,16 +4230,6 @@ internal unsafe interface % : %
             bind<write_type_name>(type, false, false),
             // Vftbl
             bind<write_vtable>(type, type_name, generic_methods, "", nongeneric_delegates),
-            [&](writer& w) {
-                for (auto required_interface : required_interfaces)
-                {
-                    if (required_interface.second.helper_wrapper.empty())
-                        continue;
-                    w.write("%.FromAbiHelper %;\n",
-                        required_interface.second.helper_wrapper,
-                        required_interface.second.adapter);
-                }
-            },
             bind<write_interface_members>(type, generic_methods),
             bind<write_event_sources>(type),
             [&](writer& w) {
