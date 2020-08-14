@@ -1039,16 +1039,19 @@ remove => %.% -= value;
 
     std::string write_static_cache_object(writer& w, std::string_view cache_type_name, TypeDef const& class_type)
     {
+        auto cache_vftbl_type = w.write_temp("ABI.%.%.Vftbl",
+            class_type.TypeNamespace(),
+            cache_type_name);
         auto cache_interface =
             w.write_temp(
-                R"((new BaseActivationFactory("%", "%.%"))._As<ABI.%.%.Vftbl>)",
+                R"((new BaseActivationFactory("%", "%.%"))._As<%>)",
                 class_type.TypeNamespace(),
                 class_type.TypeNamespace(),
                 class_type.TypeName(),
-                class_type.TypeNamespace(),
-                cache_type_name);
-
-        w.write(R"(
+                cache_vftbl_type);
+        if (settings.netstandard_compat)
+        {
+            w.write(R"(
 internal class _% : ABI.%.%
 {
 public _%() : base(%()) { }
@@ -1056,14 +1059,42 @@ private static WeakLazy<_%> _instance = new WeakLazy<_%>();
 internal static % Instance => _instance.Value;
 }
 )",
-            cache_type_name,
-            class_type.TypeNamespace(),
-            cache_type_name,
-            cache_type_name,
-            cache_interface,
-            cache_type_name,
-            cache_type_name,
-            cache_type_name);
+                cache_type_name,
+                class_type.TypeNamespace(),
+                cache_type_name,
+                cache_type_name,
+                cache_interface,
+                cache_type_name,
+                cache_type_name,
+                cache_type_name);
+        }
+        else
+        {
+            w.write(R"(
+internal class _% : IWinRTObject
+{
+private ObjectReference<%> _obj;
+public _%()
+{
+_obj = %();
+}
+
+private static WeakLazy<_%> _instance = new WeakLazy<_%>();
+internal static % Instance => (%)_instance.Value;
+
+IObjectReference IWinRTObject.NativeObject => _obj;
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
+}
+)",
+                cache_type_name,
+                cache_vftbl_type,
+                cache_type_name,
+                cache_interface,
+                cache_type_name,
+                cache_type_name,
+                cache_type_name,
+                cache_type_name);
+        }
 
         return w.write_temp("_%.Instance", cache_type_name);
     }
@@ -2331,7 +2362,8 @@ finally
     }
 
     void write_abi_method_with_raw_return_type(writer& w, MethodDef const& method)
-    {                if (is_special(method))
+    {
+        if (is_special(method))
         {
             return;
         }
@@ -2361,9 +2393,11 @@ finally
         method_signature signature{ method };
         auto [invoke_target, is_generic] = get_method_info(method);
         w.write(R"(
-public unsafe new % %(%)
+public unsafe %% %(%)
 {%}
 )",
+            // In the .NET Standard 2.0 code-gen, the fully-projected signature will be available in the base class, so we need to specify new to hide it
+            settings.netstandard_compat ? "new " : "", 
             bind(write_raw_return_type, signature),
             method.Name(),
             bind_list<write_projection_parameter>(", ", signature.params()),
@@ -2452,15 +2486,16 @@ public unsafe % %(%)
     std::string write_factory_cache_object(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
     {
         std::string_view cache_type_name = factory_type.TypeName();
-
+        auto cache_vftbl_type = w.write_temp("ABI.%.%.Vftbl", class_type.TypeNamespace(), cache_type_name);
         auto cache_interface =
             w.write_temp(
-                R"(ActivationFactory<%>.As<ABI.%.%.Vftbl>)",
+                R"(ActivationFactory<%>.As<%>)",
                 class_type.TypeName(),
-                class_type.TypeNamespace(),
-                cache_type_name);
+                cache_vftbl_type);
+        if (settings.netstandard_compat)
+        {
 
-        w.write(R"(
+            w.write(R"(
 internal class _% : ABI.%.%
 {
 public _%() : base(%()) { }
@@ -2469,16 +2504,47 @@ internal static _% Instance => _instance.Value;
 %
 }
 )",
-            cache_type_name,
-            class_type.TypeNamespace(),
-            cache_type_name,
-            cache_type_name,
-            cache_interface,
-            cache_type_name,
-            cache_type_name,
-            cache_type_name,
-            bind_each<method_writer>(factory_type.MethodList())
-            );
+                cache_type_name,
+                class_type.TypeNamespace(),
+                cache_type_name,
+                cache_type_name,
+                cache_interface,
+                cache_type_name,
+                cache_type_name,
+                cache_type_name,
+                bind_each<method_writer>(factory_type.MethodList())
+                );
+        }
+        else
+        {
+            w.write(R"(
+internal class _% : IWinRTObject
+{
+private ObjectReference<%> _obj;
+private IntPtr ThisPtr => _obj.ThisPtr;
+public _%()
+{
+_obj = %();
+}
+
+private static WeakLazy<_%> _instance = new WeakLazy<_%>();
+internal static _% Instance => _instance.Value;
+
+IObjectReference IWinRTObject.NativeObject => _obj;
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
+
+%
+}
+)",
+                cache_type_name,
+                cache_vftbl_type,
+                cache_type_name,
+                cache_interface,
+                cache_type_name,
+                cache_type_name,
+                cache_type_name,
+                bind_each<method_writer>(factory_type.MethodList()));
+        }
 
         return w.write_temp("_%.Instance", cache_type_name);
     }
@@ -3897,23 +3963,6 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
     void write_base_constructor_dispatch(writer& w, type_semantics type)
     {
-        std::string base_default_interface_name;
-        call(type,
-            [&](object_type) {},
-            [&](type_definition const& def)
-            {
-                base_default_interface_name = get_default_interface_name(w, def);
-            },
-            [&](generic_type_instance const& inst)
-            {
-                auto guard{ w.push_generic_args(inst) };
-                base_default_interface_name = get_default_interface_name(w, inst.generic_type);
-            },
-                [](auto)
-            {
-                throw_invalid("Invalid base class type.");
-            });
-
         if (!std::holds_alternative<object_type>(type))
         {
             w.write(R"(
@@ -4522,12 +4571,17 @@ public static %% FromAbi(IntPtr thisPtr)
 {
 if (thisPtr == IntPtr.Zero) return null;
 var obj = MarshalInspectable.FromAbi(thisPtr);
-return obj is % ? (%)obj : new %((%)obj);
+if (obj is % result)
+{
+return result;
+}
+using IObjectReference objRef = MarshalInspectable.CreateMarshaler(obj);
+return new %(objRef);
 }
 
 % %(IObjectReference objRef)%
 {
-_inner = objRef;
+_inner = objRef.As<%.Vftbl>();
 _defaultLazy = new Lazy<%>(() => (%)(object)this);
 }
 
@@ -4553,16 +4607,16 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             default_interface_name,
             default_interface_name,
             bind<write_attributed_types>(type),
+            // FromAbi
             derived_new,
             type_name,
             type_name,
             type_name,
-            type_name,
-            default_interface_abi_name,
             // ObjectReference constructor
             type.Flags().Sealed() ? "internal" : "protected internal",
             type_name,
             bind<write_base_constructor_dispatch>(base_semantics),
+            default_interface_abi_name,
             default_interface_name,
             default_interface_name,
             // Equality operators

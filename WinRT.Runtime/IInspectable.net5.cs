@@ -7,7 +7,7 @@ namespace WinRT
     {
         IObjectReference IWinRTObject.NativeObject => _obj;
 
-        ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>();
+        ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
     }
 
 }
