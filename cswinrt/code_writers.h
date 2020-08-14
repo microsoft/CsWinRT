@@ -1304,13 +1304,15 @@ IEnumerator IEnumerable.GetEnumerator() => %.GetEnumerator();
             target);
     }
 
-    void write_enumerable_members(writer& w, std::string_view target, bool include_nongeneric)
+    void write_enumerable_members(writer& w, std::string_view target, bool include_nongeneric, bool emit_explicit)
     {
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
+        auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IEnumerable<%>.", element) : "";
+        auto visibility = emit_explicit ? "" : "public ";
         w.write(R"(
-public IEnumerator<%> GetEnumerator() => %.GetEnumerator();
+%IEnumerator<%> %GetEnumerator() => %.GetEnumerator();
 )",         
-            element, target);
+            visibility, element, self,  target);
 
         if (!include_nongeneric) return;
         w.write(R"(
@@ -1318,40 +1320,45 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 )");
     }
 
-    void write_enumerator_members(writer& w, std::string_view target)
+    void write_enumerator_members(writer& w, std::string_view target, bool emit_explicit)
     {
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
+        auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IEnumerator<%>.", element) : "";
+        auto visibility = emit_explicit ? "" : "public ";
+
         w.write(R"(
-public bool MoveNext() => %.MoveNext();
-public void Reset() => %.Reset();
-public void Dispose() => %.Dispose();
-public % Current => %.Current;
+%bool %MoveNext() => %.MoveNext();
+%void %Reset() => %.Reset();
+%void %Dispose() => %.Dispose();
+%% %Current => %.Current;
 object IEnumerator.Current => Current;
 )", 
-            target, 
-            target, 
-            target, 
-            element, target);
+            visibility, self, target, 
+            visibility, self, target, 
+            visibility, self, target, 
+            visibility, element, self, target);
     }
 
-    void write_readonlydictionary_members(writer& w, std::string_view target, bool include_enumerable)
+    void write_readonlydictionary_members(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
     {
         auto key = w.write_temp("%", bind<write_generic_type_name>(0));
         auto value = w.write_temp("%", bind<write_generic_type_name>(1));
+        auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyDictionary<%, %>.", key, value) : "";
+        auto visibility = emit_explicit ? "" : "public ";
         w.write(R"(
-public IEnumerable<%> Keys => %.Keys;
-public IEnumerable<%> Values => %.Values;
-public int Count => %.Count;
-public % this[% key] => %[key];
-public bool ContainsKey(% key) => %.ContainsKey(key);
-public bool TryGetValue(% key, out % value) => %.TryGetValue(key, out value);
+%IEnumerable<%> %Keys => %.Keys;
+%IEnumerable<%> %Values => %.Values;
+%int %Count => %.Count;
+%% %this[% key] => %[key];
+%bool %ContainsKey(% key) => %.ContainsKey(key);
+%bool %TryGetValue(% key, out % value) => %.TryGetValue(key, out value);
 )", 
-            key, target, 
-            value, target, 
-            target, 
-            value, key, target, 
-            key, target,
-            key, value, target);
+            visibility, key, self, target, 
+            visibility, value, self, target, 
+            visibility, self, target,
+            visibility, value, self, key, target,
+            visibility, self, key, target,
+            visibility, self, key, value, target);
         
         if (!include_enumerable) return;
         w.write(R"(
@@ -1361,110 +1368,123 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
             key, value, target);
     }
 
-    void write_dictionary_members(writer& w, std::string_view target, bool include_enumerable)
+    void write_dictionary_members(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
     {
         auto key = w.write_temp("%", bind<write_generic_type_name>(0));
         auto value = w.write_temp("%", bind<write_generic_type_name>(1));
+        auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyDictionary<%, %>.", key, value) : "";
+        auto visibility = emit_explicit ? "" : "public ";
         w.write(R"(
-public ICollection<%> Keys => %.Keys;
-public ICollection<%> Values => %.Values;
-public int Count => %.Count;
-public bool IsReadOnly => %.IsReadOnly;
-public % this[% key] 
+%ICollection<%> %Keys => %.Keys;
+%ICollection<%> %Values => %.Values;
+%int %Count => %.Count;
+%bool %IsReadOnly => %.IsReadOnly;
+%% %this[% key] 
 {
 get => %[key];
 set => %[key] = value;
 }
-public void Add(% key, % value) => %.Add(key, value);
-public bool ContainsKey(% key) => %.ContainsKey(key);
-public bool Remove(% key) => %.Remove(key);
-public bool TryGetValue(% key, out % value) => %.TryGetValue(key, out value);
-public void Add(KeyValuePair<%, %> item) => %.Add(item);
-public void Clear() => %.Clear();
-public bool Contains(KeyValuePair<%, %> item) => %.Contains(item);
-public void CopyTo(KeyValuePair<%, %>[] array, int arrayIndex) => %.CopyTo(array, arrayIndex);
+%void %Add(% key, % value) => %.Add(key, value);
+%bool %ContainsKey(% key) => %.ContainsKey(key);
+%bool %Remove(% key) => %.Remove(key);
+%bool %TryGetValue(% key, out % value) => %.TryGetValue(key, out value);
+%void %Add(KeyValuePair<%, %> item) => %.Add(item);
+%void %Clear() => %.Clear();
+%bool %Contains(KeyValuePair<%, %> item) => %.Contains(item);
+%void %CopyTo(KeyValuePair<%, %>[] array, int arrayIndex) => %.CopyTo(array, arrayIndex);
 bool ICollection<KeyValuePair<%, %>>.Remove(KeyValuePair<%, %> item) => %.Remove(item);
 )", 
-            key, target, 
-            value, target, 
-            target, 
-            target, 
-            value, key, target, target, 
-            key, value, target, 
-            key, target, 
-            key, target, 
-            key, value, target,
-            key, value, target,
-            target,
-            key, value, target,
-            key, value, target,
+            visibility, key, self, target, 
+            visibility, value, self, target, 
+            visibility, self, target, 
+            visibility, self, target, 
+            visibility, value, self, key, target, target, 
+            visibility, self, key, value, target, 
+            visibility, self, key, target, 
+            visibility, self, key, target, 
+            visibility, self, key, value, target,
+            visibility, self, key, value, target,
+            visibility, self, target,
+            visibility, self, key, value, target,
+            visibility, self, key, value, target,
             key, value, key, value, target);
         
         if (!include_enumerable) return;
+        auto enumerable_type = emit_explicit ? w.write_temp("IEnumerable<KeyValuePair<%, %>>.", key, value) : "";
         w.write(R"(
-public IEnumerator<KeyValuePair<%, %>> GetEnumerator() => %.GetEnumerator();
+%IEnumerator<KeyValuePair<%, %>> %GetEnumerator() => %.GetEnumerator();
 IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 )",
-            key, value, target);
+            visibility, key, value, enumerable_type, target);
     }
 
-    void write_readonlylist_members(writer& w, std::string_view target, bool include_enumerable)
+    void write_readonlylist_members(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
     {
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
+        auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyList<%>.", element) : "";
+        auto ireadonlycollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyCollection<%>.", element) : "";
+        auto visibility = emit_explicit ? "" : "public ";
         w.write(R"(
-public int Count => %.Count;
-[global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")]
-public % this[int index] => %[index];
+%int %Count => %.Count;
+%
+%% %this[int index] => %[index];
 )",
-            target,
-            element, target);
+            visibility, ireadonlycollection, target,
+            !emit_explicit ? R"([global::System.Runtime.CompilerServices.IndexerName("ReadOnlyListItem")])" : "",
+            visibility, element, self, target);
         
         if (!include_enumerable) return;
+        auto enumerable_type = emit_explicit ? w.write_temp("IEnumerable<%>.", element) : "";
         w.write(R"(
-public IEnumerator<%> GetEnumerator() => %.GetEnumerator();
+%IEnumerator<%> %GetEnumerator() => %.GetEnumerator();
 IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 )",
-            element, target);
+            visibility, element, enumerable_type, target);
     }
 
-    void write_nongeneric_list_members(writer& w, std::string_view target, bool include_enumerable)
+    void write_nongeneric_list_members(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
     {
+        auto self = emit_explicit ? "global::System.Collections.IList." : "";
+        auto icollection = emit_explicit ? "global::System.Collections.ICollection." : "";
+        auto visibility = emit_explicit ? "" : "public ";
         w.write(R"(
-public int Count => %.Count;
-public bool IsSynchronized => %.IsSynchronized;
-public object SyncRoot => %.SyncRoot;
-public void CopyTo(Array array, int index) => %.CopyTo(array, index);
-[global::System.Runtime.CompilerServices.IndexerName("NonGenericListItem")]
-public object this[int index]
+%int %Count => %.Count;
+%bool %IsSynchronized => %.IsSynchronized;
+%object %SyncRoot => %.SyncRoot;
+%void %CopyTo(Array array, int index) => %.CopyTo(array, index);
+%
+%object %this[int index]
 {
 get => %[index];
 set => %[index] = value;
 }
-public bool IsFixedSize => %.IsFixedSize;
-public bool IsReadOnly => %.IsReadOnly;
-public int Add(object value) => %.Add(value);
-public void Clear() => %.Clear();
-public bool Contains(object value) => %.Contains(value);
-public int IndexOf(object value) => %.IndexOf(value);
-public void Insert(int index, object value) => %.Insert(index, value);
-public void Remove(object value) => %.Remove(value);
-public void RemoveAt(int index) => %.RemoveAt(index);
+%bool %IsFixedSize => %.IsFixedSize;
+%bool %IsReadOnly => %.IsReadOnly;
+%int %Add(object value) => %.Add(value);
+%void %Clear() => %.Clear();
+%bool %Contains(object value) => %.Contains(value);
+%int %IndexOf(object value) => %.IndexOf(value);
+%void %Insert(int index, object value) => %.Insert(index, value);
+%void %Remove(object value) => %.Remove(value);
+%void %RemoveAt(int index) => %.RemoveAt(index);
 )", 
+            visibility, icollection, target,
+            visibility, icollection, target,
+            visibility, icollection, target,
+            visibility, icollection, target,
+            !emit_explicit ? R"([global::System.Runtime.CompilerServices.IndexerName("NonGenericListItem")])" : "",
+            visibility, self,
             target,
             target,
-            target,
-            target,
-            target,
-            target,
-            target,
-            target,
-            target,
-            target,
-            target,
-            target,
-            target,
-            target, 
-            target);
+            visibility, self, target,
+            visibility, self, target,
+            visibility, self, target,
+            visibility, self, target,
+            visibility, self, target,
+            visibility, self, target,
+            visibility, self, target,
+            visibility, self, target, 
+            visibility, self, target);
         
         if (!include_enumerable) return;
         w.write(R"(
@@ -1473,80 +1493,87 @@ IEnumerator IEnumerable.GetEnumerator() => %.GetEnumerator();
             target);
     }
 
-    void write_list_members(writer& w, std::string_view target, bool include_enumerable)
+    void write_list_members(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
     {
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
+        auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IList<%>.", element) : "";
+        auto icollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.ICollection<%>.", element) : "";
+        auto visibility = emit_explicit ? "" : "public ";
         w.write(R"(
-public int Count => %.Count;
-public bool IsReadOnly => %.IsReadOnly;
-[global::System.Runtime.CompilerServices.IndexerName("ListItem")]
-public % this[int index] 
+%int %Count => %.Count;
+%bool %IsReadOnly => %.IsReadOnly;
+%
+%% %this[int index] 
 {
 get => %[index];
 set => %[index] = value;
 }
-public int IndexOf(% item) => %.IndexOf(item);
-public void Insert(int index, % item) => %.Insert(index, item);
-public void RemoveAt(int index) => %.RemoveAt(index);
-public void Add(% item) => %.Add(item);
-public void Clear() => %.Clear();
-public bool Contains(% item) => %.Contains(item);
-public void CopyTo(%[] array, int arrayIndex) => %.CopyTo(array, arrayIndex);
-public bool Remove(% item) => %.Remove(item);
+%int %IndexOf(% item) => %.IndexOf(item);
+%void %Insert(int index, % item) => %.Insert(index, item);
+%void %RemoveAt(int index) => %.RemoveAt(index);
+%void %Add(% item) => %.Add(item);
+%void %Clear() => %.Clear();
+%bool %Contains(% item) => %.Contains(item);
+%void %CopyTo(%[] array, int arrayIndex) => %.CopyTo(array, arrayIndex);
+%bool %Remove(% item) => %.Remove(item);
 )", 
-            target, 
-            target, 
-            element, target, target, 
-            element, target,
-            element, target,
-            target, 
-            element, target,
-            target, 
-            element, target,
-            element, target,
-            element, target);
+            visibility, icollection, target, 
+            visibility, icollection, target,
+            !emit_explicit ? R"([global::System.Runtime.CompilerServices.IndexerName("ListItem")])" : "",
+            visibility, element, self, target, target, 
+            visibility, self, element, target,
+            visibility, self, element, target,
+            visibility, self, target, 
+            visibility, icollection, element, target,
+            visibility, icollection, target, 
+            visibility, icollection, element, target,
+            visibility, icollection, element, target,
+            visibility, icollection, element, target);
         
         if (!include_enumerable) return;
+        auto enumerable_type = emit_explicit ? w.write_temp("IEnumerable<%>.", element) : "";
         w.write(R"(
-public IEnumerator<%> GetEnumerator() => %.GetEnumerator();
+%IEnumerator<%> %GetEnumerator() => %.GetEnumerator();
 IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 )",
-            element, target);
+            visibility, element, enumerable_type, target);
     }
 
-    void write_idisposable_members(writer& w, std::string_view target)
+    void write_idisposable_members(writer& w, std::string_view target, bool emit_explicit)
     {
+        auto self = emit_explicit ? "global::System.IDisposable." : "";
+        auto visibility = emit_explicit ? "" : "public ";
         w.write(R"(
-public void Dispose() => %.Dispose();
+%void %Dispose() => %.Dispose();
 )",
-target);
+            visibility, self, target);
     }
 
     void write_custom_mapped_type_members(writer& w, std::string_view target, mapped_type const& mapping)
     {
         if (mapping.abi_name == "IIterable`1") 
         {
-            write_enumerable_members(w, target, true);
+            write_enumerable_members(w, target, true, false);
         }
         else if (mapping.abi_name == "IIterator`1") 
         {
-            write_enumerator_members(w, target);
+            write_enumerator_members(w, target, false);
         }
         else if (mapping.abi_name == "IMapView`2") 
         {
-            write_readonlydictionary_members(w, target, false);
+            write_readonlydictionary_members(w, target, false, false);
         }
         else if (mapping.abi_name == "IMap`2") 
         {
-            write_dictionary_members(w, target, false);
+            write_dictionary_members(w, target, false, false);
         }
         else if (mapping.abi_name == "IVectorView`1")
         {
-            write_readonlylist_members(w, target, false);
+            write_readonlylist_members(w, target, false, false);
         }
         else if (mapping.abi_name == "IVector`1")
         {
-            write_list_members(w, target, false);
+            write_list_members(w, target, false, false);
         }
         else if (mapping.abi_name == "IBindableIterable")
         {
@@ -1554,11 +1581,11 @@ target);
         }
         else if (mapping.abi_name == "IBindableVector")
         {
-            write_nongeneric_list_members(w, target, false);
+            write_nongeneric_list_members(w, target, false, false);
         }
         else if (mapping.mapped_namespace == "System" && mapping.mapped_name == "IDisposable")
         {
-            write_idisposable_members(w, target);
+            write_idisposable_members(w, target, false);
         }
     }
 
@@ -2748,7 +2775,8 @@ remove => %.Unsubscribe(value);
                         w.write_temp("%", bind<write_enumerable_members>(
                             emit_mapped_type_helpers ? "_iterableToEnumerable"
                             : w.write_temp("((global::System.Collections.Generic.IEnumerable<%>)(IWinRTObject)this)", element),
-                            true)),
+                            true,
+                            !emit_mapped_type_helpers)),
                         w.write_temp("ABI.System.Collections.Generic.IEnumerable<%>", element),
                         "_iterableToEnumerable"
                     };
@@ -2761,7 +2789,8 @@ remove => %.Unsubscribe(value);
                     {
                         w.write_temp("%", bind<write_enumerator_members>(
                             emit_mapped_type_helpers ? "_iteratorToEnumerator"
-                            : w.write_temp("((global::System.Collections.Generic.IEnumerator<%>)(IWinRTObject)this)", element)
+                            : w.write_temp("((global::System.Collections.Generic.IEnumerator<%>)(IWinRTObject)this)", element),
+                            !emit_mapped_type_helpers
                         )),
                         w.write_temp("ABI.System.Collections.Generic.IEnumerator<%>", element),
                         "_iteratorToEnumerator"
@@ -2776,7 +2805,8 @@ remove => %.Unsubscribe(value);
                         w.write_temp("%", bind<write_readonlydictionary_members>(
                             emit_mapped_type_helpers ? "_mapViewToReadOnlyDictionary"
                             : w.write_temp("((global::System.Collections.Generic.IReadOnlyDictionary<%, %>)(IWinRTObject)this)", key, value),
-                            true)),
+                            true,
+                            !emit_mapped_type_helpers)),
                         w.write_temp("ABI.System.Collections.Generic.IReadOnlyDictionary<%, %>", key, value),
                         "_mapViewToReadOnlyDictionary"
                     };
@@ -2791,7 +2821,8 @@ remove => %.Unsubscribe(value);
                         w.write_temp("%", bind<write_dictionary_members>(
                             emit_mapped_type_helpers ? "_mapToDictionary"
                             : w.write_temp("((global::System.Collections.Generic.IDictionary<%, %>)(IWinRTObject)this)", key, value),
-                            true)),
+                            true,
+                            !emit_mapped_type_helpers)),
                         w.write_temp("ABI.System.Collections.Generic.IDictionary<%, %>", key, value),
                         "_mapToDictionary"
                     };
@@ -2805,7 +2836,8 @@ remove => %.Unsubscribe(value);
                         w.write_temp("%", bind<write_readonlylist_members>(
                             emit_mapped_type_helpers ? "_vectorViewToReadOnlyList"
                             : w.write_temp("((global::System.Collections.Generic.IReadOnlyList<%>)(IWinRTObject)this)", element),
-                            true)),
+                            true,
+                            !emit_mapped_type_helpers)),
                         w.write_temp("ABI.System.Collections.Generic.IReadOnlyList<%>", element),
                         "_vectorViewToReadOnlyList"
                     };
@@ -2819,7 +2851,8 @@ remove => %.Unsubscribe(value);
                         w.write_temp("%", bind<write_list_members>(
                             emit_mapped_type_helpers ? "_vectorToList"
                             : w.write_temp("((global::System.Collections.Generic.IList<%>)(IWinRTObject)this)", element),
-                            true)),
+                            true,
+                            !emit_mapped_type_helpers)),
                         w.write_temp("ABI.System.Collections.Generic.IList<%>", element),
                         "_vectorToList"
                     };
@@ -2843,7 +2876,8 @@ remove => %.Unsubscribe(value);
                         w.write_temp("%", bind<write_nongeneric_list_members>(
                             emit_mapped_type_helpers ? "_bindableVectorToList"
                             : "((global::System.Collections.IList)(IWinRTObject)this)",
-                            true)),
+                            true,
+                            !emit_mapped_type_helpers)),
                         "ABI.System.Collections.IList",
                         "_bindableVectorToList"
                     };
@@ -2853,7 +2887,8 @@ remove => %.Unsubscribe(value);
                 {
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_idisposable_members>(emit_mapped_type_helpers ? "As<global::ABI.System.IDisposable>()" : "((global::System.IDisposable)(IWinRTObject)this)"))
+                        w.write_temp("%", bind<write_idisposable_members>(emit_mapped_type_helpers ? "As<global::ABI.System.IDisposable>()" : "((global::System.IDisposable)(IWinRTObject)this)",
+                            !emit_mapped_type_helpers))
                     };
                 }
                 return;
