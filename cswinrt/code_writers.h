@@ -2620,7 +2620,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
 {%%}
 )",
                 settings.netstandard_compat ? "public " : "",
-                (method.Name() == "ToString"sv) ? "override " : "",
+                (settings.netstandard_compat && method.Name() == "ToString"sv) ? "override " : "",
                 bind<write_projection_return_type>(signature),
                 bind([&](writer& w)
                 {
@@ -2731,11 +2731,11 @@ remove => %.Unsubscribe(value);
                 return;
             }
 
-            if (auto mapping = get_mapped_type(iface.TypeNamespace(), iface.TypeName()); mapping && emit_mapped_type_helpers)
+            if (auto mapping = get_mapped_type(iface.TypeNamespace(), iface.TypeName()))
             {
                 auto remove_enumerable = [&](std::string generic_enumerable = "")
                 {
-                    required_interfaces[std::move("global::System.Collections.IEnumerable")] = {};
+                    required_interfaces["global::System.Collections.IEnumerable"] = {};
                     if(generic_enumerable.empty()) return;
                     required_interfaces[std::move(generic_enumerable)] = {};
                 };
@@ -2745,7 +2745,10 @@ remove => %.Unsubscribe(value);
                     auto element = w.write_temp("%", bind<write_generic_type_name>(0));
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_enumerable_members>("_iterableToEnumerable", true)),
+                        w.write_temp("%", bind<write_enumerable_members>(
+                            emit_mapped_type_helpers ? "_iterableToEnumerable"
+                            : w.write_temp("((global::System.Collections.Generic.IEnumerable<%>)(IWinRTObject)this)", element),
+                            true)),
                         w.write_temp("ABI.System.Collections.Generic.IEnumerable<%>", element),
                         "_iterableToEnumerable"
                     };
@@ -2756,7 +2759,10 @@ remove => %.Unsubscribe(value);
                     auto element = w.write_temp("%", bind<write_generic_type_name>(0));
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_enumerator_members>("_iteratorToEnumerator")),
+                        w.write_temp("%", bind<write_enumerator_members>(
+                            emit_mapped_type_helpers ? "_iteratorToEnumerator"
+                            : w.write_temp("((global::System.Collections.Generic.IEnumerator<%>)(IWinRTObject)this)", element)
+                        )),
                         w.write_temp("ABI.System.Collections.Generic.IEnumerator<%>", element),
                         "_iteratorToEnumerator"
                     };
@@ -2767,7 +2773,10 @@ remove => %.Unsubscribe(value);
                     auto value = w.write_temp("%", bind<write_generic_type_name>(1));
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_readonlydictionary_members>("_mapViewToReadOnlyDictionary", true)),
+                        w.write_temp("%", bind<write_readonlydictionary_members>(
+                            emit_mapped_type_helpers ? "_mapViewToReadOnlyDictionary"
+                            : w.write_temp("((global::System.Collections.Generic.IReadOnlyDictionary<%, %>)(IWinRTObject)this)", key, value),
+                            true)),
                         w.write_temp("ABI.System.Collections.Generic.IReadOnlyDictionary<%, %>", key, value),
                         "_mapViewToReadOnlyDictionary"
                     };
@@ -2779,7 +2788,10 @@ remove => %.Unsubscribe(value);
                     auto value = w.write_temp("%", bind<write_generic_type_name>(1));
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_dictionary_members>("_mapToDictionary", true)),
+                        w.write_temp("%", bind<write_dictionary_members>(
+                            emit_mapped_type_helpers ? "_mapToDictionary"
+                            : w.write_temp("((global::System.Collections.Generic.IDictionary<%, %>)(IWinRTObject)this)", key, value),
+                            true)),
                         w.write_temp("ABI.System.Collections.Generic.IDictionary<%, %>", key, value),
                         "_mapToDictionary"
                     };
@@ -2790,7 +2802,10 @@ remove => %.Unsubscribe(value);
                     auto element = w.write_temp("%", bind<write_generic_type_name>(0));
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_readonlylist_members>("_vectorViewToReadOnlyList", true)),
+                        w.write_temp("%", bind<write_readonlylist_members>(
+                            emit_mapped_type_helpers ? "_vectorViewToReadOnlyList"
+                            : w.write_temp("((global::System.Collections.Generic.IReadOnlyList<%>)(IWinRTObject)this)", element),
+                            true)),
                         w.write_temp("ABI.System.Collections.Generic.IReadOnlyList<%>", element),
                         "_vectorViewToReadOnlyList"
                     };
@@ -2801,7 +2816,10 @@ remove => %.Unsubscribe(value);
                     auto element = w.write_temp("%", bind<write_generic_type_name>(0));
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_list_members>("_vectorToList", true)),
+                        w.write_temp("%", bind<write_list_members>(
+                            emit_mapped_type_helpers ? "_vectorToList"
+                            : w.write_temp("((global::System.Collections.Generic.IList<%>)(IWinRTObject)this)", element),
+                            true)),
                         w.write_temp("ABI.System.Collections.Generic.IList<%>", element),
                         "_vectorToList"
                     };
@@ -2811,7 +2829,9 @@ remove => %.Unsubscribe(value);
                 {
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_nongeneric_enumerable_members>("_bindableIterableToEnumerable")),
+                        w.write_temp("%", bind<write_nongeneric_enumerable_members>(
+                            emit_mapped_type_helpers ? "_bindableIterableToEnumerable"
+                            : "((global::System.Collections.IEnumerable)(IWinRTObject)this)")),
                         "ABI.System.Collections.IEnumerable",
                         "_bindableIterableToEnumerable"
                     };
@@ -2820,7 +2840,10 @@ remove => %.Unsubscribe(value);
                 {
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_nongeneric_list_members>("_bindableVectorToList", true)),
+                        w.write_temp("%", bind<write_nongeneric_list_members>(
+                            emit_mapped_type_helpers ? "_bindableVectorToList"
+                            : "((global::System.Collections.IList)(IWinRTObject)this)",
+                            true)),
                         "ABI.System.Collections.IList",
                         "_bindableVectorToList"
                     };
@@ -2830,7 +2853,7 @@ remove => %.Unsubscribe(value);
                 {
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_idisposable_members>("As<global::ABI.System.IDisposable>()"))
+                        w.write_temp("%", bind<write_idisposable_members>(emit_mapped_type_helpers ? "As<global::ABI.System.IDisposable>()" : "((global::System.IDisposable)(IWinRTObject)this)"))
                     };
                 }
                 return;
@@ -4590,7 +4613,6 @@ _lazyInterfaces = new Dictionary<Type, object>()
 
         auto type_name = write_type_name_temp(w, type);
         auto default_interface_name = get_default_interface_name(w, type, false);
-        auto default_interface_abi_name = get_default_interface_name(w, type, true);
         auto base_semantics = get_type_semantics(type.Extends());
         auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
 
@@ -4619,7 +4641,7 @@ return new %(objRef);
 
 % %(IObjectReference objRef)%
 {
-_inner = objRef.As<%.Vftbl>();
+_inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 _defaultLazy = new Lazy<%>(() => (%)new global::WinRT.IInspectable(_inner));
 }
 
@@ -4653,7 +4675,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             type.Flags().Sealed() ? "internal" : "protected internal",
             type_name,
             bind<write_base_constructor_dispatch>(base_semantics),
-            default_interface_abi_name,
+            default_interface_name,
             default_interface_name,
             default_interface_name,
             // Equality operators
@@ -4699,12 +4721,11 @@ global::System.Collections.Concurrent.ConcurrentDictionary<global::System.Runtim
 
         auto abi_type_name = write_type_name_temp(w, type, "%", true);
         auto projected_type_name = write_type_name_temp(w, type);
-        auto default_interface_abi_name = get_default_interface_name(w, type, true);
 
         w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 public struct %
 {
-public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable.CreateMarshaler(obj).As<%.Vftbl>();
+%
 public static IntPtr GetAbi(IObjectReference value) => value is null ? IntPtr.Zero : MarshalInterfaceHelper<object>.GetAbi(value);
 public static % FromAbi(IntPtr thisPtr) => %.FromAbi(thisPtr);
 public static IntPtr FromManaged(% obj) => obj is null ? IntPtr.Zero : CreateMarshaler(obj).GetRef();
@@ -4719,8 +4740,28 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable.Disp
 }
 )",
             abi_type_name,
-            projected_type_name,
-            default_interface_abi_name,
+            bind([&](writer& w)
+            {
+                bool is_exclusive_to_default = false;
+                for_typedef(w, get_type_semantics(get_default_interface(type)), [&](auto&& type)
+                {
+                    is_exclusive_to_default = is_exclusive_to(type);
+                });
+                if (is_exclusive_to_default)
+                {
+                    auto default_interface_abi_name = get_default_interface_name(w, type, true);
+                    w.write("public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable.CreateMarshaler(obj).As<%.Vftbl>();",
+                        projected_type_name,
+                        default_interface_abi_name);
+                }
+                else
+                {
+                    auto default_interface_name = get_default_interface_name(w, type, false);
+                    w.write("public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInterface<%>.CreateMarshaler(obj);",
+                        projected_type_name,
+                        default_interface_name);
+                }
+            }),
             projected_type_name,
             projected_type_name,
             projected_type_name,
