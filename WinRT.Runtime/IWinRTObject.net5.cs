@@ -9,6 +9,10 @@ namespace WinRT
     {
         bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
         {
+            if (QueryInterfaceCache.TryGetValue(interfaceType, out _))
+            {
+                return true;
+            }
             Type type = Type.GetTypeFromHandle(interfaceType);
             Type helperType = type.FindHelperType();
             if (helperType is null)
