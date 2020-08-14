@@ -1119,7 +1119,7 @@ public %(%) : this(((Func<%>)(() => {
 IntPtr ptr = (%.%(%));
 try
 {
-return new %(ComWrappersSupport.GetObjectReferenceForInterface(ptr));
+return %(ComWrappersSupport.GetObjectReferenceForInterface(ptr));
 }
 finally
 {
@@ -1132,23 +1132,23 @@ MarshalInspectable.DisposeAbi(ptr);
 )",
                     class_type.TypeName(),
                     bind_list<write_projection_parameter>(", ", signature.params()),
-                    default_interface_name,
+                    settings.netstandard_compat ? default_interface_name : "IObjectReference",
                     cache_object,
                     method.Name(),
                     bind_list<write_parameter_name_with_modifier>(", ", signature.params()),
-                    default_interface_name);
+                    settings.netstandard_compat ? "new " + default_interface_name : "");
             }
         }
         else
         {
             w.write(R"(
-public %() : this(new %(ActivationFactory<%>.ActivateInstance<%.Vftbl>()))
+public %() : this(%(ActivationFactory<%>.ActivateInstance<%.Vftbl>()))
 {
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
 )",
                 class_type.TypeName(),
-                default_interface_name,
+                settings.netstandard_compat ? "new " + default_interface_name : "",
                 class_type.TypeName(),
                 default_interface_name);
         }
@@ -1157,7 +1157,8 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
     void write_composable_constructors(writer& w, TypeDef const& composable_type, TypeDef const& class_type, std::string_view visibility)
     {
         auto cache_object = write_factory_cache_object<write_composing_factory_method>(w, composable_type, class_type);
-        auto default_interface_name = get_default_interface_name(w, class_type);
+        auto default_interface_name = get_default_interface_name(w, class_type, false);
+        auto default_interface_abi_name = get_default_interface_name(w, class_type);
 
         for (auto&& method : composable_type.MethodList())
         {
@@ -1167,7 +1168,9 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
             params_without_objects.pop_back();
             params_without_objects.pop_back();
 
-            w.write(R"(
+            if (settings.netstandard_compat)
+            {
+                w.write(R"(
 % %(%)%
 {
 object baseInspectable = this.GetType() != typeof(%) ? this : null;
@@ -1190,18 +1193,52 @@ MarshalInspectable.DisposeAbi(ptr);
 }
 }
 )",
-                visibility,
-                class_type.TypeName(),
-                bind_list<write_projection_parameter>(", ", params_without_objects),
-                has_base_type ? ":base(global::WinRT.DerivedComposed.Instance)" : "",
-                bind<write_type_name>(class_type, false, false),
-                cache_object,
-                method.Name(),
-                bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
-                [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
-                default_interface_name,
-                default_interface_name,
-                bind<write_lazy_interface_initialization>(class_type));
+                    visibility,
+                    class_type.TypeName(),
+                    bind_list<write_projection_parameter>(", ", params_without_objects),
+                    has_base_type ? ":base(global::WinRT.DerivedComposed.Instance)" : "",
+                    bind<write_type_name>(class_type, false, false),
+                    cache_object,
+                    method.Name(),
+                    bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
+                    [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
+                    default_interface_abi_name,
+                    default_interface_abi_name,
+                    bind<write_lazy_interface_initialization>(class_type));
+            }
+            else
+            {
+                w.write(R"(
+% %(%)%
+{
+object baseInspectable = this.GetType() != typeof(%) ? this : null;
+IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
+using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
+try
+{
+_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+_defaultLazy = new Lazy<%>(() => (%)this);
+
+ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+}
+finally
+{
+MarshalInspectable.DisposeAbi(ptr);
+}
+}
+)",
+                    visibility,
+                    class_type.TypeName(),
+                    bind_list<write_projection_parameter>(", ", params_without_objects),
+                    has_base_type ? ":base(global::WinRT.DerivedComposed.Instance)" : "",
+                    bind<write_type_name>(class_type, false, false),
+                    cache_object,
+                    method.Name(),
+                    bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
+                    [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
+                    default_interface_name,
+                    default_interface_name);
+            }
         }
     }
 
@@ -4560,7 +4597,7 @@ _lazyInterfaces = new Dictionary<Type, object>()
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %public %class %%, IWinRTObject, IEquatable<%>
 {
-public %IntPtr ThisPtr => _inner.ThisPtr;
+private IntPtr ThisPtr => _inner.ThisPtr;
 
 private IObjectReference _inner = null;
 private readonly Lazy<%> _defaultLazy;
@@ -4603,7 +4640,6 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             type_name,
             bind<write_type_inheritance>(type, base_semantics, true),
             type_name,
-            derived_new,
             default_interface_name,
             default_interface_name,
             bind<write_attributed_types>(type),
