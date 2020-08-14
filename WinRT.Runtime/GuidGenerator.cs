@@ -98,7 +98,7 @@ namespace WinRT
             return "{" + type.GUID.ToString() + "}";
         }
 
-        private static Guid encode_guid(byte[] data)
+        private static Guid encode_guid(Span<byte> data)
         {
             if (BitConverter.IsLittleEndian)
             {
@@ -120,7 +120,11 @@ namespace WinRT
                 // encode rfc clock/reserved field
                 data[8] = (byte)((data[8] & 0x3f) | 0x80);
             }
-            return new Guid(data.Take(16).ToArray());
+#if NETSTANDARD2_0
+            return new Guid(data.Slice(0, 16).ToArray());
+#else
+            return new Guid(data[0..16]);
+#endif
         }
 
         private static Guid wrt_pinterface_namespace = new Guid("d57af411-737b-c042-abae-878b1e16adee");
@@ -132,11 +136,19 @@ namespace WinRT
             {
                 return new Guid(sig);
             }
+#if NETSTANDARD2_0
             var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(sig)).ToArray();
+#else
+            var maxBytes = UTF8Encoding.UTF8.GetMaxByteCount(sig.Length);
+
+            var data = new byte[16 /* Number of bytes in a GUID */ + maxBytes];
+            Span<byte> dataSpan = data;
+            wrt_pinterface_namespace.TryWriteBytes(dataSpan);
+            UTF8Encoding.UTF8.GetBytes(sig, dataSpan[16..]);
+#endif
             using (SHA1 sha = new SHA1CryptoServiceProvider())
             {
-                var hash = sha.ComputeHash(data);
-                return encode_guid(hash);
+                return encode_guid(sha.ComputeHash(data));
             }
         }
     }
