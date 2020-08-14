@@ -15,7 +15,7 @@ namespace WinRT
             }
             Type type = Type.GetTypeFromHandle(interfaceType);
             Type helperType = type.FindHelperType();
-            if (helperType is null)
+            if (helperType is null || !helperType.IsInterface)
             {
                 return false;
             }
@@ -55,10 +55,13 @@ namespace WinRT
 
         RuntimeTypeHandle IDynamicInterfaceCastable.GetInterfaceImplementation(RuntimeTypeHandle interfaceType)
         {
-            return Type.GetTypeFromHandle(interfaceType).GetHelperType().TypeHandle;
+            var helperType = Type.GetTypeFromHandle(interfaceType).GetHelperType();
+            if (helperType.IsInterface)
+                return helperType.TypeHandle;
+            return default;
         }
 
-        protected IObjectReference NativeObject { get; }
+        IObjectReference NativeObject { get; }
 
         protected ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> QueryInterfaceCache { get; }
 

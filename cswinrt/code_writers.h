@@ -1217,7 +1217,7 @@ using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref c
 try
 {
 _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
-_defaultLazy = new Lazy<%>(() => (%)this);
+_defaultLazy = new Lazy<%>(() => (%)new IInspectable(_inner));
 
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
@@ -1646,7 +1646,7 @@ private % AsInternal(InterfaceTag<%> _) => ((Lazy<%>)_lazyInterfaces[typeof(%)])
                     else
                     {
                         w.write(R"(
-private % AsInternal(InterfaceTag<%> _) => (%)(object)this;
+private % AsInternal(InterfaceTag<%> _) => (%)(object)_default;
 )",
                             interface_name,
                             interface_name,
@@ -4403,7 +4403,7 @@ if (IsOverridableInterface(iid) || typeof(global::WinRT.IInspectable).GUID == ii
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
 
-if (GetReferenceForQI().TryAs<IUnknownVftbl>(iid, out ObjectReference<IUnknownVftbl> objRef) >= 0)
+if (%.TryAs<IUnknownVftbl>(iid, out ObjectReference<IUnknownVftbl> objRef) >= 0)
 {
 using (objRef)
 {
@@ -4450,7 +4450,8 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
                 {
                     w.write("false");
                 }
-            }));
+            }),
+            settings.netstandard_compat ? "GetReferenceForQI()" : "((IWinRTObject)this).NativeObject");
     }
 
     void write_class_netstandard(writer& w, TypeDef const& type)
@@ -4619,7 +4620,7 @@ return new %(objRef);
 % %(IObjectReference objRef)%
 {
 _inner = objRef.As<%.Vftbl>();
-_defaultLazy = new Lazy<%>(() => (%)(object)this);
+_defaultLazy = new Lazy<%>(() => (%)new global::WinRT.IInspectable(_inner));
 }
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
@@ -4670,7 +4671,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
                     w.write(R"(
 protected %(global::WinRT.DerivedComposed _)%
 {
-_defaultLazy = new Lazy<%>(() => (%)(object)this);
+_defaultLazy = new Lazy<%>(() => (%)new IInspectable(((IWinRTObject)this).NativeObject));
 })",
 type.TypeName(),
 has_base_type ? ":base(_)" : "",
@@ -4679,9 +4680,7 @@ default_interface_name);
                 }
 
                 w.write(R"(
-private IObjectReference GetReferenceForQI() => _inner;
-
-IObjectReference IWinRTObject.NativeObject => GetReferenceForQI();
+IObjectReference IWinRTObject.NativeObject => _inner;
 
 global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();)");
             }),
