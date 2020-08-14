@@ -738,7 +738,7 @@ namespace UnitTest
             {
                 var obj = objs[i];
                 Assert.Same(obj, TestObject);
-                Assert.Equal(TestObject.ThisPtr, objs[i].ThisPtr);
+                Assert.Equal(TestObject, objs[i]);
             }
         }
         [Fact]
@@ -1498,7 +1498,8 @@ namespace UnitTest
         [Fact]
         public void TestUnwrapInspectable()
         {
-            var inspectable = IInspectable.FromAbi(TestObject.ThisPtr);
+            using var objRef = MarshalInspectable.CreateMarshaler(TestObject);
+            var inspectable = IInspectable.FromAbi(objRef.ThisPtr);
             Assert.True(ComWrappersSupport.TryUnwrapObject(inspectable, out _));
         }
 
