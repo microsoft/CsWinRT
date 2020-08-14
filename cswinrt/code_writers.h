@@ -1344,6 +1344,7 @@ object IEnumerator.Current => Current;
         auto key = w.write_temp("%", bind<write_generic_type_name>(0));
         auto value = w.write_temp("%", bind<write_generic_type_name>(1));
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyDictionary<%, %>.", key, value) : "";
+        auto ireadonlycollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyCollection<global::System.Collections.Generic.KeyValuePair<%, %>>.", key, value ) : "";
         auto visibility = emit_explicit ? "" : "public ";
         w.write(R"(
 %IEnumerable<%> %Keys => %.Keys;
@@ -1355,7 +1356,7 @@ object IEnumerator.Current => Current;
 )", 
             visibility, key, self, target, 
             visibility, value, self, target, 
-            visibility, self, target,
+            visibility, ireadonlycollection, target,
             visibility, value, self, key, target,
             visibility, self, key, target,
             visibility, self, key, value, target);
@@ -1372,7 +1373,8 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     {
         auto key = w.write_temp("%", bind<write_generic_type_name>(0));
         auto value = w.write_temp("%", bind<write_generic_type_name>(1));
-        auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IReadOnlyDictionary<%, %>.", key, value) : "";
+        auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IDictionary<%, %>.", key, value) : "";
+        auto icollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<%, %>>.", key, value ) : "";
         auto visibility = emit_explicit ? "" : "public ";
         w.write(R"(
 %ICollection<%> %Keys => %.Keys;
@@ -1396,17 +1398,17 @@ bool ICollection<KeyValuePair<%, %>>.Remove(KeyValuePair<%, %> item) => %.Remove
 )", 
             visibility, key, self, target, 
             visibility, value, self, target, 
-            visibility, self, target, 
-            visibility, self, target, 
+            visibility, icollection, target, 
+            visibility, icollection, target, 
             visibility, value, self, key, target, target, 
             visibility, self, key, value, target, 
             visibility, self, key, target, 
             visibility, self, key, target, 
             visibility, self, key, value, target,
-            visibility, self, key, value, target,
-            visibility, self, target,
-            visibility, self, key, value, target,
-            visibility, self, key, value, target,
+            visibility, icollection, key, value, target,
+            visibility, icollection, target,
+            visibility, icollection, key, value, target,
+            visibility, icollection, key, value, target,
             key, value, key, value, target);
         
         if (!include_enumerable) return;
