@@ -866,11 +866,22 @@ set => %.% = value;
                 auto interface_name = write_type_name_temp(w, interface_type);
                 auto interface_abi_name = write_type_name_temp(w, interface_type, "%", true);
 
-                w.write(R"(
+                if (settings.netstandard_compat)
+                {
+                    w.write(R"(
 {typeof(%), new Lazy<%>(() => new %(GetReferenceForQI()))},)",
-                    interface_name,
-                    interface_abi_name,
-                    interface_abi_name);
+                        interface_name,
+                        interface_abi_name,
+                        interface_abi_name);
+                }
+                else
+                {
+                    w.write(R"(
+{typeof(%), new Lazy<%>(() => (%)(object)_default)},)",
+                        interface_name,
+                        interface_name,
+                        interface_name);
+                }
             });
         }
     }
@@ -1218,6 +1229,9 @@ try
 {
 _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
 _defaultLazy = new Lazy<%>(() => (%)new IInspectable(_inner));
+_lazyInterfaces = new Dictionary<Type, object>()
+{%
+};
 
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
@@ -1237,7 +1251,8 @@ MarshalInspectable.DisposeAbi(ptr);
                     bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
                     [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
                     default_interface_name,
-                    default_interface_name);
+                    default_interface_name,
+                    bind<write_lazy_interface_initialization>(class_type));
             }
         }
     }
@@ -1362,11 +1377,12 @@ object IEnumerator.Current => Current;
             visibility, self, key, value, target);
         
         if (!include_enumerable) return;
+        auto enumerable_type = emit_explicit ? w.write_temp("IEnumerable<KeyValuePair<%, %>>.", key, value) : "";
         w.write(R"(
-public IEnumerator<KeyValuePair<%, %>> GetEnumerator() => %.GetEnumerator();
+%IEnumerator<KeyValuePair<%, %>> %GetEnumerator() => %.GetEnumerator();
 IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 )",
-            key, value, target);
+            visibility, key, value, enumerable_type, target);
     }
 
     void write_dictionary_members(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
@@ -1675,8 +1691,9 @@ private % AsInternal(InterfaceTag<%> _) => ((Lazy<%>)_lazyInterfaces[typeof(%)])
                     else
                     {
                         w.write(R"(
-private % AsInternal(InterfaceTag<%> _) => (%)(object)_default;
+private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]).Value;
 )",
+                            interface_name,
                             interface_name,
                             interface_name,
                             interface_name);
@@ -4661,6 +4678,7 @@ private IntPtr ThisPtr => _inner.ThisPtr;
 
 private IObjectReference _inner = null;
 private readonly Lazy<%> _defaultLazy;
+private readonly Dictionary<Type, object> _lazyInterfaces;
 
 private % _default => _defaultLazy.Value;
 %
@@ -4680,6 +4698,9 @@ return new %(objRef);
 {
 _inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 _defaultLazy = new Lazy<%>(() => (%)new global::WinRT.IInspectable(_inner));
+_lazyInterfaces = new Dictionary<Type, object>()
+{%
+};
 }
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
@@ -4715,6 +4736,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             default_interface_name,
             default_interface_name,
             default_interface_name,
+            bind<write_lazy_interface_initialization>(type),
             // Equality operators
             type_name,
             type_name,
@@ -4731,17 +4753,24 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 protected %(global::WinRT.DerivedComposed _)%
 {
 _defaultLazy = new Lazy<%>(() => (%)new IInspectable(((IWinRTObject)this).NativeObject));
+_lazyInterfaces = new Dictionary<Type, object>()
+{%
+};
 })",
-type.TypeName(),
-has_base_type ? ":base(_)" : "",
-default_interface_name,
-default_interface_name);
+                        type.TypeName(),
+                        has_base_type ? ":base(_)" : "",
+                        default_interface_name,
+                        default_interface_name,
+                        bind<write_lazy_interface_initialization>(type));
                 }
 
                 w.write(R"(
-IObjectReference IWinRTObject.NativeObject => _inner;
-
+IObjectReference IWinRTObject.NativeObject => _inner;)");
+                if (!has_base_type)
+                { 
+                w.write(R"(
 global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();)");
+                }
             }),
             default_interface_name,
             default_interface_name,

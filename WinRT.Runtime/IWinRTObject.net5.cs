@@ -9,7 +9,7 @@ namespace WinRT
     {
         bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
         {
-            if (QueryInterfaceCache.TryGetValue(interfaceType, out _))
+            if (QueryInterfaceCache.ContainsKey(interfaceType))
             {
                 return true;
             }
