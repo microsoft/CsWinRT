@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -181,6 +183,50 @@ namespace WinRT
                 }
             }
         }
+        
+        private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
+        {
+            Type classType;
+            Type interfaceType;
+            Type vftblType;
+            if (implementationType.IsInterface)
+            {
+                classType = null;
+                interfaceType = implementationType.GetHelperType() ??
+                    throw new TypeLoadException($"Unable to find an ABI implementation for the type '{runtimeClassName}'");
+                vftblType = interfaceType.FindVftblType() ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
+                if (vftblType.IsGenericTypeDefinition)
+                {
+                    vftblType = vftblType.MakeGenericType(interfaceType.GetGenericArguments());
+                }
+            }
+            else
+            {
+                classType = implementationType;
+                interfaceType = Projections.GetDefaultInterfaceTypeForRuntimeClassType(classType);
+                if (interfaceType is null)
+                {
+                    throw new TypeLoadException($"Unable to create a runtime wrapper for a WinRT object of type '{runtimeClassName}'. This type is not a projected type.");
+                }
+                vftblType = interfaceType.FindVftblType() ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
+            }
+
+            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
+            var createInterfaceInstanceExpression = Expression.New(interfaceType.GetConstructor(new[] { typeof(ObjectReference<>).MakeGenericType(vftblType) }),
+                    Expression.Call(parms[0],
+                        typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
+
+            if (classType is null)
+            {
+                return Expression.Lambda<Func<IInspectable, object>>(createInterfaceInstanceExpression, parms).Compile();
+            }
+
+            return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.New(classType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { interfaceType }, null),
+                    createInterfaceInstanceExpression),
+                parms).Compile();
+        }
+
     }
 
     struct ComInterfaceEntry
