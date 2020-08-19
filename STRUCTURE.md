@@ -1,9 +1,5 @@
 # Repository Structure
 
-## The [`doc`](/doc) folder
-
-Documentation for the project.
-
 ## The [`cswinrt`](/cswinrt) folder
 
 Contains the sources and cswinrt.vcxproj project file for building the C#/WinRT compiler, cswinrt.exe.  The projection's base library is contained in /cswinrt/strings/WinRT.cs, which is processed by /strings.props to generate string literals contained in the compiler.

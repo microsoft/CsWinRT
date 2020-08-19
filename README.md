@@ -8,10 +8,10 @@ WinRT APIs are defined in `*.winmd` format, and C#/WinRT includes tooling that g
 
 ## C#/WinRT Architecture
 
-<img alt="Creating projection" 
+<img alt="Creating projection"
     src="Diagram_CreateProjection.jpg"
     width="70%" height="50%">
-<img alt = "Adding projection" 
+<img alt = "Adding projection"
     src="Diagram_AddProjection.jpg"
     width="70%" height="50%">
 
@@ -63,6 +63,8 @@ We ask that **before you start work on a feature that you would like to contribu
 Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
 the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+
+When you submit a pull request, a CLA bot will automatically determine whether you need to provide a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions provided by the bot. You will only need to do this once across all repos using our CLA.
 
 ## Code of Conduct
 
