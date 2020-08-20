@@ -8,22 +8,10 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Directory.Build.targets" />
     <None Include="DoNotImport_MsAppxPackageTargets.targets" />
     <None Include="packages.config" />
-    <None Include="WinRT.Host.runtimeconfig.json">
-      <Filter>TestConfigs</Filter>
-    </None>
-    <None Include="MappedTarget.runtimeconfig.json">
-      <Filter>TestConfigs</Filter>
-    </None>
-    <None Include="BadRuntimeConfig.Host.runtimeconfig.json">
-      <Filter>TestConfigs</Filter>
-    </None>
-    <None Include="Test.Host.runtimeconfig.json">
-      <Filter>TestConfigs</Filter>
-    </None>
-    <None Include="ClassNotFound.Host.runtimeconfig.json">
+    <None Include="Directory.Build.targets" />
+    <None Include="RuntimeNotFound.Host.runtimeconfig.json">
       <Filter>TestConfigs</Filter>
     </None>
   </ItemGroup>
@@ -36,28 +24,49 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="ProbeByHost.manifest">
-      <Filter>TestManifests</Filter>
-    </Manifest>
-    <Manifest Include="ProbeByClass.manifest">
-      <Filter>TestManifests</Filter>
-    </Manifest>
-    <Manifest Include="MappedTarget.manifest">
-      <Filter>TestManifests</Filter>
-    </Manifest>
-    <Manifest Include="NoRuntimeConfig.manifest">
-      <Filter>TestManifests</Filter>
-    </Manifest>
-    <Manifest Include="BadRuntimeConfig.manifest">
-      <Filter>TestManifests</Filter>
-    </Manifest>
-    <Manifest Include="ClassNotFound.manifest">
-      <Filter>TestManifests</Filter>
-    </Manifest>
-  </ItemGroup>
-  <ItemGroup>
     <CopyFileToFolders Include="TargetNotFound.manifest">
       <Filter>TestManifests</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="ClassNotFound.Host.runtimeconfig.json">
+      <Filter>TestConfigs</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="MappedTarget.Host.runtimeconfig.json">
+      <Filter>TestConfigs</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="ClassNotFound.manifest">
+      <Filter>TestManifests</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="MappedTarget.manifest">
+      <Filter>TestManifests</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="NoRuntimeConfig.manifest">
+      <Filter>TestManifests</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="ProbeByClass.manifest">
+      <Filter>TestManifests</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="ProbeByHost.manifest">
+      <Filter>TestManifests</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Test.Host.runtimeconfig.json">
+      <Filter>TestConfigs</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="WinRT.Host.runtimeconfig.json">
+      <Filter>TestConfigs</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="BadMappedTarget.Host.runtimeconfig.json">
+      <Filter>TestConfigs</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="BadMappedTarget.manifest">
+      <Filter>TestManifests</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="TestHost.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="RuntimeNotFound.manifest">
+      <Filter>TestManifests</Filter>
+    </Manifest>
   </ItemGroup>
 </Project>

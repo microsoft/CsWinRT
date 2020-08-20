@@ -93,16 +93,6 @@ namespace TestComponentCSharp
         static Int32 NumObjects{ get; };
     }
 
-    runtimeclass ManagedClass : [default] Windows.Foundation.IStringable
-    {
-        ManagedClass();
-    }
-
-    runtimeclass ManagedClassNotFound : [default] Windows.Foundation.IStringable
-    {
-        ManagedClassNotFound();
-    }
-
     [default_interface]
     runtimeclass Class :
         Windows.Foundation.IStringable

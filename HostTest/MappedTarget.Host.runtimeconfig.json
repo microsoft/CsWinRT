@@ -8,6 +8,6 @@
     }
   },
   "activatableClasses": {
-    "TestComponentCSharp.ManagedClass": "Test.dll"
+    "TestHost.ManagedClass": "Test.dll"
   }
 }

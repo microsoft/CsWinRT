@@ -7,7 +7,7 @@ using Windows.Foundation;
 using WinRT;
 
 
-namespace TestComponentCSharp
+namespace TestHost
 {
     public class ManagedClass : IStringable
     {

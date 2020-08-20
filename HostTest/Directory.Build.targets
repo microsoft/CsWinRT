@@ -6,15 +6,9 @@
     <PrepareForRunDependsOn>CopyTestAssets;$(PrepareForRunDependsOn)</PrepareForRunDependsOn>
   </PropertyGroup>
 
-  <!--Work around for VS limitation - project reference from Desktop to UWP:
-      https://developercommunity.visualstudio.com/idea/1128228/a-reference-cannot-be-added-because-the-two-projec.html
-  -->
-  <ItemGroup>
-    <ProjectReference Include="..\TestComponentCSharp\TestComponentCSharp.vcxproj" />
-  </ItemGroup>
-  
   <Target Name="CopyTestAssets">
     <Copy SourceFiles="
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
@@ -27,9 +21,10 @@
             $(OutDir)Test.Host.dll;
             $(OutDir)MappedTarget.Host.dll;
             $(OutDir)ClassNotFound.Host.dll;
-            $(OutDir)BadRuntimeConfig.Host.dll;
+            $(OutDir)BadMappedTarget.Host.dll;
             $(OutDir)NoRuntimeConfig.Host.dll;
-            $(OutDir)TestComponentCSharp.ManagedClass.dll" 
+            $(OutDir)RuntimeNotFound.Host.dll;
+            $(OutDir)TestHost.ManagedClass.dll" 
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>  
   

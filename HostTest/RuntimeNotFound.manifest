@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
   <assemblyIdentity version="1.0.0.0" name="CsWinRT.HostTest"/>
-  <file name="MappedTarget.Host.dll">
+  <file name="RuntimeNotFound.Host.dll">
     <activatableClass
-        name="TestHost.ManagedClass"
+        name="TestHost.ManagedClassNotFound"
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
   </file>
