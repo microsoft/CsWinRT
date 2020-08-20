@@ -14,11 +14,14 @@
 
 #include "pch.h"
 #include "io.h"
+#include <filesystem>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/TestHost.h>
 #include "../WinRT.Host/hostfxr_status.h"
 
 using namespace winrt::TestHost;
+
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 struct ActivationContext
 {
@@ -27,7 +30,11 @@ struct ActivationContext
 
 	ActivationContext(const std::wstring& manifest)
 	{
-		ACTCTX context = { sizeof(ACTCTX), 0, manifest.c_str() };
+		wchar_t buffer[MAX_PATH];
+		auto size = ::GetModuleFileName((HINSTANCE)&__ImageBase, buffer, _countof(buffer));
+		std::filesystem::path manifest_path(buffer);
+		manifest_path.replace_filename(manifest);
+		ACTCTX context = { sizeof(ACTCTX), 0, manifest_path.c_str() };
 		_handle = CreateActCtxW(&context);
 		if ((_handle == INVALID_HANDLE_VALUE) || !ActivateActCtx(_handle, &_cookie))
 		{

@@ -349,8 +349,10 @@ void GetActivationFactory(void* hstr_class_id, void** activation_factory)
     // Load shim (managed portion of host) and retrieve get_activation_factory pointer
     if (::get_activation_factory == nullptr)
     {
+        auto shim_path = host_module;
+        shim_path.replace_filename("WinRT.Host.Shim.dll");
         check_hostfxr_hresult(load_assembly_and_get_function_pointer(
-            L"WinRT.Host.Shim.dll",
+            shim_path.wstring().c_str(),
             L"WinRT.Host.Shim, WinRT.Host.Shim",
             L"GetActivationFactory",
             // TODO: UNMANAGEDCALLERSONLY_METHOD 
