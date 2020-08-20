@@ -355,7 +355,6 @@ void GetActivationFactory(void* hstr_class_id, void** activation_factory)
             shim_path.wstring().c_str(),
             L"WinRT.Host.Shim, WinRT.Host.Shim",
             L"GetActivationFactory",
-            // TODO: UNMANAGEDCALLERSONLY_METHOD 
             L"WinRT.Host.Shim+GetActivationFactoryDelegate, WinRT.Host.Shim",     
             nullptr,
             (void**)&::get_activation_factory));

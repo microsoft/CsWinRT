@@ -114,6 +114,7 @@ namespace WinRT.Host
         private const int REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
 
         public unsafe delegate int GetActivationFactoryDelegate(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory);
+
         public static unsafe int GetActivationFactory(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory)
         {
             *activationFactory = IntPtr.Zero;
@@ -123,7 +124,7 @@ namespace WinRT.Host
 
             try
             {
-                // Per .NET folks, this may be risky - alternatives to ensure same ALC as shim?
+                // TODO: this may be risky - alternatives to ensure same ALC as shim?
                 var assembly = Assembly.LoadFrom(targetAssembly);
                 if (assembly != null)
                 {
