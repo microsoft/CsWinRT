@@ -11,62 +11,60 @@
     <None Include="DoNotImport_MsAppxPackageTargets.targets" />
     <None Include="packages.config" />
     <None Include="Directory.Build.targets" />
-    <None Include="RuntimeNotFound.Host.runtimeconfig.json">
-      <Filter>TestConfigs</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="TestManifests">
+    <Filter Include="Manifest Files">
       <UniqueIdentifier>{4b00e42e-8b0b-4002-9799-7d97856e027a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="TestConfigs">
+    <Filter Include="Config Files">
       <UniqueIdentifier>{a4254425-e0b3-4e52-8493-9429424e91de}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="TargetNotFound.manifest">
-      <Filter>TestManifests</Filter>
+      <Filter>Manifest Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="ClassNotFound.Host.runtimeconfig.json">
-      <Filter>TestConfigs</Filter>
+      <Filter>Config Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="MappedTarget.Host.runtimeconfig.json">
-      <Filter>TestConfigs</Filter>
+      <Filter>Config Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="ClassNotFound.manifest">
-      <Filter>TestManifests</Filter>
+      <Filter>Manifest Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="MappedTarget.manifest">
-      <Filter>TestManifests</Filter>
+      <Filter>Manifest Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="NoRuntimeConfig.manifest">
-      <Filter>TestManifests</Filter>
+      <Filter>Manifest Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="ProbeByClass.manifest">
-      <Filter>TestManifests</Filter>
+      <Filter>Manifest Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="ProbeByHost.manifest">
-      <Filter>TestManifests</Filter>
+      <Filter>Manifest Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="Test.Host.runtimeconfig.json">
-      <Filter>TestConfigs</Filter>
+      <Filter>Config Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="WinRT.Host.runtimeconfig.json">
-      <Filter>TestConfigs</Filter>
+      <Filter>Config Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="BadMappedTarget.Host.runtimeconfig.json">
-      <Filter>TestConfigs</Filter>
+      <Filter>Config Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="BadMappedTarget.manifest">
-      <Filter>TestManifests</Filter>
+      <Filter>Manifest Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="RuntimeNotFound.Host.runtimeconfig.json">
+      <Filter>Config Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="RuntimeNotFound.manifest">
+      <Filter>Manifest Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestHost.idl" />
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="RuntimeNotFound.manifest">
-      <Filter>TestManifests</Filter>
-    </Manifest>
   </ItemGroup>
 </Project>

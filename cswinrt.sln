@@ -67,7 +67,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinRT.Host", "WinRT.Host\Wi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HostTest", "HostTest\HostTest.vcxproj", "{B511B7C9-C8E2-47ED-A0D1-538C00747D30}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinRT.Host.Shim", "WinRT.Host.Shim\WinRT.Host.Shim.csproj", "{0BB8F82D-874E-45AA-BCA3-20CE0562164A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinRT.Host.Shim", "WinRT.Host.Shim\WinRT.Host.Shim.csproj", "{0BB8F82D-874E-45AA-BCA3-20CE0562164A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
