@@ -8,6 +8,7 @@
     <PropertyGroup>
       <NetHostDir>$(NetCoreTargetingPackRoot)/Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)/$(BundledNETCoreAppPackageVersion)/runtimes/$(NETCoreSdkRuntimeIdentifier)/native</NetHostDir>
     </PropertyGroup>
+    <Message Text="NetHostDir: $(NetHostDir)" Importance="high" />
   </Target>
 
 </Project>

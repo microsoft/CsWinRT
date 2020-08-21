@@ -109,6 +109,7 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
     </CopyFileToFolders>
+    <None Include="RuntimeFrameworkVersion.csproj" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="ProbeByClass.manifest">

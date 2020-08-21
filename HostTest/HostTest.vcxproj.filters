@@ -11,6 +11,7 @@
     <None Include="DoNotImport_MsAppxPackageTargets.targets" />
     <None Include="packages.config" />
     <None Include="Directory.Build.targets" />
+    <None Include="RuntimeFrameworkVersion.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Manifest Files">
