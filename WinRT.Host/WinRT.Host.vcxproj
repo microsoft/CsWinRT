@@ -179,6 +179,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="hostfxr_status.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>

@@ -3,48 +3,9 @@
   <PropertyGroup>
     <!--Work around WinUI assumption that client requires building PRI, etc -->
     <MsAppxPackageTargets>$(MSBuildProjectDirectory)/DoNotImport_MsAppxPackageTargets.targets</MsAppxPackageTargets>
-    <PrepareForRunDependsOn>UpdateConfigFiles;CopyTestAssets;$(PrepareForRunDependsOn)</PrepareForRunDependsOn>
+    <PrepareForRunDependsOn>CopyTestAssets;$(PrepareForRunDependsOn)</PrepareForRunDependsOn>
   </PropertyGroup>
 
-  <UsingTask TaskName="UpdateConfigFiles"
-      TaskFactory="RoslynCodeTaskFactory"
-      AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll" >
-    <ParameterGroup>
-      <ConfigFiles ParameterType="System.String[]" Required="true" />
-      <RuntimeFrameworkVersion ParameterType="System.String" Required="true" />
-    </ParameterGroup>
-    <Task>
-      <Using Namespace="System" />
-      <Using Namespace="System.IO" />
-      <Using Namespace="System.Text.RegularExpressions" />
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[
-          foreach(String ConfigFile in ConfigFiles)  
-          {  
-            File.WriteAllText(
-              ConfigFile,
-              Regex.Replace(
-                File.ReadAllText(ConfigFile), 
-                "RuntimeFrameworkVersion", 
-                RuntimeFrameworkVersion)
-            );
-          }
-        ]]>
-      </Code>
-    </Task>
-  </UsingTask>
-
-  <!--Update runtimconfig.json files with current RuntimeFrameworkVersion-->
-  <Target Name="UpdateConfigFiles">
-    <MSBuild Projects="RuntimeFrameworkVersion.csproj" Targets="GetRuntimeFrameworkVersion">
-      <Output TaskParameter="TargetOutputs" ItemName="RuntimeFrameworkVersion" />
-    </MSBuild>
-    <ItemGroup>
-      <ConfigFiles Include="$(OutDir)*.runtimeconfig.json"/>
-    </ItemGroup>
-    <UpdateConfigFiles ConfigFiles="@(ConfigFiles)" RuntimeFrameworkVersion="@(RuntimeFrameworkVersion)"/>
-  </Target>  
-  
   <!--Rename host/test dlls for various tests (requires disabling hardlinks)-->
   <Target Name="CopyTestAssets">
     <Copy SourceFiles="

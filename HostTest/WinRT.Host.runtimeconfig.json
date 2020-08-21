@@ -4,7 +4,7 @@
     "rollForward": "LatestMinor",
     "framework": {
       "name": "Microsoft.NETCore.App",
-      "version": "RuntimeFrameworkVersion"
+      "version": "5.0.0-preview"
     }
   }
 }
