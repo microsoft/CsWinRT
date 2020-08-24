@@ -86,6 +86,8 @@ After a successful command-line build, the cswinrt.sln can be launched from the 
 
 **Note:**  By default, projection projects only generate source files for Release configurations, where cswinrt.exe can execute in seconds.  To generate projection sources for Debug configurations, set the project property GenerateTestProjection to 'true'.  In either case, existing projection sources under the "Generated Files" folder will still be compiled into the projection assembly.  This configuration permits a faster inner loop in Visual Studio.
 
+**Note:** When building the first time, the build clones the testwinrt project. The build depends on this project, but msbuild doesn't consistently pick up the change when the repo is first cloned repo. You may need to build a second time if this is your first build to address the timing issue.
+
 # Structure
 The C#/WinRT compiler and unit tests are all contained within the Visual Studio 2019 solution file, \cswinrt\cswinrt.sln.  
 
