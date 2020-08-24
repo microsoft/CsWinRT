@@ -4,13 +4,22 @@
 
 C#/WinRT provides Windows Runtime (WinRT) projection support for the C# language. A "projection" is an adapter that enables programming the WinRT APIs in a natural and familiar way for the target language. The C#/WinRT projection hides the details of interop between C# and WinRT interfaces, and provides mappings of many WinRT types to appropriate .NET equivalents, such as strings, URIs, common value types, and generic collections.  
 
-WinRT APIs are defined in `*.winmd` format, and C#/WinRT includes tooling that generates .NET Standard 2.0 C# code that can be compiled into interop assemblies, similar to how [C++/WinRT](https://github.com/Microsoft/cppwinrt) generates headers for the C++ language projection. This means that neither the C# compiler nor the .NET Runtime require built-in knowledge of WinRT any longer.
+WinRT APIs are defined in `*.winmd` format, and C#/WinRT includes tooling that generates C# code that can be compiled into interop assemblies, similar to how [C++/WinRT](https://github.com/Microsoft/cppwinrt) generates headers for the C++ language projection. This means that neither the C# compiler nor the .NET Runtime require built-in knowledge of WinRT any longer.
 
 ## C#/WinRT Architecture
+
+### Component Authors
+
+Component Authors need to build a C#/WinRT projection for .NET5+ targets.
 
 <img alt="Creating projection"
     src="Diagram_CreateProjection.jpg"
     width="70%" height="50%">
+
+### Application Developers
+
+Consuming .NET5+ apps references your NuGet package, which references the projection assembly instead of a winmd.
+
 <img alt = "Adding projection"
     src="Diagram_AddProjection.jpg"
     width="70%" height="50%">
