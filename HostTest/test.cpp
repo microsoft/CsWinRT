@@ -64,11 +64,11 @@ void Activate(const wchar_t* manifest, winrt::hresult expected_error = 0)
 		TClass object;
 		auto string = object.ToString();
 		EXPECT_TRUE(string == L"ManagedClass");
-		EXPECT_TRUE(expected_error == 0);
+		EXPECT_EQ(expected_error, 0);
 	}
 	catch (winrt::hresult_error hr)
 	{
-		EXPECT_TRUE(expected_error == hr.code());
+		EXPECT_EQ(expected_error, hr.code());
 	}
 }
 
