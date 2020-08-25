@@ -15,8 +15,7 @@
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
-            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
-            $(SolutionDir)Projections\Test\bin\$(BuildPlatform)\$(Configuration)\net5.0\Test.dll" 
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll" 
           DestinationFiles="
             $(OutDir)WinRT.Host.dll;
             $(OutDir)Test.Host.dll;
@@ -24,8 +23,7 @@
             $(OutDir)ClassNotFound.Host.dll;
             $(OutDir)BadMappedTarget.Host.dll;
             $(OutDir)NoRuntimeConfig.Host.dll;
-            $(OutDir)RuntimeNotFound.Host.dll;
-            $(OutDir)TestHost.ManagedClass.dll" 
+            $(OutDir)RuntimeNotFound.Host.dll" 
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>  
   

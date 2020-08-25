@@ -8,6 +8,6 @@
     }
   },
   "activatableClasses": {
-    "TestHost.ManagedClassNotFound": "ServerNotFound.dll"
+    "TestHost.ClassNotFound": "ServerNotFound.dll"
   }
 }

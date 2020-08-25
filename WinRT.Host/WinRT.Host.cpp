@@ -271,26 +271,26 @@ std::filesystem::path probe_for_target_assembly(std::filesystem::path host_modul
         return !target_path.empty();
     };
 
-    // Probe for target assembly by runtime class name
-    target_path = host_path.wstring() + std::wstring(class_id.c_str());
-    if (!probe_target())
+    // Probe for target assembly by host name, if renamed (most common)
+    if (host_file.wstring() != L"winrt.host.dll")
     {
-        if (host_file.wstring() == L"winrt.host.dll")
-        {
-            return{};
-        }
-
-        // Probe for target assembly by host name, if renamed
         probe_paths.push_back(host_module);
         target_path = host_module;
         target_path.resize(target_path.size() - 4);
-        if (!probe_target())
+        if (probe_target())
         {
-            return{};
+            return target_path;
         }
     }
 
-    return target_path;
+    // Probe for target assembly by runtime class name (less common)
+    target_path = host_path.wstring() + std::wstring(class_id.c_str());
+    if(probe_target())
+    {
+        return target_path;
+    }
+
+    return {};
 }
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;

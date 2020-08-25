@@ -8,6 +8,6 @@
     }
   },
   "activatableClasses": {
-    "TestHost.ManagedClass": "Test.dll"
+    "TestHost.ProbeByClass": "TestHost.ProbeByClass.dll"
   }
 }

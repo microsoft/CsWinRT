@@ -8,6 +8,6 @@
     }
   },
   "activatableClasses": {
-    "TestHost.ManagedClassNotFound": "Test.dll"
+    "TestHost.ClassNotFound": "Test.dll"
   }
 }

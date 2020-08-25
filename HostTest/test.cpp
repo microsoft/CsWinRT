@@ -4,8 +4,8 @@
 // 
 // Each test case specifies:
 // 1. A runtime class to be activated: 
-//		TestComponentCSharp.ManagedClass for expected successes
-//		TestComponentCSharp.ManagedClassNotFound for expected failures
+//		ProbyByClass, ProbeByHost for expected successes
+//		ClassNotFound for expected failures
 // 2. An activation context manifest, with activatableClass entry
 //		to specify the WinRT host dll, which may be renamed.
 // 3. A runtimeconfig.json corresponding to the host dll above,
@@ -56,30 +56,31 @@ struct ActivationContext
 };
 
 template<typename TClass>
-void Activate(const wchar_t* manifest, winrt::hresult expected_error = 0)
+winrt::hstring Activate(const wchar_t* manifest, winrt::hresult expected_error = 0)
 {
 	try
 	{
 		ActivationContext context(manifest);
 		TClass object;
 		auto string = object.ToString();
-		EXPECT_TRUE(string == L"ManagedClass");
 		EXPECT_EQ(expected_error, 0);
+		return string;
 	}
 	catch (winrt::hresult_error hr)
 	{
 		EXPECT_EQ(expected_error, hr.code());
+		return {};
 	}
 }
 
 // Note: this test must precede all others to ensure no CLR is already loaded
 TEST(HostTest, RuntimeNotFound)
 {
-	Activate<ManagedClassNotFound>(L"RuntimeNotFound.manifest", FrameworkMissingFailure);
+	Activate<ClassNotFound>(L"RuntimeNotFound.manifest", FrameworkMissingFailure);
 }
 
-// ClassId:						Host:				Target:
-// TestHost.ManagedClass		WinRT.Host.dll		TestHost.ManagedClass.dll
+// ClassId:				Host:				Target:
+// TestHost.Class		WinRT.Host.dll		TestHost.ProbeByClass.dll
 // 
 // Resolve to target assembly name based on runtime class ID.
 // Note that this technique requires WinRT.Host.Shim.dll to load the target assembly 
@@ -87,55 +88,55 @@ TEST(HostTest, RuntimeNotFound)
 // which can't be known when the target assembly display name and file name differ.
 TEST(HostTest, ProbeByClass)
 {
-	Activate<ManagedClass>(L"ProbeByClass.manifest");
+	EXPECT_TRUE(Activate<ProbeByClass>(L"ProbeByClass.manifest") == L"TestHost.ProbeByClass.dll");
 }
 
-// ClassId:						Host:				Target:
-// TestHost.ManagedClass		Test.Host.dll		Test.dll
+// ClassId:				Host:				Target:
+// TestHost.Class		Test.Host.dll		Test.dll
 // 
 // Resolve to target assembly name based on renamed host dll.
 TEST(HostTest, ProbeByHost)
 {
-	Activate<ManagedClass>(L"ProbeByHost.manifest");
+	EXPECT_TRUE(Activate<ProbeByHost>(L"ProbeByHost.manifest") == L"Test.dll");
 }
 
-// ClassId:						Host:				Target:
-// TestHost.ManagedClass		MappedTarget.dll	Test.dll
+// ClassId:				Host:					Target:
+// TestHost.Class		MappedTarget.Host.dll	TestHost.ProbeByClass.dll
 // 
 // Resolve to target assembly name based on runtimeconfig.json mapping,
 // when both Host and Target dll names are fixed (e.g., manifest-free).
 TEST(HostTest, MappedTarget)
 {
-	Activate<ManagedClass>(L"MappedTarget.manifest");
+	EXPECT_TRUE(Activate<ProbeByClass>(L"MappedTarget.manifest") == L"TestHost.ProbeByClass.dll");
 }
 
 // No target assembly found via probing or mapping
 TEST(HostTest, TargetNotFound)
 {
-	Activate<ManagedClassNotFound>(L"TargetNotFound.manifest", HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND));
+	Activate<ClassNotFound>(L"TargetNotFound.manifest", HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND));
 }
 
 // Mapped target assembly that does not implement the given runtime class
 TEST(HostTest, ClassNotFound)
 {
-	Activate<ManagedClassNotFound>(L"ClassNotFound.manifest", REGDB_E_CLASSNOTREG);
+	Activate<ClassNotFound>(L"ClassNotFound.manifest", REGDB_E_CLASSNOTREG);
 }
 
 // .runtimeconfig.json activatableClass entry with invalid target assembly
 TEST(HostTest, BadMappedTarget)
 {
-	Activate<ManagedClassNotFound>(L"BadMappedTarget.manifest", InvalidConfigFile);
+	Activate<ClassNotFound>(L"BadMappedTarget.manifest", InvalidConfigFile);
 }
 
 // Renamed host dll with no .runtimeconfig.json 
 TEST(HostTest, RuntimeConfigNotFound)
 {
-	Activate<ManagedClassNotFound>(L"NoRuntimeConfig.manifest", InvalidConfigFile);
+	Activate<ClassNotFound>(L"NoRuntimeConfig.manifest", InvalidConfigFile);
 }
 
 // Fail if attempting to load a conflicting runtime
 TEST(HostTest, RuntimeConflict)
 {
-	Activate<ManagedClassNotFound>(L"RuntimeNotFound.manifest", CoreHostIncompatibleConfig);
+	Activate<ClassNotFound>(L"RuntimeNotFound.manifest", CoreHostIncompatibleConfig);
 }
 

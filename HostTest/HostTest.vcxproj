@@ -47,6 +47,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Projections\TestHost.ProbeByClass\TestHost.ProbeByClass.csproj">
+      <Project>{ef3326b5-716f-41d2-ab30-4efab30955e2}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Projections\Test\Test.csproj">
       <Project>{c6d580c5-7037-4733-b933-916ff400afe2}</Project>
     </ProjectReference>

@@ -3,7 +3,7 @@
   <assemblyIdentity version="1.0.0.0" name="CsWinRT.HostTest"/>
   <file name="WinRT.Host.dll">
     <activatableClass
-        name="TestHost.ManagedClass"
+        name="TestHost.ProbeByClass"
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
   </file>
