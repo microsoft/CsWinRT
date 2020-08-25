@@ -840,7 +840,11 @@ namespace WinRT
                 {
                     _ToAbi = BindToAbi();
                 }
-                return _ToAbi(value);
+                var ptr = _ToAbi(value).GetRef();
+                // We can use ObjectReference.Attach here since this API is
+                // only used during marshalling where we deterministically dispose
+                // on the same thread (and as a result don't need to capture context).
+                return ObjectReference<IUnknownVftbl>.Attach(ref ptr);
             }
 
             if (_As is null)

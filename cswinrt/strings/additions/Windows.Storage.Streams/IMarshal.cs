@@ -68,6 +68,11 @@ namespace ABI.Com
                 Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
             }
 
+            public Vftbl(IntPtr ptr)
+            {
+                this = Marshal.PtrToStructure<Vftbl>(ptr);
+            }
+
             private static int Do_Abi_GetUnmarshalClass_0(IntPtr thisPtr, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlFlags, out Guid pCid)
             {
                 pCid = default;

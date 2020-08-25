@@ -28,13 +28,6 @@ namespace WinRT
     {
         private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
 
-        static ComWrappersSupport()
-        {
-            PlatformSpecificInitialize();
-        }
-
-        static partial void PlatformSpecificInitialize();
-
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate
         {

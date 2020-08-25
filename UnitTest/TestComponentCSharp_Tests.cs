@@ -1645,5 +1645,15 @@ namespace UnitTest
             GC.WaitForPendingFinalizers();
             Assert.Equal(0, ComImports.NumObjects);
         }
+
+        [Fact]
+        public void TestInterfaceObjectMarshalling()
+        {
+            var nativeProperties = Class.NativeProperties1;
+
+            TestObject.CopyProperties(nativeProperties);
+
+            Assert.Equal(TestObject.ReadWriteProperty, nativeProperties.ReadWriteProperty);
+        }
     }
 }

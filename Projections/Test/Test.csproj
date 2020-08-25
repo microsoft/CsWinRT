@@ -48,6 +48,7 @@
     <PropertyGroup>
       <CsWinRTParams>
 -verbose
+-target $(TargetFramework)
 -in 10.0.18362.0
 -in @(ReferenceWinMDs->'"%(FullPath)"', ' ')
 -out "$(GeneratedFilesDir.TrimEnd('\'))"

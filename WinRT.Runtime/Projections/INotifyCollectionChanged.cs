@@ -10,24 +10,41 @@ namespace ABI.System.Collections.Specialized
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
-    public class INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
+    public unsafe class INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
     {
         [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            public _add_EventHandler add_CollectionChanged_0;
-            public _remove_EventHandler remove_CollectionChanged_1;
+#if NETSTANDARD2_0
+            private void* _add_CollectionChanged_0;
+            public delegate* stdcall<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_CollectionChanged_0 { get => (delegate* stdcall<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_CollectionChanged_0; set => _add_CollectionChanged_0=(void*)value; }
+            private void* _remove_CollectionChanged_1;
+            public delegate* stdcall<IntPtr, global::WinRT.EventRegistrationToken, int> remove_CollectionChanged_1 { get => (delegate* stdcall<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_CollectionChanged_1; set => _remove_CollectionChanged_1=(void*)value; }
+#else
+            private delegate*<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> _add_CollectionChanged_0;
+            public delegate* stdcall<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_CollectionChanged_0 { get => (delegate* stdcall<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_CollectionChanged_0; set => _add_CollectionChanged_0=(delegate*<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)value; }
+            private delegate*<IntPtr, global::WinRT.EventRegistrationToken, int> _remove_CollectionChanged_1;
+            public delegate* stdcall<IntPtr, global::WinRT.EventRegistrationToken, int> remove_CollectionChanged_1 { get => (delegate* stdcall<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_CollectionChanged_1; set => _remove_CollectionChanged_1=(delegate*<IntPtr, global::WinRT.EventRegistrationToken, int>)value; }
+#endif
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+#if NETSTANDARD2_0
+            private static Delegate[] DelegateCache = new Delegate[2];
+#endif
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    add_CollectionChanged_0 = Do_Abi_add_CollectionChanged_0,
-                    remove_CollectionChanged_1 = Do_Abi_remove_CollectionChanged_1
+#if NETSTANDARD2_0
+                    _add_CollectionChanged_0 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new _add_EventHandler(Do_Abi_add_CollectionChanged_0)),
+                    _remove_CollectionChanged_1 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new _remove_EventHandler(Do_Abi_remove_CollectionChanged_1)),
+#else
+                    _add_CollectionChanged_0 = &Do_Abi_add_CollectionChanged_0,
+                    _remove_CollectionChanged_1 = &Do_Abi_remove_CollectionChanged_1,
+#endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 2);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);

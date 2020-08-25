@@ -25,16 +25,14 @@ namespace WinRT
             }
         }
 
-        protected IUnknownVftbl VftblIUnknown
+        protected  unsafe IUnknownVftbl VftblIUnknown
         {
             get
             {
                 ThrowIfDisposed();
-                return VftblIUnknownUnsafe;
+                return **(IUnknownVftbl**)ThisPtr;
             }
         }
-
-        protected virtual IUnknownVftbl VftblIUnknownUnsafe { get; }
 
         protected IObjectReference(IntPtr thisPtr)
         {
@@ -51,7 +49,7 @@ namespace WinRT
         }
 
         public ObjectReference<T> As<T>() => As<T>(GuidGenerator.GetIID(typeof(T)));
-        public ObjectReference<T> As<T>(Guid iid)
+        public unsafe ObjectReference<T> As<T>(Guid iid)
         {
             ThrowIfDisposed();
             Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
@@ -113,44 +111,36 @@ namespace WinRT
             disposed = true;
         }
 
-        protected virtual void AddRef()
+        protected virtual unsafe void AddRef()
         {
             VftblIUnknown.AddRef(ThisPtr);
         }
 
-        protected virtual void Release()
+        protected virtual unsafe void Release()
         {
-            var releaseDelegate = VftblIUnknown.Release;
-
-            if (releaseDelegate is null)
-            {
-                unsafe
-                {
-                    // If we're in the finalizer, then releaseDelegate might already be null.
-                    // In this case, we need to re-fetch the delegate from the vtable.
-                    // TODO: Fix this once we have function pointers.
-                    releaseDelegate = Marshal.PtrToStructure<IUnknownVftbl>(Unsafe.AsRef<VftblPtr>(ThisPtr.ToPointer()).Vftbl).Release;
-                }
-            }
-
-            releaseDelegate(ThisPtr);
+            VftblIUnknown.Release(ThisPtr);
         }
 
         internal unsafe bool IsReferenceToManagedObject
         {
             get
             {
-                using var unknownObjRef = As<IUnknownVftbl>();
-                return unknownObjRef.VftblIUnknown.Equals(IUnknownVftbl.AbiToProjectionVftbl);
+                return VftblIUnknown.Equals(IUnknownVftbl.AbiToProjectionVftbl);
             }
         }
     }
 
     public class ObjectReference<T> : IObjectReference
     {
-        protected override IUnknownVftbl VftblIUnknownUnsafe => _vftblIUnknown;
-        readonly IUnknownVftbl _vftblIUnknown;
-        public readonly T Vftbl;
+        private readonly T _vftbl;
+        public T Vftbl
+        {
+            get
+            {
+                ThrowIfDisposed();
+                return _vftbl;
+            }
+        }
 
         public static ObjectReference<T> Attach(ref IntPtr thisPtr)
         {
@@ -163,31 +153,25 @@ namespace WinRT
             return obj;
         }
 
-        ObjectReference(IntPtr thisPtr, IUnknownVftbl vftblIUnknown, T vftblT) :
+        ObjectReference(IntPtr thisPtr, T vftblT) :
             base(thisPtr)
         {
-            _vftblIUnknown = vftblIUnknown;
-            Vftbl = vftblT;
+            _vftbl = vftblT;
         }
 
         private protected ObjectReference(IntPtr thisPtr) :
-            this(thisPtr, GetVtables(thisPtr))
+            this(thisPtr, GetVtable(thisPtr))
         {
         }
 
-        ObjectReference(IntPtr thisPtr, (IUnknownVftbl vftblIUnknown, T vftblT) vtables) :
-            this(thisPtr, vtables.vftblIUnknown, vtables.vftblT)
-        {
-        }
-
-        public static ObjectReference<T> FromAbi(IntPtr thisPtr, IUnknownVftbl vftblIUnknown, T vftblT)
+        public static unsafe ObjectReference<T> FromAbi(IntPtr thisPtr, T vftblT)
         {
             if (thisPtr == IntPtr.Zero)
             {
                 return null;
             }
-            var obj = new ObjectReference<T>(thisPtr, vftblIUnknown, vftblT);
-            obj._vftblIUnknown.AddRef(obj.ThisPtr);
+            var obj = new ObjectReference<T>(thisPtr, vftblT);
+            obj.VftblIUnknown.AddRef(obj.ThisPtr);
             return obj;
         }
 
@@ -197,25 +181,34 @@ namespace WinRT
             {
                 return null;
             }
-            var (vftblIUnknown, vftblT) = GetVtables(thisPtr);
-            return FromAbi(thisPtr, vftblIUnknown, vftblT);
+            var vftblT = GetVtable(thisPtr);
+            return FromAbi(thisPtr, vftblT);
         }
 
-        // C# doesn't allow us to express that T contains IUnknownVftbl, so we'll use a tuple
-        private static unsafe (IUnknownVftbl vftblIUnknown, T vftblT) GetVtables(IntPtr thisPtr)
+        private static unsafe T GetVtable(IntPtr thisPtr)
         {
             var vftblPtr = Unsafe.AsRef<VftblPtr>(thisPtr.ToPointer());
-            var vftblIUnknown = Marshal.PtrToStructure<IUnknownVftbl>(vftblPtr.Vftbl);
             T vftblT;
+            // With our vtable types, the generic vtables will have System.Delegate fields
+            // and the non-generic types will have only void* fields.
+            // On .NET 5, we can use RuntimeHelpers.IsReferenceorContainsReferences
+            // to disambiguate between generic and non-generic vtables since it's a JIT-time constant.
+            // Since it is a JIT time constant, this function will be branchless on .NET 5.
+            // On .NET Standard 2.0, the IsReferenceOrContainsReferences method does not exist,
+            // so we instead fall back to typeof(T).IsGenericType, which sadly is not a JIT-time constant.
+#if NETSTANDARD2_0
             if (typeof(T).IsGenericType)
+#else
+            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+#endif
             {
                 vftblT = (T)typeof(T).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.CreateInstance, null, new[] { typeof(IntPtr) }, null).Invoke(new object[] { thisPtr });
             }
             else
             {
-                vftblT = Marshal.PtrToStructure<T>(vftblPtr.Vftbl);
+                vftblT = Unsafe.AsRef<T>(vftblPtr.Vftbl.ToPointer());
             }
-            return (vftblIUnknown, vftblT);
+            return vftblT;
         }
     }
 
@@ -244,10 +237,9 @@ namespace WinRT
             }, &data, IID_ICallbackWithNoReentrancyToApplicationSTA, 5);
         }
 
-        public override int TryAs<U>(Guid iid, out ObjectReference<U> objRef)
+        public override unsafe int TryAs<U>(Guid iid, out ObjectReference<U> objRef)
         {
             objRef = null;
-            ThrowIfDisposed();
             int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
             if (hr >= 0)
             {

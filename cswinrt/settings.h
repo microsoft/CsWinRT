@@ -10,6 +10,7 @@ namespace cswinrt
         std::set<std::string> include;
         std::set<std::string> exclude;
         winmd::reader::filter filter;
+        bool netstandard_compat{};
     };
 
     extern settings_type settings;

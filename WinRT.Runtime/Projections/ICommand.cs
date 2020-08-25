@@ -118,9 +118,12 @@ namespace ABI.System.Windows.Input
         }
     }
 
-    internal sealed class CanExecuteChangedEventSource : EventSource<global::System.EventHandler>
+    internal sealed unsafe class CanExecuteChangedEventSource : EventSource<global::System.EventHandler>
     {
-        internal CanExecuteChangedEventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler) : base(obj, addHandler, removeHandler)
+        internal CanExecuteChangedEventSource(IObjectReference obj,
+            delegate* stdcall<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
+            delegate* stdcall<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
+            : base(obj, addHandler, removeHandler)
         {
         }
 
@@ -136,35 +139,53 @@ namespace ABI.System.Windows.Input
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
-    public class ICommand : global::System.Windows.Input.ICommand
+    public unsafe class ICommand : global::System.Windows.Input.ICommand
     {
         [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            public _add_EventHandler add_CanExecuteChanged_0;
-            public _remove_EventHandler remove_CanExecuteChanged_1;
-            public ICommand_Delegates.CanExecute_2 CanExecute_2;
-            public ICommand_Delegates.Execute_3 Execute_3;
+            private void* _add_CanExecuteChanged_0;
+            public delegate* stdcall<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_CanExecuteChanged_0 { get => (delegate* stdcall<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_CanExecuteChanged_0; set => _add_CanExecuteChanged_0 = value; }
+            private void* _remove_CanExecuteChanged_1;
+            public delegate* stdcall<IntPtr, global::WinRT.EventRegistrationToken, int> remove_CanExecuteChanged_1 { get => (delegate* stdcall<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_CanExecuteChanged_1; set => _remove_CanExecuteChanged_1 = value; }
+            private void* _CanExecute_2;
+            public delegate* stdcall<IntPtr, IntPtr, out byte, int> CanExecute_2 { get => (delegate* stdcall<IntPtr, IntPtr, out byte, int>)_CanExecute_2; set => _CanExecute_2 = value; }
+            private void* _Execute_3;
+            public delegate* stdcall<IntPtr, IntPtr, int> Execute_3 { get => (delegate* stdcall<IntPtr, IntPtr, int>)_Execute_3; set => _Execute_3 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+#if NETSTANDARD2_0
+            private static Delegate[] DelegateCache = new Delegate[4];
+#endif
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    add_CanExecuteChanged_0 = Do_Abi_add_CanExecuteChanged_0,
-                    remove_CanExecuteChanged_1 = Do_Abi_remove_CanExecuteChanged_1,
-                    CanExecute_2 = Do_Abi_CanExecute_2,
-                    Execute_3 = Do_Abi_Execute_3
+#if NETSTANDARD2_0
+                    _add_CanExecuteChanged_0 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ICommand_Delegates.add_CanExecuteChanged_0(Do_Abi_add_CanExecuteChanged_0)),
+                    _remove_CanExecuteChanged_1 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new _remove_EventHandler(Do_Abi_remove_CanExecuteChanged_1)),
+                    _CanExecute_2 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ICommand_Delegates.CanExecute_2(Do_Abi_CanExecute_2)),
+                    _Execute_3 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ICommand_Delegates.Execute_3(Do_Abi_Execute_3)),
+#else
+                    _add_CanExecuteChanged_0 = (delegate*<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*,
+                    int>)&Do_Abi_add_CanExecuteChanged_0,
+                    _remove_CanExecuteChanged_1 = (delegate*<IntPtr, global::WinRT.EventRegistrationToken, int>)&Do_Abi_remove_CanExecuteChanged_1,
+                    _CanExecute_2 = (delegate*<IntPtr, IntPtr, byte*, int>)&Do_Abi_CanExecute_2,
+                    _Execute_3 = (delegate*<IntPtr, IntPtr, int>)&Do_Abi_Execute_3,
+#endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-            private static unsafe int Do_Abi_CanExecute_2(IntPtr thisPtr, IntPtr parameter, out byte result)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_CanExecute_2(IntPtr thisPtr, IntPtr parameter, byte* result)
             {
                 bool __result = default;
 
@@ -172,7 +193,7 @@ namespace ABI.System.Windows.Input
 
                 try
                 {
-                    __result = global::WinRT.ComWrappersSupport.FindObject<global::System.Windows.Input.ICommand>(thisPtr).CanExecute(MarshalInspectable.FromAbi(parameter)); result = (byte)(__result ? 1 : 0);
+                    __result = global::WinRT.ComWrappersSupport.FindObject<global::System.Windows.Input.ICommand>(thisPtr).CanExecute(MarshalInspectable.FromAbi(parameter)); *result = (byte)(__result ? 1 : 0);
 
                 }
                 catch (global::System.Exception __exception__)
@@ -182,6 +203,10 @@ namespace ABI.System.Windows.Input
                 }
                 return 0;
             }
+
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static unsafe int Do_Abi_Execute_3(IntPtr thisPtr, IntPtr parameter)
             {
                 try
@@ -198,14 +223,17 @@ namespace ABI.System.Windows.Input
 
             private static ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>> _CanExecuteChanged_TokenTables = new ConditionalWeakTable<global::System.Windows.Input.ICommand, EventRegistrationTokenTable<global::System.EventHandler>>();
 
-            private static unsafe int Do_Abi_add_CanExecuteChanged_0(IntPtr thisPtr, IntPtr handler, out global::WinRT.EventRegistrationToken token)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_add_CanExecuteChanged_0(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token)
             {
                 token = default;
                 try
                 {
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Windows.Input.ICommand>(thisPtr);
                     var __handler = CanExecuteChangedEventHandler.FromAbi(handler);
-                    token = _CanExecuteChanged_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
+                    *token = _CanExecuteChanged_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
                     __this.CanExecuteChanged += __handler;
                     return 0;
                 }
@@ -214,6 +242,10 @@ namespace ABI.System.Windows.Input
                     return __ex.HResult;
                 }
             }
+
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static unsafe int Do_Abi_remove_CanExecuteChanged_1(IntPtr thisPtr, global::WinRT.EventRegistrationToken token)
             {
                 try
@@ -299,7 +331,8 @@ namespace ABI.System.Windows.Input
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static class ICommand_Delegates
     {
-        public unsafe delegate int CanExecute_2(IntPtr thisPtr, IntPtr parameter, out byte result);
+        public unsafe delegate int add_CanExecuteChanged_0(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token);
+        public unsafe delegate int CanExecute_2(IntPtr thisPtr, IntPtr parameter, byte* result);
         public unsafe delegate int Execute_3(IntPtr thisPtr, IntPtr parameter);
     }
 }

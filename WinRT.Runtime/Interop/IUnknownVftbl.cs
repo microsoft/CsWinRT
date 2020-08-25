@@ -6,29 +6,16 @@ using System.Text;
 namespace WinRT.Interop
 {
     [Guid("00000000-0000-0000-C000-000000000046")]
-    public struct IUnknownVftbl
+    public unsafe struct IUnknownVftbl
     {
-        public unsafe delegate int _QueryInterface(IntPtr pThis, ref Guid iid, out IntPtr vftbl);
-        public delegate uint _AddRef(IntPtr pThis);
-        public delegate uint _Release(IntPtr pThis);
+        private void* _QueryInterface;
+        public delegate* stdcall<IntPtr, ref Guid, out IntPtr, int> QueryInterface { get => (delegate* stdcall<IntPtr, ref Guid, out IntPtr, int>)_QueryInterface; set => _QueryInterface = (void*)value; }
+        private void* _AddRef;
+        public delegate* stdcall<IntPtr, uint> AddRef { get => (delegate* stdcall<IntPtr, uint>)_AddRef; set => _AddRef = (void*)value; }
+        private void* _Release;
+        public delegate* stdcall<IntPtr, uint> Release { get => (delegate* stdcall<IntPtr, uint>)_Release; set => _Release = (void*)value; }
 
-        public _QueryInterface QueryInterface;
-        public _AddRef AddRef;
-        public _Release Release;
-
-        public static readonly IUnknownVftbl AbiToProjectionVftbl;
-        public static readonly IntPtr AbiToProjectionVftblPtr;
-
-        static IUnknownVftbl()
-        {
-            AbiToProjectionVftbl = GetVftbl();
-            AbiToProjectionVftblPtr = Marshal.AllocHGlobal(Marshal.SizeOf<IUnknownVftbl>());
-            Marshal.StructureToPtr(AbiToProjectionVftbl, AbiToProjectionVftblPtr, false);
-        }
-
-        private static IUnknownVftbl GetVftbl()
-        {
-            return ComWrappersSupport.IUnknownVftbl;
-        }
+        public static IUnknownVftbl AbiToProjectionVftbl => ComWrappersSupport.IUnknownVftbl;
+        public static IntPtr AbiToProjectionVftblPtr => ComWrappersSupport.IUnknownVftblPtr;
     }
 }
