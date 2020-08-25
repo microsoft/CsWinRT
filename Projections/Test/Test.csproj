@@ -56,7 +56,6 @@
 -exclude Microsoft
 -include TestComponent
 -include TestComponentCSharp
--exclude TestComponentCSharp.Managed
       </CsWinRTParams>
     </PropertyGroup>
     <MakeDir Directories="$(GeneratedFilesDir)" />
