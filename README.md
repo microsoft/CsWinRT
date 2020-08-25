@@ -18,7 +18,7 @@ Component Authors need to build a C#/WinRT projection for .NET5+ targets.
 
 ### Application Developers
 
-Consuming .NET5+ apps references your NuGet package, which references the projection assembly instead of a winmd.
+.NET5+ apps reference the NuGet package, which pulls in the projection assembly instead of a winmd.
 
 <img alt = "Adding projection"
     src="Diagram_AddProjection.jpg"
