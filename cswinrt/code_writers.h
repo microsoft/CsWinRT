@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <set>
+#include <filesystem>
 
 namespace cswinrt
 {
@@ -4032,19 +4033,27 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             });
     }
 
+    void write_winrt_attribute(writer& w, TypeDef const& type)
+    {
+        std::filesystem::path db_path(type.get_database().path());
+        w.write(R"([global::WinRT.WindowsRuntimeType("%")]
+)",
+            db_path.stem().string());
+    }
+
     void write_interface(writer& w, TypeDef const& type)
     {
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type);
 
         uint32_t const vtable_base = type.MethodList().first.index();
-        w.write(R"([global::WinRT.WindowsRuntimeType]
-%
+        w.write(R"(%%
 %% interface %%
 {%
 }
 )",
             // Interface
+            bind<write_winrt_attribute>(type),
             bind<write_guid_attribute>(type),
             bind<write_custom_attributes>(type),
             is_exclusive_to(type) ? "internal" : "public",
@@ -4162,7 +4171,6 @@ public static class %
         return true;
     }
 
-
     void write_class(writer& w, TypeDef const& type)
     {
         if (is_static(type))
@@ -4177,8 +4185,7 @@ public static class %
         auto base_semantics = get_type_semantics(type.Extends());
         auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
 
-        w.write(R"([global::WinRT.WindowsRuntimeType]
-[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
+        w.write(R"(%[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
 %public %class %%, IEquatable<%>
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
@@ -4217,6 +4224,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 %%
 }
 )",
+            bind<write_winrt_attribute>(type),
             bind<write_custom_attributes>(type),
             bind<write_class_modifiers>(type),
             type_name,
@@ -4402,9 +4410,9 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable.Disp
     void write_delegate(writer& w, TypeDef const& type)
     {
         method_signature signature{ get_delegate_invoke(type) };
-        w.write(R"([global::WinRT.WindowsRuntimeType]
-%public delegate % %(%);
+        w.write(R"(%%public delegate % %(%);
 )",
+            bind<write_winrt_attribute>(type),
             bind<write_custom_attributes>(type),
             bind<write_projection_return_type>(signature),
             bind<write_type_name>(type, false, false),
@@ -4698,10 +4706,10 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 
         auto enum_underlying_type = is_flags_enum(type) ? "uint" : "int";
 
-        w.write(R"([global::WinRT.WindowsRuntimeType]
-%public enum % : %
+        w.write(R"(%%public enum % : %
 {
 )", 
+        bind<write_winrt_attribute>(type),
         bind<write_custom_attributes>(type),
         bind<write_type_name>(type, false, false), enum_underlying_type);
         {
@@ -4744,8 +4752,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             fields.emplace_back(field_info);
         }
 
-        w.write(R"([global::WinRT.WindowsRuntimeType]
-%public struct %: IEquatable<%>
+        w.write(R"(%%public struct %: IEquatable<%>
 {
 %
 public %(%)
@@ -4761,6 +4768,7 @@ public override int GetHashCode() => %;
 }
 )",
             // struct
+            bind<write_winrt_attribute>(type),
             bind<write_custom_attributes>(type),
             name,
             name,

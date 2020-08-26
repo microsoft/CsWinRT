@@ -4,6 +4,9 @@
     <PrepareForBuildDependsOn>
       UpdateStringSources;UpdateStringsHeader;$(PrepareForBuildDependsOn)
     </PrepareForBuildDependsOn>
+    <ComputeCompileInputsTargets>
+      AddStringSources;$(ComputeCompileInputsTargets)
+    </ComputeCompileInputsTargets>
   </PropertyGroup>
 
   <UsingTask TaskName="WriteStringSources"
@@ -143,13 +146,6 @@
       <Source>$([System.String]::new('$(IntDir)strings\%(RecursiveDir)%(Filename).cpp'))</Source>
       <File>$([System.String]::new('%(Filename)'))</File>
     </StaticStrings>
-    <!--'Visible' metadata does not support vcxproj, so use a dummy DependentUpon to hide string sources-->
-    <ClCompile Include="@(StaticStrings->'%(Source)')" AutoGen="true" Visible="false">
-      <DependentUpon>Generated Files</DependentUpon>
-    </ClCompile>
-    <ClInclude Include="$(IntDir)strings.h" AutoGen="true" Visible="false">
-      <DependentUpon>Generated Files</DependentUpon>
-    </ClInclude>
   </ItemGroup>
 
   <Target Name="SetStaticStringIndex">
@@ -159,6 +155,12 @@
         <Index>$([System.IO.Path]::GetDirectoryName($([System.IO.Path]::GetDirectoryName($([System.String]::new('%(RecursiveDir)'))))))</Index>
         <Namespace>$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName($([System.String]::new('%(RecursiveDir)'))))))</Namespace>
       </StaticStrings>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="AddStringSources">
+    <ItemGroup>
+      <ClCompile Include="@(StaticStrings->'%(Source)')" />
     </ItemGroup>
   </Target>
 
