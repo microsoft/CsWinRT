@@ -524,3 +524,25 @@ namespace WinRT
         }
     }
 }
+
+
+namespace System.Runtime.CompilerServices
+{
+    [AttributeUsage(AttributeTargets.Method)]
+    internal class ModuleInitializerAttribute : Attribute {}
+}
+
+namespace WinRT
+{
+    using System.Runtime.CompilerServices;
+    internal static class ProjectionInitializer
+    {
+#pragma warning disable 0436
+        [ModuleInitializer]
+#pragma warning restore 0436
+        internal static void InitalizeProjection()
+        {
+            ComWrappersSupport.RegisterProjectionAssembly(typeof(ProjectionInitializer).Assembly);
+        }
+    }
+}
