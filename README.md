@@ -74,7 +74,7 @@ The following msbuild project fragment demonstrates a simple invocation of cswin
 
 C#/WinRT currently requires the following packages to build:
 - Visual Studio 16.8 Preview 2 for .NET 5 Preview 8 SDK support
-- Microsoft.Net.Compilers.Toolset >= 3.8.0-3.20412.9 (for function pointer support)
+- Microsoft.Net.Compilers.Toolset >= 3.8.0-3.20428.4 (for function pointer support)
   - Will be found in the https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json NuGet feed.
 - .NET 5 SDK 5.0.100-preview.8.20417.9
 - WinUI 3 3.0.0-preview1.200515.3 
