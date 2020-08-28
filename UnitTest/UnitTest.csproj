@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!--Target .NET Core 2.0 to ensure .NET Standard 2.0 compatibility-->
-    <TargetFrameworks>netcoreapp2.0;net5.0-windows10.0.18362</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.0;net5.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
@@ -10,7 +10,6 @@
     <LangVersion>8</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>1701;1702;0436;1658</NoWarn>
-    <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,7 +33,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.2">
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
