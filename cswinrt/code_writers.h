@@ -1685,11 +1685,20 @@ private % AsInternal(InterfaceTag<%> _) => ((Lazy<%>)_lazyInterfaces[typeof(%)])
         }
     }
 
+    void write_winrt_attribute(writer& w, TypeDef const& type)
+    {
+        std::filesystem::path db_path(type.get_database().path());
+        w.write(R"([global::WinRT.WindowsRuntimeType("%")]
+)",
+db_path.stem().string());
+    }
+
     void write_static_class(writer& w, TypeDef const& type)
     {
-        w.write(R"(public static class %
+        w.write(R"(%public static class %
 {
 %})",
+            bind<write_winrt_attribute>(type),
             bind<write_type_name>(type, false, false),
             bind<write_attributed_types>(type)
         );
@@ -4039,10 +4048,11 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
     {
         auto type_name = write_type_name_temp(w, type);
 
-        w.write(R"(%public sealed class %: Attribute
+        w.write(R"(%%public sealed class %: Attribute
 {
 %}
 )",
+            bind<write_winrt_attribute>(type),
             bind<write_custom_attributes>(type),
             type_name,
             [&](writer& w)
@@ -4063,14 +4073,6 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
                         field.Name());
                 }
             });
-    }
-
-    void write_winrt_attribute(writer& w, TypeDef const& type)
-    {
-        std::filesystem::path db_path(type.get_database().path());
-        w.write(R"([global::WinRT.WindowsRuntimeType("%")]
-)",
-            db_path.stem().string());
     }
 
     void write_interface(writer& w, TypeDef const& type)
