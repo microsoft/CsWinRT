@@ -540,7 +540,9 @@ namespace UnitTest
         [Guid("96369F54-8EB6-48F0-ABCE-C1B211E627C3")]
         internal unsafe interface IStringableInterop
         {
-            // Note: ComInterfaceType.InterfaceIsIInspectable no longer supported
+            // Note: Invoking methods on ComInterfaceType.InterfaceIsIInspectable interfaces
+            // no longer appears supported in the runtime (probably with removal of WinRT support),
+            // so simulate with IUnknown.
             void GetIids(out int iidCount, out IntPtr iids);
             void GetRuntimeClassName(out IntPtr className);
             void GetTrustLevel(out TrustLevel trustLevel);
@@ -550,6 +552,8 @@ namespace UnitTest
 
         [ComImport]
         [Guid("39E050C3-4E74-441A-8DC0-B81104DF949C")]
+        // Using ComInterfaceType.InterfaceIsIInspectable here just to test the cast operation,
+        // not actually invoking RequestVerificationForWindowAsync.
         [InterfaceType(ComInterfaceType.InterfaceIsIInspectable)]
         public interface IUserConsentVerifierInterop
         {
