@@ -3361,7 +3361,7 @@ private static unsafe int Do_Abi_%%
 {
 %
 })",
-            !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly]" : "",
+            !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
             vmethod_name,
             bind<write_abi_signature>(method),
             bind<write_managed_method_call>(
@@ -3397,7 +3397,7 @@ private static unsafe int Do_Abi_%%
 {
 %
 })",
-            !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly]" : "",
+            !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
             vmethod_name,
             bind<write_abi_signature>(setter),
             bind<write_managed_method_call>(
@@ -3427,7 +3427,7 @@ private static unsafe int Do_Abi_%%
 {
 %
 })",
-                !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly]" : "",
+                !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
                 vmethod_name,
                 bind<write_abi_signature>(getter),
                 bind<write_managed_method_call>(
@@ -3479,7 +3479,7 @@ catch (Exception __ex)
 return __ex.HResult;
 }
 })",
-            !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly]" : "",
+            !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
             get_vmethod_name(w, add_method.Parent(), add_method),
             bind<write_abi_signature>(add_method),
             settings.netstandard_compat ? "" : "*",
@@ -3510,7 +3510,7 @@ catch (Exception __ex)
 return __ex.HResult;
 }
 })",
-            !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly]" : "",
+            !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
             get_vmethod_name(w, remove_method.Parent(), remove_method),
             bind<write_abi_signature>(remove_method),
             type_name,
@@ -3564,36 +3564,26 @@ internal IInspectable.Vftbl IInspectableVftbl;
                     }
                     else
                     {
-                        if (settings.netstandard_compat)
+                        if (settings.netstandard_compat || is_generic)
                         {
                             nongeneric_delegates.push_back(delegate_definition);
-                            vtable_field_type = w.write_temp("delegate* unmanaged[Stdcall]<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
                         }
-                        else
-                        {
-                            vtable_field_type = w.write_temp("delegate* unmanaged<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
-                        }
+
+                        vtable_field_type = w.write_temp("delegate* unmanaged[Stdcall]<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
                         function_pointer = true;
                     }
                 }
                 else
                 {
                     // We're a well-known delegate type, but we still need to get the function pointer type.
-                    if (settings.netstandard_compat)
-                    {
-                        vtable_field_type = w.write_temp("delegate* unmanaged[Stdcall]<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
-                    }
-                    else
-                    {
-                        vtable_field_type = w.write_temp("delegate* unmanaged<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
-                    }
+                    vtable_field_type = w.write_temp("delegate* unmanaged[Stdcall]<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
                     function_pointer = true;
                 }
                 if (!function_pointer)
                 {
                     w.write("public % %;", vtable_field_type, vmethod_name);
                 }
-                else if (settings.netstandard_compat)
+                else if (settings.netstandard_compat || is_generic)
                 {
                     // Work around https://github.com/dotnet/runtime/issues/37295
                     w.write("private void* _%;\n", vmethod_name);
@@ -4589,7 +4579,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             // DisposeAbi
             type_name,
             // Do_Abi_Invoke
-            !is_generic && !settings.netstandard_compat ? "\n[UnmanagedCallersOnly]" : "",
+            !is_generic && !settings.netstandard_compat ? "\n[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
             [&](writer& w) {
                 if (!is_generic)
                 {
