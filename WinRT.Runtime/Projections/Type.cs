@@ -5,7 +5,7 @@ using WinRT;
 
 namespace ABI.System
 {
-    [WindowsRuntimeType("Windows.UI.Xaml")]
+    [WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
     internal enum TypeKind : int
     {
         Primitive,
