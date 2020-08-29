@@ -318,7 +318,11 @@ namespace winrt::TestComponentCSharp::implementation
 
 namespace winrt::TestComponentCSharp::factory_implementation
 {
-    struct Class : ClassT<Class, implementation::Class>
+    struct Class : ClassT<Class, implementation::Class, Windows::Foundation::IStringable>
     {
+        hstring ToString()
+        {
+            return L"Class";
+        }
     };
 }

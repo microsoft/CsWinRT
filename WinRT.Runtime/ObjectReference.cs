@@ -56,6 +56,27 @@ namespace WinRT
             return ObjectReference<T>.Attach(ref thatPtr);
         }
 
+        public unsafe TInterface AsInterface<TInterface>()
+        {
+            if (typeof(TInterface).GetCustomAttribute(typeof(System.Runtime.InteropServices.ComImportAttribute)) is object)
+            {
+                Guid iid = typeof(TInterface).GUID;
+                Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr comPtr));
+                try
+                {
+                    return (TInterface)Marshal.GetObjectForIUnknown(comPtr);
+                }
+                finally
+                {
+                    var vftblPtr = Unsafe.AsRef<WinRT.VftblPtr>(comPtr.ToPointer());
+                    var vftblIUnknown = Marshal.PtrToStructure<WinRT.Interop.IUnknownVftbl>(vftblPtr.Vftbl);
+                    vftblIUnknown.Release(comPtr);
+                }
+            }
+
+            return (TInterface)typeof(TInterface).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { this });
+        }
+
         public int TryAs<T>(out ObjectReference<T> objRef) => TryAs<T>(GuidGenerator.GetIID(typeof(T)), out objRef);
 
         public virtual unsafe int TryAs<T>(Guid iid, out ObjectReference<T> objRef)
