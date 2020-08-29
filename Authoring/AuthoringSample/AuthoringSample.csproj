@@ -4,13 +4,13 @@
     <TargetFramework>net5.0</TargetFramework>
     <LangVersion>preview</LangVersion>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <EnableCsWinRTLogging>true</EnableCsWinRTLogging>
+    <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
   </PropertyGroup>
 
   <ItemGroup>
     <CompilerVisibleProperty Include="AssemblyName" />
     <CompilerVisibleProperty Include="AssemblyVersion" />
-    <CompilerVisibleProperty Include="EnableCsWinRTLogging" />
+    <CompilerVisibleProperty Include="CsWinRTEnableLogging" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>

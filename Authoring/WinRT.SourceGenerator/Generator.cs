@@ -22,18 +22,26 @@ namespace Generator
             return assemblyVersion;
         }
 
-        private string GetWinmdOutputFile(SourceGeneratorContext context)
+        public static string GetGeneratedFilesDir(SourceGeneratorContext context)
         {
+            // TODO: determine correct location to write to.
             string winmdDir = Path.Combine(Directory.GetCurrentDirectory(), "Generated Files");
             Directory.CreateDirectory(winmdDir);
-            return Path.Combine(winmdDir, GetAssemblyName(context) + ".winmd");
+            return winmdDir;
+        }
+
+        private string GetWinmdOutputFile(SourceGeneratorContext context)
+        {
+            return Path.Combine(GetGeneratedFilesDir(context), GetAssemblyName(context) + ".winmd");
         }
 
         private void GenerateWinMD(MetadataBuilder metadataBuilder, string outputFile)
         {
             Logger.Log("Writing " + outputFile);
             var managedPeBuilder = new ManagedPEBuilder(
-                new PEHeaderBuilder(imageCharacteristics: Characteristics.ExecutableImage),
+                new PEHeaderBuilder(
+                    machine: Machine.I386,
+                    imageCharacteristics: Characteristics.ExecutableImage | Characteristics.Dll | Characteristics.Bit32Machine),
                 new MetadataRootBuilder(metadataBuilder, "WindowsRuntime 1.4"),
                 new BlobBuilder(),
                 flags: CorFlags.ILOnly);

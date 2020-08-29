@@ -7,13 +7,10 @@ namespace Generator
     {
         public static void Initialize(SourceGeneratorContext context)
         {
-            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.EnableCsWinRTLogging", out var enableLogging);
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTEnableLogging", out var enableLogging);
             if(enableLogging != null && bool.Parse(enableLogging))
             {
-                string generatedDir = Path.Combine(Directory.GetCurrentDirectory(), "Generated Files");
-                Directory.CreateDirectory(generatedDir);
-
-                string logFile = Path.Combine(generatedDir, "log.txt");
+                string logFile = Path.Combine(SourceGenerator.GetGeneratedFilesDir(context), "log.txt");
                 fileLogger = File.CreateText(logFile);
             }
         }

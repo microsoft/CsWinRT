@@ -70,20 +70,15 @@ namespace Generator
         public TypeDefinitionHandle Handle;
         public string DefaultInterface;
 
-        public Dictionary<ISymbol, List<MethodDefinitionHandle>> MethodDefinitions;
-        public Dictionary<ISymbol, List<EntityHandle>> MethodReferences;
-        public Dictionary<ISymbol, FieldDefinitionHandle> FieldDefinitions;
-        public Dictionary<ISymbol, PropertyDefinitionHandle> PropertyDefinitions;
-        public Dictionary<ISymbol, EventDefinitionHandle> EventDefinitions;
+        public Dictionary<ISymbol, List<MethodDefinitionHandle>> MethodDefinitions = new Dictionary<ISymbol, List<MethodDefinitionHandle>>();
+        public Dictionary<ISymbol, List<EntityHandle>> MethodReferences = new Dictionary<ISymbol, List<EntityHandle>>();
+        public Dictionary<ISymbol, FieldDefinitionHandle> FieldDefinitions = new Dictionary<ISymbol, FieldDefinitionHandle>();
+        public Dictionary<ISymbol, PropertyDefinitionHandle> PropertyDefinitions = new Dictionary<ISymbol, PropertyDefinitionHandle>();
+        public Dictionary<ISymbol, EventDefinitionHandle> EventDefinitions = new Dictionary<ISymbol, EventDefinitionHandle>();
 
         public TypeDeclaration(ISymbol node)
         {
             Node = node;
-            MethodDefinitions = new Dictionary<ISymbol, List<MethodDefinitionHandle>>();
-            MethodReferences = new Dictionary<ISymbol, List<EntityHandle>>();
-            FieldDefinitions = new Dictionary<ISymbol, FieldDefinitionHandle>();
-            PropertyDefinitions = new Dictionary<ISymbol, PropertyDefinitionHandle>();
-            EventDefinitions = new Dictionary<ISymbol, EventDefinitionHandle>();
         }
 
         public override string ToString()
@@ -189,7 +184,7 @@ namespace Generator
 
         private void CreteAssembly()
         {
-            Logger.Log("Generating assembly " + assembly + " version " + version);
+            Logger.Log("Generating assembly " + assembly + " version  " + version);
             metadataBuilder.AddAssembly(
                 metadataBuilder.GetOrAddString(assembly),
                 new Version(version),
@@ -200,7 +195,7 @@ namespace Generator
 
             var moduleDefinition = metadataBuilder.AddModule(
                 0,
-                metadataBuilder.GetOrAddString(assembly),
+                metadataBuilder.GetOrAddString(assembly + ".winmd"),
                 metadataBuilder.GetOrAddGuid(Guid.NewGuid()),
                 default,
                 default);
@@ -959,7 +954,7 @@ namespace Generator
             Logger.Log("matching constructor found: " + matchingConstructor.First());
 
             var constructorReference = typeDefinitionMapping[attributeTypeName].MethodReferences[matchingConstructor.First()];
-            Logger.Log("found constructor handle: " + constructorReference.Count);
+            Logger.Log("found constructor handle:  " + constructorReference.Count);
 
             var attributeSignature = new BlobBuilder();
             new BlobEncoder(attributeSignature)
@@ -1302,7 +1297,7 @@ namespace Generator
 
         void AddFactoryMethod(INamedTypeSymbol classSymbol, IMethodSymbol method)
         {
-            Logger.Log("ading factory method: " + method.Name);
+            Logger.Log("adding factory method: " + method.Name);
 
             int numParameters = method.Parameters.Count();
             Parameter[] parameters = new Parameter[numParameters];
@@ -1348,7 +1343,7 @@ namespace Generator
                 }
                 else
                 {
-                    Logger.Log("member not recognized:  " + member.Kind + " name: " + member.Name);
+                    Logger.Log("member not recognized: " + member.Kind + " name: " + member.Name);
                 }
             }
 
@@ -1551,6 +1546,8 @@ namespace Generator
                 classDeclaration,
                 SynthesizedInterfaceType.Default,
                 classMembersFromInterfaces);
+
+            // TODO: address overridable and composable interfaces.
         }
 
         void AddSynthesizedInterface(
