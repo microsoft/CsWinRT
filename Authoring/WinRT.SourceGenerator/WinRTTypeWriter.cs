@@ -184,7 +184,7 @@ namespace Generator
 
         private void CreteAssembly()
         {
-            Logger.Log("Generating assembly " + assembly + " version  " + version);
+            Logger.Log("Generating assembly " + assembly + " version " + version);
             metadataBuilder.AddAssembly(
                 metadataBuilder.GetOrAddString(assembly),
                 new Version(version),
@@ -1648,8 +1648,7 @@ namespace Generator
         {
             bool isProjectedType = type.GetAttributes().
                 Any(attribute => attribute.AttributeClass.Name == "WindowsRuntimeTypeAttribute");
-            // TODO: Windows startwith is hack for missing attribute on attributes.
-            if (isProjectedType || type.ToString().StartsWith("Windows."))
+            if (isProjectedType)
             {
                 AddProjectedType(type);
             }
