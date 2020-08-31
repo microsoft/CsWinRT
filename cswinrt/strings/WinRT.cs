@@ -240,6 +240,10 @@ namespace WinRT
     {
         private ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
 
+        public ObjectReference<IActivationFactoryVftbl> Value { get => _IActivationFactory; }
+
+        public I AsInterface<I>() => _IActivationFactory.AsInterface<I>();
+
         public BaseActivationFactory(string typeNamespace, string typeFullName)
         {
             var runtimeClassId = typeFullName.Replace("WinRT", "Windows");
@@ -290,6 +294,7 @@ namespace WinRT
         public ActivationFactory() : base(typeof(T).Namespace, typeof(T).FullName) { }
 
         static WeakLazy<ActivationFactory<T>> _factory = new WeakLazy<ActivationFactory<T>>();
+        public new static I AsInterface<I>() => _factory.Value.Value.AsInterface<I>();
         public static ObjectReference<I> As<I>() => _factory.Value._As<I>();
         public static ObjectReference<I> ActivateInstance<I>() => _factory.Value._ActivateInstance<I>();
     }

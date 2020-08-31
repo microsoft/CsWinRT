@@ -46,14 +46,27 @@
       <!--Remove references to projection source winmds to prevent compile conflict warnings-->
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'TestComponent'" />
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'TestComponentCSharp'" />
-      <!--Remove any ReferenceDependencyPaths winmds to prevent deps.json from failing unit test-->
-      <ReferenceDependencyPaths Remove="@(ReferenceDependencyPaths)" Condition="%(ReferenceDependencyPaths.Extension) == '.winmd'" />
+    </ItemGroup>
+    <!--Remove Microsoft.UI.winmd;Microsoft.System.winmd;Microsoft.Graphics.winmd
+        from deps.json to prevent CLR failing unit test-->
+    <ItemGroup>
+      <WinmdReferenceDependencyPaths Include="@(ReferenceDependencyPaths)" Condition="%(ReferenceDependencyPaths.Extension) == '.winmd'" />
+    </ItemGroup>
+    <Message Importance="high" Condition="'@(WinmdReferenceDependencyPaths)' != ''" Text="WinmdReferenceDependencyPaths: @(WinmdReferenceDependencyPaths)" />
+    <ItemGroup>
+        <ReferenceDependencyPaths Remove="@(WinmdReferenceDependencyPaths)"/>
     </ItemGroup>
   </Target>
 
   <Target Name="RemoveWinMDReferences" BeforeTargets="ResolveReferences" AfterTargets="AfterResolveReferences">
+    <!--Remove TestComponent.winmd;TestComponentCSharp.winmd 
+        to avoid NETSDK1130 target error-->
     <ItemGroup>
-      <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
+      <WinmdReferencePath Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
+    </ItemGroup>
+    <Message Importance="high" Condition="'@(WinmdReferencePath)' != ''" Text="WinmdReferencePath: @(WinmdReferencePath)" />
+    <ItemGroup>
+      <ReferencePath Remove="@(WinmdReferencePath)"/>
     </ItemGroup>
   </Target>
 

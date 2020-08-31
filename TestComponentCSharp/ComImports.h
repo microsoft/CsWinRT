@@ -13,7 +13,11 @@ namespace winrt::TestComponentCSharp::implementation
 }
 namespace winrt::TestComponentCSharp::factory_implementation
 {
-    struct ComImports : ComImportsT<ComImports, implementation::ComImports>
+    struct ComImports : ComImportsT<ComImports, implementation::ComImports, Windows::Foundation::IStringable>
     {
+        hstring ToString()
+        {
+            return L"ComImports";
+        }
     };
 }
