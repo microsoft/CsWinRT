@@ -535,6 +535,54 @@ namespace UnitTest
             Assert.Equal(abiView.ThisPtr, abiView.As<WinRT.IInspectable>().As<ABI.System.Collections.Generic.IReadOnlyList<int>.Vftbl>().ThisPtr);
         }
 
+        [ComImport]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        [Guid("96369F54-8EB6-48F0-ABCE-C1B211E627C3")]
+        internal unsafe interface IStringableInterop
+        {
+            // Note: Invoking methods on ComInterfaceType.InterfaceIsIInspectable interfaces
+            // no longer appears supported in the runtime (probably with removal of WinRT support),
+            // so simulate with IUnknown.
+            void GetIids(out int iidCount, out IntPtr iids);
+            void GetRuntimeClassName(out IntPtr className);
+            void GetTrustLevel(out TrustLevel trustLevel);
+
+            void ToString(out IntPtr hstr);
+        }
+
+        [ComImport]
+        [Guid("39E050C3-4E74-441A-8DC0-B81104DF949C")]
+        // Using ComInterfaceType.InterfaceIsIInspectable here just to test the cast operation,
+        // not actually invoking RequestVerificationForWindowAsync.
+        [InterfaceType(ComInterfaceType.InterfaceIsIInspectable)]
+        public interface IUserConsentVerifierInterop
+        {
+            IAsyncOperation<Windows.Security.Credentials.UI.UserConsentVerificationResult> RequestVerificationForWindowAsync(
+                IntPtr appWindow,
+                out IntPtr message,
+                ref Guid riid);
+        }
+
+        [Fact]
+        public unsafe void TestFactoryCast()
+        {
+            IntPtr hstr;
+
+            // Access nonstatic class factory 
+            var instanceFactory = Class.As<IStringableInterop>();
+            instanceFactory.ToString(out hstr);
+            Assert.Equal("Class", MarshalString.FromAbi(hstr));
+
+            // Access static class factory
+            var staticFactory = ComImports.As<IStringableInterop>();
+            staticFactory.ToString(out hstr);
+            Assert.Equal("ComImports", MarshalString.FromAbi(hstr));
+
+            // Test user class
+            var interop = Windows.Security.Credentials.UI.UserConsentVerifier.As<IUserConsentVerifierInterop>();
+            Assert.NotNull(interop);
+        }
+
         [Fact]
         public void TestFundamentalGeneric()
         {

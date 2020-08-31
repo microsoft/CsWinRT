@@ -36,5 +36,11 @@ namespace WinRT
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Delegate | AttributeTargets.Struct | AttributeTargets.Enum, Inherited = false, AllowMultiple = false)]
     public sealed class WindowsRuntimeTypeAttribute : Attribute
     {
+        public WindowsRuntimeTypeAttribute(string sourceMetadata = null)
+        {
+            SourceMetadata = sourceMetadata;
+        }
+
+        public string SourceMetadata { get; }
     }
 }
