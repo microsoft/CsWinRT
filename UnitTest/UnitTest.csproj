@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!--Target .NET Core 2.1 to test .NET Standard 2.0 projection -->
-    <TargetFrameworks>netcoreapp2.1;net5.0</TargetFrameworks>
+    <!--Target .NET Core 2.0 to test .NET Standard 2.0 projection -->
+    <TargetFrameworks>netcoreapp2.0;net5.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
@@ -16,7 +16,7 @@
     <ProjectReference Include="..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\Projections\WinUI\WinUI.csproj" />
     <ProjectReference Include="..\Projections\Test\Test.csproj" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.0-preview-20200812-03" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
     <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.console" Version="2.4.1">
@@ -28,16 +28,17 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="XunitXml.TestLogger" Version="2.1.26" />
+   <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
     <Compile Remove="**/*.net5.cs" />
     <None Include="**/*.net5.cs" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp5.0'">
-    <Compile Remove="**/*.netcoreapp2.1.cs" />
-    <None Include="**/*.netcoreapp2.1.cs" />
+    <Compile Remove="**/*.netcoreapp2.0.cs" />
+    <None Include="**/*.netcoreapp2.0.cs" />
   </ItemGroup>
 
   <Target Name="FilterProjection" BeforeTargets="CoreCompile">
