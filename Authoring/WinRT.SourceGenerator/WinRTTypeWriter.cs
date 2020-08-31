@@ -913,8 +913,7 @@ namespace Generator
 
         private void EncodeNamedArguments(
             INamedTypeSymbol attributeType,
-            IList<KeyValuePair<string,
-            TypedConstant>> namedArguments,
+            IList<KeyValuePair<string, TypedConstant>> namedArguments,
             CustomAttributeNamedArgumentsEncoder argumentsEncoder)
         {
             var encoder = argumentsEncoder.Count(namedArguments.Count);
