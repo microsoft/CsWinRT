@@ -19,17 +19,54 @@ namespace WinRT.Host
     public static class Shim
     {
         private const int S_OK = 0;
+        private const int E_NOINTERFACE = unchecked((int)0x80004002);
+        private const int REGDB_E_READREGDB = unchecked((int)0x80040150);
         private const int REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
 
         public unsafe delegate int GetActivationFactoryDelegate(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory);
 
+        public static unsafe int GetActivationFactory(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory)
+        {
+            *activationFactory = IntPtr.Zero;
+
+            var targetAssembly = MarshalString.FromAbi(hstrTargetAssembly);
+            var runtimeClassId = MarshalString.FromAbi(hstrRuntimeClassId);
+
+            try
+            {
+                var assembly = ActivationLoader.LoadAssembly(targetAssembly);
+                var type = assembly.GetType("WinRT.Module");
+                if (type == null)
+                {
+                    return REGDB_E_CLASSNOTREG;
+                }
+                var GetActivationFactory = type.GetMethod("GetActivationFactory");
+                if (GetActivationFactory == null)
+                {
+                    return REGDB_E_READREGDB;
+                }
+                IntPtr factory = (IntPtr)GetActivationFactory.Invoke(null, new object[] { runtimeClassId });
+                if (factory == IntPtr.Zero)
+                {
+                    return E_NOINTERFACE;
+                }
+                *activationFactory = factory;
+                return S_OK;
+            }
+            catch (Exception e)
+            {
+                global::WinRT.ExceptionHelpers.SetErrorInfo(e);
+                return global::WinRT.ExceptionHelpers.GetHRForException(e);
+            }
+        }
+
 #if NETSTANDARD2_0
-        public static class ActivationLoader
+        private static class ActivationLoader
         {
             public static Assembly LoadAssembly(string targetAssembly) => Assembly.LoadFrom(targetAssembly);
         }
 #else
-        class ActivationLoader : AssemblyLoadContext
+        private class ActivationLoader : AssemblyLoadContext
         {
             private AssemblyDependencyResolver _resolver;
 
@@ -84,39 +121,6 @@ namespace WinRT.Host
             }
         }
 #endif
-
-        public static unsafe int GetActivationFactory(IntPtr hstrTargetAssembly, IntPtr hstrRuntimeClassId, IntPtr* activationFactory)
-        {
-            *activationFactory = IntPtr.Zero;
-
-            var targetAssembly = MarshalString.FromAbi(hstrTargetAssembly);
-            var runtimeClassId = MarshalString.FromAbi(hstrRuntimeClassId);
-
-            try
-            {
-                var assembly = ActivationLoader.LoadAssembly(targetAssembly);
-                var type = assembly.GetType("WinRT.Module");
-                if (type != null)
-                {
-                    var GetActivationFactory = type.GetMethod("GetActivationFactory");
-                    if (GetActivationFactory != null)
-                    {
-                        IntPtr factory = (IntPtr)GetActivationFactory.Invoke(null, new object[] { runtimeClassId });
-                        if (factory != IntPtr.Zero)
-                        {
-                            *activationFactory = factory;
-                            return S_OK;
-                        }
-                    }
-                }
-                return REGDB_E_CLASSNOTREG;
-            }
-            catch (Exception e)
-            {
-                global::WinRT.ExceptionHelpers.SetErrorInfo(e);
-                return global::WinRT.ExceptionHelpers.GetHRForException(e);
-            }
-        }
     }
 }
 
