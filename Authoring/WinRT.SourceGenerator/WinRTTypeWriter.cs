@@ -77,6 +77,7 @@ namespace Generator
         public Dictionary<ISymbol, FieldDefinitionHandle> FieldDefinitions = new Dictionary<ISymbol, FieldDefinitionHandle>();
         public Dictionary<ISymbol, PropertyDefinitionHandle> PropertyDefinitions = new Dictionary<ISymbol, PropertyDefinitionHandle>();
         public Dictionary<ISymbol, EventDefinitionHandle> EventDefinitions = new Dictionary<ISymbol, EventDefinitionHandle>();
+        public Dictionary<ISymbol, InterfaceImplementationHandle> InterfaceImplDefinitions = new Dictionary<ISymbol, InterfaceImplementationHandle>();
 
         public TypeDeclaration(ISymbol node)
         {
@@ -150,6 +151,12 @@ namespace Generator
         {
             return EventDefinitions.Values.ToList();
         }
+
+        public void AddInterfaceImpl(ISymbol node, InterfaceImplementationHandle handle)
+        {
+            InterfaceImplDefinitions[node] = handle;
+        }
+
     }
 
     class WinRTTypeWriter : CSharpSyntaxWalker
@@ -733,9 +740,10 @@ namespace Generator
                 foreach (var implementedInterface in symbol.AllInterfaces.
                     OrderBy(implementedInterface => implementedInterface.ToString()))
                 {
-                    metadataBuilder.AddInterfaceImplementation(
+                    var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
                         typeDefinitionHandle,
                         GetTypeReference(implementedInterface));
+                    currentTypeDeclaration.AddInterfaceImpl(implementedInterface, interfaceImplHandle);
                 }
             }
 
@@ -779,14 +787,22 @@ namespace Generator
             if (IsPublicNode(node))
             {
                 var classDeclaration = currentTypeDeclaration;
+                var classSymbol = classDeclaration.Node as INamedTypeSymbol;
+
                 if (hasDefaultConstructor)
                 {
                     AddActivatableAttribute(
                         classDeclaration.Handle,
-                        (uint)GetVersion(classDeclaration.Node as INamedTypeSymbol, true),
+                        (uint)GetVersion(classSymbol, true),
                         null);
                 }
                 AddSynthesizedInterfaces(classDeclaration);
+
+                // No synthesized default interface generated
+                if(classDeclaration.DefaultInterface == null && classSymbol.Interfaces.Length != 0)
+                {
+                    AddDefaultInterfaceImplAttribute(classDeclaration.InterfaceImplDefinitions[classSymbol.Interfaces[0]]);
+                }
             }
         }
 
@@ -1013,6 +1029,11 @@ namespace Generator
             };
 
             AddCustomAttributes("Windows.Foundation.Metadata.StaticAttribute", types, arguments, parentHandle);
+        }
+
+        private void AddDefaultInterfaceImplAttribute(EntityHandle interfaceImplHandle)
+        {
+            AddCustomAttributes("Windows.Foundation.Metadata.DefaultAttribute", Array.Empty<ITypeSymbol>(), Array.Empty<object>(), interfaceImplHandle);
         }
 
         private void AddGuidAttribute(EntityHandle parentHandle, string name)
@@ -1455,6 +1476,7 @@ namespace Generator
         {
             // TODO: check if custom projected interface
             // TODO: block or warn type names with namespaces not meeting WinRT requirements.
+            // TODO: synthesized interfaces and default interface impl.
 
             currentTypeDeclaration = new TypeDeclaration(type);
             bool isInterfaceParent = type.TypeKind == TypeKind.Interface;
@@ -1497,12 +1519,13 @@ namespace Generator
 
             foreach (var implementedInterface in type.AllInterfaces.OrderBy(implementedInterface => implementedInterface.ToString()))
             {
-                metadataBuilder.AddInterfaceImplementation(
+                var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
                     typeDefinitionHandle,
                     GetTypeReference(implementedInterface));
+                currentTypeDeclaration.AddInterfaceImpl(implementedInterface, interfaceImplHandle);
             }
 
-            if(isInterfaceParent)
+            if (isInterfaceParent)
             {
                 AddGuidAttribute(typeDefinitionHandle, type.ToString());
             }
@@ -1760,9 +1783,11 @@ namespace Generator
                 if(interfaceType == SynthesizedInterfaceType.Default)
                 {
                     classDeclaration.DefaultInterface = qualifiedInterfaceName;
-                    metadataBuilder.AddInterfaceImplementation(
+                    var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
                         classDeclaration.Handle,
                         GetTypeReference(classDeclaration.Node.ContainingNamespace.ToString(), interfaceName, assembly));
+                    classDeclaration.AddInterfaceImpl(classSymbol, interfaceImplHandle);
+                    AddDefaultInterfaceImplAttribute(interfaceImplHandle);
                 }
 
                 AddDefaultVersionAttribute(typeDefinitionHandle, GetVersion(classSymbol, true));
