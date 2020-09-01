@@ -32,9 +32,13 @@ Component Authors need to build a C#/WinRT projection for .NET5+ targets.
 
 However, C#/WinRT is a general effort and is intended to support other scenarios and versions of the .NET runtime, compatible down to .NET Standard 2.0.
 
-## Installing and running C#/WinRT
+## Running C#/WinRT
 
 Download the C#/WinRT NuGet package here: <http://aka.ms/cswinrt/nuget>
+
+Please see [usage](USAGE.md) for details on running the C#/WinRT tool. For additional documentation visit <http://aka.ms/cswinrt>.
+
+## Building C#/WinRT
 
 C#/WinRT currently requires the following packages to build:
 
@@ -53,9 +57,7 @@ After a successful command-line build, the cswinrt.sln can be launched from the 
 
 **Note:** When building the first time, the build clones the testwinrt project. The build depends on this project, but msbuild doesn't consistently pick up the change when the repo is first cloned repo. You may need to build a second time if this is your first build to address the timing issue.
 
-## Developer Guidance
-
-Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For additional documentation visit <http://aka.ms/cswinrt>.
+Please see the [repository structure](STRUCTURE.md) for a detailed breakdown on the repo contents.
 
 ## Related Projects
 
