@@ -108,10 +108,18 @@ rem executing "dotnet test --no-build ...", which evidently still needs to parse
 rem Work around by using a dummy targets file and assigning it to the MsAppxPackageTargets property.
 echo ^<Project/^> > %temp%\EmptyMsAppxPackage.Targets
 
-%dotnet_exe% test --no-build --logger xunit;LogFilePath=%~dp0test_%cswinrt_version_string%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets
+%dotnet_exe% test --no-build --logger xunit;LogFilePath=%~dp0unittest_%cswinrt_version_string%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets
 if ErrorLevel 1 (
   echo.
   echo ERROR: Unit test failed, skipping NuGet pack
+  exit /b !ErrorLevel!
+)
+
+rem Run WinRT.Host tests
+%~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\HostTest\bin\HostTest.exe --gtest_output=xml:%~dp0hosttest_%cswinrt_version_string%.xml 
+if ErrorLevel 1 (
+  echo.
+  echo ERROR: Host test failed, skipping NuGet pack
   exit /b !ErrorLevel!
 )
 
