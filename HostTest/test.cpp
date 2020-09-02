@@ -4,7 +4,7 @@
 // 
 // Each test case specifies:
 // 1. A runtime class to be activated: 
-//		ProbyByClass, ProbeByHost for expected successes
+//		ProbeByClass, ProbeByHost for expected successes
 //		ClassNotFound for expected failures
 // 2. An activation context manifest, with activatableClass entry
 //		to specify the WinRT host dll, which may be renamed.

@@ -127,15 +127,15 @@ void load_hostfxr()
         winrt::throw_last_error();
     }
 
-    hostfxr_initialize_for_runtime_config = (hostfxr_initialize_for_runtime_config_fn)::GetProcAddress(lib, "hostfxr_initialize_for_runtime_config");
-    hostfxr_get_runtime_delegate = (hostfxr_get_runtime_delegate_fn)::GetProcAddress(lib, "hostfxr_get_runtime_delegate");
-    hostfxr_close = (hostfxr_close_fn)::GetProcAddress(lib, "hostfxr_close");
-    hostfxr_set_error_writer = (hostfxr_set_error_writer_fn)::GetProcAddress(lib, "hostfxr_set_error_writer");
-
-    if (!is_hostfxr_loaded())
+    if ((hostfxr_initialize_for_runtime_config = (hostfxr_initialize_for_runtime_config_fn)::GetProcAddress(lib, "hostfxr_initialize_for_runtime_config")) &&
+        (hostfxr_get_runtime_delegate = (hostfxr_get_runtime_delegate_fn)::GetProcAddress(lib, "hostfxr_get_runtime_delegate")) &&
+        (hostfxr_close = (hostfxr_close_fn)::GetProcAddress(lib, "hostfxr_close")) &&
+        (hostfxr_set_error_writer = (hostfxr_set_error_writer_fn)::GetProcAddress(lib, "hostfxr_set_error_writer")))
     {
-        winrt::throw_last_error();
+        return;
     }
+
+    winrt::throw_last_error();
 }
 
 struct error_writer
