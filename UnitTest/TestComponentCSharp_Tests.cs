@@ -550,19 +550,6 @@ namespace UnitTest
             void ToString(out IntPtr hstr);
         }
 
-        [ComImport]
-        [Guid("39E050C3-4E74-441A-8DC0-B81104DF949C")]
-        // Using ComInterfaceType.InterfaceIsIInspectable here just to test the cast operation,
-        // not actually invoking RequestVerificationForWindowAsync.
-        [InterfaceType(ComInterfaceType.InterfaceIsIInspectable)]
-        public interface IUserConsentVerifierInterop
-        {
-            IAsyncOperation<Windows.Security.Credentials.UI.UserConsentVerificationResult> RequestVerificationForWindowAsync(
-                IntPtr appWindow,
-                out IntPtr message,
-                ref Guid riid);
-        }
-
         [Fact]
         public unsafe void TestFactoryCast()
         {
@@ -578,9 +565,11 @@ namespace UnitTest
             staticFactory.ToString(out hstr);
             Assert.Equal("ComImports", MarshalString.FromAbi(hstr));
 
-            // Test user class
+            // IInspectable-based (projected) interop interface
             var interop = Windows.Security.Credentials.UI.UserConsentVerifier.As<IUserConsentVerifierInterop>();
-            Assert.NotNull(interop);
+            var guid = GuidGenerator.CreateIID(typeof(Windows.Foundation.IAsyncOperation<Windows.Security.Credentials.UI.UserConsentVerificationResult>));
+            var operation = interop.RequestVerificationForWindowAsync(0, "message", guid);
+            Assert.NotNull(operation);
         }
 
         [Fact]
