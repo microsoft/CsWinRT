@@ -804,26 +804,29 @@ namespace cswinrt
         }
     }
 
-    void write_property(writer& w, std::string_view external_prop_name, std::string_view prop_name,
+    void write_property(writer& w, std::string_view explicit_base, std::string_view prop_name,
         std::string_view prop_type, std::string_view getter_target, std::string_view setter_target,
         std::string_view access_spec = ""sv, std::string_view method_spec = ""sv)
     {
+        std::string explicit_prop_scope = explicit_base.empty() ? "" : (std::string(explicit_base) + ".");
+
         if (setter_target.empty())
         {
             w.write(R"(
-%%% % => %.%;
+%%% %% => %.%;
 )",
                 access_spec,
                 method_spec,
                 prop_type,
-                external_prop_name,
+                explicit_prop_scope,
+                prop_name,
                 getter_target,
                 prop_name);
         }
         else
         {
             w.write(R"(
-%%% %
+%%% %%
 {
 get => %.%;
 set => %.% = value;
@@ -832,10 +835,28 @@ set => %.% = value;
                 access_spec,
                 method_spec,
                 prop_type,
-                external_prop_name,
+                explicit_prop_scope,
+                prop_name,
                 getter_target,
                 prop_name,
                 setter_target,
+                prop_name);
+        }
+
+        // For Powershell compat, write a put_ accessor overload (winmd convention, vs .NET set_ convention)
+        if (settings.netstandard_compat && !setter_target.empty())
+        {
+            std::string explicit_base_cast = explicit_base.empty() ? "" : ("((" + std::string(explicit_base) + ")this).");
+
+            w.write(R"(
+%%void %put_%(% value) => %% = value;
+)",
+                explicit_base.empty() ? "public " : "",
+                method_spec,
+                explicit_prop_scope,
+                prop_name,
+                prop_type,
+                explicit_base_cast,
                 prop_name);
         }
     }
@@ -885,7 +906,8 @@ set => %.% = value;
         auto [getter, setter] = get_property_methods(prop);
         auto getter_target = getter ? prop_target : "";
         auto setter_target = setter ? prop_target : "";
-        write_property(w, write_explicit_name(w, iface, prop.Name()), prop.Name(),
+        auto explicit_base = write_type_name_temp(w, iface);
+        write_property(w, explicit_base, prop.Name(),
             write_prop_type(w, prop), getter_target, setter_target);
     }
 
@@ -1179,7 +1201,7 @@ MarshalInspectable.DisposeAbi(ptr);
         auto [getter, setter] = get_property_methods(prop);
         auto getter_target = getter ? prop_target : "";
         auto setter_target = setter ? prop_target : "";
-        write_property(w, prop.Name(), prop.Name(), write_prop_type(w, prop),
+        write_property(w, "", prop.Name(), write_prop_type(w, prop),
             getter_target, setter_target, "public "sv, "static "sv);
     }
 
@@ -1681,7 +1703,7 @@ private % AsInternal(InterfaceTag<%> _) => ((Lazy<%>)_lazyInterfaces[typeof(%)])
             auto& [prop_type, getter_target, setter_target, is_overridable, is_public] = prop_data;
             std::string_view access_spec = is_public ? "public "sv : "protected "sv;
             std::string_view method_spec = is_overridable ? "virtual "sv : ""sv;
-            write_property(w, prop_name, prop_name, prop_type, getter_target, setter_target, access_spec, method_spec);
+            write_property(w, "", prop_name, prop_type, getter_target, setter_target, access_spec, method_spec);
         }
     }
 
@@ -1765,6 +1787,17 @@ private EventSource<%> _%;)",
                 getter || setter ? " get;" : "",
                 setter ? " set;" : ""
             );
+
+            // For Powershell compat, write a put_ accessor overload (winmd convention, vs .NET set_ convention)
+            if (settings.netstandard_compat && setter)
+            {
+                w.write(R"(
+%void put_%(% value);
+)",
+                    new_keyword,
+                    prop.Name(),
+                    write_prop_type(w, prop));
+            }
         }
 
         for (auto&& evt : type.EventList())
@@ -2566,8 +2599,20 @@ public unsafe % %
 {%}
 )",
                     bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers));
+
             }
             w.write("}\n");
+
+            // For Powershell compat, write a put_ accessor overload (winmd convention, vs .NET set_ convention)
+            if (settings.netstandard_compat && setter)
+            {
+                w.write(R"(
+public void put_%(% value) => % = value;
+)",
+                    prop.Name(),
+                    write_prop_type(w, prop),
+                    prop.Name());
+            }
         }
 
         for (auto&& evt : type.EventList())

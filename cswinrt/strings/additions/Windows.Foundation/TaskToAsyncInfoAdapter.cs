@@ -866,6 +866,9 @@ namespace System.Threading.Tasks
             }
         }
 
+#if NETSTANDARD2_0
+        public void put_Completed(TCompletedHandler value) => Completed = value;
+#endif
 
         /// <summary>Gets or sets the progress handler.</summary>
         public virtual TProgressHandler Progress
@@ -890,6 +893,9 @@ namespace System.Threading.Tasks
             }
         }
 
+#if NETSTANDARD2_0
+        public void put_Progress(TProgressHandler value) => Progress = value;
+#endif
 
         /// <summary>Cancels the async info.</summary>
         public virtual void Cancel()

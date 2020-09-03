@@ -681,6 +681,10 @@ namespace UnitTest
 
                 public int ReadWriteProperty { get => _value; set => _value = value; }
 
+#if NETCOREAPP2_0
+                public void put_ReadWriteProperty(int value) => ReadWriteProperty = value;
+#endif
+
                 int IProperties1.ReadWriteProperty => ReadWriteProperty;
             }
             TObservation _observation;

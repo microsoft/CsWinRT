@@ -235,6 +235,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
         }
 
+#if NETSTANDARD2_0
+        void IBuffer.put_Length(uint value) => ((IBuffer)this).Length = value;
+#endif
+
         #endregion Implementation of Windows.Foundation.IBuffer
 
 

@@ -406,6 +406,10 @@ namespace System.IO
             }
         }
 
+#if NETSTANDARD2_0
+        public void put_Size(ulong value) => Size = value;
+#endif
+
         #endregion IRandomAccessStream public interface: Not cloning related
 
 
