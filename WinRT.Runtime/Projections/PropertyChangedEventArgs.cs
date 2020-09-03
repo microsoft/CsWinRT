@@ -14,7 +14,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
     {
         internal IInspectable.Vftbl IInspectableVftbl;
         private void* _get_PropertyName_0;
-        public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_PropertyName_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_PropertyName_0;
+        public delegate* stdcall<IntPtr, IntPtr*, int> get_PropertyName_0 => (delegate* stdcall<IntPtr, IntPtr*, int>)_get_PropertyName_0;
     }
 
 
@@ -28,7 +28,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _CreateInstance_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int> CreateInstance_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int>)_CreateInstance_0;
+            public delegate* stdcall<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int> CreateInstance_0 => (delegate* stdcall<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int>)_CreateInstance_0;
         }
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 

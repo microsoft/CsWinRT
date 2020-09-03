@@ -22,7 +22,7 @@ namespace ABI.Windows.Foundation
         public IntPtr get_Query_8;
         public IntPtr get_QueryParsed_9;
         public void* _get_RawUri_10;
-        public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_RawUri_10 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_RawUri_10;
+        public delegate* stdcall<IntPtr, IntPtr*, int> get_RawUri_10 => (delegate* stdcall<IntPtr, IntPtr*, int>)_get_RawUri_10;
         public IntPtr get_SchemeName_11;
         public IntPtr get_UserName_12;
         public IntPtr get_Port_13;
@@ -45,7 +45,7 @@ namespace ABI.System
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _CreateUri_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out IntPtr, int> CreateUri_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out IntPtr, int>)_CreateUri_0;
+            public delegate* stdcall<IntPtr, IntPtr, out IntPtr, int> CreateUri_0 => (delegate* stdcall<IntPtr, IntPtr, out IntPtr, int>)_CreateUri_0;
             public IntPtr _CreateWithRelativeUri;
         }
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);

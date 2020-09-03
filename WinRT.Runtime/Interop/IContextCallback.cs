@@ -43,9 +43,9 @@ namespace ABI.WinRT.Interop
         {
             global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
             private void* _ContextCallback;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int> ContextCallback_4
+            public delegate* stdcall<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int> ContextCallback_4
             {
-                get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int>)_ContextCallback;
+                get => (delegate* stdcall<IntPtr, IntPtr, ComCallData*, Guid*, int, IntPtr, int>)_ContextCallback;
                 set => _ContextCallback = (void*)value;
             }
         }

@@ -21,7 +21,7 @@ namespace WinRT.Interop
     {
         public IInspectable.Vftbl IInspectableVftbl;
         private void* _ActivateInstance;
-        public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> ActivateInstance => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_ActivateInstance;
+        public delegate* stdcall<IntPtr, IntPtr*, int> ActivateInstance => (delegate* stdcall<IntPtr, IntPtr*, int>)_ActivateInstance;
     }
 
     // IDelegate

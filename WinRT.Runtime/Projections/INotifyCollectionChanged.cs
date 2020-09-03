@@ -18,14 +18,14 @@ namespace ABI.System.Collections.Specialized
             internal IInspectable.Vftbl IInspectableVftbl;
 #if NETSTANDARD2_0
             private void* _add_CollectionChanged_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_CollectionChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_CollectionChanged_0; set => _add_CollectionChanged_0=(void*)value; }
+            public delegate* stdcall<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_CollectionChanged_0 { get => (delegate* stdcall<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_CollectionChanged_0; set => _add_CollectionChanged_0=(void*)value; }
             private void* _remove_CollectionChanged_1;
-            public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_CollectionChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_CollectionChanged_1; set => _remove_CollectionChanged_1=(void*)value; }
+            public delegate* stdcall<IntPtr, global::WinRT.EventRegistrationToken, int> remove_CollectionChanged_1 { get => (delegate* stdcall<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_CollectionChanged_1; set => _remove_CollectionChanged_1=(void*)value; }
 #else
             private delegate*<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> _add_CollectionChanged_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_CollectionChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_CollectionChanged_0; set => _add_CollectionChanged_0=(delegate*<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)value; }
+            public delegate* stdcall<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_CollectionChanged_0 { get => (delegate* stdcall<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_CollectionChanged_0; set => _add_CollectionChanged_0=(delegate*<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)value; }
             private delegate*<IntPtr, global::WinRT.EventRegistrationToken, int> _remove_CollectionChanged_1;
-            public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_CollectionChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_CollectionChanged_1; set => _remove_CollectionChanged_1=(delegate*<IntPtr, global::WinRT.EventRegistrationToken, int>)value; }
+            public delegate* stdcall<IntPtr, global::WinRT.EventRegistrationToken, int> remove_CollectionChanged_1 { get => (delegate* stdcall<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_CollectionChanged_1; set => _remove_CollectionChanged_1=(delegate*<IntPtr, global::WinRT.EventRegistrationToken, int>)value; }
 #endif
 
             private static readonly Vftbl AbiToProjectionVftable;
