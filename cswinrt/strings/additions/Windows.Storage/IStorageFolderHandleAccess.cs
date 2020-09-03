@@ -32,7 +32,7 @@ namespace ABI.Windows.Storage
         {
             public IUnknownVftbl IUnknownVftbl;
             private void* _Create_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::Windows.Storage.HANDLE_CREATION_OPTIONS, global::Windows.Storage.HANDLE_ACCESS_OPTIONS, global::Windows.Storage.HANDLE_SHARING_OPTIONS, global::Windows.Storage.HANDLE_OPTIONS, IntPtr, out IntPtr, int> Create_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::Windows.Storage.HANDLE_CREATION_OPTIONS, global::Windows.Storage.HANDLE_ACCESS_OPTIONS, global::Windows.Storage.HANDLE_SHARING_OPTIONS, global::Windows.Storage.HANDLE_OPTIONS, IntPtr, out IntPtr, int>)_Create_0;
+            public delegate* stdcall<IntPtr, IntPtr, global::Windows.Storage.HANDLE_CREATION_OPTIONS, global::Windows.Storage.HANDLE_ACCESS_OPTIONS, global::Windows.Storage.HANDLE_SHARING_OPTIONS, global::Windows.Storage.HANDLE_OPTIONS, IntPtr, out IntPtr, int> Create_0 => (delegate* stdcall<IntPtr, IntPtr, global::Windows.Storage.HANDLE_CREATION_OPTIONS, global::Windows.Storage.HANDLE_ACCESS_OPTIONS, global::Windows.Storage.HANDLE_SHARING_OPTIONS, global::Windows.Storage.HANDLE_OPTIONS, IntPtr, out IntPtr, int>)_Create_0;
         }
 
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);

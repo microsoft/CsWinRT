@@ -1,6 +1,6 @@
 @echo off
 
-set CsWinRTNet5SdkVersion=5.0.100-preview.8.20417.9
+set CsWinRTNet5SdkVersion=5.0.100-preview.7.20366.6
 
 :dotnet
 rem Install required .NET 5 SDK version and add to environment
@@ -84,11 +84,12 @@ if not "%cswinrt_label%"=="" goto %cswinrt_label%
 if not exist .nuget md .nuget
 if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.6.0/nuget.exe -OutFile .nuget\nuget.exe"
 .nuget\nuget update -self
+.nuget\nuget.exe restore
 
 :build
 call get_testwinrt.cmd
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-msbuild /restore cswinrt.sln %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;GenerateTestProjection=true /bl
+msbuild cswinrt.sln %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;GenerateTestProjection=true
 
 :test
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet

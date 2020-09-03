@@ -3386,7 +3386,6 @@ return 0;)",
     {
         if (method.SpecialName()) return;
 
-        auto generic_type = distance(method.Parent().GenericParam()) > 0;
         method_signature signature{ method };
         auto return_sig = signature.return_signature();
         auto type_name = write_type_name_temp(w, method.Parent());
@@ -3403,7 +3402,7 @@ private static unsafe int Do_Abi_%%
 {
 %
 })",
-            !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+            !settings.netstandard_compat && !have_generic_params ? "[UnmanagedCallersOnly]" : "",
             vmethod_name,
             bind<write_abi_signature>(method),
             bind<write_managed_method_call>(
@@ -3419,7 +3418,6 @@ private static unsafe int Do_Abi_%%
     {
         auto [getter, setter] = get_property_methods(prop);
         auto type_name = write_type_name_temp(w, prop.Parent());
-        auto generic_type = distance(prop.Parent().GenericParam()) > 0;
         if (setter)
         {
             method_signature setter_sig{ setter };
@@ -3439,7 +3437,7 @@ private static unsafe int Do_Abi_%%
 {
 %
 })",
-            !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+            !settings.netstandard_compat ? "[UnmanagedCallersOnly]" : "",
             vmethod_name,
             bind<write_abi_signature>(setter),
             bind<write_managed_method_call>(
@@ -3469,7 +3467,7 @@ private static unsafe int Do_Abi_%%
 {
 %
 })",
-                !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+                !settings.netstandard_compat ? "[UnmanagedCallersOnly]" : "",
                 vmethod_name,
                 bind<write_abi_signature>(getter),
                 bind<write_managed_method_call>(
@@ -3486,7 +3484,6 @@ private static unsafe int Do_Abi_%%
     void write_event_abi_invoke(writer& w, Event const& evt)
     {
         auto type_name = write_type_name_temp(w, evt.Parent());
-        auto generic_type = distance(evt.Parent().GenericParam()) > 0;
         auto semantics = get_type_semantics(evt.EventType());
         auto [add_method, remove_method] = get_event_methods(evt);
         auto add_signature = method_signature{ add_method };
@@ -3521,7 +3518,7 @@ catch (Exception __ex)
 return __ex.HResult;
 }
 })",
-            !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+            !settings.netstandard_compat ? "[UnmanagedCallersOnly]" : "",
             get_vmethod_name(w, add_method.Parent(), add_method),
             bind<write_abi_signature>(add_method),
             settings.netstandard_compat ? "" : "*",
@@ -3552,7 +3549,7 @@ catch (Exception __ex)
 return __ex.HResult;
 }
 })",
-            !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+            !settings.netstandard_compat ? "[UnmanagedCallersOnly]" : "",
             get_vmethod_name(w, remove_method.Parent(), remove_method),
             bind<write_abi_signature>(remove_method),
             type_name,
@@ -3606,26 +3603,36 @@ internal IInspectable.Vftbl IInspectableVftbl;
                     }
                     else
                     {
-                        if (settings.netstandard_compat || is_generic)
+                        if (settings.netstandard_compat)
                         {
                             nongeneric_delegates.push_back(delegate_definition);
+                            vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
                         }
-
-                        vtable_field_type = w.write_temp("delegate* unmanaged[Stdcall]<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                        else
+                        {
+                            vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                        }
                         function_pointer = true;
                     }
                 }
                 else
                 {
                     // We're a well-known delegate type, but we still need to get the function pointer type.
-                    vtable_field_type = w.write_temp("delegate* unmanaged[Stdcall]<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                    if (settings.netstandard_compat)
+                    {
+                        vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                    }
+                    else
+                    {
+                        vtable_field_type = w.write_temp("delegate* stdcall<%, int>", bind<write_abi_parameter_types>(method_signature{ method }));
+                    }
                     function_pointer = true;
                 }
                 if (!function_pointer)
                 {
                     w.write("public % %;", vtable_field_type, vmethod_name);
                 }
-                else if (settings.netstandard_compat || is_generic)
+                else if (settings.netstandard_compat)
                 {
                     // Work around https://github.com/dotnet/runtime/issues/37295
                     w.write("private void* _%;\n", vmethod_name);
@@ -3687,7 +3694,7 @@ internal IInspectable.Vftbl IInspectableVftbl;
                                         }
                                     }, method_signature{ method })));
                     }
-                    else
+                    else if (settings.netstandard_compat)
                     {
                         method_create_delegates_to_projection.emplace_back(
                             w.write_temp("_% = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[%] = new %(Do_Abi_%))",
@@ -3695,6 +3702,14 @@ internal IInspectable.Vftbl IInspectableVftbl;
                                 delegate_cache_index,
                                 delegate_type,
                                 vmethod_name));
+                    }
+                    else
+                    {
+                        // Work around C# compiler's lack of support for UnmanagedCallersOnly
+                        method_create_delegates_to_projection.emplace_back(
+                            w.write_temp("_% = &Do_Abi_%",
+                                vmethod_name, vmethod_name)
+                        );
                     }
                 }
                 else if (settings.netstandard_compat)
@@ -3754,7 +3769,7 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
                     w.write(R"(
 private static readonly Vftbl AbiToProjectionVftable;
 public static readonly IntPtr AbiToProjectionVftablePtr;
-private static Delegate[] DelegateCache = new Delegate[%];
+%
 static unsafe Vftbl()
 {
 AbiToProjectionVftable = new Vftbl
@@ -3767,7 +3782,13 @@ var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl)
 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
 }
 )",
-                        std::to_string(distance(methods)),
+                        bind([&](writer& w)
+                            {   
+                                if (settings.netstandard_compat)
+                                {
+                                    w.write("private static Delegate[] DelegateCache = new Delegate[%];", std::to_string(distance(methods)));
+                                }
+                            }),
                         bind_list(",\n", method_create_delegates_to_projection),
                         std::to_string(distance(methods)),
                         bind([&](writer& w)
@@ -3782,9 +3803,9 @@ AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
                                     w.write("%", bind_each(method_marshals_to_projection));
                                 }
                             }));
-                }
-                else
-                {
+                    }
+                    else
+                    {
                         w.write(R"(
 public static readonly IntPtr AbiToProjectionVftablePtr;
 %
@@ -4609,7 +4630,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                 }
                 else
                 {
-                    w.write("var abiInvoke = (delegate* unmanaged[Stdcall]<%, int>)(delegateToInvoke.Vftbl.Invoke);",
+                    w.write("var abiInvoke = (delegate* stdcall<%, int>)(delegateToInvoke.Vftbl.Invoke);",
                         bind<write_abi_parameter_types>(signature));
                 }
             }),
@@ -4621,7 +4642,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             // DisposeAbi
             type_name,
             // Do_Abi_Invoke
-            !is_generic && !settings.netstandard_compat ? "\n[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
+            !is_generic && !settings.netstandard_compat ? "\n[UnmanagedCallersOnly]" : "",
             [&](writer& w) {
                 if (!is_generic)
                 {

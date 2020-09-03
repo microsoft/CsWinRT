@@ -36,7 +36,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
@@ -44,7 +43,6 @@ using WinRT.Interop;
 
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
 #pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
-#pragma warning disable CA2207, CA1063, CA1033, CA1001, CA2213
 
 namespace %
 {

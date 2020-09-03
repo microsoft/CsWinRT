@@ -13,7 +13,7 @@ namespace ABI.Windows.Foundation
 
         internal IInspectable.Vftbl IInspectableVftbl;
         private void* _ToString_0;
-        private delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> ToString_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_ToString_0; set => _ToString_0 = value; }
+        private delegate* stdcall<IntPtr, IntPtr*, int> ToString_0 { get => (delegate* stdcall<IntPtr, IntPtr*, int>)_ToString_0; set => _ToString_0 = value; }
 
         private static readonly ManagedIStringableVftbl AbiToProjectionVftable;
         public static readonly IntPtr AbiToProjectionVftablePtr;
