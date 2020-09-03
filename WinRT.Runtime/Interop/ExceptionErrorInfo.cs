@@ -94,15 +94,15 @@ namespace ABI.WinRT.Interop
         {
             internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
             private void* _GetGuid_0;
-            public delegate* stdcall<IntPtr, Guid*, int> GetGuid_0 { get => (delegate* stdcall<IntPtr, Guid*, int>)_GetGuid_0; set => _GetGuid_0 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, Guid*, int> GetGuid_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, Guid*, int>)_GetGuid_0; set => _GetGuid_0 = value; }
             private void* _GetSource_1;
-            public delegate* stdcall<IntPtr, IntPtr*, int> GetSource_1 { get => (delegate* stdcall<IntPtr, IntPtr*, int>)_GetSource_1; set => _GetSource_1 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetSource_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetSource_1; set => _GetSource_1 = value; }
             private void* _GetDescription_2;
-            public delegate* stdcall<IntPtr, IntPtr*, int> GetDescription_2 { get => (delegate* stdcall<IntPtr, IntPtr*, int>)_GetDescription_2; set => _GetDescription_2 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetDescription_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetDescription_2; set => _GetDescription_2 = value; }
             private void* _GetHelpFile_3;
-            public delegate* stdcall<IntPtr, IntPtr*, int> GetHelpFile_3 { get => (delegate* stdcall<IntPtr, IntPtr*, int>)_GetHelpFile_3; set => _GetHelpFile_3 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetHelpFile_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetHelpFile_3; set => _GetHelpFile_3 = value; }
             private void* _GetHelpFileContent_4;
-            public delegate* stdcall<IntPtr, IntPtr*, int> GetHelpFileContent_4 { get => (delegate* stdcall<IntPtr, IntPtr*, int>)_GetHelpFileContent_4; set => _GetHelpFileContent_4 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetHelpFileContent_4 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetHelpFileContent_4; set => _GetHelpFileContent_4 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -325,7 +325,7 @@ namespace ABI.WinRT.Interop
         {
             internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
             private void* _GetLanguageException_0;
-            public delegate* stdcall<IntPtr, IntPtr*, int> GetLanguageException_0 => (delegate* stdcall<IntPtr, IntPtr*, int>)_GetLanguageException_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetLanguageException_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetLanguageException_0;
         }
 
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
@@ -369,7 +369,7 @@ namespace ABI.WinRT.Interop
         {
             internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
             private void* _InterfaceSupportsErrorInfo_0;
-            public delegate* stdcall<IntPtr, Guid*, int> InterfaceSupportsErrorInfo_0 { get => (delegate* stdcall<IntPtr, Guid*, int>)_InterfaceSupportsErrorInfo_0; set => _InterfaceSupportsErrorInfo_0 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, Guid*, int> InterfaceSupportsErrorInfo_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, Guid*, int>)_InterfaceSupportsErrorInfo_0; set => _InterfaceSupportsErrorInfo_0 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -440,9 +440,9 @@ namespace ABI.WinRT.Interop
 
             internal global::WinRT.Interop.IUnknownVftbl unknownVftbl;
             private void* _GetErrorDetails_0;
-            public delegate* stdcall<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int> GetErrorDetails_0 => (delegate* stdcall<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int>)_GetErrorDetails_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int> GetErrorDetails_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int>)_GetErrorDetails_0;
             private void* _GetReference_1;
-            public delegate* stdcall<IntPtr, IntPtr*, int> GetReference_1 => (delegate* stdcall<IntPtr, IntPtr*, int>)_GetReference_1;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetReference_1 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetReference_1;
         }
 
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
