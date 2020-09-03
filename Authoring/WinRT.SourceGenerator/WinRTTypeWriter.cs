@@ -7,6 +7,8 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Generator
 {
@@ -24,7 +26,7 @@ namespace Generator
         }
 
         public Parameter(ITypeSymbol type, string name, ParameterAttributes attributes)
-            :this(new Symbol(type), name, attributes)
+            : this(new Symbol(type), name, attributes)
         {
         }
 
@@ -75,10 +77,12 @@ namespace Generator
         public Dictionary<ISymbol, FieldDefinitionHandle> FieldDefinitions = new Dictionary<ISymbol, FieldDefinitionHandle>();
         public Dictionary<ISymbol, PropertyDefinitionHandle> PropertyDefinitions = new Dictionary<ISymbol, PropertyDefinitionHandle>();
         public Dictionary<ISymbol, EventDefinitionHandle> EventDefinitions = new Dictionary<ISymbol, EventDefinitionHandle>();
+        public Dictionary<ISymbol, InterfaceImplementationHandle> InterfaceImplDefinitions = new Dictionary<ISymbol, InterfaceImplementationHandle>();
 
         public TypeDeclaration(ISymbol node)
         {
             Node = node;
+            Handle = default;
         }
 
         public override string ToString()
@@ -147,6 +151,12 @@ namespace Generator
         {
             return EventDefinitions.Values.ToList();
         }
+
+        public void AddInterfaceImpl(ISymbol node, InterfaceImplementationHandle handle)
+        {
+            InterfaceImplDefinitions[node] = handle;
+        }
+
     }
 
     class WinRTTypeWriter : CSharpSyntaxWalker
@@ -161,7 +171,7 @@ namespace Generator
         private readonly Dictionary<string, EntityHandle> assemblyReferenceMapping;
         private readonly List<ISymbol> nodesWithAttributes;
         private readonly MetadataBuilder metadataBuilder;
-        private bool hasConstructor;
+        private bool hasConstructor, hasDefaultConstructor;
 
         private readonly Dictionary<string, TypeDeclaration> typeDefinitionMapping;
         private TypeDeclaration currentTypeDeclaration;
@@ -290,7 +300,7 @@ namespace Generator
                     new Version(0xff, 0xff, 0xff, 0xff),
                     default,
                     GetStrongNameKey(assembly),
-                    AssemblyFlags.ContentTypeMask,
+                    assembly == "mscorlib" ? default : AssemblyFlags.WindowsRuntime,
                     default);
                 assemblyReferenceMapping[assembly] = assemblyReference;
             }
@@ -381,7 +391,7 @@ namespace Generator
             new BlobEncoder(methodSignature)
                 .MethodSignature(
                     SignatureCallingConvention.Default,
-                    parameters.Length,
+                    0,
                     !isStatic)
                 .Parameters(
                     parameters.Length,
@@ -730,9 +740,10 @@ namespace Generator
                 foreach (var implementedInterface in symbol.AllInterfaces.
                     OrderBy(implementedInterface => implementedInterface.ToString()))
                 {
-                    metadataBuilder.AddInterfaceImplementation(
+                    var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
                         typeDefinitionHandle,
                         GetTypeReference(implementedInterface));
+                    currentTypeDeclaration.AddInterfaceImpl(implementedInterface, interfaceImplHandle);
                 }
             }
 
@@ -742,6 +753,7 @@ namespace Generator
         public override void VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
         {
             ProcessTypeDeclaration(node, () => base.VisitInterfaceDeclaration(node));
+            AddGuidAttribute(currentTypeDeclaration.Handle, currentTypeDeclaration.Node.ToString());
         }
 
         public override void VisitClassDeclaration(ClassDeclarationSyntax node)
@@ -749,6 +761,7 @@ namespace Generator
             void processClassDeclaration()
             {
                 hasConstructor = false;
+                hasDefaultConstructor = false;
                 base.VisitClassDeclaration(node);
 
                 // implicit constructor if none defined
@@ -765,6 +778,7 @@ namespace Generator
                         true);
                     var symbol = Model.GetDeclaredSymbol(node);
                     currentTypeDeclaration.AddMethod(symbol, methodDefinitionHandle);
+                    hasDefaultConstructor = true;
                 }
             }
 
@@ -772,7 +786,23 @@ namespace Generator
 
             if (IsPublicNode(node))
             {
-                AddSynthesizedInterfaces(currentTypeDeclaration);
+                var classDeclaration = currentTypeDeclaration;
+                var classSymbol = classDeclaration.Node as INamedTypeSymbol;
+
+                if (hasDefaultConstructor)
+                {
+                    AddActivatableAttribute(
+                        classDeclaration.Handle,
+                        (uint)GetVersion(classSymbol, true),
+                        null);
+                }
+                AddSynthesizedInterfaces(classDeclaration);
+
+                // No synthesized default interface generated
+                if(classDeclaration.DefaultInterface == null && classSymbol.Interfaces.Length != 0)
+                {
+                    AddDefaultInterfaceImplAttribute(classDeclaration.InterfaceImplDefinitions[classSymbol.Interfaces[0]]);
+                }
             }
         }
 
@@ -897,7 +927,10 @@ namespace Generator
             }
         }
 
-        private void EncodeNamedArguments(INamedTypeSymbol attributeType, IList<KeyValuePair<string, TypedConstant>> namedArguments, CustomAttributeNamedArgumentsEncoder argumentsEncoder)
+        private void EncodeNamedArguments(
+            INamedTypeSymbol attributeType,
+            IList<KeyValuePair<string, TypedConstant>> namedArguments,
+            CustomAttributeNamedArgumentsEncoder argumentsEncoder)
         {
             var encoder = argumentsEncoder.Count(namedArguments.Count);
             foreach (var argument in namedArguments)
@@ -918,26 +951,143 @@ namespace Generator
         {
             foreach (var argument in primitiveArguments)
             {
-                argumentsEncoder.AddArgument().Scalar().Constant(argument);
+                var encoder = argumentsEncoder.AddArgument().Scalar();
+                if(argument is string type)
+                {
+                    encoder.SystemType(type);
+                }
+                else
+                {
+                    encoder.Constant(argument);
+                }
             }
         }
 
-        public void AddDefaultVersionAttribute(EntityHandle parentHandle, int version = -1)
+        private void AddDefaultVersionAttribute(EntityHandle parentHandle, int version = -1)
         {
             if(version == -1)
             {
                 version = Version.Parse(this.version).Major;
             }
 
+            List<ITypeSymbol> types = new List<ITypeSymbol>
+            {
+                Model.Compilation.GetTypeByMetadataName("System.UInt32")
+            };
+
             List<object> arguments = new List<object>
             {
+                (UInt32) version
+            };
+
+            AddCustomAttributes("Windows.Foundation.Metadata.VersionAttribute", types, arguments, parentHandle);
+        }
+
+        private void AddActivatableAttribute(EntityHandle parentHandle, UInt32 version, string factoryInterface)
+        {
+            List<ITypeSymbol> types = new List<ITypeSymbol>(2);
+            List<object> arguments = new List<object>(2);
+
+            if(factoryInterface != null)
+            {
+                types.Add(Model.Compilation.GetTypeByMetadataName("System.Type"));
+                arguments.Add(factoryInterface);
+            }
+            types.Add(Model.Compilation.GetTypeByMetadataName("System.UInt32"));
+            arguments.Add(version);
+
+            AddCustomAttributes("Windows.Foundation.Metadata.ActivatableAttribute", types, arguments, parentHandle);
+        }
+
+        private void AddExclusiveToAttribute(EntityHandle interfaceHandle, string className)
+        {
+            List<ITypeSymbol> types = new List<ITypeSymbol>
+            {
+                Model.Compilation.GetTypeByMetadataName("System.Type")
+            };
+
+            List<object> arguments = new List<object>
+            {
+                className
+            };
+
+            AddCustomAttributes("Windows.Foundation.Metadata.ExclusiveToAttribute", types, arguments, interfaceHandle);
+        }
+
+        private void AddStaticAttribute(EntityHandle parentHandle, UInt32 version, string staticInterface)
+        {
+            List<ITypeSymbol> types = new List<ITypeSymbol>
+            {
+                Model.Compilation.GetTypeByMetadataName("System.UInt32"),
+                Model.Compilation.GetTypeByMetadataName("System.Type")
+            };
+
+            List<object> arguments = new List<object>
+            {
+                staticInterface,
                 version
             };
 
-            AddCustomAttributes("Windows.Foundation.Metadata.VersionAttribute", arguments, parentHandle);
+            AddCustomAttributes("Windows.Foundation.Metadata.StaticAttribute", types, arguments, parentHandle);
         }
 
-        private void AddCustomAttributes(string attributeTypeName, IList<object> primitiveValues, EntityHandle parentHandle)
+        private void AddDefaultInterfaceImplAttribute(EntityHandle interfaceImplHandle)
+        {
+            AddCustomAttributes("Windows.Foundation.Metadata.DefaultAttribute", Array.Empty<ITypeSymbol>(), Array.Empty<object>(), interfaceImplHandle);
+        }
+
+        private void AddGuidAttribute(EntityHandle parentHandle, string name)
+        {
+            Guid guid;
+            using (SHA1 sha = new SHA1CryptoServiceProvider())
+            {
+                var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(name));
+                guid = Helper.EncodeGuid(hash);
+            }
+
+            var uint32Type = Model.Compilation.GetTypeByMetadataName("System.UInt32");
+            var uint16Type = Model.Compilation.GetTypeByMetadataName("System.UInt16");
+            var byteType = Model.Compilation.GetTypeByMetadataName("System.Byte");
+            List<ITypeSymbol> types = new List<ITypeSymbol>
+            {
+                uint32Type,
+                uint16Type,
+                uint16Type,
+                byteType,
+                byteType,
+                byteType,
+                byteType,
+                byteType,
+                byteType,
+                byteType,
+                byteType
+            };
+
+            var byteArray = guid.ToByteArray();
+            List<object> arguments = new List<object>
+            {
+                BitConverter.ToUInt32(byteArray, 0),
+                BitConverter.ToUInt16(byteArray, 4),
+                BitConverter.ToUInt16(byteArray, 6),
+                byteArray[8],
+                byteArray[9],
+                byteArray[10],
+                byteArray[11],
+                byteArray[12],
+                byteArray[13],
+                byteArray[14],
+                byteArray[15]
+            };
+
+            AddCustomAttributes("Windows.Foundation.Metadata.GuidAttribute", types, arguments, parentHandle);
+        }
+
+
+        private void AddCustomAttributes(
+            string attributeTypeName,
+            IList<ITypeSymbol> primitiveTypes,
+            IList<object> primitiveValues,
+            EntityHandle parentHandle)
         {
             var attributeType = Model.Compilation.GetTypeByMetadataName(attributeTypeName);
             Logger.Log("attribute type found " + attributeType);
@@ -948,7 +1098,9 @@ namespace Generator
             }
 
             Logger.Log("# constructor found: " + attributeType.Constructors.Length);
-            var matchingConstructor = attributeType.Constructors.Where(constructor => constructor.Parameters.Length == primitiveValues.Count);
+            var matchingConstructor = attributeType.Constructors.Where(constructor => 
+                constructor.Parameters.Length == primitiveValues.Count &&
+                constructor.Parameters.Select(param => param.Type).SequenceEqual(primitiveTypes));
 
             Logger.Log("# matching constructor found: " + matchingConstructor.Count());
             Logger.Log("matching constructor found: " + matchingConstructor.First());
@@ -960,7 +1112,7 @@ namespace Generator
             new BlobEncoder(attributeSignature)
                 .CustomAttributeSignature(
                     fixedArguments => EncodeFixedArguments(primitiveValues, fixedArguments),
-                    namedArguments => { }
+                    namedArguments => namedArguments.Count(0)
                 );
 
             metadataBuilder.AddCustomAttribute(
@@ -1140,6 +1292,7 @@ namespace Generator
                 node.Identifier.ValueText,
                 GetTypeReference("System", "MulticastDelegate", "mscorlib"));
             currentTypeDeclaration.Handle = typeDefinitionHandle;
+            AddGuidAttribute(typeDefinitionHandle, symbol.ToString());
         }
         
         public void AddEventDeclaration(IEventSymbol @event, bool isInterfaceParent)
@@ -1268,6 +1421,7 @@ namespace Generator
                 true,
                 true);
             currentTypeDeclaration.AddMethod(symbol, methodDefinitionHandle);
+            hasDefaultConstructor |= (numParameters == 0);
         }
 
         void AddMethodDeclaration(IMethodSymbol method, bool isInterfaceParent)
@@ -1322,6 +1476,7 @@ namespace Generator
         {
             // TODO: check if custom projected interface
             // TODO: block or warn type names with namespaces not meeting WinRT requirements.
+            // TODO: synthesized interfaces and default interface impl.
 
             currentTypeDeclaration = new TypeDeclaration(type);
             bool isInterfaceParent = type.TypeKind == TypeKind.Interface;
@@ -1364,9 +1519,15 @@ namespace Generator
 
             foreach (var implementedInterface in type.AllInterfaces.OrderBy(implementedInterface => implementedInterface.ToString()))
             {
-                metadataBuilder.AddInterfaceImplementation(
+                var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
                     typeDefinitionHandle,
                     GetTypeReference(implementedInterface));
+                currentTypeDeclaration.AddInterfaceImpl(implementedInterface, interfaceImplHandle);
+            }
+
+            if (isInterfaceParent)
+            {
+                AddGuidAttribute(typeDefinitionHandle, type.ToString());
             }
 
             typeDefinitionMapping[type.ToString()] = currentTypeDeclaration;
@@ -1383,7 +1544,7 @@ namespace Generator
             new BlobEncoder(methodSignature)
                 .MethodSignature(
                     SignatureCallingConvention.Default,
-                    parameters.Length,
+                    0,
                     !isStatic)
                 .Parameters(
                     parameters.Length,
@@ -1622,12 +1783,25 @@ namespace Generator
                 if(interfaceType == SynthesizedInterfaceType.Default)
                 {
                     classDeclaration.DefaultInterface = qualifiedInterfaceName;
-                    metadataBuilder.AddInterfaceImplementation(
+                    var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
                         classDeclaration.Handle,
                         GetTypeReference(classDeclaration.Node.ContainingNamespace.ToString(), interfaceName, assembly));
+                    classDeclaration.AddInterfaceImpl(classSymbol, interfaceImplHandle);
+                    AddDefaultInterfaceImplAttribute(interfaceImplHandle);
                 }
 
                 AddDefaultVersionAttribute(typeDefinitionHandle, GetVersion(classSymbol, true));
+                AddGuidAttribute(typeDefinitionHandle, interfaceName);
+                AddExclusiveToAttribute(typeDefinitionHandle, classSymbol.ToString());
+
+                if (interfaceType == SynthesizedInterfaceType.Factory)
+                {
+                    AddActivatableAttribute(classDeclaration.Handle, (uint) GetVersion(classSymbol, true), qualifiedInterfaceName);
+                }
+                else if(interfaceType == SynthesizedInterfaceType.Static)
+                {
+                    AddStaticAttribute(classDeclaration.Handle, (uint)GetVersion(classSymbol, true), qualifiedInterfaceName);
+                }
             }
         }
 
@@ -1690,12 +1864,6 @@ namespace Generator
                             }
                         }
                     }
-
-                    if (GetVersion(implementedInterface) == -1)
-                    {
-                        AddDefaultVersionAttribute(typeDefinitionMapping[implementedInterface.ToString()].Handle);
-
-                    }
                 }
 
                 if (classTypeDeclaration.DefaultInterface != null)
@@ -1715,6 +1883,18 @@ namespace Generator
                             }
                         }
                     }
+                }
+            }
+
+            var interfaceDeclarations = typeDefinitionMapping.Values
+                .Where(declaration => declaration.Node is INamedTypeSymbol symbol && symbol.TypeKind == TypeKind.Interface)
+                .ToList();
+            foreach (var interfaceDeclaration in interfaceDeclarations)
+            {
+                INamedTypeSymbol interfaceSymbol = interfaceDeclaration.Node as INamedTypeSymbol;
+                if (typeDefinitionMapping[interfaceSymbol.ToString()].Handle != default && GetVersion(interfaceSymbol) == -1)
+                {
+                    AddDefaultVersionAttribute(typeDefinitionMapping[interfaceSymbol.ToString()].Handle);
                 }
             }
 
