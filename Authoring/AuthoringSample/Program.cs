@@ -48,10 +48,15 @@ namespace MyTypes
         public double ExampleDouble { get; set; }
     }
 
-    [Version(3)]
+    public interface ITest
+    {
+        int GetTest();
+    }
+
+    [Version(3u)]
     public interface ITest2
     {
-        [Version(5)]
+        [Version(5u)]
         double GetTest(int test);
         int GetTest2();
         double GetSetDouble { get; set; }

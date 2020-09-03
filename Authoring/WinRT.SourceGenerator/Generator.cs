@@ -25,9 +25,9 @@ namespace Generator
         public static string GetGeneratedFilesDir(SourceGeneratorContext context)
         {
             // TODO: determine correct location to write to.
-            string winmdDir = Path.Combine(Directory.GetCurrentDirectory(), "Generated Files");
-            Directory.CreateDirectory(winmdDir);
-            return winmdDir;
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.GeneratedFilesDir", out var generatedFilesDir);
+            Directory.CreateDirectory(generatedFilesDir);
+            return generatedFilesDir;
         }
 
         private string GetWinmdOutputFile(SourceGeneratorContext context)
