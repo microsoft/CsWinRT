@@ -21,6 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{96495AB4
 		build.cmd = build.cmd
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
+		HostTest\Directory.Build.targets = HostTest\Directory.Build.targets
 		get_testwinrt.cmd = get_testwinrt.cmd
 		README.md = README.md
 		Strings.props = Strings.props
@@ -367,8 +368,8 @@ Global
 		{41E2A272-150F-42F5-AD40-047AAD9088A0}.Release|ARM.Build.0 = Release|Any CPU
 		{41E2A272-150F-42F5-AD40-047AAD9088A0}.Release|ARM64.ActiveCfg = Release|Any CPU
 		{41E2A272-150F-42F5-AD40-047AAD9088A0}.Release|ARM64.Build.0 = Release|Any CPU
-		{41E2A272-150F-42F5-AD40-047AAD9088A0}.Release|x64.ActiveCfg = Release|Any CPU
-		{41E2A272-150F-42F5-AD40-047AAD9088A0}.Release|x64.Build.0 = Release|Any CPU
+		{41E2A272-150F-42F5-AD40-047AAD9088A0}.Release|x64.ActiveCfg = Release|x64
+		{41E2A272-150F-42F5-AD40-047AAD9088A0}.Release|x64.Build.0 = Release|x64
 		{41E2A272-150F-42F5-AD40-047AAD9088A0}.Release|x86.ActiveCfg = Release|Any CPU
 		{41E2A272-150F-42F5-AD40-047AAD9088A0}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection

@@ -1,9 +1,12 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Text;
 
 namespace Generator
 {
@@ -38,6 +41,43 @@ namespace Generator
             }
 
             return false;
+        }
+
+        private static string GetCsWinRTExe(SourceGeneratorContext context)
+        {
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTExe", out var cswinrtExe);
+            return cswinrtExe;
+        }
+
+        private void GenerateSources(SourceGeneratorContext context)
+        {
+            string cswinrtExe = GetCsWinRTExe(context);
+            string winmdFile = GetWinmdOutputFile(context);
+            string outputDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()).TrimEnd('\\');
+            Directory.CreateDirectory(outputDir);
+
+            string arguments = string.Format("-component -input \"{0}\" -output \"{1}\" -verbose", winmdFile, outputDir);
+            Logger.Log("Running " + cswinrtExe + " " + arguments);
+
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = cswinrtExe,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+
+            using var cswinrtProcess = Process.Start(processInfo);
+            Logger.Log(cswinrtProcess.StandardOutput.ReadToEnd());
+            Logger.Log(cswinrtProcess.StandardError.ReadToEnd());
+            cswinrtProcess.WaitForExit();
+
+            foreach(var file in Directory.GetFiles(outputDir, "*.cs", SearchOption.TopDirectoryOnly))
+            {
+                Logger.Log("Adding " + file);
+                context.AddSource(Path.GetFileNameWithoutExtension(file), SourceText.From(File.ReadAllText(file), Encoding.UTF8));
+            }
         }
 
         private string GetWinmdOutputFile(SourceGeneratorContext context)
@@ -89,7 +129,10 @@ namespace Generator
                 }
                 writer.FinalizeGeneration();
 
-                GenerateWinMD(metadataBuilder, GetWinmdOutputFile(context));
+                string winmdFile = GetWinmdOutputFile(context);
+
+                GenerateWinMD(metadataBuilder, winmdFile);
+                GenerateSources(context);
             }
             catch(Exception e)
             {
