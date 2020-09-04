@@ -20,6 +20,8 @@ namespace WinUIDesktopSample
             this.AddHandler(UIElement.TappedEvent, new TappedEventHandler(Foo_PointerTapped), true /*handledEventsToo*/);
         }
 
+        partial void InitializeComponent();
+
         private void Foo_PointerTapped(object sender, TappedRoutedEventArgs e)
         {
         }

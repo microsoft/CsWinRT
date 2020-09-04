@@ -38,9 +38,9 @@ Download the C#/WinRT NuGet package here: <http://aka.ms/cswinrt/nuget>
 
 C#/WinRT currently requires the following packages to build:
 
-- Visual Studio 16.6 (more specifically, MSBuild 16.6.0 for "net5.0" TFM support)
-- Microsoft.Net.Compilers.Toolset >= 3.7.0 or Visual Studio 16.8 preview (for function pointer support)
-- .NET 5 SDK 5.0.100-preview.5.20279.10
+- Visual Studio 16.8 Preview 2 or newer
+- Microsoft.Net.Compilers.Toolset >= 3.8.0-3.20428.4
+- .NET 5 SDK 5.0.100 Preview 8
 - WinUI 3 3.0.0-preview1.200515.3
 
 **Note:** As prereleases may make breaking changes before final release, any other combinations above may work but are not supported and will generate a build warning.
