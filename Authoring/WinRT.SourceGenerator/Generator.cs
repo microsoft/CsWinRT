@@ -65,7 +65,9 @@ namespace Generator
                 Arguments = arguments,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true
+                RedirectStandardError = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = true
             };
 
             using var cswinrtProcess = Process.Start(processInfo);
