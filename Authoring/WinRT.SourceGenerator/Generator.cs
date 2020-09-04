@@ -30,6 +30,16 @@ namespace Generator
             return generatedFilesDir;
         }
 
+        private static bool IsCsWinRTComponent(SourceGeneratorContext context)
+        {
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTComponent", out var isCsWinRTComponentStr))
+            {
+                return bool.TryParse(isCsWinRTComponentStr, out var isCsWinRTComponent) && isCsWinRTComponent;
+            }
+
+            return false;
+        }
+
         private string GetWinmdOutputFile(SourceGeneratorContext context)
         {
             return Path.Combine(GetGeneratedFilesDir(context), GetAssemblyName(context) + ".winmd");
@@ -55,6 +65,11 @@ namespace Generator
 
         public void Execute(SourceGeneratorContext context)
         {
+            if (!IsCsWinRTComponent(context))
+            {
+                return;
+            }
+
             Logger.Initialize(context);
 
             try
