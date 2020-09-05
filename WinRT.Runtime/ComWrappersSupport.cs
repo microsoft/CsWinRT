@@ -106,6 +106,20 @@ namespace WinRT
 
         public static void RegisterProjectionAssembly(Assembly assembly) => TypeNameSupport.RegisterProjectionAssembly(assembly);
 
+        internal static object GetRuntimeClassCCWTypeIfAny(object obj)
+        {
+            var type = obj.GetType();
+            var ccwType = type.GetRuntimeClassCCWType();
+            if (ccwType != null)
+            {
+                // TODO: have some weak conditional table lookup before constructing new one.
+                var objReferenceConstructor = ccwType.GetConstructor(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { type }, null);
+                return objReferenceConstructor.Invoke(new[] { obj });
+            }
+
+            return obj;
+        }
+
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(object obj)
         {
             var entries = new List<ComInterfaceEntry>();
