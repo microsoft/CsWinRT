@@ -13,7 +13,11 @@ namespace winrt::TestComponentCSharp::implementation
 }
 namespace winrt::TestComponentCSharp::factory_implementation
 {
-    struct NonAgileClass : NonAgileClassT<NonAgileClass, implementation::NonAgileClass>
+    struct NonAgileClass : NonAgileClassT<NonAgileClass, implementation::NonAgileClass, Windows::Foundation::IStringable>
     {
+        hstring ToString()
+        {
+            return L"NonAgileClass";
+        }
     };
 }

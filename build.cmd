@@ -108,10 +108,18 @@ rem executing "dotnet test --no-build ...", which evidently still needs to parse
 rem Work around by using a dummy targets file and assigning it to the MsAppxPackageTargets property.
 echo ^<Project/^> > %temp%\EmptyMsAppxPackage.Targets
 
-%dotnet_exe% test --no-build --logger xunit;LogFilePath=%~dp0test_%cswinrt_version_string%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets
+%dotnet_exe% test --no-build --logger xunit;LogFilePath=%~dp0unittest_%cswinrt_version_string%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets
 if ErrorLevel 1 (
   echo.
   echo ERROR: Unit test failed, skipping NuGet pack
+  exit /b !ErrorLevel!
+)
+
+rem Run WinRT.Host tests
+%~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\HostTest\bin\HostTest.exe --gtest_output=xml:%~dp0hosttest_%cswinrt_version_string%.xml 
+if ErrorLevel 1 (
+  echo.
+  echo ERROR: Host test failed, skipping NuGet pack
   exit /b !ErrorLevel!
 )
 
@@ -120,4 +128,5 @@ set cswinrt_bin_dir=%~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\cswin
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
 set netstandard2_runtime=%~dp0WinRT.Runtime\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Runtime.dll
 set net5_runtime=%~dp0WinRT.Runtime\bin\%cswinrt_configuration%\net5.0\WinRT.Runtime.dll
-.nuget\nuget pack nuget/Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;netstandard2_runtime=%netstandard2_runtime%;net5_runtime=%net5_runtime%;cswinrt_nuget_version=%cswinrt_version_string% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
+set source_generator=%~dp0Authoring\WinRT.SourceGenerator\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
+.nuget\nuget pack nuget/Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;netstandard2_runtime=%netstandard2_runtime%;net5_runtime=%net5_runtime%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis

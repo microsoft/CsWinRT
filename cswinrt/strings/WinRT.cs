@@ -219,16 +219,34 @@ namespace WinRT
             _mtaCookie = mtaCookie;
         }
 
-        public static unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
+        public static unsafe (IntPtr instancePtr, int hr) GetActivationFactory(IntPtr hstrRuntimeClassId)
         {
             var module = Instance; // Ensure COM is initialized
             Guid iid = typeof(IActivationFactoryVftbl).GUID;
             IntPtr instancePtr;
-            var hstrRuntimeClassId = MarshalString.CreateMarshaler(runtimeClassId);
-            int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), ref iid, &instancePtr);
-            return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
+            int hr = Platform.RoGetActivationFactory(hstrRuntimeClassId, ref iid, &instancePtr);
+            return (hr == 0 ? instancePtr : IntPtr.Zero, hr);
         }
 
+        public static unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
+        {
+            // TODO: "using var" with ref struct and remove the try/catch below
+            var m = MarshalString.CreateMarshaler(runtimeClassId);
+            Func<bool> dispose = () => { m.Dispose(); return false; };
+            try
+            {
+                IntPtr instancePtr;
+                int hr;
+                (instancePtr, hr) = GetActivationFactory(MarshalString.GetAbi(m));
+                return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
+            }
+            catch (Exception) when (dispose())
+            {
+                // Will never execute
+                return default;
+            }
+        }
+        
         ~WinrtModule()
         {
             Marshal.ThrowExceptionForHR(Platform.CoDecrementMTAUsage(_mtaCookie));
@@ -238,6 +256,10 @@ namespace WinRT
     internal class BaseActivationFactory
     {
         private ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
+
+        public ObjectReference<IActivationFactoryVftbl> Value { get => _IActivationFactory; }
+
+        public I AsInterface<I>() => _IActivationFactory.AsInterface<I>();
 
         public BaseActivationFactory(string typeNamespace, string typeFullName)
         {
@@ -289,6 +311,7 @@ namespace WinRT
         public ActivationFactory() : base(typeof(T).Namespace, typeof(T).FullName) { }
 
         static WeakLazy<ActivationFactory<T>> _factory = new WeakLazy<ActivationFactory<T>>();
+        public new static I AsInterface<I>() => _factory.Value.Value.AsInterface<I>();
         public static ObjectReference<I> As<I>() => _factory.Value._As<I>();
         public static ObjectReference<I> ActivateInstance<I>() => _factory.Value._ActivateInstance<I>();
     }

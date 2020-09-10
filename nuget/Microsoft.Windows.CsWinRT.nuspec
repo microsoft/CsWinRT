@@ -25,5 +25,6 @@
     <file src="Microsoft.Windows.CsWinRT.Prerelease*.targets" target="build"/>
     <file src="readme.txt"/>
     <file src="$net5_runtime$" target="lib\net5.0\"/>
+    <file src="$source_generator$" target="analyzers\dotnet\cs\"/>
   </files>
 </package>
