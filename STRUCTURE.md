@@ -20,26 +20,50 @@ Contains the WinRT.Runtime project for building the C#/WinRT runtime assembly, w
 
 Contains source files for producing a C#/WinRT NuGet package, which is regularly built, signed, and published to nuget.org by Microsoft.  The C#/WinRT NuGet package contains the cswinrt.exe compiler, and both versions of the winrt.runtime.dll.
 
+## The [`Tests`](/Tests) folder
+
+Contains various testing-related projects:
+
+### Projections
+
+There are four projections which include the Windows SDK, WinUI, Test metadata (produced by the TestWinRT and TestComponentCSharp projects), and TestHost.ProbeByHost to support HostTest.
+
+### [`TestComponentCSharp`](Tests/TestComponentCSharp)
+
+This is an implementation of a WinRT test component, defined in class.idl and used by the UnitTest project.  To complement the general TestComponent above, the TestComponentCSharp  tests scenarios specific to the C#/WinRT language projection.
+
+### [`UnitTest`](Tests/UnitTest)
+
+Unit tests for validating the Windows SDK, WinUI, and Test projections generated above.  All pull requests should ensure that this project executes without errors.
+
+### [`HostTest`](Tests/HostTest)
+
+Unit tests for WinRT.Host.dll, which provides hosting for runtime components written in C#.
+
 ## [`TestWinRT`](https://github.com/microsoft/TestWinRT/)
 
-C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/TestWinRT/) repository for general language projection test coverage.  This repo should be cloned into the root of the C#/WinRT repo, via **get_testwinrt.cmd**, so that the cswinrt.sln can resolve its reference to TestComponent.vcxproj.  The resulting TestComponent.dll and TestComponent.winmd files are consumed by the UnitTest project above.
+C#/WinRT makes use of the standalone [TestWinRT](https://github.com/microsoft/TestWinRT/) repository for general language projection test coverage.  This repo should be cloned into the root of the C#/WinRT repo, via **get_testwinrt.cmd**, so that the cswinrt.sln can resolve its reference to TestComponent.vcxproj.  The resulting TestComponent.dll and TestComponent.winmd files are consumed by the UnitTest project below.
 
-## The [`TestComponentCSharp`](/TestComponentCSharp) folder
+## The [`Authoring`](/Authoring) folder
 
-Contains an implementation of a WinRT test component, defined in class.idl and used by the UnitTest project.  To complement the general TestComponent above, the TestComponentCSharp  tests scenarios specific to the C#/WinRT language projection.
-
-## The [`Projections`](/Projections) folder
-
-Contains several projects for generating and building projections from the Windows SDK, WinUI, Benchmark (produced by the BenchmarkComponent project), and Test metadata (produced by the TestWinRT and TestComponentCSharp projects).
-
-## The [`UnitTest`](/UnitTest) folder
-
-Contains unit tests for validating the Windows SDK, WinUI, and Test projections generated above.  All pull requests should ensure that this project executes without errors.
+Contains projects for implementing authoring and hosting support.
 
 ## The [`Benchmarks`](/Benchmarks) folder
 
+### [`BenchmarkComponent`](Benchmarks/BenchmarkComponent)
+
+The generated projection produced by the BenchmarkComponent project.
+
+### [`Benchmarks`](Benchmarks/Benchmarks) 
+
 Contains benchmarks written using BenchmarkDotNet to track the performance of scenarios in the generated projection.  To run the benchmarks using the CsWinRT projection, run **benchmark.cmd**.  To run the same benchmarks using the built-in WinMD support in NET Core 3.1 to compare against as a baseline, run **benchmark_winmd.cmd**.
 
-## The [`WinUIDesktopSample`](/WinUIDesktopSample) folder
+## The [`Samples`](/Samples) folder
+
+### [`AuthoringSample`](/Samples/AuthoringSample)
+
+An authoring sample of a C# runtime component.
+
+### [`WinUIDesktopSample`](Samples/WinUIDesktopSample)
 
 Contains an end-to-end sample app that uses the Windows SDK and WinUI projections generated above.

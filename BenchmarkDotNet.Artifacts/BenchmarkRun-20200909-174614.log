@@ -1,0 +1,61 @@
+// Validating benchmarks:
+// ***** BenchmarkRunner: Start   *****
+// ***** Found 17 benchmark(s) in total *****
+// ***** Building 1 exe(s) in Parallel: Start   *****
+// start dotnet restore /p:platform=x64 /p:ApplicationManifest=C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\Benchmarks.manifest /p:BenchmarkWinmdSupport=true /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 in C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\9b91628d-78e6-4c55-9976-277a082cbaf7
+// command took 3.29s and exited with 0
+// start dotnet build -c Release /p:platform=x64 /p:ApplicationManifest=C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\Benchmarks.manifest /p:BenchmarkWinmdSupport=true --no-restore /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 in C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\9b91628d-78e6-4c55-9976-277a082cbaf7
+// command took 2.2s and exited with 1
+// start dotnet build -c Release /p:platform=x64 /p:ApplicationManifest=C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\Benchmarks.manifest /p:BenchmarkWinmdSupport=true --no-restore --no-dependencies /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 in C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\9b91628d-78e6-4c55-9976-277a082cbaf7
+// command took 5.56s and exited with 0
+// ***** Done, took 00:00:11 (11.75 sec)   *****
+// Found 9 benchmarks:
+//   QueryInterfacePerf.QueryDefaultInterface: WinMD NetCoreApp31(Platform=X64, Arguments=/p:platform=x64,/p:ApplicationManifest=C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\Benchmarks.manifest,/p:BenchmarkWinmdSupport=true, Toolchain=netcoreapp3.1-native)
+//   QueryInterfacePerf.QueryNonDefaultInterface: WinMD NetCoreApp31(Platform=X64, Arguments=/p:platform=x64,/p:ApplicationManifest=C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\Benchmarks.manifest,/p:BenchmarkWinmdSupport=true, Toolchain=netcoreapp3.1-native)
+//   QueryInterfacePerf.QueryNonDefaultInterface2: WinMD NetCoreApp31(Platform=X64, Arguments=/p:platform=x64,/p:ApplicationManifest=C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\Benchmarks.manifest,/p:BenchmarkWinmdSupport=true, Toolchain=netcoreapp3.1-native)
+//   QueryInterfacePerf.QueryDefaultInterfaceSetProperty: WinMD NetCoreApp31(Platform=X64, Arguments=/p:platform=x64,/p:ApplicationManifest=C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\Benchmarks.manifest,/p:BenchmarkWinmdSupport=true, Toolchain=netcoreapp3.1-native)
+//   QueryInterfacePerf.QueryNonDefaultInterfaceSetProperty: WinMD NetCoreApp31(Platform=X64, Arguments=/p:platform=x64,/p:ApplicationManifest=C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\Benchmarks.manifest,/p:BenchmarkWinmdSupport=true, Toolchain=netcoreapp3.1-native)
+//   QueryInterfacePerf.QuerySDKDefaultInterface: WinMD NetCoreApp31(Platform=X64, Arguments=/p:platform=x64,/p:ApplicationManifest=C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\Benchmarks.manifest,/p:BenchmarkWinmdSupport=true, Toolchain=netcoreapp3.1-native)
+//   QueryInterfacePerf.QuerySDKNonDefaultInterface: WinMD NetCoreApp31(Platform=X64, Arguments=/p:platform=x64,/p:ApplicationManifest=C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\Benchmarks.manifest,/p:BenchmarkWinmdSupport=true, Toolchain=netcoreapp3.1-native)
+//   QueryInterfacePerf.ConstructAndQueryDefaultInterfaceFirstCall: WinMD NetCoreApp31(Platform=X64, Arguments=/p:platform=x64,/p:ApplicationManifest=C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\Benchmarks.manifest,/p:BenchmarkWinmdSupport=true, Toolchain=netcoreapp3.1-native)
+//   QueryInterfacePerf.ConstructAndQueryNonDefaultInterfaceFirstCall: WinMD NetCoreApp31(Platform=X64, Arguments=/p:platform=x64,/p:ApplicationManifest=C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\Benchmarks.manifest,/p:BenchmarkWinmdSupport=true, Toolchain=netcoreapp3.1-native)
+
+// **************************
+// Benchmark: QueryInterfacePerf.QueryDefaultInterface: WinMD NetCoreApp31(Platform=X64, Arguments=/p:platform=x64,/p:ApplicationManifest=C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\Benchmarks.manifest,/p:BenchmarkWinmdSupport=true, Toolchain=netcoreapp3.1-native)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: C:\Users\angzhang\source\repos\CsWinRTStructure\Benchmarks\Benchmarks\bin\x64\Release\netcoreapp3.1\9b91628d-78e6-4c55-9976-277a082cbaf7\bin\Release\netcoreapp3.1\9b91628d-78e6-4c55-9976-277a082cbaf7.exe --benchmarkName "Benchmarks.QueryInterfacePerf.QueryDefaultInterface" --job "WinMD NetCoreApp31" --benchmarkId 0 in 
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 3.1.7 (CoreCLR 4.700.20.36602, CoreFX 4.700.20.37001), X64 RyuJIT
+// GC=Concurrent Workstation
+// Job: WinMD NetCoreApp31(Platform=X64)
+
+OverheadJitting  1: 1 op, 654400.00 ns, 654.4000 us/op
+WorkloadJitting  1: 1 op, 832900.00 ns, 832.9000 us/op
+
+OverheadJitting  2: 16 op, 958700.00 ns, 59.9188 us/op
+WorkloadJitting  2: 16 op, 835800.00 ns, 52.2375 us/op
+
+WorkloadPilot    1: 16 op, 2400.00 ns, 150.0000 ns/op
+WorkloadPilot    2: 32 op, 2000.00 ns, 62.5000 ns/op
+WorkloadPilot    3: 64 op, 3600.00 ns, 56.2500 ns/op
+WorkloadPilot    4: 128 op, 5500.00 ns, 42.9688 ns/op
+WorkloadPilot    5: 256 op, 9000.00 ns, 35.1562 ns/op
+WorkloadPilot    6: 512 op, 16900.00 ns, 33.0078 ns/op
+WorkloadPilot    7: 1024 op, 43200.00 ns, 42.1875 ns/op
+WorkloadPilot    8: 2048 op, 79600.00 ns, 38.8672 ns/op
+WorkloadPilot    9: 4096 op, 156200.00 ns, 38.1348 ns/op
+WorkloadPilot   10: 8192 op, 270700.00 ns, 33.0444 ns/op
+WorkloadPilot   11: 16384 op, 509300.00 ns, 31.0852 ns/op
+WorkloadPilot   12: 32768 op, 1239900.00 ns, 37.8387 ns/op
+WorkloadPilot   13: 65536 op, 2471500.00 ns, 37.7121 ns/op
+WorkloadPilot   14: 131072 op, 5997200.00 ns, 45.7550 ns/op
+WorkloadPilot   15: 262144 op, 11405600.00 ns, 43.5089 ns/op
+WorkloadPilot   16: 524288 op, 21848500.00 ns, 41.6727 ns/op
+WorkloadPilot   17: 1048576 op, 40981500.00 ns, 39.0830 ns/op
+WorkloadPilot   18: 2097152 op, 76511200.00 ns, 36.4834 ns/op
+WorkloadPilot   19: 4194304 op, 133396600.00 ns, 31.8042 ns/op
+WorkloadPilot   20: 8388608 op, 245042600.00 ns, 29.2114 ns/op
+WorkloadPilot   21: 16777216 op, 434895900.00 ns, 25.9218 ns/op

@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>TestHost.ProbeByClass</AssemblyName>
+  </PropertyGroup>
+
+  <Import Project="../TestProjection/TestProjection.csproj"/>
+
+</Project>
