@@ -804,7 +804,7 @@ namespace cswinrt
             w.write(R"(
 % %.%(%) => %(%);)",
                 bind<write_projection_return_type>(signature),
-                bind<write_type_name>(method.Parent(), typedef_name_type::Projected, false),
+                bind<write_type_name>(method.Parent(), typedef_name_type::CCW, false),
                 method.Name(),
                 bind_list<write_projection_parameter>(", ", signature.params()),
                 method.Name(),

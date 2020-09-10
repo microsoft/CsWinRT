@@ -722,7 +722,7 @@ namespace Generator
                     TypeAttributes.Class |
                     TypeAttributes.BeforeFieldInit;
 
-                // extens
+                // extends
                 if (node.BaseList != null)
                 {
                     foreach (var type in node.BaseList.Types)
@@ -735,7 +735,8 @@ namespace Generator
                         }
                     }
                 }
-                else
+
+                if (baseType == default)
                 {
                     baseType = GetTypeReference("System", "Object", "mscorlib");
                 }
@@ -1555,6 +1556,7 @@ namespace Generator
             // TODO: check if custom projected interface
             // TODO: block or warn type names with namespaces not meeting WinRT requirements.
             // TODO: synthesized interfaces and default interface impl.
+            // TODO: extends
 
             var typeDeclaration = new TypeDeclaration(type);
             currentTypeDeclaration = typeDeclaration;
