@@ -71,6 +71,7 @@ namespace Generator
         public readonly ISymbol Node;
         public TypeDefinitionHandle Handle;
         public string DefaultInterface;
+        public string StaticInterface;
 
         public Dictionary<ISymbol, List<MethodDefinitionHandle>> MethodDefinitions = new Dictionary<ISymbol, List<MethodDefinitionHandle>>();
         public Dictionary<ISymbol, List<EntityHandle>> MethodReferences = new Dictionary<ISymbol, List<EntityHandle>>();
@@ -445,6 +446,10 @@ namespace Generator
             {
                 methodAttributes |= MethodAttributes.RTSpecialName;
             }
+            else if(isStatic)
+            {
+                methodAttributes |= MethodAttributes.Static;
+            }
             else
             {
                 methodAttributes |=
@@ -491,7 +496,7 @@ namespace Generator
                 methodSymbol.Name,
                 parameters,
                 new Symbol(methodSymbol.ReturnType),
-                !IsStaticNode(node),
+                IsStaticNode(node),
                 node.Parent is InterfaceDeclarationSyntax);
             currentTypeDeclaration.AddMethod(methodSymbol, methodSymbol.Name, methodDefinitionHandle);
         }
@@ -1808,7 +1813,8 @@ namespace Generator
                     hasTypes = true;
                     AddFactoryMethod(classSymbol, constructorMethod);
                 }
-                else if((interfaceType == SynthesizedInterfaceType.Default && !classMembersFromInterfaces.Contains(classMember.Key)) || 
+                else if((interfaceType == SynthesizedInterfaceType.Default && !classMember.Key.IsStatic && 
+                         !classMembersFromInterfaces.Contains(classMember.Key)) || 
                     (interfaceType == SynthesizedInterfaceType.Static && classMember.Key.IsStatic))
                 {
                     if (classMember.Key is IMethodSymbol method && method.MethodKind == MethodKind.Ordinary)
@@ -1876,6 +1882,7 @@ namespace Generator
                 }
                 else if(interfaceType == SynthesizedInterfaceType.Static)
                 {
+                    classDeclaration.StaticInterface = qualifiedInterfaceName;
                     AddStaticAttribute(classDeclaration.Handle, (uint)GetVersion(classSymbol, true), qualifiedInterfaceName);
                 }
             }
@@ -1971,6 +1978,23 @@ namespace Generator
                             {
                                 AddOverloadAttribute(classMemberMethodDefinitions.First(), defaultInterfaceTypeDeclaration.OverloadedMethods[interfaceMember.Key]);
                             }
+                        }
+                    }
+                }
+
+                if (classTypeDeclaration.StaticInterface != null)
+                {
+                    var staticInterfaceTypeDeclaration = typeDefinitionMapping[classTypeDeclaration.StaticInterface];
+                    foreach (var interfaceMember in staticInterfaceTypeDeclaration.MethodReferences)
+                    {
+                        // If method overloaded in static interface, overload in class too.
+                        if (classTypeDeclaration.MethodDefinitions.ContainsKey(interfaceMember.Key) &&
+                            staticInterfaceTypeDeclaration.OverloadedMethods.ContainsKey(interfaceMember.Key))
+                        {
+                            AddOverloadAttribute(
+                                classTypeDeclaration.MethodDefinitions[interfaceMember.Key].First(),
+                                staticInterfaceTypeDeclaration.OverloadedMethods[interfaceMember.Key]
+                            );
                         }
                     }
                 }
