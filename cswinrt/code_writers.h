@@ -196,6 +196,7 @@ namespace cswinrt
 
     void write_typedef_name(writer& w, type_definition const& type, typedef_name_type const& nameType = typedef_name_type::Projected, bool forceWriteNamespace = false)
     {
+        bool authoredType = settings.component && settings.filter.includes(type);
         auto typeNamespace = type.TypeNamespace();
         auto typeName = type.TypeName();
         if (auto proj = get_mapped_type(typeNamespace, typeName))
@@ -208,15 +209,15 @@ namespace cswinrt
             (typeNamespace != w._current_namespace) ||
             (nameType == typedef_name_type::Projected && (w._in_abi_namespace || w._in_abi_impl_namespace)) ||
             (nameType == typedef_name_type::ABI && !w._in_abi_namespace) ||
-            (nameType == typedef_name_type::CCW && !settings.component && w._in_abi_namespace) ||
-            (nameType == typedef_name_type::CCW && settings.component && !w._in_abi_impl_namespace))
+            (nameType == typedef_name_type::CCW && authoredType && !w._in_abi_impl_namespace) ||
+            (nameType == typedef_name_type::CCW && !authoredType && (w._in_abi_namespace || w._in_abi_impl_namespace)))
         {
             w.write("global::");
             if (nameType == typedef_name_type::ABI)
             {
                 w.write("ABI.");
             }
-            else if (settings.component && nameType == typedef_name_type::CCW)
+            else if (authoredType && nameType == typedef_name_type::CCW)
             {
                 w.write("ABI.Impl.");
             }
@@ -4831,6 +4832,8 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 
     void write_struct(writer& w, TypeDef const& type)
     {
+        if (settings.component) return;
+
         auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
 
         struct field_info
