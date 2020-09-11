@@ -37,8 +37,8 @@
       <!--Explicitly reference WinUI winmds from TFM uap10.0-->
       <ReferenceWinMDs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
       <!--Do not publish projection source winmds -->
-      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'TestComponent'" />
-      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'TestComponentCSharp'" />
+      <!-- <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'TestComponent'" />
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'TestComponentCSharp'" /> -->
     </ItemGroup>
     <PropertyGroup>
       <CsWinRTVerbosity>high</CsWinRTVerbosity>
@@ -75,16 +75,34 @@
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'TestComponent'" />
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'TestComponentCSharp'" />
       <!--Also remove ReferencePath winmds to prevent error NETSDK1130 false positive-->
-      <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'TestComponent'" />
-      <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'TestComponentCSharp'" />
+      <!-- <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'TestComponent'" />
+      <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'TestComponentCSharp'" /> -->
     </ItemGroup>
   </Target>
 
-  <Target Name="RemoveWinMDReferences" BeforeTargets="ResolveReferences" AfterTargets="AfterResolveReferences">
+  <Target Name="AddTestWinMDReferences" BeforeTargets="ResolveReferences" AfterTargets="AfterResolveReferences">
     <ItemGroup>
       <ReferenceWinMDs Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
-      <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
     </ItemGroup>
   </Target>
+
+  <Target Name="IgnoreWinMDReferences" BeforeTargets="_BlockWinMDsOnUnsupportedTFMs"
+        Returns="@(ReferencePath)"
+        Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '5.0'))">
+    <ItemGroup>
+      <IgnoredReferencePaths Include="@(ReferencePath)" Condition="'%(ReferencePath.Extension)' == '.winmd'" />
+      <ReferencePath Remove="@(IgnoredReferencePaths)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="RestoreWinMDReferences" AfterTargets="_BlockWinMDsOnUnsupportedTFMs" 
+        Returns="@(ReferencePath)"
+        Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '5.0'))">
+    <ItemGroup>
+      <ReferencePath Include="@(IgnoredReferencePaths)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- <Target Name="_BlockWinMDsOnUnsupportedTFMs"/> -->
 
 </Project>

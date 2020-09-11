@@ -3,7 +3,8 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
-    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <!-- <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion> -->
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <ApplicationManifest>WinUIDesktopSample.exe.manifest</ApplicationManifest>
     <!--
@@ -12,7 +13,13 @@
     -->
     <XamlCodeGenerationControlFlags>DoNotGenerateOtherProviders</XamlCodeGenerationControlFlags>
     <Platforms>x86;x64</Platforms>
+    <MsAppxPackageTargets>$(MSBuildThisFileDirectory)Net5_WinUI_Fixup.Targets</MsAppxPackageTargets>
   </PropertyGroup>
+
+    <PropertyGroup>
+      <TargetPlatformSupported>true</TargetPlatformSupported>
+      <TargetPlatformVersionSupported>true</TargetPlatformVersionSupported>
+    </PropertyGroup>
 
   <ItemGroup>
     <Manifest Include="WinUIDesktopSample.exe.manifest">
@@ -21,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
+    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.5" />
     <ProjectReference Include="..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\Projections\WinUI\WinUI.csproj" />
     <!--
@@ -29,7 +36,7 @@
       since we are building our own in the WinUIProjection project
     -->
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
-      <ExcludeAssets>compile; runtime</ExcludeAssets>
+      <ExcludeAssets>compile; runtime; build</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
 

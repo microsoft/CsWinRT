@@ -1,0 +1,115 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <RealMsAppxPackageTargets>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\AppxPackage\Microsoft.AppXPackage.Targets</RealMsAppxPackageTargets>
+    <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
+    <WindowsSdkPath Condition="'$(WindowsSdkPath)' == ''">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSdkLocation("Windows", "10.0"))</WindowsSdkPath>
+    <PlatformXmlDir>$(WindowsSdkPath)\Platforms\UAP\10.0.18362.0\</PlatformXmlDir>
+  </PropertyGroup>
+
+  <Import Project="$(RealMsAppxPackageTargets)"/>
+
+  <PropertyGroup>
+    <TargetPlatformIdentifier></TargetPlatformIdentifier>
+    <TargetPlatformVersion></TargetPlatformVersion>
+  </PropertyGroup>
+
+  <Target Name="FixupTargetPlatformProperties" Outputs="TargetPlatformVersion">
+    <PropertyGroup>
+        <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+        <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+        <RealMsAppxPackageTargets>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\AppxPackage\Microsoft.AppXPackage.Targets</RealMsAppxPackageTargets>
+        <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
+        <WindowsSdkPath Condition="'$(WindowsSdkPath)' == ''">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSdkLocation("Windows", "10.0"))</WindowsSdkPath>
+        <PlatformXmlDir>$(WindowsSdkPath)\Platforms\UAP\10.0.18362.0\</PlatformXmlDir>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="RestoreTargetPlatformProperties" Outputs="TargetPlatformVersion">
+    <PropertyGroup>
+        <TargetPlatformIdentifier></TargetPlatformIdentifier>
+        <TargetPlatformVersion></TargetPlatformVersion>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="Before_GetSdkToolsPathsFromSdk" BeforeTargets="_GetSdkToolsPathsFromSdk" Outputs="TargetPlatformVersion">
+    <PropertyGroup>
+        <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+        <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+        <RealMsAppxPackageTargets>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\AppxPackage\Microsoft.AppXPackage.Targets</RealMsAppxPackageTargets>
+        <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
+        <WindowsSdkPath Condition="'$(WindowsSdkPath)' == ''">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSdkLocation("Windows", "10.0"))</WindowsSdkPath>
+        <PlatformXmlDir>$(WindowsSdkPath)\Platforms\UAP\10.0.18362.0\</PlatformXmlDir>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="After_GetSdkToolsPathsFromSdk" AfterTargets="_GetSdkToolsPathsFromSdk" Outputs="TargetPlatformVersion">
+    <PropertyGroup>
+        <TargetPlatformIdentifier></TargetPlatformIdentifier>
+        <TargetPlatformVersion></TargetPlatformVersion>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="Before_ValidateConfiguration" BeforeTargets="_ValidateConfiguration" Outputs="TargetPlatformVersion">
+    <PropertyGroup>
+        <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+        <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+        <RealMsAppxPackageTargets>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\AppxPackage\Microsoft.AppXPackage.Targets</RealMsAppxPackageTargets>
+        <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
+        <WindowsSdkPath Condition="'$(WindowsSdkPath)' == ''">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSdkLocation("Windows", "10.0"))</WindowsSdkPath>
+        <PlatformXmlDir>$(WindowsSdkPath)\Platforms\UAP\10.0.18362.0\</PlatformXmlDir>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="After_ValidateConfiguration" AfterTargets="_ValidateConfiguration" Outputs="TargetPlatformVersion">
+    <PropertyGroup>
+        <TargetPlatformIdentifier></TargetPlatformIdentifier>
+        <TargetPlatformVersion></TargetPlatformVersion>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="Before_GetAppxManifestSchemaItemsFromSdk" BeforeTargets="_GetAppxManifestSchemaItemsFromSdk" Outputs="TargetPlatformVersion">
+    <PropertyGroup>
+        <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+        <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+        <RealMsAppxPackageTargets>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\AppxPackage\Microsoft.AppXPackage.Targets</RealMsAppxPackageTargets>
+        <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
+        <WindowsSdkPath Condition="'$(WindowsSdkPath)' == ''">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSdkLocation("Windows", "10.0"))</WindowsSdkPath>
+        <PlatformXmlDir>$(WindowsSdkPath)\Platforms\UAP\10.0.18362.0\</PlatformXmlDir>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="After_GetAppxManifestSchemaItemsFromSdk" AfterTargets="_GetAppxManifestSchemaItemsFromSdk" Outputs="TargetPlatformVersion">
+    <PropertyGroup>
+        <TargetPlatformIdentifier></TargetPlatformIdentifier>
+        <TargetPlatformVersion></TargetPlatformVersion>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="Before_GenerateProjectPriConfigurationFiles" BeforeTargets="_GenerateProjectPriConfigurationFiles" Outputs="TargetPlatformVersion">
+    <PropertyGroup>
+        <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+        <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+        <RealMsAppxPackageTargets>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\AppxPackage\Microsoft.AppXPackage.Targets</RealMsAppxPackageTargets>
+        <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
+        <WindowsSdkPath Condition="'$(WindowsSdkPath)' == ''">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPlatformSdkLocation("Windows", "10.0"))</WindowsSdkPath>
+        <PlatformXmlDir>$(WindowsSdkPath)\Platforms\UAP\10.0.18362.0\</PlatformXmlDir>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="After_GenerateProjectPriConfigurationFiles" AfterTargets="_GenerateProjectPriConfigurationFiles" Outputs="TargetPlatformVersion">
+    <PropertyGroup>
+        <TargetPlatformIdentifier></TargetPlatformIdentifier>
+        <TargetPlatformVersion></TargetPlatformVersion>
+    </PropertyGroup>
+  </Target>
+
+
+  <!-- <Target Name="Before_GetSdkToolsPathsFromSdk" BeforeTargets="_GetSdkToolsPathsFromSdk" DependsOnTargets="FixupTargetPlatformProperties" />
+  <Target Name="After_GetSdkToolsPathsFromSdk" AfterTargets="_GetSdkToolsPathsFromSdk" DependsOnTargets="RestoreTargetPlatformProperties" />
+  <Target Name="Before_ValidateConfiguration" BeforeTargets="_ValidateConfiguration" DependsOnTargets="FixupTargetPlatformProperties" />
+  <Target Name="After_ValidateConfiguration" AfterTargets="_ValidateConfiguration" DependsOnTargets="RestoreTargetPlatformProperties" /> -->
+
+</Project>

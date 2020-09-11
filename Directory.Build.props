@@ -40,10 +40,15 @@
     <IntDir>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', '$(MSBuildProjectName)', 'obj'))</IntDir>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+  <!-- <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
-  </PropertyGroup>
+  </PropertyGroup> -->
+
+<!-- Avoid _CheckForInvalidTargetPlatformVersion error due to TPV mismatch (4-part vs 3-part) -->
+<!-- <ItemGroup>
+<SupportedTargetPlatform Include="$(TargetPlatformVersion)"></SupportedTargetPlatform>
+</ItemGroup> -->
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -54,6 +59,27 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
+
+  <!-- Xcopy MSBuild support (temporary, until VS 16.8 is deployed to Azure Devops agents in 12/2020) -->
+  <PropertyGroup Condition="'$(UseXcopyMSBuild)' != ''">
+    <!-- <TargetFrameworkRootPath>D:\git\cswinrt2\.msbuild\RoslynTools.ReferenceAssemblies.0.1.3.nupkg</TargetFrameworkRootPath> -->
+    <TargetFrameworkRootPath>D:\git\xcopy-msbuild\binaries\RoslynTools.MSBuild.16.8.0-preview1.nupkg</TargetFrameworkRootPath>
+    <VCTargetsPath>C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Microsoft\VC\v160</VCTargetsPath>
+    <MSBuildExtensionsPath>C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild</MSBuildExtensionsPath>
+    <MSBuildExtensionsPath32>C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild</MSBuildExtensionsPath32>
+    <MSBuildExtensionsPath64>C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild</MSBuildExtensionsPath64>
+    <VCToolsVersion>14.27.29110</VCToolsVersion>
+    <VCToolsInstallDir_160>C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.27.29110\</VCToolsInstallDir_160>
+    <VCInstallDir_160>C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\</VCInstallDir_160>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(UseXcopyMSBuild)' != ''">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(XcopyMsBuildIncludeDirs)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>%(Link.AdditionalLibraryDirectories);$(XcopyMsBuildLibDirs)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
 
   <ItemDefinitionGroup>
     <ClCompile>
@@ -66,7 +92,6 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PreprocessorDefinitions>VERSION_NUMBER="$(VersionNumber)";VERSION_STRING="$(VersionString)";NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
     </ClCompile>
     <ClCompile Condition="'$(Configuration)'=='Debug'">
