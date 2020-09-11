@@ -159,6 +159,7 @@ namespace cswinrt
     }
 
     void write_projection_type(writer& w, type_semantics const& semantics);
+    void write_projection_type_for_name_type(writer& w, type_semantics const& semantics, typedef_name_type const& nameType);
 
     void write_generic_type_name_base(writer& w, uint32_t index)
     {
@@ -251,23 +252,33 @@ namespace cswinrt
         return w.write_temp(format, bind<write_type_name>(type, nameType, false));
     }
 
-    void write_projection_type(writer& w, type_semantics const& semantics)
+    void write_projection_type_for_name_type(writer& w, type_semantics const& semantics, typedef_name_type const& nameType)
     {
         call(semantics,
             [&](object_type) { w.write("object"); },
             [&](guid_type) { w.write("Guid"); },
             [&](type_type) { w.write("Type"); },
-            [&](type_definition const& type) { write_typedef_name(w, type, typedef_name_type::CCW); },
+            [&](type_definition const& type) { write_typedef_name(w, type, nameType); },
             [&](generic_type_index const& var) { write_generic_type_name(w, var.index); },
             [&](generic_type_instance const& type)
             {
                 auto guard{ w.push_generic_args(type) };
                 w.write("%<%>",
-                    bind<write_projection_type>(type.generic_type),
-                    bind_list<write_projection_type>(", ", type.generic_args));
+                    bind<write_projection_type_for_name_type>(type.generic_type, nameType),
+                    bind_list<write_projection_type_for_name_type>(", ", type.generic_args, nameType));
             },
             [&](generic_type_param const& param) { w.write(param.Name()); },
             [&](fundamental_type const& type) { write_fundamental_type(w, type); });
+    }
+
+    void write_projection_type(writer& w, type_semantics const& semantics)
+    {
+        write_projection_type_for_name_type(w, semantics, typedef_name_type::Projected);
+    }
+
+    void write_projection_ccw_type(writer& w, type_semantics const& semantics)
+    {
+        write_projection_type_for_name_type(w, semantics, typedef_name_type::CCW);
     }
 
     bool is_keyword(std::string_view str)
@@ -1170,7 +1181,7 @@ MarshalInspectable.DisposeAbi(ptr);
         }
     }
 
-    void write_static_method(writer& w, MethodDef const& method, std::string_view method_target)
+    void write_static_method(writer& w, MethodDef const& method, std::string_view method_target, bool factory_class = false)
     {
         if (method.SpecialName())
         {
@@ -1180,7 +1191,7 @@ MarshalInspectable.DisposeAbi(ptr);
         auto return_type = w.write_temp("%", [&](writer& w) {
             write_projection_return_type(w, signature);
         });
-        write_method(w, signature, method.Name(), return_type, method_target, "public "sv, "static "sv);
+        write_method(w, signature, method.Name(), return_type, method_target, "public "sv, factory_class ? ""sv : "static "sv);
     }
 
     void write_static_property(writer& w, Property const& prop, std::string_view prop_target)
@@ -1200,7 +1211,7 @@ MarshalInspectable.DisposeAbi(ptr);
     void write_static_members(writer& w, TypeDef const& static_type, TypeDef const& class_type)
     {
         auto cache_object = write_static_cache_object(w, static_type.TypeName(), class_type);
-        w.write_each<write_static_method>(static_type.MethodList(), cache_object);
+        w.write_each<write_static_method>(static_type.MethodList(), cache_object, false);
         w.write_each<write_static_property>(static_type.PropertyList(), cache_object);
         w.write_each<write_static_event>(static_type.EventList(), cache_object);
     }
@@ -3870,7 +3881,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
                 [&](ElemSig::SystemType system_type)
                 {
                     auto arg_type = type.get_cache().find_required(system_type.name);
-                    w.write("typeof(%)", bind<write_projection_type>(arg_type));
+                    w.write("typeof(%)", bind<write_projection_ccw_type>(arg_type));
                 },
                 [&](ElemSig::EnumValue enum_value)
                 {
@@ -5150,6 +5161,64 @@ public static void DisposeAbi(% abi){ /*todo*/ }
     }
 
 
+    void write_factory_class_inheritance(writer& w, TypeDef const& type)
+    {
+        auto delimiter{ ", " };
+        auto write_delimiter = [&]()
+        {
+            w.write(delimiter);
+        };
+
+        for (auto&& [interface_name, factory] : get_attributed_types(w, type))
+        {
+            if ((factory.activatable || factory.statics) && factory.type)
+            {
+                write_delimiter();
+                w.write("%", bind<write_type_name>(factory.type, typedef_name_type::CCW, false));
+            }
+        }
+    }
+
+    void write_factory_activatable_method(writer& w, MethodDef const& method, std::string_view activatable_type)
+    {
+        method_signature signature{ method };
+        w.write(R"(
+public % %(%) => new %(%);
+)",
+activatable_type,
+method.Name(),
+bind_list<write_projection_parameter>(", ", signature.params()),
+activatable_type,
+bind_list<write_parameter_name_with_modifier>(", ", signature.params())
+);
+    }
+
+    void write_factory_class_members(writer& w, TypeDef const& type)
+    {
+        auto delimiter{ ", " };
+        auto write_delimiter = [&]()
+        {
+            w.write(delimiter);
+        };
+
+        auto projected_type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
+        for (auto&& [interface_name, factory] : get_attributed_types(w, type))
+        {
+            if (factory.type)
+            {
+                if (factory.activatable)
+                {
+                    w.write_each<write_factory_activatable_method>(factory.type.MethodList(), projected_type_name);
+                }
+                else if (factory.statics)
+                {
+                    w.write_each<write_static_method>(factory.type.MethodList(), projected_type_name, true);
+                }
+            }
+        }
+    }
+
+
     void write_factory_class(writer& w, TypeDef const& type)
     {
         auto factory_type_name = write_type_name_temp(w, type, "%ServerActivationFactory", typedef_name_type::CCW);
@@ -5177,10 +5246,10 @@ return ObjectReference<IInspectable.Vftbl>.Attach(ref instance).As<I>();
 )",
 factory_type_name,
 type_name,
-"", // TODO: factory / statics
+bind<write_factory_class_inheritance>(type),
 factory_type_name,
 factory_type_name,
-"" // TODO: factory members / static members
+bind<write_factory_class_members>(type)
 );
     }
 
