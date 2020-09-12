@@ -11,6 +11,7 @@
     -->
     <XamlCodeGenerationControlFlags>DoNotGenerateOtherProviders</XamlCodeGenerationControlFlags>
     <Platforms>x86;x64</Platforms>
+    <MsAppxPackageTargets>$(MSBuildThisFileDirectory)Net5_WinUI_Fixup.Targets</MsAppxPackageTargets>
   </PropertyGroup>
 
   <ItemGroup>
