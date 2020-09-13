@@ -16,11 +16,8 @@
     <ProjectReference Include="..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\Projections\WinUI\WinUI.csproj" />
     <ProjectReference Include="..\Projections\Test\Test.csproj" />
-    <ProjectReference Include="..\TestComponentCSharp\TestComponentCSharp.vcxproj" />
-    <ProjectReference Include="..\TestWinRT\TestComponent\TestComponent.vcxproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
-    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.5" />
-    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.console" Version="2.4.1">
       <PrivateAssets>all</PrivateAssets>
@@ -31,6 +28,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="XunitXml.TestLogger" Version="2.1.26" />
+    <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
@@ -41,12 +39,6 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp5.0'">
     <Compile Remove="**/*.netcoreapp2.0.cs" />
     <None Include="**/*.netcoreapp2.0.cs" />
-  </ItemGroup>
-
-  <!-- With .NET 5 Preview 8, transitive reference outputs are no longer being picked up -->
-  <ItemGroup>
-    <ProjectReference Include="..\TestComponentCSharp\TestComponentCSharp.vcxproj" />
-    <ProjectReference Include="..\TestWinRT\TestComponent\TestComponent.vcxproj" />
   </ItemGroup>
 
   <Target Name="FilterProjection" BeforeTargets="CoreCompile">
@@ -66,7 +58,19 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="IgnoreWinMDReferences" BeforeTargets="_BlockWinMDsOnUnsupportedTFMs"
+  <!--Remove TestComponent.winmd;TestComponentCSharp.winmd 
+      to avoid NETSDK1130 target error-->
+  <Target Name="RemoveWinMDReferences" BeforeTargets="ResolveReferences" AfterTargets="AfterResolveReferences">
+    <ItemGroup>
+      <WinmdReferencePath Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
+    </ItemGroup>
+    <Message Importance="high" Condition="'@(WinmdReferencePath)' != ''" Text="WinmdReferencePath: @(WinmdReferencePath)" />
+    <ItemGroup>
+      <ReferencePath Remove="@(WinmdReferencePath)"/>
+    </ItemGroup>
+  </Target>
+
+  <!-- <Target Name="IgnoreWinMDReferences" BeforeTargets="_BlockWinMDsOnUnsupportedTFMs"
         Returns="@(ReferencePath)"
         Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '5.0'))">
     <ItemGroup>
@@ -81,6 +85,6 @@
     <ItemGroup>
       <ReferencePath Include="@(IgnoredReferencePaths)" />
     </ItemGroup>
-  </Target>
+  </Target> -->
 
 </Project>

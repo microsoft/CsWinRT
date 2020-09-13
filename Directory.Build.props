@@ -40,16 +40,6 @@
     <IntDir>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', '$(MSBuildProjectName)', 'obj'))</IntDir>
   </PropertyGroup>
 
-  <!-- <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
-    <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
-  </PropertyGroup> -->
-
-<!-- Avoid _CheckForInvalidTargetPlatformVersion error due to TPV mismatch (4-part vs 3-part) -->
-<!-- <ItemGroup>
-<SupportedTargetPlatform Include="$(TargetPlatformVersion)"></SupportedTargetPlatform>
-</ItemGroup> -->
-
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
     <LinkIncremental>true</LinkIncremental>

@@ -3,8 +3,6 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
-    <!-- <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion> -->
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <ApplicationManifest>WinUIDesktopSample.exe.manifest</ApplicationManifest>
     <!--
@@ -16,11 +14,6 @@
     <MsAppxPackageTargets>$(MSBuildThisFileDirectory)Net5_WinUI_Fixup.Targets</MsAppxPackageTargets>
   </PropertyGroup>
 
-    <PropertyGroup>
-      <TargetPlatformSupported>true</TargetPlatformSupported>
-      <TargetPlatformVersionSupported>true</TargetPlatformVersionSupported>
-    </PropertyGroup>
-
   <ItemGroup>
     <Manifest Include="WinUIDesktopSample.exe.manifest">
       <DeploymentContent>true</DeploymentContent>
@@ -28,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.5" />
+    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
     <ProjectReference Include="..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\Projections\WinUI\WinUI.csproj" />
     <!--

@@ -1,8 +1,7 @@
 @echo off
 if /i "%cswinrt_echo%" == "on" @echo on
 
-rem set CsWinRTNet5SdkVersion=5.0.100-preview.7.20366.15
-set CsWinRTNet5SdkVersion=5.0.100-preview.8.20417.9
+set CsWinRTNet5SdkVersion=5.0.100-rc.1.20454.5
 
 :dotnet
 rem Install required .NET 5 SDK version and add to environment
@@ -81,37 +80,32 @@ if not exist %prerelease_targets% (
 )
 
 rem Xcopy MSBuild support (temporary, until VS 16.8 is deployed to Azure Devops agents in 12/2020) 
-if %cswinrt_platform%==x86 (
-  set msbuild_path="%cd%\.msbuild\tools\MSBuild\Current\Bin\\"
+if not "%use_xcopy_msbuild%"=="" (
+  if %cswinrt_platform%==x86 (
+    set msbuild_path="%cd%\.msbuild\tools\MSBuild\Current\Bin\\"
+  ) else (
+    set msbuild_path="%cd%\.msbuild\tools\MSBuild\Current\Bin\amd64\\"
+  )
+  set nuget_params=-MSBuildPath %msbuild_path%
+  set msbuild_dir=C:\Program Files ^(x86^)\Microsoft Visual Studio\2019\Enterprise\MSBuild
+  rem TargetFrameworkRootPath="D:\git\xcopy-msbuild\binaries\RoslynTools.MSBuild.16.8.0-preview1.nupkg";^
+  set msbuild_params=/p:UseXcopyMSBuild=true;VCTargetsPath="%msbuild_dir%\Microsoft\VC\v160\\";MSBuildExtensionsPath="%msbuild_dir%\\";MSBuildExtensionsPath32="%msbuild_dir%";MSBuildExtensionsPath64="%msbuild_dir%" 
+  set dotnet_dir=C:\Program Files\dotnet\sdk\%CsWinRTNet5SdkVersion%
+  set dotnet_params=/p:MSBuildExtensionsPath="%dotnet_dir%\\";MSBuildExtensionsPath32="%dotnet_dir%";MSBuildExtensionsPath64="%dotnet_dir%"
 ) else (
-  set msbuild_path="%cd%\.msbuild\tools\MSBuild\Current\Bin\amd64\\"
-)
-if exist %msbuild_path% (
-set nuget_params=-MSBuildPath %msbuild_path%
-rem TargetFrameworkRootPath="D:\git\cswinrt2\.msbuild\RoslynTools.ReferenceAssemblies.0.1.3.nupkg";^
-set msbuild_params=/p:UseXcopyMSBuild=true;^
-TargetFrameworkRootPath="D:\git\xcopy-msbuild\binaries\RoslynTools.MSBuild.16.8.0-preview1.nupkg";^
-VCTargetsPath="C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Microsoft\VC\v160\\";^
-MSBuildExtensionsPath="C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\\";^
-MSBuildExtensionsPath32="C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild";^
-MSBuildExtensionsPath64="C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild" 
-set dotnet_params=/p:^
-MSBuildExtensionsPath="C:\Program Files\dotnet\sdk\%CsWinRTNet5SdkVersion%\\";^
-MSBuildExtensionsPath32="C:\Program Files\dotnet\sdk\%CsWinRTNet5SdkVersion%";^
-MSBuildExtensionsPath64="C:\Program Files\dotnet\sdk\%CsWinRTNet5SdkVersion%"
-) else (
-set msbuild_path=
-set nuget_params=
-set msbuild_params=
-set dotnet_params=
+  set msbuild_path=
+  set nuget_params=
+  set msbuild_params=
+  set dotnet_params=
 )
 
 if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
 if not exist .nuget md .nuget
-if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.6.0/nuget.exe -OutFile .nuget\nuget.exe"
+if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.8.0-preview.2/nuget.exe -OutFile .nuget\nuget.exe"
 .nuget\nuget update -self
+rem Note: packages.config-based (vcxproj) projects do not support msbuild /t:restore
 call :exec .nuget\nuget.exe restore %nuget_params%
 
 :build

@@ -23,7 +23,7 @@
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
     <PackageReference Include="Microsoft.WinUI" Version="[$(MicrosoftWinUIVersion)]" GeneratePathProperty="true">
-      <ExcludeAssets>compile; build; buildtransitive</ExcludeAssets>
+      <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
 
