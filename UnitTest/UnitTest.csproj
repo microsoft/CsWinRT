@@ -31,6 +31,12 @@
     <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 
+  <!-- With xcopy msbuild, transitive reference outputs are not being picked up -->
+  <ItemGroup Condition="'$(UseXcopyMSBuild)' != ''">
+    <ProjectReference Include="..\TestComponentCSharp\TestComponentCSharp.vcxproj" />
+    <ProjectReference Include="..\TestWinRT\TestComponent\TestComponent.vcxproj" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
     <Compile Remove="**/*.net5.cs" />
     <None Include="**/*.net5.cs" />
@@ -60,7 +66,7 @@
 
   <!--Remove TestComponent.winmd;TestComponentCSharp.winmd 
       to avoid NETSDK1130 target error-->
-  <Target Name="RemoveWinMDReferences" BeforeTargets="ResolveReferences" AfterTargets="AfterResolveReferences">
+  <!-- <Target Name="RemoveWinMDReferences" BeforeTargets="ResolveReferences" AfterTargets="AfterResolveReferences">
     <ItemGroup>
       <WinmdReferencePath Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
     </ItemGroup>
@@ -68,9 +74,9 @@
     <ItemGroup>
       <ReferencePath Remove="@(WinmdReferencePath)"/>
     </ItemGroup>
-  </Target>
+  </Target> -->
 
-  <!-- <Target Name="IgnoreWinMDReferences" BeforeTargets="_BlockWinMDsOnUnsupportedTFMs"
+  <Target Name="IgnoreWinMDReferences" BeforeTargets="_BlockWinMDsOnUnsupportedTFMs"
         Returns="@(ReferencePath)"
         Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '5.0'))">
     <ItemGroup>
@@ -85,6 +91,6 @@
     <ItemGroup>
       <ReferencePath Include="@(IgnoredReferencePaths)" />
     </ItemGroup>
-  </Target> -->
+  </Target>
 
 </Project>

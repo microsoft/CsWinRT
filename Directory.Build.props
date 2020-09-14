@@ -52,7 +52,6 @@
 
   <!-- Xcopy MSBuild support (temporary, until VS 16.8 is deployed to Azure Devops agents in 12/2020) -->
   <PropertyGroup Condition="'$(UseXcopyMSBuild)' != ''">
-    <!-- <TargetFrameworkRootPath>D:\git\cswinrt2\.msbuild\RoslynTools.ReferenceAssemblies.0.1.3.nupkg</TargetFrameworkRootPath> -->
     <TargetFrameworkRootPath>D:\git\xcopy-msbuild\binaries\RoslynTools.MSBuild.16.8.0-preview1.nupkg</TargetFrameworkRootPath>
     <VCTargetsPath>C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Microsoft\VC\v160</VCTargetsPath>
     <MSBuildExtensionsPath>C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild</MSBuildExtensionsPath>

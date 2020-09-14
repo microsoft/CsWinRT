@@ -80,21 +80,26 @@ if not exist %prerelease_targets% (
 )
 
 rem Xcopy MSBuild support (temporary, until VS 16.8 is deployed to Azure Devops agents in 12/2020) 
-if not "%use_xcopy_msbuild%"=="" (
+msbuild -ver | findstr 16.8 >nul
+if ErrorLevel 1 (
+  echo Using xcopy msbuild 16.8 
   if %cswinrt_platform%==x86 (
     set msbuild_path="%cd%\.msbuild\tools\MSBuild\Current\Bin\\"
   ) else (
     set msbuild_path="%cd%\.msbuild\tools\MSBuild\Current\Bin\amd64\\"
   )
-  set nuget_params=-MSBuildPath %msbuild_path%
+  if not exist !msbuild_path! (
+    powershell -NoProfile -ExecutionPolicy unrestricted -File .\get_xcopy_msbuild.ps1
+  )
+  set nuget_params=-MSBuildPath !msbuild_path!
   set msbuild_dir=C:\Program Files ^(x86^)\Microsoft Visual Studio\2019\Enterprise\MSBuild
   rem TargetFrameworkRootPath="D:\git\xcopy-msbuild\binaries\RoslynTools.MSBuild.16.8.0-preview1.nupkg";^
-  set msbuild_params=/p:UseXcopyMSBuild=true;VCTargetsPath="%msbuild_dir%\Microsoft\VC\v160\\";MSBuildExtensionsPath="%msbuild_dir%\\";MSBuildExtensionsPath32="%msbuild_dir%";MSBuildExtensionsPath64="%msbuild_dir%" 
+  set msbuild_params=/p:UseXcopyMSBuild=true;VCTargetsPath="!msbuild_dir!\Microsoft\VC\v160\\";MSBuildExtensionsPath="!msbuild_dir!\\";MSBuildExtensionsPath32="!msbuild_dir!";MSBuildExtensionsPath64="!msbuild_dir!" 
   set dotnet_dir=C:\Program Files\dotnet\sdk\%CsWinRTNet5SdkVersion%
-  set dotnet_params=/p:MSBuildExtensionsPath="%dotnet_dir%\\";MSBuildExtensionsPath32="%dotnet_dir%";MSBuildExtensionsPath64="%dotnet_dir%"
+  set dotnet_params=/p:MSBuildExtensionsPath="!dotnet_dir!\\";MSBuildExtensionsPath32="!dotnet_dir!";MSBuildExtensionsPath64="!dotnet_dir!"
 ) else (
   set msbuild_path=
-  set nuget_params=
+  set nuget_params= 
   set msbuild_params=
   set dotnet_params=
 )
@@ -102,6 +107,12 @@ if not "%use_xcopy_msbuild%"=="" (
 if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
+rem When a preview nuget is required, update -self doesn't work, so manually update 
+.nuget\nuget.exe | findstr 5.8.0 >nul
+if ErrorLevel 1 (
+  echo Updating to nuget 5.8.0
+  rd /s/q .nuget >nul 2>&1
+)
 if not exist .nuget md .nuget
 if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.8.0-preview.2/nuget.exe -OutFile .nuget\nuget.exe"
 .nuget\nuget update -self
