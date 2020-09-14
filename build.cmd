@@ -1,4 +1,5 @@
 @echo off
+if /i "%cswinrt_echo%" == "on" @echo on
 
 set CsWinRTNet5SdkVersion=5.0.100-rc.1.20454.5
 
@@ -78,19 +79,44 @@ if not exist %prerelease_targets% (
   echo ^</Project^> >> %prerelease_targets%
 )
 
+rem VS 16.8 BuildTools support (temporary, until VS 16.8 is deployed to Azure Devops agents in 12/2020) 
+msbuild -ver | findstr 16.8 >nul
+if ErrorLevel 1 (
+  echo Using VS Build Tools 16.8 
+  if %cswinrt_platform%==x86 (
+    set msbuild_path="%cd%\.buildtools\MSBuild\Current\Bin\\"
+  ) else (
+    set msbuild_path="%cd%\.buildtools\MSBuild\Current\Bin\amd64\\"
+  )
+  if not exist !msbuild_path! (
+    if not exist .buildtools md .buildtools 
+    powershell -NoProfile -ExecutionPolicy unrestricted -File .\get_buildtools.ps1
+  )
+  set nuget_params=-MSBuildPath !msbuild_path!
+) else (
+  set msbuild_path=
+  set nuget_params= 
+)
+
 if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
+rem When a preview nuget is required, update -self doesn't work, so manually update 
+.nuget\nuget.exe | findstr 5.8.0 >nul
+if ErrorLevel 1 (
+  echo Updating to nuget 5.8.0
+  rd /s/q .nuget >nul 2>&1
+)
 if not exist .nuget md .nuget
 if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.8.0-preview.2/nuget.exe -OutFile .nuget\nuget.exe"
 .nuget\nuget update -self
 rem Note: packages.config-based (vcxproj) projects do not support msbuild /t:restore
-.nuget\nuget restore
+call :exec .nuget\nuget.exe restore %nuget_params%
 
 :build
 call get_testwinrt.cmd
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-msbuild cswinrt.sln %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;GenerateTestProjection=true /bl
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;GenerateTestProjection=true cswinrt.sln 
 
 :test
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
@@ -108,8 +134,7 @@ rem WinUI NuGet package's Microsoft.WinUI.AppX.targets attempts to import a file
 rem executing "dotnet test --no-build ...", which evidently still needs to parse and load the entire project.
 rem Work around by using a dummy targets file and assigning it to the MsAppxPackageTargets property.
 echo ^<Project/^> > %temp%\EmptyMsAppxPackage.Targets
-
-%dotnet_exe% test --no-build --logger xunit;LogFilePath=%~dp0unittest_%cswinrt_version_string%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets
+call :exec %dotnet_exe% test --no-build --logger xunit;LogFilePath=%~dp0unittest_%cswinrt_version_string%.xml unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets 
 if ErrorLevel 1 (
   echo.
   echo ERROR: Unit test failed, skipping NuGet pack
@@ -117,7 +142,8 @@ if ErrorLevel 1 (
 )
 
 rem Run WinRT.Host tests
-%~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\HostTest\bin\HostTest.exe --gtest_output=xml:%~dp0hosttest_%cswinrt_version_string%.xml 
+echo Running cswinrt host tests for %cswinrt_platform% %cswinrt_configuration%
+call :exec %~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\HostTest\bin\HostTest.exe --gtest_output=xml:%~dp0hosttest_%cswinrt_version_string%.xml 
 if ErrorLevel 1 (
   echo.
   echo ERROR: Host test failed, skipping NuGet pack
@@ -129,4 +155,17 @@ set cswinrt_bin_dir=%~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\cswin
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
 set netstandard2_runtime=%~dp0WinRT.Runtime\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Runtime.dll
 set net5_runtime=%~dp0WinRT.Runtime\bin\%cswinrt_configuration%\net5.0\WinRT.Runtime.dll
-.nuget\nuget pack nuget/Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;netstandard2_runtime=%netstandard2_runtime%;net5_runtime=%net5_runtime%;cswinrt_nuget_version=%cswinrt_version_string% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
+set source_generator=%~dp0Authoring\WinRT.SourceGenerator\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
+echo Creating nuget package
+call :exec .nuget\nuget pack nuget/Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;netstandard2_runtime=%netstandard2_runtime%;net5_runtime=%net5_runtime%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
+goto :eof
+
+:exec
+if /i "%cswinrt_echo%" == "only" (
+echo Command Line:
+echo %*
+echo.
+) else (
+%*
+)
+goto :eof

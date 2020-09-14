@@ -29,7 +29,7 @@
       since we are building our own in the WinUIProjection project
     -->
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
-      <ExcludeAssets>compile; runtime; build</ExcludeAssets>
+      <ExcludeAssets>compile; runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
 
