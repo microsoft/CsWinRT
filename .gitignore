@@ -5,7 +5,7 @@
 *_p.c
 *.c
 *.winmd
-test*.xml
+*test*.xml
 build
 obj
 packages
