@@ -102,10 +102,12 @@ if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
 rem When a preview nuget is required, update -self doesn't work, so manually update 
-.nuget\nuget.exe | findstr 5.8.0 >nul
-if ErrorLevel 1 (
-  echo Updating to nuget 5.8.0
-  rd /s/q .nuget >nul 2>&1
+if exist .nuget\nuget.exe (
+  .nuget\nuget.exe | findstr 5.8.0 >nul
+  if ErrorLevel 1 (
+    echo Updating to nuget 5.8.0
+    rd /s/q .nuget >nul 2>&1
+  )
 )
 if not exist .nuget md .nuget
 if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.8.0-preview.2/nuget.exe -OutFile .nuget\nuget.exe"
