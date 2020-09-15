@@ -119,6 +119,12 @@ call :exec .nuget\nuget.exe restore %nuget_params%
 call get_testwinrt.cmd
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
 call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;GenerateTestProjection=true cswinrt.sln 
+if ErrorLevel 1 (
+  echo.
+  echo ERROR: Build failed
+  exit /b !ErrorLevel!
+)
+if "%cswinrt_build_only%"=="true" goto :eof
 
 :test
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
