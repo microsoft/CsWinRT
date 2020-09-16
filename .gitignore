@@ -5,7 +5,7 @@
 *_p.c
 *.c
 *.winmd
-test*.xml
+*test*.xml
 build
 obj
 packages
@@ -16,3 +16,8 @@ TestWinRT
 _build/
 global.json
 .nuget
+.nupkg
+nuget/Microsoft.Windows.CsWinRT.Prerelease.targets
+*.binlog
+vs_buildtools.exe
+.buildtools

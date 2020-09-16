@@ -31,6 +31,7 @@ namespace cswinrt
         { "output", 0, 1, "<path>", "Location of generated projection" },
         { "include", 0, option::no_max, "<prefix>", "One or more prefixes to include in projection" },
         { "exclude", 0, option::no_max, "<prefix>", "One or more prefixes to exclude from projection" },
+        { "target", 0, 1, "<net5.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with newest TFM (net5.0)." },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
@@ -40,7 +41,7 @@ namespace cswinrt
     {
         static auto printColumns = [](writer& w, std::string_view const& col1, std::string_view const& col2)
         {
-            w.write_printf("  %-20s%s\n", col1.data(), col2.data());
+            w.write_printf("  %-35s%s\n", col1.data(), col2.data());
         };
 
         static auto printOption = [](writer& w, option const& opt)
@@ -59,15 +60,15 @@ Copyright (c) Microsoft Corporation. All rights reserved.
   cswinrt.exe [options...]
 
 Options:
-
-%  ^@<path>             Response file containing command line options
+     
+%  ^@<path>                            Response file containing command line options
 
 Where <spec> is one or more of:
 
-  path                Path to winmd file or recursively scanned folder
-  local               Local ^%WinDir^%\System32\WinMetadata folder
-  sdk[+]              Current version of Windows SDK [with extensions]
-  10.0.12345.0[+]     Specific version of Windows SDK [with extensions]
+  path                               Path to winmd file or recursively scanned folder
+  local                              Local ^%WinDir^%\System32\WinMetadata folder
+  sdk[+]                             Current version of Windows SDK [with extensions]
+  10.0.12345.0[+]                    Specific version of Windows SDK [with extensions]
 )";
         w.write(format, VERSION_STRING, bind_each(printOption, options));
     }
@@ -82,6 +83,12 @@ Where <spec> is one or more of:
         }
 
         settings.verbose = args.exists("verbose");
+        auto target = args.value("target");
+        if (!target.empty() && target != "netstandard2.0" && target != "net5.0")
+        {
+            throw usage_exception();
+        }
+        settings.netstandard_compat = target == "netstandard2.0";
         settings.input = args.files("input", database::is_database);
 
         for (auto && include : args.values("include"))

@@ -17,12 +17,11 @@ namespace WinRT.Interop
 {
     // IActivationFactory
     [Guid("00000035-0000-0000-C000-000000000046")]
-    internal struct IActivationFactoryVftbl
+    internal unsafe struct IActivationFactoryVftbl
     {
-        public unsafe delegate int _ActivateInstance(IntPtr pThis, out IntPtr instance);
-
         public IInspectable.Vftbl IInspectableVftbl;
-        public _ActivateInstance ActivateInstance;
+        private void* _ActivateInstance;
+        public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> ActivateInstance => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_ActivateInstance;
     }
 
     // IDelegate

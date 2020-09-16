@@ -14,6 +14,7 @@ using System.Linq.Expressions;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
 #pragma warning disable 0649 // Field 'xxx' is never assigned to, and will always have its default value
+#pragma warning disable CA1060
 
 namespace WinRT
 {
@@ -37,6 +38,9 @@ namespace WinRT
     internal class Platform
     {
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
+        internal static extern unsafe int CoCreateInstance(ref Guid clsid, IntPtr outer, uint clsContext, ref Guid iid, IntPtr* instance);
+
+        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         internal static extern int CoDecrementMTAUsage(IntPtr cookie);
 
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
@@ -46,7 +50,7 @@ namespace WinRT
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool FreeLibrary(IntPtr moduleHandle);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true, BestFitMapping = false)]
         internal static extern IntPtr GetProcAddress(IntPtr moduleHandle, [MarshalAs(UnmanagedType.LPStr)] string functionName);
 
         internal static T GetProcAddress<T>(IntPtr moduleHandle)
@@ -85,6 +89,9 @@ namespace WinRT
 
         [DllImport("api-ms-win-core-winrt-string-l1-1-0.dll", CallingConvention = CallingConvention.StdCall)]
         internal static extern unsafe char* WindowsGetStringRawBuffer(IntPtr hstring, uint* length);
+
+        [DllImport("api-ms-win-core-com-l1-1-1.dll", CallingConvention = CallingConvention.StdCall)]
+        internal static extern unsafe int RoGetAgileReference(uint options, ref Guid iid, IntPtr unknown, IntPtr* agileReference);
     }
 
     internal struct VftblPtr
@@ -132,6 +139,17 @@ namespace WinRT
             // Explicitly look for module in the same directory as this one, and
             // use altered search path to ensure any dependencies in the same directory are found.
             _moduleHandle = Platform.LoadLibraryExW(System.IO.Path.Combine(_currentModuleDirectory, fileName), IntPtr.Zero, /* LOAD_WITH_ALTERED_SEARCH_PATH */ 8);
+#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+            if (_moduleHandle == IntPtr.Zero)
+            {
+                try 
+                {	        
+                    // Allow runtime to find module in RID-specific relative subfolder
+                    _moduleHandle = NativeLibrary.Load(fileName, Assembly.GetExecutingAssembly(), null);
+                }
+                catch (Exception) { }
+            }
+#endif
             if (_moduleHandle == IntPtr.Zero)
             {
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
@@ -202,16 +220,34 @@ namespace WinRT
             _mtaCookie = mtaCookie;
         }
 
-        public static unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
+        public static unsafe (IntPtr instancePtr, int hr) GetActivationFactory(IntPtr hstrRuntimeClassId)
         {
             var module = Instance; // Ensure COM is initialized
             Guid iid = typeof(IActivationFactoryVftbl).GUID;
             IntPtr instancePtr;
-            var hstrRuntimeClassId = MarshalString.CreateMarshaler(runtimeClassId);
-            int hr = Platform.RoGetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), ref iid, &instancePtr);
-            return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
+            int hr = Platform.RoGetActivationFactory(hstrRuntimeClassId, ref iid, &instancePtr);
+            return (hr == 0 ? instancePtr : IntPtr.Zero, hr);
         }
 
+        public static unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
+        {
+            // TODO: "using var" with ref struct and remove the try/catch below
+            var m = MarshalString.CreateMarshaler(runtimeClassId);
+            Func<bool> dispose = () => { m.Dispose(); return false; };
+            try
+            {
+                IntPtr instancePtr;
+                int hr;
+                (instancePtr, hr) = GetActivationFactory(MarshalString.GetAbi(m));
+                return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
+            }
+            catch (Exception) when (dispose())
+            {
+                // Will never execute
+                return default;
+            }
+        }
+        
         ~WinrtModule()
         {
             Marshal.ThrowExceptionForHR(Platform.CoDecrementMTAUsage(_mtaCookie));
@@ -221,6 +257,10 @@ namespace WinRT
     internal class BaseActivationFactory
     {
         private ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
+
+        public ObjectReference<IActivationFactoryVftbl> Value { get => _IActivationFactory; }
+
+        public I AsInterface<I>() => _IActivationFactory.AsInterface<I>();
 
         public BaseActivationFactory(string typeNamespace, string typeFullName)
         {
@@ -252,7 +292,8 @@ namespace WinRT
 
         public unsafe ObjectReference<I> _ActivateInstance<I>()
         {
-            Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, out IntPtr instancePtr));
+            IntPtr instancePtr;
+            Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, &instancePtr));
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface(instancePtr).As<I>();
@@ -271,16 +312,18 @@ namespace WinRT
         public ActivationFactory() : base(typeof(T).Namespace, typeof(T).FullName) { }
 
         static WeakLazy<ActivationFactory<T>> _factory = new WeakLazy<ActivationFactory<T>>();
+        public new static I AsInterface<I>() => _factory.Value.Value.AsInterface<I>();
         public static ObjectReference<I> As<I>() => _factory.Value._As<I>();
         public static ObjectReference<I> ActivateInstance<I>() => _factory.Value._ActivateInstance<I>();
     }
 
-    internal class EventSource<TDelegate>
+#pragma warning disable CA2002
+    internal unsafe class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
     {
         readonly IObjectReference _obj;
-        readonly _add_EventHandler _addHandler;
-        readonly _remove_EventHandler _removeHandler;
+        readonly delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
+        readonly delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
 
         private EventRegistrationToken _token;
         private TDelegate _event;
@@ -368,7 +411,9 @@ namespace WinRT
             }
         }
 
-        internal EventSource(IObjectReference obj, _add_EventHandler addHandler, _remove_EventHandler removeHandler)
+        internal EventSource(IObjectReference obj,
+            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler)
         {
             _obj = obj;
             _addHandler = addHandler;
@@ -381,6 +426,7 @@ namespace WinRT
             _token.Value = 0;
         }
     }
+#pragma warning restore CA2002
 
     // An event registration token table stores mappings from delegates to event tokens, in order to support
     // sourcing WinRT style events from managed code.

@@ -8,7 +8,7 @@ using WinRT.Interop;
 namespace ABI.System.ComponentModel
 {
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    [Guid("50F19C16-0A22-4D8E-A089-1EA9951657D2")]
+    [Guid("E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D")]
     public static class PropertyChangedEventHandler
     {
         private unsafe delegate int Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr e);
@@ -46,16 +46,27 @@ namespace ABI.System.ComponentModel
         private class NativeDelegateWrapper
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
+            private readonly AgileReference _agileReference = default;
 
             public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
             {
                 _nativeDelegate = nativeDelegate;
+                if (_nativeDelegate.TryAs<ABI.WinRT.Interop.IAgileObject.Vftbl>(out var objRef) < 0)
+                {
+                    _agileReference = new AgileReference(_nativeDelegate);
+                }
+                else
+                {
+                    objRef.Dispose();
+                }
             }
 
             public void Invoke(object sender, global::System.ComponentModel.PropertyChangedEventArgs e)
             {
-                IntPtr ThisPtr = _nativeDelegate.ThisPtr;
-                var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(_nativeDelegate.Vftbl.Invoke);
+                using var agileDelegate = _agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(PropertyChangedEventHandler)));
+                var delegateToInvoke = agileDelegate ?? _nativeDelegate;
+                IntPtr ThisPtr = delegateToInvoke.ThisPtr;
+                var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(delegateToInvoke.Vftbl.Invoke);
                 IObjectReference __sender = default;
                 IObjectReference __e = default;
                 try

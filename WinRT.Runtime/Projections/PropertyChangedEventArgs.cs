@@ -8,26 +8,27 @@ using WinRT.Interop;
 
 namespace ABI.Microsoft.UI.Xaml.Data
 {
-    [Guid("4F33A9A0-5CF4-47A4-B16F-D7FAAF17457E")]
+    [Guid("63D0C952-396B-54F4-AF8C-BA8724A427BF")]
     [StructLayout(LayoutKind.Sequential)]
-    internal struct IPropertyChangedEventArgsVftbl
+    internal unsafe struct IPropertyChangedEventArgsVftbl
     {
         internal IInspectable.Vftbl IInspectableVftbl;
-        public _get_PropertyAsString get_PropertyName_0;
+        private void* _get_PropertyName_0;
+        public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_PropertyName_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_PropertyName_0;
     }
 
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
-    [Guid("6DCC9C03-E0C7-4EEE-8EA9-37E3406EEB1C")]
-    internal class WinRTPropertyChangedEventArgsRuntimeClassFactory
+    [Guid("7C0C27A8-0B41-5070-B160-FC9AE960A36C")]
+    internal unsafe class WinRTPropertyChangedEventArgsRuntimeClassFactory
     {
-        [Guid("6DCC9C03-E0C7-4EEE-8EA9-37E3406EEB1C")]
+        [Guid("7C0C27A8-0B41-5070-B160-FC9AE960A36C")]
         [StructLayout(LayoutKind.Sequential)]
         public struct Vftbl
         {
-            public unsafe delegate int _CreateInstance_0(IntPtr thisPtr, IntPtr name, IntPtr baseInterface, out IntPtr innerInterface, out IntPtr value);
             internal IInspectable.Vftbl IInspectableVftbl;
-            public _CreateInstance_0 CreateInstance_0;
+            private void* _CreateInstance_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int> CreateInstance_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int>)_CreateInstance_0;
         }
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
@@ -53,7 +54,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
             {
                 __name = MarshalString.CreateMarshaler(name);
                 __baseInterface = MarshalInspectable.CreateMarshaler(baseInterface);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(__name), MarshalInspectable.GetAbi(__baseInterface), out __innerInterface, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(__name), MarshalInspectable.GetAbi(__baseInterface), &__innerInterface, &__retval));
                 innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
                 return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
             }
@@ -72,7 +73,7 @@ namespace ABI.System.ComponentModel
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     [StructLayout(LayoutKind.Sequential)]
-    public struct PropertyChangedEventArgs
+    public unsafe struct PropertyChangedEventArgs
     {
         private static WeakLazy<ActivationFactory> _propertyChangedArgsFactory = new WeakLazy<ActivationFactory>();
 
@@ -107,7 +108,7 @@ namespace ABI.System.ComponentModel
             IntPtr propertyName = IntPtr.Zero;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(args.Vftbl.get_PropertyName_0(args.ThisPtr, out propertyName));
+                ExceptionHelpers.ThrowExceptionForHR(args.Vftbl.get_PropertyName_0(args.ThisPtr, &propertyName));
                 return new global::System.ComponentModel.PropertyChangedEventArgs(MarshalString.FromAbi(propertyName));
             }
             finally

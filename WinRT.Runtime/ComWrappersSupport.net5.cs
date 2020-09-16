@@ -22,14 +22,14 @@ namespace WinRT
                 if (_comWrappers is null)
                 {
                     _comWrappers = new DefaultComWrappers();
-                    _comWrappers.RegisterAsGlobalInstance();
+                    ComWrappers.RegisterForTrackerSupport(_comWrappers);
                 }
                 return _comWrappers;
             }
             set
             {
                 _comWrappers = value;
-                _comWrappers.RegisterAsGlobalInstance();
+                ComWrappers.RegisterForTrackerSupport(_comWrappers);
             }
         }
 
@@ -41,6 +41,11 @@ namespace WinRT
 
         public static object CreateRcwForComObject(IntPtr ptr)
         {
+            if (ptr == IntPtr.Zero)
+            {
+                return null;
+            }
+
             var rcw = ComWrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.TrackerObject);
             // Because .NET will de-duplicate strings and WinRT doesn't,
             // our RCW factory returns a wrapper of our string instance.
@@ -73,14 +78,10 @@ namespace WinRT
         private static T FindDelegate<T>(IntPtr thisPtr)
             where T : class, System.Delegate => FindObject<T>(thisPtr);
 
-        public static IUnknownVftbl IUnknownVftbl { get; private set; }
+        public static IUnknownVftbl IUnknownVftbl => DefaultComWrappers.IUnknownVftbl;
+        public static IntPtr IUnknownVftblPtr => DefaultComWrappers.IUnknownVftblPtr;
 
         public static IntPtr AllocateVtableMemory(Type vtableType, int size) => RuntimeHelpers.AllocateTypeAssociatedMemory(vtableType, size);
-
-        static partial void PlatformSpecificInitialize()
-        {
-            IUnknownVftbl = DefaultComWrappers.IUnknownVftbl;
-        }
 
         /// <summary>
         /// Initialize the global <see cref="System.Runtime.InteropServices.ComWrappers"/> instance to use for WinRT.
@@ -101,16 +102,20 @@ namespace WinRT
     public class DefaultComWrappers : ComWrappers
     {
         private static ConditionalWeakTable<object, VtableEntriesCleanupScout> ComInterfaceEntryCleanupTable = new ConditionalWeakTable<object, VtableEntriesCleanupScout>();
-        public static IUnknownVftbl IUnknownVftbl { get; }
+        public static unsafe IUnknownVftbl IUnknownVftbl => Unsafe.AsRef<IUnknownVftbl>(IUnknownVftblPtr.ToPointer());
 
-        static DefaultComWrappers()
+        internal static IntPtr IUnknownVftblPtr { get; }
+
+        static unsafe DefaultComWrappers()
         {
             GetIUnknownImpl(out var qi, out var addRef, out var release);
-            IUnknownVftbl = new IUnknownVftbl
+
+            IUnknownVftblPtr = RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(IUnknownVftbl), sizeof(IUnknownVftbl));
+            (*(IUnknownVftbl*)IUnknownVftblPtr) = new IUnknownVftbl
             {
-                QueryInterface = Marshal.GetDelegateForFunctionPointer<IUnknownVftbl._QueryInterface>(qi),
-                AddRef = Marshal.GetDelegateForFunctionPointer<IUnknownVftbl._AddRef>(addRef),
-                Release = Marshal.GetDelegateForFunctionPointer<IUnknownVftbl._Release>(release),
+                QueryInterface = (delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int>)qi,
+                AddRef = (delegate* unmanaged[Stdcall]<IntPtr, uint>)addRef,
+                Release = (delegate* unmanaged[Stdcall]<IntPtr, uint>)release,
             };
         }
 

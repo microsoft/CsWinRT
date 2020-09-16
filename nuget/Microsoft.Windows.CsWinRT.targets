@@ -1,14 +1,22 @@
-<!--NOTE: Directory.Build.* files are temporary until C#/WinRT nuget contains msbuild support-->
+<!--
+***********************************************************************************************
+Copyright (C) Microsoft Corporation. All rights reserved.
+***********************************************************************************************
+-->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
   <PropertyGroup>
+    <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
     <ResolveAssemblyReferencesDependsOn Condition="'$(RemoveWindowsReference)'=='true'">$(ResolveAssemblyReferencesDependsOn);RemoveWindowsReference</ResolveAssemblyReferencesDependsOn>
   </PropertyGroup>
-
+  
   <!--Remove Windows.Winmd reference to prevent compile collisions-->
   <Target Name="RemoveWindowsReference" Outputs="@(Reference)">
     <ItemGroup>
       <Reference Remove="Windows"/>
     </ItemGroup>
   </Target>
+
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
 
 </Project>

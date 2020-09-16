@@ -87,10 +87,10 @@ namespace TestComponentCSharp
         //String DistinctProperty{ get; set; };
     }
 
-    static runtimeclass StaticClass
+    static runtimeclass ComImports
     {
-        static Class MakeClass();
-        static Int32 NumClasses{ get; };
+        static Object MakeObject();
+        static Int32 NumObjects{ get; };
     }
 
     [default_interface, gc_pressure(Windows.Foundation.Metadata.GCPressureAmount.High)]
@@ -306,5 +306,22 @@ namespace TestComponentCSharp
 
         // Keyword escapes
         String Catch(String params, out String lock);
+
+        // Interface projections
+        static IProperties1 NativeProperties1 { get; };
+    }
+
+    [threading(sta), marshaling_behavior(standard)]
+    runtimeclass NonAgileClass
+    {
+        NonAgileClass();
+        void Observe(Microsoft.UI.Xaml.Interop.IBindableObservableVector vector);
+    }
+
+    // IInspectable-based interop interface
+    [uuid(39E050C3-4E74-441A-8DC0-B81104DF949C)]
+    interface IUserConsentVerifierInterop
+    {
+        Windows.Foundation.IAsyncOperation<Windows.Security.Credentials.UI.UserConsentVerificationResult> RequestVerificationForWindowAsync(UInt64 appWindow, String message, GUID riid);
     }
 }

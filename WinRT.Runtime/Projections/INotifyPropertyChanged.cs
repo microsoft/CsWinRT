@@ -8,33 +8,51 @@ using WinRT.Interop;
 namespace ABI.System.ComponentModel
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    [Guid("CF75D69C-F2F4-486B-B302-BB4C09BAEBFA")]
-    public class INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
+    [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
+    public unsafe class INotifyPropertyChanged : global::System.ComponentModel.INotifyPropertyChanged
     {
-        [Guid("CF75D69C-F2F4-486B-B302-BB4C09BAEBFA")]
+        [Guid("90B17601-B065-586E-83D9-9ADC3A695284")]
         [StructLayout(LayoutKind.Sequential)]
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            public _add_EventHandler add_PropertyChanged_0;
-            public _remove_EventHandler remove_PropertyChanged_1;
+#if NETSTANDARD2_0
+            private void* _add_PropertyChanged_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_PropertyChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_PropertyChanged_0; set => _add_PropertyChanged_0=(void*)value; }
+            private void* _remove_PropertyChanged_1;
+            public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_PropertyChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_PropertyChanged_1; set => _remove_PropertyChanged_1=(void*)value; }
+#else
+            private delegate*<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> _add_PropertyChanged_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_PropertyChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_PropertyChanged_0; set => _add_PropertyChanged_0=(delegate*<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)value; }
+            private delegate*<IntPtr, global::WinRT.EventRegistrationToken, int> _remove_PropertyChanged_1;
+            public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_PropertyChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_PropertyChanged_1; set => _remove_PropertyChanged_1=(delegate*<IntPtr, global::WinRT.EventRegistrationToken, int>)value; }
+#endif
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+#if NETSTANDARD2_0
+            private static Delegate[] DelegateCache = new Delegate[2];
+#endif
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    add_PropertyChanged_0 = Do_Abi_add_PropertyChanged_0,
-                    remove_PropertyChanged_1 = Do_Abi_remove_PropertyChanged_1
+#if NETSTANDARD2_0
+                    _add_PropertyChanged_0 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new _add_EventHandler(Do_Abi_add_PropertyChanged_0)),
+                    _remove_PropertyChanged_1 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new _remove_EventHandler(Do_Abi_remove_PropertyChanged_1)),
+#else
+                    _add_PropertyChanged_0 = &Do_Abi_add_PropertyChanged_0,
+                    _remove_PropertyChanged_1 = &Do_Abi_remove_PropertyChanged_1,
+#endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 2);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, global::WinRT.EventRegistrationTokenTable<global::System.ComponentModel.PropertyChangedEventHandler>> _PropertyChanged_TokenTables;
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, global::WinRT.EventRegistrationTokenTable<global::System.ComponentModel.PropertyChangedEventHandler>> _PropertyChanged_TokenTables = new global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, global::WinRT.EventRegistrationTokenTable<global::System.ComponentModel.PropertyChangedEventHandler>>();
+
             private static unsafe int Do_Abi_add_PropertyChanged_0(IntPtr thisPtr, IntPtr handler, out global::WinRT.EventRegistrationToken token)
             {
                 token = default;

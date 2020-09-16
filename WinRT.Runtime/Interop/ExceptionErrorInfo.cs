@@ -84,47 +84,67 @@ namespace WinRT.Interop
 namespace ABI.WinRT.Interop
 {
     using global::WinRT;
+    using WinRT.Interop;
 
     [Guid("1CF2B120-547D-101B-8E65-08002B2BD119")]
-    internal class IErrorInfo : global::WinRT.Interop.IErrorInfo
+    internal unsafe class IErrorInfo : global::WinRT.Interop.IErrorInfo
     {
         [Guid("1CF2B120-547D-101B-8E65-08002B2BD119")]
         public struct Vftbl
         {
-            public delegate int _GetGuid(IntPtr thisPtr, out Guid guid);
-            public delegate int _GetBstr(IntPtr thisPtr, out IntPtr bstr);
             internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            public _GetGuid GetGuid_0;
-            public _GetBstr GetSource_1;
-            public _GetBstr GetDescription_2;
-            public _GetBstr GetHelpFile_3;
-            public _GetBstr GetHelpFileContent_4;
+            private void* _GetGuid_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, Guid*, int> GetGuid_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, Guid*, int>)_GetGuid_0; set => _GetGuid_0 = value; }
+            private void* _GetSource_1;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetSource_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetSource_1; set => _GetSource_1 = value; }
+            private void* _GetDescription_2;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetDescription_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetDescription_2; set => _GetDescription_2 = value; }
+            private void* _GetHelpFile_3;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetHelpFile_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetHelpFile_3; set => _GetHelpFile_3 = value; }
+            private void* _GetHelpFileContent_4;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetHelpFileContent_4 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetHelpFileContent_4; set => _GetHelpFileContent_4 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+
+#if NETSTANDARD2_0
+            public delegate int GetGuidDelegate(IntPtr thisPtr, Guid* guid);
+            public delegate int GetBstrDelegate(IntPtr thisPtr, IntPtr* bstr);
+            private static readonly Delegate[] DelegateCache = new Delegate[5];
+#endif
 
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-                    GetGuid_0 = Do_Abi_GetGuid_0,
-                    GetSource_1 = Do_Abi_GetSource_1,
-                    GetDescription_2 = Do_Abi_GetDescription_2,
-                    GetHelpFile_3 = Do_Abi_GetHelpFile_3,
-                    GetHelpFileContent_4 = Do_Abi_GetHelpFileContent_4
+#if NETSTANDARD2_0
+                    _GetGuid_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new GetGuidDelegate(Do_Abi_GetGuid_0)).ToPointer(),
+                    _GetSource_1 = Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new GetBstrDelegate(Do_Abi_GetSource_1)).ToPointer(),
+                    _GetDescription_2 = Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new GetBstrDelegate(Do_Abi_GetDescription_2)).ToPointer(),
+                    _GetHelpFile_3 = Marshal.GetFunctionPointerForDelegate(DelegateCache[3] = new GetBstrDelegate(Do_Abi_GetHelpFile_3)).ToPointer(),
+                    _GetHelpFileContent_4 = Marshal.GetFunctionPointerForDelegate(DelegateCache[4] = new GetBstrDelegate(Do_Abi_GetHelpFileContent_4)).ToPointer(),
+#else
+                    _GetGuid_0 = (delegate* <IntPtr, Guid*, int>)&Do_Abi_GetGuid_0,
+                    _GetSource_1 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetSource_1,
+                    _GetDescription_2 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetDescription_2,
+                    _GetHelpFile_3 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetHelpFile_3,
+                    _GetHelpFileContent_4 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetHelpFileContent_4
+#endif
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<Vftbl>());
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-            private static int Do_Abi_GetGuid_0(IntPtr thisPtr, out Guid guid)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static int Do_Abi_GetGuid_0(IntPtr thisPtr, Guid* guid)
             {
-                guid = default;
                 try
                 {
-                    guid = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetGuid();
+                    *guid = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetGuid();
                 }
                 catch (Exception ex)
                 {
@@ -134,72 +154,84 @@ namespace ABI.WinRT.Interop
                 return 0;
             }
 
-            private static int Do_Abi_GetSource_1(IntPtr thisPtr, out IntPtr source)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static int Do_Abi_GetSource_1(IntPtr thisPtr, IntPtr* source)
             {
-                source = IntPtr.Zero;
+                *source = IntPtr.Zero;
                 string _source;
                 try
                 {
                     _source = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetSource();
-                    source = Marshal.StringToBSTR(_source);
+                    *source = Marshal.StringToBSTR(_source);
                 }
                 catch (Exception ex)
                 {
-                    Marshal.FreeBSTR(source);
+                    Marshal.FreeBSTR(*source);
                     ExceptionHelpers.SetErrorInfo(ex);
                     return ExceptionHelpers.GetHRForException(ex);
                 }
                 return 0;
             }
 
-            private static int Do_Abi_GetDescription_2(IntPtr thisPtr, out IntPtr description)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static int Do_Abi_GetDescription_2(IntPtr thisPtr, IntPtr* description)
             {
-                description = IntPtr.Zero;
+                *description = IntPtr.Zero;
                 string _description;
                 try
                 {
                     _description = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetDescription();
-                    description = Marshal.StringToBSTR(_description);
+                    *description = Marshal.StringToBSTR(_description);
                 }
                 catch (Exception ex)
                 {
-                    Marshal.FreeBSTR(description);
+                    Marshal.FreeBSTR(*description);
                     ExceptionHelpers.SetErrorInfo(ex);
                     return ExceptionHelpers.GetHRForException(ex);
                 }
                 return 0;
             }
 
-            private static int Do_Abi_GetHelpFile_3(IntPtr thisPtr, out IntPtr helpFile)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static int Do_Abi_GetHelpFile_3(IntPtr thisPtr, IntPtr* helpFile)
             {
-                helpFile = IntPtr.Zero;
+                *helpFile = IntPtr.Zero;
                 string _helpFile;
                 try
                 {
                     _helpFile = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetHelpFile();
-                    helpFile = Marshal.StringToBSTR(_helpFile);
+                    *helpFile = Marshal.StringToBSTR(_helpFile);
                 }
                 catch (Exception ex)
                 {
-                    Marshal.FreeBSTR(helpFile);
+                    Marshal.FreeBSTR(*helpFile);
                     ExceptionHelpers.SetErrorInfo(ex);
                     return ExceptionHelpers.GetHRForException(ex);
                 }
                 return 0;
             }
 
-            private static int Do_Abi_GetHelpFileContent_4(IntPtr thisPtr, out IntPtr helpFileContent)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static int Do_Abi_GetHelpFileContent_4(IntPtr thisPtr, IntPtr* helpFileContent)
             {
-                helpFileContent = IntPtr.Zero;
+                *helpFileContent = IntPtr.Zero;
                 string _helpFileContent;
                 try
                 {
                     _helpFileContent = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetHelpFileContent();
-                    helpFileContent = Marshal.StringToBSTR(_helpFileContent);
+                    *helpFileContent = Marshal.StringToBSTR(_helpFileContent);
                 }
                 catch (Exception ex)
                 {
-                    Marshal.FreeBSTR(helpFileContent);
+                    Marshal.FreeBSTR(*helpFileContent);
                     ExceptionHelpers.SetErrorInfo(ex);
                     return ExceptionHelpers.GetHRForException(ex);
                 }
@@ -224,7 +256,7 @@ namespace ABI.WinRT.Interop
         public Guid GetGuid()
         {
             Guid __return_value__;
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.GetGuid_0(ThisPtr, out __return_value__));
+            Marshal.ThrowExceptionForHR(_obj.Vftbl.GetGuid_0(ThisPtr, &__return_value__));
             return __return_value__;
         }
 
@@ -233,7 +265,7 @@ namespace ABI.WinRT.Interop
             IntPtr __retval = default;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetSource_1(ThisPtr, out __retval));
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetSource_1(ThisPtr, &__retval));
                 return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
@@ -247,7 +279,7 @@ namespace ABI.WinRT.Interop
             IntPtr __retval = default;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetDescription_2(ThisPtr, out __retval));
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetDescription_2(ThisPtr, &__retval));
                 return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
@@ -261,7 +293,7 @@ namespace ABI.WinRT.Interop
             IntPtr __retval = default;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetHelpFile_3(ThisPtr, out __retval));
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetHelpFile_3(ThisPtr, &__retval));
                 return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
@@ -275,7 +307,7 @@ namespace ABI.WinRT.Interop
             IntPtr __retval = default;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetHelpFileContent_4(ThisPtr, out __retval));
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetHelpFileContent_4(ThisPtr, &__retval));
                 return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally
@@ -286,14 +318,14 @@ namespace ABI.WinRT.Interop
     }
 
     [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
-    internal class ILanguageExceptionErrorInfo : global::WinRT.Interop.ILanguageExceptionErrorInfo
+    internal unsafe class ILanguageExceptionErrorInfo : global::WinRT.Interop.ILanguageExceptionErrorInfo
     {
         [Guid("04a2dbf3-df83-116c-0946-0812abf6e07d")]
         public struct Vftbl
         {
-            public delegate int _GetLanguageException(IntPtr thisPtr, out IntPtr languageException);
             internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            public _GetLanguageException GetLanguageException_0;
+            private void* _GetLanguageException_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetLanguageException_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetLanguageException_0;
         }
 
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
@@ -316,48 +348,58 @@ namespace ABI.WinRT.Interop
 
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetLanguageException_0(ThisPtr, out __return_value__));
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetLanguageException_0(ThisPtr, &__return_value__));
                 return ObjectReference<global::WinRT.Interop.IUnknownVftbl>.Attach(ref __return_value__);
             }
             finally
             {
-                // Attach with a using to do a release.
-                // This can be simplified in the future when we have function pointers.
-                using var obj = ObjectReference<global::WinRT.Interop.IUnknownVftbl>.Attach(ref __return_value__);
+                if (__return_value__ != IntPtr.Zero)
+                {
+                    (*(global::WinRT.Interop.IUnknownVftbl**)__return_value__)->Release(__return_value__);
+                }
             }
         }
     }
 
     [Guid("DF0B3D60-548F-101B-8E65-08002B2BD119")]
-    internal class ISupportErrorInfo : global::WinRT.Interop.ISupportErrorInfo
+    internal unsafe class ISupportErrorInfo : global::WinRT.Interop.ISupportErrorInfo
     {
         [Guid("DF0B3D60-548F-101B-8E65-08002B2BD119")]
         public struct Vftbl
         {
-            public delegate int _InterfaceSupportsErrorInfo(IntPtr thisPtr, ref Guid riid);
             internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            public _InterfaceSupportsErrorInfo InterfaceSupportsErrorInfo_0;
+            private void* _InterfaceSupportsErrorInfo_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, Guid*, int> InterfaceSupportsErrorInfo_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, Guid*, int>)_InterfaceSupportsErrorInfo_0; set => _InterfaceSupportsErrorInfo_0 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
-
+#if NETSTANDARD2_0
+            public delegate int _InterfaceSupportsErrorInfo(IntPtr thisPtr, Guid* riid);
+            private static readonly _InterfaceSupportsErrorInfo DelegateCache;
+#endif
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-                    InterfaceSupportsErrorInfo_0 = Do_Abi_InterfaceSupportsErrorInfo_0
+#if NETSTANDARD2_0
+                    _InterfaceSupportsErrorInfo_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache = Do_Abi_InterfaceSupportsErrorInfo_0).ToPointer()
+#else
+                    _InterfaceSupportsErrorInfo_0 = (delegate* <IntPtr, Guid*, int>)&Do_Abi_InterfaceSupportsErrorInfo_0
+#endif
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<Vftbl>());
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
-
-            private static int Do_Abi_InterfaceSupportsErrorInfo_0(IntPtr thisPtr, ref Guid guid)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static int Do_Abi_InterfaceSupportsErrorInfo_0(IntPtr thisPtr, Guid* guid)
             {
                 try
                 {
-                    return global::WinRT.ComWrappersSupport.FindObject<global::WinRT.Interop.ISupportErrorInfo>(thisPtr).InterfaceSupportsErrorInfo(guid) ? 0 : 1;
+                    return global::WinRT.ComWrappersSupport.FindObject<global::WinRT.Interop.ISupportErrorInfo>(thisPtr).InterfaceSupportsErrorInfo(*guid) ? 0 : 1;
                 }
                 catch (Exception ex)
                 {
@@ -383,12 +425,12 @@ namespace ABI.WinRT.Interop
 
         public bool InterfaceSupportsErrorInfo(Guid riid)
         {
-            return _obj.Vftbl.InterfaceSupportsErrorInfo_0(ThisPtr, ref riid) == 0;
+            return _obj.Vftbl.InterfaceSupportsErrorInfo_0(ThisPtr, &riid) == 0;
         }
     }
 
     [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
-    internal class IRestrictedErrorInfo : global::WinRT.Interop.IRestrictedErrorInfo
+    internal unsafe class IRestrictedErrorInfo : global::WinRT.Interop.IRestrictedErrorInfo
     {
         [Guid("82BA7092-4C88-427D-A7BC-16DD93FEB67E")]
         public struct Vftbl
@@ -397,8 +439,10 @@ namespace ABI.WinRT.Interop
             public delegate int _GetReference(IntPtr thisPtr, out IntPtr reference);
 
             internal global::WinRT.Interop.IUnknownVftbl unknownVftbl;
-            public _GetErrorDetails GetErrorDetails_0;
-            public _GetReference GetReference_1;
+            private void* _GetErrorDetails_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int> GetErrorDetails_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int*, IntPtr*, IntPtr*, int>)_GetErrorDetails_0;
+            private void* _GetReference_1;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> GetReference_1 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_GetReference_1;
         }
 
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
@@ -426,7 +470,10 @@ namespace ABI.WinRT.Interop
             IntPtr _capabilitySid = IntPtr.Zero;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetErrorDetails_0(ThisPtr, out _description, out error, out _restrictedDescription, out _capabilitySid));
+                fixed (int* pError = &error)
+                {
+                    Marshal.ThrowExceptionForHR(_obj.Vftbl.GetErrorDetails_0(ThisPtr, &_description, pError, &_restrictedDescription, &_capabilitySid));
+                }
                 description = _description != IntPtr.Zero ? Marshal.PtrToStringBSTR(_description) : string.Empty;
                 restrictedDescription = _restrictedDescription != IntPtr.Zero ? Marshal.PtrToStringBSTR(_restrictedDescription) : string.Empty;
                 capabilitySid = _capabilitySid != IntPtr.Zero ? Marshal.PtrToStringBSTR(_capabilitySid) : string.Empty;
@@ -444,7 +491,7 @@ namespace ABI.WinRT.Interop
             IntPtr __retval = default;
             try
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetReference_1(ThisPtr, out __retval));
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.GetReference_1(ThisPtr, &__retval));
                 return __retval != IntPtr.Zero ? Marshal.PtrToStringBSTR(__retval) : string.Empty;
             }
             finally

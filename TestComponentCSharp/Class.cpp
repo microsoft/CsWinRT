@@ -1176,4 +1176,17 @@ namespace winrt::TestComponentCSharp::implementation
         // Compile-only test for keyword escaping
         throw hresult_not_implemented();
     }
+
+    struct native_properties1 : winrt::implements<native_properties1, TestComponentCSharp::IProperties1>
+    {
+        int32_t ReadWriteProperty()
+        {
+            return 42;
+        }
+    };
+
+    TestComponentCSharp::IProperties1 Class::NativeProperties1()
+    {
+        return winrt::make<native_properties1>();
+    }
 }

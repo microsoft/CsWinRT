@@ -685,6 +685,20 @@ namespace WinRT
             return array;
         }
 
+        public static unsafe void CopyAbiArray(T[] array, object box, Func<IntPtr, T> fromAbi)
+        {
+            if (box is null)
+            {
+                return;
+            }
+            var abi = ((int length, IntPtr data))box;
+            var data = (IntPtr*)abi.data.ToPointer();
+            for (int i = 0; i < abi.length; i++)
+            {
+                array[i] = fromAbi(data[i]);
+            }
+        }
+
         public static unsafe (int length, IntPtr data) FromManagedArray(T[] array, Func<T, IntPtr> fromManaged)
         {
             if (array is null)
@@ -826,7 +840,11 @@ namespace WinRT
                 {
                     _ToAbi = BindToAbi();
                 }
-                return _ToAbi(value);
+                var ptr = _ToAbi(value).GetRef();
+                // We can use ObjectReference.Attach here since this API is
+                // only used during marshalling where we deterministically dispose
+                // on the same thread (and as a result don't need to capture context).
+                return ObjectReference<IUnknownVftbl>.Attach(ref ptr);
             }
 
             if (_As is null)
@@ -866,6 +884,8 @@ namespace WinRT
         public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<T>.GetAbiArray(box);
 
         public static unsafe T[] FromAbiArray(object box) => MarshalInterfaceHelper<T>.FromAbiArray(box, FromAbi);
+
+        public static unsafe void CopyAbiArray(T[] array, object box) => MarshalInterfaceHelper<T>.CopyAbiArray(array, box, FromAbi);
 
         public static unsafe (int length, IntPtr data) FromManagedArray(T[] array) => MarshalInterfaceHelper<T>.FromManagedArray(array, (o) => FromManaged(o));
 
@@ -919,7 +939,10 @@ namespace WinRT
             {
                 return objRef.As<IInspectable.Vftbl>();
             }
-            return ComWrappersSupport.CreateCCWForObject(o);
+            using (var ccw = ComWrappersSupport.CreateCCWForObject(o))
+            { 
+                return ccw.As<IInspectable.Vftbl>();
+            }
         }
 
         public static IntPtr GetAbi(IObjectReference objRef) => 

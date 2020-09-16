@@ -9,11 +9,11 @@ using Xunit;
 
 namespace UnitTest
 {
-    public class TestComponent
+    public class TestWinRT
     {
         public ITests Tests { get; private set; }
 
-        public TestComponent()
+        public TestWinRT()
         {
             Tests = TestRunner.MakeTests();
         }
@@ -421,6 +421,20 @@ namespace UnitTest
             Assert.True(AllEqual(a, b, c, d));
         }
 
+        [Fact]
+        public void Array_Stringable()
+        {
+            IStringable[] a = new IStringable[] {
+                Windows.Data.Json.JsonValue.CreateNumberValue(3),
+                Windows.Data.Json.JsonValue.CreateNumberValue(4),
+                Windows.Data.Json.JsonValue.CreateNumberValue(5.0)
+            };
+            IStringable[] b = new IStringable[a.Length];
+            IStringable[] c;
+            IStringable[] d = Tests.Array16(a, b, out c);
+            Assert.True(AllEqual(a, b, c, d));
+        }
+
         private T[] Array_Call<T>(T[] a, T[] b, out T[] c)
         {
             Assert.True(a.Length == b.Length);
@@ -517,6 +531,12 @@ namespace UnitTest
         public void Array_Nested_Call()
         {
             Tests.Array15Call(Array_Call);
+        }
+
+        [Fact]
+        public void Array_Stringable_Call()
+        {
+            Tests.Array16Call(Array_Call);
         }
 
         [Fact]

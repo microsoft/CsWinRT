@@ -15,7 +15,7 @@
     <projectUrl>https://github.com/microsoft/cswinrt/tree/master/</projectUrl>
     <dependencies>
       <group targetFramework=".NETStandard2.0" />
-      <group targetFramework=".NETCoreApp5.0" />
+      <group targetFramework=".NET5.0" />
     </dependencies>
   </metadata>
   <files>
@@ -23,8 +23,10 @@
     <file src="$cswinrt_exe$"/>
     <file src="Microsoft.Windows.CsWinRT.props" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.targets" target="build"/>
+    <file src="Microsoft.Windows.CsWinRT.Prerelease*.targets" target="build"/>
     <file src="readme.txt"/>
     <file src="$netstandard2_runtime$" target="lib\netstandard2.0\"/>
-    <file src="$netcoreapp5_runtime$" target="lib\netcoreapp5.0\"/>
+    <file src="$net5_runtime$" target="lib\net5.0\"/>
+    <file src="$source_generator$" target="analyzers\dotnet\cs\"/>
   </files>
 </package>

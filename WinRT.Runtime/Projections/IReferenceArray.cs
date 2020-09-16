@@ -80,7 +80,7 @@ namespace ABI.Windows.Foundation
                 return null;
             }
             var vftblT = new Vftbl(ptr);
-            var wrapper = new IReferenceArray<T>(ObjectReference<Vftbl>.FromAbi(ptr, vftblT.IInspectableVftbl.IUnknownVftbl, vftblT));
+            var wrapper = new IReferenceArray<T>(ObjectReference<Vftbl>.FromAbi(ptr, vftblT));
             return wrapper.Value;
         }
 

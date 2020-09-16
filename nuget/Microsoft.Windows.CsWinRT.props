@@ -5,8 +5,19 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <PropertyGroup>
-      <CsWinRTPath Condition="'$(CsWinRTPath)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</CsWinRTPath>
-    </PropertyGroup>
+  <PropertyGroup>
+    <CsWinRTPath Condition="'$(CsWinRTPath)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</CsWinRTPath>
+    <CsWinRTExe>$(CsWinRTPath)cswinrt.exe</CsWinRTExe>
+    <AllowUnsafeBlocks Condition="$(CsWinRTComponent)==true">true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$(CsWinRTComponent)==true">
+    <CompilerVisibleProperty Include="AssemblyName" />
+    <CompilerVisibleProperty Include="AssemblyVersion" />
+    <CompilerVisibleProperty Include="CsWinRTComponent" />
+    <CompilerVisibleProperty Include="CsWinRTEnableLogging" />
+    <CompilerVisibleProperty Include="GeneratedFilesDir" />
+    <CompilerVisibleProperty Include="CsWinRTExe" />
+  </ItemGroup>
 
 </Project>

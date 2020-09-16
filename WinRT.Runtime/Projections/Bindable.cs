@@ -59,40 +59,55 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("6A1D6C07-076D-49F2-8314-F52C9C9A8331")]
-    internal class IBindableIterator : global::Microsoft.UI.Xaml.Interop.IBindableIterator
+    internal unsafe class IBindableIterator : global::Microsoft.UI.Xaml.Interop.IBindableIterator
     {
         [Guid("6A1D6C07-076D-49F2-8314-F52C9C9A8331")]
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            public _get_PropertyAsObject get_Current_0;
-            public _get_PropertyAsBoolean get_HasCurrent_1;
-            public IBindableIterator_Delegates.MoveNext_2 MoveNext_2;
+            private void* _get_Current_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_Current_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_Current_0; set => _get_Current_0 = value; }
+            private void* _get_HasCurrent_1;
+            public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> get_HasCurrent_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_get_HasCurrent_1; set => _get_HasCurrent_1 = value; }
+            private void* _MoveNext_2;
+            public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> MoveNext_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_MoveNext_2; set => _MoveNext_2 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+#if NETSTANDARD2_0
+            private static readonly Delegate[] DelegateCache = new Delegate[3];
+#endif
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
-                    IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable, 
-                    get_Current_0 = Do_Abi_get_Current_0,
-                    get_HasCurrent_1 = Do_Abi_get_HasCurrent_1,
-                    MoveNext_2 = Do_Abi_MoveNext_2
+                    IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
+#if NETSTANDARD2_0
+                    _get_Current_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new IBindableIterator_Delegates.get_Current_0(Do_Abi_get_Current_0)).ToPointer(),
+                    _get_HasCurrent_1 = Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IBindableIterator_Delegates.get_HasCurrent_1(Do_Abi_get_HasCurrent_1)).ToPointer(),
+                    _MoveNext_2 = Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new IBindableIterator_Delegates.MoveNext_2(Do_Abi_MoveNext_2)).ToPointer(),
+#else
+                    _get_Current_0 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_get_Current_0,
+                    _get_HasCurrent_1 = (delegate*<IntPtr, byte*, int>)&Do_Abi_get_HasCurrent_1,
+                    _MoveNext_2 = (delegate*<IntPtr, byte*, int>)&Do_Abi_MoveNext_2
+#endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 3);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-            private static unsafe int Do_Abi_MoveNext_2(IntPtr thisPtr, out byte result)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_MoveNext_2(IntPtr thisPtr, byte* result)
             {
                 bool __result = default;
-                result = default;
+                *result = default;
                 try
                 {
                     __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableIterator>(thisPtr).MoveNext();
-                    result = (byte)(__result ? 1 : 0);
+                    *result = (byte)(__result ? 1 : 0);
                 }
                 catch (Exception __exception__)
                 {
@@ -101,14 +116,17 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_get_Current_0(IntPtr thisPtr, out IntPtr value)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_get_Current_0(IntPtr thisPtr, IntPtr* value)
             {
                 object __value = default;
-                value = default;
+                *value = default;
                 try
                 {
                     __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableIterator>(thisPtr).Current;
-                    value = MarshalInspectable.FromManaged(__value);
+                    *value = MarshalInspectable.FromManaged(__value);
                 }
                 catch (Exception __exception__)
                 {
@@ -117,14 +135,17 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_get_HasCurrent_1(IntPtr thisPtr, out byte value)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_get_HasCurrent_1(IntPtr thisPtr, byte* value)
             {
                 bool __value = default;
-                value = default;
+                *value = default;
                 try
                 {
                     __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableIterator>(thisPtr).HasCurrent;
-                    value = (byte)(__value ? 1 : 0);
+                    *value = (byte)(__value ? 1 : 0);
                 }
                 catch (Exception __exception__)
                 {
@@ -151,7 +172,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         public unsafe bool MoveNext()
         {
             byte __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.MoveNext_2(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.MoveNext_2(ThisPtr, &__retval));
             return __retval != 0;
         }
 
@@ -162,7 +183,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 IntPtr __retval = default;
                 try
                 {
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Current_0(ThisPtr, out __retval));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Current_0(ThisPtr, &__retval));
                     return MarshalInspectable.FromAbi(__retval);
                 }
                 finally
@@ -177,7 +198,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             get
             {
                 byte __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasCurrent_1(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasCurrent_1(ThisPtr, &__retval));
                 return __retval != 0;
             }
         }
@@ -186,47 +207,62 @@ namespace ABI.Microsoft.UI.Xaml.Interop
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     internal static class IBindableIterator_Delegates
     {
-        public unsafe delegate int MoveNext_2(IntPtr thisPtr, out byte result);
+        public unsafe delegate int get_Current_0(IntPtr thisPtr, IntPtr* result);
+        public unsafe delegate int get_HasCurrent_1(IntPtr thisPtr, byte* result);
+        public unsafe delegate int MoveNext_2(IntPtr thisPtr, byte* result);
     }
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("346DD6E7-976E-4BC3-815D-ECE243BC0F33")]
-    internal class IBindableVectorView : global::Microsoft.UI.Xaml.Interop.IBindableVectorView
+    internal unsafe class IBindableVectorView : global::Microsoft.UI.Xaml.Interop.IBindableVectorView
     {
         [Guid("346DD6E7-976E-4BC3-815D-ECE243BC0F33")]
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            public IBindableVectorView_Delegates.GetAt_0 GetAt_0;
-            public _get_PropertyAsUInt32 get_Size_1;
-            public IBindableVectorView_Delegates.IndexOf_2 IndexOf_2;
+            private void* _GetAt_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr*, int> GetAt_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr*, int>)_GetAt_0; set => _GetAt_0 = value; }
+            private void* _get_Size_1;
+            public delegate* unmanaged[Stdcall]<IntPtr, uint*, int> get_Size_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint*, int>)_get_Size_1; set => _get_Size_1 = value; }
+            private void* _IndexOf_2;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, uint*, byte*, int> IndexOf_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, uint*, byte*, int>)_IndexOf_2; set => _IndexOf_2 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+#if NETSTANDARD2_0
+            private static readonly Delegate[] DelegateCache = new Delegate[3];
+#endif
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    GetAt_0 = Do_Abi_GetAt_0,
-                    get_Size_1 = Do_Abi_get_Size_1,
-                    IndexOf_2 = Do_Abi_IndexOf_2
+#if NETSTANDARD2_0
+                    _GetAt_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new IBindableVectorView_Delegates.GetAt_0(Do_Abi_GetAt_0)).ToPointer(),
+                    _get_Size_1 = Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IBindableVectorView_Delegates.get_Size_1(Do_Abi_get_Size_1)).ToPointer(),
+                    _IndexOf_2 = Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new IBindableVectorView_Delegates.IndexOf_2(Do_Abi_IndexOf_2)).ToPointer(),
+#else
+                    _GetAt_0 = (delegate*<IntPtr, uint, IntPtr*, int>)&Do_Abi_GetAt_0,
+                    _get_Size_1 = (delegate*<IntPtr, uint*, int>)&Do_Abi_get_Size_1,
+                    _IndexOf_2 = (delegate*<IntPtr, IntPtr, uint*, byte*, int>)&Do_Abi_IndexOf_2
+#endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 3);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-            private static unsafe int Do_Abi_GetAt_0(IntPtr thisPtr, uint index, out IntPtr result)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_GetAt_0(IntPtr thisPtr, uint index, IntPtr* result)
             {
                 object __result = default;
-
-                result = default;
 
                 try
                 {
                     __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>(thisPtr).GetAt(index);
-                    result = MarshalInspectable.FromManaged(__result);
+                    *result = MarshalInspectable.FromManaged(__result);
 
                 }
                 catch (Exception __exception__)
@@ -236,19 +272,22 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_IndexOf_2(IntPtr thisPtr, IntPtr value, out uint index, out byte returnValue)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_IndexOf_2(IntPtr thisPtr, IntPtr value, uint* index, byte* returnValue)
             {
                 bool __returnValue = default;
 
-                index = default;
-                returnValue = default;
+                *index = default;
+                *returnValue = default;
                 uint __index = default;
 
                 try
                 {
                     __returnValue = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>(thisPtr).IndexOf(MarshalInspectable.FromAbi(value), out __index);
-                    index = __index;
-                    returnValue = (byte)(__returnValue ? 1 : 0);
+                    *index = __index;
+                    *returnValue = (byte)(__returnValue ? 1 : 0);
 
                 }
                 catch (Exception __exception__)
@@ -258,16 +297,19 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_get_Size_1(IntPtr thisPtr, out uint value)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_get_Size_1(IntPtr thisPtr, uint* value)
             {
                 uint __value = default;
 
-                value = default;
+                *value = default;
 
                 try
                 {
                     __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>(thisPtr).Size;
-                    value = __value;
+                    *value = __value;
 
                 }
                 catch (Exception __exception__)
@@ -299,7 +341,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             IntPtr __retval = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetAt_0(ThisPtr, index, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetAt_0(ThisPtr, index, &__retval));
                 return MarshalInspectable.FromAbi(__retval);
             }
             finally
@@ -316,7 +358,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             try
             {
                 __value = MarshalInspectable.CreateMarshaler(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_2(ThisPtr, MarshalInspectable.GetAbi(__value), out __index, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_2(ThisPtr, MarshalInspectable.GetAbi(__value), &__index, &__retval));
                 index = __index;
                 return __retval != 0;
             }
@@ -331,7 +373,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             get
             {
                 uint __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, &__retval));
                 return __retval;
             }
         }
@@ -340,8 +382,9 @@ namespace ABI.Microsoft.UI.Xaml.Interop
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     internal static class IBindableVectorView_Delegates
     {
-        public unsafe delegate int GetAt_0(IntPtr thisPtr, uint index, out IntPtr result);
-        public unsafe delegate int IndexOf_2(IntPtr thisPtr, IntPtr value, out uint index, out byte returnValue);
+        public unsafe delegate int GetAt_0(IntPtr thisPtr, uint index, IntPtr* result);
+        public unsafe delegate int get_Size_1(IntPtr thisPtr, uint* result);
+        public unsafe delegate int IndexOf_2(IntPtr thisPtr, IntPtr value, uint* index, byte* returnValue);
     }
 }
 
@@ -353,7 +396,7 @@ namespace ABI.System.Collections
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F")]
-    public class IEnumerable : global::System.Collections.IEnumerable, IBindableIterable
+    public unsafe class IEnumerable : global::System.Collections.IEnumerable, IBindableIterable
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable));
 
@@ -415,30 +458,41 @@ namespace ABI.System.Collections
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            public IEnumerable_Delegates.First_0 First_0;
+            private void* _First_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> First_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_First_0; set => _First_0 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+#if NETSTANDARD2_0
+            private static readonly IEnumerable_Delegates.First_0 DelegateCache;
+#endif
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    First_0 = Do_Abi_First_0
+#if NETSTANDARD2_0
+                    _First_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache = Do_Abi_First_0).ToPointer()
+#else
+                    _First_0 = (delegate* <IntPtr, IntPtr*, int>)&Do_Abi_First_0
+#endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-            private static unsafe int Do_Abi_First_0(IntPtr thisPtr, out IntPtr result)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_First_0(IntPtr thisPtr, IntPtr* result)
             {
-                result = default;
+                *result = default;
                 try
                 {
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.IEnumerable>(thisPtr);
                     var iterator = ToAbiHelper.MakeBindableIterator(__this.GetEnumerator());
-                    result = MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableIterator>.FromManaged(iterator);
+                    *result = MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableIterator>.FromManaged(iterator);
                 }
                 catch (Exception __exception__)
                 {
@@ -476,7 +530,7 @@ namespace ABI.System.Collections
             IntPtr __retval = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(ThisPtr, &__retval));
                 return MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableIterator>.FromAbi(__retval);
             }
             finally
@@ -490,12 +544,12 @@ namespace ABI.System.Collections
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     public static class IEnumerable_Delegates
     {
-        public unsafe delegate int First_0(IntPtr thisPtr, out IntPtr result);
+        public unsafe delegate int First_0(IntPtr thisPtr, IntPtr* result);
     }
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93")]
-    public class IList : global::System.Collections.IList
+    public unsafe class IList : global::System.Collections.IList
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IList));
 
@@ -931,34 +985,61 @@ namespace ABI.System.Collections
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            public IList_Delegates.GetAt_0 GetAt_0;
-            public _get_PropertyAsUInt32 get_Size_1;
-            public IList_Delegates.GetView_2 GetView_2;
-            public IList_Delegates.IndexOf_3 IndexOf_3;
-            public IList_Delegates.SetAt_4 SetAt_4;
-            public IList_Delegates.InsertAt_5 InsertAt_5;
-            public IList_Delegates.RemoveAt_6 RemoveAt_6;
-            public IList_Delegates.Append_7 Append_7;
-            public IList_Delegates.RemoveAtEnd_8 RemoveAtEnd_8;
-            public IList_Delegates.Clear_9 Clear_9;
+            private void* _GetAt_0;
+            private void* _get_Size_1;
+            private void* _GetView_2;
+            private void* _IndexOf_3;
+            private void* _SetAt_4;
+            private void* _InsertAt_5;
+            private void* _RemoveAt_6;
+            private void* _Append_7;
+            private void* _RemoveAtEnd_8;
+            private void* _Clear_9;
+
+            public delegate* unmanaged[Stdcall]<IntPtr , uint , IntPtr* , int> GetAt_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr * , int >)_GetAt_0; set => _GetAt_0 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , uint* , int> get_Size_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint * , int >)_get_Size_1; set => _get_Size_1 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , IntPtr* , int> GetView_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr * , int >)_GetView_2; set => _GetView_2 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , IntPtr , uint* , byte* , int> IndexOf_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, uint * , byte * , int >)_IndexOf_3; set => _IndexOf_3 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , uint , IntPtr , int> SetAt_4 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, int >)_SetAt_4; set => _SetAt_4 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , uint , IntPtr , int> InsertAt_5 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, int >)_InsertAt_5; set => _InsertAt_5 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , uint , int> RemoveAt_6 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, int >)_RemoveAt_6; set => _RemoveAt_6 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , IntPtr , int> Append_7 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int >)_Append_7; set => _Append_7 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , int> RemoveAtEnd_8 { get => (delegate* unmanaged[Stdcall]<IntPtr, int >)_RemoveAtEnd_8; set => _RemoveAtEnd_8 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , int> Clear_9 { get => (delegate* unmanaged[Stdcall]<IntPtr, int >)_Clear_9; set => _Clear_9 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+#if NETSTANDARD2_0
+            private static readonly Delegate[] DelegateCache = new Delegate[10];
+#endif
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    GetAt_0 = Do_Abi_GetAt_0,
-                    get_Size_1 = Do_Abi_get_Size_1,
-                    GetView_2 = Do_Abi_GetView_2,
-                    IndexOf_3 = Do_Abi_IndexOf_3,
-                    SetAt_4 = Do_Abi_SetAt_4,
-                    InsertAt_5 = Do_Abi_InsertAt_5,
-                    RemoveAt_6 = Do_Abi_RemoveAt_6,
-                    Append_7 = Do_Abi_Append_7,
-                    RemoveAtEnd_8 = Do_Abi_RemoveAtEnd_8,
-                    Clear_9 = Do_Abi_Clear_9
+#if NETSTANDARD2_0
+                    _GetAt_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new IList_Delegates.GetAt_0(Do_Abi_GetAt_0)).ToPointer(),
+                    _get_Size_1 = Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IList_Delegates.get_Size_1(Do_Abi_get_Size_1)).ToPointer(),
+                    _GetView_2 = Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new IList_Delegates.GetView_2(Do_Abi_GetView_2)).ToPointer(),
+                    _IndexOf_3 = Marshal.GetFunctionPointerForDelegate(DelegateCache[3] = new IList_Delegates.IndexOf_3(Do_Abi_IndexOf_3)).ToPointer(),
+                    _SetAt_4 = Marshal.GetFunctionPointerForDelegate(DelegateCache[4] = new IList_Delegates.SetAt_4(Do_Abi_SetAt_4)).ToPointer(),
+                    _InsertAt_5 = Marshal.GetFunctionPointerForDelegate(DelegateCache[5] = new IList_Delegates.InsertAt_5(Do_Abi_InsertAt_5)).ToPointer(),
+                    _RemoveAt_6 = Marshal.GetFunctionPointerForDelegate(DelegateCache[6] = new IList_Delegates.RemoveAt_6(Do_Abi_RemoveAt_6)).ToPointer(),
+                    _Append_7 = Marshal.GetFunctionPointerForDelegate(DelegateCache[7] = new IList_Delegates.Append_7(Do_Abi_Append_7)).ToPointer(),
+                    _RemoveAtEnd_8 = Marshal.GetFunctionPointerForDelegate(DelegateCache[8] = new IList_Delegates.RemoveAtEnd_8(Do_Abi_RemoveAtEnd_8)).ToPointer(),
+                    _Clear_9 = Marshal.GetFunctionPointerForDelegate(DelegateCache[9] = new IList_Delegates.Clear_9(Do_Abi_Clear_9)).ToPointer(),
+#else
+                    _GetAt_0 = (delegate*<IntPtr , uint , IntPtr* , int>)&Do_Abi_GetAt_0,
+                    _get_Size_1 = (delegate*<IntPtr , uint* , int>)&Do_Abi_get_Size_1,
+                    _GetView_2 = (delegate*<IntPtr , IntPtr* , int>)&Do_Abi_GetView_2,
+                    _IndexOf_3 = (delegate*<IntPtr , IntPtr , uint* , byte* , int>)&Do_Abi_IndexOf_3,
+                    _SetAt_4 = (delegate*<IntPtr , uint , IntPtr , int>)&Do_Abi_SetAt_4,
+                    _InsertAt_5 = (delegate*<IntPtr , uint , IntPtr , int>)&Do_Abi_InsertAt_5,
+                    _RemoveAt_6 = (delegate*<IntPtr , uint , int>)&Do_Abi_RemoveAt_6,
+                    _Append_7 = (delegate*<IntPtr , IntPtr , int>)&Do_Abi_Append_7,
+                    _RemoveAtEnd_8 = (delegate*<IntPtr , int>)&Do_Abi_RemoveAtEnd_8,
+                    _Clear_9 = (delegate*<IntPtr , int>)&Do_Abi_Clear_9,
+#endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 10);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
@@ -974,14 +1055,17 @@ namespace ABI.System.Collections
                 return _adapterTable.GetValue(__this, (list) => new ToAbiHelper(list));
             }
 
-            private static unsafe int Do_Abi_GetAt_0(IntPtr thisPtr, uint index, out IntPtr result)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_GetAt_0(IntPtr thisPtr, uint index, IntPtr* result)
             {
                 object __result = default;
-                result = default;
+                *result = default;
                 try
                 {
                     __result = FindAdapter(thisPtr).GetAt(index);
-                    result = MarshalInspectable.FromManaged(__result);
+                    *result = MarshalInspectable.FromManaged(__result);
 
                 }
                 catch (Exception __exception__)
@@ -991,14 +1075,17 @@ namespace ABI.System.Collections
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_GetView_2(IntPtr thisPtr, out IntPtr result)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_GetView_2(IntPtr thisPtr, IntPtr* result)
             {
                 global::Microsoft.UI.Xaml.Interop.IBindableVectorView __result = default;
-                result = default;
+                *result = default;
                 try
                 {
                     __result = FindAdapter(thisPtr).GetView();
-                    result = MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>.FromManaged(__result);
+                    *result = MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>.FromManaged(__result);
                 }
                 catch (Exception __exception__)
                 {
@@ -1007,17 +1094,20 @@ namespace ABI.System.Collections
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_IndexOf_3(IntPtr thisPtr, IntPtr value, out uint index, out byte returnValue)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_IndexOf_3(IntPtr thisPtr, IntPtr value, uint* index, byte* returnValue)
             {
                 bool __returnValue = default;
-                index = default;
-                returnValue = default;
+                *index = default;
+                *returnValue = default;
                 uint __index = default;
                 try
                 {
                     __returnValue = FindAdapter(thisPtr).IndexOf(MarshalInspectable.FromAbi(value), out __index);
-                    index = __index;
-                    returnValue = (byte)(__returnValue ? 1 : 0);
+                    *index = __index;
+                    *returnValue = (byte)(__returnValue ? 1 : 0);
                 }
                 catch (Exception __exception__)
                 {
@@ -1026,6 +1116,9 @@ namespace ABI.System.Collections
                 }
                 return 0;
             }
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static unsafe int Do_Abi_SetAt_4(IntPtr thisPtr, uint index, IntPtr value)
             {
                 try
@@ -1039,6 +1132,9 @@ namespace ABI.System.Collections
                 }
                 return 0;
             }
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static unsafe int Do_Abi_InsertAt_5(IntPtr thisPtr, uint index, IntPtr value)
             {
                 try
@@ -1052,6 +1148,9 @@ namespace ABI.System.Collections
                 }
                 return 0;
             }
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static unsafe int Do_Abi_RemoveAt_6(IntPtr thisPtr, uint index)
             {
                 try
@@ -1065,6 +1164,9 @@ namespace ABI.System.Collections
                 }
                 return 0;
             }
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static unsafe int Do_Abi_Append_7(IntPtr thisPtr, IntPtr value)
             {
                 try
@@ -1078,6 +1180,9 @@ namespace ABI.System.Collections
                 }
                 return 0;
             }
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static unsafe int Do_Abi_RemoveAtEnd_8(IntPtr thisPtr)
             {
                 try
@@ -1091,6 +1196,9 @@ namespace ABI.System.Collections
                 }
                 return 0;
             }
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static unsafe int Do_Abi_Clear_9(IntPtr thisPtr)
             {
                 try
@@ -1104,16 +1212,19 @@ namespace ABI.System.Collections
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_get_Size_1(IntPtr thisPtr, out uint value)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_get_Size_1(IntPtr thisPtr, uint* value)
             {
                 uint __value = default;
 
-                value = default;
+                *value = default;
 
                 try
                 {
                     __value = FindAdapter(thisPtr).Size;
-                    value = __value;
+                    *value = __value;
                 }
                 catch (Exception __exception__)
                 {
@@ -1151,7 +1262,7 @@ namespace ABI.System.Collections
             IntPtr __retval = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetAt_0(ThisPtr, index, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetAt_0(ThisPtr, index, &__retval));
                 return MarshalInspectable.FromAbi(__retval);
             }
             finally
@@ -1165,7 +1276,7 @@ namespace ABI.System.Collections
             IntPtr __retval = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_2(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_2(ThisPtr, &__retval));
                 return MarshalInterface<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>.FromAbi(__retval);
             }
             finally
@@ -1182,7 +1293,7 @@ namespace ABI.System.Collections
             try
             {
                 __value = MarshalInspectable.CreateMarshaler(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_3(ThisPtr, MarshalInspectable.GetAbi(__value), out __index, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_3(ThisPtr, MarshalInspectable.GetAbi(__value), &__index, &__retval));
                 index = __index;
                 return __retval != 0;
             }
@@ -1254,7 +1365,7 @@ namespace ABI.System.Collections
             get
             {
                 uint __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, &__retval));
                 return __retval;
             }
         }
@@ -1293,12 +1404,12 @@ namespace ABI.System.Collections
 
         public IEnumerator GetEnumerator() => _vectorToList.GetEnumerator();
     }
-    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    public static class IList_Delegates
+    internal static class IList_Delegates
     {
-        public unsafe delegate int GetAt_0(IntPtr thisPtr, uint index, out IntPtr result);
-        public unsafe delegate int GetView_2(IntPtr thisPtr, out IntPtr result);
-        public unsafe delegate int IndexOf_3(IntPtr thisPtr, IntPtr value, out uint index, out byte returnValue);
+        public unsafe delegate int GetAt_0(IntPtr thisPtr, uint index, IntPtr* result);
+        public unsafe delegate int get_Size_1(IntPtr thisPtr, uint* result);
+        public unsafe delegate int GetView_2(IntPtr thisPtr, IntPtr* result);
+        public unsafe delegate int IndexOf_3(IntPtr thisPtr, IntPtr value, uint* index, byte* returnValue);
         public unsafe delegate int SetAt_4(IntPtr thisPtr, uint index, IntPtr value);
         public unsafe delegate int InsertAt_5(IntPtr thisPtr, uint index, IntPtr value);
         public unsafe delegate int RemoveAt_6(IntPtr thisPtr, uint index);

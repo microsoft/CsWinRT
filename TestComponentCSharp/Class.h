@@ -296,6 +296,8 @@ namespace winrt::TestComponentCSharp::implementation
 
         hstring Catch(hstring const& params, hstring& locks);
 
+        static IProperties1 NativeProperties1();
+
         // IStringable
         hstring ToString();
 
@@ -316,7 +318,11 @@ namespace winrt::TestComponentCSharp::implementation
 
 namespace winrt::TestComponentCSharp::factory_implementation
 {
-    struct Class : ClassT<Class, implementation::Class>
+    struct Class : ClassT<Class, implementation::Class, Windows::Foundation::IStringable>
     {
+        hstring ToString()
+        {
+            return L"Class";
+        }
     };
 }
