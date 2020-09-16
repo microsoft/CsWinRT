@@ -144,7 +144,8 @@ namespace WinRT
             var data = new byte[16 /* Number of bytes in a GUID */ + maxBytes];
             Span<byte> dataSpan = data;
             wrt_pinterface_namespace.TryWriteBytes(dataSpan);
-            UTF8Encoding.UTF8.GetBytes(sig, dataSpan[16..]);
+            var numBytes = UTF8Encoding.UTF8.GetBytes(sig, dataSpan[16..]);
+            data = data[..(16 + numBytes)];
 #endif
             using (SHA1 sha = new SHA1CryptoServiceProvider())
             {

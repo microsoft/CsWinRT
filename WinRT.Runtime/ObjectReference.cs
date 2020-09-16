@@ -74,7 +74,11 @@ namespace WinRT
                 }
             }
 
+#if NETSTANDARD2_0
             return (TInterface)typeof(TInterface).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { this });
+#else
+            return (TInterface)(object)new WinRT.IInspectable(this);
+#endif
         }
 
         public int TryAs<T>(out ObjectReference<T> objRef) => TryAs(GuidGenerator.GetIID(typeof(T)), out objRef);

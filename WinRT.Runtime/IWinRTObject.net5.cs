@@ -42,6 +42,10 @@ namespace WinRT
                 }
                 return true;
             }
+            if (vftblType.IsGenericTypeDefinition)
+            {
+                vftblType = vftblType.MakeGenericType(interfaceType.GetType().GetGenericArguments());
+            }
             using (objRef)
             {
                 IObjectReference typedObjRef = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);

@@ -3,6 +3,7 @@
 #include <functional>
 #include <set>
 #include <filesystem>
+#include <iostream>
 
 namespace cswinrt
 {
@@ -878,7 +879,8 @@ set => %.% = value;
                 else
                 {
                     w.write(R"(
-{typeof(%), new Lazy<%>(() => (%)(object)_default)},)",
+{typeof(%), new Lazy<%>(() => (%)(object)new SingleInterfaceOptimizedObject(typeof(%), _inner))},)",
+                        interface_name,
                         interface_name,
                         interface_name,
                         interface_name);
@@ -1229,7 +1231,7 @@ using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref c
 try
 {
 _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
-_defaultLazy = new Lazy<%>(() => (%)new IInspectable(_inner));
+_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
 };
@@ -1251,6 +1253,7 @@ MarshalInspectable.DisposeAbi(ptr);
                     method.Name(),
                     bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
                     [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
+                    default_interface_name,
                     default_interface_name,
                     default_interface_name,
                     bind<write_lazy_interface_initialization>(class_type));
@@ -4478,8 +4481,9 @@ public static class %
 
     bool write_abi_interface(writer& w, TypeDef const& type)
     {
-        XLANG_ASSERT(get_category(type) == category::interface_type);
+         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", true);
+        //std::cout << type_name << std::endl << std::endl << std::endl;
         std::set<std::string> generic_methods;
         std::vector<std::string> nongeneric_delegates;
 
@@ -4490,12 +4494,15 @@ public static class %
 %
 internal unsafe interface % : %
 {
-%%%%}
+%%%%%}
 )",
-            // Interface abi implementation
+// Interface abi implementation
             bind<write_guid_attribute>(type),
             type_name,
             bind<write_type_name>(type, false, false),
+            [&](writer& w) {
+                w.write(distance(type.GenericParam()) > 0 ? "public static Guid PIID = Vftbl.PIID;\n\n" : "");
+            },
             // Vftbl
             bind<write_vtable>(type, type_name, generic_methods, "", nongeneric_delegates),
             bind<write_interface_members>(type, generic_methods),
@@ -4748,7 +4755,7 @@ return new %(objRef);
 % %(IObjectReference objRef)%
 {
 _inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
-_defaultLazy = new Lazy<%>(() => (%)new global::WinRT.IInspectable(_inner));
+_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
 };
@@ -4784,6 +4791,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             type.Flags().Sealed() ? "internal" : "protected internal",
             type_name,
             bind<write_base_constructor_dispatch>(base_semantics),
+            default_interface_name,
             default_interface_name,
             default_interface_name,
             default_interface_name,
