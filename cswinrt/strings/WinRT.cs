@@ -264,11 +264,9 @@ namespace WinRT
 
         public BaseActivationFactory(string typeNamespace, string typeFullName)
         {
-            var runtimeClassId = typeFullName.Replace("WinRT", "Windows");
-
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
-            (_IActivationFactory, hr) = WinrtModule.GetActivationFactory(runtimeClassId);
+            (_IActivationFactory, hr) = WinrtModule.GetActivationFactory(typeFullName);
             if (_IActivationFactory != null) { return; }
 
             var moduleName = typeNamespace;
@@ -276,7 +274,7 @@ namespace WinRT
             {
                 try
                 {
-                    (_IActivationFactory, _) = DllModule.Load(moduleName + ".dll").GetActivationFactory(runtimeClassId);
+                    (_IActivationFactory, _) = DllModule.Load(moduleName + ".dll").GetActivationFactory(typeFullName);
                     if (_IActivationFactory != null) { return; }
                 }
                 catch (Exception) { }
