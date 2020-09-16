@@ -36,11 +36,12 @@ However, C#/WinRT is a general effort and is intended to support other scenarios
 
 Download the C#/WinRT NuGet package here: <http://aka.ms/cswinrt/nuget>
 
-C#/WinRT currently requires the following packages to build:
+C#/WinRT currently requires the following packages, or newer, to build:
 
-- Visual Studio 16.8 Preview 2 or newer
-- Microsoft.Net.Compilers.Toolset >= 3.8.0-3.20428.4
-- .NET 5 SDK 5.0.100 Preview 8
+- Visual Studio 16.8 Preview 3
+- Microsoft.Net.Compilers.Toolset 3.8.0-3.20428.4
+- .NET 5 SDK 5.0.100-rc.1.20454.5
+- Nuget.exe 5.8.0-preview.2
 - WinUI 3 3.0.0-preview1.200515.3
 
 **Note:** As prereleases may make breaking changes before final release, any other combinations above may work but are not supported and will generate a build warning.

@@ -7,8 +7,8 @@ namespace Generator
     {
         public static void Initialize(SourceGeneratorContext context)
         {
-            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTEnableLogging", out var enableLogging);
-            if(enableLogging != null && bool.Parse(enableLogging))
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTEnableLogging", out var enableLoggingStr);
+            if (enableLoggingStr != null && bool.TryParse(enableLoggingStr, out var enableLogging) && enableLogging)
             {
                 string logFile = Path.Combine(SourceGenerator.GetGeneratedFilesDir(context), "log.txt");
                 fileLogger = File.CreateText(logFile);
