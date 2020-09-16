@@ -1,0 +1,27 @@
+# This pipeline does a validation test of CsWinRT against XAML scenarios hosted by WinUI
+# Pipeline: Pull latest CsWinRT NuGet Package
+#           Run the script using those values as the variables given to the WinUI CI Pipeline
+#             NugetFeed must be set to empty string so the WinUI pipeline doesn't publish to their internal feed
+variables:
+   # set '_privateIXPNupkgVersion' to 'privateIXPNupkgVersion' if it has been set on the Pipeline, or else default to empty string.
+  _DotNetSdkVersion: $[coalesce(variables.DotNetSdkVersion, '')]
+  
+
+steps:
+- script: |
+    $branch = "master"
+    $ciPipeline = 38157
+    $cswinrtName = "Microsoft.Windows.CsWinRT"
+    $cswinrtPackage = nuget install -Source "${{ parameters.parameters.privateCsWinRTFeedUrl }}" -DirectDownload -NoCache $cswinrtName 
+    $runInfo = 
+        (az pipelines run `
+        --organization https://dev.azure.com/microsoft `
+        --project WinUI `
+        --id $ciPipeline `
+        --branch $branch `
+        --variables "privateCsWinRTNupkgVersion=$cswinrtVersion" "privateDotNetSdkVersion=$(_DotNetSdkVersion)" "NuGetFeed=''")
+        $buildUrl = $runInfo.url.Replace("_apis/build/Builds/","_build/results?buildId=")
+        Write-Host
+        Write-Host "Build URL: $buildUrl"
+        Start-Process $buildUrl
+  displayName: 'Running WinUI CI Pipeline with latest CsWinRT'
