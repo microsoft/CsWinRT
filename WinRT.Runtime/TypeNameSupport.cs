@@ -24,6 +24,13 @@ namespace WinRT
 
     static class TypeNameSupport
     {
+        private static List<Assembly> projectionAssemblies = new List<Assembly>();
+
+        public static void RegisterProjectionAssembly(Assembly assembly)
+        {
+            projectionAssemblies.Add(assembly);
+        }
+
         /// <summary>
         /// Parse the first full type name within the provided span.
         /// </summary>
@@ -66,16 +73,8 @@ namespace WinRT
                     }
                 }
 
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                foreach (var assembly in projectionAssemblies)
                 {
-                    if (runtimeClassName.StartsWith("Windows.") && assembly == typeof(object).Assembly)
-                    {
-                        // WORKAROUND:
-                        // Some WinRT types currently are also defined privately in .NET.
-                        // These types are meant to support the old projections system.
-                        // Ignore them here.
-                        continue;
-                    }
                     Type type = assembly.GetType(runtimeClassName);
                     if (type is object)
                     {
