@@ -1,7 +1,9 @@
 # This pipeline does a validation test of CsWinRT against XAML scenarios hosted by WinUI
-# Pipeline: Pull latest CsWinRT NuGet Package
-#           Run the script using those values as the variables given to the WinUI CI Pipeline
-#             NugetFeed must be set to empty string so the WinUI pipeline doesn't publish to their internal feed
+
+# Todo: verify the way I am getting the cswinrt version to pass to CI Pipeline 
+
+# Note: The NugetFeed variable MUST be set to empty string so the CI pipeline doesn't publish to WinUI's internal feed
+
 variables:
    # set '_privateIXPNupkgVersion' to 'privateIXPNupkgVersion' if it has been set on the Pipeline, or else default to empty string.
   _DotNetSdkVersion: $[coalesce(variables.DotNetSdkVersion, '')]
