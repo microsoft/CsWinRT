@@ -76,7 +76,7 @@ namespace WinRT
 
             ProjectedRuntimeClassAttribute projectedClass = type.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
 
-            if (projectedClass is object)
+            if (projectedClass is object && projectedClass.DefaultInterfaceProperty != null)
             {
                 return TryUnwrapObject(
                     type.GetProperty(projectedClass.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).GetValue(o),

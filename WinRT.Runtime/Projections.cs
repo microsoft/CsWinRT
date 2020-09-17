@@ -237,7 +237,14 @@ namespace WinRT
                 return false;
             }
 
-            defaultInterface = runtimeClass.GetProperty(attr.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).PropertyType;
+            if (attr.DefaultInterfaceProperty != null)
+            {
+                defaultInterface = runtimeClass.GetProperty(attr.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).PropertyType;
+            }
+            else
+            {
+                defaultInterface = attr.DefaultInterface;
+            }
             return true;
         }
 

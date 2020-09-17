@@ -4219,10 +4219,9 @@ public static class %
         auto default_interface_abi_name = get_default_interface_name(w, type, true);
         auto base_semantics = get_type_semantics(type.Extends());
 
-        w.write(R"(%[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
+        w.write(R"(%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
 %public %class %%
 {
-private % _default => null;
 
 public %(% comp)
 {
@@ -4252,11 +4251,11 @@ private readonly % _comp;
 }
 )",
 bind<write_winrt_attribute>(type),
+default_interface_abi_name,
 bind<write_custom_attributes>(type),
 bind<write_class_modifiers>(type),
 type_name,
 bind<write_type_inheritance>(type, base_semantics, false, true),
-default_interface_abi_name,
 type_name,
 wrapped_type_name,
 wrapped_type_name,

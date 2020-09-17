@@ -117,14 +117,13 @@ TEST(AuthoringTest, Events)
     int result = 0;
     int result2 = 0;
 
-    // TODO: validate auto_revoke - bug in weak references
     TestClass testClass;
-    auto token = testClass.BasicDelegateEvent([&result](uint32_t value)
+    auto token = testClass.BasicDelegateEvent(auto_revoke, [&result](uint32_t value)
     {
         result = value;
     });
 
-    testClass.BasicDelegateEvent2([&result2](uint32_t value)
+    auto token2 = testClass.BasicDelegateEvent2(auto_revoke, [&result2](uint32_t value)
     {
         result2 = value;
     });
@@ -135,6 +134,12 @@ TEST(AuthoringTest, Events)
     EXPECT_EQ(result2, 0);
 
     testClass.FireBasicDelegate2(5);
+    EXPECT_EQ(result, 3);
+    EXPECT_EQ(result2, 5);
+
+    // unregister handler, value shouldn't change.
+    token.revoke();
+    testClass.FireBasicDelegate(12);
     EXPECT_EQ(result, 3);
     EXPECT_EQ(result2, 5);
 
