@@ -156,3 +156,18 @@ TEST(AuthoringTest, Events)
     EXPECT_EQ(doubleResult, 8.8);
     EXPECT_EQ(result, 9);
 }
+
+TEST(AuthoringTest, CCWCaching)
+{
+    BasicClass basicClass;
+
+    basicClass.SetBasicEnum(BasicEnum::Second);
+    EXPECT_EQ(basicClass.GetBasicEnum(), BasicEnum::Second);
+    basicClass.SetFlagsEnum(FlagsEnum::Fourth);
+    EXPECT_EQ(basicClass.GetFlagsEnum(), FlagsEnum::Fourth);
+
+    auto copy = basicClass.ReturnParameter(basicClass);
+    EXPECT_EQ(copy.GetBasicEnum(), BasicEnum::Second);
+    EXPECT_EQ(copy.GetFlagsEnum(), FlagsEnum::Fourth);
+    EXPECT_EQ(basicClass, copy);
+}

@@ -27,6 +27,7 @@ namespace WinRT
     public static partial class ComWrappersSupport
     {
         private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
+        private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate
@@ -112,9 +113,10 @@ namespace WinRT
             var ccwType = type.GetRuntimeClassCCWType();
             if (ccwType != null)
             {
-                // TODO: have some weak conditional table lookup before constructing new one.
-                var objReferenceConstructor = ccwType.GetConstructor(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { type }, null);
-                return objReferenceConstructor.Invoke(new[] { obj });
+                return CCWTable.GetValue(obj, obj => {
+                    var ccwConstructor = ccwType.GetConstructor(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { type }, null);
+                    return ccwConstructor.Invoke(new[] { obj });
+                });
             }
 
             return obj;

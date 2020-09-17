@@ -103,6 +103,11 @@ namespace AuthoringSample
             return flagsEnum;
         }
 
+        public BasicClass ReturnParameter(BasicClass basicClass)
+        {
+            return basicClass;
+        }
+
         private void PrivateFunction()
         {
         }
