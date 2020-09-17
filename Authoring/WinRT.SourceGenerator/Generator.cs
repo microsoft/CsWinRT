@@ -76,10 +76,13 @@ namespace Generator
         private void GenerateSources(SourceGeneratorContext context)
         {
             string cswinrtExe = GetCsWinRTExe(context);
+            string assemblyName = GetAssemblyName(context);
             string winmdFile = GetWinmdOutputFile(context);
             string outputDir = GetTempFolder(true);
- 
-            string arguments = string.Format("-component -input \"{0}\" -output \"{1}\" -verbose", winmdFile, outputDir);
+            // TODO: make it a property with a list of WinMDs
+            string additionalWinMds = "10.0.18362.0";
+
+            string arguments = string.Format("-component -input \"{0}\" -input {1} -include {2} -output \"{3}\" -verbose", winmdFile, additionalWinMds, assemblyName, outputDir);
             Logger.Log("Running " + cswinrtExe + " " + arguments);
 
             var processInfo = new ProcessStartInfo

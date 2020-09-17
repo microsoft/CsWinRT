@@ -175,6 +175,26 @@ namespace Generator
 
     class WinRTTypeWriter : CSharpSyntaxWalker
     {
+        private struct MappedType
+        {
+            public readonly string @namespace;
+            public readonly string name;
+            public readonly string assembly;
+
+            public MappedType(string @namespace, string name, string assembly)
+            {
+                this.@namespace = @namespace;
+                this.name = name;
+                this.assembly = assembly;
+            }
+        }
+
+        private static readonly Dictionary<string, MappedType> MappedCSharpTypes = new Dictionary<string, MappedType>()
+        {
+            { "System.Nullable", new MappedType("Windows.Foundation", "IReference`1", "Windows.Foundation.FoundationContract" ) },
+            { "System.FlagsAttribute", new MappedType("System", "FlagsAttribute", "mscorlib" ) }
+        };
+
         public SemanticModel Model;
 
         private readonly string assembly;
@@ -327,21 +347,41 @@ namespace Generator
             return typeRef;
         }
 
+        public string GetAssemblyForWinRTType(ISymbol type)
+        {
+            var winrtTypeAttribute = type.GetAttributes().
+                Where(attribute => attribute.AttributeClass.Name == "WindowsRuntimeTypeAttribute");
+            if (winrtTypeAttribute.Any())
+            {
+                return (string) winrtTypeAttribute.First().ConstructorArguments[0].Value;
+            }
+
+            return null;
+        }
+
         private EntityHandle GetTypeReference(ISymbol symbol)
         {
             string @namespace = symbol.ContainingNamespace.ToString();
             string name = symbol.Name;
+            string fullType = QualifiedName(@namespace, name);
 
-            string assembly;
-            var winrtTypeAttribute = symbol.GetAttributes().
-                Where(attribute => attribute.AttributeClass.Name == "WindowsRuntimeTypeAttribute");
-            if (winrtTypeAttribute.Any())
-            {
-                assembly = (string) winrtTypeAttribute.First().ConstructorArguments[0].Value;
-            }
-            else
-            {
-                assembly = symbol.ContainingAssembly.Name;
+            var assembly = GetAssemblyForWinRTType(symbol);
+            if (assembly == null)
+            {   
+                if (MappedCSharpTypes.ContainsKey(fullType))
+                {
+                    Logger.Log("Mapping known type: " + fullType);
+                    var newType = MappedCSharpTypes[fullType];
+                    @namespace = newType.@namespace;
+                    name = newType.name;
+                    assembly = newType.assembly;
+
+                    Logger.Log("Mapping " + fullType + " to " + QualifiedName(@namespace, name) + " from " + assembly);
+                }
+                else
+                {
+                    assembly = symbol.ContainingAssembly.Name;
+                }
             }
 
             return GetTypeReference(@namespace, name, assembly);
@@ -349,8 +389,27 @@ namespace Generator
 
         private void EncodeSymbol(Symbol symbol, SignatureTypeEncoder typeEncoder)
         {
-            EntityHandle typeReference = symbol.IsHandle() ? symbol.Handle : GetTypeReference(symbol.Type);
-            typeEncoder.Type(typeReference, false);
+            if (symbol.IsHandle())
+            {
+                typeEncoder.Type(symbol.Handle, false);
+            }
+            else if(symbol.Type is INamedTypeSymbol namedType && namedType.TypeArguments.Length != 0)
+            {
+                Logger.Log("generic type");
+                var genericType = typeEncoder.GenericInstantiation(GetTypeReference(symbol.Type), namedType.TypeArguments.Length, false);
+                foreach (var typeArgument in namedType.TypeArguments)
+                {
+                    EncodeSymbol(new Symbol(typeArgument), genericType.AddArgument());
+                }
+            }
+            else if(symbol.Type.SpecialType != SpecialType.None)
+            {
+                EncodeSpecialType(symbol.Type.SpecialType, typeEncoder);
+            }
+            else
+            {
+                typeEncoder.Type(GetTypeReference(symbol.Type), symbol.Type.TypeKind == TypeKind.Enum);
+            }
         }
 
         private void EncodeReturnType(Symbol symbol, ReturnTypeEncoder returnTypeEncoder)
@@ -590,6 +649,11 @@ namespace Generator
 
         public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
+            if (!IsPublicNode(node))
+            {
+                return;
+            }
+
             base.VisitPropertyDeclaration(node);
 
             var symbol = Model.GetDeclaredSymbol(node);
@@ -609,7 +673,29 @@ namespace Generator
                 metadataBuilder.GetOrAddBlob(propertySignature));
             currentTypeDeclaration.AddProperty(symbol, propertyDefinitonHandle);
 
-            if (symbol.SetMethod != null)
+            var isGetPublic = true;
+            var isSetPublic = true;
+
+            /*
+            TODO: support for private set with default interface support
+
+            if (node.AccessorList != null)
+            {
+                foreach (var accessor in node.AccessorList.Accessors)
+                {
+                    if(accessor.Keyword.Kind() == SyntaxKind.GetKeyword)
+                    {
+                        isGetPublic = !IsPrivateNode(accessor);
+                    }
+                    else if(accessor.Keyword.Kind() == SyntaxKind.SetKeyword)
+                    {
+                        isSetPublic = !IsPrivateNode(accessor);
+                    }
+                }
+            }
+            */
+
+            if (symbol.SetMethod != null && isSetPublic)
             {
                 string setMethodName = "put_" + symbol.Name;
                 var setMethod = AddMethodDefinition(
@@ -627,20 +713,23 @@ namespace Generator
                     setMethod);
             }
 
-            string getMethodName = "get_" + symbol.Name;
-            var getMethod = AddMethodDefinition(
-                getMethodName,
-                new Parameter[0],
-                new Symbol(symbol.Type),
-                false,
-                node.Parent is InterfaceDeclarationSyntax,
-                true);
-            currentTypeDeclaration.AddMethod(symbol, getMethodName, getMethod);
+            if (!symbol.IsWriteOnly && isGetPublic)
+            {
+                string getMethodName = "get_" + symbol.Name;
+                var getMethod = AddMethodDefinition(
+                    getMethodName,
+                    new Parameter[0],
+                    new Symbol(symbol.Type),
+                    false,
+                    node.Parent is InterfaceDeclarationSyntax,
+                    true);
+                currentTypeDeclaration.AddMethod(symbol, getMethodName, getMethod);
 
-            metadataBuilder.AddMethodSemantics(
-                propertyDefinitonHandle,
-                MethodSemanticsAttributes.Getter,
-                getMethod);
+                metadataBuilder.AddMethodSemantics(
+                    propertyDefinitonHandle,
+                    MethodSemanticsAttributes.Getter,
+                    getMethod);
+            }
         }
 
         private TypeDefinitionHandle AddTypeDefinition(
@@ -1246,8 +1335,6 @@ namespace Generator
         {
             void processEnumDeclaration()
             {
-                base.VisitEnumDeclaration(node);
-
                 var enumTypeFieldAttributes =
                     FieldAttributes.Private |
                     FieldAttributes.SpecialName |
@@ -1265,11 +1352,11 @@ namespace Generator
                     metadataBuilder.GetOrAddString("value__"),
                     metadataBuilder.GetOrAddBlob(fieldSignature));
                 currentTypeDeclaration.AddField(symbol, fieldDefinitionHandle);
+
+                base.VisitEnumDeclaration(node);
             }
 
             ProcessTypeDeclaration(node, processEnumDeclaration);
-
-            // TODO:System.flags attribute
         }
 
         public override void VisitEnumMemberDeclaration(EnumMemberDeclarationSyntax node)
@@ -1911,6 +1998,11 @@ namespace Generator
             {
                 AddProjectedType(type);
             }
+            else if(MappedCSharpTypes.ContainsKey(type.ToString()))
+            {
+                var mappedType = MappedCSharpTypes[type.ToString()];
+                AddProjectedType(Model.Compilation.GetTypeByMetadataName(QualifiedName(mappedType.@namespace, mappedType.name)));
+            }
             else
             {
                 AddExternalType(type);
@@ -2046,6 +2138,11 @@ namespace Generator
         {
             return node.Modifiers.Any(modifier => modifier.ValueText == "public") ||
                 (node.Parent is InterfaceDeclarationSyntax && node.Modifiers.Count == 0);
+        }
+
+        public bool IsPrivateNode(AccessorDeclarationSyntax node)
+        {
+            return node.Modifiers.Any(modifier => modifier.ValueText == "private");
         }
 
         public bool IsStaticNode(MemberDeclarationSyntax node)

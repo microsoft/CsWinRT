@@ -961,7 +961,7 @@ remove => %.% -= value;
 
         if (is_overridable || !is_exclusive_to(event.Parent()))
         {
-            write_event(w, w.write_temp("%.%", bind<write_type_name>(event.Parent(), typedef_name_type::Projected, false), event.Name()), event, "this");
+            write_event(w, w.write_temp("%.%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false), event.Name()), event, "this");
         }
     }
 
@@ -3520,10 +3520,10 @@ private static unsafe int Do_Abi_%%
         auto remove_handler_event_token_name = method_signature{ remove_method }.params().back().first.Name();
 
         w.write("\nprivate static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_TokenTables = new global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>>();",
-            type_name,
+            ccw_type_name,
             bind<write_type_name>(semantics, typedef_name_type::Projected, false),
             evt.Name(),
-            type_name,
+            ccw_type_name,
             bind<write_type_name>(semantics, typedef_name_type::Projected, false));
 
         w.write(
@@ -4515,6 +4515,8 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable.Disp
 
     void write_delegate(writer& w, TypeDef const& type)
     {
+        if (settings.component) return;
+
         method_signature signature{ get_delegate_invoke(type) };
         w.write(R"(%%public delegate % %(%);
 )",
@@ -4805,6 +4807,8 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 
     void write_enum(writer& w, TypeDef const& type)
     {
+        if (settings.component) return;
+
         if (is_flags_enum(type))
         {
             w.write("[FlagsAttribute]\n");
