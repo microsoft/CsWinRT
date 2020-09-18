@@ -1,27 +1,26 @@
 # This pipeline does a validation test of CsWinRT against XAML scenarios hosted by WinUI
 
-# Todo: verify the way I am getting the cswinrt version to pass to CI Pipeline 
-
-# Note: The NugetFeed variable MUST be set to empty string so the CI pipeline doesn't publish to WinUI's internal feed
-
 variables:
    # set '_privateIXPNupkgVersion' to 'privateIXPNupkgVersion' if it has been set on the Pipeline, or else default to empty string.
   _DotNetSdkVersion: $[coalesce(variables.DotNetSdkVersion, '')]
-  
+
+parameters:
+  branch: 'master'
+  ciPipeline: 38157
+  cswinrtFeed: "https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json"
 
 steps:
 - script: |
-    $branch = "master"
-    $ciPipeline = 38157
-    $cswinrtName = "Microsoft.Windows.CsWinRT"
-    $cswinrtPackage = nuget install -Source "${{ parameters.parameters.privateCsWinRTFeedUrl }}" -DirectDownload -NoCache $cswinrtName 
+    $nugetList = nuget list -source ${{ parameters.cswinrtFeed }} -prerelease
+    $cswinrtPackage = $nugetList | Where-Object { $_.StartsWith("Microsoft.Windows.CsWinRT") }
+    $cswinrtVersion = $cswinrtPackage.Split(" ")[1]
     $runInfo = 
         (az pipelines run `
         --organization https://dev.azure.com/microsoft `
         --project WinUI `
-        --id $ciPipeline `
-        --branch $branch `
-        --variables "privateCsWinRTNupkgVersion=$cswinrtVersion" "privateDotNetSdkVersion=$(_DotNetSdkVersion)" "NuGetFeed=''")
+        --id ${{ parameters.ciPipeline }} `
+        --branch ${{ parameters.branch }} `
+        --variables "privateCsWinRTNupkgVersion=$cswinrtVersion" "privateDotNetSdkVersion=$(_DotNetSdkVersion)")
         $buildUrl = $runInfo.url.Replace("_apis/build/Builds/","_build/results?buildId=")
         Write-Host
         Write-Host "Build URL: $buildUrl"
