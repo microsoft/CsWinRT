@@ -4,14 +4,23 @@ variables:
    # set '_privateIXPNupkgVersion' to 'privateIXPNupkgVersion' if it has been set on the Pipeline, or else default to empty string.
   _DotNetSdkVersion: $[coalesce(variables.DotNetSdkVersion, '')]
   cswinrtFeed: "https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json"
+  dotnetFeed: "https://dotnetcli.blob.core.windows.net/dotnet"
 steps:
-- task: NuGetToolInstaller@1
-  displayName: 'Install Nuget'
-  inputs:
-    versionSpec:
 
 - powershell: |
-    $nugetList = nuget.exe list -Prerelease -Source $(cswinrtFeed)
+   Write-Host "##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}";
+   
+   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
+   
+   dotnet new globaljson --sdk-version "$($env:NET5_SDK_VERSION)" 
+   
+   &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:DOTNETSDKVERSION)" -Architecture "x64" -AzureFeed "$(
+     $env:DOTNETFEED)"
+   
+  failOnStderr: true
+  displayName: 'Install .NET 5 SDK'
+- powershell: |
+    $nugetList = nuget.exe list -Prerelease -Source "$($env:CSWINRTFEED)"
     Write-Host $?
     Write-Host "got the list"
     foreach($pkg in $nugetList)
