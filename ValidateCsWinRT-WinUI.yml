@@ -12,7 +12,8 @@ steps:
   continueOnError: false
 
 - powershell: |
-    $nugetList = nuget.exe list -source $(cswinrtFeed) -prerelease
+    Write-Host $(cswinrtFeed)
+    $nugetList = nuget.exe list Microsoft.Windows.CsWinRT -prerelease -source $(cswinrtFeed)
     $cswinrtPackage = $nugetList | Where-Object { $_.StartsWith("Microsoft.Windows.CsWinRT") }
     Write-Host "alpha"
     $cswinrtVersion = $cswinrtPackage.Split(" ")[1]
