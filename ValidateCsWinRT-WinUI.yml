@@ -3,20 +3,16 @@
 variables:
    # set '_privateIXPNupkgVersion' to 'privateIXPNupkgVersion' if it has been set on the Pipeline, or else default to empty string.
   _DotNetSdkVersion: $[coalesce(variables.DotNetSdkVersion, '')]
+  cswinrtFeed: "https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json"
 
 
 steps:
 - powershell: |
-    $cswinrtFeed = "https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json"
-    Write-Host "One"
-    $nugetList = nuget list -source $cswinrtFeed -prerelease
-    Write-Host "Two"
-    $cswinrtPackage = $nugetList | Where-Object { $_.StartsWith("Microsoft.Windows.CsWinRT") }
-    Write-Host "Three"
-    $cswinrtVersion = $cswinrtPackage.Split(" ")[1]
-    Write-Host "Four"
-    $ciPipeline = 38157
-    Write-Host "Five"
+    $nugetList = nuget.exe list -source $(cswinrtFeed) -prerelease
+    Write-Host "hmm"
+    #$cswinrtPackage = $nugetList | Where-Object { $_.StartsWith("Microsoft.Windows.CsWinRT") }
+    #$cswinrtVersion = $cswinrtPackage.Split(" ")[1]
+    #$ciPipeline = 38157
     #$runInfo = 
     #   (az pipelines run `
     #   --organization https://dev.azure.com/microsoft `
