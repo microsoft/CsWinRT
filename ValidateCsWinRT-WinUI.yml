@@ -19,31 +19,34 @@ steps:
 #  
 # failOnStderr: true
 # displayName: 'Install .NET 5 SDK'
+
+
+
 - powershell: |
-    $nugetList = nuget.exe list -Prerelease -Source "$($env:CSWINRTFEED)"
-    Write-Host $?
-    Write-Host "got the list"
-    foreach($pkg in $nugetList)
-    {
-      Write-Host $pkg
-      Write-Host "anything?"
-      if($pkg -like "Microsoft.Windows.CsWinRT*")
-      {
-        $cswinrtVersion = $pkg.Substring($pkg.IndexOf(" ") + 1)
-        Write-Host "found it!"
-        Write-Host $cswinrtVersion
-      }
-    }
-    #$ciPipeline = 38157
-    #$runInfo = 
-    #   (az pipelines run `
-    #   --organization https://dev.azure.com/microsoft `
-    #   --project WinUI `
-    #   --id $ciPipeline `
-    #   --branch "master" `
-    #   --variables "privateCsWinRTNupkgVersion=$cswinrtVersion" "privateDotNetSdkVersion=$(_DotNetSdkVersion)")
-    #   $buildUrl = $runInfo.url.Replace("_apis/build/Builds/","_build/results?buildId=")
-    #   Write-Host
-    #   Write-Host "Build URL: $buildUrl"
-    #   Start-Process $buildUrl
+    #$nugetList = nuget.exe list -Prerelease -Source "$($env:CSWINRTFEED)"
+    #Write-Host $?
+    #Write-Host "got the list"
+    #foreach($pkg in $nugetList)
+    #{
+    #  Write-Host $pkg
+    #  Write-Host "anything?"
+    #  if($pkg -like "Microsoft.Windows.CsWinRT*")
+    #  {
+    #    $cswinrtVersion = $pkg.Substring($pkg.IndexOf(" ") + 1)
+    #    Write-Host "found it!"
+    #    Write-Host $cswinrtVersion
+    #  }
+    #}
+    $ciPipeline = 38157
+    $runInfo = 
+       (az pipelines run `
+       --organization https://dev.azure.com/microsoft `
+       --project WinUI `
+       --id $ciPipeline `
+       --branch "master" `
+       --variables "privateCsWinRTNupkgVersion=0.1.0-prerelease.200917.1" "privateDotNetSdkVersion=$(_DotNetSdkVersion)")
+       $buildUrl = $runInfo.url.Replace("_apis/build/Builds/","_build/results?buildId=")
+       Write-Host
+       Write-Host "Build URL: $buildUrl"
+       Start-Process $buildUrl
   displayName: 'Running WinUI CI Pipeline with latest CsWinRT'
