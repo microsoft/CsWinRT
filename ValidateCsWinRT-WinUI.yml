@@ -5,7 +5,6 @@ variables:
   _DotNetSdkVersion: $[coalesce(variables.DotNetSdkVersion, '')]
 
 parameters:
-  branch: 'master'
   cswinrtFeed: "https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json"
 
 steps:
@@ -19,7 +18,7 @@ steps:
         --organization https://dev.azure.com/microsoft `
         --project WinUI `
         --id $ciPipeline `
-        --branch ${{ parameters.branch }} `
+        --branch "master" `
         --variables "privateCsWinRTNupkgVersion=$cswinrtVersion" "privateDotNetSdkVersion=$(_DotNetSdkVersion)")
         $buildUrl = $runInfo.url.Replace("_apis/build/Builds/","_build/results?buildId=")
         Write-Host
