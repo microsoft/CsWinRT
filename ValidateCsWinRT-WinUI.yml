@@ -5,7 +5,7 @@ variables:
   _DotNetSdkVersion: $[coalesce(variables.DotNetSdkVersion, '')]
 
 steps:
-- script: |
+- powershell: |
     $cswinrtFeed = "https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json"    
     $nugetList = nuget list -source $cswinrtFeed -prerelease
     $cswinrtPackage = $nugetList | Where-Object { $_.StartsWith("Microsoft.Windows.CsWinRT") }
