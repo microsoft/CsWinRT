@@ -106,6 +106,8 @@ namespace Generator
                 Logger.Log("Adding " + file);
                 context.AddSource(Path.GetFileNameWithoutExtension(file), SourceText.From(File.ReadAllText(file), Encoding.UTF8));
             }
+
+            Directory.Delete(outputDir, true);
         }
 
         private string GetWinmdOutputFile(SourceGeneratorContext context)
