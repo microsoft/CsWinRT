@@ -25,7 +25,7 @@ namespace ABI.WinRT.Interop
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private delegate*<IntPtr, IntPtr*, int> _ActivateInstance_0;
-            public delegate* stdcall<IntPtr, out IntPtr, int> ActivateInstance_0 { get => (delegate* stdcall<IntPtr, out IntPtr, int>)_ActivateInstance_0; set => _ActivateInstance_0 = (delegate*<IntPtr, IntPtr*, int>)value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int> ActivateInstance_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)_ActivateInstance_0; set => _ActivateInstance_0 = (delegate*<IntPtr, IntPtr*, int>)value; }
 
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
