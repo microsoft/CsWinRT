@@ -6,7 +6,6 @@ variables:
 
 parameters:
   branch: 'master'
-  ciPipeline: 38157
   cswinrtFeed: "https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json"
 
 steps:
@@ -14,11 +13,12 @@ steps:
     $nugetList = nuget list -source ${{ parameters.cswinrtFeed }} -prerelease
     $cswinrtPackage = $nugetList | Where-Object { $_.StartsWith("Microsoft.Windows.CsWinRT") }
     $cswinrtVersion = $cswinrtPackage.Split(" ")[1]
+    $ciPipeline 38157
     $runInfo = 
         (az pipelines run `
         --organization https://dev.azure.com/microsoft `
         --project WinUI `
-        --id ${{ parameters.ciPipeline }} `
+        --id $ciPipeline `
         --branch ${{ parameters.branch }} `
         --variables "privateCsWinRTNupkgVersion=$cswinrtVersion" "privateDotNetSdkVersion=$(_DotNetSdkVersion)")
         $buildUrl = $runInfo.url.Replace("_apis/build/Builds/","_build/results?buildId=")
