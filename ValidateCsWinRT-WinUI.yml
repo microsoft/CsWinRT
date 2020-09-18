@@ -6,10 +6,9 @@ variables:
   cswinrtFeed: "https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json"
 steps:
 - task: NuGetToolInstaller@1
-  displayName: 'Use NuGet 5.3'
+  displayName: 'Install Nuget'
   inputs:
-    versionSpec: 5.3
-  continueOnError: false
+    versionSpec:
 
 - powershell: |
     $nugetList = nuget.exe list -Prerelease -Source "https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json"
