@@ -17,6 +17,7 @@ steps:
     Write-Host "alpha"
     $cswinrtVersion = $cswinrtPackage.Split(" ")[1]
     Write-Host "beta"
+    Write-Host $cswinrtVersion
     #$ciPipeline = 38157
     #$runInfo = 
     #   (az pipelines run `
