@@ -11,7 +11,7 @@ steps:
     versionSpec:
 
 - powershell: |
-    $nugetList = nuget.exe list -Prerelease -Source "https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json"
+    $nugetList = nuget.exe list -Prerelease -Source $(cswinrtFeed)
     Write-Host $?
     Write-Host "got the list"
     foreach($pkg in $nugetList)
