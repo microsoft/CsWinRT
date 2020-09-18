@@ -4,9 +4,13 @@ variables:
    # set '_privateIXPNupkgVersion' to 'privateIXPNupkgVersion' if it has been set on the Pipeline, or else default to empty string.
   _DotNetSdkVersion: $[coalesce(variables.DotNetSdkVersion, '')]
   cswinrtFeed: "https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json"
-
-
 steps:
+- task: NuGetToolInstaller@1
+  displayName: 'Use NuGet 5.3'
+  inputs:
+    versionSpec: 5.3
+  continueOnError: true
+
 - powershell: |
     $nugetList = nuget.exe list -source $(cswinrtFeed) -prerelease
     Write-Host "hmm"
