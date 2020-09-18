@@ -12,13 +12,13 @@ steps:
   continueOnError: false
 
 - powershell: |
-    $nugetList = nuget.exe list Microsoft.Windows.CsWinRT -prerelease -source $(cswinrtFeed)
+    $nugetList = nuget.exe list -prerelease -source $(cswinrtFeed)
     Write-Host "got the list"
     foreach($pkg in $nugetList)
     {
       Write-Host $pkg
       Write-Host "anything?"
-      if($pkg -like "Microsoft.Windows.CsWinRT *")
+      if($pkg -like "Microsoft.Windows.CsWinRT*")
       {
         $cswinrtVersion = $pkg.Substring($pkg.IndexOf(" ") + 1)
         Write-Host "found it!"
