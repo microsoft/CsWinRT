@@ -16,6 +16,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event<EventHandlerCollection> _collectionEvent;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IVector<int32_t>>> _nestedEvent;
         winrt::event<Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, Windows::Foundation::Collections::IVector<hstring>>> _nestedTypedEvent;
+        winrt::event<TestComponentCSharp::EventWithReturn> _returnEvent;
 
         int32_t _int = 0;
         winrt::event<Windows::Foundation::EventHandler<int32_t>> _intChanged;
@@ -106,6 +107,10 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event_token NestedTypedEvent(Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, Windows::Foundation::Collections::IVector<hstring>> const& handler);
         void NestedTypedEvent(winrt::event_token const& token) noexcept;
         void InvokeNestedTypedEvent(TestComponentCSharp::Class const& sender, Windows::Foundation::Collections::IVector<hstring> const& arg0);
+        winrt::event_token ReturnEvent(TestComponentCSharp::EventWithReturn const& handler);
+        void ReturnEvent(winrt::event_token const& token) noexcept;
+        int32_t InvokeReturnEvent(int32_t const& arg0);
+
         int32_t IntProperty();
         void IntProperty(int32_t value);
         winrt::event_token IntPropertyChanged(Windows::Foundation::EventHandler<int32_t> const& handler);

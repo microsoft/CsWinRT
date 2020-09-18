@@ -265,6 +265,19 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _nestedTypedEvent(sender, arg0);
     }
+    winrt::event_token Class::ReturnEvent(TestComponentCSharp::EventWithReturn const& handler)
+    {
+        return _returnEvent.add(handler);
+    }
+    void Class::ReturnEvent(winrt::event_token const& token) noexcept
+    {
+        _returnEvent.remove(token);
+    }
+    int32_t Class::InvokeReturnEvent(int32_t const& arg0)
+    {
+        _returnEvent(arg0);
+        return arg0;
+    }
     int32_t Class::IntProperty()
     {
         return _int;
