@@ -141,6 +141,14 @@ namespace UnitTest
             TestObject.InvokeCollectionEvent(TestObject, collection0, collection1);
             events_expected++;
 
+            TestObject.ErrorsChanged += (object sender, System.ComponentModel.DataErrorsChangedEventArgs e) =>
+            {
+                events_received++;
+                Assert.Equal("name", e.PropertyName);
+            };
+            TestObject.RaiseDataErrorChanged();
+            events_expected++;
+
             Assert.Equal(events_received, events_expected);
         }
 

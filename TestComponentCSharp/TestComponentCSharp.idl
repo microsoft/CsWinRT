@@ -100,6 +100,7 @@ namespace TestComponentCSharp
         //, IArtist
         , IProperties1
         , IProperties2
+        , Microsoft.UI.Xaml.Data.INotifyDataErrorInfo
         //, Windows.Foundation.Collections.IVector<String>
         //, Windows.Foundation.Collections.IMap<Int32, String>
     {
@@ -309,6 +310,9 @@ namespace TestComponentCSharp
 
         // Interface projections
         static IProperties1 NativeProperties1 { get; };
+
+        // INotifyDataErrorInfo
+        void RaiseDataErrorChanged();
     }
 
     [threading(sta), marshaling_behavior(standard)]

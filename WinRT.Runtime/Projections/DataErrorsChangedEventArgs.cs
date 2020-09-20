@@ -14,10 +14,11 @@ namespace ABI.Microsoft.UI.Xaml.Data
     internal unsafe struct IDataErrorsChangedEventArgsVftbl
     {
         internal IInspectable.Vftbl IInspectableVftbl;
-        private delegate*<IntPtr, IntPtr*, int> _get_PropertyName_0;
+        
+        private void* _get_PropertyName_0;
         public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_PropertyName_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_PropertyName_0;
 
-        private delegate*<IntPtr, IntPtr, int> _put_PropertyName_1;
+        private void* _put_PropertyName_1;
         public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> put_PropertyName_1 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_put_PropertyName_1;
     }
 

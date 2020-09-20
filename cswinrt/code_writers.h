@@ -1480,6 +1480,28 @@ public void Dispose() => %.Dispose();
 target);
     }
 
+    void write_notify_data_error_info_members(writer& w)
+    {
+        w.write(R"(
+public global::System.Collections.IEnumerable GetErrors(string propertyName) => AsInternal(new InterfaceTag<global::System.ComponentModel.INotifyDataErrorInfo>()).GetErrors(propertyName);
+
+global::System.Collections.IEnumerable global::System.ComponentModel.INotifyDataErrorInfo.GetErrors(string propertyName) => GetErrors(propertyName);
+public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged
+{
+add => AsInternal(new InterfaceTag<global::System.ComponentModel.INotifyDataErrorInfo>()).ErrorsChanged += value;
+remove => AsInternal(new InterfaceTag<global::System.ComponentModel.INotifyDataErrorInfo>()).ErrorsChanged -= value;
+}
+
+event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> global::System.ComponentModel.INotifyDataErrorInfo.ErrorsChanged
+{
+add => this.ErrorsChanged += value;
+remove => this.ErrorsChanged -= value;
+}
+public bool HasErrors => AsInternal(new InterfaceTag<global::System.ComponentModel.INotifyDataErrorInfo>()).HasErrors;
+bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors {get => HasErrors; }
+)");
+    }
+
     void write_custom_mapped_type_members(writer& w, std::string_view target, mapped_type const& mapping)
     {
         if (mapping.abi_name == "IIterable`1") 
@@ -1506,17 +1528,21 @@ target);
         {
             write_list_members(w, target, false);
         }
-        else if (mapping.abi_name == "IBindableIterable")
+        else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IEnumerable")
         {
             write_nongeneric_enumerable_members(w, target);
         }
-        else if (mapping.abi_name == "IBindableVector")
+        else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IList")
         {
             write_nongeneric_list_members(w, target, false);
         }
         else if (mapping.mapped_namespace == "System" && mapping.mapped_name == "IDisposable")
         {
             write_idisposable_members(w, target);
+        }
+        else if (mapping.mapped_namespace == "System.ComponentModel" && mapping.mapped_name == "INotifyDataErrorInfo")
+        {
+            write_notify_data_error_info_members(w);
         }
     }
 

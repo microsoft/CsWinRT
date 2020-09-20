@@ -63,7 +63,6 @@ namespace ABI.System.ComponentModel
             }
 
 #if !NETSTANDARD2_0
-//            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })] ???
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_GetErrors_3(IntPtr thisPtr, IntPtr propertyName, IntPtr* result)

@@ -313,6 +313,13 @@ namespace winrt::TestComponentCSharp::implementation
         void ReadWriteProperty(int32_t value);
         //hstring DistinctProperty();
         //void DistinctProperty(hstring const& value);
+
+        winrt::event<Windows::Foundation::EventHandler<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs>> _dataErrorsChanged;
+        bool HasErrors();
+        winrt::event_token ErrorsChanged(Windows::Foundation::EventHandler<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> const& handler);
+        void ErrorsChanged(winrt::event_token const& token) noexcept;
+        Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> GetErrors(hstring const& propertyName);
+        void RaiseDataErrorChanged();
     };
 }
 

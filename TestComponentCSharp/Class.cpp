@@ -7,6 +7,7 @@ using namespace std::chrono;
 using namespace winrt;
 using namespace Windows::Foundation;
 using namespace Collections;
+using namespace Microsoft::UI::Xaml::Data;
 using namespace Microsoft::UI::Xaml::Interop;
 using Windows::UI::Xaml::Interop::TypeName;
 
@@ -100,6 +101,27 @@ namespace winrt::TestComponentCSharp::implementation
         {
             _wrapped.Clear();
         }
+    };
+
+    struct data_errors_changed_event_args : implements<data_errors_changed_event_args, IDataErrorsChangedEventArgs>
+    {
+        data_errors_changed_event_args(winrt::hstring name) :
+            m_name(name)
+        {
+        }
+
+        hstring PropertyName() const
+        {
+            return m_name;
+        }
+
+        void PropertyName(param::hstring const& name)
+        {
+            m_name = name;
+        }
+
+    private:
+        winrt::hstring m_name;
     };
 
     Class::Class() :
@@ -380,11 +402,11 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _objectChanged.remove(token);
     }
-    Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> Class::ObjectIterableProperty()
+    IIterable<IInspectable> Class::ObjectIterableProperty()
     {
         return _objectIterable;
     }
-    void Class::ObjectIterableProperty(Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> const& value)
+    void Class::ObjectIterableProperty(IIterable<IInspectable> const& value)
     {
         for (auto element : value)
         {
@@ -399,7 +421,7 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _objectIterable = provideObjectIterable();
     }
-    winrt::event_token Class::ObjectIterablePropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>> const& handler)
+    winrt::event_token Class::ObjectIterablePropertyChanged(EventHandler<IIterable<IInspectable>> const& handler)
     {
         return _objectIterableChanged.add(handler);
     }
@@ -776,22 +798,22 @@ namespace winrt::TestComponentCSharp::implementation
         _point = value;
     }
 
-    Windows::Foundation::Rect Class::RectProperty()
+    Rect Class::RectProperty()
     {
         return _rect;
     }
 
-    void Class::RectProperty(Windows::Foundation::Rect const& value)
+    void Class::RectProperty(Rect const& value)
     {
         _rect = value;
     }
 
-    Windows::Foundation::Size Class::SizeProperty()
+    Size Class::SizeProperty()
     {
         return _size;
     }
 
-    void Class::SizeProperty(Windows::Foundation::Size const& value)
+    void Class::SizeProperty(Size const& value)
     {
         _size = value;
     }
@@ -878,59 +900,59 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _matrix3D = value;
     }
-    Windows::Foundation::Numerics::float3x2 Class::Matrix3x2Property()
+    Numerics::float3x2 Class::Matrix3x2Property()
     {
         return _matrix3x2;
     }
-    void Class::Matrix3x2Property(Windows::Foundation::Numerics::float3x2 const& value)
+    void Class::Matrix3x2Property(Numerics::float3x2 const& value)
     {
         _matrix3x2 = value;
     }
-    Windows::Foundation::Numerics::float4x4 Class::Matrix4x4Property()
+    Numerics::float4x4 Class::Matrix4x4Property()
     {
         return _matrix4x4;
     }
-    void Class::Matrix4x4Property(Windows::Foundation::Numerics::float4x4 const& value)
+    void Class::Matrix4x4Property(Numerics::float4x4 const& value)
     {
         _matrix4x4 = value;
     }
-    Windows::Foundation::Numerics::plane Class::PlaneProperty()
+    Numerics::plane Class::PlaneProperty()
     {
         return _plane;
     }
-    void Class::PlaneProperty(Windows::Foundation::Numerics::plane const& value)
+    void Class::PlaneProperty(Numerics::plane const& value)
     {
         _plane = value;
     }
-    Windows::Foundation::Numerics::quaternion Class::QuaternionProperty()
+    Numerics::quaternion Class::QuaternionProperty()
     {
         return _quaternion;
     }
-    void Class::QuaternionProperty(Windows::Foundation::Numerics::quaternion const& value)
+    void Class::QuaternionProperty(Numerics::quaternion const& value)
     {
         _quaternion = value;
     }
-    Windows::Foundation::Numerics::float2 Class::Vector2Property()
+    Numerics::float2 Class::Vector2Property()
     {
         return _vector2;
     }
-    void Class::Vector2Property(Windows::Foundation::Numerics::float2 const& value)
+    void Class::Vector2Property(Numerics::float2 const& value)
     {
         _vector2 = value;
     }
-    Windows::Foundation::Numerics::float3 Class::Vector3Property()
+    Numerics::float3 Class::Vector3Property()
     {
         return _vector3;
     }
-    void Class::Vector3Property(Windows::Foundation::Numerics::float3 const& value)
+    void Class::Vector3Property(Numerics::float3 const& value)
     {
         _vector3 = value;
     }
-    Windows::Foundation::Numerics::float4 Class::Vector4Property()
+    Numerics::float4 Class::Vector4Property()
     {
         return _vector4;
     }
-    void Class::Vector4Property(Windows::Foundation::Numerics::float4 const& value)
+    void Class::Vector4Property(Numerics::float4 const& value)
     {
         _vector4 = value;
     }
@@ -1166,7 +1188,7 @@ namespace winrt::TestComponentCSharp::implementation
         return type.Name;
     }
 
-    Windows::Foundation::IInspectable Class::EmptyString()
+    IInspectable Class::EmptyString()
     {
         return winrt::box_value(hstring{});
     }
@@ -1189,4 +1211,29 @@ namespace winrt::TestComponentCSharp::implementation
     {
         return winrt::make<native_properties1>();
     }
+
+    // INotifyDataErrorInfo
+    bool Class::HasErrors()
+    {
+        return true;
+    }
+    winrt::event_token Class::ErrorsChanged(EventHandler<DataErrorsChangedEventArgs> const& handler)
+    {
+        return _dataErrorsChanged.add(handler);
+    }
+    void Class::ErrorsChanged(winrt::event_token const& token) noexcept
+    {
+        _dataErrorsChanged.remove(token);
+    }
+    IIterable<IInspectable> Class::GetErrors(hstring const& propertyName)
+    {
+        return _objectIterable;
+    }
+    void Class::RaiseDataErrorChanged()
+    {
+        auto mock = make<data_errors_changed_event_args>(L"name");
+        DataErrorsChangedEventArgs args(detach_abi(mock), take_ownership_from_abi_t());
+        _dataErrorsChanged(*this, args);
+    }
 }
+
