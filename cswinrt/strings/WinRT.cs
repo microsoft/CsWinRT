@@ -315,6 +315,16 @@ namespace WinRT
         public static ObjectReference<I> ActivateInstance<I>() => _factory.Value._ActivateInstance<I>();
     }
 
+    internal class ComponentActivationFactory<T> : global::WinRT.Interop.IActivationFactory where T : class, new()
+    {
+        public IntPtr ActivateInstance()
+        {
+            T comp = new T();
+            using var marshaler = MarshalInspectable.CreateMarshaler(comp);
+            return marshaler.GetRef();
+        }
+    }
+
 #pragma warning disable CA2002
     internal unsafe class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
@@ -399,10 +409,13 @@ namespace WinRT
 
                 _eventInvoke = Expression.Lambda(typeof(TDelegate),
                     Expression.Block(
+                        invoke.ReturnType,
                         new[] { delegateLocal },
                         Expression.Assign(delegateLocal, Expression.Field(Expression.Constant(this), typeof(EventSource<TDelegate>).GetField(nameof(_event), BindingFlags.Instance | BindingFlags.NonPublic))),
-                        Expression.IfThen(
-                            Expression.ReferenceNotEqual(delegateLocal, Expression.Constant(null, typeof(TDelegate))), Expression.Call(delegateLocal, invoke, parameters))),
+                        Expression.Condition(
+                            Expression.ReferenceNotEqual(delegateLocal, Expression.Constant(null, typeof(TDelegate))),
+                            Expression.Call(delegateLocal, invoke, parameters),
+                            Expression.Default(invoke.ReturnType))),
                     parameters).Compile();
 
                 return _eventInvoke;

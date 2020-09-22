@@ -159,6 +159,7 @@ namespace cswinrt
     }
 
     void write_projection_type(writer& w, type_semantics const& semantics);
+    void write_projection_type_for_name_type(writer& w, type_semantics const& semantics, typedef_name_type const& nameType);
 
     void write_generic_type_name_base(writer& w, uint32_t index)
     {
@@ -193,8 +194,9 @@ namespace cswinrt
             });
     }
 
-    void write_typedef_name(writer& w, type_definition const& type, bool abiNamespace = false, bool forceWriteNamespace = false)
+    void write_typedef_name(writer& w, type_definition const& type, typedef_name_type const& nameType = typedef_name_type::Projected, bool forceWriteNamespace = false)
     {
+        bool authoredType = settings.component && settings.filter.includes(type);
         auto typeNamespace = type.TypeNamespace();
         auto typeName = type.TypeName();
         if (auto proj = get_mapped_type(typeNamespace, typeName))
@@ -203,12 +205,21 @@ namespace cswinrt
             typeName = proj->mapped_name;
         }
 
-        if (forceWriteNamespace || ((typeNamespace != w._current_namespace) || (abiNamespace != w._in_abi_namespace)))
+        if (forceWriteNamespace || 
+            (typeNamespace != w._current_namespace) ||
+            (nameType == typedef_name_type::Projected && (w._in_abi_namespace || w._in_abi_impl_namespace)) ||
+            (nameType == typedef_name_type::ABI && !w._in_abi_namespace) ||
+            (nameType == typedef_name_type::CCW && authoredType && !w._in_abi_impl_namespace) ||
+            (nameType == typedef_name_type::CCW && !authoredType && (w._in_abi_namespace || w._in_abi_impl_namespace)))
         {
             w.write("global::");
-            if (abiNamespace)
+            if (nameType == typedef_name_type::ABI)
             {
                 w.write("ABI.");
+            }
+            else if (authoredType && nameType == typedef_name_type::CCW)
+            {
+                w.write("ABI.Impl.");
             }
 
             w.write("%.", typeNamespace);
@@ -228,37 +239,47 @@ namespace cswinrt
             { s(); write_generic_type_name(w, index++); }, type.GenericParam()));
     }
 
-    void write_type_name(writer& w, type_semantics const& semantics, bool abiNamespace = false, bool forceWriteNamespace = false)
+    void write_type_name(writer& w, type_semantics const& semantics, typedef_name_type const& nameType = typedef_name_type::Projected, bool forceWriteNamespace = false)
     {
         for_typedef(w, semantics, [&](auto type)
         {
-            write_typedef_name(w, type, abiNamespace, forceWriteNamespace);
+            write_typedef_name(w, type, nameType, forceWriteNamespace);
             write_type_params(w, type);
         });
     }
 
-    auto write_type_name_temp(writer& w, type_semantics const& type, char const* format = "%", bool abiNamespace = false)
+    auto write_type_name_temp(writer& w, type_semantics const& type, char const* format = "%", typedef_name_type const& nameType = typedef_name_type::Projected)
     {
-        return w.write_temp(format, bind<write_type_name>(type, abiNamespace, false));
+        return w.write_temp(format, bind<write_type_name>(type, nameType, false));
     }
 
-    void write_projection_type(writer& w, type_semantics const& semantics)
+    void write_projection_type_for_name_type(writer& w, type_semantics const& semantics, typedef_name_type const& nameType)
     {
         call(semantics,
             [&](object_type) { w.write("object"); },
             [&](guid_type) { w.write("Guid"); },
             [&](type_type) { w.write("Type"); },
-            [&](type_definition const& type) { write_typedef_name(w, type); },
+            [&](type_definition const& type) { write_typedef_name(w, type, nameType); },
             [&](generic_type_index const& var) { write_generic_type_name(w, var.index); },
             [&](generic_type_instance const& type)
             {
                 auto guard{ w.push_generic_args(type) };
                 w.write("%<%>",
-                    bind<write_projection_type>(type.generic_type),
-                    bind_list<write_projection_type>(", ", type.generic_args));
+                    bind<write_projection_type_for_name_type>(type.generic_type, nameType),
+                    bind_list<write_projection_type_for_name_type>(", ", type.generic_args, nameType));
             },
             [&](generic_type_param const& param) { w.write(param.Name()); },
             [&](fundamental_type const& type) { write_fundamental_type(w, type); });
+    }
+
+    void write_projection_type(writer& w, type_semantics const& semantics)
+    {
+        write_projection_type_for_name_type(w, semantics, typedef_name_type::Projected);
+    }
+
+    void write_projection_ccw_type(writer& w, type_semantics const& semantics)
+    {
+        write_projection_type_for_name_type(w, semantics, typedef_name_type::CCW);
     }
 
     bool is_keyword(std::string_view str)
@@ -375,7 +396,7 @@ namespace cswinrt
                         break;
 
                     case category::struct_type:
-                        write_type_name(w, type, !is_type_blittable(semantics));
+                        write_type_name(w, type, !is_type_blittable(semantics) ? typedef_name_type::ABI : typedef_name_type::Projected);
                         break;
 
                     default:
@@ -599,7 +620,7 @@ namespace cswinrt
     void write_delegate_abi_call(writer& w, TypeDef const& type, std::string_view call, std::string_view name)
     {
         w.write("%%.%(%)",
-            bind<write_typedef_name>(type, true, false),
+            bind<write_typedef_name>(type, typedef_name_type::ABI, false),
             bind<write_type_params>(type),
             call, name);
     }
@@ -612,7 +633,7 @@ namespace cswinrt
         {
             if (is_boxed)
             {
-                w.write("(%)", bind<write_type_name>(type, false, false));
+                w.write("(%)", bind<write_type_name>(type, typedef_name_type::Projected, false));
             }
             w.write("%", name);
             return;
@@ -630,14 +651,14 @@ namespace cswinrt
             }
             else
             {
-                w.write("%.FromAbi(%)", bind<write_type_name>(param_type, true, true), name);
+                w.write("%.FromAbi(%)", bind<write_type_name>(param_type, typedef_name_type::ABI, true), name);
             }
             return;
         }
         case category::interface_type:
         {
             w.write("MarshalInterface<%>.FromAbi(%)",
-                bind<write_type_name>(type, false, false),
+                bind<write_type_name>(type, typedef_name_type::Projected, false),
                 name);
             return;
         }
@@ -734,7 +755,7 @@ namespace cswinrt
 % %.%(%) => %.%(%);
 )",
             return_type,
-            bind<write_type_name>(method_interface, false, false),
+            bind<write_type_name>(method_interface, typedef_name_type::Projected, false),
             method.Name(),
             bind_list<write_projection_parameter>(", ", signature.params()),
             method_target,
@@ -795,7 +816,7 @@ namespace cswinrt
             w.write(R"(
 % %.%(%) => %(%);)",
                 bind<write_projection_return_type>(signature),
-                bind<write_type_name>(method.Parent(), false, false),
+                bind<write_type_name>(method.Parent(), typedef_name_type::CCW, false),
                 method.Name(),
                 bind_list<write_projection_parameter>(", ", signature.params()),
                 method.Name(),
@@ -843,7 +864,7 @@ set => %.% = value;
     std::string write_as_cast(writer& w, TypeDef const& iface, bool as_abi)
     {
         return w.write_temp(as_abi ? "As<%>()" : "AsInternal(new InterfaceTag<%>())",
-            bind<write_type_name>(iface, as_abi, false));
+            bind<write_type_name>(iface, as_abi ? typedef_name_type::ABI : typedef_name_type::Projected, false));
     }
 
     void write_lazy_interface_initialization(writer& w, TypeDef const& type)
@@ -858,7 +879,7 @@ set => %.% = value;
             for_typedef(w, get_type_semantics(ii.Interface()), [&](auto interface_type)
             {
                 auto interface_name = write_type_name_temp(w, interface_type);
-                auto interface_abi_name = write_type_name_temp(w, interface_type, "%", true);
+                auto interface_abi_name = write_type_name_temp(w, interface_type, "%", typedef_name_type::ABI);
 
                 w.write(R"(
 {typeof(%), new Lazy<%>(() => new %(GetReferenceForQI()))},)",
@@ -892,7 +913,7 @@ set => %.% = value;
     void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view event_target,
         std::string_view access_spec = ""sv, std::string_view method_spec = ""sv)
     {
-        auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), false, false));
+        auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
 
         // ICommand has a lower-fidelity type mapping where the type of the event handler doesn't project one-to-one
         // so we need to hard-code mapping the event handler from the mapped WinRT type to the correct .NET type.
@@ -940,7 +961,7 @@ remove => %.% -= value;
 
         if (is_overridable || !is_exclusive_to(event.Parent()))
         {
-            write_event(w, w.write_temp("%.%", bind<write_type_name>(event.Parent(), false, false), event.Name()), event, "this");
+            write_event(w, w.write_temp("%.%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false), event.Name()), event, "this");
         }
     }
 
@@ -1057,7 +1078,7 @@ internal static % Instance => _instance.Value;
 
     static std::string get_default_interface_name(writer& w, TypeDef const& type, bool abiNamespace = true)
     {
-        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), abiNamespace, false));
+        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), abiNamespace ? typedef_name_type::ABI : typedef_name_type::Projected, false));
     }
 
     void write_factory_constructors(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
@@ -1150,7 +1171,7 @@ MarshalInspectable.DisposeAbi(ptr);
                 class_type.TypeName(),
                 bind_list<write_projection_parameter>(", ", params_without_objects),
                 has_base_type ? ":base(global::WinRT.DerivedComposed.Instance)" : "",
-                bind<write_type_name>(class_type, false, false),
+                bind<write_type_name>(class_type, typedef_name_type::Projected, false),
                 cache_object,
                 method.Name(),
                 bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
@@ -1161,7 +1182,7 @@ MarshalInspectable.DisposeAbi(ptr);
         }
     }
 
-    void write_static_method(writer& w, MethodDef const& method, std::string_view method_target)
+    void write_static_method(writer& w, MethodDef const& method, std::string_view method_target, bool factory_class = false)
     {
         if (method.SpecialName())
         {
@@ -1171,7 +1192,7 @@ MarshalInspectable.DisposeAbi(ptr);
         auto return_type = w.write_temp("%", [&](writer& w) {
             write_projection_return_type(w, signature);
         });
-        write_method(w, signature, method.Name(), return_type, method_target, "public "sv, "static "sv);
+        write_method(w, signature, method.Name(), return_type, method_target, "public "sv, factory_class ? ""sv : "static "sv);
     }
 
     void write_static_property(writer& w, Property const& prop, std::string_view prop_target)
@@ -1191,7 +1212,7 @@ MarshalInspectable.DisposeAbi(ptr);
     void write_static_members(writer& w, TypeDef const& static_type, TypeDef const& class_type)
     {
         auto cache_object = write_static_cache_object(w, static_type.TypeName(), class_type);
-        w.write_each<write_static_method>(static_type.MethodList(), cache_object);
+        w.write_each<write_static_method>(static_type.MethodList(), cache_object, false);
         w.write_each<write_static_property>(static_type.PropertyList(), cache_object);
         w.write_each<write_static_event>(static_type.EventList(), cache_object);
     }
@@ -1556,7 +1577,7 @@ bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors {get => HasErr
             {
                 if (prop.Name() == prop_name)
                 {
-                    getter_iface = write_type_name_temp(w, type, "%", true);
+                    getter_iface = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
                     return true;
                 }
             }
@@ -1601,7 +1622,7 @@ bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors {get => HasErr
         throw_invalid("Could not find property getter interface");
     }
 
-    void write_class_members(writer& w, TypeDef const& type)
+    void write_class_members(writer& w, TypeDef const& type, bool wrapper_type)
     {
         std::map<std::string_view, std::tuple<std::string, std::string, std::string, bool, bool>> properties;
         for (auto&& ii : type.InterfaceImpl())
@@ -1611,11 +1632,11 @@ bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors {get => HasErr
             auto write_class_interface = [&](TypeDef const& interface_type)
             {
                 auto interface_name = write_type_name_temp(w, interface_type);
-                auto interface_abi_name = write_type_name_temp(w, interface_type, "%", true);
+                auto interface_abi_name = write_type_name_temp(w, interface_type, "%", typedef_name_type::ABI);
 
                 auto is_default_interface = has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute");
-                auto target = is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())");
-                if (!is_default_interface)
+                auto target = wrapper_type ? "_comp" :  (is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())"));
+                if (!is_default_interface && !wrapper_type)
                 {
                     w.write(R"(
 private % AsInternal(InterfaceTag<%> _) => ((Lazy<%>)_lazyInterfaces[typeof(%)]).Value;
@@ -1676,7 +1697,7 @@ private % AsInternal(InterfaceTag<%> _) => ((Lazy<%>)_lazyInterfaces[typeof(%)])
                     {
                         w.write("% %.% {%%}",
                             prop_type,
-                            bind<write_type_name>(interface_type, false, false),
+                            bind<write_type_name>(interface_type, typedef_name_type::Projected, false),
                             prop.Name(),
                             bind([&](writer& w)
                             {
@@ -1725,7 +1746,7 @@ db_path.stem().string());
 {
 %})",
             bind<write_winrt_attribute>(type),
-            bind<write_type_name>(type, false, false),
+            bind<write_type_name>(type, typedef_name_type::Projected, false),
             bind<write_attributed_types>(type)
         );
     }
@@ -1743,7 +1764,7 @@ _% =
     _obj.Vftbl.%,
     _obj.Vftbl.%);)",
                 evt.Name(),
-                bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
+                bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
                 get_vmethod_name(w, type, add),
                 get_vmethod_name(w, type, remove));
         }
@@ -1755,7 +1776,7 @@ _% =
         {
             w.write(R"(
 private EventSource<%> _%;)",
-                bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
+                bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
                 evt.Name());
         }
     }
@@ -1797,7 +1818,7 @@ private EventSource<%> _%;)",
         {
             w.write(R"(
 event % %;)",
-                bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
+                bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
                 evt.Name());
         }
     }
@@ -2112,12 +2133,12 @@ event % %;)",
 
         auto get_abi_type = [&]()
         {
-            auto abi_type = w.write_temp("%", bind<write_type_name>(semantics, true, false));
+            auto abi_type = w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, false));
             if (abi_type != prop_name)
             {
                 return abi_type;
             }
-            return w.write_temp("%", bind<write_type_name>(semantics, true, true));
+            return w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
         };
 
         auto set_simple_marshaler_type = [&](abi_marshaler& m, TypeDef const& type)
@@ -2165,7 +2186,7 @@ event % %;)",
                 }
                 break;
             case category::class_type:
-                m.marshaler_type = w.write_temp("%", bind<write_type_name>(semantics, true, true));
+                m.marshaler_type = w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
                 if (m.is_array())
                 {
                     m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
@@ -2606,7 +2627,7 @@ add => _%.Subscribe(value);
 remove => _%.Unsubscribe(value);
 }
 )",
-                bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
+                bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
                 evt.Name(),
                 evt.Name(),
                 evt.Name());
@@ -2744,7 +2765,7 @@ remove => _%.Unsubscribe(value);
                 {
                     if (!method.SpecialName())
                     {
-                        auto method_target = w.write_temp("As<%>()", bind<write_type_name>(iface, true, false));
+                        auto method_target = w.write_temp("As<%>()", bind<write_type_name>(iface, typedef_name_type::ABI, false));
                         auto return_type = w.write_temp("%", bind<write_projection_return_type>(method_signature{ method }));
                         write_explicitly_implemented_method(w, method, return_type, iface, method_target);
                     }
@@ -2799,7 +2820,7 @@ remove => _%.Unsubscribe(value);
             get<uint8_t>(get_arg(10)));
     }
 
-    void write_type_inheritance(writer& w, TypeDef const& type, type_semantics base_semantics, bool add_custom_qi)
+    void write_type_inheritance(writer& w, TypeDef const& type, type_semantics base_semantics, bool add_custom_qi, bool include_exclusive_interface)
     {
         auto delimiter{ " : " };
         auto write_delimiter = [&]()
@@ -2818,10 +2839,10 @@ remove => _%.Unsubscribe(value);
         {
             for_typedef(w, get_type_semantics(iface.Interface()), [&](auto type)
             {
-                if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute") || !is_exclusive_to(type))
+                if (has_attribute(iface, "Windows.Foundation.Metadata", "OverridableAttribute") || !is_exclusive_to(type) || include_exclusive_interface)
                 {
                     write_delimiter();
-                    w.write("%", bind<write_type_name>(type, false, false));
+                    w.write("%", bind<write_type_name>(type, typedef_name_type::CCW, false));
                 }
             });
         }
@@ -3223,7 +3244,7 @@ remove => _%.Unsubscribe(value);
 
             auto get_abi_type = [&]()
             {
-                return w.write_temp("%", bind<write_type_name>(semantics, true, true));
+                return w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
             };
 
             auto set_typedef_marshaler = [&](TypeDef const& type)
@@ -3416,6 +3437,7 @@ return 0;)",
         method_signature signature{ method };
         auto return_sig = signature.return_signature();
         auto type_name = write_type_name_temp(w, method.Parent());
+        auto ccw_type_name = write_type_name_temp(w, method.Parent(), "%", typedef_name_type::CCW);
         auto vmethod_name = get_vmethod_name(w, method.Parent(), method);
 
         auto generic_abi_types = get_generic_abi_types(w, signature);
@@ -3435,7 +3457,7 @@ private static unsafe int Do_Abi_%%
             bind<write_managed_method_call>(
                 signature,
                 w.write_temp("global::WinRT.ComWrappersSupport.FindObject<%>(%).%%",
-                    type_name,
+                    ccw_type_name,
                     have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                     method.Name(),
                     "(%)")));
@@ -3446,6 +3468,7 @@ private static unsafe int Do_Abi_%%
         auto [getter, setter] = get_property_methods(prop);
         auto type_name = write_type_name_temp(w, prop.Parent());
         auto generic_type = distance(prop.Parent().GenericParam()) > 0;
+        auto ccw_type_name = write_type_name_temp(w, prop.Parent(), "%", typedef_name_type::CCW);
         if (setter)
         {
             method_signature setter_sig{ setter };
@@ -3471,7 +3494,7 @@ private static unsafe int Do_Abi_%%
             bind<write_managed_method_call>(
                 setter_sig,
                 w.write_temp("global::WinRT.ComWrappersSupport.FindObject<%>(%).% = %",
-                    type_name,
+                    ccw_type_name,
                     have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                     prop.Name(),
                     "%")));
@@ -3501,7 +3524,7 @@ private static unsafe int Do_Abi_%%
                 bind<write_managed_method_call>(
                     getter_sig,
                     w.write_temp("global::WinRT.ComWrappersSupport.FindObject<%>(%).%%",
-                        type_name,
+                        ccw_type_name,
                         have_generic_params ? "new IntPtr(thisPtr)" : "thisPtr",
                         prop.Name(),
                         "%")));
@@ -3513,6 +3536,7 @@ private static unsafe int Do_Abi_%%
     {
         auto type_name = write_type_name_temp(w, evt.Parent());
         auto generic_type = distance(evt.Parent().GenericParam()) > 0;
+        auto ccw_type_name = write_type_name_temp(w, evt.Parent(), "%", typedef_name_type::CCW);
         auto semantics = get_type_semantics(evt.EventType());
         auto [add_method, remove_method] = get_event_methods(evt);
         auto add_signature = method_signature{ add_method };
@@ -3522,11 +3546,11 @@ private static unsafe int Do_Abi_%%
         auto remove_handler_event_token_name = method_signature{ remove_method }.params().back().first.Name();
 
         w.write("\nprivate static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_TokenTables = new global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>>();",
-            type_name,
-            bind<write_type_name>(semantics, false, false),
+            ccw_type_name,
+            bind<write_type_name>(semantics, typedef_name_type::Projected, false),
             evt.Name(),
-            type_name,
-            bind<write_type_name>(semantics, false, false));
+            ccw_type_name,
+            bind<write_type_name>(semantics, typedef_name_type::Projected, false));
 
         w.write(
             R"(
@@ -3552,8 +3576,8 @@ return __ex.HResult;
             bind<write_abi_signature>(add_method),
             settings.netstandard_compat ? "" : "*",
             add_handler_event_token_name,
-            type_name,
-            bind<write_type_name>(semantics, true, false),
+            ccw_type_name,
+            bind<write_type_name>(semantics, typedef_name_type::ABI, false),
             handler_parameter_name,
             settings.netstandard_compat ?  "" : "*",
             add_handler_event_token_name,
@@ -3581,7 +3605,7 @@ return __ex.HResult;
             !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
             get_vmethod_name(w, remove_method.Parent(), remove_method),
             bind<write_abi_signature>(remove_method),
-            type_name,
+            ccw_type_name,
             evt.Name(),
             remove_handler_event_token_name,
             evt.Name());
@@ -3884,7 +3908,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
                 [&](ElemSig::SystemType system_type)
                 {
                     auto arg_type = type.get_cache().find_required(system_type.name);
-                    w.write("typeof(%)", bind<write_projection_type>(arg_type));
+                    w.write("typeof(%)", bind<write_projection_ccw_type>(arg_type));
                 },
                 [&](ElemSig::EnumValue enum_value)
                 {
@@ -4029,6 +4053,10 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         for (auto&& attribute : attributes)
         {
             w.write("[");
+            if (w._in_abi_impl_namespace)
+            {
+                w.write("global::");
+            }
             w.write(attribute.first);
             if (!attribute.second.empty())
             {
@@ -4083,7 +4111,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
     void write_interface(writer& w, TypeDef const& type)
     {
         XLANG_ASSERT(get_category(type) == category::interface_type);
-        auto type_name = write_type_name_temp(w, type);
+        auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
 
         uint32_t const vtable_base = type.MethodList().first.index();
         w.write(R"(%%
@@ -4097,7 +4125,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             bind<write_custom_attributes>(type),
             is_exclusive_to(type) ? "internal" : "public",
             type_name,
-            bind<write_type_inheritance>(type, object_type{}, false),
+            bind<write_type_inheritance>(type, object_type{}, false, false),
             bind<write_interface_member_signatures>(type)
         );
     }
@@ -4105,8 +4133,8 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
     bool write_abi_interface(writer& w, TypeDef const& type)
     {
         XLANG_ASSERT(get_category(type) == category::interface_type);
-        auto type_name = write_type_name_temp(w, type, "%", true);
-        auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type, true, false));
+        auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
+        auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
         auto is_generic = distance(type.GenericParam()) > 0;
         std::set<std::string> generic_methods;
         std::vector<std::string> nongeneric_delegates;
@@ -4138,7 +4166,7 @@ _obj = obj;%
             // Interface abi implementation
             bind<write_guid_attribute>(type),
             type_name,
-            bind<write_type_name>(type, false, false),
+            bind<write_type_name>(type, typedef_name_type::CCW, false),
             // Vftbl
             bind<write_vtable>(type, type_name, generic_methods, nongenerics_class, nongeneric_delegates),
             // Interface impl
@@ -4210,8 +4238,71 @@ public static class %
         return true;
     }
 
+    void write_wrapper_class(writer& w, TypeDef const& type)
+    {
+        auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
+        auto wrapped_type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
+        auto default_interface_abi_name = get_default_interface_name(w, type, true);
+        auto base_semantics = get_type_semantics(type.Extends());
+
+        w.write(R"(%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
+%public %class %%
+{
+
+public %(% comp)
+{
+_comp = comp;
+}
+
+public static implicit operator %(% comp)
+{
+return comp._comp;
+}
+
+public static implicit operator %(% comp)
+{
+return new %(comp);
+}
+
+public static % FromAbi(IntPtr thisPtr)
+{
+if (thisPtr == IntPtr.Zero) return null;
+var obj = MarshalInspectable.FromAbi(thisPtr);
+return obj as %;
+}
+
+%
+
+private readonly % _comp;
+}
+)",
+bind<write_winrt_attribute>(type),
+default_interface_abi_name,
+bind<write_custom_attributes>(type),
+bind<write_class_modifiers>(type),
+type_name,
+bind<write_type_inheritance>(type, base_semantics, false, true),
+type_name,
+wrapped_type_name,
+wrapped_type_name,
+type_name,
+type_name,
+wrapped_type_name,
+type_name,
+wrapped_type_name,
+type_name,
+bind<write_class_members>(type, true),
+wrapped_type_name);
+    }
+
     void write_class(writer& w, TypeDef const& type)
     {
+        if (settings.component)
+        {
+            write_wrapper_class(w, type);
+            return;
+        }
+
         if (is_static(type))
         {
             write_static_class(w, type);
@@ -4267,7 +4358,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             bind<write_custom_attributes>(type),
             bind<write_class_modifiers>(type),
             type_name,
-            bind<write_type_inheritance>(type, base_semantics, true),
+            bind<write_type_inheritance>(type, base_semantics, true, false),
             type_name,
             derived_new,
             default_interface_abi_name,
@@ -4333,7 +4424,7 @@ bind<write_lazy_interface_initialization>(type));
             }),
             default_interface_name,
             default_interface_name,
-            bind<write_class_members>(type),
+            bind<write_class_members>(type, false),
             bind([&](writer& w)
             {
                     bool has_base_class = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
@@ -4382,7 +4473,7 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
                     {
                         s();
                         w.write("GuidGenerator.GetIID(typeof(%)) == iid",
-                            bind<write_type_name>(get_type_semantics(iface.Interface()), false, false));
+                            bind<write_type_name>(get_type_semantics(iface.Interface()), typedef_name_type::Projected, false));
                     }
                 }, type.InterfaceImpl()),
                 bind([&](writer& w)
@@ -4407,8 +4498,9 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
             return;
         }
 
-        auto abi_type_name = write_type_name_temp(w, type, "%", true);
+        auto abi_type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
         auto projected_type_name = write_type_name_temp(w, type);
+        auto ccw_type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
         auto default_interface_abi_name = get_default_interface_name(w, type, true);
 
         w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
@@ -4432,7 +4524,7 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable.Disp
             projected_type_name,
             default_interface_abi_name,
             projected_type_name,
-            projected_type_name,
+            ccw_type_name,
             projected_type_name,
             projected_type_name,
             projected_type_name,
@@ -4448,13 +4540,15 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable.Disp
 
     void write_delegate(writer& w, TypeDef const& type)
     {
+        if (settings.component) return;
+
         method_signature signature{ get_delegate_invoke(type) };
         w.write(R"(%%public delegate % %(%);
 )",
             bind<write_winrt_attribute>(type),
             bind<write_custom_attributes>(type),
             bind<write_projection_return_type>(signature),
-            bind<write_type_name>(type, false, false),
+            bind<write_type_name>(type, typedef_name_type::Projected, false),
             bind_list<write_projection_parameter>(", ", signature.params()));
     }
 
@@ -4738,6 +4832,8 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 
     void write_enum(writer& w, TypeDef const& type)
     {
+        if (settings.component) return;
+
         if (is_flags_enum(type))
         {
             w.write("[FlagsAttribute]\n");
@@ -4750,7 +4846,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 )", 
         bind<write_winrt_attribute>(type),
         bind<write_custom_attributes>(type),
-        bind<write_type_name>(type, false, false), enum_underlying_type);
+        bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
         {
             for (auto&& field : type.FieldList())
             {
@@ -4765,7 +4861,9 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 
     void write_struct(writer& w, TypeDef const& type)
     {
-        auto name = w.write_temp("%", bind<write_type_name>(type, false, false));
+        if (settings.component) return;
+
+        auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
 
         struct field_info
         {
@@ -4853,7 +4951,7 @@ public override int GetHashCode() => %;
             return;
         }
 
-        w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\npublic struct %\n{\n", bind<write_type_name>(type, true, false));
+        w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\npublic struct %\n{\n", bind<write_type_name>(type, typedef_name_type::ABI, false));
         for (auto&& field : type.FieldList())
         {
             w.write("public ");
@@ -4862,7 +4960,7 @@ public override int GetHashCode() => %;
         }
 
         auto projected_type = w.write_temp("%", bind<write_projection_type>(type));
-        auto abi_type = w.write_temp("%", bind<write_type_name>(type, true, false));
+        auto abi_type = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::ABI, false));
 
         std::vector<abi_marshaler> marshalers;
         for (auto&& field : type.FieldList())
@@ -5092,5 +5190,131 @@ public static void DisposeAbi(% abi){ /*todo*/ }
 
 )",
             abi_type);
+    }
+
+
+    void write_factory_class_inheritance(writer& w, TypeDef const& type)
+    {
+        auto delimiter{ ", " };
+        auto write_delimiter = [&]()
+        {
+            w.write(delimiter);
+        };
+
+        for (auto&& [interface_name, factory] : get_attributed_types(w, type))
+        {
+            if ((factory.activatable || factory.statics) && factory.type)
+            {
+                write_delimiter();
+                w.write("%", bind<write_type_name>(factory.type, typedef_name_type::CCW, false));
+            }
+        }
+    }
+
+    void write_factory_activatable_method(writer& w, MethodDef const& method, std::string_view activatable_type)
+    {
+        method_signature signature{ method };
+        w.write(R"(
+public % %(%) => new %(%);
+)",
+activatable_type,
+method.Name(),
+bind_list<write_projection_parameter>(", ", signature.params()),
+activatable_type,
+bind_list<write_parameter_name_with_modifier>(", ", signature.params())
+);
+    }
+
+    void write_factory_class_members(writer& w, TypeDef const& type)
+    {
+        auto delimiter{ ", " };
+        auto write_delimiter = [&]()
+        {
+            w.write(delimiter);
+        };
+
+        auto projected_type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
+        for (auto&& [interface_name, factory] : get_attributed_types(w, type))
+        {
+            if (factory.type)
+            {
+                if (factory.activatable)
+                {
+                    w.write_each<write_factory_activatable_method>(factory.type.MethodList(), projected_type_name);
+                }
+                else if (factory.statics)
+                {
+                    w.write_each<write_static_method>(factory.type.MethodList(), projected_type_name, true);
+                }
+            }
+        }
+    }
+
+
+    void write_factory_class(writer& w, TypeDef const& type)
+    {
+        auto factory_type_name = write_type_name_temp(w, type, "%ServerActivationFactory", typedef_name_type::CCW);
+        auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
+
+        w.write(R"(
+internal class % : ComponentActivationFactory<%>%
+{
+
+public static IntPtr Make()
+{
+using var marshaler = MarshalInspectable.CreateMarshaler(_factory).As<ABI.WinRT.Interop.IActivationFactory.Vftbl>();
+return marshaler.GetRef();
+}
+
+static readonly % _factory = new %();
+public static ObjectReference<I> ActivateInstance<I>()
+{
+IntPtr instance = _factory.ActivateInstance();
+return ObjectReference<IInspectable.Vftbl>.Attach(ref instance).As<I>();
+}
+
+%
+}
+)",
+factory_type_name,
+type_name,
+bind<write_factory_class_inheritance>(type),
+factory_type_name,
+factory_type_name,
+bind<write_factory_class_members>(type)
+);
+    }
+
+    void write_module_activation_factory(writer& w, std::set<TypeDef> const& types)
+    {
+        w.write(R"(
+using System;
+namespace WinRT
+{
+public static class Module
+{
+public static unsafe IntPtr GetActivationFactory(String runtimeClassId)
+{%
+return IntPtr.Zero;
+}
+}
+}
+)",
+bind_each([](writer& w, TypeDef const& type)
+{
+    w.write(R"(
+
+if (runtimeClassId == "%.%")
+{
+return %ServerActivationFactory.Make();
+}
+)",
+type.TypeNamespace(),
+type.TypeName(),
+bind<write_type_name>(type, typedef_name_type::CCW, true)
+);
+},
+types
+));
     }
 }

@@ -130,6 +130,14 @@ namespace UnitTest
             TestObject.InvokeNestedEvent(TestObject, ints);
             events_expected++;
 
+            TestObject.ReturnEvent += (int arg0) =>
+            {
+                events_received++;
+                return arg0;
+            };
+            Assert.Equal(42, TestObject.InvokeReturnEvent(42));
+            events_expected++;
+
             var collection0 = new int[] { 42, 1729 };
             var collection1 = new Dictionary<int, string> { [1] = "foo", [2] = "bar" };
             TestObject.CollectionEvent += (Class sender, IList<int> arg0, IDictionary<int, string> arg1) =>

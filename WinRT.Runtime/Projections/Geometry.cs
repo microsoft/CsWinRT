@@ -9,7 +9,7 @@ namespace Windows.Foundation
         public static string ArgumentOutOfRange_NeedNonNegNum = "Non-negative number required.";
     }
 
-    [global::WinRT.WindowsRuntimeType]
+    [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
     [StructLayout(LayoutKind.Sequential)]
     public struct Point : IFormattable
     {
@@ -96,7 +96,7 @@ namespace Windows.Foundation
         }
     }
 
-    [global::WinRT.WindowsRuntimeType]
+    [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
     [StructLayout(LayoutKind.Sequential)]
     public struct Rect : IFormattable
     {
@@ -415,7 +415,7 @@ namespace Windows.Foundation
         }
     }
 
-    [global::WinRT.WindowsRuntimeType]
+    [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
     [StructLayout(LayoutKind.Sequential)]
     public struct Size
     {
