@@ -1,15 +1,20 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Text;
 
 namespace Generator
 {
     [Generator]
     public class SourceGenerator : ISourceGenerator
     {
+        private string _tempFolder;
+
         private string GetAssemblyName(SourceGeneratorContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.AssemblyName", out var assemblyName);
@@ -38,6 +43,71 @@ namespace Generator
             }
 
             return false;
+        }
+
+        private static string GetCsWinRTExe(SourceGeneratorContext context)
+        {
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTExe", out var cswinrtExe);
+            return cswinrtExe;
+        }
+
+        private string GetTempFolder(bool clearSourceFilesFromFolder = false)
+        {
+            if(_tempFolder == null || !File.Exists(_tempFolder))
+            {
+                string outputDir = Path.Combine(Path.GetTempPath(), "CsWinRT", Path.GetRandomFileName()).TrimEnd('\\');
+                Directory.CreateDirectory(outputDir);
+                _tempFolder = outputDir;
+                Logger.Log("Created temp folder: " + _tempFolder);
+            }
+
+            if (clearSourceFilesFromFolder)
+            {
+                foreach (var file in Directory.GetFiles(_tempFolder, "*.cs", SearchOption.TopDirectoryOnly))
+                {
+                    Logger.Log("Clearing " + file);
+                    File.Delete(file);
+                }
+            }
+
+            return _tempFolder;
+        }
+
+        private void GenerateSources(SourceGeneratorContext context)
+        {
+            string cswinrtExe = GetCsWinRTExe(context);
+            string assemblyName = GetAssemblyName(context);
+            string winmdFile = GetWinmdOutputFile(context);
+            string outputDir = GetTempFolder(true);
+            // TODO: make it a property with a list of WinMDs
+            string additionalWinMds = "10.0.18362.0";
+
+            string arguments = string.Format("-component -input \"{0}\" -input {1} -include {2} -output \"{3}\" -verbose", winmdFile, additionalWinMds, assemblyName, outputDir);
+            Logger.Log("Running " + cswinrtExe + " " + arguments);
+
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = cswinrtExe,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = true
+            };
+
+            using var cswinrtProcess = Process.Start(processInfo);
+            Logger.Log(cswinrtProcess.StandardOutput.ReadToEnd());
+            Logger.Log(cswinrtProcess.StandardError.ReadToEnd());
+            cswinrtProcess.WaitForExit();
+
+            foreach(var file in Directory.GetFiles(outputDir, "*.cs", SearchOption.TopDirectoryOnly))
+            {
+                Logger.Log("Adding " + file);
+                context.AddSource(Path.GetFileNameWithoutExtension(file), SourceText.From(File.ReadAllText(file), Encoding.UTF8));
+            }
+
+            Directory.Delete(outputDir, true);
         }
 
         private string GetWinmdOutputFile(SourceGeneratorContext context)
@@ -89,7 +159,10 @@ namespace Generator
                 }
                 writer.FinalizeGeneration();
 
-                GenerateWinMD(metadataBuilder, GetWinmdOutputFile(context));
+                string winmdFile = GetWinmdOutputFile(context);
+
+                GenerateWinMD(metadataBuilder, winmdFile);
+                GenerateSources(context);
             }
             catch(Exception e)
             {

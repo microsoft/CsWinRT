@@ -8,6 +8,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <PropertyGroup>
     <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
     <ResolveAssemblyReferencesDependsOn Condition="'$(RemoveWindowsReference)'=='true'">$(ResolveAssemblyReferencesDependsOn);RemoveWindowsReference</ResolveAssemblyReferencesDependsOn>
+    <AllowUnsafeBlocks Condition="$(CsWinRTComponent)==true">true</AllowUnsafeBlocks>
   </PropertyGroup>
   
   <!--Remove Windows.Winmd reference to prevent compile collisions-->
@@ -16,6 +17,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <Reference Remove="Windows"/>
     </ItemGroup>
   </Target>
+
+  <ItemGroup Condition="$(CsWinRTComponent)==true">
+    <CompilerVisibleProperty Include="AssemblyName" />
+    <CompilerVisibleProperty Include="AssemblyVersion" />
+    <CompilerVisibleProperty Include="CsWinRTComponent" />
+    <CompilerVisibleProperty Include="CsWinRTEnableLogging" />
+    <CompilerVisibleProperty Include="GeneratedFilesDir" />
+    <CompilerVisibleProperty Include="CsWinRTExe" />
+  </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
 

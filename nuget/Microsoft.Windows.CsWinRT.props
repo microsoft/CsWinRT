@@ -8,16 +8,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <PropertyGroup>
     <CsWinRTPath Condition="'$(CsWinRTPath)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</CsWinRTPath>
     <CsWinRTExe>$(CsWinRTPath)cswinrt.exe</CsWinRTExe>
-    <AllowUnsafeBlocks Condition="$(CsWinRTComponent)==true">true</AllowUnsafeBlocks>
   </PropertyGroup>
-
-  <ItemGroup Condition="$(CsWinRTComponent)==true">
-    <CompilerVisibleProperty Include="AssemblyName" />
-    <CompilerVisibleProperty Include="AssemblyVersion" />
-    <CompilerVisibleProperty Include="CsWinRTComponent" />
-    <CompilerVisibleProperty Include="CsWinRTEnableLogging" />
-    <CompilerVisibleProperty Include="GeneratedFilesDir" />
-    <CompilerVisibleProperty Include="CsWinRTExe" />
-  </ItemGroup>
 
 </Project>

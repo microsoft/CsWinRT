@@ -162,6 +162,7 @@ namespace WinRT
 
         private static bool IsTypeWindowsRuntimeTypeNoArray(Type type)
         {
+            type = type.GetRuntimeClassCCWType() ?? type;
             if (type.IsConstructedGenericType)
             {
                 if(IsTypeWindowsRuntimeTypeNoArray(type.GetGenericTypeDefinition()))
@@ -228,6 +229,7 @@ namespace WinRT
 
         internal static bool TryGetDefaultInterfaceTypeForRuntimeClassType(Type runtimeClass, out Type defaultInterface)
         {
+            runtimeClass = runtimeClass.GetRuntimeClassCCWType() ?? runtimeClass;
             defaultInterface = null;
             ProjectedRuntimeClassAttribute attr = runtimeClass.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
             if (attr is null)
@@ -235,7 +237,14 @@ namespace WinRT
                 return false;
             }
 
-            defaultInterface = runtimeClass.GetProperty(attr.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).PropertyType;
+            if (attr.DefaultInterfaceProperty != null)
+            {
+                defaultInterface = runtimeClass.GetProperty(attr.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).PropertyType;
+            }
+            else
+            {
+                defaultInterface = attr.DefaultInterface;
+            }
             return true;
         }
 

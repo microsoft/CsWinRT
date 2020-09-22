@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AuthoringSample": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
