@@ -20,7 +20,15 @@ namespace WinRT
             {
                 return customMapping;
             }
-            var helper = $"ABI.{type.FullName}";
+
+            string fullTypeName = type.FullName;
+            string ccwTypePrefix = "ABI.Impl.";
+            if (fullTypeName.StartsWith(ccwTypePrefix))
+            {
+                fullTypeName = fullTypeName.Substring(ccwTypePrefix.Length);
+            }
+
+            var helper = $"ABI.{fullTypeName}";
             return Type.GetType(helper) ?? type.Assembly.GetType(helper);
         }
 
@@ -65,5 +73,12 @@ namespace WinRT
         {
             return typeof(Delegate).IsAssignableFrom(type);
         }
+
+        public static Type GetRuntimeClassCCWType(this Type type)
+        {
+            var ccwTypeName = $"ABI.Impl.{type.FullName}";
+            return Type.GetType(ccwTypeName, false) ?? type.Assembly.GetType(ccwTypeName, false);
+        }
+
     }
 }
