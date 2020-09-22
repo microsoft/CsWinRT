@@ -7,36 +7,22 @@ variables:
   dotnetFeed: "https://dotnetcli.blob.core.windows.net/dotnet"
 steps:
 
-#- powershell: |
-#  Write-Host "##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}";
-#  
-#  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
-#  
-#  dotnet new globaljson --sdk-version "$($env:NET5_SDK_VERSION)" 
-#  
-#  &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:DOTNETSDKVERSION)" -Architecture "x64" -AzureFeed "$(
-#    $env:DOTNETFEED)"
-#  
-# failOnStderr: true
-# displayName: 'Install .NET 5 SDK'
-
-
-
 - powershell: |
-    #$nugetList = nuget.exe list -Prerelease -Source "$($env:CSWINRTFEED)"
-    #Write-Host $?
-    #Write-Host "got the list"
-    #foreach($pkg in $nugetList)
-    #{
-    #  Write-Host $pkg
-    #  Write-Host "anything?"
-    #  if($pkg -like "Microsoft.Windows.CsWinRT*")
-    #  {
-    #    $cswinrtVersion = $pkg.Substring($pkg.IndexOf(" ") + 1)
-    #    Write-Host "found it!"
-    #    Write-Host $cswinrtVersion
-    #  }
-    #}
+   
+    $nugetList = nuget.exe list -Prerelease -Source "$($env:CSWINRTFEED)"
+    Write-Host $?
+    Write-Host "got the list"
+    foreach($pkg in $nugetList)
+    {
+      Write-Host $pkg
+      Write-Host "anything?"
+      if($pkg -like "Microsoft.Windows.CsWinRT*")
+      {
+        $cswinrtVersion = $pkg.Substring($pkg.IndexOf(" ") + 1)
+        Write-Host "found it!"
+        Write-Host $cswinrtVersion
+      }
+    }
     $ciPipeline = 38157
     $runInfo = 
        (az pipelines run `
