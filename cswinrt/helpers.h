@@ -462,6 +462,8 @@ namespace cswinrt
             },
             { "Microsoft.UI.Xaml.Data",
                 {
+                    { "DataErrorsChangedEventArgs", "System.ComponentModel", "DataErrorsChangedEventArgs" },
+                    { "INotifyDataErrorInfo", "System.ComponentModel", "INotifyDataErrorInfo", true, true },
                     { "INotifyPropertyChanged", "System.ComponentModel", "INotifyPropertyChanged" },
                     { "PropertyChangedEventArgs", "System.ComponentModel", "PropertyChangedEventArgs" },
                     { "PropertyChangedEventHandler", "System.ComponentModel", "PropertyChangedEventHandler" },
