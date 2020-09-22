@@ -607,4 +607,11 @@ namespace cswinrt
 
         return &*nameItr;
     }
+
+    enum class typedef_name_type
+    {
+        Projected,
+        CCW,
+        ABI
+    };
 }

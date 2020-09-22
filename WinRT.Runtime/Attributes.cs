@@ -14,7 +14,13 @@ namespace WinRT
             DefaultInterfaceProperty = defaultInterfaceProp;
         }
 
+        public ProjectedRuntimeClassAttribute(Type defaultInterface)
+        {
+            DefaultInterface = defaultInterface;
+        }
+
         public string DefaultInterfaceProperty { get; }
+        public Type DefaultInterface { get; }
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
