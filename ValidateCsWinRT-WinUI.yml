@@ -7,6 +7,13 @@ variables:
   dotnetFeed: "https://dotnetcli.blob.core.windows.net/dotnet"
 steps:
 
+- task: NuGetToolInstaller@1
+  displayName: 'Use NuGet 5.3'
+  inputs:
+    versionSpec: 5.3
+  continueOnError: true
+- task: NuGetAuthenticate@0
+
 - powershell: |
    
     $nugetList = nuget.exe list -Prerelease -Source "$($env:CSWINRTFEED)"
