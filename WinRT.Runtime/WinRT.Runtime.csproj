@@ -25,6 +25,8 @@
     <Description>C#/WinRT Runtime v$(VersionString)</Description>
     <AssemblyTitle>C#/WinRT Runtime v$(VersionString)</AssemblyTitle>
     <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
     
   <ItemGroup>
