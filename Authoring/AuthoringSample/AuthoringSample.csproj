@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <Platforms>x64</Platforms>
+    <Platforms>x64;x86</Platforms>
     <LangVersion>preview</LangVersion>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
