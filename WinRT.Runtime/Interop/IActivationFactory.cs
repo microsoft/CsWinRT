@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using WinRT;
@@ -24,9 +25,13 @@ namespace ABI.WinRT.Interop
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            private delegate*<IntPtr, IntPtr*, int> _ActivateInstance_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int> ActivateInstance_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)_ActivateInstance_0; set => _ActivateInstance_0 = (delegate*<IntPtr, IntPtr*, int>)value; }
-
+#if NETSTANDARD2_0
+            private delegate int ActivateInstance_Delegate(IntPtr thisPtr, IntPtr* pobj);
+            private void* _ActivateInstance_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> ActivateInstance_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_ActivateInstance_0; set => _ActivateInstance_0 = value; }
+#else
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> ActivateInstance_0;
+#endif
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
 #if NETSTANDARD2_0
@@ -38,12 +43,16 @@ namespace ABI.WinRT.Interop
                 (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    _ActivateInstance_0 = &Do_Abi_ActivateInstance_0
+#if NETSTANDARD2_0
+                    _ActivateInstance_0 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ActivateInstance_Delegate(Do_Abi_ActivateInstance_0))
+#else
+                    ActivateInstance_0 = &Do_Abi_ActivateInstance_0
+#endif
                 };
             }
 
 #if !NETSTANDARD2_0
-            [UnmanagedCallersOnly]
+            [UnmanagedCallersOnly(CallConvs = new [] { typeof(CallConvStdcall) })]
 #endif
             private static unsafe int Do_Abi_ActivateInstance_0(IntPtr thisPtr, IntPtr* result)
             {
@@ -83,7 +92,7 @@ namespace ABI.WinRT.Interop
             IntPtr __retval = default;
             try
             {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.ActivateInstance_0(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.ActivateInstance_0(ThisPtr, &__retval));
                 return __retval;
             }
             finally

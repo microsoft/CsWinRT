@@ -125,11 +125,11 @@ namespace ABI.WinRT.Interop
                     _GetHelpFile_3 = Marshal.GetFunctionPointerForDelegate(DelegateCache[3] = new GetBstrDelegate(Do_Abi_GetHelpFile_3)).ToPointer(),
                     _GetHelpFileContent_4 = Marshal.GetFunctionPointerForDelegate(DelegateCache[4] = new GetBstrDelegate(Do_Abi_GetHelpFileContent_4)).ToPointer(),
 #else
-                    _GetGuid_0 = (delegate* <IntPtr, Guid*, int>)&Do_Abi_GetGuid_0,
-                    _GetSource_1 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetSource_1,
-                    _GetDescription_2 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetDescription_2,
-                    _GetHelpFile_3 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetHelpFile_3,
-                    _GetHelpFileContent_4 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetHelpFileContent_4
+                    _GetGuid_0 = (delegate* unmanaged<IntPtr, Guid*, int>)&Do_Abi_GetGuid_0,
+                    _GetSource_1 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetSource_1,
+                    _GetDescription_2 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetDescription_2,
+                    _GetHelpFile_3 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetHelpFile_3,
+                    _GetHelpFileContent_4 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetHelpFileContent_4
 #endif
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<Vftbl>());
@@ -385,7 +385,7 @@ namespace ABI.WinRT.Interop
 #if NETSTANDARD2_0
                     _InterfaceSupportsErrorInfo_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache = Do_Abi_InterfaceSupportsErrorInfo_0).ToPointer()
 #else
-                    _InterfaceSupportsErrorInfo_0 = (delegate* <IntPtr, Guid*, int>)&Do_Abi_InterfaceSupportsErrorInfo_0
+                    _InterfaceSupportsErrorInfo_0 = (delegate* unmanaged<IntPtr, Guid*, int>)&Do_Abi_InterfaceSupportsErrorInfo_0
 #endif
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<Vftbl>());

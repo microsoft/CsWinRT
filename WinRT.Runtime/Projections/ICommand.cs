@@ -170,11 +170,11 @@ namespace ABI.System.Windows.Input
                     _CanExecute_2 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ICommand_Delegates.CanExecute_2(Do_Abi_CanExecute_2)),
                     _Execute_3 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ICommand_Delegates.Execute_3(Do_Abi_Execute_3)),
 #else
-                    _add_CanExecuteChanged_0 = (delegate*<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*,
+                    _add_CanExecuteChanged_0 = (delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*,
                     int>)&Do_Abi_add_CanExecuteChanged_0,
-                    _remove_CanExecuteChanged_1 = (delegate*<IntPtr, global::WinRT.EventRegistrationToken, int>)&Do_Abi_remove_CanExecuteChanged_1,
-                    _CanExecute_2 = (delegate*<IntPtr, IntPtr, byte*, int>)&Do_Abi_CanExecute_2,
-                    _Execute_3 = (delegate*<IntPtr, IntPtr, int>)&Do_Abi_Execute_3,
+                    _remove_CanExecuteChanged_1 = (delegate* unmanaged<IntPtr, global::WinRT.EventRegistrationToken, int>)&Do_Abi_remove_CanExecuteChanged_1,
+                    _CanExecute_2 = (delegate* unmanaged<IntPtr, IntPtr, byte*, int>)&Do_Abi_CanExecute_2,
+                    _Execute_3 = (delegate* unmanaged<IntPtr, IntPtr, int>)&Do_Abi_Execute_3,
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);

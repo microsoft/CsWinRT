@@ -61,14 +61,14 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     get_CanWrite_6 = Marshal.GetFunctionPointerForDelegate(DelegateCache[6] = new ICustomProperty_Delegates.get_CanWrite_6(Do_Abi_get_CanWrite_6)).ToPointer(),
                     get_CanRead_7 = Marshal.GetFunctionPointerForDelegate(DelegateCache[7] = new ICustomProperty_Delegates.get_CanRead_7(Do_Abi_get_CanRead_7)).ToPointer(),
 #else
-                    get_Type_0 = (delegate*<IntPtr, ABI.System.Type*, int>)&Do_Abi_get_Type_0,
-                    get_Name_1 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_get_Name_1,
-                    GetValue_2 = (delegate*<IntPtr, IntPtr, IntPtr*, int>)&Do_Abi_GetValue_2,
-                    SetValue_3 = (delegate*<IntPtr, IntPtr, IntPtr, int>)&Do_Abi_SetValue_3,
-                    GetIndexedValue_4 = (delegate*<IntPtr, IntPtr, IntPtr, IntPtr*, int>)&Do_Abi_GetIndexedValue_4,
-                    SetIndexedValue_5 = (delegate*<IntPtr, IntPtr, IntPtr, IntPtr, int>)&Do_Abi_SetIndexedValue_5,
-                    get_CanWrite_6 = (delegate*<IntPtr, byte*, int>)&Do_Abi_get_CanWrite_6,
-                    get_CanRead_7 = (delegate*<IntPtr, byte*, int>)&Do_Abi_get_CanRead_7
+                    get_Type_0 = (delegate* unmanaged<IntPtr, ABI.System.Type*, int>)&Do_Abi_get_Type_0,
+                    get_Name_1 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_get_Name_1,
+                    GetValue_2 = (delegate* unmanaged<IntPtr, IntPtr, IntPtr*, int>)&Do_Abi_GetValue_2,
+                    SetValue_3 = (delegate* unmanaged<IntPtr, IntPtr, IntPtr, int>)&Do_Abi_SetValue_3,
+                    GetIndexedValue_4 = (delegate* unmanaged<IntPtr, IntPtr, IntPtr, IntPtr*, int>)&Do_Abi_GetIndexedValue_4,
+                    SetIndexedValue_5 = (delegate* unmanaged<IntPtr, IntPtr, IntPtr, IntPtr, int>)&Do_Abi_SetIndexedValue_5,
+                    get_CanWrite_6 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_get_CanWrite_6,
+                    get_CanRead_7 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_get_CanRead_7
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 8);
@@ -309,10 +309,10 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 GetStringRepresentation_2 = Marshal.GetFunctionPointerForDelegate(new ICustomPropertyProvider_Delegates.GetStringRepresentation_2(Do_Abi_GetStringRepresentation_2)).ToPointer(),
                 get_Type_3 = Marshal.GetFunctionPointerForDelegate(new ICustomPropertyProvider_Delegates.get_Type_3(Do_Abi_get_Type_3)).ToPointer(),
 #else
-                GetCustomProperty_0 = (delegate*<IntPtr, IntPtr, IntPtr*, int>)&Do_Abi_GetCustomProperty_0,
-                GetIndexedProperty_1 = (delegate*<IntPtr, IntPtr, global::ABI.System.Type, IntPtr*, int>)&Do_Abi_GetIndexedProperty_1,
-                GetStringRepresentation_2 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetStringRepresentation_2,
-                get_Type_3 = (delegate*<IntPtr, global::ABI.System.Type*, int>)&Do_Abi_get_Type_3
+                GetCustomProperty_0 = (delegate* unmanaged<IntPtr, IntPtr, IntPtr*, int>)&Do_Abi_GetCustomProperty_0,
+                GetIndexedProperty_1 = (delegate* unmanaged<IntPtr, IntPtr, global::ABI.System.Type, IntPtr*, int>)&Do_Abi_GetIndexedProperty_1,
+                GetStringRepresentation_2 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetStringRepresentation_2,
+                get_Type_3 = (delegate* unmanaged<IntPtr, global::ABI.System.Type*, int>)&Do_Abi_get_Type_3
 #endif
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedCustomPropertyProviderVftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);

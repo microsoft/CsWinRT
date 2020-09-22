@@ -58,7 +58,7 @@ namespace ABI.WinRT.Interop
 #if NETSTANDARD2_0
                     _Resolve = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ResolveDelegate(Do_Abi_Resolve)).ToPointer(),
 #else
-                    _Resolve = (delegate*<IntPtr, Guid*, IntPtr*, int>)&Do_Abi_Resolve
+                    _Resolve = (delegate* unmanaged<IntPtr, Guid*, IntPtr*, int>)&Do_Abi_Resolve
 #endif
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());

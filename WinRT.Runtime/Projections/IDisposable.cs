@@ -32,7 +32,7 @@ namespace ABI.System
 #if NETSTANDARD2_0
                     _Close_0 = Marshal.GetFunctionPointerForDelegate(closeDelegate = Do_Abi_Close_0).ToPointer()
 #else
-                    _Close_0 = (delegate*<IntPtr, int>)&Do_Abi_Close_0
+                    _Close_0 = (delegate* unmanaged<IntPtr, int>)&Do_Abi_Close_0
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
