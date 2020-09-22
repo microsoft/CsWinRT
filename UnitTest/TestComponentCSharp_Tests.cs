@@ -8,6 +8,7 @@ using WinRT;
 
 using Windows.Foundation;
 using Windows.UI;
+using Windows.Storage.Streams;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Interop;
@@ -20,6 +21,7 @@ using System.Collections.Generic;
 using System.Collections;
 using WinRT.Interop;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace UnitTest
 {
@@ -30,6 +32,18 @@ namespace UnitTest
         public TestCSharp()
         {
             TestObject = new Class();
+        }
+
+        [Fact]
+        public async Task TestWriteBuffer()
+        {
+            var random = new Random(42);
+            byte[] data = new byte[256];
+            random.NextBytes(data);
+
+            using var stream = new InMemoryRandomAccessStream();
+            IBuffer buffer = data.AsBuffer();
+            await stream.WriteAsync(buffer);
         }
 
         [Fact]

@@ -2,6 +2,9 @@
 using System.IO;
 using TestComponentCSharp;
 using Windows.Storage;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
+using Windows.Storage.Streams;
 using Xunit;
 
 namespace UnitTest
@@ -16,25 +19,31 @@ namespace UnitTest
         }
 
         [Fact]
-        public async void TestIBufferByteAcces()
+        static async void TestReadToEndAsync()
         {
-            Windows.Storage.StorageFolder localFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
-            string fileName = "IBufferByteAccessTest.txt";
-            Windows.Storage.StorageFile file = await localFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
+            StorageFolder localFolder = await StorageFolder.GetFolderFromPathAsync(System.IO.Path.GetTempPath());
+            StorageFile file = await localFolder.CreateFileAsync("temp.txt", CreationCollisionOption.ReplaceExisting);
             string text = "";
             using (var reader = new System.IO.StreamReader(await file.OpenStreamForReadAsync(), true))
             {
-                try
-                {
-                    text = await reader.ReadToEndAsync();
-                }
-                catch (InvalidCastException)
-                {
-                    Assert.True(false);
-                }
-
-                Assert.True(true);
+                text = await reader.ReadToEndAsync();
             }
+        }
+
+        [Fact]
+        public async Task TestStreamWriteAndRead()
+        {
+            var random = new Random(42);
+            byte[] data = new byte[256];
+            random.NextBytes(data);
+
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            await stream.WriteAsync(data, 0, data.Length);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            byte[] read = new byte[256];
+            await stream.ReadAsync(read, 0, read.Length);
+            Assert.Equal(read, data);
         }
     }
 }
