@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Linq;
@@ -18,22 +19,18 @@ namespace ABI.System.ComponentModel
             internal IInspectable.Vftbl IInspectableVftbl;
 #if NETSTANDARD2_0
             private void* _get_HasErrors_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, out byte, int> get_HasErrors_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, out byte, int>)_get_HasErrors_0; set => _get_HasErrors_0 = (void*)value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> get_HasErrors_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_get_HasErrors_0; set => _get_HasErrors_0 = (void*)value; }
             private void* _add_ErrorsChanged_1;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_ErrorsChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_ErrorsChanged_1; set => _add_ErrorsChanged_1 = (void*)value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> add_ErrorsChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_add_ErrorsChanged_1; set => _add_ErrorsChanged_1 = (void*)value; }
             private void* _remove_ErrorsChanged_2;
             public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_ErrorsChanged_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_ErrorsChanged_2; set => _remove_ErrorsChanged_2 = (void*)value; }
             private void* _GetErrors_3;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out IntPtr, int> GetErrors_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out IntPtr, int>)_GetErrors_3; set => _GetErrors_3 = (void*)value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int> GetErrors_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr*, int>)_GetErrors_3; set => _GetErrors_3 = (void*)value; }
 #else
-            private delegate*<IntPtr, byte*, int> _get_HasErrors_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, out byte, int> get_HasErrors_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, out byte, int>)_get_HasErrors_0; set => _get_HasErrors_0 = (delegate*<IntPtr, byte*, int>)value; }
-            private delegate*<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> _add_ErrorsChanged_1;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_ErrorsChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_ErrorsChanged_1; set => _add_ErrorsChanged_1 = (delegate*<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)value; }
-            private delegate*<IntPtr, global::WinRT.EventRegistrationToken, int> _remove_ErrorsChanged_2;
-            public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_ErrorsChanged_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_ErrorsChanged_2; set => _remove_ErrorsChanged_2 = (delegate*<IntPtr, global::WinRT.EventRegistrationToken, int>)value; }
-            private delegate*<IntPtr, IntPtr, IntPtr*, int> _GetErrors_3;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out IntPtr, int> GetErrors_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out IntPtr, int>)_GetErrors_3; set => _GetErrors_3 = (delegate*<IntPtr, IntPtr, IntPtr*, int>)value; }
+            public delegate* unmanaged<IntPtr, byte*, int> get_HasErrors_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> add_ErrorsChanged_1;
+            public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_ErrorsChanged_2;
+            public delegate* unmanaged<IntPtr, IntPtr, IntPtr*, int> GetErrors_3;
 #endif
 
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -54,10 +51,10 @@ namespace ABI.System.ComponentModel
                     _remove_ErrorsChanged_2 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new INotifyDataErrorInfo_Delegates.remove_ErrorsChanged_2(Do_Abi_remove_ErrorsChanged_2)).ToPointer(),
                     _GetErrors_3 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[3] = new INotifyDataErrorInfo_Delegates.GetErrors_3(Do_Abi_GetErrors_3)).ToPointer()
 #else
-                    _get_HasErrors_0 = &Do_Abi_get_HasErrors_0,
-                    _add_ErrorsChanged_1 = &Do_Abi_add_ErrorsChanged_1,
-                    _remove_ErrorsChanged_2 = &Do_Abi_remove_ErrorsChanged_2,
-                    _GetErrors_3 = &Do_Abi_GetErrors_3
+                    get_HasErrors_0 = &Do_Abi_get_HasErrors_0,
+                    add_ErrorsChanged_1 = &Do_Abi_add_ErrorsChanged_1,
+                    remove_ErrorsChanged_2 = &Do_Abi_remove_ErrorsChanged_2,
+                    GetErrors_3 = &Do_Abi_GetErrors_3
 #endif
                 };
             }
@@ -110,7 +107,7 @@ namespace ABI.System.ComponentModel
             private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTables = new global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>>();
 
 #if !NETSTANDARD2_0
-            [UnmanagedCallersOnly]
+            [UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvStdcall)})]
 #endif
             private static unsafe int Do_Abi_add_ErrorsChanged_1(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token)
             {
@@ -130,7 +127,7 @@ namespace ABI.System.ComponentModel
             }
 
 #if !NETSTANDARD2_0
-            [UnmanagedCallersOnly]
+            [UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvStdcall)})]
 #endif
             private static unsafe int Do_Abi_remove_ErrorsChanged_2(IntPtr thisPtr, global::WinRT.EventRegistrationToken token)
             {
@@ -164,7 +161,7 @@ namespace ABI.System.ComponentModel
 
             _ErrorsChanged =
                 new EventSource<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>(_obj,
-                _obj.Vftbl.add_ErrorsChanged_1,
+                (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_obj.Vftbl.add_ErrorsChanged_1,
                 _obj.Vftbl.remove_ErrorsChanged_2);
         }
 
@@ -175,7 +172,7 @@ namespace ABI.System.ComponentModel
             try
             {
                 __propertyName = MarshalString.CreateMarshaler(propertyName);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetErrors_3(ThisPtr, MarshalString.GetAbi(__propertyName), out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetErrors_3(ThisPtr, MarshalString.GetAbi(__propertyName), &__retval));
                 return global::ABI.System.Collections.Generic.IEnumerable<object>.FromAbi(__retval);
             }
             finally
@@ -190,7 +187,7 @@ namespace ABI.System.ComponentModel
             get
             {
                 byte __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasErrors_0(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasErrors_0(ThisPtr, &__retval));
                 return __retval != 0;
             }
         }
