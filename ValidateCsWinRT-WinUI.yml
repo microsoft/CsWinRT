@@ -6,33 +6,29 @@ variables:
   cswinrtFeed: "https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json"
   dotnetFeed: "https://dotnetcli.blob.core.windows.net/dotnet"
 steps:
+- script: az extension add -n azure-devops
+  displayName: 'Install Azure DevOps Extension'
 
-- task: NuGetToolInstaller@1
-  displayName: 'Use NuGet 5.3'
-  inputs:
-    versionSpec: 5.3
-  continueOnError: true
-- task: NuGetAuthenticate@0
+- script: echo ${AZURE_DEVOPS_CLI_PAT} | az devops login
+  env:
+    AZURE_DEVOPS_CLI_PAT: $(System.AccessToken)
+  displayName: 'Login Azure DevOps Extension'
 
+# need to figure out automate the login/give the 'agent' that runs this login-access to azure
+# $env:AZURE_DEVOPS_EXT_PAT (External personal access token)
+# az login
+# az devops login --organization https://dev.azure.com/microsoft ??? give it the token
 - powershell: |
-   #$accessTokenInfo = (az account get-access-token) | Out-String | ConvertFrom-Json
-   #if ($lastexitcode -ne 0)
-   #{
-   #  $loginInfo = az login
-   #}
-   #az extension add --name azure-devops
-    az login
-    $ciPipeline = 38157
-    $runInfo = 
-       (az pipelines run `
-       --organization https://dev.azure.com/microsoft `
-       --project WinUI `
-       --id $ciPipeline `
-       --branch "master" `
-       --variables "privateCsWinRTNupkgVersion=0.1.0-prerelease.200917.1" "privateDotNetSdkVersion=$(_DotNetSdkVersion)") | ConvertFrom-Json
-    $buildUrl = $runInfo.url.Replace("_apis/build/Builds/","_build/results?buildId=")
-    
-    Write-Host
-    Write-Host "Build URL: $buildUrl"
-    Start-Process $buildUrl
+  $ciPipeline = 38157
+  $runInfo = 
+     (az pipelines run `
+     --organization https://dev.azure.com/microsoft `
+     --project WinUI `
+     --id $ciPipeline `
+     --branch "master" `
+     --variables "privateCsWinRTNupkgVersion=0.1.0-prerelease.200917.1" "privateDotNetSdkVersion=$(_DotNetSdkVersion)") | ConvertFrom-Json
+  $buildUrl = $runInfo.url.Replace("_apis/build/Builds/","_build/results?buildId=")
+  Write-Host
+  Write-Host "Build URL: $buildUrl"
+  Start-Process $buildUrl
   displayName: 'Running WinUI CI Pipeline with latest CsWinRT'
