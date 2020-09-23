@@ -18,6 +18,17 @@ namespace UnitTest
             TestObject = new Class();
         }
 
+
+        [Fact]
+        public void TestAsStream()
+        {
+            using InMemoryRandomAccessStream winrtStream = new InMemoryRandomAccessStream();
+            using Stream normalStream = winrtStream.AsStream();
+            using var memoryStream = new MemoryStream();
+            normalStream.CopyTo(memoryStream);
+        }
+
+
         [Fact]
         static async void TestReadToEndAsync()
         {
