@@ -11,6 +11,7 @@ namespace TestComponentCSharp
     delegate void EventHandler2(Class sender, Int32 arg0);
     delegate void EventHandler3(Class sender, Int32 arg0, String arg1);
     delegate void EventHandlerCollection(Class sender, Windows.Foundation.Collections.IVector<Int32> arg0, Windows.Foundation.Collections.IMap<Int32, String> arg1);
+    delegate Int32 EventWithReturn(Int32 arg);
 
     struct BlittableStruct
     {
@@ -100,6 +101,7 @@ namespace TestComponentCSharp
         //, IArtist
         , IProperties1
         , IProperties2
+        , Microsoft.UI.Xaml.Data.INotifyDataErrorInfo
         //, Windows.Foundation.Collections.IVector<String>
         //, Windows.Foundation.Collections.IMap<Int32, String>
     {
@@ -135,6 +137,8 @@ namespace TestComponentCSharp
         void InvokeNestedEvent(Class sender, Windows.Foundation.Collections.IVector<Int32> arg0);
         event Windows.Foundation.TypedEventHandler<Class, Windows.Foundation.Collections.IVector<String> > NestedTypedEvent;
         void InvokeNestedTypedEvent(Class sender, Windows.Foundation.Collections.IVector<String> arg0);
+        event EventWithReturn ReturnEvent;
+        Int32 InvokeReturnEvent(Int32 arg0);
 
         Int32 IntProperty;
         event Windows.Foundation.EventHandler<Int32> IntPropertyChanged;
@@ -309,6 +313,9 @@ namespace TestComponentCSharp
 
         // Interface projections
         static IProperties1 NativeProperties1 { get; };
+
+        // INotifyDataErrorInfo
+        void RaiseDataErrorChanged();
     }
 
     [threading(sta), marshaling_behavior(standard)]

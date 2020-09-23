@@ -144,6 +144,14 @@ namespace UnitTest
             TestObject.InvokeNestedEvent(TestObject, ints);
             events_expected++;
 
+            TestObject.ReturnEvent += (int arg0) =>
+            {
+                events_received++;
+                return arg0;
+            };
+            Assert.Equal(42, TestObject.InvokeReturnEvent(42));
+            events_expected++;
+
             var collection0 = new int[] { 42, 1729 };
             var collection1 = new Dictionary<int, string> { [1] = "foo", [2] = "bar" };
             TestObject.CollectionEvent += (Class sender, IList<int> arg0, IDictionary<int, string> arg1) =>
@@ -153,6 +161,14 @@ namespace UnitTest
                 Assert.True(arg1.SequenceEqual(collection1));
             };
             TestObject.InvokeCollectionEvent(TestObject, collection0, collection1);
+            events_expected++;
+
+            TestObject.ErrorsChanged += (object sender, System.ComponentModel.DataErrorsChangedEventArgs e) =>
+            {
+                events_received++;
+                Assert.Equal("name", e.PropertyName);
+            };
+            TestObject.RaiseDataErrorChanged();
             events_expected++;
 
             Assert.Equal(events_received, events_expected);
