@@ -28,7 +28,7 @@ steps:
      --branch "master" `
      --variables "privateCsWinRTNupkgVersion=0.1.0-prerelease.200917.1" "privateDotNetSdkVersion=$(_DotNetSdkVersion)") | ConvertFrom-Json
   $buildUrl = $runInfo.url.Replace("_apis/build/Builds/","_build/results?buildId=")
-  Write-Host
-  Write-Host "Build URL: $buildUrl"
+  #Write-Host "Build URL: $buildUrl"
+  #Write-Host "Build URL: $buildUrl"
   Start-Process $buildUrl
   displayName: 'Running WinUI CI Pipeline with latest CsWinRT'
