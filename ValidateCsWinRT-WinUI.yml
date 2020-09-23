@@ -22,7 +22,7 @@ steps:
    #}
    #$accessTokenInfo = (az account get-access-token) | Out-String | ConvertFrom-Json
    #az extension add --name azure-devops
-
+    az login
     $ciPipeline = 38157
     $runInfo = 
        (az pipelines run `
