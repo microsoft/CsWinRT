@@ -11,6 +11,7 @@ steps:
 # az login
 # az devops login --organization https://dev.azure.com/microsoft ??? give it the token
 - powershell: |
+    az extension add --name azure-devops
     az devops login 
     $ciPipeline = 38157
     $runInfo = (az pipelines run `
