@@ -6,19 +6,12 @@ variables:
   cswinrtFeed: "https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json"
   dotnetFeed: "https://dotnetcli.blob.core.windows.net/dotnet"
 steps:
-- script: az extension add -n azure-devops
-  displayName: 'Install Azure DevOps Extension'
-
-- script: echo ${AZURE_DEVOPS_CLI_PAT} | az devops login
-  env:
-    AZURE_DEVOPS_CLI_PAT: $(System.AccessToken)
-  displayName: 'Login Azure DevOps Extension'
-
 # need to figure out automate the login/give the 'agent' that runs this login-access to azure
 # $env:AZURE_DEVOPS_EXT_PAT (External personal access token)
 # az login
 # az devops login --organization https://dev.azure.com/microsoft ??? give it the token
 - powershell: |
+  az devops login $(CsWinRTAzureAccessToken)
   $ciPipeline = 38157
   $runInfo = 
   (az pipelines run `
