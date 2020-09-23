@@ -8,12 +8,11 @@
   <PropertyGroup>
     <GenerateTestProjection>true</GenerateTestProjection>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!--<NoWarn>8305;0618</NoWarn>-->
-    <GeneratedFilesDir>.\Generated Files\</GeneratedFilesDir>
+    <GeneratedProjectionDir>.\Generated Files\</GeneratedProjectionDir>
   </PropertyGroup>
-  
+
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.1.0-prerelease.200922.1" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.1.0-prerelease.200923.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,19 +41,18 @@
     <!--CSWinRT properties-->
     <PropertyGroup>
       <CsWinRTVerbosity>high</CsWinRTVerbosity>
-      <CsWinRTResponseFile>$(GeneratedFilesDir)cswinrt_build_projection.rsp</CsWinRTResponseFile>
+      <CsWinRTResponseFile>$(GeneratedProjectionDir)cswinrt_build_projection.rsp</CsWinRTResponseFile>
       <CsWinRTCommand>$(CsWinRTExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
-        <!---target $(TargetFramework)-->
     <CsWinRTParams>
         -verbose
         -in 10.0.18362.0
         -in @(ReferenceWinMDs->'"%(FullPath)"', ' ')
-        -out "$(GeneratedFilesDir.TrimEnd('\'))"
+        -out "$(GeneratedProjectionDir.TrimEnd('\'))"
         -include $(ProjectionNamespaceToInclude)
         -exclude Windows
       </CsWinRTParams>
     </PropertyGroup>
-    <MakeDir Directories="$(GeneratedFilesDir)" />
+    <MakeDir Directories="$(GeneratedProjectionDir)" />
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
     <Exec Command="$(CsWinRTCommand)" />
@@ -63,7 +61,7 @@
   <!--Build the projection dll-->
   <Target Name="BuildProjectionAssembly" DependsOnTargets="GenerateProjection" BeforeTargets="CoreCompile">
     <ItemGroup>
-      <Compile Include="$(GeneratedFilesDir)*.cs" Exclude="@(Compile)" />
+      <Compile Include="$(GeneratedProjectionDir)*.cs" Exclude="@(Compile)" />
       <!--Remove references to projection source winmds to prevent compile conflict warnings-->
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'SimpleMathComponent'" />
       <!--Also remove ReferencePath winmds to prevent error NETSDK1130-->
