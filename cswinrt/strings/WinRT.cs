@@ -409,10 +409,13 @@ namespace WinRT
 
                 _eventInvoke = Expression.Lambda(typeof(TDelegate),
                     Expression.Block(
+                        invoke.ReturnType,
                         new[] { delegateLocal },
                         Expression.Assign(delegateLocal, Expression.Field(Expression.Constant(this), typeof(EventSource<TDelegate>).GetField(nameof(_event), BindingFlags.Instance | BindingFlags.NonPublic))),
-                        Expression.IfThen(
-                            Expression.ReferenceNotEqual(delegateLocal, Expression.Constant(null, typeof(TDelegate))), Expression.Call(delegateLocal, invoke, parameters))),
+                        Expression.Condition(
+                            Expression.ReferenceNotEqual(delegateLocal, Expression.Constant(null, typeof(TDelegate))),
+                            Expression.Call(delegateLocal, invoke, parameters),
+                            Expression.Default(invoke.ReturnType))),
                     parameters).Compile();
 
                 return _eventInvoke;

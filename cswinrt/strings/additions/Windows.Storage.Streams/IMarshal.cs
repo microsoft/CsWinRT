@@ -5,6 +5,7 @@ namespace Com
     internal enum MSHCTX : int { Local = 0, NoSharedMem = 1, DifferentMachine = 2, InProc = 3, CrossCtx = 4 }
     internal enum MSHLFLAGS : int { Normal = 0, TableStrong = 1, TableWeak = 2, NoPing = 4 }
 
+    [global::WinRT.WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
     [Guid("00000003-0000-0000-c000-000000000046")]
     internal interface IMarshal
     {
