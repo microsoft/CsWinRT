@@ -2,6 +2,7 @@ namespace Windows.Storage.Streams
 {
     using global::System;
 
+    [global::WinRT.WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
     [Guid("905a0fef-bc53-11df-8c49-001e4fc686da")]
     internal interface IBufferByteAccess
     {
