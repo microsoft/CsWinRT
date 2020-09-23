@@ -1156,15 +1156,14 @@ MarshalInspectable.DisposeAbi(ptr);
         else
         {
             w.write(R"(
-public %() : this(%(ActivationFactory<%>.ActivateInstance<%.Vftbl>()))
+public %() : this(%(ActivationFactory<%>.ActivateInstance<IUnknownVftbl>()))
 {
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
 )",
                 class_type.TypeName(),
                 settings.netstandard_compat ? "new " + default_interface_name : "",
-                class_type.TypeName(),
-                default_interface_name);
+                class_type.TypeName());
         }
     }
 
@@ -2267,15 +2266,7 @@ event % %;)",
                 set_simple_marshaler_type(m, type);
                 break;
             case category::interface_type:
-                if (get_mapped_type(type.TypeNamespace(), type.TypeName()) &&
-                    type.TypeNamespace() == "Windows.Foundation.Collections")
-                {
-                    m.marshaler_type = get_abi_type();
-                }
-                else
-                {
-                    m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
-                }
+                m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
                 if (m.is_array())
                 {
                     m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
@@ -3479,15 +3470,7 @@ remove => %.Unsubscribe(value);
                     }
                     break;
                 case category::interface_type:
-                    if (get_mapped_type(type.TypeNamespace(), type.TypeName()) &&
-                        type.TypeNamespace() == "Windows.Foundation.Collections")
-                    {
-                        m.marshaler_type = get_abi_type();
-                    }
-                    else
-                    {
-                        m.marshaler_type = w.write_temp("MarshalInterface<%>", m.param_type);
-                    }
+                    m.marshaler_type = w.write_temp("MarshalInterface<%>", m.param_type);
                     m.local_type = m.param_type;
                     break;
                 case category::class_type:
@@ -4965,7 +4948,11 @@ private readonly AgileReference _agileReference = default;
 public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
 {
 _nativeDelegate = nativeDelegate;
+#if NETSTANDARD2_0
 if (_nativeDelegate.TryAs<ABI.WinRT.Interop.IAgileObject.Vftbl>(out var objRef) < 0)
+#else
+if (_nativeDelegate.TryAs<IUnknownVftbl>(IAgileObject.IID, out var objRef) < 0)
+#endif
 {
 _agileReference = new AgileReference(_nativeDelegate);
 }

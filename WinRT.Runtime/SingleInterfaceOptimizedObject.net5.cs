@@ -42,15 +42,7 @@ namespace WinRT
             {
                 return true;
             }
-            return (this as IWinRTObject).IsInterfaceImplemented(interfaceType, throwIfNotImplemented);
-        }
-
-        RuntimeTypeHandle IDynamicInterfaceCastable.GetInterfaceImplementation(RuntimeTypeHandle interfaceType)
-        {
-            var helperType = Type.GetTypeFromHandle(interfaceType).GetHelperType();
-            if (helperType.IsInterface)
-                return helperType.TypeHandle;
-            return default;
+            return (this as IWinRTObject).IsInterfaceImplementedFallback(interfaceType, throwIfNotImplemented);
         }
 
         IObjectReference IWinRTObject.GetObjectReferenceForType(RuntimeTypeHandle interfaceType)
@@ -59,7 +51,7 @@ namespace WinRT
             {
                 return _obj;
             }
-            return (this as IWinRTObject).GetObjectReferenceForType(interfaceType);
+            return (this as IWinRTObject).GetObjectReferenceForTypeFallback(interfaceType);
         }
 
     }

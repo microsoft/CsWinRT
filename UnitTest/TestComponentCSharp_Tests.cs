@@ -527,6 +527,7 @@ namespace UnitTest
             Assert.True(val.bools.z);
         }
 
+#if NETCOREAPP2_0
         [Fact]
         public void TestGenericCast()
         {
@@ -534,6 +535,7 @@ namespace UnitTest
             var abiView = (ABI.System.Collections.Generic.IReadOnlyList<int>)ints;
             Assert.Equal(abiView.ThisPtr, abiView.As<WinRT.IInspectable>().As<ABI.System.Collections.Generic.IReadOnlyList<int>.Vftbl>().ThisPtr);
         }
+#endif
 
         [ComImport]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -1493,7 +1495,7 @@ namespace UnitTest
         public void CCWOfListOfManagedType()
         {
             using var ccw = ComWrappersSupport.CreateCCWForObject(new List<ManagedType>());
-            using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(ABI.System.Collections.Generic.IEnumerable<object>)));
+            using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
         }
 
         [Fact]

@@ -214,7 +214,8 @@ namespace WinRT
             {
                 // IWeakReference is IUnknown-based, so implementations of it may not (and likely won't) implement
                 // IInspectable. As a result, we need to check for them explicitly.
-                return new ABI.WinRT.Interop.IWeakReference(weakRef);
+                
+                return new SingleInterfaceOptimizedObject(typeof(IWeakReference), weakRef);
             }
             // If the external COM object isn't IInspectable or IWeakReference, we can't handle it.
             // If we're registered globally, we want to let the runtime fall back for IUnknown and IDispatch support.
