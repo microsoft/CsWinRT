@@ -51,9 +51,9 @@ namespace WinRT
                     _GetRuntimeClassName = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new _GetRuntimeClassNameDelegate(Do_Abi_GetRuntimeClassName)),
                     _GetTrustLevel = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new _GetTrustLevelDelegate(Do_Abi_GetTrustLevel))
 #else
-                    _GetIids = (void*)(delegate*<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetIids,
-                    _GetRuntimeClassName = (void*)(delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetRuntimeClassName,
-                    _GetTrustLevel = (void*)(delegate*<IntPtr, TrustLevel*, int>)&Do_Abi_GetTrustLevel
+                    _GetIids = (void*)(delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetIids,
+                    _GetRuntimeClassName = (void*)(delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetRuntimeClassName,
+                    _GetTrustLevel = (void*)(delegate* unmanaged<IntPtr, TrustLevel*, int>)&Do_Abi_GetTrustLevel
 #endif
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());

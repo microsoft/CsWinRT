@@ -87,9 +87,9 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                     _get_HasCurrent_1 = Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IBindableIterator_Delegates.get_HasCurrent_1(Do_Abi_get_HasCurrent_1)).ToPointer(),
                     _MoveNext_2 = Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new IBindableIterator_Delegates.MoveNext_2(Do_Abi_MoveNext_2)).ToPointer(),
 #else
-                    _get_Current_0 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_get_Current_0,
-                    _get_HasCurrent_1 = (delegate*<IntPtr, byte*, int>)&Do_Abi_get_HasCurrent_1,
-                    _MoveNext_2 = (delegate*<IntPtr, byte*, int>)&Do_Abi_MoveNext_2
+                    _get_Current_0 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_get_Current_0,
+                    _get_HasCurrent_1 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_get_HasCurrent_1,
+                    _MoveNext_2 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_MoveNext_2
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 3);
@@ -242,9 +242,9 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                     _get_Size_1 = Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IBindableVectorView_Delegates.get_Size_1(Do_Abi_get_Size_1)).ToPointer(),
                     _IndexOf_2 = Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new IBindableVectorView_Delegates.IndexOf_2(Do_Abi_IndexOf_2)).ToPointer(),
 #else
-                    _GetAt_0 = (delegate*<IntPtr, uint, IntPtr*, int>)&Do_Abi_GetAt_0,
-                    _get_Size_1 = (delegate*<IntPtr, uint*, int>)&Do_Abi_get_Size_1,
-                    _IndexOf_2 = (delegate*<IntPtr, IntPtr, uint*, byte*, int>)&Do_Abi_IndexOf_2
+                    _GetAt_0 = (delegate* unmanaged<IntPtr, uint, IntPtr*, int>)&Do_Abi_GetAt_0,
+                    _get_Size_1 = (delegate* unmanaged<IntPtr, uint*, int>)&Do_Abi_get_Size_1,
+                    _IndexOf_2 = (delegate* unmanaged<IntPtr, IntPtr, uint*, byte*, int>)&Do_Abi_IndexOf_2
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 3);
@@ -474,7 +474,7 @@ namespace ABI.System.Collections
 #if NETSTANDARD2_0
                     _First_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache = Do_Abi_First_0).ToPointer()
 #else
-                    _First_0 = (delegate* <IntPtr, IntPtr*, int>)&Do_Abi_First_0
+                    _First_0 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_First_0
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
@@ -1029,16 +1029,16 @@ namespace ABI.System.Collections
                     _RemoveAtEnd_8 = Marshal.GetFunctionPointerForDelegate(DelegateCache[8] = new IList_Delegates.RemoveAtEnd_8(Do_Abi_RemoveAtEnd_8)).ToPointer(),
                     _Clear_9 = Marshal.GetFunctionPointerForDelegate(DelegateCache[9] = new IList_Delegates.Clear_9(Do_Abi_Clear_9)).ToPointer(),
 #else
-                    _GetAt_0 = (delegate*<IntPtr , uint , IntPtr* , int>)&Do_Abi_GetAt_0,
-                    _get_Size_1 = (delegate*<IntPtr , uint* , int>)&Do_Abi_get_Size_1,
-                    _GetView_2 = (delegate*<IntPtr , IntPtr* , int>)&Do_Abi_GetView_2,
-                    _IndexOf_3 = (delegate*<IntPtr , IntPtr , uint* , byte* , int>)&Do_Abi_IndexOf_3,
-                    _SetAt_4 = (delegate*<IntPtr , uint , IntPtr , int>)&Do_Abi_SetAt_4,
-                    _InsertAt_5 = (delegate*<IntPtr , uint , IntPtr , int>)&Do_Abi_InsertAt_5,
-                    _RemoveAt_6 = (delegate*<IntPtr , uint , int>)&Do_Abi_RemoveAt_6,
-                    _Append_7 = (delegate*<IntPtr , IntPtr , int>)&Do_Abi_Append_7,
-                    _RemoveAtEnd_8 = (delegate*<IntPtr , int>)&Do_Abi_RemoveAtEnd_8,
-                    _Clear_9 = (delegate*<IntPtr , int>)&Do_Abi_Clear_9,
+                    _GetAt_0 = (delegate* unmanaged<IntPtr , uint , IntPtr* , int>)&Do_Abi_GetAt_0,
+                    _get_Size_1 = (delegate* unmanaged<IntPtr , uint* , int>)&Do_Abi_get_Size_1,
+                    _GetView_2 = (delegate* unmanaged<IntPtr , IntPtr* , int>)&Do_Abi_GetView_2,
+                    _IndexOf_3 = (delegate* unmanaged<IntPtr , IntPtr , uint* , byte* , int>)&Do_Abi_IndexOf_3,
+                    _SetAt_4 = (delegate* unmanaged<IntPtr , uint , IntPtr , int>)&Do_Abi_SetAt_4,
+                    _InsertAt_5 = (delegate* unmanaged<IntPtr , uint , IntPtr , int>)&Do_Abi_InsertAt_5,
+                    _RemoveAt_6 = (delegate* unmanaged<IntPtr , uint , int>)&Do_Abi_RemoveAt_6,
+                    _Append_7 = (delegate* unmanaged<IntPtr , IntPtr , int>)&Do_Abi_Append_7,
+                    _RemoveAtEnd_8 = (delegate* unmanaged<IntPtr , int>)&Do_Abi_RemoveAtEnd_8,
+                    _Clear_9 = (delegate* unmanaged<IntPtr , int>)&Do_Abi_Clear_9,
 #endif
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 10);

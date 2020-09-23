@@ -22,10 +22,10 @@ namespace ABI.System.ComponentModel
             private void* _remove_PropertyChanged_1;
             public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_PropertyChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_PropertyChanged_1; set => _remove_PropertyChanged_1=(void*)value; }
 #else
-            private delegate*<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> _add_PropertyChanged_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_PropertyChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_PropertyChanged_0; set => _add_PropertyChanged_0=(delegate*<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)value; }
-            private delegate*<IntPtr, global::WinRT.EventRegistrationToken, int> _remove_PropertyChanged_1;
-            public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_PropertyChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_PropertyChanged_1; set => _remove_PropertyChanged_1=(delegate*<IntPtr, global::WinRT.EventRegistrationToken, int>)value; }
+            private delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int> _add_PropertyChanged_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int> add_PropertyChanged_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)_add_PropertyChanged_0; set => _add_PropertyChanged_0=(delegate* unmanaged<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)value; }
+            private delegate* unmanaged<IntPtr, global::WinRT.EventRegistrationToken, int> _remove_PropertyChanged_1;
+            public delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int> remove_PropertyChanged_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::WinRT.EventRegistrationToken, int>)_remove_PropertyChanged_1; set => _remove_PropertyChanged_1=(delegate* unmanaged<IntPtr, global::WinRT.EventRegistrationToken, int>)value; }
 #endif
 
             private static readonly Vftbl AbiToProjectionVftable;
@@ -53,14 +53,27 @@ namespace ABI.System.ComponentModel
 
             private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, global::WinRT.EventRegistrationTokenTable<global::System.ComponentModel.PropertyChangedEventHandler>> _PropertyChanged_TokenTables = new global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyPropertyChanged, global::WinRT.EventRegistrationTokenTable<global::System.ComponentModel.PropertyChangedEventHandler>>();
 
+#if NETSTANDARD2_0
             private static unsafe int Do_Abi_add_PropertyChanged_0(IntPtr thisPtr, IntPtr handler, out global::WinRT.EventRegistrationToken token)
             {
-                token = default;
+                fixed (global::WinRT.EventRegistrationToken* ptoken = &token)
+                {
+                    return Do_Abi_add_PropertyChanged_0(thisPtr, handler, ptoken);
+                }
+            }
+#endif
+
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_add_PropertyChanged_0(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token)
+            {
+                *token = default;
                 try
                 {
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.ComponentModel.INotifyPropertyChanged>(thisPtr);
                     var __handler = global::ABI.System.ComponentModel.PropertyChangedEventHandler.FromAbi(handler);
-                    token = _PropertyChanged_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
+                    *token = _PropertyChanged_TokenTables.GetOrCreateValue(__this).AddEventHandler(__handler);
                     __this.PropertyChanged += __handler;
                     return 0;
                 }
@@ -69,6 +82,10 @@ namespace ABI.System.ComponentModel
                     return __ex.HResult;
                 }
             }
+
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static unsafe int Do_Abi_remove_PropertyChanged_1(IntPtr thisPtr, global::WinRT.EventRegistrationToken token)
             {
                 try

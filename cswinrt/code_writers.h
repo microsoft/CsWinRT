@@ -3685,8 +3685,8 @@ internal IInspectable.Vftbl IInspectableVftbl;
                 else
                 {
                     // Work around C# compiler's lack of support for UnmanagedCallersOnly
-                    w.write("private delegate*<%, int> _%;\n", bind<write_abi_parameter_types_pointer>(method_signature{ method }), vmethod_name);
-                    w.write("public % % { get => (%)_%; set => _%=(delegate*<%, int>)value; }\n",
+                    w.write("private delegate* unmanaged[Stdcall]<%, int> _%;\n", bind<write_abi_parameter_types_pointer>(method_signature{ method }), vmethod_name);
+                    w.write("public % % { get => (%)_%; set => _%=(delegate* unmanaged[Stdcall]<%, int>)value; }\n",
                         vtable_field_type, vmethod_name, vtable_field_type, vmethod_name, vmethod_name,
                         bind<write_abi_parameter_types_pointer>(method_signature{ method }));
                 }
@@ -4698,7 +4698,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                 }
                 else
                 {
-                    w.write("(IntPtr)(delegate*<%, int>)&Do_Abi_Invoke", bind<write_abi_parameter_types_pointer>(signature));
+                    w.write("(IntPtr)(delegate* unmanaged[Stdcall]<%, int>)&Do_Abi_Invoke", bind<write_abi_parameter_types_pointer>(signature));
                 }
             }),
             type.TypeName(),
