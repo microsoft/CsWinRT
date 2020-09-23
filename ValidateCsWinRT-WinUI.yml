@@ -11,7 +11,7 @@ steps:
 # az login
 # az devops login --organization https://dev.azure.com/microsoft ??? give it the token
 - powershell: |
-    az devops login $(CsWinRTAzureAccessToken)
+    az devops login 
     $ciPipeline = 38157
     $runInfo = (az pipelines run `
       --organization https://dev.azure.com/microsoft `
@@ -22,3 +22,5 @@ steps:
     $buildUrl = $runInfo.url.Replace("_apis/build/Builds/","_build/results?buildId=")
     Start-Process $buildUrl
   displayName: 'Running WinUI CI Pipeline with latest CsWinRT'
+  env:
+    AZURE_DEVOPS_EXT_PAT: $(CsWinRTAzureAccessToken)
