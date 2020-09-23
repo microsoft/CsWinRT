@@ -22,4 +22,4 @@ steps:
     Start-Process $buildUrl
   displayName: 'Running WinUI CI Pipeline with latest CsWinRT'
   env:
-    AZURE_DEVOPS_EXT_PAT: $(CsWinRTAzureAccessToken)
+    AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
