@@ -18,7 +18,7 @@ steps:
    
     $nugetList = nuget.exe list -Prerelease -Source "$($env:CSWINRTFEED)"
     Write-Host $?
-    Write-Host "got the list"
+    Write-Host "list: $nugetList"
     foreach($pkg in $nugetList)
     {
       Write-Host $pkg
