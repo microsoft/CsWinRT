@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Linq;
@@ -16,18 +17,18 @@ namespace ABI.System
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
+
 #if NETSTANDARD2_0
             private void* _GetService_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, global::ABI.System.Type, out IntPtr, int> GetService_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::ABI.System.Type, out IntPtr, int>)_GetService_0; set => _GetService_0 = (void*)value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, global::ABI.System.Type, IntPtr*, int> GetService_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::ABI.System.Type, IntPtr*, int>)_GetService_0; set => _GetService_0 = (void*)value; }
 #else
-            private delegate*<IntPtr, global::ABI.System.Type, IntPtr*, int> _GetService_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, global::ABI.System.Type, out IntPtr, int> GetService_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::ABI.System.Type, out IntPtr, int>)_GetService_0; set => _GetService_0=(delegate*<IntPtr, global::ABI.System.Type, IntPtr*, int>)value; }
+            public delegate* unmanaged<IntPtr, global::ABI.System.Type, IntPtr*, int> GetService_0;
 #endif
 
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
 #if NETSTANDARD2_0
-            private static Delegate[] DelegateCache = new Delegate[4];
+            private static Delegate[] DelegateCache = new Delegate[1];
 #endif
 
             static unsafe Vftbl()
@@ -39,7 +40,7 @@ namespace ABI.System
 #if NETSTANDARD2_0
                     _GetService_0 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new IXamlServiceProvider_Delegates.GetService_0(Do_Abi_GetService_0))
 #else
-                    _GetService_0 = &Do_Abi_GetService_0
+                    GetService_0 = (delegate* unmanaged<IntPtr, global::ABI.System.Type, IntPtr*, int>)&Do_Abi_GetService_0
 #endif
                 };
             }
@@ -87,7 +88,7 @@ namespace ABI.System
             try
             {
                 __type = global::ABI.System.Type.CreateMarshaler(type);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetService_0(ThisPtr, global::ABI.System.Type.GetAbi(__type), out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetService_0(ThisPtr, global::ABI.System.Type.GetAbi(__type), &__retval));
                 return MarshalInspectable.FromAbi(__retval);
             }
             finally
