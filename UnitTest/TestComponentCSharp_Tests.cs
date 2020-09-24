@@ -32,6 +32,21 @@ namespace UnitTest
             TestObject = new Class();
         }
 
+#if NET5_0
+        [Fact]
+        public void TestDynamicInterfaceCastingOnValidInterface()
+        {
+            var agileObject = (IAgileObject)(IWinRTObject)TestObject;
+            Assert.NotNull(agileObject);
+        }
+
+        [Fact]
+        public void TestDynamicInterfaceCastingOnInvalidInterface()
+        {
+            Assert.ThrowsAny<System.Exception>(() => (IStringableInterop)(IWinRTObject)TestObject);
+        }
+#endif
+
         [Fact]
         public void TestUri()
         {
