@@ -450,6 +450,7 @@ namespace cswinrt
                     { "IThicknessHelperStatics" },
                     { "Thickness", "Microsoft.UI.Xaml", "Thickness" },
                     { "ThicknessHelper" },
+                    { "IXamlServiceProvider", "System", "IServiceProvider" },
                 }
             },
             { "Microsoft.UI.Xaml.Controls.Primitives",
