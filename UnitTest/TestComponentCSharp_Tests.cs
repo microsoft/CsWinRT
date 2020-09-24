@@ -163,16 +163,44 @@ namespace UnitTest
             TestObject.InvokeCollectionEvent(TestObject, collection0, collection1);
             events_expected++;
 
-            TestObject.ErrorsChanged += (object sender, System.ComponentModel.DataErrorsChangedEventArgs e) =>
-            {
-                events_received++;
-                Assert.Equal("name", e.PropertyName);
-            };
-            TestObject.RaiseDataErrorChanged();
-            events_expected++;
-
             Assert.Equal(events_received, events_expected);
         }
+
+        // TODO: when the public WinUI nuget supports IXamlServiceProvider, just use the projection
+        [ComImport]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        [Guid("68B3A2DF-8173-539F-B524-C8A2348F5AFB")]
+        internal unsafe interface IServiceProviderInterop
+        {
+            // Note: Invoking methods on ComInterfaceType.InterfaceIsIInspectable interfaces
+            // no longer appears supported in the runtime (probably with removal of WinRT support),
+            // so simulate with IUnknown.
+            void GetIids(out int iidCount, out IntPtr iids);
+            void GetRuntimeClassName(out IntPtr className);
+            void GetTrustLevel(out TrustLevel trustLevel);
+
+            void GetService(IntPtr type, out IntPtr service);
+        }
+
+        [Fact]
+        public void TestCustomProjections()
+        {
+            // INotifyDataErrorsInfo
+            string propertyName = "";
+            TestObject.ErrorsChanged += (object sender, System.ComponentModel.DataErrorsChangedEventArgs e) =>
+            {
+                propertyName = e.PropertyName;
+            };
+            TestObject.RaiseDataErrorChanged();
+            Assert.Equal("name", propertyName);
+
+            // IXamlServiceProvider <-> IServiceProvider
+            var serviceProvider = Class.ServiceProvider.As<IServiceProviderInterop>();
+            IntPtr service;
+            serviceProvider.GetService(IntPtr.Zero, out service);
+            Assert.Equal(new IntPtr(42), service);
+        }
+
 
         [Fact]
         public void TestKeyValuePair()

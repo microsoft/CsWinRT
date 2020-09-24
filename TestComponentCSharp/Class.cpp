@@ -6,6 +6,7 @@ using namespace std::chrono;
 
 using namespace winrt;
 using namespace Windows::Foundation;
+namespace WF = Windows::Foundation;
 using namespace Collections;
 using namespace Microsoft::UI::Xaml::Data;
 using namespace Microsoft::UI::Xaml::Interop;
@@ -61,7 +62,7 @@ namespace winrt::TestComponentCSharp::implementation
             return _wrapped.First();
         }
 
-        IInspectable GetAt(uint32_t index) const
+        WF::IInspectable GetAt(uint32_t index) const
         {
             return _wrapped.GetAt(index);
         }
@@ -73,15 +74,15 @@ namespace winrt::TestComponentCSharp::implementation
         {
             return _wrapped.GetView();
         }
-        bool IndexOf(IInspectable const& value, uint32_t& index) const
+        bool IndexOf(WF::IInspectable const& value, uint32_t& index) const
         {
             return _wrapped.IndexOf(value, index);
         }
-        void SetAt(uint32_t index, IInspectable const& value) const
+        void SetAt(uint32_t index, WF::IInspectable const& value) const
         {
             _wrapped.SetAt(index, value);
         }
-        void InsertAt(uint32_t index, IInspectable const& value) const
+        void InsertAt(uint32_t index, WF::IInspectable const& value) const
         {
             _wrapped.InsertAt(index, value);
         }
@@ -89,7 +90,7 @@ namespace winrt::TestComponentCSharp::implementation
         {
             _wrapped.RemoveAt(index);
         }
-        void Append(IInspectable const& value) const
+        void Append(WF::IInspectable const& value) const
         {
             _wrapped.Append(value);
         }
@@ -391,11 +392,11 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _strings = value;
     }
-    IInspectable Class::ObjectProperty()
+    WF::IInspectable Class::ObjectProperty()
     {
         return _object;
     }
-    void Class::ObjectProperty(IInspectable const& value)
+    void Class::ObjectProperty(WF::IInspectable const& value)
     {
         _object = value;
     }
@@ -407,7 +408,7 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _object = provideObject();
     }
-    winrt::event_token Class::ObjectPropertyChanged(EventHandler<IInspectable> const& handler)
+    winrt::event_token Class::ObjectPropertyChanged(EventHandler<WF::IInspectable> const& handler)
     {
         return _objectChanged.add(handler);
     }
@@ -415,11 +416,11 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _objectChanged.remove(token);
     }
-    IIterable<IInspectable> Class::ObjectIterableProperty()
+    IIterable<WF::IInspectable> Class::ObjectIterableProperty()
     {
         return _objectIterable;
     }
-    void Class::ObjectIterableProperty(IIterable<IInspectable> const& value)
+    void Class::ObjectIterableProperty(IIterable<WF::IInspectable> const& value)
     {
         for (auto element : value)
         {
@@ -434,7 +435,7 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _objectIterable = provideObjectIterable();
     }
-    winrt::event_token Class::ObjectIterablePropertyChanged(EventHandler<IIterable<IInspectable>> const& handler)
+    winrt::event_token Class::ObjectIterablePropertyChanged(EventHandler<IIterable<WF::IInspectable>> const& handler)
     {
         return _objectIterableChanged.add(handler);
     }
@@ -697,9 +698,9 @@ namespace winrt::TestComponentCSharp::implementation
         }).GetView();
     }
 
-    IVectorView<IInspectable> Class::GetObjectVector()
+    IVectorView<WF::IInspectable> Class::GetObjectVector()
     {
-        return winrt::single_threaded_vector(std::vector<IInspectable>{ winrt::box_value(0), winrt::box_value(1), winrt::box_value(2) }).GetView();
+        return winrt::single_threaded_vector(std::vector<WF::IInspectable>{ winrt::box_value(0), winrt::box_value(1), winrt::box_value(2) }).GetView();
     }
 
     IVectorView<TestComponentCSharp::IProperties1> Class::GetInterfaceVector()
@@ -1114,7 +1115,7 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _bindableObservable = value;
         _bindableObservable.VectorChanged(
-            [](IBindableObservableVector vector, IInspectable e) {
+            [](IBindableObservableVector vector, WF::IInspectable e) {
                 int32_t sum = 0;
                 auto view = vector.GetView();
                 for (uint32_t i = 0; i < view.Size(); i++)
@@ -1136,32 +1137,32 @@ namespace winrt::TestComponentCSharp::implementation
         ReadWriteProperty(weak_ref.get().ReadWriteProperty());
     }
 
-    int32_t Class::UnboxInt32(IInspectable const& obj)
+    int32_t Class::UnboxInt32(WF::IInspectable const& obj)
     {
         return winrt::unbox_value<int32_t>(obj);
     }
 
-    bool Class::UnboxBoolean(IInspectable const& obj)
+    bool Class::UnboxBoolean(WF::IInspectable const& obj)
     {
         return winrt::unbox_value<bool>(obj);
     }
 
-    hstring Class::UnboxString(IInspectable const& obj)
+    hstring Class::UnboxString(WF::IInspectable const& obj)
     {
         return winrt::unbox_value<hstring>(obj);
     }
 
-    com_array<int32_t> Class::UnboxInt32Array(IInspectable const& obj)
+    com_array<int32_t> Class::UnboxInt32Array(WF::IInspectable const& obj)
     {
         return obj.as<IReferenceArray<int32_t>>().Value();
     }
 
-    com_array<bool> Class::UnboxBooleanArray(IInspectable const& obj)
+    com_array<bool> Class::UnboxBooleanArray(WF::IInspectable const& obj)
     {
         return obj.as<IReferenceArray<bool>>().Value();
     }
     
-    com_array<hstring> Class::UnboxStringArray(IInspectable const& obj)
+    com_array<hstring> Class::UnboxStringArray(WF::IInspectable const& obj)
     {
         return obj.as<IReferenceArray<hstring>>().Value();
     }
@@ -1201,7 +1202,7 @@ namespace winrt::TestComponentCSharp::implementation
         return type.Name;
     }
 
-    IInspectable Class::EmptyString()
+    WF::IInspectable Class::EmptyString()
     {
         return winrt::box_value(hstring{});
     }
@@ -1225,6 +1226,26 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::make<native_properties1>();
     }
 
+    // TODO: when the public WinUI nuget supports IXamlServiceProvider, just use the projection
+    struct __declspec(uuid("68B3A2DF-8173-539F-B524-C8A2348F5AFB")) IServiceProviderInterop : ::IInspectable
+    {
+        virtual HRESULT __stdcall GetService(int32_t* type, int32_t* service) noexcept = 0;
+    };
+
+    struct service_provider : winrt::implements<service_provider, WF::IInspectable, IServiceProviderInterop>
+    {
+        HRESULT __stdcall GetService(int32_t* type, int32_t* service) noexcept override
+        {
+            *service = 42;
+            return 0;
+        }
+    };
+
+    WF::IInspectable Class::ServiceProvider()
+    {
+        return winrt::make<service_provider>();
+    }
+
     // INotifyDataErrorInfo
     bool Class::HasErrors()
     {
@@ -1238,7 +1259,7 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _dataErrorsChanged.remove(token);
     }
-    IIterable<IInspectable> Class::GetErrors(hstring const& propertyName)
+    IIterable<WF::IInspectable> Class::GetErrors(hstring const& propertyName)
     {
         return _objectIterable;
     }
