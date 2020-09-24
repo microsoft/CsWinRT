@@ -35,7 +35,7 @@ namespace UnitTest
         }
 
         [Fact]
-        public async Task TestWriteBuffer()
+        public void TestWriteBuffer()
         {
             var random = new Random(42);
             byte[] data = new byte[256];
@@ -43,7 +43,8 @@ namespace UnitTest
 
             using var stream = new InMemoryRandomAccessStream();
             IBuffer buffer = data.AsBuffer();
-            await stream.WriteAsync(buffer);
+            var writeTask = stream.WriteAsync(buffer).AsTask();
+            Assert.True(writeTask.Wait(1000));
         }
 
         [Fact]
