@@ -46,28 +46,23 @@ namespace ABI.WinRT.Interop
             public static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+
             public delegate int ResolveDelegate(IntPtr thisPtr, Guid* riid, IntPtr* objectReference);
             private static readonly Delegate[] DelegateCache = new Delegate[1];
-#endif
+
             static Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-#if NETSTANDARD2_0
+
                     _Resolve = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ResolveDelegate(Do_Abi_Resolve)).ToPointer(),
-#else
-                    _Resolve = (delegate*<IntPtr, Guid*, IntPtr*, int>)&Do_Abi_Resolve
-#endif
+
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
                 Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
             }
 
-#if !NETSTANDARD2_0
-            [UnmanagedCallersOnly]
-#endif
             private static int Do_Abi_Resolve(IntPtr thisPtr, Guid* riid, IntPtr* objectReference)
             {
                 IObjectReference _objectReference = default;

@@ -4466,7 +4466,7 @@ public static class %
     {
          XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", true);
-        //std::cout << type_name << std::endl << std::endl << std::endl;
+
         std::set<std::string> generic_methods;
         std::vector<std::string> nongeneric_delegates;
 
