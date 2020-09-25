@@ -131,9 +131,9 @@ namespace WinRT
             IUnknownVftblPtr = Marshal.AllocHGlobal(sizeof(IUnknownVftbl));
             (*(IUnknownVftbl*)IUnknownVftblPtr) = new IUnknownVftbl
             {
-                QueryInterface = (delegate* stdcall<IntPtr, ref Guid, out IntPtr, int>)Marshal.GetFunctionPointerForDelegate(Abi_QueryInterface),
-                AddRef = (delegate* stdcall<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_AddRef),
-                Release = (delegate* stdcall<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_Release),
+                QueryInterface = (delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int>)Marshal.GetFunctionPointerForDelegate(Abi_QueryInterface),
+                AddRef = (delegate* unmanaged[Stdcall]<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_AddRef),
+                Release = (delegate* unmanaged[Stdcall]<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_Release),
             };
         }
         

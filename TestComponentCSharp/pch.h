@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <unknwn.h>
+#include <inspectable.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Microsoft.UI.Xaml.h>

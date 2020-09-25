@@ -57,7 +57,7 @@ namespace ABI.WinRT.Interop
         {
             public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
             private void* _GetWeakReference;
-            public delegate* stdcall<IntPtr, out IntPtr, int> GetWeakReference { get => (delegate* stdcall<IntPtr, out IntPtr, int>)_GetWeakReference; set => _GetWeakReference = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int> GetWeakReference { get => (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)_GetWeakReference; set => _GetWeakReference = value; }
 
             public static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -68,7 +68,7 @@ namespace ABI.WinRT.Interop
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
 
-                    _GetWeakReference = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetWeakReference
+                    _GetWeakReference = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetWeakReference
 
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
@@ -123,7 +123,7 @@ namespace ABI.WinRT.Interop
         {
             public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
             private void* _Resolve;
-            public delegate* stdcall<IntPtr, ref Guid, out IntPtr, int> Resolve { get => (delegate* stdcall<IntPtr, ref Guid, out IntPtr, int>)_Resolve; set => _Resolve = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int> Resolve { get => (delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int>)_Resolve; set => _Resolve = value; }
 
             public static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -135,7 +135,7 @@ namespace ABI.WinRT.Interop
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
 
-                    _Resolve = (delegate*<IntPtr, Guid*, IntPtr*, int>)&Do_Abi_Resolve
+                    _Resolve = (delegate* unmanaged<IntPtr, Guid*, IntPtr*, int>)&Do_Abi_Resolve
 
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());

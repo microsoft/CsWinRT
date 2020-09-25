@@ -35,6 +35,7 @@ namespace WinRT
                 }
             }
 
+            type = type.GetRuntimeClassCCWType() ?? type;
             if (type == typeof(object))
             {
                 return "cinterface(IInspectable)";

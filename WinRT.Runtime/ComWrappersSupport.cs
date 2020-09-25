@@ -27,6 +27,7 @@ namespace WinRT
     public static partial class ComWrappersSupport
     {
         private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
+        private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate
@@ -76,7 +77,7 @@ namespace WinRT
 
             ProjectedRuntimeClassAttribute projectedClass = type.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
 
-            if (projectedClass is object)
+            if (projectedClass is object && projectedClass.DefaultInterfaceProperty != null)
             {
                 return TryUnwrapObject(
                     type.GetProperty(projectedClass.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).GetValue(o),
@@ -102,6 +103,23 @@ namespace WinRT
                     unknownRef.GetRef(),
                     Context.GetContextCallback());
             }
+        }
+
+        public static void RegisterProjectionAssembly(Assembly assembly) => TypeNameSupport.RegisterProjectionAssembly(assembly);
+
+        internal static object GetRuntimeClassCCWTypeIfAny(object obj)
+        {
+            var type = obj.GetType();
+            var ccwType = type.GetRuntimeClassCCWType();
+            if (ccwType != null)
+            {
+                return CCWTable.GetValue(obj, obj => {
+                    var ccwConstructor = ccwType.GetConstructor(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { type }, null);
+                    return ccwConstructor.Invoke(new[] { obj });
+                });
+            }
+
+            return obj;
         }
 
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(object obj)

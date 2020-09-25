@@ -3,7 +3,9 @@
 #include "ComImports.h"
 #include "ComImports.g.cpp"
 
-using namespace winrt::Windows::Foundation;
+using namespace winrt;
+using namespace Windows::Foundation;
+namespace WF = Windows::Foundation;
 
 namespace winrt::TestComponentCSharp::implementation
 {
@@ -22,7 +24,7 @@ namespace winrt::TestComponentCSharp::implementation
         virtual HRESULT __stdcall Initialize(HWND hWnd) noexcept = 0;
     };
 
-    struct ComImportObject : winrt::implements<ComImportObject, IInspectable, IWindowNative, IInitializeWithWindow>
+    struct ComImportObject : winrt::implements<ComImportObject, WF::IInspectable, IWindowNative, IInitializeWithWindow>
     {
         ComImportObject()
         {
@@ -49,7 +51,7 @@ namespace winrt::TestComponentCSharp::implementation
         }
     };
 
-    IInspectable ComImports::MakeObject()
+    WF::IInspectable ComImports::MakeObject()
     {
         return winrt::make<ComImportObject>();
     }

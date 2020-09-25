@@ -73,11 +73,11 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _get_Current_0;
-            public delegate* stdcall<IntPtr, IntPtr*, int> get_Current_0 { get => (delegate* stdcall<IntPtr, IntPtr*, int>)_get_Current_0; set => _get_Current_0 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_Current_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_Current_0; set => _get_Current_0 = value; }
             private void* _get_HasCurrent_1;
-            public delegate* stdcall<IntPtr, byte*, int> get_HasCurrent_1 { get => (delegate* stdcall<IntPtr, byte*, int>)_get_HasCurrent_1; set => _get_HasCurrent_1 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> get_HasCurrent_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_get_HasCurrent_1; set => _get_HasCurrent_1 = value; }
             private void* _MoveNext_2;
-            public delegate* stdcall<IntPtr, byte*, int> MoveNext_2 { get => (delegate* stdcall<IntPtr, byte*, int>)_MoveNext_2; set => _MoveNext_2 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> MoveNext_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_MoveNext_2; set => _MoveNext_2 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -88,9 +88,9 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
-                    _get_Current_0 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_get_Current_0,
-                    _get_HasCurrent_1 = (delegate*<IntPtr, byte*, int>)&Do_Abi_get_HasCurrent_1,
-                    _MoveNext_2 = (delegate*<IntPtr, byte*, int>)&Do_Abi_MoveNext_2
+                    _get_Current_0 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_get_Current_0,
+                    _get_HasCurrent_1 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_get_HasCurrent_1,
+                    _MoveNext_2 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_MoveNext_2
 
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 3);
@@ -216,11 +216,11 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _GetAt_0;
-            public delegate* stdcall<IntPtr, uint, IntPtr*, int> GetAt_0 { get => (delegate* stdcall<IntPtr, uint, IntPtr*, int>)_GetAt_0; set => _GetAt_0 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr*, int> GetAt_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr*, int>)_GetAt_0; set => _GetAt_0 = value; }
             private void* _get_Size_1;
-            public delegate* stdcall<IntPtr, uint*, int> get_Size_1 { get => (delegate* stdcall<IntPtr, uint*, int>)_get_Size_1; set => _get_Size_1 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, uint*, int> get_Size_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint*, int>)_get_Size_1; set => _get_Size_1 = value; }
             private void* _IndexOf_2;
-            public delegate* stdcall<IntPtr, IntPtr, uint*, byte*, int> IndexOf_2 { get => (delegate* stdcall<IntPtr, IntPtr, uint*, byte*, int>)_IndexOf_2; set => _IndexOf_2 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, uint*, byte*, int> IndexOf_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, uint*, byte*, int>)_IndexOf_2; set => _IndexOf_2 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -231,9 +231,9 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
-                    _GetAt_0 = (delegate*<IntPtr, uint, IntPtr*, int>)&Do_Abi_GetAt_0,
-                    _get_Size_1 = (delegate*<IntPtr, uint*, int>)&Do_Abi_get_Size_1,
-                    _IndexOf_2 = (delegate*<IntPtr, IntPtr, uint*, byte*, int>)&Do_Abi_IndexOf_2
+                    _GetAt_0 = (delegate* unmanaged<IntPtr, uint, IntPtr*, int>)&Do_Abi_GetAt_0,
+                    _get_Size_1 = (delegate* unmanaged<IntPtr, uint*, int>)&Do_Abi_get_Size_1,
+                    _IndexOf_2 = (delegate* unmanaged<IntPtr, IntPtr, uint*, byte*, int>)&Do_Abi_IndexOf_2
 
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 3);
@@ -444,7 +444,7 @@ namespace ABI.System.Collections
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _First_0;
-            public delegate* stdcall<IntPtr, IntPtr*, int> First_0 { get => (delegate* stdcall<IntPtr, IntPtr*, int>)_First_0; set => _First_0 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> First_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_First_0; set => _First_0 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -455,7 +455,7 @@ namespace ABI.System.Collections
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
-                    _First_0 = (delegate* <IntPtr, IntPtr*, int>)&Do_Abi_First_0
+                    _First_0 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_First_0
 
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
@@ -465,7 +465,6 @@ namespace ABI.System.Collections
 
 
             [UnmanagedCallersOnly]
-
             private static unsafe int Do_Abi_First_0(IntPtr thisPtr, IntPtr* result)
             {
                 *result = default;
@@ -971,16 +970,16 @@ namespace ABI.System.Collections
             private void* _RemoveAtEnd_8;
             private void* _Clear_9;
 
-            public delegate* stdcall<IntPtr , uint , IntPtr* , int> GetAt_0 { get => (delegate* stdcall<IntPtr, uint, IntPtr * , int >)_GetAt_0; set => _GetAt_0 = value; }
-            public delegate* stdcall<IntPtr , uint* , int> get_Size_1 { get => (delegate* stdcall<IntPtr, uint * , int >)_get_Size_1; set => _get_Size_1 = value; }
-            public delegate* stdcall<IntPtr , IntPtr* , int> GetView_2 { get => (delegate* stdcall<IntPtr, IntPtr * , int >)_GetView_2; set => _GetView_2 = value; }
-            public delegate* stdcall<IntPtr , IntPtr , uint* , byte* , int> IndexOf_3 { get => (delegate* stdcall<IntPtr, IntPtr, uint * , byte * , int >)_IndexOf_3; set => _IndexOf_3 = value; }
-            public delegate* stdcall<IntPtr , uint , IntPtr , int> SetAt_4 { get => (delegate* stdcall<IntPtr, uint, IntPtr, int >)_SetAt_4; set => _SetAt_4 = value; }
-            public delegate* stdcall<IntPtr , uint , IntPtr , int> InsertAt_5 { get => (delegate* stdcall<IntPtr, uint, IntPtr, int >)_InsertAt_5; set => _InsertAt_5 = value; }
-            public delegate* stdcall<IntPtr , uint , int> RemoveAt_6 { get => (delegate* stdcall<IntPtr, uint, int >)_RemoveAt_6; set => _RemoveAt_6 = value; }
-            public delegate* stdcall<IntPtr , IntPtr , int> Append_7 { get => (delegate* stdcall<IntPtr, IntPtr, int >)_Append_7; set => _Append_7 = value; }
-            public delegate* stdcall<IntPtr , int> RemoveAtEnd_8 { get => (delegate* stdcall<IntPtr, int >)_RemoveAtEnd_8; set => _RemoveAtEnd_8 = value; }
-            public delegate* stdcall<IntPtr , int> Clear_9 { get => (delegate* stdcall<IntPtr, int >)_Clear_9; set => _Clear_9 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , uint , IntPtr* , int> GetAt_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr * , int >)_GetAt_0; set => _GetAt_0 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , uint* , int> get_Size_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint * , int >)_get_Size_1; set => _get_Size_1 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , IntPtr* , int> GetView_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr * , int >)_GetView_2; set => _GetView_2 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , IntPtr , uint* , byte* , int> IndexOf_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, uint * , byte * , int >)_IndexOf_3; set => _IndexOf_3 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , uint , IntPtr , int> SetAt_4 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, int >)_SetAt_4; set => _SetAt_4 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , uint , IntPtr , int> InsertAt_5 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, int >)_InsertAt_5; set => _InsertAt_5 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , uint , int> RemoveAt_6 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, int >)_RemoveAt_6; set => _RemoveAt_6 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , IntPtr , int> Append_7 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int >)_Append_7; set => _Append_7 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , int> RemoveAtEnd_8 { get => (delegate* unmanaged[Stdcall]<IntPtr, int >)_RemoveAtEnd_8; set => _RemoveAtEnd_8 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr , int> Clear_9 { get => (delegate* unmanaged[Stdcall]<IntPtr, int >)_Clear_9; set => _Clear_9 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -991,16 +990,16 @@ namespace ABI.System.Collections
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
-                    _GetAt_0 = (delegate*<IntPtr , uint , IntPtr* , int>)&Do_Abi_GetAt_0,
-                    _get_Size_1 = (delegate*<IntPtr , uint* , int>)&Do_Abi_get_Size_1,
-                    _GetView_2 = (delegate*<IntPtr , IntPtr* , int>)&Do_Abi_GetView_2,
-                    _IndexOf_3 = (delegate*<IntPtr , IntPtr , uint* , byte* , int>)&Do_Abi_IndexOf_3,
-                    _SetAt_4 = (delegate*<IntPtr , uint , IntPtr , int>)&Do_Abi_SetAt_4,
-                    _InsertAt_5 = (delegate*<IntPtr , uint , IntPtr , int>)&Do_Abi_InsertAt_5,
-                    _RemoveAt_6 = (delegate*<IntPtr , uint , int>)&Do_Abi_RemoveAt_6,
-                    _Append_7 = (delegate*<IntPtr , IntPtr , int>)&Do_Abi_Append_7,
-                    _RemoveAtEnd_8 = (delegate*<IntPtr , int>)&Do_Abi_RemoveAtEnd_8,
-                    _Clear_9 = (delegate*<IntPtr , int>)&Do_Abi_Clear_9,
+                    _GetAt_0 = (delegate* unmanaged<IntPtr , uint , IntPtr* , int>)&Do_Abi_GetAt_0,
+                    _get_Size_1 = (delegate* unmanaged<IntPtr , uint* , int>)&Do_Abi_get_Size_1,
+                    _GetView_2 = (delegate* unmanaged<IntPtr , IntPtr* , int>)&Do_Abi_GetView_2,
+                    _IndexOf_3 = (delegate* unmanaged<IntPtr , IntPtr , uint* , byte* , int>)&Do_Abi_IndexOf_3,
+                    _SetAt_4 = (delegate* unmanaged<IntPtr , uint , IntPtr , int>)&Do_Abi_SetAt_4,
+                    _InsertAt_5 = (delegate* unmanaged<IntPtr , uint , IntPtr , int>)&Do_Abi_InsertAt_5,
+                    _RemoveAt_6 = (delegate* unmanaged<IntPtr , uint , int>)&Do_Abi_RemoveAt_6,
+                    _Append_7 = (delegate* unmanaged<IntPtr , IntPtr , int>)&Do_Abi_Append_7,
+                    _RemoveAtEnd_8 = (delegate* unmanaged<IntPtr , int>)&Do_Abi_RemoveAtEnd_8,
+                    _Clear_9 = (delegate* unmanaged<IntPtr , int>)&Do_Abi_Clear_9,
 
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 10);

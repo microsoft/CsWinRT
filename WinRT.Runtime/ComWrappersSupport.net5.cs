@@ -130,9 +130,9 @@ namespace WinRT
             IUnknownVftblPtr = RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(IUnknownVftbl), sizeof(IUnknownVftbl));
             (*(IUnknownVftbl*)IUnknownVftblPtr) = new IUnknownVftbl
             {
-                QueryInterface = (delegate* stdcall<IntPtr, ref Guid, out IntPtr, int>)qi,
-                AddRef = (delegate* stdcall<IntPtr, uint>)addRef,
-                Release = (delegate* stdcall<IntPtr, uint>)release,
+                QueryInterface = (delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int>)qi,
+                AddRef = (delegate* unmanaged[Stdcall]<IntPtr, uint>)addRef,
+                Release = (delegate* unmanaged[Stdcall]<IntPtr, uint>)release,
             };
         }
 

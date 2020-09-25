@@ -13,30 +13,34 @@ namespace ABI.Windows.Foundation
 
         internal IInspectable.Vftbl IInspectableVftbl;
         private void* _ToString_0;
-        private delegate* stdcall<IntPtr, IntPtr*, int> ToString_0 { get => (delegate* stdcall<IntPtr, IntPtr*, int>)_ToString_0; set => _ToString_0 = value; }
+        private delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> ToString_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_ToString_0; set => _ToString_0 = value; }
 
         private static readonly ManagedIStringableVftbl AbiToProjectionVftable;
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
-
+#if NETSTANDARD2_0
         private unsafe delegate int ToStringDelegate(IntPtr thisPtr, IntPtr* value);
         private static readonly ToStringDelegate delegateCache;
-
+#endif
         static unsafe ManagedIStringableVftbl()
         {
             AbiToProjectionVftable = new ManagedIStringableVftbl
             {
                 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-
+#if NETSTANDARD2_0
                 _ToString_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_ToString_0).ToPointer()
-
+#else
+                _ToString_0 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_ToString_0
+#endif
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedIStringableVftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
             Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
             AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
         }
 
-
+#if !NETSTANDARD2_0
+        [UnmanagedCallersOnly]
+#endif
         private static unsafe int Do_Abi_ToString_0(IntPtr thisPtr, IntPtr* value)
         {
             try

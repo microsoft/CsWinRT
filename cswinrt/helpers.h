@@ -450,6 +450,7 @@ namespace cswinrt
                     { "IThicknessHelperStatics" },
                     { "Thickness", "Microsoft.UI.Xaml", "Thickness" },
                     { "ThicknessHelper" },
+                    { "IXamlServiceProvider", "System", "IServiceProvider" },
                 }
             },
             { "Microsoft.UI.Xaml.Controls.Primitives",
@@ -462,6 +463,8 @@ namespace cswinrt
             },
             { "Microsoft.UI.Xaml.Data",
                 {
+                    { "DataErrorsChangedEventArgs", "System.ComponentModel", "DataErrorsChangedEventArgs" },
+                    { "INotifyDataErrorInfo", "System.ComponentModel", "INotifyDataErrorInfo", true, true },
                     { "INotifyPropertyChanged", "System.ComponentModel", "INotifyPropertyChanged" },
                     { "PropertyChangedEventArgs", "System.ComponentModel", "PropertyChangedEventArgs" },
                     { "PropertyChangedEventHandler", "System.ComponentModel", "PropertyChangedEventHandler" },
@@ -607,4 +610,11 @@ namespace cswinrt
 
         return &*nameItr;
     }
+
+    enum class typedef_name_type
+    {
+        Projected,
+        CCW,
+        ABI
+    };
 }

@@ -1,214 +1,258 @@
 ﻿using System;
 using System.Reflection;
+using Windows.Foundation;
 using Windows.Foundation.Metadata;
+using WinRT;
 
-namespace MyTypes
+namespace AuthoringSample
 {
-    public delegate void ExampleDelegate(UInt32 value);
-    public delegate int ExampleDelegateDouble(double newvalue);
-
-    public class ExampleClass
+    public enum BasicEnum
     {
-        public ExampleClass()
-        {
-        }
-
-        public event ExampleDelegate SampleEvent;
-
-        public ExampleClass(ExampleClass other)
-        {
-            other.MethodA();
-        }
-
-        public ExampleClass(int alpha)
-        {
-            MethodB(alpha, alpha);
-        }
-
-        public void MethodA()
-        {
-            System.Console.WriteLine("Yay!");
-        }
-
-        public int MethodB(int param1, double param2)
-        {
-            return 4;
-        }
-
-        public ExampleClass Get()
-        {
-            return null;
-        }
-
-        private static void HelperMethod(ExampleClass instance)
-        {
-            instance.MethodA();
-        }
-
-        public double ExampleDouble { get; set; }
+        First = -1,
+        Second = 0,
+        Third = 1,
+        Fourth
     }
 
-    public interface ITest
+    [Flags]
+    public enum FlagsEnum : uint
     {
-        int GetTest();
-    }
-
-    [Version(3u)]
-    public interface ITest2
-    {
-        [Version(5u)]
-        double GetTest(int test);
-        int GetTest2();
-        double GetSetDouble { get; set; }
+        First = 0,
+        Second = 1,
+        Third = 2,
+        Fourth = 4
     }
 
     internal enum PrivateEnum
     {
-        privatetest,
-        privatetest2
+        PrivateFirst,
+        PrivateSecond
     }
 
-    public enum TestEnum
+    public delegate void BasicDelegate(uint value);
+    public delegate bool ComplexDelegate(double value, int value2);
+
+    public sealed class BasicClass
     {
-        test,
-        test2
-    }
+        private BasicEnum basicEnum = BasicEnum.First;
+        private FlagsEnum flagsEnum = FlagsEnum.Second | FlagsEnum.Third;
 
-    public enum NumericEnum : int
-    {
-        five = -5,
-        six = 6
-    }
+        public event ComplexDelegate ComplexDelegateEvent;
+        private event ComplexDelegate ComplexDelegateEvent2;
 
-    public enum UnsignedEnum : uint
-    {
-        zero,
-        one,
-        two,
-        three
-    }
-
-    public struct MyStruct
-    {
-        public int test, test3;
-        public double test2;
-    }
-
-    public class Test : ITest2
-    {
-        public int GetSetInt { get; set; }
-        public double GetSetDouble { get; set; }
-        public int GetInt { get; }
-
-        public double GetTest(int test)
+        public Point GetPoint()
         {
-            return test;
+            Point p = new Point
+            {
+                X = 2,
+                Y = 3
+            };
+            return p;
         }
 
-        public int GetTest2()
+        public CustomWWW GetCustomWWW()
         {
-            return 4;
-        }
-    }
-
-    public class ExampleClass2 : ExampleClass
-    {
-        public void Delta()
-        {
+            return new CustomWWW();
         }
 
-        public int Method()
+        public BasicStruct GetBasicStruct()
         {
-            return 4;
+            BasicStruct basicStruct;
+            basicStruct.X = 4;
+            basicStruct.Y = 8;
+            basicStruct.Value = "CsWinRT";
+            return basicStruct;
         }
 
-        public int Method2(int param1, double param2)
+        public int GetSumOfInts(BasicStruct basicStruct)
         {
-            return 4;
+            return basicStruct.X + basicStruct.Y;
         }
 
-        public void Pen()
+        public ComplexStruct GetComplexStruct()
         {
+            ComplexStruct complexStruct;
+            complexStruct.X = 12;
+            complexStruct.Val = true;
+            complexStruct.BasicStruct = GetBasicStruct();
+            return complexStruct;
         }
 
-        public int Method3(double p1, double param2, int param3)
+        public int? GetX(ComplexStruct basicStruct)
         {
-            return 4;
+            return basicStruct.X;
         }
 
-        public double Method4(double m4, double m5, int m6, int m7)
+        public void SetBasicEnum(BasicEnum basicEnum)
         {
-            return 4;
-        }
-    }
-
-    public class Test3 : Test
-    {
-
-    }
-
-
-    public class Test8 : Windows.Foundation.IWwwFormUrlDecoderEntry
-    {
-        public string Name => throw new NotImplementedException();
-
-        public string Value => throw new NotImplementedException();
-    }
-
-    public class NewTest4 : ITest4
-    {
-        public double GetSetDouble { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        public event ExampleDelegate TestEvent;
-
-        public double GetTest(int test)
-        {
-            throw new NotImplementedException();
+            this.basicEnum = basicEnum;
         }
 
-        public int GetTest2()
+        public BasicEnum GetBasicEnum()
         {
-            throw new NotImplementedException();
+            return basicEnum;
         }
 
-        public int GetTest4()
+        public void SetFlagsEnum(FlagsEnum flagsEnum)
         {
-            throw new NotImplementedException();
+            this.flagsEnum = flagsEnum;
+        }
+
+        public FlagsEnum GetFlagsEnum()
+        {
+            return flagsEnum;
+        }
+
+        public BasicClass ReturnParameter(BasicClass basicClass)
+        {
+            return basicClass;
+        }
+
+        private void PrivateFunction()
+        {
         }
     }
 
-    public interface ITest4 : ITest2
+    public struct BasicStruct
     {
-        int GetTest4();
-
-        public event ExampleDelegate TestEvent;
+        public int X, Y;
+        public string Value;
     }
 
-    public class TestCustom
+    public struct ComplexStruct
     {
-        public TestCustom(int num)
-        {
-            _num = num;
-        }
-
-        public int GetNum()
-        {
-            return _num;
-        }
-
-        private int _num;
+        public int? X;
+        public bool? Val;
+        public BasicStruct BasicStruct;
     }
 
-    internal class SomeMoreCode
+    public class CustomWWW : IWwwFormUrlDecoderEntry
     {
-        public static void Stuff()
+        public string Name => "CustomWWW";
+
+        public string Value => "CsWinRT";
+    }
+
+    [Version(3u)]
+    public interface IDouble
+    {
+        double GetDouble();
+        double GetDouble(bool ignoreFactor);
+    }
+
+    public interface IAnotherInterface
+    {
+        event ComplexDelegate ComplexDelegateEvent;
+
+        bool FireComplexDelegate(double value, int value2);
+
+        [Version(5u)]
+        int GetThree();
+    }
+
+    public sealed class TestClass : IDouble, IAnotherInterface
+    {
+        public event BasicDelegate BasicDelegateEvent, BasicDelegateEvent2;
+        public event ComplexDelegate ComplexDelegateEvent;
+
+        public int Factor { get; set; }
+        private int Factor2 { get; set; }
+        public uint DelegateValue { get; set; }
+
+        public TestClass()
         {
-            const ExampleClass instance1 = null;
+            Factor = 1;
+            Factor2 = 1;
+            BasicDelegateEvent += TestClass_BasicDelegateEvent;
         }
 
-        ExampleClass MyProp2
+        private void TestClass_BasicDelegateEvent(uint value)
         {
-            get { return null; }
+            DelegateValue = value;
+        }
+
+        // Factory
+
+        public TestClass(int factor)
+        {
+            Factor = factor;
+        }
+
+        // Statics
+        public static int GetDefaultFactor()
+        {
+            return 1;
+        }
+
+        public static int GetDefaultNumber()
+        {
+            return 2;
+        }
+
+        // Default interface
+
+        public void FireBasicDelegate(uint value)
+        {
+            BasicDelegateEvent.Invoke(value);
+        }
+
+        public void FireBasicDelegate2(uint value)
+        {
+            BasicDelegateEvent2.Invoke(value);
+        }
+
+        public int GetFactor()
+        {
+            return Factor;
+        }
+
+        // Method overloading
+
+        public int GetNumber()
+        {
+            return 2 * Factor;
+        }
+
+        public int GetNumber(bool ignoreFactor)
+        {
+            return ignoreFactor ? 2 : GetNumber();
+        }
+
+        public int GetNumberWithDelta(bool ignoreFactor, int delta)
+        {
+            return delta + (ignoreFactor ? 2 : GetNumber());
+        }
+
+        // Implementing interface
+
+        public double GetDouble()
+        {
+            return 2.0 * Factor;
+        }
+
+        public double GetDouble(bool ignoreFactor)
+        {
+            return ignoreFactor ? 2.0 : GetNumber();
+        }
+
+        // Implementing another interface
+
+        public bool FireComplexDelegate(double value, int value2)
+        {
+            return ComplexDelegateEvent.Invoke(value, value2);
+        }
+
+        public int GetThree()
+        {
+            return 3;
+        }
+
+    }
+
+    internal class InternalClass
+    {
+        public static void Get()
+        {
         }
     }
 }

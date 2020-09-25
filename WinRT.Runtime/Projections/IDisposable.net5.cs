@@ -17,7 +17,7 @@ namespace ABI.System
             private delegate int CloseDelegate(IntPtr thisPtr);
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _Close_0;
-            public delegate* stdcall<IntPtr, int> Close_0 { get => (delegate* stdcall<IntPtr, int>)_Close_0; set => _Close_0 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, int> Close_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, int>)_Close_0; set => _Close_0 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -29,7 +29,7 @@ namespace ABI.System
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
-                    _Close_0 = (delegate*<IntPtr, int>)&Do_Abi_Close_0
+                    _Close_0 = (delegate* unmanaged<IntPtr, int>)&Do_Abi_Close_0
 
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);

@@ -113,45 +113,45 @@ namespace ABI.Windows.Foundation
             {
                 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
-                _get_Type_0 = (delegate*<IntPtr, global::Windows.Foundation.PropertyType*, int>)&Do_Abi_get_Type_0,
-                _get_IsNumericScalar_1 = (delegate*<IntPtr, byte*, int>)&Do_Abi_get_IsNumericScalar_1,
-                _GetUInt8_2 = (delegate*<IntPtr, byte*, int>)&Do_Abi_GetUInt8_2,
-                _GetInt16_3 = (delegate*<IntPtr, short*, int>)&Do_Abi_GetInt16_3,
-                _GetUInt16_4 = (delegate*<IntPtr, ushort*, int>)&Do_Abi_GetUInt16_4,
-                _GetInt32_5 = (delegate*<IntPtr, int*, int>)&Do_Abi_GetInt32_5,
-                _GetUInt32_6 = (delegate*<IntPtr, uint*, int>)&Do_Abi_GetUInt32_6,
-                _GetInt64_7 = (delegate*<IntPtr, long*, int>)&Do_Abi_GetInt64_7,
-                _GetUInt64_8 = (delegate*<IntPtr, ulong*, int>)&Do_Abi_GetUInt64_8,
-                _GetSingle_9 = (delegate*<IntPtr, float*, int>)&Do_Abi_GetSingle_9,
-                _GetDouble_10 = (delegate*<IntPtr, double*, int>)&Do_Abi_GetDouble_10,
-                _GetChar16_11 = (delegate*<IntPtr, ushort*, int>)&Do_Abi_GetChar16_11,
-                _GetBoolean_12 = (delegate*<IntPtr, byte*, int>)&Do_Abi_GetBoolean_12,
-                _GetString_13 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetString_13,
-                _GetGuid_14 = (delegate*<IntPtr, Guid*, int>)&Do_Abi_GetGuid_14,
-                _GetDateTime_15 = (delegate*<IntPtr, global::ABI.System.DateTimeOffset*, int>)&Do_Abi_GetDateTime_15,
-                _GetTimeSpan_16 = (delegate*<IntPtr, global::ABI.System.TimeSpan*, int>)&Do_Abi_GetTimeSpan_16,
-                _GetPoint_17 = (delegate*<IntPtr, global::Windows.Foundation.Point*, int>)&Do_Abi_GetPoint_17,
-                _GetSize_18 = (delegate*<IntPtr, global::Windows.Foundation.Size*, int>)&Do_Abi_GetSize_18,
-                _GetRect_19 = (delegate*<IntPtr, global::Windows.Foundation.Rect*, int>)&Do_Abi_GetRect_19,
-                _GetUInt8Array_20 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetUInt8Array_20,
-                _GetInt16Array_21 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetInt16Array_21,
-                _GetUInt16Array_22 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetUInt16Array_22,
-                _GetInt32Array_23 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetInt32Array_23,
-                _GetUInt32Array_24 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetUInt32Array_24,
-                _GetInt64Array_25 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetInt64Array_25,
-                _GetUInt64Array_26 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetUInt64Array_26,
-                _GetSingleArray_27 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetSingleArray_27,
-                _GetDoubleArray_28 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetDoubleArray_28,
-                _GetChar16Array_29 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetChar16Array_29,
-                _GetBooleanArray_30 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetBooleanArray_30,
-                _GetStringArray_31 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetStringArray_31,
-                _GetInspectableArray_32 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetInspectableArray_32,
-                _GetGuidArray_33 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetGuidArray_33,
-                _GetDateTimeArray_34 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetDateTimeArray_34,
-                _GetTimeSpanArray_35 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetTimeSpanArray_35,
-                _GetPointArray_36 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetPointArray_36,
-                _GetSizeArray_37 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetSizeArray_37,
-                _GetRectArray_38 = (delegate*<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetRectArray_38,
+                _get_Type_0 = (delegate* unmanaged<IntPtr, global::Windows.Foundation.PropertyType*, int>)&Do_Abi_get_Type_0,
+                _get_IsNumericScalar_1 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_get_IsNumericScalar_1,
+                _GetUInt8_2 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_GetUInt8_2,
+                _GetInt16_3 = (delegate* unmanaged<IntPtr, short*, int>)&Do_Abi_GetInt16_3,
+                _GetUInt16_4 = (delegate* unmanaged<IntPtr, ushort*, int>)&Do_Abi_GetUInt16_4,
+                _GetInt32_5 = (delegate* unmanaged<IntPtr, int*, int>)&Do_Abi_GetInt32_5,
+                _GetUInt32_6 = (delegate* unmanaged<IntPtr, uint*, int>)&Do_Abi_GetUInt32_6,
+                _GetInt64_7 = (delegate* unmanaged<IntPtr, long*, int>)&Do_Abi_GetInt64_7,
+                _GetUInt64_8 = (delegate* unmanaged<IntPtr, ulong*, int>)&Do_Abi_GetUInt64_8,
+                _GetSingle_9 = (delegate* unmanaged<IntPtr, float*, int>)&Do_Abi_GetSingle_9,
+                _GetDouble_10 = (delegate* unmanaged<IntPtr, double*, int>)&Do_Abi_GetDouble_10,
+                _GetChar16_11 = (delegate* unmanaged<IntPtr, ushort*, int>)&Do_Abi_GetChar16_11,
+                _GetBoolean_12 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_GetBoolean_12,
+                _GetString_13 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetString_13,
+                _GetGuid_14 = (delegate* unmanaged<IntPtr, Guid*, int>)&Do_Abi_GetGuid_14,
+                _GetDateTime_15 = (delegate* unmanaged<IntPtr, global::ABI.System.DateTimeOffset*, int>)&Do_Abi_GetDateTime_15,
+                _GetTimeSpan_16 = (delegate* unmanaged<IntPtr, global::ABI.System.TimeSpan*, int>)&Do_Abi_GetTimeSpan_16,
+                _GetPoint_17 = (delegate* unmanaged<IntPtr, global::Windows.Foundation.Point*, int>)&Do_Abi_GetPoint_17,
+                _GetSize_18 = (delegate* unmanaged<IntPtr, global::Windows.Foundation.Size*, int>)&Do_Abi_GetSize_18,
+                _GetRect_19 = (delegate* unmanaged<IntPtr, global::Windows.Foundation.Rect*, int>)&Do_Abi_GetRect_19,
+                _GetUInt8Array_20 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetUInt8Array_20,
+                _GetInt16Array_21 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetInt16Array_21,
+                _GetUInt16Array_22 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetUInt16Array_22,
+                _GetInt32Array_23 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetInt32Array_23,
+                _GetUInt32Array_24 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetUInt32Array_24,
+                _GetInt64Array_25 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetInt64Array_25,
+                _GetUInt64Array_26 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetUInt64Array_26,
+                _GetSingleArray_27 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetSingleArray_27,
+                _GetDoubleArray_28 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetDoubleArray_28,
+                _GetChar16Array_29 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetChar16Array_29,
+                _GetBooleanArray_30 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetBooleanArray_30,
+                _GetStringArray_31 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetStringArray_31,
+                _GetInspectableArray_32 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetInspectableArray_32,
+                _GetGuidArray_33 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetGuidArray_33,
+                _GetDateTimeArray_34 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetDateTimeArray_34,
+                _GetTimeSpanArray_35 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetTimeSpanArray_35,
+                _GetPointArray_36 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetPointArray_36,
+                _GetSizeArray_37 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetSizeArray_37,
+                _GetRectArray_38 = (delegate* unmanaged<IntPtr, int*, IntPtr*, int>)&Do_Abi_GetRectArray_38,
 
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedIPropertyValueImpl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 39);
@@ -1258,83 +1258,83 @@ namespace ABI.Windows.Foundation
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             internal void* _get_Type_0;
-            public delegate* stdcall<IntPtr, out global::Windows.Foundation.PropertyType, int> get_Type_0 { get => (delegate* stdcall<IntPtr, out global::Windows.Foundation.PropertyType, int>)_get_Type_0; set => _get_Type_0 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.PropertyType, int> get_Type_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.PropertyType, int>)_get_Type_0; set => _get_Type_0 = value; }
             public void* _get_IsNumericScalar_1;
-            public delegate* stdcall<IntPtr, out byte, int> get_IsNumericScalar_1 { get => (delegate* stdcall<IntPtr, out byte, int>)_get_IsNumericScalar_1; set => _get_IsNumericScalar_1 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out byte, int> get_IsNumericScalar_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, out byte, int>)_get_IsNumericScalar_1; set => _get_IsNumericScalar_1 = value; }
             internal void* _GetUInt8_2;
-            public delegate* stdcall<IntPtr, out byte, int> GetUInt8_2 { get => (delegate* stdcall<IntPtr, out byte, int>)_GetUInt8_2; set => _GetUInt8_2 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out byte, int> GetUInt8_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, out byte, int>)_GetUInt8_2; set => _GetUInt8_2 = value; }
             internal void* _GetInt16_3;
-            public delegate* stdcall<IntPtr, out short, int> GetInt16_3 { get => (delegate* stdcall<IntPtr, out short, int>)_GetInt16_3; set => _GetInt16_3 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out short, int> GetInt16_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, out short, int>)_GetInt16_3; set => _GetInt16_3 = value; }
             internal void* _GetUInt16_4;
-            public delegate* stdcall<IntPtr, out ushort, int> GetUInt16_4 { get => (delegate* stdcall<IntPtr, out ushort, int>)_GetUInt16_4; set => _GetUInt16_4 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out ushort, int> GetUInt16_4 { get => (delegate* unmanaged[Stdcall]<IntPtr, out ushort, int>)_GetUInt16_4; set => _GetUInt16_4 = value; }
             internal void* _GetInt32_5;
-            public delegate* stdcall<IntPtr, out int, int> GetInt32_5 { get => (delegate* stdcall<IntPtr, out int, int>)_GetInt32_5; set => _GetInt32_5 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int, int> GetInt32_5 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int, int>)_GetInt32_5; set => _GetInt32_5 = value; }
             internal void* _GetUInt32_6;
-            public delegate* stdcall<IntPtr, out uint, int> GetUInt32_6 { get => (delegate* stdcall<IntPtr, out uint, int>)_GetUInt32_6; set => _GetUInt32_6 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out uint, int> GetUInt32_6 { get => (delegate* unmanaged[Stdcall]<IntPtr, out uint, int>)_GetUInt32_6; set => _GetUInt32_6 = value; }
             internal void* _GetInt64_7;
-            public delegate* stdcall<IntPtr, out long, int> GetInt64_7 { get => (delegate* stdcall<IntPtr, out long, int>)_GetInt64_7; set => _GetInt64_7 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out long, int> GetInt64_7 { get => (delegate* unmanaged[Stdcall]<IntPtr, out long, int>)_GetInt64_7; set => _GetInt64_7 = value; }
             internal void* _GetUInt64_8;
-            public delegate* stdcall<IntPtr, out ulong, int> GetUInt64_8 { get => (delegate* stdcall<IntPtr, out ulong, int>)_GetUInt64_8; set => _GetUInt64_8 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out ulong, int> GetUInt64_8 { get => (delegate* unmanaged[Stdcall]<IntPtr, out ulong, int>)_GetUInt64_8; set => _GetUInt64_8 = value; }
             internal void* _GetSingle_9;
-            public delegate* stdcall<IntPtr, out float, int> GetSingle_9 { get => (delegate* stdcall<IntPtr, out float, int>)_GetSingle_9; set => _GetSingle_9 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out float, int> GetSingle_9 { get => (delegate* unmanaged[Stdcall]<IntPtr, out float, int>)_GetSingle_9; set => _GetSingle_9 = value; }
             internal void* _GetDouble_10;
-            public delegate* stdcall<IntPtr, out double, int> GetDouble_10 { get => (delegate* stdcall<IntPtr, out double, int>)_GetDouble_10; set => _GetDouble_10 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out double, int> GetDouble_10 { get => (delegate* unmanaged[Stdcall]<IntPtr, out double, int>)_GetDouble_10; set => _GetDouble_10 = value; }
             internal void* _GetChar16_11;
-            public delegate* stdcall<IntPtr, out ushort, int> GetChar16_11 { get => (delegate* stdcall<IntPtr, out ushort, int>)_GetChar16_11; set => _GetChar16_11 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out ushort, int> GetChar16_11 { get => (delegate* unmanaged[Stdcall]<IntPtr, out ushort, int>)_GetChar16_11; set => _GetChar16_11 = value; }
             internal void* _GetBoolean_12;
-            public delegate* stdcall<IntPtr, out byte, int> GetBoolean_12 { get => (delegate* stdcall<IntPtr, out byte, int>)_GetBoolean_12; set => _GetBoolean_12 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out byte, int> GetBoolean_12 { get => (delegate* unmanaged[Stdcall]<IntPtr, out byte, int>)_GetBoolean_12; set => _GetBoolean_12 = value; }
             internal void* _GetString_13;
-            public delegate* stdcall<IntPtr, out IntPtr, int> GetString_13 { get => (delegate* stdcall<IntPtr, out IntPtr, int>)_GetString_13; set => _GetString_13 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int> GetString_13 { get => (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)_GetString_13; set => _GetString_13 = value; }
             internal void* _GetGuid_14;
-            public delegate* stdcall<IntPtr, out Guid, int> GetGuid_14 { get => (delegate* stdcall<IntPtr, out Guid, int>)_GetGuid_14; set => _GetGuid_14 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out Guid, int> GetGuid_14 { get => (delegate* unmanaged[Stdcall]<IntPtr, out Guid, int>)_GetGuid_14; set => _GetGuid_14 = value; }
             internal void* _GetDateTime_15;
-            public delegate* stdcall<IntPtr, out global::ABI.System.DateTimeOffset, int> GetDateTime_15 { get => (delegate* stdcall<IntPtr, out global::ABI.System.DateTimeOffset, int>)_GetDateTime_15; set => _GetDateTime_15 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out global::ABI.System.DateTimeOffset, int> GetDateTime_15 { get => (delegate* unmanaged[Stdcall]<IntPtr, out global::ABI.System.DateTimeOffset, int>)_GetDateTime_15; set => _GetDateTime_15 = value; }
             internal void* _GetTimeSpan_16;
-            public delegate* stdcall<IntPtr, out global::ABI.System.TimeSpan, int> GetTimeSpan_16 { get => (delegate* stdcall<IntPtr, out global::ABI.System.TimeSpan, int>)_GetTimeSpan_16; set => _GetTimeSpan_16 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out global::ABI.System.TimeSpan, int> GetTimeSpan_16 { get => (delegate* unmanaged[Stdcall]<IntPtr, out global::ABI.System.TimeSpan, int>)_GetTimeSpan_16; set => _GetTimeSpan_16 = value; }
             internal void* _GetPoint_17;
-            public delegate* stdcall<IntPtr, out global::Windows.Foundation.Point, int> GetPoint_17 { get => (delegate* stdcall<IntPtr, out global::Windows.Foundation.Point, int>)_GetPoint_17; set => _GetPoint_17 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.Point, int> GetPoint_17 { get => (delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.Point, int>)_GetPoint_17; set => _GetPoint_17 = value; }
             internal void* _GetSize_18;
-            public delegate* stdcall<IntPtr, out global::Windows.Foundation.Size, int> GetSize_18 { get => (delegate* stdcall<IntPtr, out global::Windows.Foundation.Size, int>)_GetSize_18; set => _GetSize_18 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.Size, int> GetSize_18 { get => (delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.Size, int>)_GetSize_18; set => _GetSize_18 = value; }
             internal void* _GetRect_19;
-            public delegate* stdcall<IntPtr, out global::Windows.Foundation.Rect, int> GetRect_19 { get => (delegate* stdcall<IntPtr, out global::Windows.Foundation.Rect, int>)_GetRect_19; set => _GetRect_19 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.Rect, int> GetRect_19 { get => (delegate* unmanaged[Stdcall]<IntPtr, out global::Windows.Foundation.Rect, int>)_GetRect_19; set => _GetRect_19 = value; }
             internal void* _GetUInt8Array_20;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetUInt8Array_20 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetUInt8Array_20; set => _GetUInt8Array_20 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetUInt8Array_20 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetUInt8Array_20; set => _GetUInt8Array_20 = value; }
             internal void* _GetInt16Array_21;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetInt16Array_21 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetInt16Array_21; set => _GetInt16Array_21 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetInt16Array_21 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetInt16Array_21; set => _GetInt16Array_21 = value; }
             internal void* _GetUInt16Array_22;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetUInt16Array_22 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetUInt16Array_22; set => _GetUInt16Array_22 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetUInt16Array_22 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetUInt16Array_22; set => _GetUInt16Array_22 = value; }
             internal void* _GetInt32Array_23;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetInt32Array_23 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetInt32Array_23; set => _GetInt32Array_23 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetInt32Array_23 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetInt32Array_23; set => _GetInt32Array_23 = value; }
             internal void* _GetUInt32Array_24;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetUInt32Array_24 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetUInt32Array_24; set => _GetUInt32Array_24 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetUInt32Array_24 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetUInt32Array_24; set => _GetUInt32Array_24 = value; }
             internal void* _GetInt64Array_25;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetInt64Array_25 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetInt64Array_25; set => _GetInt64Array_25 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetInt64Array_25 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetInt64Array_25; set => _GetInt64Array_25 = value; }
             internal void* _GetUInt64Array_26;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetUInt64Array_26 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetUInt64Array_26; set => _GetUInt64Array_26 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetUInt64Array_26 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetUInt64Array_26; set => _GetUInt64Array_26 = value; }
             internal void* _GetSingleArray_27;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetSingleArray_27 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetSingleArray_27; set => _GetSingleArray_27 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetSingleArray_27 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetSingleArray_27; set => _GetSingleArray_27 = value; }
             internal void* _GetDoubleArray_28;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetDoubleArray_28 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetDoubleArray_28; set => _GetDoubleArray_28 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetDoubleArray_28 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetDoubleArray_28; set => _GetDoubleArray_28 = value; }
             internal void* _GetChar16Array_29;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetChar16Array_29 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetChar16Array_29; set => _GetChar16Array_29 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetChar16Array_29 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetChar16Array_29; set => _GetChar16Array_29 = value; }
             internal void* _GetBooleanArray_30;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetBooleanArray_30 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetBooleanArray_30; set => _GetBooleanArray_30 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetBooleanArray_30 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetBooleanArray_30; set => _GetBooleanArray_30 = value; }
             internal void* _GetStringArray_31;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetStringArray_31 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetStringArray_31; set => _GetStringArray_31 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetStringArray_31 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetStringArray_31; set => _GetStringArray_31 = value; }
             internal void* _GetInspectableArray_32;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetInspectableArray_32 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetInspectableArray_32; set => _GetInspectableArray_32 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetInspectableArray_32 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetInspectableArray_32; set => _GetInspectableArray_32 = value; }
             internal void* _GetGuidArray_33;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetGuidArray_33 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetGuidArray_33; set => _GetGuidArray_33 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetGuidArray_33 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetGuidArray_33; set => _GetGuidArray_33 = value; }
             internal void* _GetDateTimeArray_34;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetDateTimeArray_34 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetDateTimeArray_34; set => _GetDateTimeArray_34 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetDateTimeArray_34 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetDateTimeArray_34; set => _GetDateTimeArray_34 = value; }
             internal void* _GetTimeSpanArray_35;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetTimeSpanArray_35 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetTimeSpanArray_35; set => _GetTimeSpanArray_35 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetTimeSpanArray_35 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetTimeSpanArray_35; set => _GetTimeSpanArray_35 = value; }
             internal void* _GetPointArray_36;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetPointArray_36 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetPointArray_36; set => _GetPointArray_36 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetPointArray_36 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetPointArray_36; set => _GetPointArray_36 = value; }
             internal void* _GetSizeArray_37;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetSizeArray_37 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetSizeArray_37; set => _GetSizeArray_37 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetSizeArray_37 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetSizeArray_37; set => _GetSizeArray_37 = value; }
             internal void* _GetRectArray_38;
-            public delegate* stdcall<IntPtr, out int , out IntPtr, int> GetRectArray_38 { get => (delegate* stdcall<IntPtr, out int , out IntPtr, int>)_GetRectArray_38; set => _GetRectArray_38 = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int> GetRectArray_38 { get => (delegate* unmanaged[Stdcall]<IntPtr, out int , out IntPtr, int>)_GetRectArray_38; set => _GetRectArray_38 = value; }
         }
 
         unsafe byte global::Windows.Foundation.IPropertyValue.GetUInt8()

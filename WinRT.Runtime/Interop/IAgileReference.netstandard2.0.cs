@@ -41,7 +41,7 @@ namespace ABI.WinRT.Interop
         {
             public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
             private void* _Resolve;
-            public delegate* stdcall<IntPtr, ref Guid, out IntPtr, int> Resolve { get => (delegate* stdcall<IntPtr, ref Guid, out IntPtr, int>)_Resolve; set => _Resolve = value; }
+            public delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int> Resolve { get => (delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int>)_Resolve; set => _Resolve = value; }
 
             public static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -158,11 +158,11 @@ namespace ABI.WinRT.Interop
         {
             public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
             private void* _RegisterInterfaceInGlobal;
-            public delegate* stdcall<IntPtr, IntPtr, ref Guid, out IntPtr, int> RegisterInterfaceInGlobal => (delegate* stdcall<IntPtr, IntPtr, ref Guid, out IntPtr, int>)_RegisterInterfaceInGlobal;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ref Guid, out IntPtr, int> RegisterInterfaceInGlobal => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ref Guid, out IntPtr, int>)_RegisterInterfaceInGlobal;
             private void* _RevokeInterfaceFromGlobal;
-            public delegate* stdcall<IntPtr, IntPtr, int> RevokeInterfaceFromGlobal => (delegate* stdcall<IntPtr, IntPtr, int>)_RevokeInterfaceFromGlobal;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int> RevokeInterfaceFromGlobal => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)_RevokeInterfaceFromGlobal;
             private void* _GetInterfaceFromGlobal;
-            public delegate* stdcall<IntPtr, IntPtr, ref Guid, out IntPtr, int> GetInterfaceFromGlobal => (delegate* stdcall<IntPtr, IntPtr, ref Guid, out IntPtr, int>)_GetInterfaceFromGlobal;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ref Guid, out IntPtr, int> GetInterfaceFromGlobal => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, ref Guid, out IntPtr, int>)_GetInterfaceFromGlobal;
         }
 
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
