@@ -173,7 +173,7 @@ namespace ABI.System.ComponentModel
             {
                 __propertyName = MarshalString.CreateMarshaler(propertyName);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetErrors_3(ThisPtr, MarshalString.GetAbi(__propertyName), &__retval));
-                return global::ABI.System.Collections.Generic.IEnumerable<object>.FromAbi(__retval);
+                return (global::ABI.System.Collections.Generic.IEnumerable<object>)(object)IInspectable.FromAbi(__retval);
             }
             finally
             {

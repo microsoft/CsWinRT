@@ -871,7 +871,7 @@ set => %.% = value;
         }
         else
         {
-            return w.write_temp("((%)(IWinRTObject)this)", bind<write_type_name>(iface, false, false));
+            return w.write_temp("((%)(IWinRTObject)this)", bind<write_type_name>(iface, typedef_name_type::Projected, false));
         }
     }
 
@@ -1911,7 +1911,7 @@ db_path.stem().string());
         {
             w.write(R"(
 private EventSource<%> _%;)",
-bind<write_type_name>(get_type_semantics(evt.EventType()), false, false),
+bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
 evt.Name());
         }
     }
@@ -2738,7 +2738,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
             if (!settings.netstandard_compat)
             {
                 w.write("\nvar _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(%).TypeHandle));\n",
-                    bind<write_type_name>(type, false, false));
+                    bind<write_type_name>(type, typedef_name_type::Projected, false));
                 w.write("var ThisPtr = _obj.ThisPtr;\n");
             }
         };
@@ -2762,7 +2762,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
                 {
                     if (!settings.netstandard_compat)
                     {
-                        w.write("%.", bind<write_type_name>(type, false, false));
+                        w.write("%.", bind<write_type_name>(type, typedef_name_type::Projected, false));
                     }
                 }),
                 method.Name(),
@@ -2784,7 +2784,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
                 {
                     if (!settings.netstandard_compat)
                     {
-                        w.write("%.", bind<write_type_name>(type, false, false));
+                        w.write("%.", bind<write_type_name>(type, typedef_name_type::Projected, false));
                     }
                 }),
                 prop.Name());
@@ -2825,7 +2825,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
             auto semantics = get_type_semantics(evt.EventType());
             auto event_source = settings.netstandard_compat ? 
                 w.write_temp("_%", evt.Name())
-                : w.write_temp("_%.GetValue((IWinRTObject)this, (key) => { var _obj = (ObjectReference<Vftbl>)key.GetObjectReferenceForType(typeof(%).TypeHandle); return %; })", evt.Name(), bind<write_type_name>(type, false, false), bind<write_event_source_ctor>(evt));
+                : w.write_temp("_%.GetValue((IWinRTObject)this, (key) => { var _obj = (ObjectReference<Vftbl>)key.GetObjectReferenceForType(typeof(%).TypeHandle); return %; })", evt.Name(), bind<write_type_name>(type, typedef_name_type::Projected, false), bind<write_event_source_ctor>(evt));
             w.write(R"(
 %event % %%
 {
@@ -4498,7 +4498,9 @@ public static class %
     bool write_abi_interface(writer& w, TypeDef const& type)
     {
          XLANG_ASSERT(get_category(type) == category::interface_type);
-        auto type_name = write_type_name_temp(w, type, "%", true);
+        auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
+
+        auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
 
         std::set<std::string> generic_methods;
         std::vector<std::string> nongeneric_delegates;
@@ -4520,7 +4522,7 @@ internal unsafe interface % : %
                 w.write(distance(type.GenericParam()) > 0 ? "public static Guid PIID = Vftbl.PIID;\n\n" : "");
             },
             // Vftbl
-            bind<write_vtable>(type, type_name, generic_methods, "", nongeneric_delegates),
+            bind<write_vtable>(type, type_name, generic_methods, nongenerics_class, nongeneric_delegates),
             bind<write_interface_members>(type, generic_methods),
             bind<write_event_source_tables>(type),
             [&](writer& w) {
@@ -4531,7 +4533,16 @@ internal unsafe interface % : %
             }
         );
 
-        XLANG_ASSERT(nongeneric_delegates.empty());
+        if (!nongeneric_delegates.empty())
+        {
+            w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+public static class %
+{
+%}
+)",
+nongenerics_class,
+bind_each(nongeneric_delegates));
+        }
         w.write("\n");
 
         return true;
@@ -4602,6 +4613,57 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
                 }
             }),
             settings.netstandard_compat ? "GetReferenceForQI()" : "((IWinRTObject)this).NativeObject");
+    }
+
+    void write_wrapper_class(writer& w, TypeDef const& type)
+    {
+        auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
+        auto wrapped_type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
+        auto default_interface_abi_name = get_default_interface_name(w, type, true);
+        auto base_semantics = get_type_semantics(type.Extends());
+
+        w.write(R"(%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
+%public %class %%
+{
+public %(% comp)
+{
+_comp = comp;
+}
+public static implicit operator %(% comp)
+{
+return comp._comp;
+}
+public static implicit operator %(% comp)
+{
+return new %(comp);
+}
+public static % FromAbi(IntPtr thisPtr)
+{
+if (thisPtr == IntPtr.Zero) return null;
+var obj = MarshalInspectable.FromAbi(thisPtr);
+return obj as %;
+}
+%
+private readonly % _comp;
+}
+)",
+bind<write_winrt_attribute>(type),
+default_interface_abi_name,
+bind<write_custom_attributes>(type),
+bind<write_class_modifiers>(type),
+type_name,
+bind<write_type_inheritance>(type, base_semantics, false, true),
+type_name,
+wrapped_type_name,
+wrapped_type_name,
+type_name,
+type_name,
+wrapped_type_name,
+type_name,
+wrapped_type_name,
+type_name,
+bind<write_class_members>(type, true),
+wrapped_type_name);
     }
 
     void write_class_netstandard(writer& w, TypeDef const& type)
@@ -4733,7 +4795,7 @@ _lazyInterfaces = new Dictionary<Type, object>()
             }),
             default_interface_name,
             default_interface_name,
-            bind<write_class_members>(type),
+            bind<write_class_members>(type, false),
             bind<write_custom_query_interface_impl>(type));
     }
 
@@ -4799,7 +4861,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             bind<write_custom_attributes>(type),
             bind<write_class_modifiers>(type),
             type_name,
-            bind<write_type_inheritance>(type, base_semantics, true),
+            bind<write_type_inheritance>(type, base_semantics, true, false),
             type_name,
             default_interface_name,
             default_interface_name,
@@ -4855,7 +4917,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<global::System.Runtim
             }),
             default_interface_name,
             default_interface_name,
-            bind<write_class_members>(type),
+            bind<write_class_members>(type, false),
             bind<write_custom_query_interface_impl>(type));
     }
 
