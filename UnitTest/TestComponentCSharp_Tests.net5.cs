@@ -18,7 +18,6 @@ namespace UnitTest
             TestObject = new Class();
         }
 
-
         [Fact]
         public void TestAsStream()
         {
@@ -28,9 +27,7 @@ namespace UnitTest
             normalStream.CopyTo(memoryStream);
         }
 
-
-        [Fact]
-        static async void TestReadToEndAsync()
+        async Task InvokeReadToEndAsync()
         {
             StorageFolder localFolder = await StorageFolder.GetFolderFromPathAsync(System.IO.Path.GetTempPath());
             StorageFile file = await localFolder.CreateFileAsync("temp.txt", CreationCollisionOption.ReplaceExisting);
@@ -42,7 +39,12 @@ namespace UnitTest
         }
 
         [Fact]
-        public async Task TestStreamWriteAndRead()
+        public void TestReadToEndAsync()
+        {
+            Assert.True(InvokeReadToEndAsync().Wait(1000));
+        }
+
+        async Task InvokeStreamWriteAndReadAsync()
         {
             var random = new Random(42);
             byte[] data = new byte[256];
@@ -55,6 +57,12 @@ namespace UnitTest
             byte[] read = new byte[256];
             await stream.ReadAsync(read, 0, read.Length);
             Assert.Equal(read, data);
+        }
+
+        [Fact]
+        public void TestStreamWriteAndRead()
+        {
+            Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
         }
     }
 }
