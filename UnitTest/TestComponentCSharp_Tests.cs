@@ -34,6 +34,21 @@ namespace UnitTest
             TestObject = new Class();
         }
 
+#if NET5_0
+        [Fact]
+        public void TestDynamicInterfaceCastingOnValidInterface()
+        {
+            var agileObject = (IAgileObject)(IWinRTObject)TestObject;
+            Assert.NotNull(agileObject);
+        }
+
+        [Fact]
+        public void TestDynamicInterfaceCastingOnInvalidInterface()
+        {
+            Assert.ThrowsAny<System.Exception>(() => (IStringableInterop)(IWinRTObject)TestObject);
+        }
+#endif
+
         async Task InvokeWriteBufferAsync()
         {
             var random = new Random(42);
@@ -590,6 +605,7 @@ namespace UnitTest
             Assert.True(val.bools.z);
         }
 
+#if NETCOREAPP2_0
         [Fact]
         public void TestGenericCast()
         {
@@ -597,6 +613,7 @@ namespace UnitTest
             var abiView = (ABI.System.Collections.Generic.IReadOnlyList<int>)ints;
             Assert.Equal(abiView.ThisPtr, abiView.As<WinRT.IInspectable>().As<ABI.System.Collections.Generic.IReadOnlyList<int>.Vftbl>().ThisPtr);
         }
+#endif
 
         [ComImport]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -838,7 +855,7 @@ namespace UnitTest
             {
                 var obj = objs[i];
                 Assert.Same(obj, TestObject);
-                Assert.Equal(TestObject.ThisPtr, objs[i].ThisPtr);
+                Assert.Equal(TestObject, objs[i]);
             }
         }
         [Fact]
@@ -1556,7 +1573,7 @@ namespace UnitTest
         public void CCWOfListOfManagedType()
         {
             using var ccw = ComWrappersSupport.CreateCCWForObject(new List<ManagedType>());
-            using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(ABI.System.Collections.Generic.IEnumerable<object>)));
+            using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
         }
 
         [Fact]
@@ -1598,7 +1615,8 @@ namespace UnitTest
         [Fact]
         public void TestUnwrapInspectable()
         {
-            var inspectable = IInspectable.FromAbi(TestObject.ThisPtr);
+            using var objRef = MarshalInspectable.CreateMarshaler(TestObject);
+            var inspectable = IInspectable.FromAbi(objRef.ThisPtr);
             Assert.True(ComWrappersSupport.TryUnwrapObject(inspectable, out _));
         }
 

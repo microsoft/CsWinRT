@@ -106,15 +106,15 @@ namespace ABI.Windows.Foundation
         private static IPropertyValue.Vftbl AbiToProjectionVftable;
         public static IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+
         private static readonly Delegate[] DelegateCache = new Delegate[39];
-#endif
+
         static unsafe ManagedIPropertyValueImpl()
         {
             AbiToProjectionVftable = new IPropertyValue.Vftbl
             {
                 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+
                 _get_Type_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new IPropertyValue_Delegates.get_Type_0(Do_Abi_get_Type_0)).ToPointer(),
                 _get_IsNumericScalar_1 = Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IPropertyValue_Delegates.get_IsNumericScalar_1(Do_Abi_get_IsNumericScalar_1)).ToPointer(),
                 _GetUInt8_2 = Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new IPropertyValue_Delegates.GetUInt8_2(Do_Abi_GetUInt8_2)).ToPointer(),
@@ -154,47 +154,7 @@ namespace ABI.Windows.Foundation
                 _GetPointArray_36 = Marshal.GetFunctionPointerForDelegate(DelegateCache[36] = new IPropertyValue_Delegates.GetPointArray_36(Do_Abi_GetPointArray_36)).ToPointer(),
                 _GetSizeArray_37 = Marshal.GetFunctionPointerForDelegate(DelegateCache[37] = new IPropertyValue_Delegates.GetSizeArray_37(Do_Abi_GetSizeArray_37)).ToPointer(),
                 _GetRectArray_38 = Marshal.GetFunctionPointerForDelegate(DelegateCache[38] = new IPropertyValue_Delegates.GetRectArray_38(Do_Abi_GetRectArray_38)).ToPointer(),
-#else
-                _get_Type_0 = (delegate* unmanaged<IntPtr, global::Windows.Foundation.PropertyType*, int>)&Do_Abi_get_Type_0,
-                _get_IsNumericScalar_1 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_get_IsNumericScalar_1,
-                _GetUInt8_2 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_GetUInt8_2,
-                _GetInt16_3 = (delegate* unmanaged<IntPtr, short*, int>)&Do_Abi_GetInt16_3,
-                _GetUInt16_4 = (delegate* unmanaged<IntPtr, ushort*, int>)&Do_Abi_GetUInt16_4,
-                _GetInt32_5 = (delegate* unmanaged<IntPtr, int*, int>)&Do_Abi_GetInt32_5,
-                _GetUInt32_6 = (delegate* unmanaged<IntPtr, uint*, int>)&Do_Abi_GetUInt32_6,
-                _GetInt64_7 = (delegate* unmanaged<IntPtr, long*, int>)&Do_Abi_GetInt64_7,
-                _GetUInt64_8 = (delegate* unmanaged<IntPtr, ulong*, int>)&Do_Abi_GetUInt64_8,
-                _GetSingle_9 = (delegate* unmanaged<IntPtr, float*, int>)&Do_Abi_GetSingle_9,
-                _GetDouble_10 = (delegate* unmanaged<IntPtr, double*, int>)&Do_Abi_GetDouble_10,
-                _GetChar16_11 = (delegate* unmanaged<IntPtr, ushort*, int>)&Do_Abi_GetChar16_11,
-                _GetBoolean_12 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_GetBoolean_12,
-                _GetString_13 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetString_13,
-                _GetGuid_14 = (delegate* unmanaged<IntPtr, Guid*, int>)&Do_Abi_GetGuid_14,
-                _GetDateTime_15 = (delegate* unmanaged<IntPtr, global::ABI.System.DateTimeOffset*, int>)&Do_Abi_GetDateTime_15,
-                _GetTimeSpan_16 = (delegate* unmanaged<IntPtr, global::ABI.System.TimeSpan*, int>)&Do_Abi_GetTimeSpan_16,
-                _GetPoint_17 = (delegate* unmanaged<IntPtr, global::Windows.Foundation.Point*, int>)&Do_Abi_GetPoint_17,
-                _GetSize_18 = (delegate* unmanaged<IntPtr, global::Windows.Foundation.Size*, int>)&Do_Abi_GetSize_18,
-                _GetRect_19 = (delegate* unmanaged<IntPtr, global::Windows.Foundation.Rect*, int>)&Do_Abi_GetRect_19,
-                _GetUInt8Array_20 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetUInt8Array_20,
-                _GetInt16Array_21 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetInt16Array_21,
-                _GetUInt16Array_22 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetUInt16Array_22,
-                _GetInt32Array_23 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetInt32Array_23,
-                _GetUInt32Array_24 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetUInt32Array_24,
-                _GetInt64Array_25 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetInt64Array_25,
-                _GetUInt64Array_26 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetUInt64Array_26,
-                _GetSingleArray_27 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetSingleArray_27,
-                _GetDoubleArray_28 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetDoubleArray_28,
-                _GetChar16Array_29 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetChar16Array_29,
-                _GetBooleanArray_30 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetBooleanArray_30,
-                _GetStringArray_31 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetStringArray_31,
-                _GetInspectableArray_32 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetInspectableArray_32,
-                _GetGuidArray_33 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetGuidArray_33,
-                _GetDateTimeArray_34 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetDateTimeArray_34,
-                _GetTimeSpanArray_35 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetTimeSpanArray_35,
-                _GetPointArray_36 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetPointArray_36,
-                _GetSizeArray_37 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetSizeArray_37,
-                _GetRectArray_38 = (delegate* unmanaged<IntPtr, int* , IntPtr*, int>)&Do_Abi_GetRectArray_38,
-#endif
+
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedIPropertyValueImpl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 39);
             Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
@@ -422,9 +382,7 @@ namespace ABI.Windows.Foundation
             return coercedArray;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetUInt8_2(IntPtr thisPtr, byte* value)
         {
             try
@@ -439,9 +397,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetInt16_3(IntPtr thisPtr, short* value)
         {
             try
@@ -456,9 +412,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetUInt16_4(IntPtr thisPtr, ushort* value)
         {
             try
@@ -473,9 +427,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetInt32_5(IntPtr thisPtr, int* value)
         {
             try
@@ -490,9 +442,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetUInt32_6(IntPtr thisPtr, uint* value)
         {
             try
@@ -507,9 +457,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetInt64_7(IntPtr thisPtr, long* value)
         {
             try
@@ -524,9 +472,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetUInt64_8(IntPtr thisPtr, ulong* value)
         {
             try
@@ -541,9 +487,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetSingle_9(IntPtr thisPtr, float* value)
         {
             try
@@ -558,9 +502,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetDouble_10(IntPtr thisPtr, double* value)
         {
             try
@@ -575,9 +517,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetChar16_11(IntPtr thisPtr, ushort* value)
         {
             
@@ -593,9 +533,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetBoolean_12(IntPtr thisPtr, byte* value)
         {
             
@@ -611,9 +549,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetString_13(IntPtr thisPtr, IntPtr* value)
         {
             
@@ -629,9 +565,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetGuid_14(IntPtr thisPtr, Guid* value)
         {
             
@@ -647,9 +581,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetDateTime_15(IntPtr thisPtr, global::ABI.System.DateTimeOffset* value)
         {
             
@@ -665,9 +597,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetTimeSpan_16(IntPtr thisPtr, global::ABI.System.TimeSpan* value)
         {
             
@@ -683,9 +613,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetPoint_17(IntPtr thisPtr, global::Windows.Foundation.Point* value)
         {
             
@@ -701,9 +629,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetSize_18(IntPtr thisPtr, global::Windows.Foundation.Size* value)
         {
             
@@ -719,9 +645,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetRect_19(IntPtr thisPtr, global::Windows.Foundation.Rect* value)
         {
             
@@ -737,9 +661,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetUInt8Array_20(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
             byte[] __value = default;
@@ -757,9 +679,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetInt16Array_21(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -780,9 +700,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetUInt16Array_22(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -803,9 +721,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetInt32Array_23(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -826,9 +742,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetUInt32Array_24(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -849,9 +763,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetInt64Array_25(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -872,9 +784,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetUInt64Array_26(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -895,9 +805,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetSingleArray_27(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -918,9 +826,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetDoubleArray_28(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -941,9 +847,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetChar16Array_29(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -964,9 +868,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetBooleanArray_30(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -987,9 +889,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetStringArray_31(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -1011,9 +911,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetInspectableArray_32(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -1034,9 +932,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetGuidArray_33(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -1058,9 +954,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetDateTimeArray_34(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -1082,9 +976,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetTimeSpanArray_35(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -1106,9 +998,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetPointArray_36(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -1130,9 +1020,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetSizeArray_37(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -1154,9 +1042,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_GetRectArray_38(IntPtr thisPtr, int* __valueSize, IntPtr* value)
         {
 
@@ -1178,9 +1064,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_get_IsNumericScalar_1(IntPtr thisPtr, byte* value)
         {
             
@@ -1196,9 +1080,7 @@ namespace ABI.Windows.Foundation
             return 0;
         }
 
-#if !NETSTANDARD2_0
-        [UnmanagedCallersOnly]
-#endif
+
         private static unsafe int Do_Abi_get_Type_0(IntPtr thisPtr, global::Windows.Foundation.PropertyType* value)
         {
             
