@@ -2738,7 +2738,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
             if (!settings.netstandard_compat)
             {
                 w.write("\nvar _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(%).TypeHandle));\n",
-                    bind<write_type_name>(type, typedef_name_type::Projected, false));
+                    bind<write_type_name>(type, typedef_name_type::CCW, false));
                 w.write("var ThisPtr = _obj.ThisPtr;\n");
             }
         };
@@ -2762,7 +2762,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
                 {
                     if (!settings.netstandard_compat)
                     {
-                        w.write("%.", bind<write_type_name>(type, typedef_name_type::Projected, false));
+                        w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
                     }
                 }),
                 method.Name(),
@@ -2784,7 +2784,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
                 {
                     if (!settings.netstandard_compat)
                     {
-                        w.write("%.", bind<write_type_name>(type, typedef_name_type::Projected, false));
+                        w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
                     }
                 }),
                 prop.Name());
@@ -2825,7 +2825,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
             auto semantics = get_type_semantics(evt.EventType());
             auto event_source = settings.netstandard_compat ? 
                 w.write_temp("_%", evt.Name())
-                : w.write_temp("_%.GetValue((IWinRTObject)this, (key) => { var _obj = (ObjectReference<Vftbl>)key.GetObjectReferenceForType(typeof(%).TypeHandle); return %; })", evt.Name(), bind<write_type_name>(type, typedef_name_type::Projected, false), bind<write_event_source_ctor>(evt));
+                : w.write_temp("_%.GetValue((IWinRTObject)this, (key) => { var _obj = (ObjectReference<Vftbl>)key.GetObjectReferenceForType(typeof(%).TypeHandle); return %; })", evt.Name(), bind<write_type_name>(type, typedef_name_type::CCW, false), bind<write_event_source_ctor>(evt));
             w.write(R"(
 %event % %%
 {
@@ -2839,7 +2839,7 @@ remove => %.Unsubscribe(value);
                 {
                     if (!settings.netstandard_compat)
                     {
-                        w.write("%.", bind<write_type_name>(type, typedef_name_type::Projected, false));
+                        w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
                     }
                 }),
                 evt.Name(),
@@ -4517,7 +4517,7 @@ internal unsafe interface % : %
 // Interface abi implementation
             bind<write_guid_attribute>(type),
             type_name,
-            bind<write_type_name>(type, typedef_name_type::Projected, false),
+            bind<write_type_name>(type, typedef_name_type::CCW, false),
             [&](writer& w) {
                 w.write(distance(type.GenericParam()) > 0 ? "public static Guid PIID = Vftbl.PIID;\n\n" : "");
             },
@@ -4622,8 +4622,8 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
         auto default_interface_abi_name = get_default_interface_name(w, type, true);
         auto base_semantics = get_type_semantics(type.Extends());
 
-        w.write(R"(%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
-%public %class %%
+        w.write(R"(
+%%internal %class %%
 {
 public %(% comp)
 {
@@ -4648,7 +4648,6 @@ private readonly % _comp;
 }
 )",
 bind<write_winrt_attribute>(type),
-default_interface_abi_name,
 bind<write_custom_attributes>(type),
 bind<write_class_modifiers>(type),
 type_name,
@@ -4801,6 +4800,12 @@ _lazyInterfaces = new Dictionary<Type, object>()
 
     void write_class(writer& w, TypeDef const& type)
     {
+        if (settings.component)
+        {
+            write_wrapper_class(w, type);
+            return;
+        }
+
         if (is_static(type))
         {
             write_static_class(w, type);
