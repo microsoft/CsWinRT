@@ -900,7 +900,7 @@ set => %.% = value;
                 else
                 {
                     w.write(R"(
-{typeof(%), new Lazy<%>(() => (%)(object)new SingleInterfaceOptimizedObject(typeof(%), _inner))},)",
+{typeof(%), new Lazy<%>(() => (%)(object)new SingleInterfaceOptimizedObject(typeof(%), _inner ?? ((IWinRTObject)this).NativeObject))},)",
                         interface_name,
                         interface_name,
                         interface_name,
