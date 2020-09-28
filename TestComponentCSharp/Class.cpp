@@ -720,6 +720,8 @@ namespace winrt::TestComponentCSharp::implementation
 
     IVectorView<TestComponentCSharp::Class> Class::GetClassVector()
     {
+        auto g = winrt::impl::generate_guid(winrt::impl::signature<winrt::Windows::Foundation::Collections::IVectorView<IClass>>::data);
+
         return winrt::single_threaded_vector_view(std::vector<TestComponentCSharp::Class>{ *this, *this, *this });
     }
 
