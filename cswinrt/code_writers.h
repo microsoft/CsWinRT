@@ -2313,6 +2313,7 @@ event % %;)",
                 set_simple_marshaler_type(m, type);
                 break;
             case category::interface_type:
+                // TODO: review the need for target & namespace specific behavior
                 if (settings.netstandard_compat) {
                     if (get_mapped_type(type.TypeNamespace(), type.TypeName()) &&
                         type.TypeNamespace() == "Windows.Foundation.Collections")
@@ -3530,6 +3531,7 @@ remove => %.Unsubscribe(value);
                     }
                     break;
                 case category::interface_type:
+                    // TODO: review the need for target & namespace specific behavior
                     if (settings.netstandard_compat)
                     {
                         if (get_mapped_type(type.TypeNamespace(), type.TypeName()) &&
