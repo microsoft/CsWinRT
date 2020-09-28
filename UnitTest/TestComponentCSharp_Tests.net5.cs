@@ -65,17 +65,5 @@ namespace UnitTest
             Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
         }
 
-        [Fact]
-        public void TestClassGeneric()
-        {
-            var objs = TestObject.GetClassVector();
-            Assert.Equal(3, objs.Count);
-            for (int i = 0; i < 3; ++i)
-            {
-                var obj = objs[i];
-                Assert.Same(obj, TestObject);
-                Assert.Equal(TestObject, objs[i]);
-            }
-        }
     }
 }
