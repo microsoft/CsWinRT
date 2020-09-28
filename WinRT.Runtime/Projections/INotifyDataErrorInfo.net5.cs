@@ -122,23 +122,6 @@ namespace ABI.System.ComponentModel
         }
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
-        //public static implicit operator INotifyDataErrorInfo(IObjectReference obj) => (obj != null) ? new INotifyDataErrorInfo(obj) : null;
-        //protected readonly ObjectReference<Vftbl> _obj;
-        //public IObjectReference ObjRef { get => _obj; }
-        //public IntPtr ThisPtr => _obj.ThisPtr;
-        //public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        //public A As<A>() => _obj.AsType<A>();
-        //public INotifyDataErrorInfo(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        //internal INotifyDataErrorInfo(ObjectReference<Vftbl> obj)
-        //{
-        //    _obj = obj;
-
-        //    _ErrorsChanged =
-        //        new EventSource<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>(_obj,
-        //        (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_obj.Vftbl.add_ErrorsChanged_1,
-        //        _obj.Vftbl.remove_ErrorsChanged_2);
-        //}
-
         private static EventSource<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>> _ErrorsChanged(IWinRTObject _this)
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)_this).GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle));
@@ -185,8 +168,6 @@ namespace ABI.System.ComponentModel
             add => _ErrorsChanged((IWinRTObject)this).Subscribe(value);
             remove => _ErrorsChanged((IWinRTObject)this).Unsubscribe(value);
         }
-
-        //private EventSource<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>> _ErrorsChanged;
     }
     
     internal static class INotifyDataErrorInfo_Delegates
