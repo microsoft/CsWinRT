@@ -18,7 +18,7 @@ namespace UnitTest
             TestObject = new Class();
         }
 
-        [Fact (Skip = "flakey")]
+        [Fact]
         public void TestAsStream()
         {
             using InMemoryRandomAccessStream winrtStream = new InMemoryRandomAccessStream();
@@ -38,7 +38,7 @@ namespace UnitTest
             }
         }
 
-        [Fact (Skip = "flakey")]
+        [Fact]
         public void TestReadToEndAsync()
         {
             Assert.True(InvokeReadToEndAsync().Wait(1000));
@@ -59,10 +59,23 @@ namespace UnitTest
             Assert.Equal(read, data);
         }
 
-        [Fact (Skip = "flakey")]
+        [Fact]
         public void TestStreamWriteAndRead()
         {
             Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
+        }
+
+        [Fact]
+        public void TestClassGeneric()
+        {
+            var objs = TestObject.GetClassVector();
+            Assert.Equal(3, objs.Count);
+            for (int i = 0; i < 3; ++i)
+            {
+                var obj = objs[i];
+                Assert.Same(obj, TestObject);
+                Assert.Equal(TestObject, objs[i]);
+            }
         }
     }
 }

@@ -60,7 +60,7 @@ namespace UnitTest
             await stream.WriteAsync(buffer);
         }
 
-        [Fact (Skip = "flakey")]
+        [Fact]
         public void TestWriteBuffer()
         {
             Assert.True(InvokeWriteBufferAsync().Wait(1000)); 
@@ -849,6 +849,7 @@ namespace UnitTest
         [Fact]
         public void TestClassGeneric()
         {
+            var x = TestObject.StringsProperty;
             var objs = TestObject.GetClassVector();
             Assert.Equal(3, objs.Count);
             for (int i = 0; i < 3; ++i)
