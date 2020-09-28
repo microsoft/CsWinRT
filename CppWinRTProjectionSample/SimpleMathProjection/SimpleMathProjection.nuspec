@@ -16,7 +16,7 @@
 		<file src="..\x64\Debug\SimpleMathComponent\SimpleMathComponent.winmd" target="lib\netcoreapp3.0\SimpleMathComponent.winmd" />
 		<file src="..\x64\Debug\SimpleMathComponent\SimpleMathComponent.winmd" target="lib\uap10.0\SimpleMathComponent.winmd" />
 		<file src="..\x64\Debug\SimpleMathComponent\SimpleMathComponent.winmd" target="lib\net46\SimpleMathComponent.winmd" />
-		<file src="..\SimpleMathProjection\bin\x64\Debug\net5.0-windows10.0.19041.0\SimpleMathProjection.dll" target="lib\net5.0\SimpleMathProjection.dll" />
+		<file src="..\x64\Debug\SimpleMathComponent\SimpleMathComponent.dll" target="lib\net5.0\SimpleMathProjection.dll" />
 		<file src="..\x64\Debug\SimpleMathComponent\SimpleMathComponent.dll" target="runtimes\win10-x64\native\SimpleMathComponent.dll" />
 	</files>
 </package>
