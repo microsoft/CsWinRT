@@ -12,7 +12,7 @@ powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
 -Version '%CsWinRTNet5SdkVersion%' -InstallDir "%DOTNET_ROOT%" -Architecture 'x64' ^
--AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet' "n
+-AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet' "
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
