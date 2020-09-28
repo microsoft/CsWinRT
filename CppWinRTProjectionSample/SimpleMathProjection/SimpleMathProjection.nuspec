@@ -7,7 +7,7 @@
 		<description>A simple component with basic math operations</description>
 		<dependencies>
 			<group targetFramework="net5.0">
-				<dependency id="Microsoft.Windows.CsWinRT" version="0.1.0-prerelease.200922.1" exclude="Build,Analyzers" />
+				<dependency id="Microsoft.Windows.CsWinRT" version="0.1.0-prerelease.200925.12" exclude="Build,Analyzers" />
 			</group>
 		</dependencies>
 	</metadata>
