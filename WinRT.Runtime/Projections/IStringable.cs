@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
@@ -30,7 +30,7 @@ namespace ABI.Windows.Foundation
 #if NETSTANDARD2_0
                 _ToString_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_ToString_0).ToPointer()
 #else
-                _ToString_0 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_ToString_0
+                _ToString_0 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_ToString_0
 #endif
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedIStringableVftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);

@@ -8,6 +8,7 @@ using WinRT;
 
 using Windows.Foundation;
 using Windows.UI;
+using Windows.Storage.Streams;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Interop;
@@ -20,6 +21,7 @@ using System.Collections.Generic;
 using System.Collections;
 using WinRT.Interop;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace UnitTest
 {
@@ -30,6 +32,38 @@ namespace UnitTest
         public TestCSharp()
         {
             TestObject = new Class();
+        }
+
+#if NET5_0
+        [Fact]
+        public void TestDynamicInterfaceCastingOnValidInterface()
+        {
+            var agileObject = (IAgileObject)(IWinRTObject)TestObject;
+            Assert.NotNull(agileObject);
+        }
+
+        [Fact]
+        public void TestDynamicInterfaceCastingOnInvalidInterface()
+        {
+            Assert.ThrowsAny<System.Exception>(() => (IStringableInterop)(IWinRTObject)TestObject);
+        }
+#endif
+
+        async Task InvokeWriteBufferAsync()
+        {
+            var random = new Random(42);
+            byte[] data = new byte[256];
+            random.NextBytes(data);
+
+            using var stream = new InMemoryRandomAccessStream();
+            IBuffer buffer = data.AsBuffer();
+            await stream.WriteAsync(buffer);
+        }
+
+        [Fact]
+        public void TestWriteBuffer()
+        {
+            Assert.True(InvokeWriteBufferAsync().Wait(1000)); 
         }
 
         [Fact]
@@ -130,6 +164,14 @@ namespace UnitTest
             TestObject.InvokeNestedEvent(TestObject, ints);
             events_expected++;
 
+            TestObject.ReturnEvent += (int arg0) =>
+            {
+                events_received++;
+                return arg0;
+            };
+            Assert.Equal(42, TestObject.InvokeReturnEvent(42));
+            events_expected++;
+
             var collection0 = new int[] { 42, 1729 };
             var collection1 = new Dictionary<int, string> { [1] = "foo", [2] = "bar" };
             TestObject.CollectionEvent += (Class sender, IList<int> arg0, IDictionary<int, string> arg1) =>
@@ -143,6 +185,42 @@ namespace UnitTest
 
             Assert.Equal(events_received, events_expected);
         }
+
+        // TODO: when the public WinUI nuget supports IXamlServiceProvider, just use the projection
+        [ComImport]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        [Guid("68B3A2DF-8173-539F-B524-C8A2348F5AFB")]
+        internal unsafe interface IServiceProviderInterop
+        {
+            // Note: Invoking methods on ComInterfaceType.InterfaceIsIInspectable interfaces
+            // no longer appears supported in the runtime (probably with removal of WinRT support),
+            // so simulate with IUnknown.
+            void GetIids(out int iidCount, out IntPtr iids);
+            void GetRuntimeClassName(out IntPtr className);
+            void GetTrustLevel(out TrustLevel trustLevel);
+
+            void GetService(IntPtr type, out IntPtr service);
+        }
+
+        [Fact]
+        public void TestCustomProjections()
+        {
+            // INotifyDataErrorsInfo
+            string propertyName = "";
+            TestObject.ErrorsChanged += (object sender, System.ComponentModel.DataErrorsChangedEventArgs e) =>
+            {
+                propertyName = e.PropertyName;
+            };
+            TestObject.RaiseDataErrorChanged();
+            Assert.Equal("name", propertyName);
+
+            // IXamlServiceProvider <-> IServiceProvider
+            var serviceProvider = Class.ServiceProvider.As<IServiceProviderInterop>();
+            IntPtr service;
+            serviceProvider.GetService(IntPtr.Zero, out service);
+            Assert.Equal(new IntPtr(42), service);
+        }
+
 
         [Fact]
         public void TestKeyValuePair()
@@ -527,6 +605,7 @@ namespace UnitTest
             Assert.True(val.bools.z);
         }
 
+#if NETCOREAPP2_0
         [Fact]
         public void TestGenericCast()
         {
@@ -534,6 +613,7 @@ namespace UnitTest
             var abiView = (ABI.System.Collections.Generic.IReadOnlyList<int>)ints;
             Assert.Equal(abiView.ThisPtr, abiView.As<WinRT.IInspectable>().As<ABI.System.Collections.Generic.IReadOnlyList<int>.Vftbl>().ThisPtr);
         }
+#endif
 
         [ComImport]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -775,7 +855,7 @@ namespace UnitTest
             {
                 var obj = objs[i];
                 Assert.Same(obj, TestObject);
-                Assert.Equal(TestObject.ThisPtr, objs[i].ThisPtr);
+                Assert.Equal(TestObject, objs[i]);
             }
         }
         [Fact]
@@ -1493,7 +1573,7 @@ namespace UnitTest
         public void CCWOfListOfManagedType()
         {
             using var ccw = ComWrappersSupport.CreateCCWForObject(new List<ManagedType>());
-            using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(ABI.System.Collections.Generic.IEnumerable<object>)));
+            using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
         }
 
         [Fact]
@@ -1535,7 +1615,8 @@ namespace UnitTest
         [Fact]
         public void TestUnwrapInspectable()
         {
-            var inspectable = IInspectable.FromAbi(TestObject.ThisPtr);
+            using var objRef = MarshalInspectable.CreateMarshaler(TestObject);
+            var inspectable = IInspectable.FromAbi(objRef.ThisPtr);
             Assert.True(ComWrappersSupport.TryUnwrapObject(inspectable, out _));
         }
 

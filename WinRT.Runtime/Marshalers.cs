@@ -816,6 +816,9 @@ namespace WinRT
             {
                 return obj;
             }
+#if !NETSTANDARD2_0
+            return (T)(object)IInspectable.FromAbi(ptr);
+#else
             // If the metadata type doesn't implement the interface, then create a tear-off RCW.
             // TODO: Uniqueness of tear-offs?
             if (_FromAbi == null)
@@ -823,6 +826,7 @@ namespace WinRT
                 _FromAbi = BindFromAbi();
             }
             return _FromAbi(ptr);
+#endif
         }
 
         public static IObjectReference CreateMarshaler(T value)

@@ -73,7 +73,7 @@ namespace ABI.WinRT.Interop
 #if NETSTANDARD2_0
                     _GetWeakReference = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new GetWeakReferenceDelegate(Do_Abi_GetWeakReference)).ToPointer(),
 #else
-                    _GetWeakReference = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_GetWeakReference
+                    _GetWeakReference = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetWeakReference
 #endif
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
@@ -153,7 +153,7 @@ namespace ABI.WinRT.Interop
 #if NETSTANDARD2_0
                     _Resolve = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ResolveDelegate(Do_Abi_Resolve)).ToPointer(),
 #else
-                    _Resolve = (delegate*<IntPtr, Guid*, IntPtr*, int>)&Do_Abi_Resolve
+                    _Resolve = (delegate* unmanaged<IntPtr, Guid*, IntPtr*, int>)&Do_Abi_Resolve
 #endif
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());

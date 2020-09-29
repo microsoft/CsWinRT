@@ -15,19 +15,19 @@ namespace Generator
     {
         private string _tempFolder;
 
-        private string GetAssemblyName(SourceGeneratorContext context)
+        private string GetAssemblyName(GeneratorExecutionContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.AssemblyName", out var assemblyName);
             return assemblyName;
         }
 
-        private string GetAssemblyVersion(SourceGeneratorContext context)
+        private string GetAssemblyVersion(GeneratorExecutionContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.AssemblyVersion", out var assemblyVersion);
             return assemblyVersion;
         }
 
-        public static string GetGeneratedFilesDir(SourceGeneratorContext context)
+        public static string GetGeneratedFilesDir(GeneratorExecutionContext context)
         {
             // TODO: determine correct location to write to.
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.GeneratedFilesDir", out var generatedFilesDir);
@@ -35,7 +35,7 @@ namespace Generator
             return generatedFilesDir;
         }
 
-        private static bool IsCsWinRTComponent(SourceGeneratorContext context)
+        private static bool IsCsWinRTComponent(GeneratorExecutionContext context)
         {
             if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTComponent", out var isCsWinRTComponentStr))
             {
@@ -45,7 +45,7 @@ namespace Generator
             return false;
         }
 
-        private static string GetCsWinRTExe(SourceGeneratorContext context)
+        private static string GetCsWinRTExe(GeneratorExecutionContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTExe", out var cswinrtExe);
             return cswinrtExe;
@@ -73,7 +73,7 @@ namespace Generator
             return _tempFolder;
         }
 
-        private void GenerateSources(SourceGeneratorContext context)
+        private void GenerateSources(GeneratorExecutionContext context)
         {
             string cswinrtExe = GetCsWinRTExe(context);
             string assemblyName = GetAssemblyName(context);
@@ -110,7 +110,7 @@ namespace Generator
             Directory.Delete(outputDir, true);
         }
 
-        private string GetWinmdOutputFile(SourceGeneratorContext context)
+        private string GetWinmdOutputFile(GeneratorExecutionContext context)
         {
             return Path.Combine(GetGeneratedFilesDir(context), GetAssemblyName(context) + ".winmd");
         }
@@ -133,7 +133,7 @@ namespace Generator
             peBlob.WriteContentTo(fs);
         }
 
-        public void Execute(SourceGeneratorContext context)
+        public void Execute(GeneratorExecutionContext context)
         {
             if (!IsCsWinRTComponent(context))
             {
@@ -179,7 +179,7 @@ namespace Generator
             Logger.Close();
         }
 
-        public void Initialize(InitializationContext context)
+        public void Initialize(GeneratorInitializationContext context)
         {
         }
     }

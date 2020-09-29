@@ -12,11 +12,6 @@
     <NoWarn>8305;0618</NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DebugType>full</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />

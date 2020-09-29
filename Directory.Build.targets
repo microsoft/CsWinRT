@@ -24,7 +24,7 @@
   </PropertyGroup>
 
  <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
-   <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.8.0-3.20428.4" />
+   <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.8.0-4.20472.6" />
  </ItemGroup>
 
  <ItemGroup>
