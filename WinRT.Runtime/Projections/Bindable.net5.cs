@@ -127,7 +127,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 try
                 {
                     __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableIterator>(thisPtr).Current;
-                    *value = MarshalInspectable.FromManaged(__value);
+                    *value = MarshalInspectable<object>.FromManaged(__value);
                 }
                 catch (Exception __exception__)
                 {
@@ -177,11 +177,11 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 try
                 {
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Current_0(ThisPtr, &__retval));
-                    return MarshalInspectable.FromAbi(__retval);
+                    return MarshalInspectable<object>.FromAbi(__retval);
                 }
                 finally
                 {
-                    MarshalInspectable.DisposeAbi(__retval);
+                    MarshalInspectable<object>.DisposeAbi(__retval);
                 }
             }
         }
@@ -251,7 +251,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 try
                 {
                     __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>(thisPtr).GetAt(index);
-                    *result = MarshalInspectable.FromManaged(__result);
+                    *result = MarshalInspectable<object>.FromManaged(__result);
 
                 }
                 catch (Exception __exception__)
@@ -274,7 +274,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
                 try
                 {
-                    __returnValue = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>(thisPtr).IndexOf(MarshalInspectable.FromAbi(value), out __index);
+                    __returnValue = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Interop.IBindableVectorView>(thisPtr).IndexOf(MarshalInspectable<object>.FromAbi(value), out __index);
                     *index = __index;
                     *returnValue = (byte)(__returnValue ? 1 : 0);
 
@@ -322,11 +322,11 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetAt_0(ThisPtr, index, &__retval));
-                return MarshalInspectable.FromAbi(__retval);
+                return MarshalInspectable<object>.FromAbi(__retval);
             }
             finally
             {
-                MarshalInspectable.DisposeAbi(__retval);
+                MarshalInspectable<object>.DisposeAbi(__retval);
             }
         }
 
@@ -339,14 +339,14 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             byte __retval = default;
             try
             {
-                __value = MarshalInspectable.CreateMarshaler(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_2(ThisPtr, MarshalInspectable.GetAbi(__value), &__index, &__retval));
+                __value = MarshalInspectable<object>.CreateMarshaler(value);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_2(ThisPtr, MarshalInspectable<object>.GetAbi(__value), &__index, &__retval));
                 index = __index;
                 return __retval != 0;
             }
             finally
             {
-                MarshalInspectable.DisposeMarshaler(__value);
+                MarshalInspectable<object>.DisposeMarshaler(__value);
             }
         }
 
@@ -1026,7 +1026,7 @@ namespace ABI.System.Collections
                 try
                 {
                     __result = FindAdapter(thisPtr).GetAt(index);
-                    *result = MarshalInspectable.FromManaged(__result);
+                    *result = MarshalInspectable<object>.FromManaged(__result);
 
                 }
                 catch (Exception __exception__)
@@ -1066,7 +1066,7 @@ namespace ABI.System.Collections
                 uint __index = default;
                 try
                 {
-                    __returnValue = FindAdapter(thisPtr).IndexOf(MarshalInspectable.FromAbi(value), out __index);
+                    __returnValue = FindAdapter(thisPtr).IndexOf(MarshalInspectable<object>.FromAbi(value), out __index);
                     *index = __index;
                     *returnValue = (byte)(__returnValue ? 1 : 0);
                 }
@@ -1084,7 +1084,7 @@ namespace ABI.System.Collections
             {
                 try
                 {
-                    FindAdapter(thisPtr).SetAt(index, MarshalInspectable.FromAbi(value));
+                    FindAdapter(thisPtr).SetAt(index, MarshalInspectable<object>.FromAbi(value));
                 }
                 catch (Exception __exception__)
                 {
@@ -1100,7 +1100,7 @@ namespace ABI.System.Collections
             {
                 try
                 {
-                    FindAdapter(thisPtr).InsertAt(index, MarshalInspectable.FromAbi(value));
+                    FindAdapter(thisPtr).InsertAt(index, MarshalInspectable<object>.FromAbi(value));
                 }
                 catch (Exception __exception__)
                 {
@@ -1132,7 +1132,7 @@ namespace ABI.System.Collections
             {
                 try
                 {
-                    FindAdapter(thisPtr).Append(MarshalInspectable.FromAbi(value));
+                    FindAdapter(thisPtr).Append(MarshalInspectable<object>.FromAbi(value));
                 }
                 catch (Exception __exception__)
                 {
@@ -1218,11 +1218,11 @@ namespace ABI.System.Collections
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetAt_0(ThisPtr, index, &__retval));
-                return MarshalInspectable.FromAbi(__retval);
+                return MarshalInspectable<object>.FromAbi(__retval);
             }
             finally
             {
-                MarshalInspectable.DisposeAbi(__retval);
+                MarshalInspectable<object>.DisposeAbi(__retval);
             }
         }
 
@@ -1251,14 +1251,14 @@ namespace ABI.System.Collections
             byte __retval = default;
             try
             {
-                __value = MarshalInspectable.CreateMarshaler(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_3(ThisPtr, MarshalInspectable.GetAbi(__value), &__index, &__retval));
+                __value = MarshalInspectable<object>.CreateMarshaler(value);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_3(ThisPtr, MarshalInspectable<object>.GetAbi(__value), &__index, &__retval));
                 index = __index;
                 return __retval != 0;
             }
             finally
             {
-                MarshalInspectable.DisposeMarshaler(__value);
+                MarshalInspectable<object>.DisposeMarshaler(__value);
             }
         }
 
@@ -1269,12 +1269,12 @@ namespace ABI.System.Collections
             IObjectReference __value = default;
             try
             {
-                __value = MarshalInspectable.CreateMarshaler(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.SetAt_4(ThisPtr, index, MarshalInspectable.GetAbi(__value)));
+                __value = MarshalInspectable<object>.CreateMarshaler(value);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.SetAt_4(ThisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
             }
             finally
             {
-                MarshalInspectable.DisposeMarshaler(__value);
+                MarshalInspectable<object>.DisposeMarshaler(__value);
             }
         }
 
@@ -1285,12 +1285,12 @@ namespace ABI.System.Collections
             IObjectReference __value = default;
             try
             {
-                __value = MarshalInspectable.CreateMarshaler(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.InsertAt_5(ThisPtr, index, MarshalInspectable.GetAbi(__value)));
+                __value = MarshalInspectable<object>.CreateMarshaler(value);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.InsertAt_5(ThisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
             }
             finally
             {
-                MarshalInspectable.DisposeMarshaler(__value);
+                MarshalInspectable<object>.DisposeMarshaler(__value);
             }
         }
 
@@ -1308,12 +1308,12 @@ namespace ABI.System.Collections
             IObjectReference __value = default;
             try
             {
-                __value = MarshalInspectable.CreateMarshaler(value);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Append_7(ThisPtr, MarshalInspectable.GetAbi(__value)));
+                __value = MarshalInspectable<object>.CreateMarshaler(value);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Append_7(ThisPtr, MarshalInspectable<object>.GetAbi(__value)));
             }
             finally
             {
-                MarshalInspectable.DisposeMarshaler(__value);
+                MarshalInspectable<object>.DisposeMarshaler(__value);
             }
         }
 

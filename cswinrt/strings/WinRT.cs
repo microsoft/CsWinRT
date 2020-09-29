@@ -298,7 +298,7 @@ namespace WinRT
             }
             finally
             {
-                MarshalInspectable.DisposeAbi(instancePtr);
+                MarshalInspectable<object>.DisposeAbi(instancePtr);
             }
         }
 
@@ -320,8 +320,7 @@ namespace WinRT
         public IntPtr ActivateInstance()
         {
             T comp = new T();
-            using var marshaler = MarshalInspectable.CreateMarshaler(comp);
-            return marshaler.GetRef();
+            return MarshalInspectable<T>.FromManaged(comp);
         }
     }
 

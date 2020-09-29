@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using WinRT.Interop;
 using static System.Runtime.InteropServices.ComWrappers;
 
@@ -14,6 +15,7 @@ namespace WinRT
     public static partial class ComWrappersSupport
     {
         internal static readonly ConditionalWeakTable<object, InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<object, InspectableInfo>();
+        internal static readonly ThreadLocal<Type> CreateRCWType = new ThreadLocal<Type>();
 
         private static ComWrappers _comWrappers;
         private static object _comWrappersLock = new object();
@@ -50,14 +52,19 @@ namespace WinRT
             return InspectableInfoTable.GetValue(_this, o => PregenerateNativeTypeInformation(o).inspectableInfo);
         }
 
-        public static object CreateRcwForComObject(IntPtr ptr)
+        public static T CreateRcwForComObject<T>(IntPtr ptr)
         {
             if (ptr == IntPtr.Zero)
             {
-                return null;
+                return default;
             }
 
+            if (typeof(T) != typeof(object))
+            {
+                CreateRCWType.Value = typeof(T);
+            }
             var rcw = ComWrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.TrackerObject);
+            CreateRCWType.Value = null;
             // Because .NET will de-duplicate strings and WinRT doesn't,
             // our RCW factory returns a wrapper of our string instance.
             // This ensures that ComWrappers never sees the same managed object for two different
@@ -65,12 +72,22 @@ namespace WinRT
             // and consumers get a string object for a Windows.Foundation.IReference<String>.
             // We need to do the same thing for System.Type because there can be multiple WUX.Interop.TypeName's
             // for a single System.Type.
+
             return rcw switch
             {
-                ABI.System.Nullable<string> ns => ns.Value,
-                ABI.System.Nullable<Type> nt => nt.Value,
-                _ => rcw
+                ABI.System.Nullable<string> ns => (T)(object) ns.Value,
+                ABI.System.Nullable<Type> nt => (T)(object) nt.Value,
+                _ => (T) rcw
             };
+
+/*            if ((typeof(T) == typeof(string) || typeof(T) == typeof(Type)) && rcw is ABI.System.Nullable<T> ns)
+            {
+                return ns.Value;
+            }
+            else
+            {
+                return (T)rcw;
+            }*/
         }
 
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr) => TryRegisterObjectForInterface(obj, thisPtr);
@@ -211,12 +228,20 @@ namespace WinRT
             {
                 IInspectable inspectable = new IInspectable(inspectableRef);
 
-                string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
-                if (runtimeClassName == null)
+                string runtimeClassName;
+                if(ComWrappersSupport.CreateRCWType.Value != null)
                 {
-                    // If the external IInspectable has not implemented GetRuntimeClassName,
-                    // we use the Inspectable wrapper directly.
-                    return inspectable;
+                    runtimeClassName = TypeNameSupport.GetNameForType(ComWrappersSupport.CreateRCWType.Value, TypeNameGenerationFlags.GenerateBoxedName);
+                }
+                else
+                {
+                    runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
+                    if (runtimeClassName == null)
+                    {
+                        // If the external IInspectable has not implemented GetRuntimeClassName,
+                        // we use the Inspectable wrapper directly.
+                        return inspectable;
+                    }
                 }
                 return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
             }
