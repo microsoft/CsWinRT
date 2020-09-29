@@ -900,7 +900,7 @@ set => %.% = value;
                 else
                 {
                     w.write(R"(
-{typeof(%), new Lazy<%>(() => (%)(object)new SingleInterfaceOptimizedObject(typeof(%), _inner))},)",
+{typeof(%), new Lazy<%>(() => (%)(object)new SingleInterfaceOptimizedObject(typeof(%), _inner ?? ((IWinRTObject)this).NativeObject))},)",
                         interface_name,
                         interface_name,
                         interface_name,
@@ -2313,7 +2313,21 @@ event % %;)",
                 set_simple_marshaler_type(m, type);
                 break;
             case category::interface_type:
-                m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
+                // TODO: review the need for target & namespace specific behavior
+                if (settings.netstandard_compat) {
+                    if (get_mapped_type(type.TypeNamespace(), type.TypeName()) &&
+                        type.TypeNamespace() == "Windows.Foundation.Collections")
+                    {
+                        m.marshaler_type = get_abi_type();
+                    }
+                    else
+                    {
+                        m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
+                    }
+                }
+                else {
+                    m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
+                }
                 if (m.is_array())
                 {
                     m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
@@ -3517,7 +3531,22 @@ remove => %.Unsubscribe(value);
                     }
                     break;
                 case category::interface_type:
-                    m.marshaler_type = w.write_temp("MarshalInterface<%>", m.param_type);
+                    // TODO: review the need for target & namespace specific behavior
+                    if (settings.netstandard_compat)
+                    {
+                        if (get_mapped_type(type.TypeNamespace(), type.TypeName()) &&
+                            type.TypeNamespace() == "Windows.Foundation.Collections")
+                        {
+                            m.marshaler_type = get_abi_type();
+                        }
+                        else
+                        {
+                            m.marshaler_type = w.write_temp("MarshalInterface<%>", m.param_type);
+                        }
+                    }
+                    else {
+                        m.marshaler_type = w.write_temp("MarshalInterface<%>", m.param_type);
+                    }
                     m.local_type = m.param_type;
                     break;
                 case category::class_type:
@@ -4818,6 +4847,7 @@ _lazyInterfaces = new Dictionary<Type, object>()
         auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
 
         w.write(R"([global::WinRT.WindowsRuntimeType]
+[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %public %class %%, IWinRTObject, IEquatable<%>
 {

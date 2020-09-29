@@ -60,7 +60,7 @@ namespace UnitTest
             await stream.WriteAsync(buffer);
         }
 
-        [Fact (Skip = "flakey")]
+        [Fact]
         public void TestWriteBuffer()
         {
             Assert.True(InvokeWriteBufferAsync().Wait(1000)); 
