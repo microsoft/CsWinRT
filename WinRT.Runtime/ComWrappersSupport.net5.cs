@@ -16,21 +16,31 @@ namespace WinRT
         internal static readonly ConditionalWeakTable<object, InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<object, InspectableInfo>();
 
         private static ComWrappers _comWrappers;
+        private static object _comWrappersLock = new object();
         private static ComWrappers ComWrappers
         {
             get
             {
                 if (_comWrappers is null)
                 {
-                    _comWrappers = new DefaultComWrappers();
-                    ComWrappers.RegisterForTrackerSupport(_comWrappers);
+                    lock (_comWrappersLock)
+                    {
+                        if (_comWrappers is null)
+                        {
+                            _comWrappers = new DefaultComWrappers();
+                            ComWrappers.RegisterForTrackerSupport(_comWrappers);
+                        }
+                    }
                 }
                 return _comWrappers;
             }
             set
             {
-                _comWrappers = value;
-                ComWrappers.RegisterForTrackerSupport(_comWrappers);
+                lock (_comWrappersLock)
+                {
+                    _comWrappers = value;
+                    ComWrappers.RegisterForTrackerSupport(_comWrappers);
+                }
             }
         }
 
