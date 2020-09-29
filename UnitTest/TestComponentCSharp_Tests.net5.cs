@@ -41,7 +41,7 @@ namespace UnitTest
         [Fact/*(Skip = "flakey")*/]
         public void TestReadToEndAsync()
         {
-            Assert.True(InvokeReadToEndAsync().Wait(1000));
+            Assert.True(InvokeReadToEndAsync().Wait(-1));
         }
 
         async Task InvokeStreamWriteAndReadAsync()
@@ -62,7 +62,7 @@ namespace UnitTest
         [Fact /*(Skip = "flakey")*/]
         public void TestStreamWriteAndRead()
         {
-            Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
+            Assert.True(InvokeStreamWriteAndReadAsync().Wait(-1));
         }
 
     }
