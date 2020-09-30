@@ -42,6 +42,7 @@ namespace UnitTest
         public void TestReadToEndAsync()
         {
             Task task = InvokeReadToEndAsync();
+            task.Wait(-1);
             Assert.True(task.IsCompletedSuccessfully);
         }
 
