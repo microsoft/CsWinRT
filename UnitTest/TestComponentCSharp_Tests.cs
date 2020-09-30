@@ -1022,7 +1022,7 @@ namespace UnitTest
             var task = InvokeDoitAsync();
             Assert.False(task.Wait(25));
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(-1));
+            Assert.True(task.Wait(1000));
             Assert.Equal(TaskStatus.RanToCompletion, task.Status);
 
             task = InvokeDoitAsync();
@@ -1065,7 +1065,7 @@ namespace UnitTest
             }
 
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(-1));
+            Assert.True(task.Wait(1000));
             Assert.Equal(TaskStatus.RanToCompletion, task.Status);
 
             task = InvokeDoitAsyncWithProgress();
@@ -1094,7 +1094,7 @@ namespace UnitTest
             var task = InvokeAddAsync(42, 8);
             Assert.False(task.Wait(25));
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(-1));
+            Assert.True(task.Wait(1000));
             Assert.Equal(TaskStatus.RanToCompletion, task.Status);
             Assert.Equal(50, task.Result);
 
@@ -1138,7 +1138,7 @@ namespace UnitTest
             }
 
             TestObject.CompleteAsync();
-            Assert.True(task.Wait(-1));
+            Assert.True(task.Wait(1000));
             Assert.Equal(TaskStatus.RanToCompletion, task.Status);
             Assert.Equal(50, task.Result);
 
