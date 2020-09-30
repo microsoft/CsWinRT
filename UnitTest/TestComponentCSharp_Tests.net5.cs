@@ -42,8 +42,6 @@ namespace UnitTest
         public void TestReadToEndAsync()
         {
             Task task = InvokeReadToEndAsync();
-            task.Start();
-            task.Wait(-1);
             Assert.True(task.IsCompletedSuccessfully);
         }
 
@@ -66,7 +64,6 @@ namespace UnitTest
         public void TestStreamWriteAndRead()
         {
             Task task = InvokeStreamWriteAndReadAsync();
-            task.Wait(-1);
             Assert.True(task.IsCompletedSuccessfully);
         }
 
