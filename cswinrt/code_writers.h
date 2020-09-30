@@ -2313,21 +2313,7 @@ event % %;)",
                 set_simple_marshaler_type(m, type);
                 break;
             case category::interface_type:
-                // TODO: review the need for target & namespace specific behavior
-                if (settings.netstandard_compat) {
-                    if (get_mapped_type(type.TypeNamespace(), type.TypeName()) &&
-                        type.TypeNamespace() == "Windows.Foundation.Collections")
-                    {
-                        m.marshaler_type = get_abi_type();
-                    }
-                    else
-                    {
-                        m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
-                    }
-                }
-                else {
-                    m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
-                }
+                m.marshaler_type = "MarshalInterface<" + m.param_type + ">";    
                 if (m.is_array())
                 {
                     m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
@@ -3531,22 +3517,7 @@ remove => %.Unsubscribe(value);
                     }
                     break;
                 case category::interface_type:
-                    // TODO: review the need for target & namespace specific behavior
-                    if (settings.netstandard_compat)
-                    {
-                        if (get_mapped_type(type.TypeNamespace(), type.TypeName()) &&
-                            type.TypeNamespace() == "Windows.Foundation.Collections")
-                        {
-                            m.marshaler_type = get_abi_type();
-                        }
-                        else
-                        {
-                            m.marshaler_type = w.write_temp("MarshalInterface<%>", m.param_type);
-                        }
-                    }
-                    else {
-                        m.marshaler_type = w.write_temp("MarshalInterface<%>", m.param_type);
-                    }
+                    m.marshaler_type = w.write_temp("MarshalInterface<%>", m.param_type);
                     m.local_type = m.param_type;
                     break;
                 case category::class_type:
