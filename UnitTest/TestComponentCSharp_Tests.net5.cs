@@ -38,7 +38,7 @@ namespace UnitTest
             }
         }
 
-        [Fact/*(Skip = "flakey")*/]
+        [Fact(Skip = "flakey")]
         public void TestReadToEndAsync()
         {
             Task task = InvokeReadToEndAsync();
@@ -64,8 +64,7 @@ namespace UnitTest
         [Fact /*(Skip = "flakey")*/]
         public void TestStreamWriteAndRead()
         {
-            Task task = InvokeStreamWriteAndReadAsync();
-            Assert.True(task.IsCompletedSuccessfully);
+            Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
         }
 
     }
