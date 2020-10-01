@@ -421,7 +421,7 @@ namespace UnitTest
             Assert.True(AllEqual(a, b, c, d));
         }
 
-        [Fact(Skip="flakey")]
+        [Fact]
         public void Array_Stringable()
         {
             IStringable[] a = new IStringable[] {
