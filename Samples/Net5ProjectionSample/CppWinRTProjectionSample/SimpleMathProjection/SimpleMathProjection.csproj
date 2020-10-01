@@ -12,7 +12,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-	<NuspecFile>SimpleMathProjection.nuspec</NuspecFile>
+	<GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
+	<NuspecFile>$(GeneratedNugetDir)SimpleMathProjection.nuspec</NuspecFile>
 	<OutputPath>./nuget</OutputPath>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
@@ -31,10 +32,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SimpleMathComponent\SimpleMathComponent.vcxproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="nuget\" />
   </ItemGroup>
 
   <!--C#/WinRT Targets and Props-->
