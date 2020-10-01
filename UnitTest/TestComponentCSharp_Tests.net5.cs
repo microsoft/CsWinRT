@@ -18,7 +18,7 @@ namespace UnitTest
             TestObject = new Class();
         }
 
-        [Fact/*(Skip = "flakey")*/]
+        [Fact]
         public void TestAsStream()
         {
             using InMemoryRandomAccessStream winrtStream = new InMemoryRandomAccessStream();
@@ -42,7 +42,7 @@ namespace UnitTest
             Assert.Equal(read, data);
         }
 
-        [Fact /*(Skip = "flakey")*/]
+        [Fact]
         public void TestStreamWriteAndRead()
         {
             Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
