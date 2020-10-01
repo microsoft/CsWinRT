@@ -43,7 +43,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Windows", "Projections\Wind
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinUI", "Projections\WinUI\WinUI.csproj", "{0A991D5F-BFEE-4D2F-9AAD-6AD06470A5DF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nuget", "Nuget", "{5A94EFDF-A6AC-494D-A731-A0A8A37F1F6C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nuget", "Nuget", "{967889B0-4C40-4EA2-8F11-26ECB88205FF}"
 	ProjectSection(SolutionItems) = preProject
 		nuget\LICENSE = nuget\LICENSE
 		nuget\Microsoft.Windows.CsWinRT.nuspec = nuget\Microsoft.Windows.CsWinRT.nuspec

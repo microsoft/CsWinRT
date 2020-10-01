@@ -1,6 +1,6 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'" >
+  <!--<PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'" >
     <GeneratedFilesRootDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', 'Generated Files'))</GeneratedFilesRootDir>
     <GeneratedFilesDir>$([MSBuild]::NormalizeDirectory('$(GeneratedFilesRootDir)', '$(TargetFramework)'))</GeneratedFilesDir>
   </PropertyGroup>
@@ -9,9 +9,8 @@
    <Compile Remove="$(GeneratedFilesRootDir)**/*.cs" />
    <None Include="$(GeneratedFilesRootDir)**/*.cs" />
    <Compile Condition="'$(GeneratedFilesDir)' != '$(GeneratedFilesRootDir)'" Include="$(GeneratedFilesDir)*.cs" />
- </ItemGroup>
+ </ItemGroup>-->
 
-  <Import Condition="'$(MSBuildProjectExtension)' == '.csproj'" Project="nuget\Microsoft.Windows.CsWinRT.targets" />
 
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <LangVersion>preview</LangVersion>
@@ -30,5 +29,7 @@
  <ItemGroup>
    <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
  </ItemGroup>
+
+ <Import Condition="'$(MSBuildProjectExtension)' == '.csproj'" Project="nuget\Microsoft.Windows.CsWinRT.targets" />
 
 </Project>

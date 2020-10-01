@@ -3,18 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
-    <LangVersion>preview</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>8305;0618</NoWarn>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DebugType>full</DebugType>
-    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   
   <ItemGroup>
@@ -25,48 +13,11 @@
     <ProjectReference Include="..\Windows\Windows.csproj" />
   </ItemGroup>
 
-  <Target Name="GenerateProjection" Condition="'$(GenerateTestProjection)' == 'true'">
-    <ItemGroup>
-      <!--Do not publish projection source winmds -->
-      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="%(ReferenceCopyLocalPaths.Filename) == 'BenchmarkComponent'" />
-    </ItemGroup>
-    <PropertyGroup>
-      <CsWinRTVerbosity>high</CsWinRTVerbosity>
-      <CsWinRTResponseFile>$(GeneratedFilesDir)cswinrt_benchmark.rsp</CsWinRTResponseFile>
-      <CsWinRTCommand>$(CsWinRTExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
-    </PropertyGroup>
-    <PropertyGroup>
-      <CsWinRTParams>
--verbose
--target $(TargetFramework)
--in 10.0.18362.0
--in @(ReferenceWinMDs->'"%(FullPath)"', ' ')
--out "$(GeneratedFilesDir.TrimEnd('\'))"
+  <PropertyGroup>
+    <CsWinRTFilters>
 -exclude Windows
 -include BenchmarkComponent
-      </CsWinRTParams>
-    </PropertyGroup>
-    <MakeDir Directories="$(GeneratedFilesDir)" />
-    <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
-    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
-    <Exec Command="$(CsWinRTCommand)" />
-  </Target>
-
-  <Target Name="IncludeProjection" DependsOnTargets="GenerateProjection" BeforeTargets="CoreCompile">
-    <ItemGroup>
-      <Compile Include="$(GeneratedFilesDir)*.cs" Exclude="@(Compile)" />
-      <!--Remove references to projection source winmds to prevent compile conflict warnings-->
-      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'BenchmarkComponent'" />
-      <!--Also remove ReferencePath winmds to prevent error NETSDK1130 false positive-->
-      <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'BenchmarkComponent'" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="RemoveWinMDReferences" BeforeTargets="ResolveReferences" AfterTargets="AfterResolveReferences">
-    <ItemGroup>
-      <ReferenceWinMDs Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
-      <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
-    </ItemGroup>
-  </Target>
+    </CsWinRTFilters>
+  </PropertyGroup>
 
 </Project>

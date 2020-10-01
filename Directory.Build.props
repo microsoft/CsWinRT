@@ -9,6 +9,14 @@
     <MicrosoftWinUIVersion>3.0.0-preview1.200515.3</MicrosoftWinUIVersion>
     <!-- Temporary fallback until Microsoft.WinUI nuget supports Net5 TFM -->
     <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <!--<TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>-->
+    <LangVersion>preview</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>8305;0618</NoWarn>
+    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
+    <CsWinRTGenerateProjection>$(GenerateTestProjection)</CsWinRTGenerateProjection>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' != 'net5.0'">
