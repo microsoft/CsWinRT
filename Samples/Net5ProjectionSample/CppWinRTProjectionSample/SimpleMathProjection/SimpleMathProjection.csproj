@@ -12,10 +12,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-	<GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
-	<NuspecFile>$(GeneratedNugetDir)SimpleMathProjection.nuspec</NuspecFile>
-	<OutputPath>./nuget</OutputPath>
-	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
+    <NuspecFile>$(GeneratedNugetDir)SimpleMathProjection.nuspec</NuspecFile>
+    <OutputPath>$(GeneratedNugetDir)</OutputPath>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,9 +24,9 @@
   </ItemGroup>
 
   <PropertyGroup>
-	<RestoreSources>
-		https://api.nuget.org/v3/index.json;
-		https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
+    <RestoreSources>
+	https://api.nuget.org/v3/index.json;
+	https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
     </RestoreSources>
   </PropertyGroup>
 
