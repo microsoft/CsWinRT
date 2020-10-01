@@ -9,22 +9,25 @@
   <PropertyGroup>
     <GenerateTestProjection>true</GenerateTestProjection>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <GeneratedProjectionDir>.\Generated Files\</GeneratedProjectionDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+	<NuspecFile>SimpleMathProjection.nuspec</NuspecFile>
+	<OutputPath>./nuget</OutputPath>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
-	<PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.1.0-prerelease.200925.12" />
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.8.0-4.20472.6" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.1.0-prerelease.200928.7" />
   </ItemGroup>
-
-  <PropertyGroup>
-	<RestoreSources>
-    https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
-	</RestoreSources>
-  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\SimpleMathComponent\SimpleMathComponent.vcxproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="nuget\" />
   </ItemGroup>
 
   <!--C#/WinRT Targets and Props-->
@@ -49,18 +52,17 @@
     <!--CSWinRT properties-->
     <PropertyGroup>
       <CsWinRTVerbosity>high</CsWinRTVerbosity>
-      <CsWinRTResponseFile>$(GeneratedProjectionDir)cswinrt_build_projection.rsp</CsWinRTResponseFile>
+      <CsWinRTResponseFile>$(OutDir)cswinrt_build_projection.rsp</CsWinRTResponseFile>
       <CsWinRTCommand>$(CsWinRTExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
     <CsWinRTParams>
         -verbose
         -in 10.0.18362.0
         -in @(ReferenceWinMDs->'"%(FullPath)"', ' ')
-        -out "$(GeneratedProjectionDir.TrimEnd('\'))"
+        -out "$(OutDir.TrimEnd('\'))"
         -include $(ProjectionNamespaceToInclude)
         -exclude Windows
       </CsWinRTParams>
     </PropertyGroup>
-    <MakeDir Directories="$(GeneratedProjectionDir)" />
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
     <Exec Command="$(CsWinRTCommand)" />
@@ -69,6 +71,7 @@
   <!--Build the projection dll-->
   <Target Name="BuildProjectionAssembly" DependsOnTargets="GenerateProjection" BeforeTargets="CoreCompile">
     <ItemGroup>
+	  <Compile Include="$(OutDir)*.cs" Exclude="@(Compile)" />
       <!--Remove references to projection source winmds to prevent compile conflict warnings-->
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'SimpleMathComponent'" />
       <!--Also remove ReferencePath winmds to prevent error NETSDK1130-->
