@@ -27,25 +27,6 @@ namespace UnitTest
             normalStream.CopyTo(memoryStream);
         }
 
-        async Task InvokeReadToEndAsync()
-        {
-            StorageFolder localFolder = await StorageFolder.GetFolderFromPathAsync(System.IO.Path.GetTempPath());
-            StorageFile file = await localFolder.CreateFileAsync("temp.txt", CreationCollisionOption.ReplaceExisting);
-            string text = "";
-            using (var reader = new System.IO.StreamReader(await file.OpenStreamForReadAsync(), true))
-            {
-                text = await reader.ReadToEndAsync();
-            }
-        }
-
-        [Fact(Skip = "flakey")]
-        public void TestReadToEndAsync()
-        {
-            Task task = InvokeReadToEndAsync();
-            task.Wait(-1);
-            Assert.True(task.IsCompletedSuccessfully);
-        }
-
         async Task InvokeStreamWriteAndReadAsync()
         {
             var random = new Random(42);
