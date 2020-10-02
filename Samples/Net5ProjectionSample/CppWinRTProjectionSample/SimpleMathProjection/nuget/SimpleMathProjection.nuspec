@@ -6,6 +6,9 @@
 		<authors>Contoso Math Inc.</authors>
 		<description>A simple component with basic math operations</description>
 		<dependencies>
+			<group targetFramework=".NETCoreApp3.0" />
+			<group targetFramework="UAP10.0" />
+			<group targetFramework=".NETFramework4.6" />
 			<group targetFramework="net5.0">
 				<dependency id="Microsoft.Windows.CsWinRT" version="0.1.0-prerelease.200928.7" exclude="Build,Analyzers" />
 			</group>
