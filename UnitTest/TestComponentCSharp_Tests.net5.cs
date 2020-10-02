@@ -18,30 +18,13 @@ namespace UnitTest
             TestObject = new Class();
         }
 
-        [Fact(Skip = "flakey")]
+        [Fact]
         public void TestAsStream()
         {
             using InMemoryRandomAccessStream winrtStream = new InMemoryRandomAccessStream();
             using Stream normalStream = winrtStream.AsStream();
             using var memoryStream = new MemoryStream();
             normalStream.CopyTo(memoryStream);
-        }
-
-        async Task InvokeReadToEndAsync()
-        {
-            StorageFolder localFolder = await StorageFolder.GetFolderFromPathAsync(System.IO.Path.GetTempPath());
-            StorageFile file = await localFolder.CreateFileAsync("temp.txt", CreationCollisionOption.ReplaceExisting);
-            string text = "";
-            using (var reader = new System.IO.StreamReader(await file.OpenStreamForReadAsync(), true))
-            {
-                text = await reader.ReadToEndAsync();
-            }
-        }
-
-        [Fact(Skip = "flakey")]
-        public void TestReadToEndAsync()
-        {
-            Assert.True(InvokeReadToEndAsync().Wait(1000));
         }
 
         async Task InvokeStreamWriteAndReadAsync()
@@ -59,7 +42,7 @@ namespace UnitTest
             Assert.Equal(read, data);
         }
 
-        [Fact(Skip = "flakey")]
+        [Fact]
         public void TestStreamWriteAndRead()
         {
             Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
