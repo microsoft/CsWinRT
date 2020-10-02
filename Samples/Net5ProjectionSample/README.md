@@ -9,7 +9,7 @@ Requirements:
 
 To run this sample, you will need to do the following:
 
-1. Build the *CppWinRTProjectionSample* solution first. This generates the projection and interop assembly using cswinrt, and creates *SimpleMathComponent.nupkg* which can be referenced in consuming apps. If you run into errors restoring NuGet packages, go to **Tools** -> **NuGet Package Manager** -> **Package Manager Settings** and select *"Automatically check for missing packages during build in Visual Studio”*. Alternatively, you can run `dotnet restore` using the command line.
+1. Build the *CppWinRTProjectionSample* solution first. This generates the projection and interop assembly using cswinrt, and creates *SimpleMathComponent.nupkg* which can be referenced in consuming apps. If you run into errors restoring NuGet packages, look at the docs on [NuGet restore options](https://docs.microsoft.com/nuget/consume-packages/package-restore). You may need to configure your NuGet package manager settings to allow for package restores on build.
 
 2. Build the *ConsoleAppSample* solution which references and restores  *SimpleMathComponent.nupkg* to consume the projection.
 
