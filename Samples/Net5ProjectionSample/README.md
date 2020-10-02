@@ -1,6 +1,13 @@
 # C#/WinRT End to End Sample
 
-This sample demonstrates how to invoke C#/WinRT to build a .NET5 projection for a C++/WinRT Runtime Component, create a NuGet package for the component, and reference the NuGet package from a .NET5 console app. To run this sample, you will nee to do the following:
+This sample demonstrates how to invoke C#/WinRT to build a .NET5 projection for a C++/WinRT Runtime Component, create a NuGet package for the component, and reference the NuGet package from a .NET5 console app.
+
+Requirements:
+
+- Visual Studio 16.8 Preview 3
+- .NET 5 SDK RC2
+
+To run this sample, you will need to do the following:
 
 1. Build the *CppWinRTProjectionSample* solution first. This generates the projection and interop assembly using cswinrt, and creates *SimpleMathComponent.nupkg* which can be referenced in consuming apps.
 

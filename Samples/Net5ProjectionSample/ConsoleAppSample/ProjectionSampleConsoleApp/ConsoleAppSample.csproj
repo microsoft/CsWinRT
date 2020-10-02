@@ -7,7 +7,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-	<RestoreSources>../../CppWinRTProjectionSample/SimpleMathProjection/nuget</RestoreSources>
+    <RestoreSources>
+	  https://api.nuget.org/v3/index.json;
+	  ../../CppWinRTProjectionSample/SimpleMathProjection/nuget
+    </RestoreSources>
   </PropertyGroup>
 	
   <ItemGroup>
