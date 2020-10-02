@@ -16,6 +16,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>8305;0618</NoWarn>
     <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
+    <GenerateTestProjection Condition="'$(GenerateTestProjection)' == ''">false</GenerateTestProjection>
     <CsWinRTGenerateProjection>$(GenerateTestProjection)</CsWinRTGenerateProjection>
   </PropertyGroup>
 
