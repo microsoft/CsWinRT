@@ -11,3 +11,5 @@
     ```xml
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.8.0-4.20472.6"
     ```
+
+5. Because of strong-name signing, you cannot combine pre-RC2 and post-RC2 projection assemblies. For example, with WinUI and the Windows SDK, both would need to move up to latest (RC2) version together.
