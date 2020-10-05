@@ -22,6 +22,6 @@ For building with the command line, execute the following:
 
 ```cmd
 nuget restore
-msbuild /p:platform=x64;configuration=debug CppWinRTProjectionSample\CppWinRTComponentProjectionSample.sln
-msbuild /p:platform=x64;configuration=debug ConsoleAppSample\ConsoleAppSample.sln
+msbuild /p:platform=x64;configuration=debug CppWinRTComponentProjectionSample.sln
+msbuild /p:platform=x64;configuration=debug ConsoleAppSample.sln
 ```
