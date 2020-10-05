@@ -3,11 +3,10 @@
   <PropertyGroup>
     <!--Target .NET Core 2.0 to test .NET Standard 2.0 projection -->
     <TargetFrameworks>netcoreapp2.0;net5.0</TargetFrameworks>
-    <IsPackable>false</IsPackable>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <RunPostBuildEvent>Always</RunPostBuildEvent>
     <ProjectName>UnitTest</ProjectName>
     <NoWarn>1701;1702;0436;1658</NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

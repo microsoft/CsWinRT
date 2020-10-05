@@ -6,15 +6,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <CsWinRTVerbosity Condition="'$(CsWinRTVerbosity)' == ''">normal</CsWinRTVerbosity>
-    <CsWinRTCommandVerbosity Condition="'$(CsWinRTVerbosity)' == 'high'">-verbose</CsWinRTCommandVerbosity>
+    <CsWinRTMessageImportance Condition="'$(CsWinRTMessageImportance)' == ''">normal</CsWinRTMessageImportance>
+    <CsWinRTCommandVerbosity Condition="'$(CsWinRTMessageImportance)' == 'high'">-verbose</CsWinRTCommandVerbosity>
     <ResolveAssemblyReferencesDependsOn Condition="'$(CsWinRTRemoveWindowsReference)'!='false'">$(CsWinRTRemoveWindowsReference);CsWinRTRemoveWindowsReference</ResolveAssemblyReferencesDependsOn>
-    <AllowUnsafeBlocks Condition="'$(CsWinRTComponent)' == 'true'">true</AllowUnsafeBlocks>
     <CsWinRTEnabled Condition="'$(CsWinRTFilters)$(CsWinRTParams)'==''">false</CsWinRTEnabled>
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)'==''">true</CsWinRTEnabled>
     <CsWinRTWindowsSdkVersion Condition="'$(CsWinRTWindowsSdkVersion)'==''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsSdkVersion>
     <CsWinRTGenerateProjection Condition="'$(CsWinRTEnabled)'=='false'">false</CsWinRTGenerateProjection>
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)'==''">true</CsWinRTGenerateProjection>
+    <AllowUnsafeBlocks Condition="'$(CsWinRTComponent)' == 'true'">true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks Condition="'$(CsWinRTEnabled)' == 'true'">true</AllowUnsafeBlocks>
   </PropertyGroup>
   
   <!--Remove Windows.Winmd reference to prevent compile collisions-->
@@ -64,7 +65,7 @@ $(CsWinRTFilters)
     </PropertyGroup>
     <MakeDir Directories="$(CsWinRTGeneratedFilesDir)" />
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
-    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
+    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
     <Exec Command="$(CsWinRTCommand)" />
   </Target>
   
@@ -74,7 +75,7 @@ $(CsWinRTFilters)
     </ItemGroup>
   </Target>
 
-  <ItemGroup Condition="$(CsWinRTComponent)==true">
+  <ItemGroup Condition="'$(CsWinRTComponent)'=='true'">
     <CompilerVisibleProperty Include="AssemblyName" />
     <CompilerVisibleProperty Include="AssemblyVersion" />
     <CompilerVisibleProperty Include="CsWinRTComponent" />
