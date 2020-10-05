@@ -58,9 +58,9 @@ After a successful command-line build, the cswinrt.sln can be launched from the 
 
 Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For additional documentation visit <http://aka.ms/cswinrt>.
 
-### Breaking Changes
+**Breaking Changes:**
 
-A list of known breaking changes can be found [here](breakingchanges.md). 
+C#/WinRT breaking changes for .NET 5 RC2 are listed [here](docs/breakingchanges-rc2.md).
 
 ## Related Projects
 
