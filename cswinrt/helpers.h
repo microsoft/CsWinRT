@@ -5,10 +5,30 @@ namespace cswinrt
     using namespace std::literals;
     using namespace winmd::reader;
 
+    static inline bool starts_with(std::string_view const& value, std::string_view const& match) noexcept
+    {
+        return 0 == value.compare(0, match.size(), match);
+    }
+
+    static bool is_remove_overload(MethodDef const& method)
+    {
+        return method.SpecialName() && starts_with(method.Name(), "remove_");
+    }
+
     template <typename T>
     bool has_attribute(T const& row, std::string_view const& type_namespace, std::string_view const& type_name)
     {
         return static_cast<bool>(get_attribute(row, type_namespace, type_name));
+    }
+
+    static bool is_noexcept(MethodDef const& method)
+    {
+        return is_remove_overload(method) || has_attribute(method, "Windows.Foundation.Metadata", "NoExceptionAttribute");
+    }
+
+    static bool is_noexcept(Property const& prop)
+    {
+        return has_attribute(prop, "Windows.Foundation.Metadata", "NoExceptionAttribute");
     }
 
     bool is_exclusive_to(TypeDef const& type)
