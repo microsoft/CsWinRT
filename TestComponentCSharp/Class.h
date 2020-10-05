@@ -201,7 +201,7 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ComposedNonBlittableStruct> GetNonBlittableStructVector();
         Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> GetObjectVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> GetInterfaceVector();
-        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector();
+        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector() noexcept;
 
         Windows::Foundation::Collections::IIterable<int32_t> GetIntIterable();
         void SetIntIterable(Windows::Foundation::Collections::IIterable<int32_t> const& value);
@@ -316,7 +316,7 @@ namespace winrt::TestComponentCSharp::implementation
         //int32_t DrawTo();
         int32_t ReadWriteProperty();
         //int32_t DistinctProperty();
-        void ReadWriteProperty(int32_t value);
+        void ReadWriteProperty(int32_t value) noexcept;
         //hstring DistinctProperty();
         //void DistinctProperty(hstring const& value);
 
