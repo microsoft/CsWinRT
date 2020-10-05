@@ -9,11 +9,6 @@ namespace cswinrt
 {
     using namespace winmd::reader;
 
-    static inline bool starts_with(std::string_view const& value, std::string_view const& match) noexcept
-    {
-        return 0 == value.compare(0, match.size(), match);
-    }
-
     static const struct
     {
         char const* csharp;
@@ -2457,7 +2452,7 @@ event % %;)",
         return marshalers;
     }
 
-    void write_abi_method_call_marshalers(writer& w, std::string_view invoke_target, bool is_generic, std::vector<abi_marshaler> const& marshalers)
+    void write_abi_method_call_marshalers(writer& w, std::string_view invoke_target, bool is_generic, std::vector<abi_marshaler> const& marshalers, bool has_noexcept_attr = false)
     {
         auto write_abi_invoke = [&](writer& w)
         {
@@ -2465,7 +2460,7 @@ event % %;)",
             {
                 w.write("%.DynamicInvokeAbi(__params);\n", invoke_target);
             }
-            else
+            else if (!has_noexcept_attr)
             {
                 w.write("global::WinRT.ExceptionHelpers.ThrowExceptionForHR(%(ThisPtr%));\n",
                     invoke_target,
@@ -2474,6 +2469,15 @@ event % %;)",
                         w.write(", ");
                         m.write_marshal_to_abi(w);
                     }, marshalers));
+            }
+            else {
+                w.write("%(ThisPtr%);\n",
+                    invoke_target,
+                    bind_each([](writer& w, abi_marshaler const& m)
+                        {
+                            w.write(", ");
+                            m.write_marshal_to_abi(w);
+                        }, marshalers));
             }
             for (auto&& m : marshalers)
             {
@@ -2529,9 +2533,9 @@ finally
         );
     }
 
-    void write_abi_method_call(writer& w, method_signature signature, std::string_view invoke_target, bool is_generic, bool raw_return_type = false)
+    void write_abi_method_call(writer& w, method_signature signature, std::string_view invoke_target, bool is_generic, bool raw_return_type = false, bool has_noexcept_attr = false)
     {
-        write_abi_method_call_marshalers(w, invoke_target, is_generic, get_abi_marshalers(w, signature, is_generic, "", raw_return_type));
+        write_abi_method_call_marshalers(w, invoke_target, is_generic, get_abi_marshalers(w, signature, is_generic, "", raw_return_type), has_noexcept_attr);
     }
 
     void write_abi_method_with_raw_return_type(writer& w, MethodDef const& method)
@@ -2574,7 +2578,7 @@ public unsafe %% %(%)
             bind(write_raw_return_type, signature),
             method.Name(),
             bind_list<write_projection_parameter>(", ", signature.params()),
-            bind<write_abi_method_call>(signature, invoke_target, is_generic, true));
+            bind<write_abi_method_call>(signature, invoke_target, is_generic, true, is_noexcept(method)));
     }
 
 
@@ -2652,7 +2656,7 @@ public unsafe % %(%)
             bind(write_raw_return_type, signature),
             method.Name(),
             bind(write_composable_constructor_params, signature),
-            bind<write_abi_method_call_marshalers>(invoke_target, is_generic, abi_marshalers));
+            bind<write_abi_method_call_marshalers>(invoke_target, is_generic, abi_marshalers, is_noexcept(method)));
     }
     
     template<auto method_writer>
@@ -2768,7 +2772,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
                 method.Name(),
                 bind_list<write_projection_parameter>(", ", signature.params()),
                 bind(init_call_variables),
-                bind<write_abi_method_call>(signature, invoke_target, is_generic, false));
+                bind<write_abi_method_call>(signature, invoke_target, is_generic, false, is_noexcept(method)));
         }
 
         for (auto&& prop : type.PropertyList())
@@ -2788,6 +2792,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
                     }
                 }),
                 prop.Name());
+
             if (getter)
             {
                 auto [invoke_target, is_generic] = get_method_info(getter);
@@ -2797,7 +2802,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
 {%%}
 )",
                     bind(init_call_variables),
-                    bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers));
+                    bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers, is_noexcept(prop)));
             }
             if (setter)
             {
@@ -2815,7 +2820,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
 {%%}
 )",
                     bind(init_call_variables),
-                    bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers));
+                    bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers, is_noexcept(prop)));
             }
             w.write("}\n");
         }
@@ -5193,7 +5198,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                         bind<write_abi_parameter_types>(signature));
                 }
             }),
-            bind<write_abi_method_call>(signature, "abiInvoke", is_generic, false),
+            bind<write_abi_method_call>(signature, "abiInvoke", is_generic, false, is_noexcept(method)),
             // FromManaged
             type_name,
             // DisposeMarshaler
