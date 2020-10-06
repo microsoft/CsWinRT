@@ -15,3 +15,5 @@
 5. Because of strong-name signing, you cannot combine pre-RC2 and post-RC2 projection assemblies. For example, with WinUI and the Windows SDK, both would need to move up to the latest (RC2) version together.
 
 6. The `add` event accessor return type has changed from `System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken` to `void`. We no longer project the `System.Runtime.InteropServices.WindowsRuntime` type, as it has been removed from .NET5.
+
+7. This update of C#/WinRT with .NET5 RC2 is not compatible with WinUI 3 Preview 2. This will be fixed in WinUI3 Preview3.
