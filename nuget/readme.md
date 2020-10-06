@@ -48,7 +48,7 @@ If CsWinRTParam is not defined, the following effective values are used:
 
 ## Consuming and Producing 
 
-The C#/WinRT package can be used either to consume WinRT interfaces (CsWinRTFilters), to produce them (CsWinRTComponent).  It is also possible to combine these settings and do both.  For example, a developer might want to *produce* a library that's implemented in terms of another WinRT runtime class (*consuming* it).
+The C#/WinRT package can be used both to consume WinRT interfaces (CsWinRTFilters), and to produce them (CsWinRTComponent).  It is also possible to combine these settings and do both.  For example, a developer might want to *produce* a library that's implemented in terms of another WinRT runtime class (*consuming* it).
 
 ## Troubleshooting
 
