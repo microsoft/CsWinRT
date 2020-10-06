@@ -16,4 +16,4 @@
 
 6. The `add` event accessor return type has changed from `System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken` to `void`. We no longer project the `System.Runtime.InteropServices.WindowsRuntime` type, as it has been removed from .NET5.
 
-7. This update of C#/WinRT with .NET5 RC2 is not compatible with WinUI 3 Preview 2. This will be fixed in WinUI3 Preview3.
+7. This update of C#/WinRT with .NET5 RC2 is not compatible with WinUI 3 Preview 2. This will be fixed in WinUI3 Preview 3.
