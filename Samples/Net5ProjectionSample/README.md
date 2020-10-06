@@ -14,7 +14,7 @@ This sample demonstrates how to invoke C#/WinRT to build a .NET5 projection for 
 
 Using Visual Studio:
 
-1. Build the *CppWinRTProjectionSample* solution first. This generates the projection and interop assembly using cswinrt, and creates *SimpleMathComponent.nupkg* which can be referenced in consuming apps. If you run into errors restoring NuGet packages, look at the docs on [NuGet restore options](https://docs.microsoft.com/nuget/consume-packages/package-restore). You may need to configure your NuGet package manager settings to allow for package restores on build.
+1. Build the *CppWinRTComponentProjectionSample* solution first. This generates the projection and interop assembly using cswinrt, and creates *SimpleMathComponent.nupkg* which can be referenced in consuming apps. If you run into errors restoring NuGet packages, look at the docs on [NuGet restore options](https://docs.microsoft.com/nuget/consume-packages/package-restore). You may need to configure your NuGet package manager settings to allow for package restores on build.
 
 2. Build the *ConsoleAppSample* solution which references and restores  *SimpleMathComponent.nupkg* to consume the projection.
 
@@ -22,6 +22,6 @@ For building with the command line, execute the following:
 
 ```cmd
 nuget restore
-msbuild /p:platform=x64;configuration=debug CppWinRTProjectionSample\CppWinRTComponentProjectionSample.sln
-msbuild /p:platform=x64;configuration=debug ConsoleAppSample\ConsoleAppSample.sln
+msbuild /p:platform=x64;configuration=debug CppWinRTComponentProjectionSample.sln
+msbuild /p:platform=x64;configuration=debug ConsoleAppSample.sln
 ```
