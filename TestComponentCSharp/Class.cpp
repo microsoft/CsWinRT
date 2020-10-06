@@ -718,7 +718,7 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::single_threaded_vector_view(std::vector<IProperties1>{ *this, *this, *this });
     }
 
-    IVectorView<TestComponentCSharp::Class> Class::GetClassVector()
+    IVectorView<TestComponentCSharp::Class> Class::GetClassVector() noexcept
     {
         return winrt::single_threaded_vector_view(std::vector<TestComponentCSharp::Class>{ *this, *this, *this });
     }
@@ -1031,11 +1031,11 @@ namespace winrt::TestComponentCSharp::implementation
         return _string;
     }
 
-    int32_t Class::ReadWriteProperty()
+    int32_t Class::ReadWriteProperty() 
     {
         return _int;
     }
-    void Class::ReadWriteProperty(int32_t value)
+    void Class::ReadWriteProperty(int32_t value) noexcept
     {
         _int = value;
     }
