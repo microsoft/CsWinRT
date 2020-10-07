@@ -38,6 +38,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "Projections\Test\Test.csproj", "{C6D580C5-7037-4733-B933-916FF400AFE2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Projections", "Projections", "{6D41796B-9904-40B8-BBCB-40B2D1BAE44B}"
+	ProjectSection(SolutionItems) = preProject
+		Projections\Directory.Build.props = Projections\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Windows", "Projections\Windows\Windows.csproj", "{FFA9A78B-F53F-43EE-AF87-24A80F4C330A}"
 EndProject

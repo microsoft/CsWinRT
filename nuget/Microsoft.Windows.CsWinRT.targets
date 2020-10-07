@@ -9,17 +9,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTMessageImportance Condition="'$(CsWinRTMessageImportance)' == ''">normal</CsWinRTMessageImportance>
     <CsWinRTCommandVerbosity Condition="'$(CsWinRTMessageImportance)' == 'high'">-verbose</CsWinRTCommandVerbosity>
     <ResolveAssemblyReferencesDependsOn Condition="'$(CsWinRTRemoveWindowsReference)'!='false'">$(CsWinRTRemoveWindowsReference);CsWinRTRemoveWindowsReference</ResolveAssemblyReferencesDependsOn>
-    <CsWinRTEnabled Condition="'$(CsWinRTFilters)$(CsWinRTParams)'==''">false</CsWinRTEnabled>
-    <CsWinRTEnabled Condition="'$(CsWinRTEnabled)'==''">true</CsWinRTEnabled>
-    <CsWinRTWindowsSdkVersion Condition="'$(CsWinRTWindowsSdkVersion)'==''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsSdkVersion>
-    <CsWinRTGenerateProjection Condition="'$(CsWinRTEnabled)'=='false'">false</CsWinRTGenerateProjection>
-    <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)'==''">true</CsWinRTGenerateProjection>
+    <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' == ''">true</CsWinRTEnabled>
+    <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' != 'true'">false</CsWinRTEnabled>
+    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
+    <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
+    <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
     <AllowUnsafeBlocks Condition="'$(CsWinRTComponent)' == 'true'">true</AllowUnsafeBlocks>
-    <AllowUnsafeBlocks Condition="'$(CsWinRTEnabled)' == 'true'">true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
   </PropertyGroup>
   
   <!--Remove Windows.Winmd reference to prevent compile collisions-->
-  <Target Name="CsWinRTRemoveWindowsReference" Outputs="@(Reference)" Condition="'$(CsWinRTEnabled)' == 'true'">
+  <Target Name="CsWinRTRemoveWindowsReference" Outputs="@(Reference)" Condition="$(CsWinRTEnabled)">
     <ItemGroup>
       <Reference Remove="Windows"/>
     </ItemGroup>
@@ -43,8 +43,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <Target Name="CsWinRTPrepareProjection" DependsOnTargets="$(CsWinRTPrepareProjectionDependsOn)" Outputs="$(CsWinRTGeneratedFilesDir)">
     <PropertyGroup>
-      <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)'==''">$(GeneratedFilesDir)</CsWinRTGeneratedFilesDir>
-      <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</CsWinRTGeneratedFilesDir>
+      <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)' == ''">$(GeneratedFilesDir)</CsWinRTGeneratedFilesDir>
+      <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</CsWinRTGeneratedFilesDir>
     </PropertyGroup>
   </Target>
 
@@ -54,12 +54,23 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTCommand>$(CsWinRTExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
     </PropertyGroup>
     <PropertyGroup>
-      <CsWinRTParams Condition="'$(CsWinRTParams)'==''">
+      <CsWinRTExcludes Condition="'$(CsWinRTExcludes)' == ''">Windows;Microsoft</CsWinRTExcludes>
+    </PropertyGroup>
+    <ItemGroup>
+      <CsWinRTExcludeItems Include="$(CsWinRTExcludes)"/>
+      <CsWinRTIncludeItems Include="$(CsWinRTIncludes)"/>
+    </ItemGroup>
+    <PropertyGroup>
+      <CsWinRTFilters Condition="'$(CsWinRTFilters)' == ''">
+@(CsWinRTExcludeItems->'-exclude %(Identity)', '&#x0d;&#x0a;')
+@(CsWinRTIncludeItems->'-include %(Identity)', '&#x0d;&#x0a;')
+      </CsWinRTFilters>
+      <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
 $(CsWinRTCommandVerbosity)
 -target $(TargetFramework)
--in $(CsWinRTWindowsSdkVersion)
--in @(CsWinRTInputs->'"%(FullPath)"', ' ')
--out "$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
+-input $(CsWinRTWindowsMetadata)
+-input @(CsWinRTInputs->'"%(FullPath)"', ' ')
+-output "$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
 $(CsWinRTFilters)
       </CsWinRTParams>
     </PropertyGroup>
@@ -69,13 +80,13 @@ $(CsWinRTFilters)
     <Exec Command="$(CsWinRTCommand)" />
   </Target>
   
-  <Target Name="CsWinRTIncludeProjection" BeforeTargets="CoreCompile" DependsOnTargets="CsWinRTGenerateProjection" Condition="'$(CsWinRTEnabled)'=='true'">
+  <Target Name="CsWinRTIncludeProjection" BeforeTargets="CoreCompile" DependsOnTargets="CsWinRTGenerateProjection" Condition="$(CsWinRTEnabled)">
     <ItemGroup>
       <Compile Include="$(CsWinRTGeneratedFilesDir)*.cs" Exclude="@(Compile)" />
     </ItemGroup>
   </Target>
 
-  <ItemGroup Condition="'$(CsWinRTComponent)'=='true'">
+  <ItemGroup Condition="'$(CsWinRTComponent)' == 'true'">
     <CompilerVisibleProperty Include="AssemblyName" />
     <CompilerVisibleProperty Include="AssemblyVersion" />
     <CompilerVisibleProperty Include="CsWinRTComponent" />

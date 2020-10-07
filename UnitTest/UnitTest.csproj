@@ -7,6 +7,8 @@
     <ProjectName>UnitTest</ProjectName>
     <NoWarn>1701;1702;0436;1658</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
+    <CsWinRTEnabled>false</CsWinRTEnabled>
   </PropertyGroup>
 
   <ItemGroup>

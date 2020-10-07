@@ -6,6 +6,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <CppWinRTVerbosity>high</CppWinRTVerbosity>
+    <CsWinRTVerbosity>high</CsWinRTVerbosity>
     <MicrosoftWinUIVersion>3.0.0-preview1.200515.3</MicrosoftWinUIVersion>
     <!-- Temporary fallback until Microsoft.WinUI nuget supports Net5 TFM -->
     <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
@@ -16,6 +17,7 @@
     <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
     <GenerateTestProjection Condition="'$(GenerateTestProjection)' == ''">false</GenerateTestProjection>
     <CsWinRTGenerateProjection>$(GenerateTestProjection)</CsWinRTGenerateProjection>
+    <!--<CsWinRTGeneratedFilesDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files', '$(TargetFramework)'))</CsWinRTGeneratedFilesDir>-->
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' != 'net5.0'">
@@ -90,6 +92,6 @@
 
   <Import Project="Strings.props" />
 
-  <Import Condition="'$(MSBuildProjectExtension)' == '.csproj'" Project="nuget\Microsoft.Windows.CsWinRT.props" />
+  <Import Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(SimulateCsWinRTNugetReference)' == 'true'" Project="nuget\Microsoft.Windows.CsWinRT.props" />
 
 </Project>

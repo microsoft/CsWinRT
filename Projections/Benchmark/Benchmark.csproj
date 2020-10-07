@@ -14,10 +14,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <CsWinRTFilters>
--exclude Windows
--include BenchmarkComponent
-    </CsWinRTFilters>
+    <CsWinRTIncludes>BenchmarkComponent</CsWinRTIncludes>
   </PropertyGroup>
 
 </Project>

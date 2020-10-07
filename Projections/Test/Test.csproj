@@ -17,12 +17,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <CsWinRTFilters>
--exclude Windows
--exclude Microsoft
--include TestComponent
--include TestComponentCSharp
-    </CsWinRTFilters>
+    <CsWinRTIncludes>TestComponent;TestComponentCSharp</CsWinRTIncludes>
     <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
     <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
   </PropertyGroup>

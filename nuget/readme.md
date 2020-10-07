@@ -12,7 +12,7 @@ C#/WinRT detects Windows metadata from:
 * Other project references producing winmd files
 * Raw winmd file references
 
-For any winmd file discovered above, C#/WinRT creates reference (consuming) projection sources (*.cs files).  These sources can then be compiled into a projection assembly for client projects to reference, or compiled directly into an app.
+For WinRT types defined in winmd files discovered above, C#/WinRT creates C# projection source files for consuming those WinRT types.  These sources can then be compiled into a projection assembly for client projects to reference, or compiled directly into an app.
 
 ## Details
 
@@ -29,7 +29,7 @@ C#/WinRT behavior can be customized with these project properties:
 | Property | Value(s) | Description |
 |-|-|-|
 | CsWinRTEnabled | true \| *false | Enables projection-related targets, defaults to true if CsWinRTFilters or CsWinRTParams are defined |
-| CsWinRTMessageImportance | low \| *normal \| high | Sets the [importance](https://docs.microsoft.com/en-us/visualstudio/msbuild/message-task?view=vs-2017) of C++/WinRT build messages (see below) |
+| CsWinRTMessageImportance | low \| *normal \| high | Sets the [importance](https://docs.microsoft.com/en-us/visualstudio/msbuild/message-task?view=vs-2017) of C#/WinRT build messages (see below) |
 | CsWinRTInputs | *@(ReferencePath) | Specifies WinMD files (beyond the Windows SDK) to read metadata from |
 | CsWinRTFilters | "" | Specifies the -includes and -excludes to include in projection output |
 | CsWinRTParams | "" | Custom cswinrt.exe command-line parameters, replacing default settings below |
