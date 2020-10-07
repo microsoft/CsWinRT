@@ -810,23 +810,7 @@ namespace WinRT
                 return (T)(object)null;
             }
 
-            object primaryManagedWrapper = MarshalInspectable<T>.FromAbi(ptr);
-
-            if (primaryManagedWrapper is T obj)
-            {
-                return obj;
-            }
-#if !NETSTANDARD2_0
-            return (T)(object)IInspectable.FromAbi(ptr);
-#else
-            // If the metadata type doesn't implement the interface, then create a tear-off RCW.
-            // TODO: Uniqueness of tear-offs?
-            if (_FromAbi == null)
-            {
-                _FromAbi = BindFromAbi();
-            }
-            return _FromAbi(ptr);
-#endif
+            return MarshalInspectable<T>.FromAbi(ptr);
         }
 
         public static IObjectReference CreateMarshaler(T value)

@@ -35,7 +35,7 @@ namespace WinRT
                 if (identity.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
                 {
                     var inspectable = new IInspectable(identity);
-                    string runtimeClassName = typeof(T) != typeof(object) ? typeof(T).FullName : inspectable.GetRuntimeClassName();
+                    string runtimeClassName = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
                     runtimeWrapper = TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
@@ -69,14 +69,12 @@ namespace WinRT
             // and consumers get a string object for a Windows.Foundation.IReference<String>.
             // We need to do the same thing for System.Type because there can be multiple MUX.Interop.TypeName's
             // for a single System.Type.
-            if ((typeof(T) == typeof(string) || typeof(T) == typeof(Type)) && rcw is ABI.System.Nullable<T> ns)
+            return rcw switch
             {
-                return ns.Value;
-            }
-            else
-            {
-                return (T)rcw;
-            }
+                ABI.System.Nullable<string> ns => (T)(object)ns.Value,
+                ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                _ => (T)rcw
+            };
         }
     
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr)

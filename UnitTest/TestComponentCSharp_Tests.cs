@@ -22,6 +22,8 @@ using System.Collections;
 using WinRT.Interop;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Security.Cryptography;
+using Windows.Security.Cryptography.Core;
 
 namespace UnitTest
 {
@@ -1780,6 +1782,16 @@ namespace UnitTest
             TestObject.CopyProperties(nativeProperties);
 
             Assert.Equal(TestObject.ReadWriteProperty, nativeProperties.ReadWriteProperty);
+        }
+
+        [Fact]
+        public void TestNonProjectedRuntimeClass()
+        {
+            string key = ".....";
+            IBuffer keyMaterial = CryptographicBuffer.ConvertStringToBinary(key, BinaryStringEncoding.Utf8);
+            MacAlgorithmProvider mac = MacAlgorithmProvider.OpenAlgorithm(MacAlgorithmNames.HmacSha1);
+            CryptographicKey cryptoKey = mac.CreateKey(keyMaterial);
+            Assert.NotNull(cryptoKey);
         }
     }
 }

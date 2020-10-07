@@ -79,15 +79,6 @@ namespace WinRT
                 ABI.System.Nullable<Type> nt => (T)(object) nt.Value,
                 _ => (T) rcw
             };
-
-/*            if ((typeof(T) == typeof(string) || typeof(T) == typeof(Type)) && rcw is ABI.System.Nullable<T> ns)
-            {
-                return ns.Value;
-            }
-            else
-            {
-                return (T)rcw;
-            }*/
         }
 
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr) => TryRegisterObjectForInterface(obj, thisPtr);
@@ -228,20 +219,12 @@ namespace WinRT
             {
                 IInspectable inspectable = new IInspectable(inspectableRef);
 
-                string runtimeClassName;
-                if(ComWrappersSupport.CreateRCWType.Value != null)
+                string runtimeClassName = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType.Value);
+                if (runtimeClassName == null)
                 {
-                    runtimeClassName = TypeNameSupport.GetNameForType(ComWrappersSupport.CreateRCWType.Value, TypeNameGenerationFlags.GenerateBoxedName);
-                }
-                else
-                {
-                    runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
-                    if (runtimeClassName == null)
-                    {
-                        // If the external IInspectable has not implemented GetRuntimeClassName,
-                        // we use the Inspectable wrapper directly.
-                        return inspectable;
-                    }
+                    // If the external IInspectable has not implemented GetRuntimeClassName,
+                    // we use the Inspectable wrapper directly.
+                    return inspectable;
                 }
                 return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
             }

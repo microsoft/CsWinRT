@@ -328,6 +328,44 @@ namespace WinRT
             return CreateFactoryForImplementationType(runtimeClassName, implementationType);
         }
 
+        internal static string GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
+        {
+            string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
+            if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))
+            {
+                // We have a static type which we can use to construct the object.  But, we can't just it for all scenarios
+                // and primarily use it for tear off scenarios and for scenarios where runtimeclass isn't accurate.
+                // For instance if the static type is an interface, we return an IInspectable to represent the interface.
+                // But it isn't convertable back to the class via the as operator which would be possible if we use runtimeclass.
+                // Similarly for composable types, they can be statically retrieved using the parent class, but can then no longer
+                // be cast to the sub class via as operator even if it is really an instance of it per rutimeclass.
+                // To handle these scenarios, we use the runtimeclass if we find it is assignable to the statically determined type.
+                // If it isn't, we use the statically determined type as it is a tear off.
+
+                Type implementationType = null;
+                if (runtimeClassName != null)
+                {
+                    try
+                    {
+                        (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
+                    }
+                    catch (TypeLoadException)
+                    {
+                    }
+                }
+
+                if (!(implementationType != null &&
+                    (staticallyDeterminedType == implementationType ||
+                     staticallyDeterminedType.IsAssignableFrom(implementationType) ||
+                     staticallyDeterminedType.IsGenericType && implementationType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == staticallyDeterminedType.GetGenericTypeDefinition()))))
+                {
+                    runtimeClassName = TypeNameSupport.GetNameForType(staticallyDeterminedType, TypeNameGenerationFlags.GenerateBoxedName);
+                }
+            }
+
+            return runtimeClassName;
+        }
+
         private static bool ShouldProvideIReference(object obj)
         {
             return obj.GetType().IsValueType || obj is string || obj is Type || obj is Delegate;
