@@ -1,4 +1,4 @@
-# Breaking Changes for C#/WinRT in RC2
+# Breaking Changes for C#/WinRT in .NET 5.0 RC2
 
 1.  With IDynamicInterfaceCastable support, all projected interfaces can now use a simple C#-style cast.  Unprojected interfaces must use the `.As<T>()` extension method.
 
