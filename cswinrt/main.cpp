@@ -205,7 +205,14 @@ Where <spec> is one or more of:
                             }
                             else
                             {
-                                write_class(w, type);
+                                if (settings.netstandard_compat)
+                                {
+                                    write_class_netstandard(w, type);
+                                }
+                                else
+                                {
+                                    write_class(w, type);
+                                }
                                 if (settings.component && componentActivatableClasses.count(type) == 1)
                                 {
                                     write_factory_class(w, type);
@@ -261,7 +268,14 @@ Where <spec> is one or more of:
                                     write_abi_delegate(w, type);
                                     break;
                                 case category::interface_type:
-                                    write_abi_interface(w, type);
+                                    if (settings.netstandard_compat)
+                                    {
+                                        write_abi_interface_netstandard(w, type);
+                                    }
+                                    else
+                                    {
+                                        write_abi_interface(w, type);
+                                    }
                                     break;
                                 case category::struct_type:
                                     if (!is_type_blittable(type))

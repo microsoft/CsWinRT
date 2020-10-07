@@ -20,16 +20,13 @@ powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet' "
 
 :globaljson
-rem User expected to provide global.json with allowPrerelease=true
-if not exist %~dp0global.json (
-  echo Creating default global.json to allowPrelease for unit test project builds
-  echo { > global.json
-  echo   "sdk": { >> global.json
-  echo     "version": "%CsWinRTNet5SdkVersion%", >> global.json
-  echo     "allowPrerelease": true >> global.json
-  echo   } >> global.json
-  echo } >> global.json
-)
+rem Create global.json for current .NET SDK, and with allowPrerelease=true
+echo { > global.json
+echo   "sdk": { >> global.json
+echo     "version": "%CsWinRTNet5SdkVersion%", >> global.json
+echo     "allowPrerelease": true >> global.json
+echo   } >> global.json
+echo } >> global.json
 
 rem Preserve above for Visual Studio launch inheritance
 setlocal ENABLEDELAYEDEXPANSION
@@ -69,15 +66,13 @@ if "%cswinrt_version_string%"=="" set cswinrt_version_string=0.0.0-private.0
 
 rem Generate prerelease targets file to exercise build warnings
 set prerelease_targets=nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
-if not exist %prerelease_targets% (
-  echo Creating default %prerelease_targets%
-  echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="CsWinRTVerifyPrerelease"^> > %prerelease_targets%
-  echo   ^<Target Name="CsWinRTVerifyPrerelease" >> %prerelease_targets%
-  echo     Condition="'$(NetCoreSdkVersion)' ^!= '%CsWinRTNet5SdkVersion%' and '$(Net5SdkVersion)' ^!= '%CsWinRTNet5SdkVersion%'"^> >> %prerelease_targets%
-  echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK %CsWinRTNet5SdkVersion%. Other prereleases may be incompatible due to breaking changes." /^> >> %prerelease_targets%
-  echo   ^</Target^> >> %prerelease_targets%
-  echo ^</Project^> >> %prerelease_targets%
-)
+rem Create default %prerelease_targets%
+echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="CsWinRTVerifyPrerelease"^> > %prerelease_targets%
+echo   ^<Target Name="CsWinRTVerifyPrerelease" >> %prerelease_targets%
+echo     Condition="'$(NetCoreSdkVersion)' ^!= '%CsWinRTNet5SdkVersion%' and '$(Net5SdkVersion)' ^!= '%CsWinRTNet5SdkVersion%'"^> >> %prerelease_targets%
+echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK %CsWinRTNet5SdkVersion%. Other prereleases may be incompatible due to breaking changes." /^> >> %prerelease_targets%
+echo   ^</Target^> >> %prerelease_targets%
+echo ^</Project^> >> %prerelease_targets%
 
 rem VS 16.8 BuildTools support (temporary, until VS 16.8 is deployed to Azure Devops agents in 12/2020) 
 msbuild -ver | findstr 16.8 >nul

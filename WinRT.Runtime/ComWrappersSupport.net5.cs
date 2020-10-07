@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -15,21 +16,31 @@ namespace WinRT
         internal static readonly ConditionalWeakTable<object, InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<object, InspectableInfo>();
 
         private static ComWrappers _comWrappers;
+        private static object _comWrappersLock = new object();
         private static ComWrappers ComWrappers
         {
             get
             {
                 if (_comWrappers is null)
                 {
-                    _comWrappers = new DefaultComWrappers();
-                    ComWrappers.RegisterForTrackerSupport(_comWrappers);
+                    lock (_comWrappersLock)
+                    {
+                        if (_comWrappers is null)
+                        {
+                            _comWrappers = new DefaultComWrappers();
+                            ComWrappers.RegisterForTrackerSupport(_comWrappers);
+                        }
+                    }
                 }
                 return _comWrappers;
             }
             set
             {
-                _comWrappers = value;
-                ComWrappers.RegisterForTrackerSupport(_comWrappers);
+                lock (_comWrappersLock)
+                {
+                    _comWrappers = value;
+                    ComWrappers.RegisterForTrackerSupport(_comWrappers);
+                }
             }
         }
 
@@ -97,6 +108,22 @@ namespace WinRT
         }
 
         internal static Func<IInspectable, object> GetTypedRcwFactory(string runtimeClassName) => TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className));
+    
+        
+        private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
+        {
+            if (implementationType.IsInterface)
+            {
+                return obj => obj;
+            }
+            
+            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
+
+            return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.New(implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
+                    Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
+                parms).Compile();
+        }
     }
 
     public class DefaultComWrappers : ComWrappers
@@ -197,7 +224,8 @@ namespace WinRT
             {
                 // IWeakReference is IUnknown-based, so implementations of it may not (and likely won't) implement
                 // IInspectable. As a result, we need to check for them explicitly.
-                return new ABI.WinRT.Interop.IWeakReference(weakRef);
+                
+                return new SingleInterfaceOptimizedObject(typeof(IWeakReference), weakRef);
             }
             // If the external COM object isn't IInspectable or IWeakReference, we can't handle it.
             // If we're registered globally, we want to let the runtime fall back for IUnknown and IDispatch support.

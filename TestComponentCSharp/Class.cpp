@@ -12,6 +12,16 @@ using namespace Microsoft::UI::Xaml::Data;
 using namespace Microsoft::UI::Xaml::Interop;
 using Windows::UI::Xaml::Interop::TypeName;
 
+// Until C++/WinRT provides, to ensure that GetRuntimeClasName reports IVectorView rather than IVector
+namespace winrt
+{
+    template <typename T, typename Allocator = std::allocator<T>>
+    Windows::Foundation::Collections::IVectorView<T> single_threaded_vector_view(std::vector<T, Allocator>&& values = {})
+    {
+        return make<impl::input_vector_view<T, std::vector<T, Allocator>>>(std::move(values));
+    }
+}
+
 namespace winrt::TestComponentCSharp::implementation
 {
     namespace statics
@@ -669,48 +679,48 @@ namespace winrt::TestComponentCSharp::implementation
 
     IVectorView<int32_t> Class::GetIntVector()
     {
-        return winrt::single_threaded_vector(std::vector{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }).GetView();
+        return winrt::single_threaded_vector_view(std::vector{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
     }
 
     IVectorView<bool> Class::GetBoolVector()
     {
-        return winrt::single_threaded_vector(std::vector{ true, false, true, false }).GetView();
+        return winrt::single_threaded_vector_view(std::vector{ true, false, true, false });
     }
 
     IVectorView<hstring> Class::GetStringVector()
     {
-        return winrt::single_threaded_vector(std::vector<hstring>{ L"String0", L"String1", L"String2", L"String3", L"String4" }).GetView();
+        return winrt::single_threaded_vector_view(std::vector<hstring>{ L"String0", L"String1", L"String2", L"String3", L"String4" });
     }
 
     IVectorView<TestComponentCSharp::ComposedBlittableStruct> Class::GetBlittableStructVector()
     {
-        return winrt::single_threaded_vector(std::vector{ ComposedBlittableStruct{0}, ComposedBlittableStruct{1},
-            ComposedBlittableStruct{2}, ComposedBlittableStruct{3}, ComposedBlittableStruct{4} }).GetView();
+        return winrt::single_threaded_vector_view(std::vector{ ComposedBlittableStruct{0}, ComposedBlittableStruct{1},
+            ComposedBlittableStruct{2}, ComposedBlittableStruct{3}, ComposedBlittableStruct{4} });
     }
 
     IVectorView<TestComponentCSharp::ComposedNonBlittableStruct> Class::GetNonBlittableStructVector()
     {
-        return winrt::single_threaded_vector(std::vector
+        return winrt::single_threaded_vector_view(std::vector
         {
             ComposedNonBlittableStruct{ { 0 }, { L"String0" }, { true, false, true, false }, { 0 } },
             ComposedNonBlittableStruct{ { 1 }, { L"String1" }, { false, true, false, true }, { 1 } },
             ComposedNonBlittableStruct{ { 2 }, { L"String2" }, { true, false, true, false }, { 2 } },
-        }).GetView();
+        });
     }
 
     IVectorView<WF::IInspectable> Class::GetObjectVector()
     {
-        return winrt::single_threaded_vector(std::vector<WF::IInspectable>{ winrt::box_value(0), winrt::box_value(1), winrt::box_value(2) }).GetView();
+        return winrt::single_threaded_vector_view(std::vector<WF::IInspectable>{ winrt::box_value(0), winrt::box_value(1), winrt::box_value(2) });
     }
 
     IVectorView<TestComponentCSharp::IProperties1> Class::GetInterfaceVector()
     {
-        return winrt::single_threaded_vector(std::vector<IProperties1>{ *this, *this, *this }).GetView();
+        return winrt::single_threaded_vector_view(std::vector<IProperties1>{ *this, *this, *this });
     }
 
-    IVectorView<TestComponentCSharp::Class> Class::GetClassVector()
+    IVectorView<TestComponentCSharp::Class> Class::GetClassVector() noexcept
     {
-        return winrt::single_threaded_vector(std::vector<TestComponentCSharp::Class>{ *this, *this, *this }).GetView();
+        return winrt::single_threaded_vector_view(std::vector<TestComponentCSharp::Class>{ *this, *this, *this });
     }
 
     void Class::CompleteAsync()
@@ -1021,11 +1031,11 @@ namespace winrt::TestComponentCSharp::implementation
         return _string;
     }
 
-    int32_t Class::ReadWriteProperty()
+    int32_t Class::ReadWriteProperty() 
     {
         return _int;
     }
-    void Class::ReadWriteProperty(int32_t value)
+    void Class::ReadWriteProperty(int32_t value) noexcept
     {
         _int = value;
     }

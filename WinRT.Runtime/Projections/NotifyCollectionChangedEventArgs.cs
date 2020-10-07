@@ -1,4 +1,4 @@
-﻿using ABI.Microsoft.UI.Xaml.Interop;
+using ABI.Microsoft.UI.Xaml.Interop;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

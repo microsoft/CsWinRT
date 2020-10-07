@@ -83,7 +83,7 @@ namespace TestComponentCSharp
 
     interface IProperties2 requires IProperties1
     {
-        Int32 ReadWriteProperty{ set; };
+        [noexcept] Int32 ReadWriteProperty{ set; };
         //String DisjointProperty{ set; };
         //String DistinctProperty{ get; set; };
     }
@@ -224,7 +224,7 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IVectorView<ComposedNonBlittableStruct> GetNonBlittableStructVector();
         Windows.Foundation.Collections.IVectorView<Object> GetObjectVector();
         Windows.Foundation.Collections.IVectorView<IProperties1> GetInterfaceVector();
-        Windows.Foundation.Collections.IVectorView<Class> GetClassVector();
+        [noexcept] Windows.Foundation.Collections.IVectorView<Class> GetClassVector();
 
         Windows.Foundation.Collections.IIterable<Int32> GetIntIterable();
         void SetIntIterable(Windows.Foundation.Collections.IIterable<Int32> value);
