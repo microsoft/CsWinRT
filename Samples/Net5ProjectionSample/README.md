@@ -21,7 +21,8 @@ Using Visual Studio:
 For building with the command line, execute the following:
 
 ```cmd
-nuget restore
+nuget restore CppWinRTComponentProjectionSample.sln
 msbuild /p:platform=x64;configuration=debug CppWinRTComponentProjectionSample.sln
+nuget restore ConsoleAppSample.sln
 msbuild /p:platform=x64;configuration=debug ConsoleAppSample.sln
 ```
