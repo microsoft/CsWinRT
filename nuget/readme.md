@@ -28,7 +28,7 @@ C#/WinRT behavior can be customized with these project properties:
 
 | Property | Value(s) | Description |
 |-|-|-|
-| CsWinRTEnabled | true \| *false | Enables projection-related targets, defaults to true if CsWinRTFilters or CsWinRTParams are defined |
+| CsWinRTEnabled | *true \| false | Enables projection-related targets, can be set to false to customize build behavior |
 | CsWinRTMessageImportance | low \| *normal \| high | Sets the [importance](https://docs.microsoft.com/en-us/visualstudio/msbuild/message-task?view=vs-2017) of C#/WinRT build messages (see below) |
 | CsWinRTInputs | *@(ReferencePath) | Specifies WinMD files (beyond the Windows SDK) to read metadata from |
 | CsWinRTExcludes | "Windows;Microsoft" | Specifies types or namespaces to exclude from projection output |
