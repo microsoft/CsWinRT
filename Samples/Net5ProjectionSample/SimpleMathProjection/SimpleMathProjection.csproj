@@ -19,13 +19,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-	<PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.1.0-prerelease.200928.7" />
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.8.0-4.20472.6" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.2.0-prerelease.201008.4" />
   </ItemGroup>
 
   <PropertyGroup>
     <RestoreSources>
 	https://api.nuget.org/v3/index.json;
+	https://pkgs.dev.azure.com/microsoft/_packaging/CsWinRT/nuget/v3/index.json;
 	https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
     </RestoreSources>
   </PropertyGroup>
@@ -36,24 +37,24 @@
 
   <!--C#/WinRT Targets and Props-->
   
-  <!--Identify WinMDs in project references-->
+  <!--Identify WinMDs in project references--><!--
   <Target Name="RemoveWinMDReferences" BeforeTargets="ResolveReferences" AfterTargets="AfterResolveReferences">
     <ItemGroup>
-      <!--Track WinMDs-->
+      --><!--Track WinMDs--><!--
       <ReferenceWinMDs Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
-      <!--Remove WinMDs from project outputs-->
+      --><!--Remove WinMDs from project outputs--><!--
       <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
     </ItemGroup>
-  </Target>
+  </Target>-->
 
-  <Target Name="GenerateProjection" Condition="'$(GenerateNet5Projection)' == 'true'">
+  <!--<Target Name="GenerateProjection" Condition="false">
 
-    <!--Project Property for which namespaces to include-->
+    --><!--Project Property for which namespaces to include--><!--
     <PropertyGroup>
       <ProjectionNamespaceToInclude>SimpleMathComponent</ProjectionNamespaceToInclude>
     </PropertyGroup>
 
-    <!--CSWinRT properties-->
+    --><!--CSWinRT properties--><!--
     <PropertyGroup>
       <CsWinRTVerbosity>high</CsWinRTVerbosity>
       <CsWinRTResponseFile>$(OutDir)cswinrt_build_projection.rsp</CsWinRTResponseFile>
@@ -70,23 +71,28 @@
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
     <Exec Command="$(CsWinRTCommand)" />
-  </Target>
+  </Target>-->
 
-  <!--Build the projection dll-->
+	<PropertyGroup>
+		<CsWinRTIncludes>SimpleMathComponent</CsWinRTIncludes>
+	    <CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
+	</PropertyGroup>
+	
+  <!--Build the projection dll--><!--
   <Target Name="BuildProjectionAssembly" DependsOnTargets="GenerateProjection" BeforeTargets="CoreCompile">
     <ItemGroup>
 	  <Compile Include="$(OutDir)*.cs" Exclude="@(Compile)" />
-      <!--Remove references to projection source winmds to prevent compile conflict warnings-->
+      --><!--Remove references to projection source winmds to prevent compile conflict warnings--><!--
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'SimpleMathComponent'" />
-      <!--Also remove ReferencePath winmds to prevent error NETSDK1130-->
+      --><!--Also remove ReferencePath winmds to prevent error NETSDK1130--><!--
       <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'SimpleMathComponent'" />
     </ItemGroup>
-  </Target>
+  </Target>-->
 
-  <!--Final clean up of any winmds-->
+  <!--Final clean up of any winmds--><!--
   <Target Name="RemoveProjectionAfterBuild" AfterTargets="AfterBuild">
     <Message Text="Deleting $(OutDir)SimpleMathComponent.winmd" />
     <Delete Files="$(OutDir)SimpleMathComponent.winmd" />
-  </Target>
+  </Target>-->
   
 </Project>
