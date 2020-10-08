@@ -48,7 +48,7 @@ If CsWinRTParam is not defined, the following effective values are used:
 
 ## Consuming and Producing 
 
-The C#/WinRT package can be used both to consume WinRT interfaces (CsWinRTFilters), and to produce them (CsWinRTComponent).  It is also possible to combine these settings and do both.  For example, a developer might want to *produce* a library that's implemented in terms of another WinRT runtime class (*consuming* it).
+The C#/WinRT package can be used both to consume WinRT types, and to produce them (via CsWinRTComponent).  It is also possible to combine these settings and do both.  For example, a developer might want to *produce* a library that's implemented in terms of another WinRT runtime class (*consuming* it).
 
 ## Troubleshooting
 
@@ -67,7 +67,7 @@ For example, if the verbosity is set to minimal, then only messages with high im
 The default importance of C#/WinRT build messages is 'normal', but this can be overridden with the CsWinRTMessageImportance property to enable throttling of C#/WinRT messages independent of the overall verbosity level.
 
 Example:
-> msbuild project.vcxproj /verbosity:minimal /property:CsWinRTVerbosity=high ...
+> msbuild project.vcxproj /verbosity:minimal /property:CsWinRTMessageImportance=high ...
 
 For more complex analysis of build errors, the [MSBuild Binary and Structured Log Viewer](http://msbuildlog.com/) is highly recommended.
 

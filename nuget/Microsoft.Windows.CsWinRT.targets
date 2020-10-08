@@ -33,7 +33,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
       <!--Prevent NETSDK1130 errors from winmd references-->
       <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
-      <ReferencePathWithRefAssemblies Remove="@(CsWinRTRemovedReferences)" Condition="%(CsWinRTRemovedReferences.Filename) == '%(ReferencePathWithRefAssemblies.Filename)'" />
+      <ReferencePathWithRefAssemblies Remove="@(CsWinRTRemovedReferences)" 
+        Condition="'%(CsWinRTRemovedReferences.Filename)%(CsWinRTRemovedReferences.Extension)' == '%(ReferencePathWithRefAssemblies.Filename)%(ReferencePathWithRefAssemblies.Extension)'" />
       <!--Do not publish projection source winmds -->
       <ReferenceCopyLocalPaths Remove="@(CsWinRTRemovedReferences)" />
       <!--Remove winmd references from deps.json to prevent CLR failing unit test execution-->
