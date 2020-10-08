@@ -28,6 +28,8 @@ namespace WinRT
     {
         private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
+        private readonly static ConcurrentDictionary<Type, FieldInfo> TypeObjectRefWrapperFieldCache = new ConcurrentDictionary<Type, FieldInfo>();
+        private readonly static ConcurrentDictionary<Type, PropertyInfo> TypeDefaultInterfacePropertyCache = new ConcurrentDictionary<Type, PropertyInfo>();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate
@@ -68,20 +70,39 @@ namespace WinRT
             }
 
             Type type = o.GetType();
-            ObjectReferenceWrapperAttribute objRefWrapper = type.GetCustomAttribute<ObjectReferenceWrapperAttribute>();
-            if (objRefWrapper is object)
+
+            FieldInfo objRefField = TypeObjectRefWrapperFieldCache.GetOrAdd(type, (type) =>
             {
-                objRef = (IObjectReference)type.GetField(objRefWrapper.ObjectReferenceField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).GetValue(o);
+                ObjectReferenceWrapperAttribute objRefWrapper = type.GetCustomAttribute<ObjectReferenceWrapperAttribute>();
+                if (objRefWrapper is object)
+                {
+                    return type.GetField(objRefWrapper.ObjectReferenceField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                }
+
+                return null;
+            });
+
+            if(objRefField != null)
+            {
+                objRef = (IObjectReference) objRefField.GetValue(o);
                 return true;
             }
 
-            ProjectedRuntimeClassAttribute projectedClass = type.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
-
-            if (projectedClass is object && projectedClass.DefaultInterfaceProperty != null)
+            PropertyInfo defaultProperty = TypeDefaultInterfacePropertyCache.GetOrAdd(type, (type) =>
             {
-                return TryUnwrapObject(
-                    type.GetProperty(projectedClass.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).GetValue(o),
-                    out objRef);
+                ProjectedRuntimeClassAttribute projectedClass = type.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
+
+                if (projectedClass is object && projectedClass.DefaultInterfaceProperty != null)
+                {
+                    return type.GetProperty(projectedClass.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                }
+
+                return null;
+            });
+
+            if (defaultProperty != null)
+            {
+                return TryUnwrapObject(defaultProperty.GetValue(o), out objRef);
             }
 
             objRef = null;
