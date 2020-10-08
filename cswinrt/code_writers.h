@@ -4618,7 +4618,7 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
                     w.write("false");
                 }
             }),
-            settings.netstandard_compat ? "GetReferenceForQI()" : "((IWinRTObject)this).NativeObject");
+            settings.netstandard_compat ? "GetReferenceForQI()" : "_inner");
     }
 
     void write_wrapper_class(writer& w, TypeDef const& type)
@@ -4917,7 +4917,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
                     w.write(R"(
 protected %(global::WinRT.DerivedComposed _)%
 {
-_defaultLazy = new Lazy<%>(() => (%)new IInspectable(((IWinRTObject)this).NativeObject));
+_defaultLazy = new Lazy<%>(() => (%)new IInspectable(_inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
 };
