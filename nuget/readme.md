@@ -31,15 +31,21 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTEnabled | true \| *false | Enables projection-related targets, defaults to true if CsWinRTFilters or CsWinRTParams are defined |
 | CsWinRTMessageImportance | low \| *normal \| high | Sets the [importance](https://docs.microsoft.com/en-us/visualstudio/msbuild/message-task?view=vs-2017) of C#/WinRT build messages (see below) |
 | CsWinRTInputs | *@(ReferencePath) | Specifies WinMD files (beyond the Windows SDK) to read metadata from |
-| CsWinRTFilters | "" | Specifies the -includes and -excludes to include in projection output |
-| CsWinRTParams | "" | Custom cswinrt.exe command-line parameters, replacing default settings below |
+| CsWinRTExcludes | "Windows;Microsoft" | Specifies types or namespaces to exclude from projection output |
+| CsWinRTIncludes | "" | Specifies types or namespaces to include in projection output |
+| CsWinRTFilters | "" | **Specifies the -includes and -excludes to include in projection output |
+| CsWinRTParams | "" | ***Custom cswinrt.exe command-line parameters, replacing default settings below |
 | CsWinRTComponent | true \| *false | Specifies whether to generate a component (producing) projection from project sources |
 | CsWinRTWindowsMetadata | \<path\> \| "local" \| "sdk" \| *$(WindowsSDKVersion) | Specifies the source for Windows metadata |
 | CsWinRTGenerateProjection | *true \| false | Indicates whether to generate and compile projection sources (true), or only to compile them (false) |
 | CsWinRTGeneratedFilesDir | *"$(IntermediateOutputPath)\Generated Files" | Specifies the location for generated project source files |
 \*Default value
 
-If CsWinRTParam is not defined, the following effective values are used:
+**If CsWinRTFilters is not defined, the following effective value is used:
+* -exclude $(CsWinRTExcludes)
+* -include $(CsWinRTIncludes)
+
+***If CsWinRTParam is not defined, the following effective value is used:
 * -target $(TargetFramework)
 * -input $(CsWinRTWindowsMetadata)
 * -input @(CsWinRTInputs)
