@@ -6,19 +6,88 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
-    <ResolveAssemblyReferencesDependsOn Condition="'$(RemoveWindowsReference)'=='true'">$(ResolveAssemblyReferencesDependsOn);RemoveWindowsReference</ResolveAssemblyReferencesDependsOn>
-    <AllowUnsafeBlocks Condition="$(CsWinRTComponent)==true">true</AllowUnsafeBlocks>
+    <CsWinRTMessageImportance Condition="'$(CsWinRTMessageImportance)' == ''">normal</CsWinRTMessageImportance>
+    <CsWinRTCommandVerbosity Condition="'$(CsWinRTMessageImportance)' == 'high'">-verbose</CsWinRTCommandVerbosity>
+    <ResolveAssemblyReferencesDependsOn Condition="'$(CsWinRTRemoveWindowsReference)'!='false'">$(CsWinRTRemoveWindowsReference);CsWinRTRemoveWindowsReference</ResolveAssemblyReferencesDependsOn>
+    <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' == ''">true</CsWinRTEnabled>
+    <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' != 'true'">false</CsWinRTEnabled>
+    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
+    <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
+    <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
+    <AllowUnsafeBlocks Condition="'$(CsWinRTComponent)' == 'true'">true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
   </PropertyGroup>
   
   <!--Remove Windows.Winmd reference to prevent compile collisions-->
-  <Target Name="RemoveWindowsReference" Outputs="@(Reference)">
+  <Target Name="CsWinRTRemoveWindowsReference" Outputs="@(Reference)" Condition="$(CsWinRTEnabled)">
     <ItemGroup>
       <Reference Remove="Windows"/>
     </ItemGroup>
   </Target>
 
-  <ItemGroup Condition="$(CsWinRTComponent)==true">
+  <Target Name="CsWinRTRemoveWinMDReferences" BeforeTargets="ResolveReferences;CoreCompile" AfterTargets="AfterResolveReferences">
+    <ItemGroup>
+      <!--Move winmd references into private item group to prevent subsequent winmd reference errors-->
+      <CsWinRTRemovedReferences Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
+      <CsWinRTInputs Include="@(CsWinRTRemovedReferences)"/>
+
+      <!--Prevent NETSDK1130 errors from winmd references-->
+      <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
+      <ReferencePathWithRefAssemblies Remove="@(CsWinRTRemovedReferences)" 
+        Condition="'%(CsWinRTRemovedReferences.Filename)%(CsWinRTRemovedReferences.Extension)' == '%(ReferencePathWithRefAssemblies.Filename)%(ReferencePathWithRefAssemblies.Extension)'" />
+      <!--Do not publish projection source winmds -->
+      <ReferenceCopyLocalPaths Remove="@(CsWinRTRemovedReferences)" />
+      <!--Remove winmd references from deps.json to prevent CLR failing unit test execution-->
+      <ReferenceDependencyPaths Remove="@(ReferenceDependencyPaths)" Condition="%(ReferenceDependencyPaths.Extension) == '.winmd'"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CsWinRTPrepareProjection" DependsOnTargets="$(CsWinRTPrepareProjectionDependsOn)" Outputs="$(CsWinRTGeneratedFilesDir)">
+    <PropertyGroup>
+      <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)' == ''">$(GeneratedFilesDir)</CsWinRTGeneratedFilesDir>
+      <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</CsWinRTGeneratedFilesDir>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="CsWinRTGenerateProjection" DependsOnTargets="CsWinRTPrepareProjection" Condition="'$(CsWinRTGenerateProjection)' == 'true'">
+    <PropertyGroup>
+      <CsWinRTResponseFile>$(CsWinRTGeneratedFilesDir)cswinrt.rsp</CsWinRTResponseFile>
+      <CsWinRTCommand>$(CsWinRTExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+    </PropertyGroup>
+    <PropertyGroup>
+      <CsWinRTExcludes Condition="'$(CsWinRTExcludes)' == ''">Windows;Microsoft</CsWinRTExcludes>
+    </PropertyGroup>
+    <ItemGroup>
+      <CsWinRTExcludeItems Include="$(CsWinRTExcludes)"/>
+      <CsWinRTIncludeItems Include="$(CsWinRTIncludes)"/>
+    </ItemGroup>
+    <PropertyGroup>
+      <CsWinRTFilters Condition="'$(CsWinRTFilters)' == ''">
+@(CsWinRTExcludeItems->'-exclude %(Identity)', '&#x0d;&#x0a;')
+@(CsWinRTIncludeItems->'-include %(Identity)', '&#x0d;&#x0a;')
+      </CsWinRTFilters>
+      <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
+$(CsWinRTCommandVerbosity)
+-target $(TargetFramework)
+-input $(CsWinRTWindowsMetadata)
+-input @(CsWinRTInputs->'"%(FullPath)"', ' ')
+-output "$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
+$(CsWinRTFilters)
+      </CsWinRTParams>
+    </PropertyGroup>
+    <MakeDir Directories="$(CsWinRTGeneratedFilesDir)" />
+    <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
+    <Exec Command="$(CsWinRTCommand)" />
+  </Target>
+  
+  <Target Name="CsWinRTIncludeProjection" BeforeTargets="CoreCompile" DependsOnTargets="CsWinRTGenerateProjection" Condition="$(CsWinRTEnabled)">
+    <ItemGroup>
+      <Compile Include="$(CsWinRTGeneratedFilesDir)*.cs" Exclude="@(Compile)" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup Condition="'$(CsWinRTComponent)' == 'true'">
     <CompilerVisibleProperty Include="AssemblyName" />
     <CompilerVisibleProperty Include="AssemblyVersion" />
     <CompilerVisibleProperty Include="CsWinRTComponent" />
