@@ -3,13 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
-    <LangVersion>preview</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>8305;0618</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,28 +15,8 @@
     </PackageReference>
   </ItemGroup>
 
-  <Target Name="GenerateProjection" Condition="'$(GenerateTestProjection)' == 'true'">
-    <PropertyGroup>
-      <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
-      <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
-    </PropertyGroup>
-    <ItemGroup>
-      <!--Explicitly reference WinUI winmds from TFM uap10.0-->
-      <ReferenceWinMDs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
-      <ReferenceWinMDs Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
-    </ItemGroup>
-    <PropertyGroup>
-      <CsWinRTVerbosity>high</CsWinRTVerbosity>
-      <CsWinRTResponseFile>$(GeneratedFilesDir)cswinrt_winui.rsp</CsWinRTResponseFile>
-      <CsWinRTCommand>$(CsWinrtExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
-    </PropertyGroup>
-    <PropertyGroup>
-      <CsWinRTParams>
--verbose
--target $(TargetFramework)
--in 10.0.18362.0
--in @(ReferenceWinMDs->'"%(FullPath)"', ' ')
--out "$(GeneratedFilesDir.TrimEnd('\'))"
+  <PropertyGroup>
+    <CsWinRTFilters>
 -exclude Windows
 -include Microsoft
 # The current WinUI nuget incorrectly references several Windows.* types that should be
@@ -60,19 +33,14 @@
 -include Windows.UI.Xaml.Markup.MarkupExtensionReturnTypeAttribute
 -include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
 -include Windows.UI.Xaml.Media.Animation.IndependentlyAnimatableAttribute
--include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
-      </CsWinRTParams>
-    </PropertyGroup>
-    <MakeDir Directories="$(GeneratedFilesDir)" />
-    <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
-    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
-    <Exec Command="$(CsWinRTCommand)" />
-  </Target>
-
-  <Target Name="IncludeProjection" DependsOnTargets="GenerateProjection" BeforeTargets="CoreCompile">
-    <ItemGroup>
-      <Compile Include="$(GeneratedFilesDir)*.cs" Exclude="@(Compile)" />
-    </ItemGroup>
-  </Target>
-
+-include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute      
+    </CsWinRTFilters>
+    <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
+    <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
+  </PropertyGroup>
+  <ItemGroup>
+    <!--Explicitly reference WinUI winmds from TFM uap10.0-->
+    <CsWinRTInputs Include="$(PkgMicrosoft_WinUI)/**/*.winmd" />
+  </ItemGroup>
+  
 </Project>

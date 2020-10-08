@@ -5,14 +5,8 @@
     <RootNamespace>WinRT</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>8</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <Authors>Microsoft Corporation</Authors>
     <Company>Microsoft Corporation</Company>
     <Product>C#/WinRT</Product>
