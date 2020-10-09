@@ -4827,7 +4827,7 @@ _lazyInterfaces = new Dictionary<Type, object>()
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %public %class %%, IWinRTObject, IEquatable<%>
 {
-private IntPtr ThisPtr => _inner.ThisPtr;
+private IntPtr ThisPtr => _inner == null ? (((IWinRTObject)this).NativeObject).ThisPtr : _inner.ThisPtr;
 
 private IObjectReference _inner = null;
 private readonly Lazy<%> _defaultLazy;
