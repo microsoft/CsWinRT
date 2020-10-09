@@ -1784,6 +1784,7 @@ namespace UnitTest
             Assert.Equal(TestObject.ReadWriteProperty, nativeProperties.ReadWriteProperty);
         }
 
+        // Test scenario where type reported by runtimeclass name is not a valid type (i.e. internal type).
         [Fact]
         public void TestNonProjectedRuntimeClass()
         {

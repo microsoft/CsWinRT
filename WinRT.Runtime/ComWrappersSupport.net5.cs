@@ -59,10 +59,11 @@ namespace WinRT
                 return default;
             }
 
-            if (typeof(T) != typeof(object))
-            {
-                CreateRCWType.Value = typeof(T);
-            }
+            // CreateRCWType is a thread local which is set here to communicate the statically known type
+            // when we are called by the ComWrappers API to create the object.  We can't pass this through the
+            // ComWrappers API surface, so we are achieving it via a thread local.  We unset it after in case
+            // there is other calls to it via other means.
+            CreateRCWType.Value = typeof(T);
             var rcw = ComWrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.TrackerObject);
             CreateRCWType.Value = null;
             // Because .NET will de-duplicate strings and WinRT doesn't,

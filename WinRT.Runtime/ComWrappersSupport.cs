@@ -347,7 +347,7 @@ namespace WinRT
             string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
             if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))
             {
-                // We have a static type which we can use to construct the object.  But, we can't just it for all scenarios
+                // We have a static type which we can use to construct the object.  But, we can't just use it for all scenarios
                 // and primarily use it for tear off scenarios and for scenarios where runtimeclass isn't accurate.
                 // For instance if the static type is an interface, we return an IInspectable to represent the interface.
                 // But it isn't convertable back to the class via the as operator which would be possible if we use runtimeclass.
