@@ -895,7 +895,7 @@ set => %.% = value;
                 else
                 {
                     w.write(R"(
-{typeof(%), new Lazy<%>(() => (%)(object)new SingleInterfaceOptimizedObject(typeof(%), _inner))},)",
+{typeof(%), new Lazy<%>(() => (%)(object)new SingleInterfaceOptimizedObject(typeof(%), _inner ?? ((IWinRTObject)this).NativeObject))},)",
                         interface_name,
                         interface_name,
                         interface_name,
@@ -1246,7 +1246,7 @@ using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref c
 try
 {
 _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
-%_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
+_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
 };
@@ -1268,7 +1268,6 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                     method.Name(),
                     bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
                     [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
-                    has_base_type ? "base.SetInner(_inner);\n" : "",
                     default_interface_name,
                     default_interface_name,
                     default_interface_name,
@@ -4618,7 +4617,7 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
                     w.write("false");
                 }
             }),
-            settings.netstandard_compat ? "GetReferenceForQI()" : "_inner");
+            settings.netstandard_compat ? "GetReferenceForQI()" : "((IWinRTObject)this).NativeObject");
     }
 
     void write_wrapper_class(writer& w, TypeDef const& type)
@@ -4792,16 +4791,6 @@ _lazyInterfaces = new Dictionary<Type, object>()
 %%IObjectReference GetReferenceForQI() => _inner ?? _default.ObjRef;)",
                     access_spec,
                     override_spec);
-
-                w.write(R"(
-% % void SetInner(IObjectReference objRef)
-{
-%_inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
-})",
-                    access_spec,
-                    override_spec,
-                    has_base_type ? "base.SetInner(objRef);\n" : "",
-                    default_interface_abi_name);
             }),
             default_interface_name,
             default_interface_name,
@@ -4833,7 +4822,7 @@ _lazyInterfaces = new Dictionary<Type, object>()
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %public %class %%, IWinRTObject, IEquatable<%>
 {
-private IntPtr ThisPtr => _inner.ThisPtr;
+private IntPtr ThisPtr => _inner == null ? (((IWinRTObject)this).NativeObject).ThisPtr : _inner.ThisPtr;
 
 private IObjectReference _inner = null;
 private readonly Lazy<%> _defaultLazy;
@@ -4905,7 +4894,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
                     w.write(R"(
 protected %(global::WinRT.DerivedComposed _)%
 {
-_defaultLazy = new Lazy<%>(() => (%)new IInspectable(_inner));
+_defaultLazy = new Lazy<%>(() => (%)new IInspectable(((IWinRTObject)this).NativeObject));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
 };
@@ -4924,25 +4913,6 @@ IObjectReference IWinRTObject.NativeObject => _inner;)");
                 w.write(R"(
 global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();)");
                 }
-
-                std::string_view access_spec = "protected ";
-                std::string_view override_spec = has_base_type ? "override " : "virtual ";
-
-                if (type.Flags().Sealed() && !has_base_type)
-                {
-                    access_spec = "private ";
-                    override_spec = " ";
-                }
-
-                w.write(R"(
-% % void SetInner(IObjectReference objRef)
-{
-%_inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
-})",
-                    access_spec,
-                    override_spec,
-                    has_base_type ? "base.SetInner(objRef);\n" : "",
-                    default_interface_name);
             }),
             default_interface_name,
             default_interface_name,
