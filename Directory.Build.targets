@@ -10,6 +10,17 @@
     </RestoreSources>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'" >
+    <GeneratedFilesRootDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', 'Generated Files'))</GeneratedFilesRootDir>
+    <GeneratedFilesDir>$([MSBuild]::NormalizeDirectory('$(GeneratedFilesRootDir)', '$(TargetFramework)'))</GeneratedFilesDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="$(GeneratedFilesRootDir)**/*.cs" />
+    <None Include="$(GeneratedFilesRootDir)**/*.cs" />
+    <Compile Condition="'$(GeneratedFilesDir)' != '$(GeneratedFilesRootDir)'" Include="$(GeneratedFilesDir)*.cs" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.8.0-4.20472.6" />
   </ItemGroup>
