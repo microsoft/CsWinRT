@@ -571,7 +571,8 @@ namespace ABI.System.Collections.Generic
 
                 try
                 {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).IndexOf(Marshaler<T>.FromAbi(value), out __index); index = __index;
+                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).IndexOf(Marshaler<T>.FromAbi(value), out __index); 
+                    index = __index;
                     __return_value__ = (byte)(____return_value__ ? 1 : 0);
 
                 }
