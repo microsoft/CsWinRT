@@ -183,7 +183,7 @@ namespace ABI.System.Windows.Input
             {
                 bool __result = default;
 
-                result = default;
+                *result = default;
 
                 try
                 {
