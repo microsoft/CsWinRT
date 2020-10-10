@@ -312,6 +312,7 @@ namespace cswinrt
     enum class param_category
     {
         in,
+        ref,
         out,
         pass_array,
         fill_array,
@@ -339,9 +340,13 @@ namespace cswinrt
         }
         else
         {
-            if (param.first.Flags().Out())
+            if(param.first.Flags().Out())
             {
                 return param_category::out;
+            }
+            else if (param.second->ByRef())
+            {
+                return param_category::ref;
             }
             else
             {

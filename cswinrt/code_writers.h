@@ -320,6 +320,9 @@ namespace cswinrt
     {
         switch (get_param_category(param))
         {
+        case param_category::ref:
+            w.write("in ");
+            break;
         case param_category::out:
         case param_category::receive_array:
             w.write("out ");
@@ -338,6 +341,9 @@ namespace cswinrt
         {
         case param_category::in:
             w.write("%", bind<write_projection_type>(semantics));
+            break;
+        case param_category::ref:
+            w.write("in %", bind<write_projection_type>(semantics));
             break;
         case param_category::out:
             w.write("out %", bind<write_projection_type>(semantics));
@@ -442,6 +448,9 @@ namespace cswinrt
         case param_category::in:
             w.write(", % %", bind<write_abi_type>(semantics), param_name);
             break;
+        case param_category::ref:
+            w.write(settings.netstandard_compat ? ", in % %" : ", %* %", bind<write_abi_type>(semantics), param_name);
+            break;
         case param_category::out:
             w.write(settings.netstandard_compat ? ", out % %" : ", %* %", bind<write_abi_type>(semantics), param_name);
             break;
@@ -463,6 +472,9 @@ namespace cswinrt
         case param_category::in:
             w.write(", %", bind<write_abi_type>(semantics));
             break;
+        case param_category::ref:
+            w.write(", in %", bind<write_abi_type>(semantics));
+            break;
         case param_category::out:
             w.write(", out %", bind<write_abi_type>(semantics));
             break;
@@ -483,6 +495,9 @@ namespace cswinrt
         {
         case param_category::in:
             w.write(", %", bind<write_abi_type>(semantics));
+            break;
+        case param_category::ref:
+            w.write(", %*", bind<write_abi_type>(semantics));
             break;
         case param_category::out:
             w.write(", %*", bind<write_abi_type>(semantics));
@@ -1998,7 +2013,7 @@ event % %;)",
 
         bool is_object_in() const
         {
-            return (category == param_category::in) &&
+            return ((category == param_category::in) || (category == param_category::ref)) &&
                 marshaler_type.empty() && local_type == "IntPtr";
         }
 
@@ -3263,6 +3278,19 @@ remove => %.Unsubscribe(value);
             {
                 std::string_view param_prefix = "";
                 std::string_view param_suffix = "";
+                
+                if (param_cat == param_category::ref)
+                {
+                    if (settings.netstandard_compat)
+                    {
+                        param_prefix = "in ";
+                    }
+                    else
+                    {
+                        param_suffix = "*";
+                    }
+                }
+
                 if (param_cat == param_category::out)
                 {
                     if (settings.netstandard_compat)
@@ -3354,6 +3382,16 @@ remove => %.Unsubscribe(value);
                     param_name, bind<write_escaped_identifier>(param_name));
                 return;
             }
+            if (category == param_category::ref)
+            {
+                if (!use_pointers)
+                {
+                    w.write("var __% = %;\n",
+                        param_name,
+                        bind<write_escaped_identifier>(param_name));
+                }
+                return;
+            }
             std::string_view out_local_type;
             if (param_type == "bool")
             {
@@ -3395,7 +3433,7 @@ remove => %.Unsubscribe(value);
 
         void write_marshal_to_managed(writer& w) const
         {
-            if (is_out() || is_ref())
+            if(is_out() || is_ref())
             {
                 w.write("% __%", is_out() ? "out" : "", param_name);
             }
@@ -3409,6 +3447,17 @@ remove => %.Unsubscribe(value);
                 else if (param_type == "char")
                 {
                     format_string = "(char)%";
+                }
+                else if (category == param_category::ref)
+                {
+                    if (!use_pointers)
+                    {
+                        format_string = "in __%";
+                    }
+                    else
+                    {
+                        format_string = use_pointers ? "*%" : "in %";
+                    }
                 }
                 else
                 {
@@ -3424,8 +3473,9 @@ remove => %.Unsubscribe(value);
             }
             else
             {
-                w.write("%.FromAbi(%)",
+                w.write("%.FromAbi(%%)",
                     marshaler_type,
+                    category == param_category::ref ? use_pointers ? "*" : "__" : "",
                     bind<write_escaped_identifier>(param_name));
             }
         }
@@ -3568,7 +3618,7 @@ remove => %.Unsubscribe(value);
                 },
                 [&](auto const&) {});
 
-            if (m.is_out() && m.local_type.empty())
+            if ((m.is_out() || (m.category == param_category::ref)) && m.local_type.empty())
             {
                 m.local_type = w.write_temp("%", bind<write_abi_type>(semantics));
             }

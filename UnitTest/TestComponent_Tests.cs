@@ -140,7 +140,7 @@ namespace UnitTest
         {
             Blittable a = new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(ITests).GUID);
             Blittable b;
-            Blittable c = Tests.Param13(a, a, out b);
+            Blittable c = Tests.Param13(a, in a, out b);
             Assert.True(AllEqual(a, b, c));
         }
 
@@ -149,7 +149,7 @@ namespace UnitTest
         {
             NonBlittable a = new NonBlittable(false, 'X', "WinRT", (long?)PropertyValue.CreateInt64(1234));
             NonBlittable b;
-            NonBlittable c = Tests.Param14(a, a, out b);
+            NonBlittable c = Tests.Param14(a, in a, out b);
             Assert.True(AllEqual(a, b, c));
         }
 
@@ -160,7 +160,7 @@ namespace UnitTest
                 new Blittable(1, 2, 3, 4, -5, -6, -7, 8.0f, 9.0, typeof(ITests).GUID),
                 new NonBlittable(false, 'X', "WinRT", (long?)PropertyValue.CreateInt64(1234)));
             Nested b;
-            Nested c = Tests.Param15(a, a, out b);
+            Nested c = Tests.Param15(a, in a, out b);
             Assert.True(AllEqual(a, b, c));
         }
 
@@ -239,19 +239,19 @@ namespace UnitTest
         [Fact]
         public void Params_Blittable_Call()
         {
-            Tests.Param13Call((Blittable a, Blittable b, out Blittable c) => { c = a; return a; });
+            Tests.Param13Call((Blittable a, in Blittable b, out Blittable c) => { c = a; return a; });
         }
 
         [Fact]
         public void Params_NonBlittable_Call()
         {
-            Tests.Param14Call((NonBlittable a, NonBlittable b, out NonBlittable c) => { c = a; return a; });
+            Tests.Param14Call((NonBlittable a, in NonBlittable b, out NonBlittable c) => { c = a; return a; });
         }
 
         [Fact]
         public void Params_Nested_Call()
         {
-            Tests.Param15Call((Nested a, Nested b, out Nested c) => { c = a; return a; });
+            Tests.Param15Call((Nested a, in Nested b, out Nested c) => { c = a; return a; });
         }
 
         [Fact]
