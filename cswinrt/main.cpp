@@ -85,7 +85,7 @@ Where <spec> is one or more of:
 
         settings.verbose = args.exists("verbose");
         auto target = args.value("target");
-        if (!target.empty() && target != "netstandard2.0" && target != "net5.0")
+        if (!target.empty() && target != "netstandard2.0" && !starts_with(target, "net5.0"))
         {
             throw usage_exception();
         }
