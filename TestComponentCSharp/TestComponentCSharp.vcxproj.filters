@@ -15,7 +15,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="$(IntDir)strings.h" />
     <ClInclude Include="NonAgileClass.h" />
     <ClInclude Include="ComImports.h" />
   </ItemGroup>
