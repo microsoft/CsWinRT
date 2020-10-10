@@ -30,7 +30,7 @@ namespace WinRT
                 {
                     using (objRef)
                     {
-                        return (TInterface)ComWrappersSupport.CreateRcwForComObject(objRef.ThisPtr);
+                        return ComWrappersSupport.CreateRcwForComObject<TInterface>(objRef.ThisPtr);
                     }
                 }
             }

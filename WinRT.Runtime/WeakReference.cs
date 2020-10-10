@@ -60,7 +60,7 @@ namespace WinRT
                 return null;
             }
             using var resolved = reference.Resolve(typeof(IUnknownVftbl).GUID);
-            return ComWrappersSupport.CreateRcwForComObject(resolved.ThisPtr);
+            return ComWrappersSupport.CreateRcwForComObject<object>(resolved.ThisPtr);
         }
     }
 }

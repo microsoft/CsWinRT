@@ -22,6 +22,8 @@ using System.Collections;
 using WinRT.Interop;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Security.Cryptography;
+using Windows.Security.Cryptography.Core;
 
 namespace UnitTest
 {
@@ -87,9 +89,13 @@ namespace UnitTest
                 (object sender, Uri value) => Assert.Equal(managedUri, value);
             TestObject.RaiseUriChanged();
 
-            var uri2 = MarshalInspectable.FromAbi(ABI.System.Uri.FromManaged(managedUri));
+            var uri2 = MarshalInspectable<System.Uri>.FromAbi(ABI.System.Uri.FromManaged(managedUri));
             var str2 = uri2.ToString();
             Assert.Equal(full_uri, str2);
+
+            var uri3 = MarshalInspectable<object>.FromAbi(ABI.System.Uri.FromManaged(managedUri));
+            var str3 = uri3.ToString();
+            Assert.Equal(full_uri, str3);
         }
 
         [Fact]
@@ -1615,9 +1621,13 @@ namespace UnitTest
         [Fact]
         public void TestUnwrapInspectable()
         {
-            using var objRef = MarshalInspectable.CreateMarshaler(TestObject);
+            using var objRef = MarshalInspectable<object>.CreateMarshaler(TestObject);
             var inspectable = IInspectable.FromAbi(objRef.ThisPtr);
             Assert.True(ComWrappersSupport.TryUnwrapObject(inspectable, out _));
+
+            using var objRef2 = MarshalInspectable<Class>.CreateMarshaler(TestObject);
+            var inspectable2 = IInspectable.FromAbi(objRef2.ThisPtr);
+            Assert.True(ComWrappersSupport.TryUnwrapObject(inspectable2, out _));
         }
 
         [Fact]
@@ -1772,6 +1782,17 @@ namespace UnitTest
             TestObject.CopyProperties(nativeProperties);
 
             Assert.Equal(TestObject.ReadWriteProperty, nativeProperties.ReadWriteProperty);
+        }
+
+        // Test scenario where type reported by runtimeclass name is not a valid type (i.e. internal type).
+        [Fact]
+        public void TestNonProjectedRuntimeClass()
+        {
+            string key = ".....";
+            IBuffer keyMaterial = CryptographicBuffer.ConvertStringToBinary(key, BinaryStringEncoding.Utf8);
+            MacAlgorithmProvider mac = MacAlgorithmProvider.OpenAlgorithm(MacAlgorithmNames.HmacSha1);
+            CryptographicKey cryptoKey = mac.CreateKey(keyMaterial);
+            Assert.NotNull(cryptoKey);
         }
     }
 }

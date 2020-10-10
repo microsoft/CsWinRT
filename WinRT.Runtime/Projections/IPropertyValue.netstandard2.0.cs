@@ -922,7 +922,7 @@ namespace ABI.Windows.Foundation
             try
             {
                 __value = CoerceArray<object>(global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr));
-                (*__valueSize, *value) = MarshalInspectable.FromManagedArray(__value);
+                (*__valueSize, *value) = MarshalInspectable<object>.FromManagedArray(__value);
             }
             catch (global::System.Exception __exception__)
             {
@@ -1610,11 +1610,11 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetInspectableArray_32(ThisPtr, out __value_length, out __value_data));
-                value = MarshalInspectable.FromAbiArray((__value_length, __value_data));
+                value = MarshalInspectable<object>.FromAbiArray((__value_length, __value_data));
             }
             finally
             {
-                MarshalInspectable.DisposeAbiArray((__value_length, __value_data));
+                MarshalInspectable<object>.DisposeAbiArray((__value_length, __value_data));
             }
         }
 

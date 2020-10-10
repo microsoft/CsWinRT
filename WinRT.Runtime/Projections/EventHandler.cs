@@ -77,15 +77,15 @@ namespace ABI.System
                 var __params = new object[] { ThisPtr, null, null };
                 try
                 {
-                    __sender = MarshalInspectable.CreateMarshaler(sender);
-                    __params[1] = MarshalInspectable.GetAbi(__sender);
+                    __sender = MarshalInspectable<object>.CreateMarshaler(sender);
+                    __params[1] = MarshalInspectable<object>.GetAbi(__sender);
                     __args = Marshaler<T>.CreateMarshaler(args);
                     __params[2] = Marshaler<T>.GetAbi(__args);
                     abiInvoke.DynamicInvokeAbi(__params);
                 }
                 finally
                 {
-                    MarshalInspectable.DisposeMarshaler(__sender);
+                    MarshalInspectable<object>.DisposeMarshaler(__sender);
                     Marshaler<T>.DisposeMarshaler(__args);
                 }
 
@@ -105,7 +105,7 @@ namespace ABI.System
             {
                 global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(new IntPtr(thisPtr), (global::System.Delegate invoke) =>
                 {
-                    invoke.DynamicInvoke(MarshalInspectable.FromAbi(sender), Marshaler<T>.FromAbi(args));
+                    invoke.DynamicInvoke(MarshalInspectable<object>.FromAbi(sender), Marshaler<T>.FromAbi(args));
                 });
             }
             catch (global::System.Exception __exception__)

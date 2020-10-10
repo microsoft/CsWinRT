@@ -28,6 +28,7 @@ namespace WinRT
     {
         private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
+        private readonly static ConcurrentDictionary<Type, MemberInfo> TypeObjectRefFieldCache = new ConcurrentDictionary<Type, MemberInfo>();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate
@@ -68,20 +69,33 @@ namespace WinRT
             }
 
             Type type = o.GetType();
-            ObjectReferenceWrapperAttribute objRefWrapper = type.GetCustomAttribute<ObjectReferenceWrapperAttribute>();
-            if (objRefWrapper is object)
+
+            var objRefField = TypeObjectRefFieldCache.GetOrAdd(type, (type) =>
             {
-                objRef = (IObjectReference)type.GetField(objRefWrapper.ObjectReferenceField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).GetValue(o);
+                ObjectReferenceWrapperAttribute objRefWrapper = type.GetCustomAttribute<ObjectReferenceWrapperAttribute>();
+                if (objRefWrapper is object)
+                {
+                    return type.GetField(objRefWrapper.ObjectReferenceField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                }
+
+                ProjectedRuntimeClassAttribute projectedClass = type.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
+                if (projectedClass is object && projectedClass.DefaultInterfaceProperty != null)
+                {
+                    return type.GetProperty(projectedClass.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                }
+
+                return null;
+            });
+
+
+            if(objRefField is FieldInfo field)
+            {
+                objRef = (IObjectReference)field.GetValue(o);
                 return true;
             }
-
-            ProjectedRuntimeClassAttribute projectedClass = type.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
-
-            if (projectedClass is object && projectedClass.DefaultInterfaceProperty != null)
+            else if(objRefField is PropertyInfo defaultProperty)
             {
-                return TryUnwrapObject(
-                    type.GetProperty(projectedClass.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).GetValue(o),
-                    out objRef);
+                return TryUnwrapObject(defaultProperty.GetValue(o), out objRef);
             }
 
             objRef = null;
@@ -326,6 +340,44 @@ namespace WinRT
             }
 
             return CreateFactoryForImplementationType(runtimeClassName, implementationType);
+        }
+
+        internal static string GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
+        {
+            string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
+            if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))
+            {
+                // We have a static type which we can use to construct the object.  But, we can't just use it for all scenarios
+                // and primarily use it for tear off scenarios and for scenarios where runtimeclass isn't accurate.
+                // For instance if the static type is an interface, we return an IInspectable to represent the interface.
+                // But it isn't convertable back to the class via the as operator which would be possible if we use runtimeclass.
+                // Similarly for composable types, they can be statically retrieved using the parent class, but can then no longer
+                // be cast to the sub class via as operator even if it is really an instance of it per rutimeclass.
+                // To handle these scenarios, we use the runtimeclass if we find it is assignable to the statically determined type.
+                // If it isn't, we use the statically determined type as it is a tear off.
+
+                Type implementationType = null;
+                if (runtimeClassName != null)
+                {
+                    try
+                    {
+                        (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
+                    }
+                    catch (TypeLoadException)
+                    {
+                    }
+                }
+
+                if (!(implementationType != null &&
+                    (staticallyDeterminedType == implementationType ||
+                     staticallyDeterminedType.IsAssignableFrom(implementationType) ||
+                     staticallyDeterminedType.IsGenericType && implementationType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == staticallyDeterminedType.GetGenericTypeDefinition()))))
+                {
+                    runtimeClassName = TypeNameSupport.GetNameForType(staticallyDeterminedType, TypeNameGenerationFlags.GenerateBoxedName);
+                }
+            }
+
+            return runtimeClassName;
         }
 
         private static bool ShouldProvideIReference(object obj)
