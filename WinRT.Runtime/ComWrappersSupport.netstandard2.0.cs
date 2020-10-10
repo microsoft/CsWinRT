@@ -18,11 +18,11 @@ namespace WinRT
 
         internal static InspectableInfo GetInspectableInfo(IntPtr pThis) => UnmanagedObject.FindObject<ComCallableWrapper>(pThis).InspectableInfo;
 
-        public static object CreateRcwForComObject(IntPtr ptr)
+        public static T CreateRcwForComObject<T>(IntPtr ptr)
         {
             if (ptr == IntPtr.Zero)
             {
-                return null;
+                return default;
             }
 
             IObjectReference identity = GetObjectReferenceForInterface(ptr).As<IUnknownVftbl>();
@@ -35,7 +35,7 @@ namespace WinRT
                 if (identity.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
                 {
                     var inspectable = new IInspectable(identity);
-                    string runtimeClassName = inspectable.GetRuntimeClassName();
+                    string runtimeClassName = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
                     runtimeWrapper = TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
@@ -71,9 +71,9 @@ namespace WinRT
             // for a single System.Type.
             return rcw switch
             {
-                ABI.System.Nullable<string> ns => ns.Value,
-                ABI.System.Nullable<Type> nt => nt.Value,
-                _ => rcw
+                ABI.System.Nullable<string> ns => (T)(object)ns.Value,
+                ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                _ => (T)rcw
             };
         }
     

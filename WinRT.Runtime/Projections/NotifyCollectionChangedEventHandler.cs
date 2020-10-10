@@ -72,13 +72,13 @@ namespace ABI.System.Collections.Specialized
                 IObjectReference __e = default;
                 try
                 {
-                    __sender = MarshalInspectable.CreateMarshaler(sender);
+                    __sender = MarshalInspectable<object>.CreateMarshaler(sender);
                     __e = global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.CreateMarshaler(e);
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInspectable.GetAbi(__sender), global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.GetAbi(__e)));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInspectable<object>.GetAbi(__sender), global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.GetAbi(__e)));
                 }
                 finally
                 {
-                    MarshalInspectable.DisposeMarshaler(__sender);
+                    MarshalInspectable<object>.DisposeMarshaler(__sender);
                     global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.DisposeMarshaler(__e);
                 }
 
@@ -98,7 +98,7 @@ namespace ABI.System.Collections.Specialized
             {
                 global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(thisPtr, (global::System.Collections.Specialized.NotifyCollectionChangedEventHandler invoke) =>
                 {
-                    invoke(MarshalInspectable.FromAbi(sender), global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.FromAbi(e));
+                    invoke(MarshalInspectable<object>.FromAbi(sender), global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.FromAbi(e));
                 });
             }
             catch (global::System.Exception __exception__)

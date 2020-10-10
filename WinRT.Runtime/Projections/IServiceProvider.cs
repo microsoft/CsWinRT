@@ -57,7 +57,7 @@ namespace ABI.System
                 try
                 {
                     __result = global::WinRT.ComWrappersSupport.FindObject<global::System.IServiceProvider>(thisPtr).GetService(global::ABI.System.Type.FromAbi(type));
-                    *result = MarshalInspectable.FromManaged(__result);
+                    *result = MarshalInspectable<object>.FromManaged(__result);
                 }
                 catch (global::System.Exception __exception__)
                 {
@@ -89,12 +89,12 @@ namespace ABI.System
             {
                 __type = global::ABI.System.Type.CreateMarshaler(type);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetService_0(ThisPtr, global::ABI.System.Type.GetAbi(__type), &__retval));
-                return MarshalInspectable.FromAbi(__retval);
+                return MarshalInspectable<object>.FromAbi(__retval);
             }
             finally
             {
                 global::ABI.System.Type.DisposeMarshaler(__type);
-                MarshalInspectable.DisposeAbi(__retval);
+                MarshalInspectable<object>.DisposeAbi(__retval);
             }
         }
     }

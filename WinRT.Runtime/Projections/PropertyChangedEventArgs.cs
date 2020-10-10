@@ -53,17 +53,17 @@ namespace ABI.Microsoft.UI.Xaml.Data
             try
             {
                 __name = MarshalString.CreateMarshaler(name);
-                __baseInterface = MarshalInspectable.CreateMarshaler(baseInterface);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(__name), MarshalInspectable.GetAbi(__baseInterface), &__innerInterface, &__retval));
+                __baseInterface = MarshalInspectable<object>.CreateMarshaler(baseInterface);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(__name), MarshalInspectable<object>.GetAbi(__baseInterface), &__innerInterface, &__retval));
                 innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
                 return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
             }
             finally
             {
                 MarshalString.DisposeMarshaler(__name);
-                MarshalInspectable.DisposeMarshaler(__baseInterface);
-                MarshalInspectable.DisposeAbi(__innerInterface);
-                MarshalInspectable.DisposeAbi(__retval);
+                MarshalInspectable<object>.DisposeMarshaler(__baseInterface);
+                MarshalInspectable<object>.DisposeAbi(__innerInterface);
+                MarshalInspectable<object>.DisposeAbi(__retval);
             }
         }
     }
