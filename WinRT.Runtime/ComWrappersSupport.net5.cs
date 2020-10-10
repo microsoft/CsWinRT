@@ -82,6 +82,27 @@ namespace WinRT
             };
         }
 
+        public static bool TryUnwrapObject(object o, out IObjectReference objRef)
+        {
+            // The unwrapping here needs to be in exact type match in case the user
+            // has implemented a WinRT interface or inherited from a WinRT class
+            // in a .NET (non-projected) type.
+
+            if (o is Delegate del)
+            {
+                return TryUnwrapObject(del.Target, out objRef);
+            }
+
+            if (o is IWinRTObject winrtObj && winrtObj.HasUnwrappableNativeObject)
+            {
+                objRef = winrtObj.NativeObject;
+                return true;
+            }
+
+            objRef = null;
+            return false;
+        }
+
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr) => TryRegisterObjectForInterface(obj, thisPtr);
 
         public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr) => ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);

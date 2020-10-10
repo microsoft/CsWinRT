@@ -28,7 +28,6 @@ namespace WinRT
     {
         private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
-        private readonly static ConcurrentDictionary<Type, MemberInfo> TypeObjectRefFieldCache = new ConcurrentDictionary<Type, MemberInfo>();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate
@@ -55,51 +54,6 @@ namespace WinRT
                     invoke(target_invoke);
                 }
             }
-        }
-
-        public static bool TryUnwrapObject(object o, out IObjectReference objRef)
-        {
-            // The unwrapping here needs to be in exact type match in case the user
-            // has implemented a WinRT interface or inherited from a WinRT class
-            // in a .NET (non-projected) type.
-
-            if (o is Delegate del)
-            {
-                return TryUnwrapObject(del.Target, out objRef);
-            }
-
-            Type type = o.GetType();
-
-            var objRefField = TypeObjectRefFieldCache.GetOrAdd(type, (type) =>
-            {
-                ObjectReferenceWrapperAttribute objRefWrapper = type.GetCustomAttribute<ObjectReferenceWrapperAttribute>();
-                if (objRefWrapper is object)
-                {
-                    return type.GetField(objRefWrapper.ObjectReferenceField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-                }
-
-                ProjectedRuntimeClassAttribute projectedClass = type.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
-                if (projectedClass is object && projectedClass.DefaultInterfaceProperty != null)
-                {
-                    return type.GetProperty(projectedClass.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-                }
-
-                return null;
-            });
-
-
-            if(objRefField is FieldInfo field)
-            {
-                objRef = (IObjectReference)field.GetValue(o);
-                return true;
-            }
-            else if(objRefField is PropertyInfo defaultProperty)
-            {
-                return TryUnwrapObject(defaultProperty.GetValue(o), out objRef);
-            }
-
-            objRef = null;
-            return false;
         }
 
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)

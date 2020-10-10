@@ -1113,6 +1113,7 @@ private static WeakLazy<_%> _instance = new WeakLazy<_%>();
 internal static % Instance => (%)_instance.Value;
 
 IObjectReference IWinRTObject.NativeObject => _obj;
+bool IWinRTObject.HasUnwrappableNativeObject => false;
 global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
 }
 )",
@@ -2708,6 +2709,7 @@ private static WeakLazy<_%> _instance = new WeakLazy<_%>();
 internal static _% Instance => _instance.Value;
 
 IObjectReference IWinRTObject.NativeObject => _obj;
+bool IWinRTObject.HasUnwrappableNativeObject => false;
 global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
 
 %
@@ -4904,6 +4906,14 @@ _lazyInterfaces = new Dictionary<Type, object>()
                         default_interface_name,
                         default_interface_name,
                         bind<write_lazy_interface_initialization>(type));
+                    w.write(R"(
+bool IWinRTObject.HasUnwrappableNativeObject => this.GetType() == typeof(%);)",
+                        type.TypeName());
+                }
+                else
+                {
+                    w.write(R"(
+bool IWinRTObject.HasUnwrappableNativeObject => true;)");
                 }
 
                 w.write(R"(
