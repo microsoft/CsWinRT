@@ -9,6 +9,12 @@ namespace winrt::TestComponentCSharp::implementation
     {
         Class();
 
+        Windows::UI::Xaml::Interop::TypeName _typeProperty;
+        void TypeProperty(Windows::UI::Xaml::Interop::TypeName val);
+        Windows::UI::Xaml::Interop::TypeName TypeProperty();
+        winrt::hstring GetTypePropertyAbiName();
+        winrt::hstring GetTypePropertyKind();
+
         winrt::event<EventHandler0> _event0;
         winrt::event<EventHandler1> _event1;
         winrt::event<EventHandler2> _event2;
