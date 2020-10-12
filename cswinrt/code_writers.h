@@ -3456,7 +3456,7 @@ remove => %.Unsubscribe(value);
                     }
                     else
                     {
-                        format_string = use_pointers ? "*%" : "in %";
+                        format_string = "*%";
                     }
                 }
                 else
