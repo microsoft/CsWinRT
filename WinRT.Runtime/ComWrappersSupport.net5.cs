@@ -84,7 +84,7 @@ namespace WinRT
 
         public static bool TryUnwrapObject(object o, out IObjectReference objRef)
         {
-            // The unwrapping here needs to be in exact type match in case the user
+            // The unwrapping here needs to be an exact type match in case the user
             // has implemented a WinRT interface or inherited from a WinRT class
             // in a .NET (non-projected) type.
 
