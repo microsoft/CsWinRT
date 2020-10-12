@@ -153,6 +153,15 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
+rem Run Authoring tests
+echo Running cswinrt authoring tests for %cswinrt_platform% %cswinrt_configuration%
+call :exec %~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:%~dp0hosttest_%cswinrt_version_string%.xml 
+if ErrorLevel 1 (
+  echo.
+  echo ERROR: Host test failed, skipping NuGet pack
+  exit /b !ErrorLevel!
+)
+
 :package
 set cswinrt_bin_dir=%~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
