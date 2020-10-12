@@ -12,7 +12,6 @@
 
   <!--CsWinRT properties-->
   <PropertyGroup>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CsWinRTIncludes>SimpleMathComponent</CsWinRTIncludes>
     <CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
   </PropertyGroup>
