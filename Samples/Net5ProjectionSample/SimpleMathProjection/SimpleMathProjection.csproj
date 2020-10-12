@@ -4,13 +4,20 @@
     <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
     <Platforms>x64</Platforms>
   </PropertyGroup>
+	
+  <ItemGroup>
+    <ProjectReference Include="..\SimpleMathComponent\SimpleMathComponent.vcxproj" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.8.0" />
+  </ItemGroup>
 
+  <!--CsWinRT properties-->
   <PropertyGroup>
-    <GenerateNet5Projection>true</GenerateNet5Projection>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>preview</LangVersion>
+    <CsWinRTIncludes>SimpleMathComponent</CsWinRTIncludes>
+    <CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
   </PropertyGroup>
 
+  <!--Properties for generating the NuGet package-->
   <PropertyGroup>
     <GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
     <NuspecFile>$(GeneratedNugetDir)SimpleMathProjection.nuspec</NuspecFile>
@@ -18,8 +25,8 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
+  <!--The C# compiler package below is not needed with Visual Studio 16.8 Preview 4-->
   <ItemGroup>
-	<PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.1.0-prerelease.200928.7" />
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.8.0-4.20472.6" />
   </ItemGroup>
 
@@ -30,63 +37,4 @@
     </RestoreSources>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\SimpleMathComponent\SimpleMathComponent.vcxproj" />
-  </ItemGroup>
-
-  <!--C#/WinRT Targets and Props-->
-  
-  <!--Identify WinMDs in project references-->
-  <Target Name="RemoveWinMDReferences" BeforeTargets="ResolveReferences" AfterTargets="AfterResolveReferences">
-    <ItemGroup>
-      <!--Track WinMDs-->
-      <ReferenceWinMDs Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
-      <!--Remove WinMDs from project outputs-->
-      <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="GenerateProjection" Condition="'$(GenerateNet5Projection)' == 'true'">
-
-    <!--Project Property for which namespaces to include-->
-    <PropertyGroup>
-      <ProjectionNamespaceToInclude>SimpleMathComponent</ProjectionNamespaceToInclude>
-    </PropertyGroup>
-
-    <!--CSWinRT properties-->
-    <PropertyGroup>
-      <CsWinRTVerbosity>high</CsWinRTVerbosity>
-      <CsWinRTResponseFile>$(OutDir)cswinrt_build_projection.rsp</CsWinRTResponseFile>
-      <CsWinRTCommand>$(CsWinRTExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
-    <CsWinRTParams>
-        -verbose
-        -in 10.0.18362.0
-        -in @(ReferenceWinMDs->'"%(FullPath)"', ' ')
-        -out "$(OutDir.TrimEnd('\'))"
-        -include $(ProjectionNamespaceToInclude)
-        -exclude Windows
-      </CsWinRTParams>
-    </PropertyGroup>
-    <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
-    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
-    <Exec Command="$(CsWinRTCommand)" />
-  </Target>
-
-  <!--Build the projection dll-->
-  <Target Name="BuildProjectionAssembly" DependsOnTargets="GenerateProjection" BeforeTargets="CoreCompile">
-    <ItemGroup>
-	  <Compile Include="$(OutDir)*.cs" Exclude="@(Compile)" />
-      <!--Remove references to projection source winmds to prevent compile conflict warnings-->
-      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'SimpleMathComponent'" />
-      <!--Also remove ReferencePath winmds to prevent error NETSDK1130-->
-      <ReferencePath Remove="@(ReferencePath)" Condition="%(ReferencePath.Filename) == 'SimpleMathComponent'" />
-    </ItemGroup>
-  </Target>
-
-  <!--Final clean up of any winmds-->
-  <Target Name="RemoveProjectionAfterBuild" AfterTargets="AfterBuild">
-    <Message Text="Deleting $(OutDir)SimpleMathComponent.winmd" />
-    <Delete Files="$(OutDir)SimpleMathComponent.winmd" />
-  </Target>
-  
 </Project>
