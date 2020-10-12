@@ -310,12 +310,9 @@ Where <spec> is one or more of:
                     }
                     catch (std::exception const& e)
                     {
-                        if (settings.verbose)
-                        {
-                            writer console;
-                            console.write("error: processing type %s in namespace %s\n", currentType, ns);
-                            console.flush_to_console();
-                        }
+                        writer console;
+                        console.write("error: '%' when processing %%%\n", e.what(), ns, currentType.empty() ? "" : ".", currentType);
+                        console.flush_to_console();
                         throw;
                     }
                 });
