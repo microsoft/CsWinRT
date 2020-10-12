@@ -1586,27 +1586,27 @@ namespace UnitTest
         public void WeakReferenceOfManagedObject()
         {
             var properties = new ManagedProperties(42);
-            WinRT.WeakReference<IProperties1> weakReference = new WinRT.WeakReference<IProperties1>(properties);
-            weakReference.TryGetTarget(out var propertiesStrong);
+            WeakReference<IProperties1> weakReference = new WeakReference<IProperties1>(properties);
+            Assert.True(weakReference.TryGetTarget(out var propertiesStrong));
             Assert.Same(properties, propertiesStrong);
         }
 
         [Fact]
         public void WeakReferenceOfNativeObject()
         {
-            var weakReference = new WinRT.WeakReference<Class>(TestObject);
-            weakReference.TryGetTarget(out var classStrong);
+            var weakReference = new WeakReference<Class>(TestObject);
+            Assert.True(weakReference.TryGetTarget(out var classStrong));
             Assert.Same(TestObject, classStrong);
         }
 
         [Fact]
         public void WeakReferenceOfNativeObjectRehydratedAfterWrapperIsCollected()
         {
-            static (WinRT.WeakReference<Class> winrt, WeakReference net, IObjectReference objRef) GetWeakReferences()
+            static (WeakReference<Class> winrt, WeakReference net, IObjectReference objRef) GetWeakReferences()
             {
                 var obj = new Class();
                 ComWrappersSupport.TryUnwrapObject(obj, out var objRef);
-                return (new WinRT.WeakReference<Class>(obj), new WeakReference(obj), objRef);
+                return (new WeakReference<Class>(obj, true), new WeakReference(obj), objRef);
             }
 
             var (winrt, net, objRef) = GetWeakReferences();
