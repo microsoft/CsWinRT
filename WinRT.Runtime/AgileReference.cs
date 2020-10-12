@@ -103,7 +103,7 @@ namespace WinRT
         public new T Get() 
         {
             using var objRef = base.Get();
-            return ComWrappersSupport.CreateRcwForComObject<T>(objRef?.ThisPtr ?? IntPtr.Zero);
+            return (T) ComWrappersSupport.CreateRcwForComObject(objRef?.ThisPtr ?? IntPtr.Zero);
         }
     }
 }

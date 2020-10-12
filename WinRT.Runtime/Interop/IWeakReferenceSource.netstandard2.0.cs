@@ -123,7 +123,7 @@ namespace ABI.WinRT.Interop
             }
             finally
             {
-                MarshalInspectable<object>.DisposeAbi(objRef);
+                MarshalInspectable.DisposeAbi(objRef);
             }
         }
     }

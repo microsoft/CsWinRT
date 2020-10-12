@@ -71,13 +71,13 @@ namespace ABI.System.ComponentModel
                 IObjectReference __e = default;
                 try
                 {
-                    __sender = MarshalInspectable<object>.CreateMarshaler(sender);
+                    __sender = MarshalInspectable.CreateMarshaler(sender);
                     __e = global::ABI.System.ComponentModel.PropertyChangedEventArgs.CreateMarshaler(e);
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInspectable<object>.GetAbi(__sender), global::ABI.System.ComponentModel.PropertyChangedEventArgs.GetAbi(__e)));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInspectable.GetAbi(__sender), global::ABI.System.ComponentModel.PropertyChangedEventArgs.GetAbi(__e)));
                 }
                 finally
                 {
-                    MarshalInspectable<object>.DisposeMarshaler(__sender);
+                    MarshalInspectable.DisposeMarshaler(__sender);
                     global::ABI.System.ComponentModel.PropertyChangedEventArgs.DisposeMarshaler(__e);
                 }
 
@@ -99,7 +99,7 @@ namespace ABI.System.ComponentModel
             {
                 global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(thisPtr, (global::System.ComponentModel.PropertyChangedEventHandler invoke) =>
                 {
-                    invoke(MarshalInspectable<object>.FromAbi(sender), global::ABI.System.ComponentModel.PropertyChangedEventArgs.FromAbi(e));
+                    invoke(MarshalInspectable.FromAbi(sender), global::ABI.System.ComponentModel.PropertyChangedEventArgs.FromAbi(e));
                 });
             }
             catch (global::System.Exception __exception__)

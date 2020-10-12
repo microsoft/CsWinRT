@@ -144,8 +144,8 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             {
                 __newItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler(newItems);
                 __oldItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler(oldItems);
-                __baseInterface = MarshalInspectable<object>.CreateMarshaler(baseInterface);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, MarshalInspectable<object>.GetAbi(__baseInterface), out __innerInterface, out __retval));
+                __baseInterface = MarshalInspectable.CreateMarshaler(baseInterface);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, MarshalInspectable.GetAbi(__baseInterface), out __innerInterface, out __retval));
                 innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
                 return ObjectReference<IUnknownVftbl>.FromAbi(__retval);
             }
@@ -153,9 +153,9 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             {
                 MarshalInterface<global::System.Collections.IList>.DisposeMarshaler(__newItems);
                 MarshalInterface<global::System.Collections.IList>.DisposeMarshaler(__oldItems);
-                MarshalInspectable<object>.DisposeMarshaler(__baseInterface);
-                MarshalInspectable<object>.DisposeAbi(__innerInterface);
-                MarshalInspectable<object>.DisposeAbi(__retval);
+                MarshalInspectable.DisposeMarshaler(__baseInterface);
+                MarshalInspectable.DisposeAbi(__innerInterface);
+                MarshalInspectable.DisposeAbi(__retval);
             }
         }
     }

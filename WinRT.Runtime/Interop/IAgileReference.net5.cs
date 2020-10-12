@@ -103,7 +103,7 @@ namespace ABI.WinRT.Interop
             }
             finally
             {
-                MarshalInspectable<object>.DisposeAbi(ptr);
+                MarshalInspectable.DisposeAbi(ptr);
             }
         }
     }
@@ -187,7 +187,7 @@ namespace ABI.WinRT.Interop
             }
             finally
             {
-                MarshalInspectable<object>.DisposeAbi(ptr);
+                MarshalInspectable.DisposeAbi(ptr);
             }
         }
     }

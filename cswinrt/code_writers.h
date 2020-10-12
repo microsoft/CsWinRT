@@ -1153,7 +1153,7 @@ return %(ComWrappersSupport.GetObjectReferenceForInterface(ptr));
 }
 finally
 {
-MarshalInspectable<object>.DisposeAbi(ptr);
+MarshalInspectable.DisposeAbi(ptr);
 }
 }))())
 {
@@ -1218,7 +1218,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
 finally
 {
-MarshalInspectable<object>.DisposeAbi(ptr);
+MarshalInspectable.DisposeAbi(ptr);
 }
 }
 )",
@@ -1255,7 +1255,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
 finally
 {
-MarshalInspectable<object>.DisposeAbi(ptr);
+MarshalInspectable.DisposeAbi(ptr);
 }
 }
 )",
@@ -2244,7 +2244,7 @@ event % %;)",
             {
                 if (is_out() && (local_type == "IntPtr" && param_type != "IntPtr"))
                 {
-                    w.write("MarshalInspectable<object>.DisposeAbi(%);\n", get_marshaler_local(w));
+                    w.write("MarshalInspectable.DisposeAbi(%);\n", get_marshaler_local(w));
                 }
                 return;
             }
@@ -2346,7 +2346,7 @@ event % %;)",
         call(semantics,
             [&](object_type)
             {
-                m.marshaler_type = "MarshalInspectable<object>";
+                m.marshaler_type = "MarshalInspectable";
                 if (m.is_array())
                 {
                     m.local_type = "MarshalInterfaceHelper<object>.MarshalerArray";
@@ -3539,7 +3539,7 @@ remove => %.Unsubscribe(value);
             call(semantics,
                 [&](object_type const&)
                 {
-                    m.marshaler_type = "MarshalInspectable<object>";
+                    m.marshaler_type = "MarshalInspectable";
                     m.local_type = "object";
                 },
                 [&](type_definition const& type)
@@ -4645,7 +4645,8 @@ return new %(comp);
 public static % FromAbi(IntPtr thisPtr)
 {
 if (thisPtr == IntPtr.Zero) return null;
-return MarshalInspectable<%>.FromAbi(thisPtr);
+var obj = MarshalInspectable.FromAbi(thisPtr);
+return obj as %;
 }
 %
 private readonly % _comp;
@@ -4703,7 +4704,8 @@ private % _default => _defaultLazy.Value;
 public static %% FromAbi(IntPtr thisPtr)
 {
 if (thisPtr == IntPtr.Zero) return null;
-return MarshalInspectable<%>.FromAbi(thisPtr);
+var obj = MarshalInspectable.FromAbi(thisPtr);
+return obj is % ? (%)obj : new %((%)obj);
 }
 
 % %(% ifc)%
@@ -4740,6 +4742,9 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             derived_new,
             type_name,
             type_name,
+            type_name,
+            type_name,
+            default_interface_abi_name,
             type.Flags().Sealed() ? "internal" : "protected internal",
             type_name,
             default_interface_abi_name,
@@ -4833,7 +4838,13 @@ private % _default => _defaultLazy.Value;
 public static %% FromAbi(IntPtr thisPtr)
 {
 if (thisPtr == IntPtr.Zero) return null;
-return MarshalInspectable<%>.FromAbi(thisPtr);
+var obj = MarshalInspectable.FromAbi(thisPtr);
+if (obj is % result)
+{
+return result;
+}
+using IObjectReference objRef = MarshalInspectable.CreateMarshaler(obj);
+return new %(objRef);
 }
 
 % %(IObjectReference objRef)%
@@ -4868,6 +4879,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             bind<write_attributed_types>(type),
             // FromAbi
             derived_new,
+            type_name,
             type_name,
             type_name,
             // ObjectReference constructor
@@ -4943,10 +4955,10 @@ public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArr
 public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<%>.GetAbiArray(box);
 public static unsafe %[] FromAbiArray(object box) => MarshalInterfaceHelper<%>.FromAbiArray(box, FromAbi);
 public static (int length, IntPtr data) FromManagedArray(%[] array) => MarshalInterfaceHelper<%>.FromManagedArray(array, (o) => FromManaged(o));
-public static void DisposeMarshaler(IObjectReference value) => MarshalInspectable<object>.DisposeMarshaler(value);
+public static void DisposeMarshaler(IObjectReference value) => MarshalInspectable.DisposeMarshaler(value);
 public static void DisposeMarshalerArray(MarshalInterfaceHelper<%>.MarshalerArray array) => MarshalInterfaceHelper<%>.DisposeMarshalerArray(array);
-public static void DisposeAbi(IntPtr abi) => MarshalInspectable<object>.DisposeAbi(abi);
-public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
+public static void DisposeAbi(IntPtr abi) => MarshalInspectable.DisposeAbi(abi);
+public static unsafe void DisposeAbiArray(object box) => MarshalInspectable.DisposeAbiArray(box);
 }
 )",
             abi_type_name,
@@ -4960,8 +4972,7 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<obje
                 if (is_exclusive_to_default)
                 {
                     auto default_interface_abi_name = get_default_interface_name(w, type, true);
-                    w.write("public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable<%>.CreateMarshaler(obj).As<%.Vftbl>();",
-                        projected_type_name,
+                    w.write("public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable.CreateMarshaler(obj).As<%.Vftbl>();",
                         projected_type_name,
                         default_interface_abi_name);
                 }
@@ -5716,7 +5727,7 @@ internal class % : ComponentActivationFactory<%>%
 
 public static IntPtr Make()
 {
-using var marshaler = MarshalInspectable<%>.CreateMarshaler(_factory).As<ABI.WinRT.Interop.IActivationFactory.Vftbl>();
+using var marshaler = MarshalInspectable.CreateMarshaler(_factory).As<ABI.WinRT.Interop.IActivationFactory.Vftbl>();
 return marshaler.GetRef();
 }
 
@@ -5733,7 +5744,6 @@ return ObjectReference<IInspectable.Vftbl>.Attach(ref instance).As<I>();
 factory_type_name,
 type_name,
 bind<write_factory_class_inheritance>(type),
-factory_type_name,
 factory_type_name,
 factory_type_name,
 bind<write_factory_class_members>(type)

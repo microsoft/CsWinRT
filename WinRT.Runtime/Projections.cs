@@ -19,7 +19,6 @@ namespace WinRT
         private static readonly Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>();
         private static readonly Dictionary<Type, string> CustomTypeToAbiTypeNameMappings = new Dictionary<Type, string>();
         private static readonly HashSet<string> ProjectedRuntimeClassNames = new HashSet<string>();
-        private static readonly HashSet<Type> ProjectedCustomTypeRuntimeClasses = new HashSet<Type>();
 
         static Projections()
         {
@@ -95,20 +94,14 @@ namespace WinRT
             if (isRuntimeClass)
             {
                 ProjectedRuntimeClassNames.Add(winrtTypeName);
-                ProjectedCustomTypeRuntimeClasses.Add(publicType);
             }
         }
 
-        public static Type FindCustomHelperTypeMapping(Type publicType, bool filterToRuntimeClass = false)
+        public static Type FindCustomHelperTypeMapping(Type publicType)
         {
             rwlock.EnterReadLock();
             try
             {
-                if(filterToRuntimeClass && !ProjectedCustomTypeRuntimeClasses.Contains(publicType))
-                {
-                    return null;
-                }
-
                 if (publicType.IsGenericType)
                 {
                     return CustomTypeToHelperTypeMappings.TryGetValue(publicType.GetGenericTypeDefinition(), out Type abiTypeDefinition)
@@ -275,38 +268,29 @@ namespace WinRT
             return defaultInterface;
         }
 
-        internal static bool TryGetMarshalerTypeForProjectedRuntimeClass<T>(IObjectReference objectReference, out Type type)
+        internal static bool TryGetMarshalerTypeForProjectedRuntimeClass(IObjectReference objectReference, out Type type)
         {
-            Type projectedType = typeof(T);
-            if (projectedType == typeof(object))
+            if(objectReference.TryAs<IInspectable.Vftbl>(out var inspectablePtr) == 0)
             {
-                if (objectReference.TryAs<IInspectable.Vftbl>(out var inspectablePtr) == 0)
+                rwlock.EnterReadLock();
+                try
                 {
-                    rwlock.EnterReadLock();
-                    try
+                    IInspectable inspectable = inspectablePtr;
+                    string runtimeClassName = inspectable.GetRuntimeClassName(true);
+                    if (runtimeClassName is object)
                     {
-                        IInspectable inspectable = inspectablePtr;
-                        string runtimeClassName = inspectable.GetRuntimeClassName(true);
-                        if (runtimeClassName is object)
+                        if (ProjectedRuntimeClassNames.Contains(runtimeClassName))
                         {
-                            if (ProjectedRuntimeClassNames.Contains(runtimeClassName))
-                            {
-                                type = CustomTypeToHelperTypeMappings[CustomAbiTypeNameToTypeMappings[runtimeClassName]];
-                                return true;
-                            }
+                            type = CustomTypeToHelperTypeMappings[CustomAbiTypeNameToTypeMappings[runtimeClassName]];
+                            return true;
                         }
                     }
-                    finally
-                    {
-                        inspectablePtr.Dispose();
-                        rwlock.ExitReadLock();
-                    }
                 }
-            }
-            else
-            {
-                type = FindCustomHelperTypeMapping(projectedType, true);
-                return type != null;
+                finally
+                {
+                    inspectablePtr.Dispose();
+                    rwlock.ExitReadLock();
+                }
             }
             type = null;
             return false;
