@@ -115,6 +115,10 @@ namespace TestComponentCSharp
         Class(Int32 intProperty);
         Class(Int32 intProperty, String stringProperty);
 
+        Windows.UI.Xaml.Interop.TypeName TypeProperty{ get; set; };
+        String GetTypePropertyAbiName();
+        String GetTypePropertyKind();
+
         // static
         static Int32 StaticIntProperty;
         static event Windows.Foundation.EventHandler<Int32> StaticIntPropertyChanged;

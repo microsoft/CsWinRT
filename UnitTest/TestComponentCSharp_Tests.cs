@@ -36,6 +36,14 @@ namespace UnitTest
             TestObject = new Class();
         }
 
+        [Fact]
+        public void TestTypePropertyWithSystemType()
+        {
+            TestObject.TypeProperty = typeof(System.Type);
+            Assert.Equal("Windows.UI.Xaml.Interop.TypeName", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+        }
+
 #if NET5_0
         [Fact]
         public void TestDynamicInterfaceCastingOnValidInterface()

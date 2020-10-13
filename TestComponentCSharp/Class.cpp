@@ -157,6 +157,40 @@ namespace winrt::TestComponentCSharp::implementation
         }
         _strings = winrt::single_threaded_vector<hstring>({ L"foo", L"bar" });
     }
+
+    void Class::TypeProperty(Windows::UI::Xaml::Interop::TypeName val)
+    {
+        _typeProperty = val;
+    }
+
+    Windows::UI::Xaml::Interop::TypeName Class::TypeProperty()
+    {
+        return _typeProperty;
+    }
+
+    winrt::hstring Class::GetTypePropertyAbiName()
+    {
+        return _typeProperty.Name;
+    }
+
+    winrt::hstring Class::GetTypePropertyKind()
+    {
+        switch (_typeProperty.Kind)
+        {
+        case Windows::UI::Xaml::Interop::TypeKind::Custom:
+            return winrt::hstring(L"Custom");
+        case Windows::UI::Xaml::Interop::TypeKind::Metadata:
+            return winrt::hstring(L"Metadata");
+        default:
+            return winrt::hstring(L"Primitive");
+        }
+    }
+
+    Windows::UI::Xaml::Interop::TypeName TypeProperty()
+    {
+        return Windows::UI::Xaml::Interop::TypeName();
+    }
+
     int32_t Class::StaticIntProperty()
     {
         return statics::_int;
