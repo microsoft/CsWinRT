@@ -181,124 +181,139 @@ Where <spec> is one or more of:
                 group.add([&ns_members, &componentActivatableClasses]
                 {
                     auto&& [ns, members] = ns_members;
-                    writer w(ns);
-                    w.write_begin();
-                    bool written = false;
-                    bool requires_abi = false;
-                    for (auto&& [name, type] : members.types)
+                    std::string_view currentType = "";
+                    try
                     {
-                        if (!settings.filter.includes(type)) { continue; }
-                        if (get_mapped_type(ns, name))
+                        writer w(ns);
+                        w.write_begin();
+                        bool written = false;
+                        bool requires_abi = false;
+                        for (auto&& [name, type] : members.types)
                         {
-                            written = true;
-                            continue;
-                        }
-                        auto guard{ w.push_generic_params(type.GenericParam()) };
-
-                        bool type_requires_abi = true;
-                        switch (get_category(type))
-                        {
-                        case category::class_type:
-                            if(is_attribute_type(type))
+                            currentType = name;
+                            if (!settings.filter.includes(type)) { continue; }
+                            if (get_mapped_type(ns, name))
                             {
-                                write_attribute(w, type);
+                                written = true;
+                                continue;
                             }
-                            else
+                            auto guard{ w.push_generic_params(type.GenericParam()) };
+
+                            bool type_requires_abi = true;
+                            switch (get_category(type))
                             {
-                                if (settings.netstandard_compat)
+                            case category::class_type:
+                                if (is_attribute_type(type))
                                 {
-                                    write_class_netstandard(w, type);
+                                    write_attribute(w, type);
                                 }
                                 else
                                 {
-                                    write_class(w, type);
-                                }
-                                if (settings.component && componentActivatableClasses.count(type) == 1)
-                                {
-                                    write_factory_class(w, type);
-                                }
-                            }
-                            break;
-                        case category::delegate_type:
-                            write_delegate(w, type);
-                            break;
-                        case category::enum_type:
-                            write_enum(w, type);
-                            type_requires_abi = false;
-                            break;
-                        case category::interface_type:
-                            write_interface(w, type);
-                            break;
-                        case category::struct_type:
-                            if (is_api_contract_type(type))
-                            {
-                                write_contract(w, type);
-                            }
-                            else
-                            {
-                                write_struct(w, type);
-                                type_requires_abi = !is_type_blittable(type);
-                            }
-                            break;
-                        }
-
-                        written = true;
-                        requires_abi = requires_abi || type_requires_abi;
-                    }
-                    if (written)
-                    {
-                        w.write_end();
-                        if (requires_abi)
-                        {
-                            w.write_begin_abi();
-                            for (auto&& [name, type] : members.types)
-                            {
-                                if (!settings.filter.includes(type)) { continue; }
-                                if (get_mapped_type(ns, name)) continue;
-                                if (is_api_contract_type(type)) { continue; }
-                                if (is_attribute_type(type)) { continue; }
-                                auto guard{ w.push_generic_params(type.GenericParam()) };
-
-                                switch (get_category(type))
-                                {
-                                case category::class_type:
-                                    write_abi_class(w, type);
-                                    break;
-                                case category::delegate_type:
-                                    write_abi_delegate(w, type);
-                                    break;
-                                case category::interface_type:
                                     if (settings.netstandard_compat)
                                     {
-                                        write_abi_interface_netstandard(w, type);
+                                        write_class_netstandard(w, type);
                                     }
                                     else
                                     {
-                                        write_abi_interface(w, type);
+                                        write_class(w, type);
                                     }
-                                    break;
-                                case category::struct_type:
-                                    if (!is_type_blittable(type))
+                                    if (settings.component && componentActivatableClasses.count(type) == 1)
                                     {
-                                        write_abi_struct(w, type);
+                                        write_factory_class(w, type);
                                     }
-                                    break;
+                                }
+                                break;
+                            case category::delegate_type:
+                                write_delegate(w, type);
+                                break;
+                            case category::enum_type:
+                                write_enum(w, type);
+                                type_requires_abi = false;
+                                break;
+                            case category::interface_type:
+                                write_interface(w, type);
+                                break;
+                            case category::struct_type:
+                                if (is_api_contract_type(type))
+                                {
+                                    write_contract(w, type);
+                                }
+                                else
+                                {
+                                    write_struct(w, type);
+                                    type_requires_abi = !is_type_blittable(type);
+                                }
+                                break;
+                            }
+
+                            written = true;
+                            requires_abi = requires_abi || type_requires_abi;
+                        }
+                        currentType = "";
+                        if (written)
+                        {
+                            w.write_end();
+                            if (requires_abi)
+                            {
+                                w.write_begin_abi();
+                                for (auto&& [name, type] : members.types)
+                                {
+                                    currentType = name;
+                                    if (!settings.filter.includes(type)) { continue; }
+                                    if (get_mapped_type(ns, name)) continue;
+                                    if (is_api_contract_type(type)) { continue; }
+                                    if (is_attribute_type(type)) { continue; }
+                                    auto guard{ w.push_generic_params(type.GenericParam()) };
+
+                                    switch (get_category(type))
+                                    {
+                                    case category::class_type:
+                                        write_abi_class(w, type);
+                                        break;
+                                    case category::delegate_type:
+                                        write_abi_delegate(w, type);
+                                        break;
+                                    case category::interface_type:
+                                        if (settings.netstandard_compat)
+                                        {
+                                            write_abi_interface_netstandard(w, type);
+                                        }
+                                        else
+                                        {
+                                            write_abi_interface(w, type);
+                                        }
+                                        break;
+                                    case category::struct_type:
+                                        if (!is_type_blittable(type))
+                                        {
+                                            write_abi_struct(w, type);
+                                        }
+                                        break;
+                                    }
+                                }
+                                w.write_end_abi();
+                            }
+                            currentType = "";
+
+                            // Custom additions to namespaces
+                            for (auto addition : strings::additions)
+                            {
+                                if (ns == addition.name)
+                                {
+                                    w.write(addition.value);
                                 }
                             }
-                            w.write_end_abi();
-                        }
 
-                        // Custom additions to namespaces
-                        for (auto addition : strings::additions)
-                        {
-                            if (ns == addition.name)
-                            {
-                                w.write(addition.value);
-                            }
+                            auto filename = w.write_temp("%.cs", ns);
+                            w.flush_to_file(settings.output_folder / filename);
                         }
-
-                        auto filename = w.write_temp("%.cs", ns);
-                        w.flush_to_file(settings.output_folder / filename);
+                    }
+                    catch (std::exception const& e)
+                    {
+                        writer console;
+                        console.write("error: '%' when processing %%%\n", e.what(), ns, currentType.empty() ? "" : ".", currentType);
+                        console.flush_to_console();
+                        throw;
                     }
                 });
             }
