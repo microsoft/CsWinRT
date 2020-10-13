@@ -5044,7 +5044,7 @@ AbiToProjectionVftablePtr = nativeVftbl;
 }
 %
 public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => 
-managedDelegate is null ? null : ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%)));
+managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(@%)));
 
 public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
 
@@ -5055,7 +5055,11 @@ return abiDelegate is null ? null : (%)ComWrappersSupport.TryRegisterObjectForIn
 }
 
 [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
+#if NETSTANDARD2_0
 private class NativeDelegateWrapper
+#else
+private class NativeDelegateWrapper : IWinRTObject
+#endif
 {
 private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
 private readonly AgileReference _agileReference = default;
@@ -5076,6 +5080,12 @@ else
 objRef.Dispose();
 }
 }
+
+#if !NETSTANDARD2_0
+IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
+bool IWinRTObject.HasUnwrappableNativeObject => true;
+global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
+#endif
 
 public unsafe % Invoke(%)
 {

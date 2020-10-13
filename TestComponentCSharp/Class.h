@@ -129,6 +129,7 @@ namespace winrt::TestComponentCSharp::implementation
         void StringPropertyChanged(winrt::event_token const& token) noexcept;
         void RaiseStringChanged();
         void CallForString(TestComponentCSharp::ProvideString const& provideString);
+        void AddUriHandler(TestComponentCSharp::IUriHandler uriHandler);
         hstring StringProperty2();
         void StringProperty2(hstring const& value);
         Windows::Foundation::Collections::IVector<hstring> StringsProperty();
@@ -157,6 +158,7 @@ namespace winrt::TestComponentCSharp::implementation
         void CallForStringPair(TestComponentCSharp::ProvideStringPair const& provideStringPair);
         winrt::event_token StringPairPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IKeyValuePair<hstring, hstring>> const& handler);
         void StringPairPropertyChanged(winrt::event_token const& token) noexcept;
+        TestComponentCSharp::ProvideUri GetUriDelegate() noexcept;
         BlittableStruct BlittableStructProperty();
         void BlittableStructProperty(BlittableStruct const& value);
         BlittableStruct GetBlittableStruct();
