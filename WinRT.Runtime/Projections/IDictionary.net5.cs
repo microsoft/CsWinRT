@@ -161,7 +161,7 @@ namespace ABI.System.Collections.Generic
                 if (ContainsKey(key))
                     throw new ArgumentException(ErrorStrings.Argument_AddingDuplicate);
 
-                Insert((this as global::Windows.Foundation.Collections.IMap<K, V>), key, value);
+                Insert(_map, key, value);
             }
 
             public bool Remove(K key)
@@ -199,7 +199,7 @@ namespace ABI.System.Collections.Generic
 
                 try
                 {
-                    value = Lookup((this as global::Windows.Foundation.Collections.IMap<K, V>), key);
+                    value = Lookup(_map, key);
                     return true;
                 }
                 catch (KeyNotFoundException)
