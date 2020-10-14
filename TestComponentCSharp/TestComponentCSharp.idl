@@ -88,6 +88,11 @@ namespace TestComponentCSharp
         //String DistinctProperty{ get; set; };
     }
 
+    interface IUriHandler
+    {
+        void AddUriHandler(ProvideUri provideUri);
+    };
+
     static runtimeclass ComImports
     {
         static Object MakeObject();
@@ -181,6 +186,9 @@ namespace TestComponentCSharp
         void RaiseStringPairChanged();
         void CallForStringPair(ProvideStringPair provideStringPair);
         event Windows.Foundation.EventHandler<Windows.Foundation.Collections.IKeyValuePair<String, String> > StringPairPropertyChanged;
+
+        ProvideUri GetUriDelegate();
+        void AddUriHandler(IUriHandler uriHandler);
 
         // Structs
         BlittableStruct BlittableStructProperty;

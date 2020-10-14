@@ -993,6 +993,26 @@ namespace WinRT
         public static unsafe void DisposeAbiArray(T box) => MarshalInterfaceHelper<T>.DisposeAbiArray(box);
     }
 
+    static public class MarshalDelegate
+    {
+        public static IObjectReference CreateMarshaler(object o, Guid delegateIID, bool unwrapObject = true)
+        {
+            if (o is null)
+            {
+                return null;
+            }
+
+            if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
+            {
+                return objRef.As<global::WinRT.Interop.IDelegateVftbl>(delegateIID);
+            }
+            using (var ccw = ComWrappersSupport.CreateCCWForObject(ComWrappersSupport.GetRuntimeClassCCWTypeIfAny(o)))
+            {
+                return ccw.As<global::WinRT.Interop.IDelegateVftbl>(delegateIID);
+            }
+        }
+    }
+
     public class Marshaler<T>
     {
         static Marshaler()

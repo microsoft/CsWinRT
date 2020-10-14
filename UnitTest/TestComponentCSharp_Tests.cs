@@ -25,6 +25,12 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
 
+#if NET5_0
+using WeakRefNS = System;
+#else
+using WeakRefNS = WinRT;
+#endif
+
 namespace UnitTest
 {
     public class TestCSharp
@@ -198,6 +204,32 @@ namespace UnitTest
             events_expected++;
 
             Assert.Equal(events_received, events_expected);
+        }
+
+        class ManagedUriHandler : IUriHandler
+        {
+            public Class TestObject { get; private set; }
+
+            public ManagedUriHandler(Class testObject)
+            {
+                TestObject = testObject;
+            }
+
+            public void AddUriHandler(ProvideUri provideUri)
+            {
+                TestObject.CallForUri(provideUri);
+                Assert.Equal(new Uri("http://github.com"), TestObject.UriProperty);
+            }
+        }
+
+        [Fact]
+        public void TestDelegateUnwrapping()
+        {
+            var obj = TestObject.GetUriDelegate();
+            TestObject.CallForUri(obj);
+            Assert.Equal(new Uri("http://microsoft.com"), TestObject.UriProperty);
+
+            TestObject.AddUriHandler(new ManagedUriHandler(TestObject));
         }
 
         // TODO: when the public WinUI nuget supports IXamlServiceProvider, just use the projection
@@ -1594,27 +1626,27 @@ namespace UnitTest
         public void WeakReferenceOfManagedObject()
         {
             var properties = new ManagedProperties(42);
-            WinRT.WeakReference<IProperties1> weakReference = new WinRT.WeakReference<IProperties1>(properties);
-            weakReference.TryGetTarget(out var propertiesStrong);
+            WeakRefNS.WeakReference<IProperties1> weakReference = new WeakRefNS.WeakReference<IProperties1>(properties);
+            Assert.True(weakReference.TryGetTarget(out var propertiesStrong));
             Assert.Same(properties, propertiesStrong);
         }
 
         [Fact]
         public void WeakReferenceOfNativeObject()
         {
-            var weakReference = new WinRT.WeakReference<Class>(TestObject);
-            weakReference.TryGetTarget(out var classStrong);
+            var weakReference = new WeakRefNS.WeakReference<Class>(TestObject);
+            Assert.True(weakReference.TryGetTarget(out var classStrong));
             Assert.Same(TestObject, classStrong);
         }
 
         [Fact]
         public void WeakReferenceOfNativeObjectRehydratedAfterWrapperIsCollected()
         {
-            static (WinRT.WeakReference<Class> winrt, WeakReference net, IObjectReference objRef) GetWeakReferences()
+            static (WeakRefNS.WeakReference<Class> winrt, WeakReference net, IObjectReference objRef) GetWeakReferences()
             {
                 var obj = new Class();
                 ComWrappersSupport.TryUnwrapObject(obj, out var objRef);
-                return (new WinRT.WeakReference<Class>(obj), new WeakReference(obj), objRef);
+                return (new WeakRefNS.WeakReference<Class>(obj), new WeakReference(obj), objRef);
             }
 
             var (winrt, net, objRef) = GetWeakReferences();

@@ -9,27 +9,19 @@ using WinRT.Interop;
 
 namespace ABI.System
 {
-    [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     [Guid("68B3A2DF-8173-539F-B524-C8A2348F5AFB")]
-    public unsafe class IServiceProvider : global::System.IServiceProvider
+    [DynamicInterfaceCastableImplementation]
+    internal unsafe interface IServiceProvider : global::System.IServiceProvider
     {
         [Guid("68B3A2DF-8173-539F-B524-C8A2348F5AFB")]
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
 
-#if NETSTANDARD2_0
-            private void* _GetService_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, global::ABI.System.Type, IntPtr*, int> GetService_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, global::ABI.System.Type, IntPtr*, int>)_GetService_0; set => _GetService_0 = (void*)value; }
-#else
             public delegate* unmanaged<IntPtr, global::ABI.System.Type, IntPtr*, int> GetService_0;
-#endif
 
             public static readonly IntPtr AbiToProjectionVftablePtr;
-
-#if NETSTANDARD2_0
-            private static Delegate[] DelegateCache = new Delegate[1];
-#endif
 
             static unsafe Vftbl()
             {
@@ -37,17 +29,11 @@ namespace ABI.System
                 (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
-                    _GetService_0 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new IXamlServiceProvider_Delegates.GetService_0(Do_Abi_GetService_0))
-#else
                     GetService_0 = (delegate* unmanaged<IntPtr, global::ABI.System.Type, IntPtr*, int>)&Do_Abi_GetService_0
-#endif
                 };
             }
 
-#if !NETSTANDARD2_0
             [UnmanagedCallersOnly]
-#endif
             private static unsafe int Do_Abi_GetService_0(IntPtr thisPtr, global::ABI.System.Type type, IntPtr* result)
             {
                 object __result = default;
@@ -69,24 +55,14 @@ namespace ABI.System
         }
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
-        public static implicit operator IServiceProvider(IObjectReference obj) => (obj != null) ? new IServiceProvider(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
-        public IObjectReference ObjRef { get => _obj; }
-        public IntPtr ThisPtr => _obj.ThisPtr;
-        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
-        public A As<A>() => _obj.AsType<A>();
-        public IServiceProvider(IObjectReference obj) : this(obj.As<Vftbl>()) { }
-        internal IServiceProvider(ObjectReference<Vftbl> obj)
-        {
-            _obj = obj;
-        }
-
-        public unsafe object GetService(global::System.Type type)
+        unsafe object global::System.IServiceProvider.GetService(global::System.Type type)
         {
             global::ABI.System.Type.Marshaler __type = default;
             IntPtr __retval = default;
             try
             {
+                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.IServiceProvider).TypeHandle));
+                var ThisPtr = _obj.ThisPtr;
                 __type = global::ABI.System.Type.CreateMarshaler(type);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetService_0(ThisPtr, global::ABI.System.Type.GetAbi(__type), &__retval));
                 return MarshalInspectable<object>.FromAbi(__retval);
