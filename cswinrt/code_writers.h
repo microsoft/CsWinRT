@@ -5070,7 +5070,7 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<obje
                             {
                                 w.write(
                                     ".As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).GetHelperType()))",
-                                    bind<write_type_name>(type, typedef_name_type::Projected, false));
+                                    bind<write_type_name>(get_type_semantics(get_default_interface(type)), typedef_name_type::Projected, false));
                             }
                         }));
                 }
