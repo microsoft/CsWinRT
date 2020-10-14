@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
@@ -47,7 +48,7 @@ namespace ABI.System.Windows.Input
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
-        private class NativeDelegateWrapper
+        private class NativeDelegateWrapper : IWinRTObject
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
             private readonly AgileReference _agileReference = default;
@@ -64,6 +65,10 @@ namespace ABI.System.Windows.Input
                     objRef.Dispose();
                 }
             }
+
+            IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
+            bool IWinRTObject.HasUnwrappableNativeObject => true;
+            ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
 
             public void Invoke(object sender, EventArgs args)
             {

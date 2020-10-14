@@ -546,6 +546,18 @@ namespace winrt::TestComponentCSharp::implementation
         _stringPairChanged.remove(token);
     }
 
+    TestComponentCSharp::ProvideUri Class::GetUriDelegate() noexcept
+    {
+        TestComponentCSharp::ProvideUri handler = [] { return Windows::Foundation::Uri(L"http://microsoft.com"); };
+        return handler;
+    }
+
+    void Class::AddUriHandler(TestComponentCSharp::IUriHandler uriHandler)
+    {
+        TestComponentCSharp::ProvideUri handler = [] { return Windows::Foundation::Uri(L"http://github.com"); };
+        uriHandler.AddUriHandler(handler);
+    }
+
     BlittableStruct Class::BlittableStructProperty()
     {
         return _blittableStruct.blittable;
