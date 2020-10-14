@@ -18,35 +18,6 @@ namespace UnitTest
             TestObject = new Class();
         }
 
-        [Fact]
-        public void TestAsStream()
-        {
-            using InMemoryRandomAccessStream winrtStream = new InMemoryRandomAccessStream();
-            using Stream normalStream = winrtStream.AsStream();
-            using var memoryStream = new MemoryStream();
-            normalStream.CopyTo(memoryStream);
-        }
-
-        async Task InvokeStreamWriteAndReadAsync()
-        {
-            var random = new Random(42);
-            byte[] data = new byte[256];
-            random.NextBytes(data);
-
-            using var stream = new InMemoryRandomAccessStream().AsStream();
-            await stream.WriteAsync(data, 0, data.Length);
-            stream.Seek(0, SeekOrigin.Begin);
-
-            byte[] read = new byte[256];
-            await stream.ReadAsync(read, 0, read.Length);
-            Assert.Equal(read, data);
-        }
-
-        [Fact]
-        public void TestStreamWriteAndRead()
-        {
-            Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
-        }
-
+      
     }
 }

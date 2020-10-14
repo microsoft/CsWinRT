@@ -110,6 +110,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         public static byte[] ToArray(this IBuffer source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source.Capacity == 0) return Array.Empty<byte>();
 
             return ToArray(source, 0, checked((int)source.Length));
         }
@@ -118,6 +119,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         public static byte[] ToArray(this IBuffer source, uint sourceIndex, int count)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source.Capacity == 0) return Array.Empty<byte>();
             if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
             if (source.Capacity <= sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
             if (source.Capacity - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
@@ -139,6 +141,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
+            if (source.Capacity == 0 && destination.Length == 0) return;
 
             CopyTo(source, 0, destination, 0, checked((int)source.Length));
         }
@@ -146,6 +149,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         public static void CopyTo(this IBuffer source, uint sourceIndex, byte[] destination, int destinationIndex, int count)
         {
+            if (source.Capacity == 0 && destination.Length == 0) return;
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
             if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
