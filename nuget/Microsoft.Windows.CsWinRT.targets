@@ -49,7 +49,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
   </Target>
 
-  <Target Name="CsWinRTGenerateProjection" DependsOnTargets="CsWinRTPrepareProjection" Condition="'$(CsWinRTGenerateProjection)' == 'true' And '@(CsWinRTInputs)' != ''">
+  <Target Name="CsWinRTGenerateProjection" DependsOnTargets="CsWinRTPrepareProjection" Condition="'$(CsWinRTGenerateProjection)' == 'true'">
     <PropertyGroup>
       <CsWinRTResponseFile>$(CsWinRTGeneratedFilesDir)cswinrt.rsp</CsWinRTResponseFile>
       <CsWinRTCommand>$(CsWinRTExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
