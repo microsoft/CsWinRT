@@ -206,6 +206,32 @@ namespace UnitTest
             Assert.Equal(events_received, events_expected);
         }
 
+        class ManagedUriHandler : IUriHandler
+        {
+            public Class TestObject { get; private set; }
+
+            public ManagedUriHandler(Class testObject)
+            {
+                TestObject = testObject;
+            }
+
+            public void AddUriHandler(ProvideUri provideUri)
+            {
+                TestObject.CallForUri(provideUri);
+                Assert.Equal(new Uri("http://github.com"), TestObject.UriProperty);
+            }
+        }
+
+        [Fact]
+        public void TestDelegateUnwrapping()
+        {
+            var obj = TestObject.GetUriDelegate();
+            TestObject.CallForUri(obj);
+            Assert.Equal(new Uri("http://microsoft.com"), TestObject.UriProperty);
+
+            TestObject.AddUriHandler(new ManagedUriHandler(TestObject));
+        }
+
         // TODO: when the public WinUI nuget supports IXamlServiceProvider, just use the projection
         [ComImport]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]

@@ -1128,6 +1128,7 @@ private static WeakLazy<_%> _instance = new WeakLazy<_%>();
 internal static % Instance => (%)_instance.Value;
 
 IObjectReference IWinRTObject.NativeObject => _obj;
+bool IWinRTObject.HasUnwrappableNativeObject => false;
 global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
 }
 )",
@@ -2723,6 +2724,7 @@ private static WeakLazy<_%> _instance = new WeakLazy<_%>();
 internal static _% Instance => _instance.Value;
 
 IObjectReference IWinRTObject.NativeObject => _obj;
+bool IWinRTObject.HasUnwrappableNativeObject => false;
 global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
 
 %
@@ -4954,6 +4956,14 @@ _lazyInterfaces = new Dictionary<Type, object>()
                         default_interface_name,
                         default_interface_name,
                         bind<write_lazy_interface_initialization>(type));
+                    w.write(R"(
+bool IWinRTObject.HasUnwrappableNativeObject => this.GetType() == typeof(%);)",
+                        type.TypeName());
+                }
+                else
+                {
+                    w.write(R"(
+bool IWinRTObject.HasUnwrappableNativeObject => true;)");
                 }
 
                 w.write(R"(
@@ -5084,7 +5094,7 @@ AbiToProjectionVftablePtr = nativeVftbl;
 }
 %
 public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => 
-managedDelegate is null ? null : ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%)));
+managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(@%)));
 
 public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
 
@@ -5095,7 +5105,11 @@ return abiDelegate is null ? null : (%)ComWrappersSupport.TryRegisterObjectForIn
 }
 
 [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
+#if NETSTANDARD2_0
 private class NativeDelegateWrapper
+#else
+private class NativeDelegateWrapper : IWinRTObject
+#endif
 {
 private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
 private readonly AgileReference _agileReference = default;
@@ -5116,6 +5130,12 @@ else
 objRef.Dispose();
 }
 }
+
+#if !NETSTANDARD2_0
+IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
+bool IWinRTObject.HasUnwrappableNativeObject => true;
+global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
+#endif
 
 public unsafe % Invoke(%)
 {
