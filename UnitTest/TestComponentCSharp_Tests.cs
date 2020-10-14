@@ -50,6 +50,16 @@ namespace UnitTest
             Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
         }
 
+        class CustomDictionary : Dictionary<string, string> { }
+
+        [Fact]
+        public void TestTypePropertyWithCustomType()
+        {
+            TestObject.TypeProperty = typeof(CustomDictionary);
+            var name = TestObject.GetTypePropertyAbiName();
+            Assert.Equal("UnitTest.TestCSharp+CustomDictionary, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", name);
+        }
+
 #if NET5_0
         [Fact]
         public void TestDynamicInterfaceCastingOnValidInterface()
