@@ -103,6 +103,7 @@ namespace WinRT
 
         private static bool TryGetComposedRefForQI(object value, out IObjectReference objRef)
         {
+#if NETSTANDARD2_0
             var getReferenceMethod = value.GetType().GetMethod("GetDefaultReference", BindingFlags.NonPublic | BindingFlags.Instance).MakeGenericMethod(typeof(IUnknownVftbl));
             if (getReferenceMethod is null)
             {
@@ -111,6 +112,15 @@ namespace WinRT
             }
             objRef = (IObjectReference)getReferenceMethod.Invoke(value, Array.Empty<object>());
             return true;
+#else
+            if(value is IWinRTObject winrtObj)
+            {
+                objRef = winrtObj.NativeObject;
+                return true;
+            }
+            objRef = null;
+            return false;
+#endif
         }
     }
 }
