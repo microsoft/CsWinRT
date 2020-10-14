@@ -1089,11 +1089,12 @@ remove => %.% -= value;
 
     std::string write_static_cache_object(writer& w, std::string_view cache_type_name, TypeDef const& class_type)
     {
-        auto cache_vftbl_type = settings.netstandard_compat
-            ? w.write_temp("ABI.%.%.Vftbl",
+        if (settings.netstandard_compat)
+        {
+            
+        auto cache_vftbl_type = w.write_temp("ABI.%.%.Vftbl",
                 class_type.TypeNamespace(),
-                cache_type_name)
-            : "IUnknownVftbl";
+                cache_type_name);
         auto cache_interface =
             w.write_temp(
                 R"((new BaseActivationFactory("%", "%.%"))._As<%>)",
@@ -1101,8 +1102,6 @@ remove => %.% -= value;
                 class_type.TypeNamespace(),
                 class_type.TypeName(),
                 cache_vftbl_type);
-        if (settings.netstandard_compat)
-        {
             w.write(R"(
 internal class _% : ABI.%.%
 {
@@ -1125,10 +1124,10 @@ internal static % Instance => _instance.Value;
             w.write(R"(
 internal class _% : IWinRTObject
 {
-private ObjectReference<%> _obj;
+private IObjectReference _obj;
 public _%()
 {
-_obj = %();
+_obj = (new BaseActivationFactory("%", "%.%"))._As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
 }
 
 private static WeakLazy<_%> _instance = new WeakLazy<_%>();
@@ -1139,9 +1138,12 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
 }
 )",
                 cache_type_name,
-                cache_vftbl_type,
                 cache_type_name,
-                cache_interface,
+                class_type.TypeNamespace(),
+                class_type.TypeNamespace(),
+                class_type.TypeName(),
+                class_type.TypeNamespace(),
+                cache_type_name,
                 cache_type_name,
                 cache_type_name,
                 cache_type_name,
@@ -2683,16 +2685,14 @@ public unsafe % %(%)
     std::string write_factory_cache_object(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
     {
         std::string_view cache_type_name = factory_type.TypeName();
-        auto cache_vftbl_type = settings.netstandard_compat
-            ? w.write_temp("ABI.%.%.Vftbl", class_type.TypeNamespace(), cache_type_name)
-            : "IUnknownVftbl";
-        auto cache_interface =
-            w.write_temp(
-                R"(ActivationFactory<%>.As<%>)",
-                class_type.TypeName(),
-                cache_vftbl_type);
         if (settings.netstandard_compat)
         {
+            auto cache_vftbl_type = w.write_temp("ABI.%.%.Vftbl", class_type.TypeNamespace(), cache_type_name);
+            auto cache_interface =
+                w.write_temp(
+                    R"(ActivationFactory<%>.As<%>)",
+                    class_type.TypeName(),
+                    cache_vftbl_type);
 
             w.write(R"(
 internal class _% : ABI.%.%
@@ -2719,11 +2719,11 @@ internal static _% Instance => _instance.Value;
             w.write(R"(
 internal class _% : IWinRTObject
 {
-private ObjectReference<%> _obj;
+private IObjectReference _obj;
 private IntPtr ThisPtr => _obj.ThisPtr;
 public _%()
 {
-_obj = %();
+_obj = ActivationFactory<%>.As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
 }
 
 private static WeakLazy<_%> _instance = new WeakLazy<_%>();
@@ -2736,9 +2736,10 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
 }
 )",
                 cache_type_name,
-                cache_vftbl_type,
                 cache_type_name,
-                cache_interface,
+                class_type.TypeName(),
+                class_type.TypeNamespace(),
+                cache_type_name,
                 cache_type_name,
                 cache_type_name,
                 cache_type_name,
@@ -4615,7 +4616,7 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
                         auto method_name = method.Name();
                         w.write("((delegate* unmanaged[Stdcall]<%, int>*)AbiToProjectionVftablePtr)[%] = &Do_Abi_%_%;",
                             bind<write_abi_parameter_types_pointer>(method_signature{ method }),
-                            method_index,
+                            method_index + 6 /* number of entries in IInspectable */,
                             method_name,
                             method_index);
                     }, "\n", methods),
