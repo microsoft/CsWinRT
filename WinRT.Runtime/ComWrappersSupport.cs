@@ -148,7 +148,7 @@ namespace WinRT
                     entries.Add(new ComInterfaceEntry
                     {
                         IID = GuidGenerator.GetIID(ifaceAbiType),
-                        Vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                        Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
                     });
                 }
 
@@ -159,7 +159,7 @@ namespace WinRT
                     entries.Add(new ComInterfaceEntry
                     {
                         IID = GuidGenerator.GetIID(compatibleIfaceAbiType),
-                        Vtable = (IntPtr)compatibleIfaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                        Vtable = (IntPtr)compatibleIfaceAbiType.GetAbiToProjectionVftblPtr()
                     });
                 }
             }
@@ -169,7 +169,7 @@ namespace WinRT
                 entries.Add(new ComInterfaceEntry
                 {
                     IID = GuidGenerator.GetIID(obj.GetType()),
-                    Vtable = (IntPtr)obj.GetType().GetHelperType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                    Vtable = (IntPtr)obj.GetType().GetHelperType().GetAbiToProjectionVftblPtr()
                 });
             }
 
@@ -180,7 +180,7 @@ namespace WinRT
                 entries.Add(new ComInterfaceEntry
                 {
                     IID = GuidGenerator.GetIID(ifaceAbiType),
-                    Vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                    Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
                 });
             }
             else if (ShouldProvideIReference(obj))
@@ -537,7 +537,7 @@ namespace WinRT
             return new ComInterfaceEntry
             {
                 IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<>).MakeGenericType(type)),
-                Vtable = (IntPtr)typeof(BoxedValueIReferenceImpl<>).MakeGenericType(type).GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                Vtable = (IntPtr)typeof(BoxedValueIReferenceImpl<>).MakeGenericType(type).GetAbiToProjectionVftblPtr()
             };
         }
 
@@ -688,7 +688,7 @@ namespace WinRT
             return new ComInterfaceEntry
             {
                 IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<>).MakeGenericType(type)),
-                Vtable = (IntPtr)typeof(BoxedArrayIReferenceArrayImpl<>).MakeGenericType(type).GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                Vtable = (IntPtr)typeof(BoxedArrayIReferenceArrayImpl<>).MakeGenericType(type).GetAbiToProjectionVftblPtr()
             };
         }
 

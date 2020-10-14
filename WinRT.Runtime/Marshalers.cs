@@ -905,12 +905,21 @@ namespace WinRT
         private static Func<IObjectReference, IObjectReference> BindAs()
         {
             var helperType = typeof(T).GetHelperType();
-            var parms = new[] { Expression.Parameter(typeof(IObjectReference), "arg") };
-            return Expression.Lambda<Func<IObjectReference, IObjectReference>>(
-                Expression.Call(
-                    parms[0],
-                    typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(helperType.FindVftblType())
-                    ), parms).Compile();
+            var vftblType = helperType.FindVftblType();
+            if (vftblType is not null)
+            {
+                var parms = new[] { Expression.Parameter(typeof(IObjectReference), "arg") };
+                return Expression.Lambda<Func<IObjectReference, IObjectReference>>(
+                    Expression.Call(
+                        parms[0],
+                        typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType)
+                        ), parms).Compile();
+            }
+            else
+            {
+                Guid iid = GuidGenerator.GetIID(helperType);
+                return obj => obj.As<IUnknownVftbl>(iid);
+            }
         }
     }
 
