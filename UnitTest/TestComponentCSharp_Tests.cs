@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
@@ -8,6 +9,7 @@ using WinRT;
 
 using Windows.Foundation;
 using Windows.UI;
+using Windows.Storage;
 using Windows.Storage.Streams;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -43,6 +45,23 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestEmptyBufferToArray()
+        {
+            var buffer = new Windows.Storage.Streams.Buffer(0);
+            var array = buffer.ToArray();
+            Assert.True(array.Length == 0);
+        }
+
+        [Fact]
+        public void TestEmptyBufferCopyTo()
+        { 
+            var buffer = new Windows.Storage.Streams.Buffer(0);
+            byte[] array = { };
+            buffer.CopyTo(array);
+            Assert.True(array.Length == 0);
+        }
+
+        [Fact]
         public void TestTypePropertyWithSystemType()
         {
             TestObject.TypeProperty = typeof(System.Type);
@@ -61,6 +80,36 @@ namespace UnitTest
         }
 
 #if NET5_0
+        [Fact]
+        public void TestAsStream()
+        {
+            using InMemoryRandomAccessStream winrtStream = new InMemoryRandomAccessStream();
+            using Stream normalStream = winrtStream.AsStream();
+            using var memoryStream = new MemoryStream();
+            normalStream.CopyTo(memoryStream);
+        }
+
+        async Task InvokeStreamWriteAndReadAsync()
+        {
+            var random = new Random(42);
+            byte[] data = new byte[256];
+            random.NextBytes(data);
+
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            await stream.WriteAsync(data, 0, data.Length);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            byte[] read = new byte[256];
+            await stream.ReadAsync(read, 0, read.Length);
+            Assert.Equal(read, data);
+        }
+
+        [Fact]
+        public void TestStreamWriteAndRead()
+        {
+            Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
+        }
+
         [Fact]
         public void TestDynamicInterfaceCastingOnValidInterface()
         {
