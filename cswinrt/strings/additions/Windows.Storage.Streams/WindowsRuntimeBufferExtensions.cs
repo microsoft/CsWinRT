@@ -110,7 +110,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         public static byte[] ToArray(this IBuffer source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (source.Length == 0) return Array.Empty<byte>();
 
             return ToArray(source, 0, checked((int)source.Length));
         }
@@ -143,7 +142,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (destination == null) throw new ArgumentNullException(nameof(destination));
 
             // If buffer and array are empty, nothing to copy
-            if (source.Length == 0 && destination.Length == 0) return;
+            if (source.Length == 0) return;
 
             CopyTo(source, 0, destination, 0, checked((int)source.Length));
         }
@@ -155,7 +154,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (destination == null) throw new ArgumentNullException(nameof(destination));
             if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
             if (destinationIndex < 0) throw new ArgumentOutOfRangeException(nameof(destinationIndex));
-            if (source.Length == 0) return;
+            if (source.Length == 0 && count == 0) return;
             if (source.Capacity <= sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
             if (source.Capacity - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
             if (destination.Length <= destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_IndexOutOfArrayBounds);
