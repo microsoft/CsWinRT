@@ -85,7 +85,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (destination == null) throw new ArgumentNullException(nameof(destination));
             if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
             if (sourceIndex < 0) throw new ArgumentOutOfRangeException(nameof(sourceIndex));
-            if (source.Length <= sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_IndexOutOfArrayBounds, nameof(sourceIndex));
+            if (source.Length < sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_IndexOutOfArrayBounds, nameof(sourceIndex));
             if (source.Length - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
             if (destination.Capacity - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
 
@@ -120,7 +120,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (source.Length == 0 && count == 0) return Array.Empty<byte>();
             if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
-            if (source.Capacity <= sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
+            if (source.Capacity < sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
             if (source.Capacity - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
 
             if (count == 0)
@@ -192,7 +192,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
             if (count == 0) return;
-            if (source.Capacity <= sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
+            if (source.Capacity < sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
             if (source.Capacity - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
             if (destination.Capacity <= destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
             if (destination.Capacity - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
@@ -426,7 +426,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         public static byte GetByte(this IBuffer source, uint byteOffset)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (source.Capacity <= byteOffset) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity, nameof(byteOffset));
+            if (source.Capacity < byteOffset) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity, nameof(byteOffset));
 
             byte[] srcDataArr;
             int srcDataOffs;
