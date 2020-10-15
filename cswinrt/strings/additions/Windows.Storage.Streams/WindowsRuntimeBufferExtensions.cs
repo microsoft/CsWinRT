@@ -141,7 +141,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
 
-            // If buffer and array are empty, nothing to copy
+            // If buffer is empty, nothing to copy
             if (source.Length == 0) return;
 
             CopyTo(source, 0, destination, 0, checked((int)source.Length));
@@ -191,6 +191,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
+            if (count == 0) return;
             if (source.Capacity <= sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
             if (source.Capacity - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
             if (destination.Capacity <= destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
