@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
@@ -25,6 +26,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
+using Windows.Storage.Streams;
 
 
 #if NET5_0
