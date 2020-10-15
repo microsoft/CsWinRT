@@ -26,8 +26,6 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
-using Windows.Storage.Streams;
-
 
 #if NET5_0
 using WeakRefNS = System;
@@ -111,7 +109,6 @@ namespace UnitTest
         {
             Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
         }
-
 
         [Fact]
         public void TestDynamicInterfaceCastingOnValidInterface()
