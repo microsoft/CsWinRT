@@ -52,6 +52,150 @@ namespace UnitTest
             Assert.True(array.Length == 0);
         }
 
+        [Fact]
+        public void TestBufferCheck1()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            // Do something with buffer and arr
+            // CopyTo(this byte[] source, int sourceIndex, IBuffer destination, uint destinationIndex, int count)
+            arr.CopyTo(3, buf, 3, 0);
+        }
+        [Fact(Skip="errors properly")]
+        public void TestBufferCheck11()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(3, buf, 3, 1); // errors 
+        }
+        [Fact]
+        public void TestBufferCheck2()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            // ToArray(this IBuffer source, uint sourceIndex, int count)
+            var arr = buf.ToArray(3, 0);
+        }
+
+        [Fact]
+        public void TestBufferCheck3()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            // CopyTo(this IBuffer source, uint sourceIndex, byte[] destination, int destinationIndex, int count)
+            buf.CopyTo(3, arr, 0, 0); // copy 0-span from end of buf to front of array
+        }
+
+        [Fact]
+        public void TestBufferCheck32()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            // CopyTo(this IBuffer source, uint sourceIndex, byte[] destination, int destinationIndex, int count)
+            buf.CopyTo(3, arr, 0, 1); // copy 0-span from end of buf to front of array
+        }
+
+        [Fact]
+        public void TestBufferCheck31()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            // CopyTo(this IBuffer source, uint sourceIndex, byte[] destination, int destinationIndex, int count)
+            buf.CopyTo(3, arr, 3, 0); // copy 0-span from end of buf to end of array
+        }
+        [Fact]
+        public void TestBufferCheck33()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            // CopyTo(this IBuffer source, uint sourceIndex, byte[] destination, int destinationIndex, int count)
+            buf.CopyTo(3, arr, 3, 1); // copy 0-span from end of buf to end of array
+        }
+
+        [Fact]
+        public void TestBufferCheck4()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            IBuffer dest = new Windows.Storage.Streams.Buffer(3);
+            // CopyTo(this IBuffer source, uint sourceIndex, IBuffer destination, uint destinationIndex, uint count)
+            buf.CopyTo(3, dest, 3, 0);
+        }
+
+        [Fact]
+        public void TestBufferCheck43()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            IBuffer dest = new Windows.Storage.Streams.Buffer(3);
+            // CopyTo(this IBuffer source, uint sourceIndex, IBuffer destination, uint destinationIndex, uint count)
+            buf.CopyTo(3, dest, 3, 1);
+        }
+
+        [Fact]
+        public void TestBufferCheck41()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            IBuffer dest = new Windows.Storage.Streams.Buffer(3);
+            // CopyTo(this IBuffer source, uint sourceIndex, IBuffer destination, uint destinationIndex, uint count)
+            buf.CopyTo(3, dest, 1, 0);
+        }
+
+        [Fact]
+        public void TestBufferCheck44()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            IBuffer dest = new Windows.Storage.Streams.Buffer(3);
+            // CopyTo(this IBuffer source, uint sourceIndex, IBuffer destination, uint destinationIndex, uint count)
+            buf.CopyTo(3, dest, 1, 1);
+        }
+
+        [Fact]
+        public void TestBufferCheck42()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            IBuffer dest = new Windows.Storage.Streams.Buffer(3);
+            // CopyTo(this IBuffer source, uint sourceIndex, IBuffer destination, uint destinationIndex, uint count)
+            buf.CopyTo(1, dest, 1, 0);
+        }
+
+        [Fact]
+        public void TestBufferCheck45()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            IBuffer dest = new Windows.Storage.Streams.Buffer(3);
+            // CopyTo(this IBuffer source, uint sourceIndex, IBuffer destination, uint destinationIndex, uint count)
+            buf.CopyTo(1, dest, 1, 1);
+        }
+
+        [Fact]
+        public void TestBufferCheck5()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            // Do something with buffer and arr
+            // GetByte(this IBuffer source, uint byteOffset)
+            buf.GetByte(3); // think this will error 
+        }
+
+        [Fact]
+        public void TestBufferCheck6()
+        {
+            MemoryStream stream = new MemoryStream(3);
+            IBuffer buf = stream.GetWindowsRuntimeBuffer(2, 0);
+        }
+
+        [Fact]
+        public void TestBufferCheck61()
+        {
+            MemoryStream stream = new MemoryStream(3);
+            IBuffer buff = stream.GetWindowsRuntimeBuffer(3, 0);
+        }
+
+        [Fact]
+        public void TestBufferCheck62()
+        {
+            MemoryStream stream = new MemoryStream(3);
+            IBuffer buff = stream.GetWindowsRuntimeBuffer(3, 1);
+        }
+
         [Fact(Skip ="blocked by issue #497")]
         public void TestEmptyBufferCopyTo()
         { 

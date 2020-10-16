@@ -152,7 +152,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (destinationIndex < 0) throw new ArgumentOutOfRangeException(nameof(destinationIndex));
             if (source.Capacity < sourceIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
             if (source.Capacity - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
-            if (destination.Length <= destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_IndexOutOfArrayBounds);
+            if (destination.Length < destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_IndexOutOfArrayBounds);
             if (destination.Length - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
            
             // If source is backed by a managed array, use the array instead of the pointer as it does not require pinning:
@@ -375,7 +375,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (length < 0)
                 throw new ArgumentOutOfRangeException(nameof(length));
 
-            if (underlyingStream.Capacity <= positionInStream)
+            if (underlyingStream.Capacity < positionInStream)
                 throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_StreamPositionBeyondEOS);
 
             ArraySegment<byte> streamData;
