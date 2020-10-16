@@ -8,7 +8,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <PropertyGroup>
     <CsWinRTMessageImportance Condition="'$(CsWinRTMessageImportance)' == ''">normal</CsWinRTMessageImportance>
     <CsWinRTCommandVerbosity Condition="'$(CsWinRTMessageImportance)' == 'high'">-verbose</CsWinRTCommandVerbosity>
-    <ResolveAssemblyReferencesDependsOn Condition="'$(CsWinRTRemoveWindowsReference)'!='false'">$(CsWinRTRemoveWindowsReference);CsWinRTRemoveWindowsReference</ResolveAssemblyReferencesDependsOn>
+    <ResolveAssemblyReferencesDependsOn Condition="'$(CsWinRTRemoveWindowsReference)'!='false'">$(ResolveAssemblyReferencesDependsOn);CsWinRTRemoveWindowsReference</ResolveAssemblyReferencesDependsOn>
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' == ''">true</CsWinRTEnabled>
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' != 'true'">false</CsWinRTEnabled>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
@@ -25,7 +25,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </ItemGroup>
   </Target>
 
-  <Target Name="CsWinRTRemoveWinMDReferences" BeforeTargets="ResolveReferences;CoreCompile" AfterTargets="AfterResolveReferences">
+  <Target Name="CsWinRTRemoveWinMDReferences" BeforeTargets="ResolveReferences;BeforeCompile" AfterTargets="AfterResolveReferences">
     <ItemGroup>
       <!--Move winmd references into private item group to prevent subsequent winmd reference errors-->
       <CsWinRTRemovedReferences Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
@@ -49,7 +49,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
   </Target>
 
-  <Target Name="CsWinRTGenerateProjection" DependsOnTargets="CsWinRTPrepareProjection" Condition="'$(CsWinRTGenerateProjection)' == 'true'">
+  <Target Name="CsWinRTGenerateProjection" DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences" Condition="'$(CsWinRTGenerateProjection)' == 'true'">
     <PropertyGroup>
       <CsWinRTResponseFile>$(CsWinRTGeneratedFilesDir)cswinrt.rsp</CsWinRTResponseFile>
       <CsWinRTCommand>$(CsWinRTExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
@@ -81,7 +81,7 @@ $(CsWinRTFilters)
     <Exec Command="$(CsWinRTCommand)" />
   </Target>
   
-  <Target Name="CsWinRTIncludeProjection" BeforeTargets="CoreCompile" DependsOnTargets="CsWinRTGenerateProjection" Condition="$(CsWinRTEnabled)">
+  <Target Name="CsWinRTIncludeProjection" BeforeTargets="BeforeCompile" DependsOnTargets="CsWinRTGenerateProjection" Condition="$(CsWinRTEnabled)">
     <ItemGroup>
       <Compile Include="$(CsWinRTGeneratedFilesDir)*.cs" Exclude="@(Compile)" />
     </ItemGroup>
