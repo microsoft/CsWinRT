@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ABI.Microsoft.UI.Xaml.Data;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -33,6 +34,7 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(TimeSpan), typeof(ABI.System.TimeSpan), "Windows.Foundation.TimeSpan");
             RegisterCustomAbiTypeMappingNoLock(typeof(Uri), typeof(ABI.System.Uri), "Windows.Foundation.Uri", isRuntimeClass: true);
             RegisterCustomAbiTypeMappingNoLock(typeof(DataErrorsChangedEventArgs), typeof(ABI.System.ComponentModel.DataErrorsChangedEventArgs), "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs", isRuntimeClass: true);
+            RegisterCustomAbiTypeMappingNoLock(typeof(ICustomProperty), typeof(ABI.Microsoft.UI.Xaml.Data.ICustomProperty), "Microsoft.UI.Xaml.Data.ICustomProperty");
             RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventArgs), typeof(ABI.System.ComponentModel.PropertyChangedEventArgs), "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", isRuntimeClass: true);
             RegisterCustomAbiTypeMappingNoLock(typeof(PropertyChangedEventHandler), typeof(ABI.System.ComponentModel.PropertyChangedEventHandler), "Microsoft.UI.Xaml.Data.PropertyChangedEventHandler");
             RegisterCustomAbiTypeMappingNoLock(typeof(INotifyDataErrorInfo), typeof(ABI.System.ComponentModel.INotifyDataErrorInfo), "Microsoft.UI.Xaml.Data.INotifyDataErrorInfo");    
