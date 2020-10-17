@@ -242,7 +242,7 @@ namespace WinRT
                 IInspectable inspectable = new IInspectable(inspectableRef);
 
                 string runtimeClassName = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType.Value);
-                if (runtimeClassName == null)
+                if (string.IsNullOrEmpty(runtimeClassName))
                 {
                     // If the external IInspectable has not implemented GetRuntimeClassName,
                     // we use the Inspectable wrapper directly.
