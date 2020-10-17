@@ -409,13 +409,29 @@ namespace cswinrt
             {
                 if (std::filesystem::is_directory(path))
                 {
-                    add_directory(std::filesystem::canonical(path));
+                    try
+                    {
+                        add_directory(std::filesystem::canonical(path));
+                    }
+                    catch (std::filesystem::filesystem_error const&)
+                    {
+                        // If canonical fails try using the provided path directly
+                        files.insert(path);
+                    }
                     continue;
                 }
 
                 if (std::filesystem::is_regular_file(path))
                 {
-                    files.insert(std::filesystem::canonical(path).string());
+                    try
+                    {
+                        files.insert(std::filesystem::canonical(path).string());
+                    }
+                    catch (std::filesystem::filesystem_error const&)
+                    {
+                        // If canonical fails try using the provided path directly
+                        files.insert(path);
+                    }
                     continue;
                 }
                 if (path == "local")
