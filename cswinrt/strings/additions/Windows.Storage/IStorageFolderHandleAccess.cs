@@ -24,6 +24,8 @@ namespace ABI.Windows.Storage
 {
     using global::Microsoft.Win32.SafeHandles;
     using global::System;
+//TODO: Update netstandard version by adding objectreferenceattribute 
+#if NETSTANDARD2_0
     [Guid("DF19938F-5462-48A0-BE65-D2A3271A08D6")]
     internal unsafe class IStorageFolderHandleAccess : global::Windows.Storage.IStorageFolderHandleAccess
     {
@@ -73,4 +75,46 @@ namespace ABI.Windows.Storage
             return interopHandle;
         }
     }
+#else
+    [DynamicInterfaceCastableImplementation]
+    [Guid("DF19938F-5462-48A0-BE65-D2A3271A08D6")]
+    internal unsafe interface IStorageFolderHandleAccess : global::Windows.Storage.IStorageFolderHandleAccess
+    {
+        [Guid("DF19938F-5462-48A0-BE65-D2A3271A08D6")]
+        public struct Vftbl
+        {
+            public IUnknownVftbl IUnknownVftbl;
+            private void* _Create_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::Windows.Storage.HANDLE_CREATION_OPTIONS, global::Windows.Storage.HANDLE_ACCESS_OPTIONS, global::Windows.Storage.HANDLE_SHARING_OPTIONS, global::Windows.Storage.HANDLE_OPTIONS, IntPtr, out IntPtr, int> Create_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::Windows.Storage.HANDLE_CREATION_OPTIONS, global::Windows.Storage.HANDLE_ACCESS_OPTIONS, global::Windows.Storage.HANDLE_SHARING_OPTIONS, global::Windows.Storage.HANDLE_OPTIONS, IntPtr, out IntPtr, int>)_Create_0;
+        }
+
+        internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
+
+        unsafe SafeFileHandle global::Windows.Storage.IStorageFolderHandleAccess.Create(
+            string fileName,
+            global::Windows.Storage.HANDLE_CREATION_OPTIONS creationOptions,
+            global::Windows.Storage.HANDLE_ACCESS_OPTIONS accessOptions,
+            global::Windows.Storage.HANDLE_SHARING_OPTIONS sharingOptions,
+            global::Windows.Storage.HANDLE_OPTIONS options,
+            IntPtr oplockBreakingHandler)
+        {
+            SafeFileHandle interopHandle = default;
+            IntPtr _interopHandle = default;
+            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Windows.Storage.IStorageFolderHandleAccess).TypeHandle));
+            var ThisPtr = _obj.ThisPtr;
+            try
+            {
+                fixed (char* fileNamePtr = fileName)
+                {
+                    ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Create_0(ThisPtr, (IntPtr)fileNamePtr, creationOptions, accessOptions, sharingOptions, options, oplockBreakingHandler, out _interopHandle));
+                }
+            }
+            finally
+            {
+                interopHandle = new SafeFileHandle(_interopHandle, true);
+            }
+            return interopHandle;
+        }
+    }
+#endif
 }

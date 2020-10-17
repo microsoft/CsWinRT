@@ -122,6 +122,30 @@ namespace UnitTest
         {
             Assert.ThrowsAny<System.Exception>(() => (IStringableInterop)(IWinRTObject)TestObject);
         }
+
+        [Fact]
+        public void TestBuffer()
+        {
+            var buffer = new Windows.Storage.Streams.Buffer(2);
+            var array = buffer.ToArray(0, 2);
+            Assert.Equal(2, array.Length);
+        }
+
+        [Fact]
+        public async void TestStorageFile()
+        {
+            StorageFile file = await StorageFile.GetFileFromPathAsync("C:\\Program Files\\Git\\LICENSE.txt");
+            var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(file, FileAccess.Read);
+            Assert.NotNull(handle);
+        }
+
+        [Fact]
+        public async void TestStorageFolder()
+        {
+            StorageFolder folder = await StorageFolder.GetFolderFromPathAsync("C:\\Program Files\\Git");
+            var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(folder, "LICENSE.txt", FileMode.Open, FileAccess.Read);
+            Assert.NotNull(handle);
+        }
 #endif
 
         async Task InvokeWriteBufferAsync()
