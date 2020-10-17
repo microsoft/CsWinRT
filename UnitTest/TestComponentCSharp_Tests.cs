@@ -175,7 +175,7 @@ namespace UnitTest
         public void TestWinRTBufferWithZeroLength()
         {
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
-            MemoryStream stream = new MemoryStream(arr);
+            MemoryStream stream = new MemoryStream(arr, 0, 3, false, true);
             IBuffer buff = stream.GetWindowsRuntimeBuffer(3, 0);
             Assert.True(buff != null);
             Assert.True(buff.Length == 0);
