@@ -416,7 +416,7 @@ namespace cswinrt
                     catch (std::filesystem::filesystem_error const&)
                     {
                         // If canonical fails try using the provided path directly
-                        files.insert(path);
+                        add_directory(path);
                     }
                     continue;
                 }
