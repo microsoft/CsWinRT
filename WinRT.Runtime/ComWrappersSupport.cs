@@ -311,7 +311,7 @@ namespace WinRT
                 // If it isn't, we use the statically determined type as it is a tear off.
 
                 Type implementationType = null;
-                if (runtimeClassName != null)
+                if (!string.IsNullOrEmpty(runtimeClassName))
                 {
                     try
                     {
