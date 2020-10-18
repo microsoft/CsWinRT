@@ -27,6 +27,7 @@
   <!--The C# compiler package below is not needed with Visual Studio 16.8 Preview 4-->
   <ItemGroup>
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.8.0-4.20472.6" />
+    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.19041.1" />
   </ItemGroup>
 
   <PropertyGroup>
