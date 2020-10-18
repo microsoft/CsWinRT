@@ -11,7 +11,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <ResolveAssemblyReferencesDependsOn Condition="'$(CsWinRTRemoveWindowsReference)'!='false'">$(ResolveAssemblyReferencesDependsOn);CsWinRTRemoveWindowsReference</ResolveAssemblyReferencesDependsOn>
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' == ''">true</CsWinRTEnabled>
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' != 'true'">false</CsWinRTEnabled>
-    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
     <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
     <AllowUnsafeBlocks Condition="'$(CsWinRTComponent)' == 'true'">true</AllowUnsafeBlocks>
@@ -53,7 +52,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <PropertyGroup>
       <CsWinRTResponseFile>$(CsWinRTGeneratedFilesDir)cswinrt.rsp</CsWinRTResponseFile>
       <CsWinRTCommand>$(CsWinRTExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+      <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
+      <CsWinRTWindowsMetadataInput Condition="'$(CsWinRTWindowsMetadata)' != ''">-input $(CsWinRTWindowsMetadata)</CsWinRTWindowsMetadataInput>
     </PropertyGroup>
+    <ItemGroup>
+      <CsWinRTDetectWindowsMetadata Include="@(CsWinRTInputs)" Condition="'%(CsWinRTInputs.Filename)%(CsWinRTInputs.Extension)' == 'Windows.Foundation.FoundationContract.winmd'"></CsWinRTDetectWindowsMetadata>
+      <CsWinRTDetectWindowsMetadata Include="@(CsWinRTInputs)" Condition="'%(CsWinRTInputs.Filename)%(CsWinRTInputs.Extension)' == 'Windows.winmd'"></CsWinRTDetectWindowsMetadata>
+    </ItemGroup>
+    <Error Condition="'$(CsWinRTParams)$(CsWinRTFilters)$(CsWinRTWindowsMetadata)@(CsWinRTDetectWindowsMetadata)' == ''"
+      Text="Windows Metadata not provided or detected.  See https://github.com/microsoft/CsWinRT/tree/master/nuget/readme.md" />
     <PropertyGroup>
       <CsWinRTExcludes Condition="'$(CsWinRTExcludes)' == ''">Windows;Microsoft</CsWinRTExcludes>
     </PropertyGroup>
@@ -65,11 +72,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTFilters Condition="'$(CsWinRTFilters)' == ''">
 @(CsWinRTExcludeItems->'-exclude %(Identity)', '&#x0d;&#x0a;')
 @(CsWinRTIncludeItems->'-include %(Identity)', '&#x0d;&#x0a;')
-      </CsWinRTFilters>
+      </CsWinRTFilters> 
       <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
 $(CsWinRTCommandVerbosity)
 -target $(TargetFramework)
--input $(CsWinRTWindowsMetadata)
+$(CsWinRTWindowsMetadataInput)
 -input @(CsWinRTInputs->'"%(FullPath)"', ' ')
 -output "$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
 $(CsWinRTFilters)
