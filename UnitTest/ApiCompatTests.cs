@@ -1,3 +1,8 @@
+
+// Workstation tests require local resources or configuration that may not be available in automation.
+// These can be enabled for additional local testing.
+// #define ENABLE_WORKSTATION_TESTS
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -40,6 +45,10 @@ namespace UnitTest
             Assert.NotEqual("", cal.DayOfWeekAsString());
         }
 
+#if ENABLE_WORKSTATION_TESTS 
+        // Even with exception handling fall-backs, this test fails on x64 builds in automation 
+        // runs. Leaving disabled for now in automation, root cause unknown.
+
         // This test fails if geolocation is disabled, as is often the case in automation servers.
         async Task InvokeGeolocation()
         {
@@ -70,8 +79,9 @@ namespace UnitTest
         {
             Assert.True(InvokeGeolocation().Wait(1000));
         }
+#endif
 
-#if false
+#if ENABLE_WORKSTATION_TESTS 
         // This test validates reading device property bag, but requires a USB drive to be connected, so is disabled by default.
         async Task InvokeDeviceEnumeration()
         {
