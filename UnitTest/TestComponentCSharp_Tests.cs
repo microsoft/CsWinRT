@@ -26,6 +26,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
+using System.Reflection;
 
 #if NET5_0
 using WeakRefNS = System;
@@ -131,20 +132,32 @@ namespace UnitTest
             Assert.Equal(2, array.Length);
         }
 
-        [Fact]
-        public async void TestStorageFile()
+        async Task TestStorageFileAsync()
         {
-            StorageFile file = await StorageFile.GetFileFromPathAsync("C:\\Program Files\\Git\\LICENSE.txt");
+            var folderPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            StorageFile file = await StorageFile.GetFileFromPathAsync(folderPath + "\\UnitTest.dll");
             var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(file, FileAccess.Read);
             Assert.NotNull(handle);
         }
 
         [Fact]
-        public async void TestStorageFolder()
+        public void TestStorageFile()
         {
-            StorageFolder folder = await StorageFolder.GetFolderFromPathAsync("C:\\Program Files\\Git");
-            var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(folder, "LICENSE.txt", FileMode.Open, FileAccess.Read);
+            Assert.True(TestStorageFileAsync().Wait(1000));
+        }
+
+        async Task TestStorageFolderAsync()
+        {
+            var folderPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            StorageFolder folder = await StorageFolder.GetFolderFromPathAsync(folderPath);
+            var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(folder, "UnitTest.dll", FileMode.Open, FileAccess.Read);
             Assert.NotNull(handle);
+        }
+
+        [Fact]
+        public void TestStorageFolder()
+        {
+            Assert.True(TestStorageFolderAsync().Wait(1000));
         }
 #endif
 
