@@ -53,11 +53,15 @@ namespace UnitTest
                 Assert.NotEqual(0, pos.Coordinate.Latitude);
                 Assert.NotEqual(0, pos.Coordinate.Longitude);
             }
-            catch(System.Runtime.InteropServices.COMException e)
+            catch(System.Exception e)
             {
                 // Location services are disabled, ignore.
-                // This is common on build servers.
-                Assert.Equal(0x80070422, (UInt32)e.HResult);
+                // This is common on build servers. There are a few different
+                // exception types that can be triggered to reach this case 
+                // depending on configuration
+                UInt32 hr = (UInt32)e.HResult;
+                Assert.True(0x80070422 == hr ||
+                            0x80070005 == hr);
             }
         }
 
