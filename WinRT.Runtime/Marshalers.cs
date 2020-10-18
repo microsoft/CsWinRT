@@ -124,7 +124,7 @@ namespace WinRT
                         marshaler?.Dispose();
                     }
                 }
-                if (_array != null)
+                if (_array != IntPtr.Zero)
                 {
                     Marshal.FreeCoTaskMem(_array);
                 }
@@ -442,7 +442,7 @@ namespace WinRT
                         Marshaler<T>.DisposeMarshaler(marshaler);
                     }
                 }
-                if (_array != null)
+                if (_array != IntPtr.Zero)
                 {
                     Marshal.FreeCoTaskMem(_array);
                 }
@@ -624,7 +624,7 @@ namespace WinRT
                         DisposeMarshaler(marshaler);
                     }
                 }
-                if (_array != null)
+                if (_array != IntPtr.Zero)
                 {
                     Marshal.FreeCoTaskMem(_array);
                 }
@@ -1000,6 +1000,26 @@ namespace WinRT
         public static void DisposeMarshalerArray(T box) => MarshalInterfaceHelper<T>.DisposeMarshalerArray(box);
 
         public static unsafe void DisposeAbiArray(T box) => MarshalInterfaceHelper<T>.DisposeAbiArray(box);
+    }
+
+    static public class MarshalDelegate
+    {
+        public static IObjectReference CreateMarshaler(object o, Guid delegateIID, bool unwrapObject = true)
+        {
+            if (o is null)
+            {
+                return null;
+            }
+
+            if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
+            {
+                return objRef.As<global::WinRT.Interop.IDelegateVftbl>(delegateIID);
+            }
+            using (var ccw = ComWrappersSupport.CreateCCWForObject(ComWrappersSupport.GetRuntimeClassCCWTypeIfAny(o)))
+            {
+                return ccw.As<global::WinRT.Interop.IDelegateVftbl>(delegateIID);
+            }
+        }
     }
 
     public class Marshaler<T>

@@ -146,6 +146,7 @@ namespace WinRT
         }
 
         IObjectReference NativeObject { get; }
+        bool HasUnwrappableNativeObject { get; }
 
         protected ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> QueryInterfaceCache { get; }
 

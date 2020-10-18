@@ -51,7 +51,7 @@ namespace ABI.System
 
             return new Marshaler
             {
-                Name = MarshalString.CreateMarshaler(TypeNameSupport.GetNameForType(value, TypeNameGenerationFlags.None)),
+                Name = MarshalString.CreateMarshaler(kind == TypeKind.Custom ? value.AssemblyQualifiedName : TypeNameSupport.GetNameForType(value, TypeNameGenerationFlags.None)),
                 Kind = kind
             };
         }

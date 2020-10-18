@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
@@ -8,6 +9,7 @@ using WinRT;
 
 using Windows.Foundation;
 using Windows.UI;
+using Windows.Storage;
 using Windows.Storage.Streams;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -25,6 +27,12 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
 
+#if NET5_0
+using WeakRefNS = System;
+#else
+using WeakRefNS = WinRT;
+#endif
+
 namespace UnitTest
 {
     public class TestCSharp
@@ -37,6 +45,23 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestEmptyBufferToArray()
+        {
+            var buffer = new Windows.Storage.Streams.Buffer(0);
+            var array = buffer.ToArray();
+            Assert.True(array.Length == 0);
+        }
+
+        [Fact]
+        public void TestEmptyBufferCopyTo()
+        { 
+            var buffer = new Windows.Storage.Streams.Buffer(0);
+            byte[] array = { };
+            buffer.CopyTo(array);
+            Assert.True(array.Length == 0);
+        }
+
+        [Fact]
         public void TestTypePropertyWithSystemType()
         {
             TestObject.TypeProperty = typeof(System.Type);
@@ -44,7 +69,47 @@ namespace UnitTest
             Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
         }
 
+        class CustomDictionary : Dictionary<string, string> { }
+
+        [Fact]
+        public void TestTypePropertyWithCustomType()
+        {
+            TestObject.TypeProperty = typeof(CustomDictionary);
+            var name = TestObject.GetTypePropertyAbiName();
+            Assert.Equal("UnitTest.TestCSharp+CustomDictionary, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", name);
+        }
+
 #if NET5_0
+        [Fact]
+        public void TestAsStream()
+        {
+            using InMemoryRandomAccessStream winrtStream = new InMemoryRandomAccessStream();
+            using Stream normalStream = winrtStream.AsStream();
+            using var memoryStream = new MemoryStream();
+            normalStream.CopyTo(memoryStream);
+        }
+
+        async Task InvokeStreamWriteAndReadAsync()
+        {
+            var random = new Random(42);
+            byte[] data = new byte[256];
+            random.NextBytes(data);
+
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            await stream.WriteAsync(data, 0, data.Length);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            byte[] read = new byte[256];
+            await stream.ReadAsync(read, 0, read.Length);
+            Assert.Equal(read, data);
+        }
+
+        [Fact]
+        public void TestStreamWriteAndRead()
+        {
+            Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
+        }
+
         [Fact]
         public void TestDynamicInterfaceCastingOnValidInterface()
         {
@@ -198,6 +263,32 @@ namespace UnitTest
             events_expected++;
 
             Assert.Equal(events_received, events_expected);
+        }
+
+        class ManagedUriHandler : IUriHandler
+        {
+            public Class TestObject { get; private set; }
+
+            public ManagedUriHandler(Class testObject)
+            {
+                TestObject = testObject;
+            }
+
+            public void AddUriHandler(ProvideUri provideUri)
+            {
+                TestObject.CallForUri(provideUri);
+                Assert.Equal(new Uri("http://github.com"), TestObject.UriProperty);
+            }
+        }
+
+        [Fact]
+        public void TestDelegateUnwrapping()
+        {
+            var obj = TestObject.GetUriDelegate();
+            TestObject.CallForUri(obj);
+            Assert.Equal(new Uri("http://microsoft.com"), TestObject.UriProperty);
+
+            TestObject.AddUriHandler(new ManagedUriHandler(TestObject));
         }
 
         // TODO: when the public WinUI nuget supports IXamlServiceProvider, just use the projection
@@ -1594,27 +1685,27 @@ namespace UnitTest
         public void WeakReferenceOfManagedObject()
         {
             var properties = new ManagedProperties(42);
-            WinRT.WeakReference<IProperties1> weakReference = new WinRT.WeakReference<IProperties1>(properties);
-            weakReference.TryGetTarget(out var propertiesStrong);
+            WeakRefNS.WeakReference<IProperties1> weakReference = new WeakRefNS.WeakReference<IProperties1>(properties);
+            Assert.True(weakReference.TryGetTarget(out var propertiesStrong));
             Assert.Same(properties, propertiesStrong);
         }
 
         [Fact]
         public void WeakReferenceOfNativeObject()
         {
-            var weakReference = new WinRT.WeakReference<Class>(TestObject);
-            weakReference.TryGetTarget(out var classStrong);
+            var weakReference = new WeakRefNS.WeakReference<Class>(TestObject);
+            Assert.True(weakReference.TryGetTarget(out var classStrong));
             Assert.Same(TestObject, classStrong);
         }
 
         [Fact]
         public void WeakReferenceOfNativeObjectRehydratedAfterWrapperIsCollected()
         {
-            static (WinRT.WeakReference<Class> winrt, WeakReference net, IObjectReference objRef) GetWeakReferences()
+            static (WeakRefNS.WeakReference<Class> winrt, WeakReference net, IObjectReference objRef) GetWeakReferences()
             {
                 var obj = new Class();
                 ComWrappersSupport.TryUnwrapObject(obj, out var objRef);
-                return (new WinRT.WeakReference<Class>(obj), new WeakReference(obj), objRef);
+                return (new WeakRefNS.WeakReference<Class>(obj), new WeakReference(obj), objRef);
             }
 
             var (winrt, net, objRef) = GetWeakReferences();

@@ -82,6 +82,27 @@ namespace WinRT
             };
         }
 
+        public static bool TryUnwrapObject(object o, out IObjectReference objRef)
+        {
+            // The unwrapping here needs to be an exact type match in case the user
+            // has implemented a WinRT interface or inherited from a WinRT class
+            // in a .NET (non-projected) type.
+
+            if (o is Delegate del)
+            {
+                return TryUnwrapObject(del.Target, out objRef);
+            }
+
+            if (o is IWinRTObject winrtObj && winrtObj.HasUnwrappableNativeObject)
+            {
+                objRef = winrtObj.NativeObject;
+                return true;
+            }
+
+            objRef = null;
+            return false;
+        }
+
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr) => TryRegisterObjectForInterface(obj, thisPtr);
 
         public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr) => ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);
@@ -221,7 +242,7 @@ namespace WinRT
                 IInspectable inspectable = new IInspectable(inspectableRef);
 
                 string runtimeClassName = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType.Value);
-                if (runtimeClassName == null)
+                if (string.IsNullOrEmpty(runtimeClassName))
                 {
                     // If the external IInspectable has not implemented GetRuntimeClassName,
                     // we use the Inspectable wrapper directly.
