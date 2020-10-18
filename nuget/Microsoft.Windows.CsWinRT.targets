@@ -55,11 +55,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadataInput Condition="'$(CsWinRTWindowsMetadata)' != ''">-input $(CsWinRTWindowsMetadata)</CsWinRTWindowsMetadataInput>
     </PropertyGroup>
-    <ItemGroup Condition="'$(CsWinRTParams)$(CsWinRTWindowsMetadata)' == ''">
+    <ItemGroup>
       <CsWinRTDetectWindowsMetadata Include="@(CsWinRTInputs)" Condition="'%(CsWinRTInputs.Filename)%(CsWinRTInputs.Extension)' == 'Windows.Foundation.FoundationContract.winmd'"></CsWinRTDetectWindowsMetadata>
       <CsWinRTDetectWindowsMetadata Include="@(CsWinRTInputs)" Condition="'%(CsWinRTInputs.Filename)%(CsWinRTInputs.Extension)' == 'Windows.winmd'"></CsWinRTDetectWindowsMetadata>
     </ItemGroup>
-    <Error Condition="'$(CsWinRTParams)$(CsWinRTWindowsMetadata)@(CsWinRTDetectWindowsMetadata)' == ''"
+    <Error Condition="'$(CsWinRTParams)$(CsWinRTFilters)$(CsWinRTWindowsMetadata)@(CsWinRTDetectWindowsMetadata)' == ''"
       Text="Windows Metadata not provided or detected.  See https://github.com/microsoft/CsWinRT/tree/master/nuget/readme.md" />
     <PropertyGroup>
       <CsWinRTExcludes Condition="'$(CsWinRTExcludes)' == ''">Windows;Microsoft</CsWinRTExcludes>
