@@ -9,15 +9,6 @@ using WinRT;
 
 using WFC = Windows.Foundation.Collections;
 using Windows.Foundation;
-using Windows.UI;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Animation;
-using Microsoft.UI.Xaml.Media.Media3D;
-
-using WinRT.Interop;
-
 
 using Windows.Devices.Geolocation;
 using Windows.Globalization;
@@ -29,18 +20,8 @@ using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.Storage.FileProperties;
 
-using TestComponentCSharp;
 using System.Diagnostics;
-
-
-//using System.IO;
-//using System.Linq;
-//using Microsoft.UI.Xaml.Interop;
-//using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
-//using Windows.Security.Cryptography;
-//using Windows.Security.Cryptography.Core;
-
 
 namespace UnitTest
 {
