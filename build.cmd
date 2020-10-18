@@ -2,6 +2,7 @@
 if /i "%cswinrt_echo%" == "on" @echo on
 
 set CsWinRTNet5SdkVersion=5.0.100-rc.1.20454.5
+rem set CsWinRTNet5SdkVersion=5.0.100-rtm.20515.8
 
 :dotnet
 rem Install required .NET 5 SDK version and add to environment

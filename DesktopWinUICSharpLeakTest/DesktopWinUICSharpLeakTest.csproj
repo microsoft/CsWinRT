@@ -1,0 +1,114 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
+    <TargetPlatformMinVersion>10.0.17134.0</TargetPlatformMinVersion>
+    <RootNamespace>DesktopWinUICSharpLeakTest</RootNamespace>
+    <!--<CsWinRTEnabled>false</CsWinRTEnabled>-->
+
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>AnyCPU;x86;x64</Platforms>
+    <!--<SelfContained>true</SelfContained>-->
+    <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+    <RuntimeIdentifier>win-$(Platform)</RuntimeIdentifier>
+    <MsAppxPackageTargets>$(MSBuildThisFileDirectory)Net5_WinUI_Fixup.Targets</MsAppxPackageTargets>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--<PackageReference Include="Microsoft.AspNetCore.App.Runtime.win-x86" Version="5.0.0-rtm.20512.8" />-->
+    <!--<PackageReference Include="Microsoft.AspNetCore.App.Runtime.win-x64" Version="5.0.0-rtm.20512.8" />
+    <PackageReference Include="Microsoft.AspNetCore.App.Runtime.win-x86" Version="5.0.0-rtm.20512.8" />
+    <PackageReference Include="Microsoft.NETCore.App.Runtime.win-x64" Version="6.0.0-alpha.1.20420.2" />
+    <PackageReference Include="Microsoft.NETCore.App.Runtime.win-x86" Version="6.0.0-alpha.1.20420.2" />
+    <PackageReference Include="Microsoft.WindowsDesktop.App.Runtime.win-x64" Version="5.0.0-rtm.20511.1" />
+    <PackageReference Include="Microsoft.WindowsDesktop.App.Runtime.win-x86" Version="5.0.0-rtm.20511.1" />-->
+    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
+    <!--<PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">-->
+      <PackageReference Include="Microsoft.WinUI" Version="3.0.0-preview2.200713.0" GeneratePathProperty="true">
+      <ExcludeAssets>compile; runtime</ExcludeAssets>
+      <!--<ExcludeAssets>compile</ExcludeAssets>-->
+    </PackageReference>
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <!--<Target Name="RemoveWinUI" BeforeTargets="ResolveReferences" AfterTargets="AfterResolveReferences">
+    <ItemGroup>
+      <ReferencePath Remove="@(ReferencePath)" Condition="'%(FileName)' == 'Microsoft.Windows.SDK.NET'"/>
+      <ReferencePath Remove="@(ReferencePath)" Condition="'%(FileName)' == 'Microsoft.WinUI'"/>
+    </ItemGroup>
+  </Target>-->
+
+  <!--<PropertyGroup>
+    <ResolveAssemblyReferencesDependsOn>$(ResolveAssemblyReferencesDependsOn);RemoveWindowsPackage</ResolveAssemblyReferencesDependsOn>
+  </PropertyGroup>
+    
+  <Target Name="RemoveWindowsPackage">
+    <ItemGroup>
+      <Reference Remove="@(Reference)" Condition="'%(NugetPackageId)' == 'Microsoft.Windows.SDK.NET'"/>
+      --><!--<Reference Remove="@(Reference)" Condition="'%(NugetPackageId)' == 'Microsoft.WinUI'"/>--><!--
+    </ItemGroup>
+  </Target>-->
+  
+  <!--<Target Name="RemoveWindows" AfterTargets="ResolvePackageAssets">
+    <ItemGroup>
+      <PackageDependencies Remove="@(PackageDependencies)" Condition="'%(Identity)' == 'Microsoft.Windows.SDK.NET'"/>
+      <PackageDependencies Remove="@(PackageDependencies)" Condition="'%(Identity)' == 'Microsoft.Windows.CsWinRT'"/>
+      <PackageDependencies Remove="@(PackageDependencies)" Condition="'%(Identity)' == 'Microsoft.WinUI'"/>
+      <RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="'%(NugetPackageId)' == 'Microsoft.Windows.SDK.NET'"/>
+      <RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="'%(NugetPackageId)' == 'Microsoft.Windows.CsWinRT'"/>
+      <RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="'%(NugetPackageId)' == 'Microsoft.WinUI'"/>
+      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" Condition="'%(NugetPackageId)' == 'Microsoft.Windows.SDK.NET'"/>
+      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" Condition="'%(NugetPackageId)' == 'Microsoft.Windows.CsWinRT'"/>
+      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" Condition="'%(NugetPackageId)' == 'Microsoft.WinUI'"/>
+    </ItemGroup>
+  </Target>
+
+
+  <Target Name="FilterProjection" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      --><!--Remove references to projection source winmds to prevent compile conflict warnings--><!--
+      <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="%(ReferencePathWithRefAssemblies.Filename) == 'TestComponentCSharp'" />
+    </ItemGroup>
+  </Target>  
+    
+ <ItemGroup>
+   <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
+   <FrameworkReference Remove="Microsoft.Windows.SDK.NET" />
+ </ItemGroup>-->
+  
+  <ItemGroup>
+    <None Remove="App.xaml" />
+    <None Remove="FirstPage.xaml" />
+    <None Remove="MainWindow.xaml" />
+    <None Remove="SecondPage.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\Projections\WinUI\WinUI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="SecondPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="FirstPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+</Project>
