@@ -40,15 +40,25 @@ namespace UnitTest
             Assert.NotEqual("", cal.DayOfWeekAsString());
         }
 
+        // This test fails if geolocation is disabled, as is often the case in automation servers.
         async Task InvokeGeolocation()
         {
             // Actual position doesn't matter (unless you're on a weather bouy in 
             // the Gulf of Guinea. Then this might give a false failure). 
             // This test is just validating the results of calling a simply async OS API.
-            Geolocator locator = new Geolocator();
-            Geoposition pos = await locator.GetGeopositionAsync();
-            Assert.NotEqual(0, pos.Coordinate.Latitude);
-            Assert.NotEqual(0, pos.Coordinate.Longitude);
+            try
+            {
+                Geolocator locator = new Geolocator();
+                Geoposition pos = await locator.GetGeopositionAsync();
+                Assert.NotEqual(0, pos.Coordinate.Latitude);
+                Assert.NotEqual(0, pos.Coordinate.Longitude);
+            }
+            catch(System.Runtime.InteropServices.COMException e)
+            {
+                // Location services are disabled, ignore.
+                // This is common on build servers.
+                Assert.Equal(0x80070422, (UInt32)e.HResult);
+            }
         }
 
         [Fact]
