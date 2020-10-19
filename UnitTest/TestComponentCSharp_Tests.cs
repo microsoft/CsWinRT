@@ -1573,6 +1573,14 @@ namespace UnitTest
         }
 
         [Fact]
+        public void BufferToArrayWithZeroCountAtEnd_WorksWithSpans()
+        {
+            byte[] array = { 0xA1, 0xA2, 0xA3 };
+            var result = array.AsSpan().Slice(3, 0);
+            //Assert.IsNotNull(result);
+        }
+
+        [Fact]
         public void TestTimeSpanMapping()
         {
             var ts = TimeSpan.FromSeconds(42);
