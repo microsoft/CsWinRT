@@ -78,26 +78,18 @@ namespace WinRT
                 }
                 return false;
             }
-            var vftblType = helperType.GetNestedType("Vftbl");
-            if (vftblType is null)
-            {
-                // The helper type might not have a vftbl type if it was linked away.
-                // The only time the Vftbl type would be linked away is when we don't actually use
-                // any of the methods on the interface (it was just a type cast/"is Type" check).
-                // In that case, we can use the IUnknownVftbl-typed ObjectReference since
-                // it has all of the information we'll need.
-                if (!QueryInterfaceCache.TryAdd(interfaceType, objRef))
-                {
-                    objRef.Dispose();
-                }
-                return true;
-            }
-            if (vftblType.IsGenericTypeDefinition)
-            {
-                vftblType = vftblType.MakeGenericType(Type.GetTypeFromHandle(interfaceType).GetGenericArguments());
-            }
+            var vftblType = helperType.FindVftblType();
             using (objRef)
             {
+                if (vftblType is null)
+                {
+                    var qiObjRef = objRef.As<IUnknownVftbl>(GuidGenerator.GetIID(helperType));
+                    if (!QueryInterfaceCache.TryAdd(interfaceType, qiObjRef))
+                    {
+                        objRef.Dispose();
+                    }
+                    return true;
+                }
                 IObjectReference typedObjRef = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
                 if (!QueryInterfaceCache.TryAdd(interfaceType, typedObjRef))
                 {
