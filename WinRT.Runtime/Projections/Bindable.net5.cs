@@ -390,17 +390,50 @@ namespace ABI.System.Collections
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable));
 
+        public class AdaptiveFromAbiHelper : FromAbiHelper, global::System.Collections.IEnumerable
+        {
+            private readonly Func<IWinRTObject, global::System.Collections.IEnumerator> _enumerator;
+
+            public AdaptiveFromAbiHelper(Type runtimeType, IWinRTObject winRTObject)
+                :base(winRTObject)
+            {
+                Type enumGenericType = (runtimeType.IsGenericType && runtimeType.GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.IEnumerable<>)) ? 
+                    runtimeType : runtimeType.GetInterface("System.Collections.Generic.IEnumerable`1");
+                if(enumGenericType != null)
+                {
+                    var getEnumerator = enumGenericType.GetMethod("GetEnumerator");
+                    var obj = Expression.Variable(typeof(IWinRTObject));
+                    _enumerator = Expression.Lambda<Func<IWinRTObject, global::System.Collections.IEnumerator>>(
+                        Expression.Call(Expression.Convert(obj, runtimeType), getEnumerator), obj).Compile();
+                }
+            }
+
+            public override global::System.Collections.IEnumerator GetEnumerator() => _enumerator != null ? _enumerator(_winrtObject) : base.GetEnumerator();
+        }
+
         public class FromAbiHelper : global::System.Collections.IEnumerable
         {
             private readonly global::System.Collections.IEnumerable _iterable;
+            protected readonly IWinRTObject _winrtObject;
 
             public FromAbiHelper(global::System.Collections.IEnumerable iterable)
             {
                 _iterable = iterable;
             }
 
-            public global::System.Collections.IEnumerator GetEnumerator() =>
-                new Generic.IEnumerator<object>.FromAbiHelper(new NonGenericToGenericIterator(((global::Microsoft.UI.Xaml.Interop.IBindableIterable)(IWinRTObject)_iterable).First()));
+            protected FromAbiHelper(IWinRTObject winrtObject)
+            {
+                _iterable = null;
+                _winrtObject = winrtObject;
+            }
+
+            private IWinRTObject GetIterable()
+            {
+                return (IWinRTObject)_iterable ?? _winrtObject;
+            }
+
+            public virtual global::System.Collections.IEnumerator GetEnumerator() =>
+                new Generic.IEnumerator<object>.FromAbiHelper(new NonGenericToGenericIterator(((global::Microsoft.UI.Xaml.Interop.IBindableIterable) GetIterable()).First()));
 
             private sealed class NonGenericToGenericIterator : global::Windows.Foundation.Collections.IIterator<object>
             {

@@ -343,7 +343,7 @@ namespace ABI.System.Collections.Generic
         }
         public static Guid PIID = Vftbl.PIID;
 
-        private static FromAbiHelper _FromVectorView(IWinRTObject _this)
+        internal static FromAbiHelper _FromVectorView(IWinRTObject _this)
         {
             var _obj = ((ObjectReference<Vftbl>)_this.GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyList<T>).TypeHandle));
             var ThisPtr = _obj.ThisPtr;

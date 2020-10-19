@@ -512,6 +512,11 @@ namespace winrt::TestComponentCSharp::implementation
         _uriChanged.remove(token);
     }
 
+    Windows::Foundation::Collections::IVector<Windows::Foundation::IInspectable> Class::GetUriVectorAsIInspectableVector()
+    {
+        return single_threaded_vector<Windows::Foundation::IInspectable>({ Uri(L"https://microsoft.com"), Uri(L"https://github.com") });
+    };
+
     IAsyncOperation<int32_t> Class::GetIntAsync()
     {
         co_return _int;
