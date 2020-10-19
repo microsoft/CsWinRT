@@ -131,6 +131,7 @@ namespace UnitTest
             var array = buffer.ToArray(0, 2);
             Assert.Equal(2, array.Length);
         }
+#endif
 
         async Task TestStorageFileAsync()
         {
@@ -159,7 +160,6 @@ namespace UnitTest
         {
             Assert.True(TestStorageFolderAsync().Wait(1000));
         }
-#endif
 
         async Task InvokeWriteBufferAsync()
         {

@@ -24,8 +24,10 @@ namespace ABI.Windows.Storage
 {
     using global::Microsoft.Win32.SafeHandles;
     using global::System;
-//TODO: Update netstandard version by adding objectreferenceattribute 
+    using global::System.ComponentModel;
+
 #if NETSTANDARD2_0
+    [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("DF19938F-5462-48A0-BE65-D2A3271A08D6")]
     internal unsafe class IStorageFolderHandleAccess : global::Windows.Storage.IStorageFolderHandleAccess
     {
