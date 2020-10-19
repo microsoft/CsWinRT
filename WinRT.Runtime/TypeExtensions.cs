@@ -59,6 +59,11 @@ namespace WinRT
             return vftblType;
         }
 
+        internal static IntPtr GetAbiToProjectionVftblPtr(this Type helperType)
+        {
+            return (IntPtr)(helperType.FindVftblType() ?? helperType).GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+        }
+
         public static Type GetAbiType(this Type type)
         {
             return type.GetHelperType().GetMethod("GetAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).ReturnType;
