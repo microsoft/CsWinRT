@@ -98,22 +98,6 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestArrayCopyToBufferMidToMid()
-        {
-            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
-            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
-            arr.CopyTo(1, buf, 1, 0);
-        }
-
-        [Fact]
-        public void TestArrayCopyToBufferMidToEnd()
-        {
-            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
-            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
-            arr.CopyTo(1, buf, 3, 0);
-        }
-
-        [Fact]
         public void TestBufferCopyToArrayEndToEnd()
         {
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
@@ -221,14 +205,7 @@ namespace UnitTest
             Assert.ThrowsAny<System.Exception>(() => (IStringableInterop)(IWinRTObject)TestObject);
         }
 
-        [Fact]
-        public void TestBuffer()
-        {
-            var buffer = new Windows.Storage.Streams.Buffer(2);
-            var array = buffer.ToArray(0, 2);
-            Assert.Equal(2, array.Length);
-        }
-#endif
+ #endif
 
         async Task TestStorageFileAsync()
         {
