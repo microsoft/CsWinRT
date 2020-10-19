@@ -46,6 +46,55 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestGetByte()
+        {
+            var array = new byte[] { 0x01 };
+            var buff = array.AsBuffer();
+            Assert.True(buff.Length == 1);
+            byte b = buff.GetByte(0);
+            Assert.True(b == 0x01);
+        }
+
+        [Fact]
+        public void TestManyBufferExtensionMethods()
+        {
+            var arrayLen3 = new byte[] { 0x01, 0x02, 0x03 };
+            var buffLen3 = arrayLen3.AsBuffer();
+
+            var arrayLen4 = new byte[] { 0x11, 0x12, 0x13, 0x14 };
+            var buffLen4 = arrayLen4.AsBuffer();
+
+            var arrayLen4Again = new byte[4];
+
+            arrayLen3.CopyTo(1, buffLen4, 0, 1); // copy just the second element of the array to the beginning of the buffer 
+            Assert.True(buffLen4.Length == 4);
+            Assert.Throws<ArgumentException>(() => buffLen4.GetByte(5)); // shouldn't have a 5th element
+            Assert.True(buffLen4.GetByte(0) == 0x02); // make sure we got the 2nd element of the array
+            
+            arrayLen3.CopyTo(buffLen4); // Array to Buffer copying
+            Assert.True(buffLen4.Length == 4);
+            Assert.True(buffLen4.GetByte(0) == 0x01); // make sure we updated the first few 
+            Assert.True(buffLen4.GetByte(1) == 0x02); 
+            Assert.True(buffLen4.GetByte(2) == 0x03);
+            Assert.True(buffLen4.GetByte(3) == 0x14); // and kept the last one 
+
+            var buffLen3Again = buffLen3.ToArray().AsBuffer();
+            Assert.True(buffLen3Again.GetByte(0) == 0x01);
+            Assert.True(buffLen3Again.GetByte(1) == 0x02);
+            Assert.True(buffLen3Again.GetByte(2) == 0x03);
+
+            Assert.False(buffLen3.IsSameData(buffLen3Again)); // different memory regions
+
+            buffLen4.CopyTo(arrayLen4Again);  // Buffer to Array copying
+            var array4 = buffLen4.ToArray();
+            Assert.True(arrayLen4Again.Length == array4.Length);
+            for (int i = 0; i < arrayLen4Again.Length; ++i)
+            {
+                Assert.True(arrayLen4Again[i] == array4[i]); // make sure we have equal array
+            }
+        }
+
+        [Fact]
         public void TestIsSameDataDifferentArrays()
         {
             var arr = new byte[] { 0x01, 0x02 };
@@ -84,26 +133,12 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestBufferAsStreamReturnsUnmanaged()
+        public void TestBufferAsStreamUsingAsBuffer()
         {
             var arr = new byte[] { 0x01, 0x02 };
-            var buffer = new Windows.Storage.Streams.Buffer(2);
-            arr.CopyTo(buffer); // try with buffer made by doing AsBuffer
-            Stream stream = buffer.AsStream(); // this doesn't return a memory stream but a UnmanagedMemoryStream
-            var buffer2 = stream.As<MemoryStream>().GetWindowsRuntimeBuffer(); // if above works, then make this an Assert.Throws
+            Stream stream = arr.AsBuffer().AsStream();            
+            Assert.True(stream != null);
             Assert.True(stream.Length == 2);
-            Assert.True(buffer.IsSameData(buffer2));
-        }
-
-        [Fact]
-        public void TestBufferAsStreamReturnsUnmanaged1()
-        {
-            var arr = new byte[] { 0x01, 0x02 };
-            var buffer = arr.AsBuffer();
-            Stream stream = buffer.AsStream(); // just changed this to set pub vis to true
-            var buffer2 = stream.As<MemoryStream>().GetWindowsRuntimeBuffer(); // the constructed memorystream doesn't have publically visible set to true...
-            Assert.True(stream.Length == 2);
-            Assert.True(buffer.IsSameData(buffer2));
         }
 
         [Fact]
@@ -119,7 +154,7 @@ namespace UnitTest
 
         [Fact]
         public void TestBufferAsStreamWorksWithEmptyBuffer2()
-        { // not backed by a managed byte array , should hit the unsafe case 
+        { 
             var buffer = new Windows.Storage.Streams.Buffer(0);
             Stream stream = buffer.AsStream();
             Assert.True(stream != null);
