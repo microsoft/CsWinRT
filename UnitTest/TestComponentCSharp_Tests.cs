@@ -142,18 +142,7 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestBufferAsStreamWorksWithEmptyBuffer()
-        {
-            var arr = new byte[] { };
-            var buffer = new Windows.Storage.Streams.Buffer(0);
-            arr.CopyTo(buffer);
-            Stream stream = buffer.AsStream();
-            Assert.True(stream != null);
-            Assert.True(stream.Length == 0);
-        }
-
-        [Fact]
-        public void TestBufferAsStreamWorksWithEmptyBuffer2()
+        public void TestBufferAsStreamWithEmptyBuffer1()
         { 
             var buffer = new Windows.Storage.Streams.Buffer(0);
             Stream stream = buffer.AsStream();
