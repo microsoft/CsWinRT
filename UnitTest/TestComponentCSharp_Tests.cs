@@ -114,38 +114,6 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestArrayCopyToBufferEndToMid()
-        {
-            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
-            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
-            buf.CopyTo(3, arr, 1, 0);
-        }
-
-
-        [Fact]
-        public void TestBufferToArrayZeroFromEnd()
-        {
-            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
-            var arr = buf.ToArray(3, 0);
-        }
-
-        [Fact]
-        public void TestBufferToArrayZeroFromMiddle()
-        {
-            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
-            var arr = buf.ToArray(1, 0);
-        }
-
-        [Fact]
-        public void TestJoshua()
-        {
-            byte[] array = { 0xA1, 0xA2, 0xA3 };
-            var buffer = array.AsBuffer();
-            var target = new byte[10];
-            buffer.CopyTo(3, target, 10, 0);
-        }
-
-        [Fact]
         public void TestBufferCopyToArrayEndToEnd()
         {
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
@@ -155,46 +123,21 @@ namespace UnitTest
         }
 
         [Fact]
-        public void BufferToArrayWithZeroCountAtEnd()
+        public void BufferToArrayWithZeroCountAtEnd2()
         {
             byte[] array = { 0xA1, 0xA2, 0xA3 };
             var result = array.AsBuffer().ToArray(3, 0);
-            Assert.IsNotNull(result);
-            Assert.AreEqual(0, result.Length);
+            Assert.True(result != null);
+            Assert.True(0 == result.Length);
         }
+
         [Fact]
         public void BufferToArrayWithZeroCountAtEnd_WorksWithSpans()
         {
             byte[] array = { 0xA1, 0xA2, 0xA3 };
             var result = array.AsSpan().Slice(3, 0).ToArray();
-            Assert.IsNotNull(result);
-            Assert.AreEqual(0, result.Length);
-        }
-
-        [Fact]
-        public void BufferToArrayWithZeroCountAtEnd()
-        {
-            byte[] array = { 0xA1, 0xA2, 0xA3 };
-            var result = array.AsBuffer().ToArray(3, 0);
-            Assert.IsNotNull(result);
-            Assert.AreEqual(0, result.Length);
-        }
-
-
-        [Fact]
-        public void TestBufferCopyToArrayMidToMid()
-        {
-            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
-            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
-            buf.CopyTo(1, arr, 1, 0);
-        }
-       
-        [Fact]
-        public void TestCopyZeroBetweenBuffersAtEnd()
-        {
-            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
-            IBuffer dest = new Windows.Storage.Streams.Buffer(3);
-            buf.CopyTo(3, dest, 3, 0);
+            Assert.True(result != null);
+            Assert.True(0 == result.Length);
         }
 
         [Fact]
