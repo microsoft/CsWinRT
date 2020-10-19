@@ -1257,13 +1257,13 @@ MarshalInspectable<object>.DisposeAbi(ptr);
 % %(%)%
 {
 object baseInspectable = this.GetType() != typeof(%) ? this : null;
+_constructing = true;
 IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
+_constructing = false;
 using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
 try
 {
-_constructing = true;
 _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
-_constructing = false;
 _defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
