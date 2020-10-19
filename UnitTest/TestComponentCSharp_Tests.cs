@@ -46,11 +46,116 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestBufferImproperReadCopyToOutOfBounds()
+        {
+            var array = new byte[] { 0x01, 0x02, 0x03 };
+            var buffer = array.AsBuffer();
+            var biggerBuffer = new Windows.Storage.Streams.Buffer(5);
+            buffer.CopyTo(biggerBuffer);
+            Assert.Throws<ArgumentException>(() => biggerBuffer.ToArray(4, 2));
+        }
+
+        [Fact]
+        public void TestBufferImproperReadCopyToStraddleBounds()
+        {
+            var array = new byte[] { 0x01, 0x02, 0x03 };
+            var buffer = array.AsBuffer();
+            var bufferBig = new Windows.Storage.Streams.Buffer(5);
+            buffer.CopyTo(bufferBig);
+            Assert.Throws<ArgumentException>(() => bufferBig.ToArray(2, 2));
+        }
+
+        [Fact]
+        public void TestBufferImproperReadGetByte()
+        {
+            var array = new byte[] { 0x01, 0x02, 0x03 };
+            var buffer = array.AsBuffer();
+            Assert.Throws<ArgumentException>(() => buffer.GetByte(4));
+        }
+
+        [Fact]
         public void TestEmptyBufferToArray()
         {
             var buffer = new Windows.Storage.Streams.Buffer(0);
             var array = buffer.ToArray();
             Assert.True(array.Length == 0);
+        }
+
+        [Fact]
+        public void TestArrayCopyToBufferEndToBeginning()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(3, buf, 0, 0);
+        }
+
+        [Fact]
+        public void TestArrayCopyToBufferEndToEnd2()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(0, buf, 0, 3);
+        }
+
+        [Fact]
+        public void TestArrayCopyToBufferEndToEnd()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(3, buf, 3, 0);
+        }
+
+        [Fact]
+        public void TestArrayCopyToBufferMidToMid()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(1, buf, 1, 0);
+        }
+
+        [Fact]
+        public void TestArrayCopyToBufferMidToEnd()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(1, buf, 3, 0);
+        }
+
+        [Fact]
+        public void TestBufferCopyToArrayEndToEnd()
+        {
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            var buf = arr.AsBuffer();
+            var target = new byte[4];
+            buf.CopyTo(3, target, 4, 0);
+        }
+
+        [Fact]
+        public void BufferToArrayWithZeroCountAtEnd2()
+        {
+            byte[] array = { 0xA1, 0xA2, 0xA3 };
+            var result = array.AsBuffer().ToArray(3, 0);
+            Assert.True(result != null);
+            Assert.True(0 == result.Length);
+        }
+
+        [Fact]
+        public void BufferToArrayWithZeroCountAtEnd_WorksWithSpans()
+        {
+            byte[] array = { 0xA1, 0xA2, 0xA3 };
+            var result = array.AsSpan().Slice(3, 0).ToArray();
+            Assert.True(result != null);
+            Assert.True(0 == result.Length);
+        }
+
+        [Fact]
+        public void TestWinRTBufferWithZeroLength()
+        {
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            MemoryStream stream = new MemoryStream(arr, 0, 3, false, true);
+            IBuffer buff = stream.GetWindowsRuntimeBuffer(3, 0);
+            Assert.True(buff != null);
+            Assert.True(buff.Length == 0);
         }
 
         [Fact]
@@ -127,11 +232,14 @@ namespace UnitTest
         [Fact]
         public void TestBuffer()
         {
-            var buffer = new Windows.Storage.Streams.Buffer(2);
-            var array = buffer.ToArray(0, 2);
-            Assert.Equal(2, array.Length);
+            var arr1 = new byte[] { 0x01, 0x02 };
+            var buff = arr1.AsBuffer();
+            var arr2 = buff.ToArray(0,2);
+            Assert.True(arr1[0] == arr2[0]);
+            Assert.True(arr1[1] == arr2[1]);
         }
-#endif
+
+ #endif
 
         async Task TestStorageFileAsync()
         {
