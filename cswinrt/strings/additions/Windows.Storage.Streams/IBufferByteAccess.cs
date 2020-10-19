@@ -19,46 +19,39 @@ namespace ABI.Windows.Storage.Streams
 #if NETSTANDARD2_0
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("905a0fef-bc53-11df-8c49-001e4fc686da")]
-    internal class IBufferByteAccess : global::Windows.Storage.Streams.IBufferByteAccess
+    internal unsafe class IBufferByteAccess : global::Windows.Storage.Streams.IBufferByteAccess
     {
         [Guid("905a0fef-bc53-11df-8c49-001e4fc686da")]
         public struct Vftbl
         {
-            public delegate int _get_Buffer_0(IntPtr thisPtr, out IntPtr buffer);
-
             internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            public _get_Buffer_0 get_Buffer_0;
+            private void* _get_Buffer_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_Buffer_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_Buffer_0; set => _get_Buffer_0 = value; }
+
+            public unsafe delegate int _get_Buffer_0_delegate(IntPtr thisPtr, IntPtr* result);
+            private static readonly _get_Buffer_0_delegate DelegateCache;
 
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-                    get_Buffer_0 = Do_Abi_get_Buffer_0
+                    _get_Buffer_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache = Do_Abi_get_Buffer_0).ToPointer()
                 };
-                var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<IUnknownVftbl>() + sizeof(IntPtr) * 12);
-                Marshal.StructureToPtr(AbiToProjectionVftable.IUnknownVftbl, (IntPtr)nativeVftbl, false);
-                nativeVftbl[3] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.get_Buffer_0);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
             public static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-            internal unsafe Vftbl(IntPtr thisPtr)
+            private static int Do_Abi_get_Buffer_0(IntPtr thisPtr, IntPtr* buffer)
             {
-                var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
-                var vftbl = (IntPtr*)vftblPtr.Vftbl;
-                IUnknownVftbl = Marshal.PtrToStructure<IUnknownVftbl>(vftblPtr.Vftbl);
-                get_Buffer_0 = Marshal.GetDelegateForFunctionPointer<_get_Buffer_0>(vftbl[3]);
-            }
-
-            private static int Do_Abi_get_Buffer_0(IntPtr thisPtr, out IntPtr buffer)
-            {
-                buffer = default;
+                *buffer = default;
                 try
                 {
-                    buffer = ComWrappersSupport.FindObject<global::Windows.Storage.Streams.IBufferByteAccess>(thisPtr).Buffer;
+                    *buffer = ComWrappersSupport.FindObject<global::Windows.Storage.Streams.IBufferByteAccess>(thisPtr).Buffer;
                 }
                 catch (Exception ex)
                 {
@@ -85,8 +78,9 @@ namespace ABI.Windows.Storage.Streams
         {
             get
             {
-                Marshal.ThrowExceptionForHR(_obj.Vftbl.get_Buffer_0(ThisPtr, out IntPtr buffer));
-                return buffer;
+                IntPtr __retval = default;
+                Marshal.ThrowExceptionForHR(_obj.Vftbl.get_Buffer_0(ThisPtr, &__retval));
+                return __retval;
             }
         }
     }
