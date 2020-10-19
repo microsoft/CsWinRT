@@ -26,6 +26,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
+using System.Reflection;
 
 #if NET5_0
 using WeakRefNS = System;
@@ -262,7 +263,43 @@ namespace UnitTest
         {
             Assert.ThrowsAny<System.Exception>(() => (IStringableInterop)(IWinRTObject)TestObject);
         }
+
+        [Fact]
+        public void TestBuffer()
+        {
+            var buffer = new Windows.Storage.Streams.Buffer(2);
+            var array = buffer.ToArray(0, 2);
+            Assert.Equal(2, array.Length);
+        }
 #endif
+
+        async Task TestStorageFileAsync()
+        {
+            var folderPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            StorageFile file = await StorageFile.GetFileFromPathAsync(folderPath + "\\UnitTest.dll");
+            var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(file, FileAccess.Read);
+            Assert.NotNull(handle);
+        }
+
+        [Fact]
+        public void TestStorageFile()
+        {
+            Assert.True(TestStorageFileAsync().Wait(1000));
+        }
+
+        async Task TestStorageFolderAsync()
+        {
+            var folderPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            StorageFolder folder = await StorageFolder.GetFolderFromPathAsync(folderPath);
+            var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(folder, "UnitTest.dll", FileMode.Open, FileAccess.Read);
+            Assert.NotNull(handle);
+        }
+
+        [Fact]
+        public void TestStorageFolder()
+        {
+            Assert.True(TestStorageFolderAsync().Wait(1000));
+        }
 
         async Task InvokeWriteBufferAsync()
         {
