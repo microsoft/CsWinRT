@@ -52,6 +52,15 @@ C#/WinRT behavior can be customized with these project properties:
 * -output $(CsWinRTGeneratedFilesDir)
 * $(CsWinRTFilters)
 
+### Windows Metadata
+
+Windows Metadata is required for all C#/WinRT projections, and can be supplied by:
+* A package reference, such as to [Microsoft.Windows.SDK.Contracts]( https://www.nuget.org/packages/Microsoft.Windows.SDK.Contracts/)
+* An explicit value, supplied by $(CsWinRTWindowsMetadata)
+* The default value, assigned from $(WindowsSDKVersion)
+
+If a Windows SDK is installed, $(WindowsSDKVersion) is defined when building from a VS command prompt.
+
 ## Consuming and Producing 
 
 The C#/WinRT package can be used both to consume WinRT types, and to produce them (via CsWinRTComponent).  It is also possible to combine these settings and do both.  For example, a developer might want to *produce* a library that's implemented in terms of another WinRT runtime class (*consuming* it).

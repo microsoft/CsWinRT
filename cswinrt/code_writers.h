@@ -50,11 +50,16 @@ namespace cswinrt
         return type_mappings[(int)type].dotnet;
     }
 
-    static std::string get_vmethod_name(writer& w, TypeDef const& type, MethodDef const& method)
+    static uint32_t get_vmethod_index(TypeDef const& type, MethodDef const& method)
     {
         uint32_t const vtable_base = type.MethodList().first.index();
         uint32_t const vtable_index = method.index() - vtable_base;
-        return w.write_temp("%_%", method.Name(), vtable_index);
+        return vtable_index;
+    }
+
+    static std::string get_vmethod_name(writer& w, TypeDef const& type, MethodDef const& method)
+    {
+        return w.write_temp("%_%", method.Name(), get_vmethod_index(type, method));
     }
 
     bool is_type_blittable(type_semantics const& semantics)
@@ -1084,9 +1089,12 @@ remove => %.% -= value;
 
     std::string write_static_cache_object(writer& w, std::string_view cache_type_name, TypeDef const& class_type)
     {
+        if (settings.netstandard_compat)
+        {
+            
         auto cache_vftbl_type = w.write_temp("ABI.%.%.Vftbl",
-            class_type.TypeNamespace(),
-            cache_type_name);
+                class_type.TypeNamespace(),
+                cache_type_name);
         auto cache_interface =
             w.write_temp(
                 R"((new BaseActivationFactory("%", "%.%"))._As<%>)",
@@ -1094,8 +1102,6 @@ remove => %.% -= value;
                 class_type.TypeNamespace(),
                 class_type.TypeName(),
                 cache_vftbl_type);
-        if (settings.netstandard_compat)
-        {
             w.write(R"(
 internal class _% : ABI.%.%
 {
@@ -1118,10 +1124,10 @@ internal static % Instance => _instance.Value;
             w.write(R"(
 internal class _% : IWinRTObject
 {
-private ObjectReference<%> _obj;
+private IObjectReference _obj;
 public _%()
 {
-_obj = %();
+_obj = (new BaseActivationFactory("%", "%.%"))._As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
 }
 
 private static WeakLazy<_%> _instance = new WeakLazy<_%>();
@@ -1133,9 +1139,12 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
 }
 )",
                 cache_type_name,
-                cache_vftbl_type,
                 cache_type_name,
-                cache_interface,
+                class_type.TypeNamespace(),
+                class_type.TypeNamespace(),
+                class_type.TypeName(),
+                class_type.TypeNamespace(),
+                cache_type_name,
                 cache_type_name,
                 cache_type_name,
                 cache_type_name,
@@ -1893,6 +1902,24 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
 db_path.stem().string());
     }
 
+    auto get_invoke_info(writer& w, MethodDef const& method)
+    {
+        TypeDef const& type = method.Parent();
+        if (!settings.netstandard_compat && distance(type.GenericParam()) == 0)
+        {
+            return std::pair{
+                w.write_temp("(*(delegate* unmanaged[Stdcall]<%, int>**)ThisPtr)[%]",
+                    bind<write_abi_parameter_types>(method_signature { method }),
+                    get_vmethod_index(type, method) + 6 /* number of methods in IInspectable */),
+                false
+            };
+        }
+        auto vmethod_name = get_vmethod_name(w, type, method);
+        return std::pair{
+            "_obj.Vftbl." + vmethod_name,
+            abi_signature_has_generic_parameters(w, method_signature { method })};
+    };
+
     void write_static_class(writer& w, TypeDef const& type)
     {
         w.write(R"(%public static class %
@@ -1909,11 +1936,11 @@ db_path.stem().string());
         auto [add, remove] = get_event_methods(evt);
         w.write(R"(
     new EventSource<%>(_obj,
-    _obj.Vftbl.%,
-    _obj.Vftbl.%))",
+    %,
+    %))",
             bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
-            get_vmethod_name(w, evt.Parent(), add),
-            get_vmethod_name(w, evt.Parent(), remove));
+            get_invoke_info(w, add).first,
+            get_invoke_info(w, remove).first);
     }
 
     void write_event_sources(writer& w, TypeDef const& type)
@@ -2561,16 +2588,6 @@ finally
             return;
         }
 
-        auto get_method_info = [&](MethodDef const& method)
-        {
-            auto vmethod_name = get_vmethod_name(w, method.Parent(), method);
-            method_signature signature{ method };
-            return std::pair{
-                "_obj.Vftbl." + vmethod_name,
-                abi_signature_has_generic_parameters(w, signature)
-            };
-        };
-
         auto write_raw_return_type = [](writer& w, method_signature const& sig)
         {
             if (auto return_sig = sig.return_signature())
@@ -2584,7 +2601,7 @@ finally
         };
 
         method_signature signature{ method };
-        auto [invoke_target, is_generic] = get_method_info(method);
+        auto [invoke_target, is_generic] = get_invoke_info(w, method);
         w.write(R"(
 public unsafe %% %(%)
 {%}
@@ -2604,16 +2621,6 @@ public unsafe %% %(%)
         {
             return;
         }
-
-        auto get_method_info = [&](MethodDef const& method)
-        {
-            auto vmethod_name = get_vmethod_name(w, method.Parent(), method);
-            method_signature signature{ method };
-            return std::pair{
-                "_obj.Vftbl." + vmethod_name,
-                abi_signature_has_generic_parameters(w, signature)
-            };
-        };
 
         auto write_composable_constructor_params = [&](writer& w, method_signature const& method_sig)
         {
@@ -2647,7 +2654,7 @@ public unsafe %% %(%)
         };
 
         method_signature signature{ method };
-        auto [invoke_target, is_generic] = get_method_info(method);
+        auto [invoke_target, is_generic] = get_invoke_info(w, method);
 
         auto abi_marshalers = get_abi_marshalers(w, signature, is_generic, "", true);
         // The last abi marshaler is the return value and the second-to-last one
@@ -2679,14 +2686,14 @@ public unsafe % %(%)
     std::string write_factory_cache_object(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
     {
         std::string_view cache_type_name = factory_type.TypeName();
-        auto cache_vftbl_type = w.write_temp("ABI.%.%.Vftbl", class_type.TypeNamespace(), cache_type_name);
-        auto cache_interface =
-            w.write_temp(
-                R"(ActivationFactory<%>.As<%>)",
-                class_type.TypeName(),
-                cache_vftbl_type);
         if (settings.netstandard_compat)
         {
+            auto cache_vftbl_type = w.write_temp("ABI.%.%.Vftbl", class_type.TypeNamespace(), cache_type_name);
+            auto cache_interface =
+                w.write_temp(
+                    R"(ActivationFactory<%>.As<%>)",
+                    class_type.TypeName(),
+                    cache_vftbl_type);
 
             w.write(R"(
 internal class _% : ABI.%.%
@@ -2713,11 +2720,11 @@ internal static _% Instance => _instance.Value;
             w.write(R"(
 internal class _% : IWinRTObject
 {
-private ObjectReference<%> _obj;
+private IObjectReference _obj;
 private IntPtr ThisPtr => _obj.ThisPtr;
 public _%()
 {
-_obj = %();
+_obj = ActivationFactory<%>.As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
 }
 
 private static WeakLazy<_%> _instance = new WeakLazy<_%>();
@@ -2731,9 +2738,10 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
 }
 )",
                 cache_type_name,
-                cache_vftbl_type,
                 cache_type_name,
-                cache_interface,
+                class_type.TypeName(),
+                class_type.TypeNamespace(),
+                cache_type_name,
                 cache_type_name,
                 cache_type_name,
                 cache_type_name,
@@ -2746,19 +2754,14 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
 
     void write_interface_members(writer& w, TypeDef const& type, std::set<std::string> const& generic_methods)
     {
-        auto get_method_info = [&](MethodDef const& method)
-        {
-            auto vmethod_name = get_vmethod_name(w, type, method);
-            return std::pair{
-                "_obj.Vftbl." + vmethod_name,
-                generic_methods.find(vmethod_name) != generic_methods.end()};
-        };
+        bool generic_type = distance(type.GenericParam()) > 0;
 
         auto init_call_variables = [&](writer& w)
         {
             if (!settings.netstandard_compat)
             {
-                w.write("\nvar _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(%).TypeHandle));\n",
+                w.write("\nvar _obj = ((%)((IWinRTObject)this).GetObjectReferenceForType(typeof(%).TypeHandle));\n",
+                    generic_type ? "ObjectReference<Vftbl>" : "IObjectReference",
                     bind<write_type_name>(type, typedef_name_type::CCW, false));
                 w.write("var ThisPtr = _obj.ThisPtr;\n");
             }
@@ -2771,7 +2774,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
                 continue;
             }
             method_signature signature{ method };
-            auto [invoke_target, is_generic] = get_method_info(method);
+            auto [invoke_target, is_generic] = get_invoke_info(w, method);
             w.write(R"(
 %unsafe %% %%(%)
 {%%}
@@ -2812,7 +2815,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
 
             if (getter)
             {
-                auto [invoke_target, is_generic] = get_method_info(getter);
+                auto [invoke_target, is_generic] = get_invoke_info(w, getter);
                 auto signature = method_signature(getter);
                 auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
                 w.write(R"(get
@@ -2829,7 +2832,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
                     auto getter_cast = settings.netstandard_compat ? "As<%>()"s : "((%)(IWinRTObject)this)"s;
                     w.write("get{ return " + getter_cast + ".%; }\n", getter_interface.first, prop.Name());
                 }
-                auto [invoke_target, is_generic] = get_method_info(setter);
+                auto [invoke_target, is_generic] = get_invoke_info(w, setter);
                 auto signature = method_signature(setter);
                 auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
                 marshalers[0].param_name = "value";
@@ -2847,7 +2850,14 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IO
             auto semantics = get_type_semantics(evt.EventType());
             auto event_source = settings.netstandard_compat ? 
                 w.write_temp("_%", evt.Name())
-                : w.write_temp("_%.GetValue((IWinRTObject)this, (key) => { var _obj = (ObjectReference<Vftbl>)key.GetObjectReferenceForType(typeof(%).TypeHandle); return %; })", evt.Name(), bind<write_type_name>(type, typedef_name_type::CCW, false), bind<write_event_source_ctor>(evt));
+                : w.write_temp(R"(_%.GetValue((IWinRTObject)this, (key) =>
+{
+%
+return %;
+}))",
+                    evt.Name(),
+                    bind(init_call_variables),
+                    bind<write_event_source_ctor>(evt));
             w.write(R"(
 %event % %%
 {
@@ -4554,7 +4564,8 @@ public static class %
 
     bool write_abi_interface(writer& w, TypeDef const& type)
     {
-         XLANG_ASSERT(get_category(type) == category::interface_type);
+        bool is_generic = distance(type.GenericParam()) > 0;
+        XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
 
         auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
@@ -4579,7 +4590,43 @@ internal unsafe interface % : %
                 w.write(distance(type.GenericParam()) > 0 ? "public static Guid PIID = Vftbl.PIID;\n\n" : "");
             },
             // Vftbl
-            bind<write_vtable>(type, type_name, generic_methods, nongenerics_class, nongeneric_delegates),
+            bind([&](writer& w)
+            {
+                auto methods = type.MethodList();
+                if (is_generic)
+                {
+                    write_vtable(w, type, type_name, generic_methods, nongenerics_class, nongeneric_delegates);
+                }
+                else
+                {
+                    w.write(R"(
+public static IntPtr AbiToProjectionVftablePtr;
+static unsafe @()
+{
+AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), sizeof(IInspectable.Vftbl) + sizeof(IntPtr) * %);
+*(IInspectable.Vftbl*)AbiToProjectionVftablePtr = IInspectable.Vftbl.AbiToProjectionVftable;
+%
+}
+%%%
+)",
+                    type.TypeName(),
+                    type.TypeName(),
+                    distance(methods),
+                    bind_list([&](writer& w, MethodDef const& method)
+                    {
+                        auto method_index = get_vmethod_index(method.Parent(), method);
+                        auto method_name = method.Name();
+                        w.write("((delegate* unmanaged[Stdcall]<%, int>*)AbiToProjectionVftablePtr)[%] = &Do_Abi_%_%;",
+                            bind<write_abi_parameter_types_pointer>(method_signature{ method }),
+                            method_index + 6 /* number of entries in IInspectable */,
+                            method_name,
+                            method_index);
+                    }, "\n", methods),
+                    bind_each<write_method_abi_invoke>(methods),
+                    bind_each<write_property_abi_invoke>(type.PropertyList()),
+                    bind_each<write_event_abi_invoke>(type.EventList()));
+                }
+            }),
             bind<write_interface_members>(type, generic_methods),
             bind<write_event_source_tables>(type),
             [&](writer& w) {
@@ -5020,10 +5067,22 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<obje
                 if (is_exclusive_to_default)
                 {
                     auto default_interface_abi_name = get_default_interface_name(w, type, true);
-                    w.write("public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable<%>.CreateMarshaler(obj).As<%.Vftbl>();",
+                    w.write("public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable<%>.CreateMarshaler(obj)%;",
                         projected_type_name,
                         projected_type_name,
-                        default_interface_abi_name);
+                        bind([&](writer& w)
+                        {
+                            if (distance(type.GenericParam()) > 0)
+                            {
+                                w.write(".As<%.Vftbl>()", default_interface_abi_name);
+                            }
+                            else
+                            {
+                                w.write(
+                                    ".As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).GetHelperType()))",
+                                    bind<write_type_name>(get_type_semantics(get_default_interface(type)), typedef_name_type::Projected, false));
+                            }
+                        }));
                 }
                 else
                 {
