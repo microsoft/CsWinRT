@@ -29,14 +29,24 @@ namespace WinRT
                     Type iReadOnlyDictionary = typeof(IReadOnlyDictionary<,>).MakeGenericType(itemType.GetGenericArguments());
                     if (IsInterfaceImplemented(iReadOnlyDictionary.TypeHandle, false))
                     {
+                        if (QueryInterfaceCache.TryGetValue(iReadOnlyDictionary.TypeHandle, out var typedObjRef) && !QueryInterfaceCache.TryAdd(interfaceType, typedObjRef))
+                        {
+                            typedObjRef.Dispose();
+                        }
                         return true;
                     }
                 }
                 Type iReadOnlyList = typeof(IReadOnlyList<>).MakeGenericType(new[] { itemType });
                 if (IsInterfaceImplemented(iReadOnlyList.TypeHandle, throwIfNotImplemented))
                 {
+                    if (QueryInterfaceCache.TryGetValue(iReadOnlyList.TypeHandle, out var typedObjRef) && !QueryInterfaceCache.TryAdd(interfaceType, typedObjRef))
+                    {
+                        typedObjRef.Dispose();
+                    }
                     return true;
                 }
+
+                return false;
             }
             else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.ICollection<>))
             {
@@ -62,6 +72,20 @@ namespace WinRT
                     }
                     return true;
                 }
+
+                return false;
+            }
+            else if (type == typeof(System.Collections.IEnumerable))
+            {
+                Type iEnum = typeof(System.Collections.Generic.IEnumerable<object>);
+                if (IsInterfaceImplemented(iEnum.TypeHandle, false))
+                {
+                    if (QueryInterfaceCache.TryGetValue(iEnum.TypeHandle, out var typedObjRef) && !QueryInterfaceCache.TryAdd(interfaceType, typedObjRef))
+                    {
+                        typedObjRef.Dispose();
+                    }
+                    return true;
+                }
             }
 
             Type helperType = type.FindHelperType();
@@ -78,6 +102,13 @@ namespace WinRT
                 }
                 return false;
             }
+
+            if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type))
+            {
+                RuntimeTypeHandle projectIEnum = typeof(System.Collections.IEnumerable).TypeHandle;
+                AdditionalTypeData.GetOrAdd(projectIEnum, (_) => new ABI.System.Collections.IEnumerable.AdaptiveFromAbiHelper(type, this));
+            }
+
             var vftblType = helperType.FindVftblType();
             using (objRef)
             {
@@ -102,43 +133,6 @@ namespace WinRT
         RuntimeTypeHandle IDynamicInterfaceCastable.GetInterfaceImplementation(RuntimeTypeHandle interfaceType)
         {
             var type = Type.GetTypeFromHandle(interfaceType);
-
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IReadOnlyCollection<>))
-            {
-                Type itemType = type.GetGenericArguments()[0];
-                if (itemType.IsGenericType && itemType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-                {
-                    Type iReadOnlyDictionary = typeof(IReadOnlyDictionary<,>).MakeGenericType(itemType.GetGenericArguments());
-                    
-                    if (IsInterfaceImplemented(iReadOnlyDictionary.TypeHandle, false))
-                    {
-                        return GetInterfaceImplementation(iReadOnlyDictionary.TypeHandle);
-                    }
-                }
-                Type iReadOnlyList = typeof(IReadOnlyList<>).MakeGenericType(new[] { itemType });
-                if (IsInterfaceImplemented(iReadOnlyList.TypeHandle, false))
-                {
-                    return GetInterfaceImplementation(iReadOnlyList.TypeHandle);
-                }
-            }
-            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.ICollection<>))
-            {
-                Type itemType = type.GetGenericArguments()[0];
-                if (itemType.IsGenericType && itemType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-                {
-                    Type iDictionary = typeof(IDictionary<,>).MakeGenericType(itemType.GetGenericArguments());
-                    if (IsInterfaceImplemented(iDictionary.TypeHandle, false))
-                    {
-                        return GetInterfaceImplementation(iDictionary.TypeHandle);
-                    }
-                }
-                Type iList = typeof(IList<>).MakeGenericType(new[] { itemType });
-                if (IsInterfaceImplemented(iList.TypeHandle, false))
-                {
-                    return GetInterfaceImplementation(iList.TypeHandle);
-                }
-            }
-
             var helperType = type.GetHelperType();
             if (helperType.IsInterface)
                 return helperType.TypeHandle;
@@ -164,7 +158,7 @@ namespace WinRT
             throw new Exception("Interface " + Type.GetTypeFromHandle(type) +" is not implemented.");
         }
 
-        ConcurrentDictionary<RuntimeTypeHandle, object> AdditionalTypeData => new ConcurrentDictionary<RuntimeTypeHandle, object>();
+        ConcurrentDictionary<RuntimeTypeHandle, object> AdditionalTypeData { get; }
 
         object GetOrCreateTypeHelperData(RuntimeTypeHandle type, Func<object> helperDataFactory)
         {

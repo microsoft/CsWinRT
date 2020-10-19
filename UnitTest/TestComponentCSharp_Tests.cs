@@ -185,6 +185,15 @@ namespace UnitTest
             Assert.Equal("UnitTest.TestCSharp+CustomDictionary, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", name);
         }
 
+        [Fact]
+        public void TestVectorCastConversion()
+        {
+            var vector = TestObject.GetUriVectorAsIInspectableVector();
+            var uriVector = vector.Cast<Uri>();
+            var first = uriVector.First();
+            Assert.Equal(vector, uriVector);
+        }
+
 #if NET5_0
         [Fact]
         public void TestAsStream()

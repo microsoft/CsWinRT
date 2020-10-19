@@ -726,7 +726,7 @@ namespace ABI.System.Collections.Generic
         }
         public static Guid PIID = Vftbl.PIID;
         
-        private static FromAbiHelper _FromVector(IWinRTObject _this)
+        internal static FromAbiHelper _FromVector(IWinRTObject _this)
         {
             return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IList<T>).TypeHandle,
                 () => new FromAbiHelper((global::Windows.Foundation.Collections.IVector<T>)_this));

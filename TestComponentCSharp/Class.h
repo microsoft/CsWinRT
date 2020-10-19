@@ -24,6 +24,8 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event<Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, Windows::Foundation::Collections::IVector<hstring>>> _nestedTypedEvent;
         winrt::event<TestComponentCSharp::EventWithReturn> _returnEvent;
 
+        Windows::Foundation::Collections::IVector<Windows::Foundation::IInspectable> GetUriVectorAsIInspectableVector();
+
         int32_t _int = 0;
         winrt::event<Windows::Foundation::EventHandler<int32_t>> _intChanged;
         bool _bool = false;

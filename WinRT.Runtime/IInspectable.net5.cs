@@ -9,6 +9,7 @@ namespace WinRT
         bool IWinRTObject.HasUnwrappableNativeObject => true;
 
         ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
+        ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData { get; } = new();
     }
 
 }

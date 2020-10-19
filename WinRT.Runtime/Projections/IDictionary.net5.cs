@@ -142,9 +142,9 @@ namespace ABI.System.Collections.Generic
                 Insert(_map, key, value);
             }
 
-            public ICollection<K> Keys { get => new DictionaryKeyCollection(this); }
+            public global::System.Collections.Generic.ICollection<K> Keys { get => new DictionaryKeyCollection(this); }
 
-            public ICollection<V> Values { get => new DictionaryValueCollection(this); }
+            public global::System.Collections.Generic.ICollection<V> Values { get => new DictionaryValueCollection(this); }
 
             public bool ContainsKey(K key)
             {
@@ -271,12 +271,12 @@ namespace ABI.System.Collections.Generic
 
                 public bool IsReadOnly => true;
 
-                void ICollection<K>.Add(K item)
+                void global::System.Collections.Generic.ICollection<K>.Add(K item)
                 {
                     throw new NotSupportedException(ErrorStrings.NotSupported_KeyCollectionSet);
                 }
 
-                void ICollection<K>.Clear()
+                void global::System.Collections.Generic.ICollection<K>.Clear()
                 {
                     throw new NotSupportedException(ErrorStrings.NotSupported_KeyCollectionSet);
                 }
@@ -286,7 +286,7 @@ namespace ABI.System.Collections.Generic
                     return dictionary.ContainsKey(item);
                 }
 
-                bool ICollection<K>.Remove(K item)
+                bool global::System.Collections.Generic.ICollection<K>.Remove(K item)
                 {
                     throw new NotSupportedException(ErrorStrings.NotSupported_KeyCollectionSet);
                 }
@@ -365,12 +365,12 @@ namespace ABI.System.Collections.Generic
 
                 public bool IsReadOnly => true;
 
-                void ICollection<V>.Add(V item)
+                void global::System.Collections.Generic.ICollection<V>.Add(V item)
                 {
                     throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
                 }
 
-                void ICollection<V>.Clear()
+                void global::System.Collections.Generic.ICollection<V>.Clear()
                 {
                     throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
                 }
@@ -384,7 +384,7 @@ namespace ABI.System.Collections.Generic
                     return false;
                 }
 
-                bool ICollection<V>.Remove(V item)
+                bool global::System.Collections.Generic.ICollection<V>.Remove(V item)
                 {
                     throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
                 }
@@ -815,8 +815,8 @@ namespace ABI.System.Collections.Generic
                 () => new FromAbiHelper((global::Windows.Foundation.Collections.IMap<K, V>)(IWinRTObject)obj));
         }
 
-        ICollection<K> global::System.Collections.Generic.IDictionary<K, V>.Keys => _FromMap((IWinRTObject)this).Keys;
-        ICollection<V> global::System.Collections.Generic.IDictionary<K, V>.Values => _FromMap((IWinRTObject)this).Values;
+        global::System.Collections.Generic.ICollection<K> global::System.Collections.Generic.IDictionary<K, V>.Keys => _FromMap((IWinRTObject)this).Keys;
+        global::System.Collections.Generic.ICollection<V> global::System.Collections.Generic.IDictionary<K, V>.Values => _FromMap((IWinRTObject)this).Values;
         int global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Count => _FromMap((IWinRTObject)this).Count;
         bool global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.IsReadOnly => _FromMap((IWinRTObject)this).IsReadOnly;
         V global::System.Collections.Generic.IDictionary<K, V>.this[K key] { get => _FromMap((IWinRTObject)this)[key]; set => _FromMap((IWinRTObject)this)[key] = value; }

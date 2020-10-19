@@ -70,6 +70,7 @@ namespace ABI.System.ComponentModel
             IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
             bool IWinRTObject.HasUnwrappableNativeObject => true;
             ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
+            ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData { get; } = new();
 #endif
 
             public void Invoke(object sender, global::System.ComponentModel.PropertyChangedEventArgs e)
