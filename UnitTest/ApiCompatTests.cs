@@ -79,9 +79,7 @@ namespace UnitTest
         {
             Assert.True(InvokeGeolocation().Wait(1000));
         }
-#endif
 
-#if ENABLE_WORKSTATION_TESTS 
         // This test validates reading device property bag, but requires a USB drive to be connected, so is disabled by default.
         async Task InvokeDeviceEnumeration()
         {
@@ -101,7 +99,6 @@ namespace UnitTest
             Assert.True(InvokeDeviceEnumeration().Wait(5*1000));
         }
     }
-#endif
 
         static readonly string dateAccessedProperty = "System.DateAccessed";
         static readonly string fileOwnerProperty = "System.FileOwner";
@@ -181,5 +178,7 @@ namespace UnitTest
                 }
             }
         }
+#endif
+
     }
 }
