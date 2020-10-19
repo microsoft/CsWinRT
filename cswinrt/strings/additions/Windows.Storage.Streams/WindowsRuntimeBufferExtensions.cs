@@ -89,6 +89,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source.Length - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
             if (destination.Capacity < destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
             if (destination.Capacity - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
+            if (count == 0) return;
 
             // If destination is backed by a managed array, use the array instead of the pointer as it does not require pinning:
             byte[] destDataArr;
@@ -155,7 +156,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source.Length - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
             if (destination.Length < destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_IndexOutOfArrayBounds);
             if (destination.Length - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientArrayElementsAfterOffset);
-           
+            if (count == 0) return;
+
             // If source is backed by a managed array, use the array instead of the pointer as it does not require pinning:
             byte[] srcDataArr;
             int srcDataOffs;
@@ -191,6 +193,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source.Length - sourceIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInSourceBuffer);
             if (destination.Capacity < destinationIndex) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_BufferIndexExceedsCapacity);
             if (destination.Capacity - destinationIndex < count) throw new ArgumentException(global::Windows.Storage.Streams.SR.Argument_InsufficientSpaceInTargetBuffer);
+            if (count == 0) return;
 
             // If source are destination are backed by managed arrays, use the arrays instead of the pointers as it does not require pinning:
             byte[] srcDataArr, destDataArr;
