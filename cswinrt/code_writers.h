@@ -1261,7 +1261,9 @@ IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
 using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
 try
 {
+_constructing = true;
 _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+_constructing = false;
 _defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
@@ -4749,6 +4751,7 @@ public %IntPtr ThisPtr => _default.ThisPtr;
 private IObjectReference _inner = null;
 private readonly Lazy<%> _defaultLazy;
 private readonly Dictionary<Type, object> _lazyInterfaces;
+private bool _constructing = false;
 
 private % _default => _defaultLazy.Value;
 %
@@ -4879,6 +4882,7 @@ private IntPtr ThisPtr => _inner == null ? (((IWinRTObject)this).NativeObject).T
 private IObjectReference _inner = null;
 private readonly Lazy<%> _defaultLazy;
 private readonly Dictionary<Type, object> _lazyInterfaces;
+private bool _constructing = false;
 
 private % _default => _defaultLazy.Value;
 %
@@ -4957,7 +4961,7 @@ _lazyInterfaces = new Dictionary<Type, object>()
                         default_interface_name,
                         bind<write_lazy_interface_initialization>(type));
                     w.write(R"(
-bool IWinRTObject.HasUnwrappableNativeObject => this.GetType() == typeof(%);)",
+bool IWinRTObject.HasUnwrappableNativeObject => this.GetType() == typeof(%) || _constructing;)",
                         type.TypeName());
                 }
                 else
