@@ -46,14 +46,31 @@ namespace UnitTest
         }
 
         [Fact]
-        public void ReadBogusBytes()
+        public void TestBufferImproperReadCopyToOutOfBounds()
+        {
+            var array = new byte[] { 0x01, 0x02, 0x03 };
+            var buffer = array.AsBuffer();
+            var biggerBuffer = new Windows.Storage.Streams.Buffer(5);
+            buffer.CopyTo(biggerBuffer);
+            Assert.Throws<ArgumentException>(() => biggerBuffer.ToArray(4, 2));
+        }
+
+        [Fact]
+        public void TestBufferImproperReadCopyToStraddleBounds()
         {
             var array = new byte[] { 0x01, 0x02, 0x03 };
             var buffer = array.AsBuffer();
             var bufferBig = new Windows.Storage.Streams.Buffer(5);
             buffer.CopyTo(bufferBig);
-            var bogus = bufferBig.ToArray(4, 2);
-            Assert.True(bogus.Length == 2);
+            Assert.Throws<ArgumentException>(() => bufferBig.ToArray(2, 2));
+        }
+
+        [Fact]
+        public void TestBufferImproperReadGetByte()
+        {
+            var array = new byte[] { 0x01, 0x02, 0x03 };
+            var buffer = array.AsBuffer();
+            Assert.Throws<ArgumentException>(() => buffer.GetByte(4));
         }
 
         [Fact]
@@ -64,7 +81,7 @@ namespace UnitTest
             Assert.True(array.Length == 0);
         }
 
-        [Fact(Skip="Blocked by issue #497")]
+        [Fact]
         public void TestArrayCopyToBufferEndToBeginning()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
@@ -72,7 +89,7 @@ namespace UnitTest
             arr.CopyTo(3, buf, 0, 0);
         }
 
-        [Fact(Skip="Blocked by issue #497")]
+        [Fact]
         public void TestArrayCopyToBufferEndToEnd()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
@@ -80,7 +97,7 @@ namespace UnitTest
             arr.CopyTo(3, buf, 3, 0);
         }
 
-        [Fact(Skip="Blocked by issue #497")]
+        [Fact]
         public void TestArrayCopyToBufferMidToMid()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
@@ -88,7 +105,7 @@ namespace UnitTest
             arr.CopyTo(1, buf, 1, 0);
         }
 
-        [Fact(Skip="Blocked by issue #497")]
+        [Fact]
         public void TestArrayCopyToBufferMidToEnd()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
@@ -96,7 +113,7 @@ namespace UnitTest
             arr.CopyTo(1, buf, 3, 0);
         }
 
-        [Fact(Skip="Blocked by issue #497")]
+        [Fact]
         public void TestArrayCopyToBufferEndToMid()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
@@ -119,63 +136,60 @@ namespace UnitTest
             var arr = buf.ToArray(1, 0);
         }
 
-        [Fact(Skip="Blocked by issue #497")]
-        public void TestBufferCopyToArrayEndToBeginning()
+        [Fact]
+        public void TestJoshua()
         {
-            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
-            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
-            buf.CopyTo(3, arr, 0, 0);
+            byte[] array = { 0xA1, 0xA2, 0xA3 };
+            var buffer = array.AsBuffer();
+            var target = new byte[10];
+            buffer.CopyTo(3, target, 10, 0);
         }
 
-        [Fact(Skip="Blocked by issue #497")]
+        [Fact]
         public void TestBufferCopyToArrayEndToEnd()
         {
-            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
-            buf.CopyTo(3, arr, 3, 0);
+            var buf = arr.AsBuffer();
+            var target = new byte[4];
+            buf.CopyTo(3, target, 4, 0);
         }
 
-        [Fact(Skip="Blocked by issue #497")]
+        [Fact]
+        public void BufferToArrayWithZeroCountAtEnd()
+        {
+            byte[] array = { 0xA1, 0xA2, 0xA3 };
+            var result = array.AsBuffer().ToArray(3, 0);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(0, result.Length);
+        }
+        [Fact]
+        public void BufferToArrayWithZeroCountAtEnd_WorksWithSpans()
+        {
+            byte[] array = { 0xA1, 0xA2, 0xA3 };
+            var result = array.AsSpan().Slice(3, 0).ToArray();
+            Assert.IsNotNull(result);
+            Assert.AreEqual(0, result.Length);
+        }
+
+        [Fact]
+        public void BufferToArrayWithZeroCountAtEnd()
+        {
+            byte[] array = { 0xA1, 0xA2, 0xA3 };
+            var result = array.AsBuffer().ToArray(3, 0);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(0, result.Length);
+        }
+
+
+        [Fact]
         public void TestBufferCopyToArrayMidToMid()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
             buf.CopyTo(1, arr, 1, 0);
         }
-
-        [Fact(Skip="Blocked by issue #497")]
-        public void TestBufferCopyToArrayMidToEnd()
-        {
-            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
-            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
-            buf.CopyTo(1, arr, 3, 0);
-        }
-
-        [Fact(Skip="Blocked by issue #497")]
-        public void TestBufferCopyToArrayEndToMid()
-        {
-            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
-            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
-            buf.CopyTo(3, arr, 1, 0);
-        }
-
-        [Fact(Skip="Blocked by issue #497")]
-        public void TestCopyZeroBetweenBuffersEndToMiddle()
-        {
-            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
-            IBuffer dest = new Windows.Storage.Streams.Buffer(3);
-            buf.CopyTo(3, dest, 1, 0);
-        }
-
-        [Fact(Skip="Blocked by issue #497")]
-        public void TestCopyZeroBetweenBuffersInMiddle()
-        {
-            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
-            IBuffer dest = new Windows.Storage.Streams.Buffer(3);
-            buf.CopyTo(1, dest, 1, 0);
-        }
        
-        [Fact(Skip="Blocked by issue #497")]
+        [Fact]
         public void TestCopyZeroBetweenBuffersAtEnd()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
@@ -193,7 +207,7 @@ namespace UnitTest
             Assert.True(buff.Length == 0);
         }
 
-        [Fact(Skip="Blocked by issue #497")]
+        [Fact]
         public void TestEmptyBufferCopyTo()
         { 
             var buffer = new Windows.Storage.Streams.Buffer(0);
