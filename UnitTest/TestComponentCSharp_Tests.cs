@@ -90,11 +90,35 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestArrayCopyToBufferEndToEnd2()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(0, buf, 0, 3);
+        }
+
+        [Fact]
         public void TestArrayCopyToBufferEndToEnd()
         {
             IBuffer buf = new Windows.Storage.Streams.Buffer(3);
             byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
             arr.CopyTo(3, buf, 3, 0);
+        }
+
+        [Fact]
+        public void TestArrayCopyToBufferMidToMid()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(1, buf, 1, 0);
+        }
+
+        [Fact]
+        public void TestArrayCopyToBufferMidToEnd()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(1, buf, 3, 0);
         }
 
         [Fact]
@@ -203,6 +227,16 @@ namespace UnitTest
         public void TestDynamicInterfaceCastingOnInvalidInterface()
         {
             Assert.ThrowsAny<System.Exception>(() => (IStringableInterop)(IWinRTObject)TestObject);
+        }
+
+        [Fact]
+        public void TestBuffer()
+        {
+            var arr1 = new byte[] { 0x01, 0x02 };
+            var buff = arr1.AsBuffer();
+            var arr2 = buff.ToArray(0,2);
+            Assert.True(arr1[0] == arr2[0]);
+            Assert.True(arr1[1] == arr2[1]);
         }
 
  #endif
