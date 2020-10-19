@@ -45,6 +45,17 @@ namespace UnitTest
         }
 
         [Fact]
+        public void ReadBogusBytes()
+        {
+            var array = new byte[] { 0x01, 0x02, 0x03 };
+            var buffer = array.AsBuffer();
+            var bufferBig = new Windows.Storage.Streams.Buffer(5);
+            buffer.CopyTo(bufferBig);
+            var bogus = bufferBig.ToArray(4, 2);
+            Assert.True(bogus.Length == 2);
+        }
+
+        [Fact]
         public void TestEmptyBufferToArray()
         {
             var buffer = new Windows.Storage.Streams.Buffer(0);
