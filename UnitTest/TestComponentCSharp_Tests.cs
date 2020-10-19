@@ -46,6 +46,87 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestIsSameDataDifferentArrays()
+        {
+            var arr = new byte[] { 0x01, 0x02 };
+            var buf1 = arr.AsBuffer();
+            var arr2 = new byte[] { 0x01, 0x02 };
+            var buf2 = arr2.AsBuffer();
+            Assert.False(buf1.IsSameData(buf2));
+        }
+
+        [Fact]
+        public void TestIsSameDataUsingCopyTo()
+        {
+            var arr = new byte[] { 0x01, 0x02 };
+            var buf1 = arr.AsBuffer();
+            var buf2 = new Windows.Storage.Streams.Buffer(2);
+            buf1.CopyTo(buf2);
+            Assert.False(buf1.IsSameData(buf2));
+        }
+
+        [Fact]
+        public void TestIsSameDataUsingAsBufferTwice()
+        {
+            var arr = new byte[] { 0x01, 0x02 };
+            var buf1 = arr.AsBuffer();
+            var buf2 = arr.AsBuffer();
+            Assert.True(buf1.IsSameData(buf2));
+        }
+
+        [Fact]
+        public void TestIsSameDataUsingToArray()
+        {
+            var arr = new byte[] { 0x01, 0x02 };
+            var buf1 = arr.AsBuffer();
+            var buf2 = buf1.ToArray().AsBuffer();
+            Assert.False(buf1.IsSameData(buf2));
+        }
+
+        [Fact]
+        public void TestBufferAsStreamReturnsUnmanaged()
+        {
+            var arr = new byte[] { 0x01, 0x02 };
+            var buffer = new Windows.Storage.Streams.Buffer(2);
+            arr.CopyTo(buffer); // try with buffer made by doing AsBuffer
+            Stream stream = buffer.AsStream(); // this doesn't return a memory stream but a UnmanagedMemoryStream
+            var buffer2 = stream.As<MemoryStream>().GetWindowsRuntimeBuffer(); // if above works, then make this an Assert.Throws
+            Assert.True(stream.Length == 2);
+            Assert.True(buffer.IsSameData(buffer2));
+        }
+
+        [Fact]
+        public void TestBufferAsStreamReturnsUnmanaged1()
+        {
+            var arr = new byte[] { 0x01, 0x02 };
+            var buffer = arr.AsBuffer();
+            Stream stream = buffer.AsStream(); // just changed this to set pub vis to true
+            var buffer2 = stream.As<MemoryStream>().GetWindowsRuntimeBuffer(); // the constructed memorystream doesn't have publically visible set to true...
+            Assert.True(stream.Length == 2);
+            Assert.True(buffer.IsSameData(buffer2));
+        }
+
+        [Fact]
+        public void TestBufferAsStreamWorksWithEmptyBuffer()
+        {
+            var arr = new byte[] { };
+            var buffer = new Windows.Storage.Streams.Buffer(0);
+            arr.CopyTo(buffer);
+            Stream stream = buffer.AsStream();
+            Assert.True(stream != null);
+            Assert.True(stream.Length == 0);
+        }
+
+        [Fact]
+        public void TestBufferAsStreamWorksWithEmptyBuffer2()
+        { // not backed by a managed byte array , should hit the unsafe case 
+            var buffer = new Windows.Storage.Streams.Buffer(0);
+            Stream stream = buffer.AsStream();
+            Assert.True(stream != null);
+            Assert.True(stream.Length == 0);
+        }
+
+        [Fact]
         public void TestBufferImproperReadCopyToOutOfBounds()
         {
             var array = new byte[] { 0x01, 0x02, 0x03 };
@@ -60,9 +141,9 @@ namespace UnitTest
         {
             var array = new byte[] { 0x01, 0x02, 0x03 };
             var buffer = array.AsBuffer();
-            var bufferBig = new Windows.Storage.Streams.Buffer(5);
-            buffer.CopyTo(bufferBig);
-            Assert.Throws<ArgumentException>(() => bufferBig.ToArray(2, 2));
+            var biggerBuffer = new Windows.Storage.Streams.Buffer(5);
+            buffer.CopyTo(biggerBuffer);
+            Assert.Throws<ArgumentException>(() => biggerBuffer.ToArray(2, 2));
         }
 
         [Fact]

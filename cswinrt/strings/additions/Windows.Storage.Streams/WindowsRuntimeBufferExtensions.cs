@@ -406,7 +406,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             if (source.TryGetUnderlyingData(out dataArr, out dataOffs))
             {
                 Debug.Assert(source.Capacity < int.MaxValue);
-                return new MemoryStream(dataArr, dataOffs, (int)source.Capacity, true);
+                return new MemoryStream(dataArr, dataOffs, (int)source.Capacity, true, true);
             }
 
             unsafe
