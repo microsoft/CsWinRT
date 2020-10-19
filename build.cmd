@@ -122,6 +122,7 @@ if ErrorLevel 1 (
 if "%cswinrt_build_only%"=="true" goto :eof
 
 :test
+:unittest
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
 echo Running cswinrt unit tests for %cswinrt_platform% %cswinrt_configuration%
 set dotnet_exe="%DOTNET_ROOT%\dotnet.exe"
@@ -144,6 +145,7 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
+:hosttest
 rem Run WinRT.Host tests
 echo Running cswinrt host tests for %cswinrt_platform% %cswinrt_configuration%
 call :exec %~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\HostTest\bin\HostTest.exe --gtest_output=xml:%~dp0hosttest_%cswinrt_version_string%.xml 
@@ -153,9 +155,7 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
-rem Temporarily skip authoring tests, as vtbl optimization has regressed
-goto :package
-
+:authortest
 rem Run Authoring tests
 echo Running cswinrt authoring tests for %cswinrt_platform% %cswinrt_configuration%
 call :exec %~dp0_build\%cswinrt_platform%\%cswinrt_configuration%\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:%~dp0hosttest_%cswinrt_version_string%.xml 
