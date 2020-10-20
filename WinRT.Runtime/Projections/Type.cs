@@ -72,6 +72,12 @@ namespace ABI.System
             {
                 return null;
             }
+
+            if(value.Kind == TypeKind.Custom)
+            {
+                return global::System.Type.GetType(name);
+            }
+
             return TypeNameSupport.FindTypeByName(name.AsSpan()).type;
         }
 
