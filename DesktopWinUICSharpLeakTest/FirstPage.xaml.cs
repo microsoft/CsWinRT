@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using WinRT;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -18,29 +19,49 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace DesktopWinUICSharpLeakTest
 {
+    //public sealed partial class FirstPageHandler
+    //{
+
+    //    public static void Button_Click(object sender, RoutedEventArgs e)
+    //    {
+    //        App.Navigate(typeof(FirstPage));
+    //    }
+    //}
+
+    class TestPage : Page, IWinRTObject
+    {
+        public TestPage()
+        {
+        }
+        //bool IWinRTObject.HasUnwrappableNativeObject => true;
+        //IObjectReference IWinRTObject.NativeObject => base.NativeObject; // TODO: Doesn't work, but what I need?
+    }
+
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
     public sealed partial class FirstPage : Page
     {
         public FirstPage()
+            // : base(((IWinRTObject)new Page()).NativeObject) // Was a thought, but doesn't work.
         {
             this.InitializeComponent();
+            MyButton.Click += Button_Click;
 
-            this.TheListView.ItemsSource = GetItems();
         }
 
-        public IEnumerable<string> GetItems()
+        private static void Button_Click(object sender, RoutedEventArgs e)
         {
-            for (int i = 0; i < 1000; i++)
-            {
-                yield return "Item " + (i + 1);
-            }
-        }
+            App.Navigate(typeof(FirstPage));
+            //{
+            //    var testPage = new TestPage();
+            //    var page = new Page();
 
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            App.Navigate(typeof(SecondPage));
+            //    Console.WriteLine();
+            //}
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
     }
 }

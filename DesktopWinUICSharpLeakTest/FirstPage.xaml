@@ -9,7 +9,7 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <StackPanel>
-        <Button Content="Navigate to SecondPage" Click="Button_Click" />
-        <ListView x:Name="TheListView" />
+        <Button Name="MyButton" Content="Navigate to SecondPage" />
+        <!--<Button Content="Navigate to SecondPage" Click="Button_Click" />-->
     </StackPanel>
 </Page>

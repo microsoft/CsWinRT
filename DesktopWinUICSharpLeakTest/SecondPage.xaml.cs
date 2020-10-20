@@ -27,20 +27,20 @@ namespace DesktopWinUICSharpLeakTest
         {
             this.InitializeComponent();
 
-            this.TheListView.ItemsSource = GetItems();
+            //this.TheListView.ItemsSource = GetItems();
         }
 
-        public IEnumerable<string> GetItems()
-        {
-            for (int i = 0; i < 1000; i++)
-            {
-                yield return "Item " + (i + 1);
-            }
-        }
+        //public IEnumerable<string> GetItems()
+        //{
+        //    for (int i = 0; i < 1000; i++)
+        //    {
+        //        yield return "Item " + (i + 1);
+        //    }
+        //}
 
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            App.Navigate(typeof(FirstPage));
-        }
+        //private void Button_Click(object sender, RoutedEventArgs e)
+        //{
+        //    App.Navigate(typeof(FirstPage));
+        //}
     }
 }

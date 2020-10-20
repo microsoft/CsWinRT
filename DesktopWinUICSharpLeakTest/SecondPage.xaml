@@ -8,8 +8,9 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <StackPanel>
-        <Button Content="Navigate to FirstPage" Click="Button_Click" />
-        <ListView x:Name="TheListView" />
-    </StackPanel>
+    <!--<StackPanel>
+        <Button Content="Navigate to FirstPage" />
+        --><!--<Button Content="Navigate to FirstPage" Click="Button_Click" />-->
+        <!--<ListView x:Name="TheListView" />--><!--
+    </StackPanel>-->
 </Page>

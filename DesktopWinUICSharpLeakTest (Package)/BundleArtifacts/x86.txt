@@ -1,0 +1,2 @@
+MainPackage=F:\github2\CsWinRT\DesktopWinUICSharpLeakTest (Package)\bin\x86\Release\DesktopWinUICSharpLeakTest (Package)_2.0.0.0_x86.appx
+SymbolPackage=F:\github2\CsWinRT\DesktopWinUICSharpLeakTest (Package)\obj\x86\Release\Symbols\DesktopWinUICSharpLeakTest (Package)_2.0.0.0_x86.appxsym

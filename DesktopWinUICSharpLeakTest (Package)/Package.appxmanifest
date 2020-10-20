@@ -7,9 +7,9 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="6c9fc94b-9d61-4370-9299-68c3598714d2"
+    Name="CSharpLeakTestApp"
     Publisher="CN=llongley"
-    Version="1.0.0.0" />
+    Version="2.0.0.0" />
 
   <Properties>
     <DisplayName>DesktopWinUICSharpLeakTest (Package)</DisplayName>
