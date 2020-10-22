@@ -336,6 +336,8 @@ namespace winrt::TestComponentCSharp::implementation
         void ErrorsChanged(winrt::event_token const& token) noexcept;
         Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> GetErrors(hstring const& propertyName);
         void RaiseDataErrorChanged();
+
+        static Windows::Foundation::IInspectable BadRuntimeClassName();
     };
 }
 

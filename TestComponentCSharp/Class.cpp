@@ -1274,16 +1274,16 @@ namespace winrt::TestComponentCSharp::implementation
         throw hresult_not_implemented();
     }
 
-    struct native_properties1 : winrt::implements<native_properties1, TestComponentCSharp::IProperties1>
-    {
-        int32_t ReadWriteProperty()
-        {
-            return 42;
-        }
-    };
-
     TestComponentCSharp::IProperties1 Class::NativeProperties1()
     {
+        struct native_properties1 : winrt::implements<native_properties1, TestComponentCSharp::IProperties1>
+        {
+            int32_t ReadWriteProperty()
+            {
+                return 42;
+            }
+        };
+
         return winrt::make<native_properties1>();
     }
 
@@ -1293,17 +1293,17 @@ namespace winrt::TestComponentCSharp::implementation
         virtual HRESULT __stdcall GetService(int32_t* type, int32_t* service) noexcept = 0;
     };
 
-    struct service_provider : winrt::implements<service_provider, WF::IInspectable, IServiceProviderInterop>
-    {
-        HRESULT __stdcall GetService(int32_t* type, int32_t* service) noexcept override
-        {
-            *service = 42;
-            return 0;
-        }
-    };
-
     WF::IInspectable Class::ServiceProvider()
     {
+        struct service_provider : winrt::implements<service_provider, WF::IInspectable, IServiceProviderInterop>
+        {
+            HRESULT __stdcall GetService(int32_t* type, int32_t* service) noexcept override
+            {
+                *service = 42;
+                return 0;
+            }
+        };
+
         return winrt::make<service_provider>();
     }
 
@@ -1329,6 +1329,19 @@ namespace winrt::TestComponentCSharp::implementation
         auto mock = make<data_errors_changed_event_args>(L"name");
         DataErrorsChangedEventArgs args(detach_abi(mock), take_ownership_from_abi_t());
         _dataErrorsChanged(*this, args);
+    }
+
+    WF::IInspectable Class::BadRuntimeClassName()
+    {
+        struct bad_runtime_classname : winrt::implements<bad_runtime_classname, WF::IInspectable>
+        {
+            hstring GetRuntimeClassName()
+            {
+                return L"BadRuntimeClassName<T>";
+            }
+        };
+
+        return winrt::make<bad_runtime_classname>();
     }
 }
 
