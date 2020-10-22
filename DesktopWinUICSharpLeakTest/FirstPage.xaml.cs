@@ -28,13 +28,8 @@ namespace DesktopWinUICSharpLeakTest
     //    }
     //}
 
-    class TestPage : Page, IWinRTObject
+    class TestPage : Page
     {
-        public TestPage()
-        {
-        }
-        //bool IWinRTObject.HasUnwrappableNativeObject => true;
-        //IObjectReference IWinRTObject.NativeObject => base.NativeObject; // TODO: Doesn't work, but what I need?
     }
 
     /// <summary>
@@ -52,13 +47,12 @@ namespace DesktopWinUICSharpLeakTest
 
         private static void Button_Click(object sender, RoutedEventArgs e)
         {
-            App.Navigate(typeof(FirstPage));
-            //{
-            //    var testPage = new TestPage();
-            //    var page = new Page();
-
-            //    Console.WriteLine();
-            //}
+            //            App.Navigate(typeof(FirstPage));
+            {
+                var testPage = new TestPage();
+                var page = new Page();
+                Console.WriteLine();
+            }
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
