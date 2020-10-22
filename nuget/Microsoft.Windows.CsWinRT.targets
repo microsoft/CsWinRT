@@ -27,11 +27,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="CsWinRTRemoveWinMDReferences" BeforeTargets="ResolveReferences;BeforeCompile" AfterTargets="AfterResolveReferences">
     <ItemGroup>
       <!--Move winmd references into private item group to prevent subsequent winmd reference errors-->
-      <CsWinRTRemovedReferences Include="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
+      <CsWinRTRemovedReferences Include="@(ReferencePath)" Condition="'%(ReferencePath.Extension)' == '.winmd'" />
       <CsWinRTInputs Include="@(CsWinRTRemovedReferences)"/>
 
       <!--Prevent NETSDK1130 errors from winmd references-->
-      <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.WinMDFile)' == 'true'" />
+      <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.Extension)' == '.winmd'" />
       <ReferencePathWithRefAssemblies Remove="@(CsWinRTRemovedReferences)" 
         Condition="'%(CsWinRTRemovedReferences.Filename)%(CsWinRTRemovedReferences.Extension)' == '%(ReferencePathWithRefAssemblies.Filename)%(ReferencePathWithRefAssemblies.Extension)'" />
       <!--Do not publish projection source winmds -->
