@@ -194,6 +194,24 @@ namespace UnitTest
             Assert.Equal(vector, uriVector);
         }
 
+        async Task LookupPorts()
+        {
+            var ports = await Windows.Devices.Enumeration.DeviceInformation.FindAllAsync(
+                Windows.Devices.SerialCommunication.SerialDevice.GetDeviceSelector(),
+                new string[] { "System.ItemNameDisplay" });
+            foreach (var port in ports)
+            {
+                object o = port.Properties["System.ItemNameDisplay"];
+                Assert.NotNull(o);
+            }
+        }
+
+        [Fact]
+        public void TestReadOnlyDictionaryLookup()
+        {
+            Assert.True(LookupPorts().Wait(10000));
+        }
+
 #if NET5_0
         [Fact]
         public void TestAsStream()
@@ -248,7 +266,7 @@ namespace UnitTest
             Assert.True(arr1[1] == arr2[1]);
         }
 
- #endif
+#endif
 
         async Task TestStorageFileAsync()
         {
