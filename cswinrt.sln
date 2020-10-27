@@ -33,7 +33,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestComponent", "TestWinRT\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinRT.Runtime", "WinRT.Runtime\WinRT.Runtime.csproj", "{25244CED-966E-45F2-9711-1F51E951FF89}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinUIDesktopSample", "WinUIDesktopSample\WinUIDesktopSample.csproj", "{8E6FBCB2-B0C1-4E92-8AEB-2A11564E6E0D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinUIDesktopSample", "Samples\WinUIDesktopSample\WinUIDesktopSample.csproj", "{8E6FBCB2-B0C1-4E92-8AEB-2A11564E6E0D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "Projections\Test\Test.csproj", "{C6D580C5-7037-4733-B933-916FF400AFE2}"
 EndProject

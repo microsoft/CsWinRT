@@ -22,8 +22,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
-    <ProjectReference Include="..\Projections\Windows\Windows.csproj" />
-    <ProjectReference Include="..\Projections\WinUI\WinUI.csproj" />
+    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\..\Projections\WinUI\WinUI.csproj" />
     <!--
       Exclude compile time assets so we don't pick up the interop assembly from the WinUI Nuget
       since we are building our own in the WinUIProjection project
