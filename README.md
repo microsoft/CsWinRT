@@ -50,8 +50,6 @@ The build.cmd script takes care of all related configuration steps and is the si
 
 After a successful command-line build, the cswinrt.sln can be launched from the same command prompt, to inherit the necessary environment. 
 
-**Note:**  By default, projection projects only generate source files for Release configurations, where cswinrt.exe can execute in seconds.  To generate projection sources for Debug configurations, set the project property GenerateTestProjection to 'true'.  In either case, existing projection sources under the "Generated Files" folder will still be compiled into the projection assembly.  This configuration permits a faster inner loop in Visual Studio.
-
 ## Developer Guidance
 
 Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For additional documentation visit <http://aka.ms/cswinrt>.
