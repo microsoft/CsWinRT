@@ -9,6 +9,12 @@ namespace winrt::TestComponentCSharp::implementation
     {
         Class();
 
+        Windows::UI::Xaml::Interop::TypeName _typeProperty;
+        void TypeProperty(Windows::UI::Xaml::Interop::TypeName val);
+        Windows::UI::Xaml::Interop::TypeName TypeProperty();
+        winrt::hstring GetTypePropertyAbiName();
+        winrt::hstring GetTypePropertyKind();
+
         winrt::event<EventHandler0> _event0;
         winrt::event<EventHandler1> _event1;
         winrt::event<EventHandler2> _event2;
@@ -16,6 +22,9 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event<EventHandlerCollection> _collectionEvent;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IVector<int32_t>>> _nestedEvent;
         winrt::event<Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, Windows::Foundation::Collections::IVector<hstring>>> _nestedTypedEvent;
+        winrt::event<TestComponentCSharp::EventWithReturn> _returnEvent;
+
+        Windows::Foundation::Collections::IVector<Windows::Foundation::IInspectable> GetUriVectorAsIInspectableVector();
 
         int32_t _int = 0;
         winrt::event<Windows::Foundation::EventHandler<int32_t>> _intChanged;
@@ -106,6 +115,10 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event_token NestedTypedEvent(Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, Windows::Foundation::Collections::IVector<hstring>> const& handler);
         void NestedTypedEvent(winrt::event_token const& token) noexcept;
         void InvokeNestedTypedEvent(TestComponentCSharp::Class const& sender, Windows::Foundation::Collections::IVector<hstring> const& arg0);
+        winrt::event_token ReturnEvent(TestComponentCSharp::EventWithReturn const& handler);
+        void ReturnEvent(winrt::event_token const& token) noexcept;
+        int32_t InvokeReturnEvent(int32_t const& arg0);
+
         int32_t IntProperty();
         void IntProperty(int32_t value);
         winrt::event_token IntPropertyChanged(Windows::Foundation::EventHandler<int32_t> const& handler);
@@ -124,6 +137,7 @@ namespace winrt::TestComponentCSharp::implementation
         void StringPropertyChanged(winrt::event_token const& token) noexcept;
         void RaiseStringChanged();
         void CallForString(TestComponentCSharp::ProvideString const& provideString);
+        void AddUriHandler(TestComponentCSharp::IUriHandler uriHandler);
         hstring StringProperty2();
         void StringProperty2(hstring const& value);
         Windows::Foundation::Collections::IVector<hstring> StringsProperty();
@@ -152,6 +166,7 @@ namespace winrt::TestComponentCSharp::implementation
         void CallForStringPair(TestComponentCSharp::ProvideStringPair const& provideStringPair);
         winrt::event_token StringPairPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IKeyValuePair<hstring, hstring>> const& handler);
         void StringPairPropertyChanged(winrt::event_token const& token) noexcept;
+        TestComponentCSharp::ProvideUri GetUriDelegate() noexcept;
         BlittableStruct BlittableStructProperty();
         void BlittableStructProperty(BlittableStruct const& value);
         BlittableStruct GetBlittableStruct();
@@ -196,7 +211,7 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ComposedNonBlittableStruct> GetNonBlittableStructVector();
         Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> GetObjectVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> GetInterfaceVector();
-        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector();
+        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector() noexcept;
 
         Windows::Foundation::Collections::IIterable<int32_t> GetIntIterable();
         void SetIntIterable(Windows::Foundation::Collections::IIterable<int32_t> const& value);
@@ -297,6 +312,7 @@ namespace winrt::TestComponentCSharp::implementation
         hstring Catch(hstring const& params, hstring& locks);
 
         static IProperties1 NativeProperties1();
+        static Windows::Foundation::IInspectable ServiceProvider();
 
         // IStringable
         hstring ToString();
@@ -310,9 +326,16 @@ namespace winrt::TestComponentCSharp::implementation
         //int32_t DrawTo();
         int32_t ReadWriteProperty();
         //int32_t DistinctProperty();
-        void ReadWriteProperty(int32_t value);
+        void ReadWriteProperty(int32_t value) noexcept;
         //hstring DistinctProperty();
         //void DistinctProperty(hstring const& value);
+
+        winrt::event<Windows::Foundation::EventHandler<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs>> _dataErrorsChanged;
+        bool HasErrors();
+        winrt::event_token ErrorsChanged(Windows::Foundation::EventHandler<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> const& handler);
+        void ErrorsChanged(winrt::event_token const& token) noexcept;
+        Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> GetErrors(hstring const& propertyName);
+        void RaiseDataErrorChanged();
     };
 }
 

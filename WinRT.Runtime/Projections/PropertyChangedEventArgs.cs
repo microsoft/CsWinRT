@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -14,7 +14,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
     {
         internal IInspectable.Vftbl IInspectableVftbl;
         private void* _get_PropertyName_0;
-        public delegate* stdcall<IntPtr, IntPtr*, int> get_PropertyName_0 => (delegate* stdcall<IntPtr, IntPtr*, int>)_get_PropertyName_0;
+        public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_PropertyName_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_PropertyName_0;
     }
 
 
@@ -28,7 +28,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _CreateInstance_0;
-            public delegate* stdcall<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int> CreateInstance_0 => (delegate* stdcall<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int>)_CreateInstance_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int> CreateInstance_0 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, IntPtr*, IntPtr*, int>)_CreateInstance_0;
         }
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
@@ -53,17 +53,17 @@ namespace ABI.Microsoft.UI.Xaml.Data
             try
             {
                 __name = MarshalString.CreateMarshaler(name);
-                __baseInterface = MarshalInspectable.CreateMarshaler(baseInterface);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(__name), MarshalInspectable.GetAbi(__baseInterface), &__innerInterface, &__retval));
+                __baseInterface = MarshalInspectable<object>.CreateMarshaler(baseInterface);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(__name), MarshalInspectable<object>.GetAbi(__baseInterface), &__innerInterface, &__retval));
                 innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
                 return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
             }
             finally
             {
                 MarshalString.DisposeMarshaler(__name);
-                MarshalInspectable.DisposeMarshaler(__baseInterface);
-                MarshalInspectable.DisposeAbi(__innerInterface);
-                MarshalInspectable.DisposeAbi(__retval);
+                MarshalInspectable<object>.DisposeMarshaler(__baseInterface);
+                MarshalInspectable<object>.DisposeAbi(__innerInterface);
+                MarshalInspectable<object>.DisposeAbi(__retval);
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
@@ -13,7 +13,7 @@ namespace ABI.Windows.Foundation
 
         internal IInspectable.Vftbl IInspectableVftbl;
         private void* _ToString_0;
-        private delegate* stdcall<IntPtr, IntPtr*, int> ToString_0 { get => (delegate* stdcall<IntPtr, IntPtr*, int>)_ToString_0; set => _ToString_0 = value; }
+        private delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> ToString_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_ToString_0; set => _ToString_0 = value; }
 
         private static readonly ManagedIStringableVftbl AbiToProjectionVftable;
         public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -30,7 +30,7 @@ namespace ABI.Windows.Foundation
 #if NETSTANDARD2_0
                 _ToString_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_ToString_0).ToPointer()
 #else
-                _ToString_0 = (delegate*<IntPtr, IntPtr*, int>)&Do_Abi_ToString_0
+                _ToString_0 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_ToString_0
 #endif
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(ManagedIStringableVftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);

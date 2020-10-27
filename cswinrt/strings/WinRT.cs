@@ -14,6 +14,7 @@ using System.Linq.Expressions;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
 #pragma warning disable 0649 // Field 'xxx' is never assigned to, and will always have its default value
+#pragma warning disable CA1060
 
 namespace WinRT
 {
@@ -49,7 +50,7 @@ namespace WinRT
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool FreeLibrary(IntPtr moduleHandle);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true, BestFitMapping = false)]
         internal static extern IntPtr GetProcAddress(IntPtr moduleHandle, [MarshalAs(UnmanagedType.LPStr)] string functionName);
 
         internal static T GetProcAddress<T>(IntPtr moduleHandle)
@@ -263,11 +264,9 @@ namespace WinRT
 
         public BaseActivationFactory(string typeNamespace, string typeFullName)
         {
-            var runtimeClassId = typeFullName.Replace("WinRT", "Windows");
-
             // Prefer the RoGetActivationFactory HRESULT failure over the LoadLibrary/etc. failure
             int hr;
-            (_IActivationFactory, hr) = WinrtModule.GetActivationFactory(runtimeClassId);
+            (_IActivationFactory, hr) = WinrtModule.GetActivationFactory(typeFullName);
             if (_IActivationFactory != null) { return; }
 
             var moduleName = typeNamespace;
@@ -275,7 +274,7 @@ namespace WinRT
             {
                 try
                 {
-                    (_IActivationFactory, _) = DllModule.Load(moduleName + ".dll").GetActivationFactory(runtimeClassId);
+                    (_IActivationFactory, _) = DllModule.Load(moduleName + ".dll").GetActivationFactory(typeFullName);
                     if (_IActivationFactory != null) { return; }
                 }
                 catch (Exception) { }
@@ -299,11 +298,12 @@ namespace WinRT
             }
             finally
             {
-                MarshalInspectable.DisposeAbi(instancePtr);
+                MarshalInspectable<object>.DisposeAbi(instancePtr);
             }
         }
 
         public ObjectReference<I> _As<I>() => _IActivationFactory.As<I>();
+        public IObjectReference _As(Guid iid) => _IActivationFactory.As<WinRT.Interop.IUnknownVftbl>(iid);
     }
 
     internal class ActivationFactory<T> : BaseActivationFactory
@@ -313,15 +313,26 @@ namespace WinRT
         static WeakLazy<ActivationFactory<T>> _factory = new WeakLazy<ActivationFactory<T>>();
         public new static I AsInterface<I>() => _factory.Value.Value.AsInterface<I>();
         public static ObjectReference<I> As<I>() => _factory.Value._As<I>();
+        public static IObjectReference As(Guid iid) => _factory.Value._As(iid);
         public static ObjectReference<I> ActivateInstance<I>() => _factory.Value._ActivateInstance<I>();
     }
 
+    internal class ComponentActivationFactory<T> : global::WinRT.Interop.IActivationFactory where T : class, new()
+    {
+        public IntPtr ActivateInstance()
+        {
+            T comp = new T();
+            return MarshalInspectable<T>.FromManaged(comp);
+        }
+    }
+
+#pragma warning disable CA2002
     internal unsafe class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
     {
         readonly IObjectReference _obj;
-        readonly delegate* stdcall<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
-        readonly delegate* stdcall<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
+        readonly delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
+        readonly delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
 
         private EventRegistrationToken _token;
         private TDelegate _event;
@@ -399,10 +410,13 @@ namespace WinRT
 
                 _eventInvoke = Expression.Lambda(typeof(TDelegate),
                     Expression.Block(
+                        invoke.ReturnType,
                         new[] { delegateLocal },
                         Expression.Assign(delegateLocal, Expression.Field(Expression.Constant(this), typeof(EventSource<TDelegate>).GetField(nameof(_event), BindingFlags.Instance | BindingFlags.NonPublic))),
-                        Expression.IfThen(
-                            Expression.ReferenceNotEqual(delegateLocal, Expression.Constant(null, typeof(TDelegate))), Expression.Call(delegateLocal, invoke, parameters))),
+                        Expression.Condition(
+                            Expression.ReferenceNotEqual(delegateLocal, Expression.Constant(null, typeof(TDelegate))),
+                            Expression.Call(delegateLocal, invoke, parameters),
+                            Expression.Default(invoke.ReturnType))),
                     parameters).Compile();
 
                 return _eventInvoke;
@@ -410,8 +424,8 @@ namespace WinRT
         }
 
         internal EventSource(IObjectReference obj,
-            delegate* stdcall<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-            delegate* stdcall<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler)
+            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler)
         {
             _obj = obj;
             _addHandler = addHandler;
@@ -424,6 +438,7 @@ namespace WinRT
             _token.Value = 0;
         }
     }
+#pragma warning restore CA2002
 
     // An event registration token table stores mappings from delegates to event tokens, in order to support
     // sourcing WinRT style events from managed code.
@@ -544,6 +559,28 @@ namespace WinRT
             {
                 m_tokens.Remove(token);
             }
+        }
+    }
+}
+
+
+namespace System.Runtime.CompilerServices
+{
+    [AttributeUsage(AttributeTargets.Method)]
+    internal class ModuleInitializerAttribute : Attribute {}
+}
+
+namespace WinRT
+{
+    using System.Runtime.CompilerServices;
+    internal static class ProjectionInitializer
+    {
+#pragma warning disable 0436
+        [ModuleInitializer]
+#pragma warning restore 0436
+        internal static void InitalizeProjection()
+        {
+            ComWrappersSupport.RegisterProjectionAssembly(typeof(ProjectionInitializer).Assembly);
         }
     }
 }

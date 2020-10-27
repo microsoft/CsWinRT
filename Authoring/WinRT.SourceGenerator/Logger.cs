@@ -5,7 +5,7 @@ namespace Generator
 {
     class Logger
     {
-        public static void Initialize(SourceGeneratorContext context)
+        public static void Initialize(GeneratorExecutionContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTEnableLogging", out var enableLoggingStr);
             if (enableLoggingStr != null && bool.TryParse(enableLoggingStr, out var enableLogging) && enableLogging)

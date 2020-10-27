@@ -5,14 +5,8 @@
     <RootNamespace>WinRT</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>8</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <Authors>Microsoft Corporation</Authors>
     <Company>Microsoft Corporation</Company>
     <Product>C#/WinRT</Product>
@@ -25,6 +19,8 @@
     <Description>C#/WinRT Runtime v$(VersionString)</Description>
     <AssemblyTitle>C#/WinRT Runtime v$(VersionString)</AssemblyTitle>
     <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
     
   <ItemGroup>
@@ -44,5 +40,6 @@
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.4" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
     <PackageReference Include="System.Runtime.Extensions" Version="4.3.1" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
   </ItemGroup>
 </Project>

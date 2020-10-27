@@ -28,7 +28,11 @@ namespace WinRT
                     ref iid,
                     instance.ThisPtr,
                     &agileReference));
+#if NET5_0
+                _agileReference = (IAgileReference)new SingleInterfaceOptimizedObject(typeof(IAgileReference), ObjectReference<ABI.WinRT.Interop.IAgileReference.Vftbl>.Attach(ref agileReference));
+#else
                 _agileReference = ABI.WinRT.Interop.IAgileReference.FromAbi(agileReference).AsType<ABI.WinRT.Interop.IAgileReference>();
+#endif
             }
             catch(TypeLoadException)
             {
@@ -99,7 +103,7 @@ namespace WinRT
         public new T Get() 
         {
             using var objRef = base.Get();
-            return (T) ComWrappersSupport.CreateRcwForComObject(objRef?.ThisPtr ?? IntPtr.Zero);
+            return ComWrappersSupport.CreateRcwForComObject<T>(objRef?.ThisPtr ?? IntPtr.Zero);
         }
     }
 }

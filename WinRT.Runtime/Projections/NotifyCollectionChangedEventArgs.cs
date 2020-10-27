@@ -1,4 +1,4 @@
-﻿using ABI.Microsoft.UI.Xaml.Interop;
+using ABI.Microsoft.UI.Xaml.Interop;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -19,15 +19,15 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _get_Action_0;
-            public delegate* stdcall<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction*, int> get_Action_0 => (delegate* stdcall<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction*, int>)_get_Action_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction*, int> get_Action_0 => (delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction*, int>)_get_Action_0;
             private void* _get_NewItems_1;
-            public delegate* stdcall<IntPtr, IntPtr*, int> get_NewItems_1 => (delegate* stdcall<IntPtr, IntPtr*, int>)_get_NewItems_1;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_NewItems_1 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_NewItems_1;
             private void* _get_OldItems_2;
-            public delegate* stdcall<IntPtr, IntPtr*, int> get_OldItems_2 => (delegate* stdcall<IntPtr, IntPtr*, int>)_get_OldItems_2;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> get_OldItems_2 => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_get_OldItems_2;
             private void* _get_NewStartingIndex_3;
-            public delegate* stdcall<IntPtr, int*, int> get_NewStartingIndex_3 => (delegate* stdcall<IntPtr, int*, int>)_get_NewStartingIndex_3;
+            public delegate* unmanaged[Stdcall]<IntPtr, int*, int> get_NewStartingIndex_3 => (delegate* unmanaged[Stdcall]<IntPtr, int*, int>)_get_NewStartingIndex_3;
             private void* _get_OldStartingIndex_4;
-            public delegate* stdcall<IntPtr, int*, int> get_OldStartingIndex_4 => (delegate* stdcall<IntPtr, int*, int>)_get_OldStartingIndex_4;
+            public delegate* unmanaged[Stdcall]<IntPtr, int*, int> get_OldStartingIndex_4 => (delegate* unmanaged[Stdcall]<IntPtr, int*, int>)_get_OldStartingIndex_4;
         }
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
@@ -118,7 +118,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             private void* _CreateInstanceWithAllParameters_0;
-            public delegate* stdcall<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction, IntPtr, IntPtr, int, int, IntPtr, out IntPtr, out IntPtr, int> CreateInstanceWithAllParameters_0 => (delegate* stdcall<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction, IntPtr, IntPtr, int, int, IntPtr, out IntPtr, out IntPtr, int>)_CreateInstanceWithAllParameters_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction, IntPtr, IntPtr, int, int, IntPtr, out IntPtr, out IntPtr, int> CreateInstanceWithAllParameters_0 => (delegate* unmanaged[Stdcall]<IntPtr, global::System.Collections.Specialized.NotifyCollectionChangedAction, IntPtr, IntPtr, int, int, IntPtr, out IntPtr, out IntPtr, int>)_CreateInstanceWithAllParameters_0;
         }
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
@@ -144,8 +144,8 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             {
                 __newItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler(newItems);
                 __oldItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler(oldItems);
-                __baseInterface = MarshalInspectable.CreateMarshaler(baseInterface);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, MarshalInspectable.GetAbi(__baseInterface), out __innerInterface, out __retval));
+                __baseInterface = MarshalInspectable<object>.CreateMarshaler(baseInterface);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, MarshalInspectable<object>.GetAbi(__baseInterface), out __innerInterface, out __retval));
                 innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
                 return ObjectReference<IUnknownVftbl>.FromAbi(__retval);
             }
@@ -153,9 +153,9 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             {
                 MarshalInterface<global::System.Collections.IList>.DisposeMarshaler(__newItems);
                 MarshalInterface<global::System.Collections.IList>.DisposeMarshaler(__oldItems);
-                MarshalInspectable.DisposeMarshaler(__baseInterface);
-                MarshalInspectable.DisposeAbi(__innerInterface);
-                MarshalInspectable.DisposeAbi(__retval);
+                MarshalInspectable<object>.DisposeMarshaler(__baseInterface);
+                MarshalInspectable<object>.DisposeAbi(__innerInterface);
+                MarshalInspectable<object>.DisposeAbi(__retval);
             }
         }
     }

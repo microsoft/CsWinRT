@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using WinRT;
@@ -39,7 +39,7 @@ namespace ABI.System
                 {
                     kind = TypeKind.Primitive;
                 }
-                else if (value == typeof(object) || value == typeof(string) || value == typeof(Guid))
+                else if (value == typeof(object) || value == typeof(string) || value == typeof(Guid) || value == typeof(System.Type))
                 {
                     kind = TypeKind.Metadata;
                 }
@@ -51,7 +51,7 @@ namespace ABI.System
 
             return new Marshaler
             {
-                Name = MarshalString.CreateMarshaler(TypeNameSupport.GetNameForType(value, TypeNameGenerationFlags.None)),
+                Name = MarshalString.CreateMarshaler(kind == TypeKind.Custom ? value.AssemblyQualifiedName : TypeNameSupport.GetNameForType(value, TypeNameGenerationFlags.None)),
                 Kind = kind
             };
         }
@@ -72,6 +72,12 @@ namespace ABI.System
             {
                 return null;
             }
+
+            if(value.Kind == TypeKind.Custom)
+            {
+                return global::System.Type.GetType(name);
+            }
+
             return TypeNameSupport.FindTypeByName(name.AsSpan()).type;
         }
 

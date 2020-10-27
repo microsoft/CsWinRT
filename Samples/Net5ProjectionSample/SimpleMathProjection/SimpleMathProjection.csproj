@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+	
+  <ItemGroup>
+    <ProjectReference Include="..\SimpleMathComponent\SimpleMathComponent.vcxproj" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="1.0.1" />
+  </ItemGroup>
+
+  <!--CsWinRT properties-->
+  <PropertyGroup>
+    <CsWinRTIncludes>SimpleMathComponent</CsWinRTIncludes>
+    <CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
+  </PropertyGroup>
+
+  <!--Properties for generating the NuGet package-->
+  <PropertyGroup>
+    <GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
+    <NuspecFile>$(GeneratedNugetDir)SimpleMathProjection.nuspec</NuspecFile>
+    <OutputPath>$(GeneratedNugetDir)</OutputPath>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <!--The C# compiler package below is not needed with Visual Studio 16.8 Preview 4-->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.8.0-4.20472.6" />
+    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.19041.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <RestoreSources>
+	https://api.nuget.org/v3/index.json;
+	https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
+    </RestoreSources>
+  </PropertyGroup>
+
+</Project>

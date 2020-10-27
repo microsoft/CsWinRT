@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -44,7 +45,11 @@ namespace ABI.System.Collections.Specialized
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
+#if NETSTANDARD2_0
         private class NativeDelegateWrapper
+#else
+        private class NativeDelegateWrapper : IWinRTObject
+#endif
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
             private readonly AgileReference _agileReference = default;
@@ -62,6 +67,13 @@ namespace ABI.System.Collections.Specialized
                 }
             }
 
+#if !NETSTANDARD2_0
+            IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
+            bool IWinRTObject.HasUnwrappableNativeObject => true;
+            ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
+            ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData { get; } = new();
+#endif
+
             public void Invoke(object sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
             {
                 using var agileDelegate = _agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(NotifyCollectionChangedEventHandler)));
@@ -72,13 +84,13 @@ namespace ABI.System.Collections.Specialized
                 IObjectReference __e = default;
                 try
                 {
-                    __sender = MarshalInspectable.CreateMarshaler(sender);
+                    __sender = MarshalInspectable<object>.CreateMarshaler(sender);
                     __e = global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.CreateMarshaler(e);
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInspectable.GetAbi(__sender), global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.GetAbi(__e)));
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInspectable<object>.GetAbi(__sender), global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.GetAbi(__e)));
                 }
                 finally
                 {
-                    MarshalInspectable.DisposeMarshaler(__sender);
+                    MarshalInspectable<object>.DisposeMarshaler(__sender);
                     global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.DisposeMarshaler(__e);
                 }
 
@@ -98,7 +110,7 @@ namespace ABI.System.Collections.Specialized
             {
                 global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(thisPtr, (global::System.Collections.Specialized.NotifyCollectionChangedEventHandler invoke) =>
                 {
-                    invoke(MarshalInspectable.FromAbi(sender), global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.FromAbi(e));
+                    invoke(MarshalInspectable<object>.FromAbi(sender), global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.FromAbi(e));
                 });
             }
             catch (global::System.Exception __exception__)

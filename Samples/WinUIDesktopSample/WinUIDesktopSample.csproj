@@ -3,7 +3,6 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
-    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <ApplicationManifest>WinUIDesktopSample.exe.manifest</ApplicationManifest>
     <!--
@@ -12,6 +11,7 @@
     -->
     <XamlCodeGenerationControlFlags>DoNotGenerateOtherProviders</XamlCodeGenerationControlFlags>
     <Platforms>x86;x64</Platforms>
+    <MsAppxPackageTargets>$(MSBuildThisFileDirectory)Net5_WinUI_Fixup.Targets</MsAppxPackageTargets>
   </PropertyGroup>
 
   <ItemGroup>

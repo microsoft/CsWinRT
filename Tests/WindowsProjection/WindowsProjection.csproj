@@ -1,50 +1,18 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
-    <LangVersion>8</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>8305;0618</NoWarn>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <DebugType>full</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|x64'">
-    <DebugType>full</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup>
-	<AssemblyName>Windows</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
-    <!--<PackageReference Include="Microsoft.Windows.CsWinRT" Version="[$(NugetTestVersion)]" />-->
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
   </ItemGroup>
 
-  <Target Name="GenerateProjection" Condition="'$(GenerateTestProjection)' == 'true'">
-    <PropertyGroup>
-      <CsWinRTVerbosity>high</CsWinRTVerbosity>
-      <CsWinRTResponseFile>$(GeneratedFilesDir)cswinrt_windows.rsp</CsWinRTResponseFile>
-      <CsWinRTCommand>$(CsWinrtExe) %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
-    </PropertyGroup>
-    <PropertyGroup>
-      <CsWinRTParams>
--verbose
--target $(TargetFramework)
--in 10.0.18362.0
--out "$(GeneratedFilesDir.TrimEnd('\'))"
+  <PropertyGroup>
+    <CsWinRTFilters>
 -include Windows
 # Exclude Windows.UI, Windows.UI.Text, Windows.UI.Xaml per Microsoft.Windows.SDK.WinUI.Contracts NuGet
 -include Windows.UI.Popups
@@ -60,19 +28,8 @@
 -include Windows.UI.Text.FontStyle
 -include Windows.UI.Text.FontWeight
 -include Windows.UI.Text.UnderlineType
--include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
-      </CsWinRTParams>
-    </PropertyGroup>
-    <MakeDir Directories="$(GeneratedFilesDir)" />
-    <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
-    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTVerbosity)" />
-    <Exec Command="$(CsWinRTCommand)" />
-  </Target>
-
-  <Target Name="IncludeProjection" DependsOnTargets="GenerateProjection" BeforeTargets="CoreCompile">
-    <ItemGroup>
-      <Compile Include="$(GeneratedFilesDir)*.cs" Exclude="@(Compile)" />
-    </ItemGroup>
-  </Target>
-
+-include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute      
+    </CsWinRTFilters>
+  </PropertyGroup>
+ 
 </Project>

@@ -32,19 +32,16 @@ Component Authors need to build a C#/WinRT projection for .NET5+ targets.
 
 However, C#/WinRT is a general effort and is intended to support other scenarios and versions of the .NET runtime, compatible down to .NET Standard 2.0.
 
-## Running C#/WinRT
+## Installing and running C#/WinRT
 
 Download the C#/WinRT NuGet package here: <http://aka.ms/cswinrt/nuget>
 
-Please see [usage](USAGE.md) for details on running the C#/WinRT tool. For additional documentation visit <http://aka.ms/cswinrt>.
+C#/WinRT currently requires the following packages, or newer, to build:
 
-## Building C#/WinRT
-
-C#/WinRT currently requires the following packages to build:
-
-- Visual Studio 16.6 (more specifically, MSBuild 16.6.0 for "net5.0" TFM support)
-- Microsoft.Net.Compilers.Toolset >= 3.7.0 or Visual Studio 16.8 preview (for function pointer support)
-- .NET 5 SDK 5.0.100-preview.5.20279.10
+- Visual Studio 16.8 Preview 3
+- Microsoft.Net.Compilers.Toolset 3.8.0-3.20428.4
+- .NET 5 SDK 5.0.100-rc.1.20454.5
+- Nuget.exe 5.8.0-preview.2
 - WinUI 3 3.0.0-preview1.200515.3
 
 **Note:** As prereleases may make breaking changes before final release, any other combinations above may work but are not supported and will generate a build warning.
@@ -55,9 +52,13 @@ After a successful command-line build, the cswinrt.sln can be launched from the 
 
 **Note:**  By default, projection projects only generate source files for Release configurations, where cswinrt.exe can execute in seconds.  To generate projection sources for Debug configurations, set the project property GenerateTestProjection to 'true'.  In either case, existing projection sources under the "Generated Files" folder will still be compiled into the projection assembly.  This configuration permits a faster inner loop in Visual Studio.
 
-**Note:** When building the first time, the build clones the testwinrt project. The build depends on this project, but msbuild doesn't consistently pick up the change when the repo is first cloned repo. You may need to build a second time if this is your first build to address the timing issue.
+## Developer Guidance
 
-Please see the [repository structure](STRUCTURE.md) for a detailed breakdown on the repo contents.
+Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For additional documentation visit <http://aka.ms/cswinrt>.
+
+**Breaking Changes:**
+
+C#/WinRT breaking changes for .NET 5 RC2 are listed [here](docs/breakingchanges-rc2.md).
 
 ## Related Projects
 

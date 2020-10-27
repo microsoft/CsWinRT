@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -13,14 +15,15 @@ namespace WinRT
         private static ConditionalWeakTable<object, ComCallableWrapper> ComWrapperCache = new ConditionalWeakTable<object, ComCallableWrapper>();
 
         private static ConcurrentDictionary<IntPtr, System.WeakReference<object>> RuntimeWrapperCache = new ConcurrentDictionary<IntPtr, System.WeakReference<object>>();
+        private readonly static ConcurrentDictionary<Type, Func<object, IObjectReference>> TypeObjectRefFuncCache = new ConcurrentDictionary<Type, Func<object, IObjectReference>>();
 
         internal static InspectableInfo GetInspectableInfo(IntPtr pThis) => UnmanagedObject.FindObject<ComCallableWrapper>(pThis).InspectableInfo;
 
-        public static object CreateRcwForComObject(IntPtr ptr)
+        public static T CreateRcwForComObject<T>(IntPtr ptr)
         {
             if (ptr == IntPtr.Zero)
             {
-                return null;
+                return default;
             }
 
             IObjectReference identity = GetObjectReferenceForInterface(ptr).As<IUnknownVftbl>();
@@ -33,8 +36,8 @@ namespace WinRT
                 if (identity.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
                 {
                     var inspectable = new IInspectable(identity);
-                    string runtimeClassName = inspectable.GetRuntimeClassName();
-                    runtimeWrapper = TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
+                    string runtimeClassName = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
+                    runtimeWrapper = string.IsNullOrEmpty(runtimeClassName) ? inspectable : TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
                 {
@@ -69,12 +72,50 @@ namespace WinRT
             // for a single System.Type.
             return rcw switch
             {
-                ABI.System.Nullable<string> ns => ns.Value,
-                ABI.System.Nullable<Type> nt => nt.Value,
-                _ => rcw
+                ABI.System.Nullable<string> ns => (T)(object)ns.Value,
+                ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                _ => (T)rcw
             };
         }
-    
+
+        public static bool TryUnwrapObject(object o, out IObjectReference objRef)
+        {
+            // The unwrapping here needs to be an exact type match in case the user
+            // has implemented a WinRT interface or inherited from a WinRT class
+            // in a .NET (non-projected) type.
+
+            if (o is Delegate del)
+            {
+                return TryUnwrapObject(del.Target, out objRef);
+            }
+
+            var objRefFunc = TypeObjectRefFuncCache.GetOrAdd(o.GetType(), (type) =>
+            {
+                ObjectReferenceWrapperAttribute objRefWrapper = type.GetCustomAttribute<ObjectReferenceWrapperAttribute>();
+                if (objRefWrapper is object)
+                {
+                    var field = type.GetField(objRefWrapper.ObjectReferenceField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                    return (o) => (IObjectReference) field.GetValue(o);
+                }
+
+                ProjectedRuntimeClassAttribute projectedClass = type.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
+                if (projectedClass is object && projectedClass.DefaultInterfaceProperty != null)
+                {
+                    var property = type.GetProperty(projectedClass.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                    return (o) =>
+                    {
+                        TryUnwrapObject(property.GetValue(o), out var objRef);
+                        return objRef;
+                    };
+                }
+
+                return null;
+            });
+
+            objRef = objRefFunc != null ? objRefFunc(o) : null;
+            return objRef != null;
+        }
+
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr)
         {
             var referenceWrapper = new System.WeakReference<object>(obj);
@@ -129,9 +170,9 @@ namespace WinRT
             IUnknownVftblPtr = Marshal.AllocHGlobal(sizeof(IUnknownVftbl));
             (*(IUnknownVftbl*)IUnknownVftblPtr) = new IUnknownVftbl
             {
-                QueryInterface = (delegate* stdcall<IntPtr, ref Guid, out IntPtr, int>)Marshal.GetFunctionPointerForDelegate(Abi_QueryInterface),
-                AddRef = (delegate* stdcall<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_AddRef),
-                Release = (delegate* stdcall<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_Release),
+                QueryInterface = (delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int>)Marshal.GetFunctionPointerForDelegate(Abi_QueryInterface),
+                AddRef = (delegate* unmanaged[Stdcall]<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_AddRef),
+                Release = (delegate* unmanaged[Stdcall]<IntPtr, uint>)Marshal.GetFunctionPointerForDelegate(Abi_Release),
             };
         }
         
@@ -181,6 +222,50 @@ namespace WinRT
                 }
             }
         }
+        
+        private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
+        {
+            Type classType;
+            Type interfaceType;
+            Type vftblType;
+            if (implementationType.IsInterface)
+            {
+                classType = null;
+                interfaceType = implementationType.GetHelperType() ??
+                    throw new TypeLoadException($"Unable to find an ABI implementation for the type '{runtimeClassName}'");
+                vftblType = interfaceType.FindVftblType() ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
+                if (vftblType.IsGenericTypeDefinition)
+                {
+                    vftblType = vftblType.MakeGenericType(interfaceType.GetGenericArguments());
+                }
+            }
+            else
+            {
+                classType = implementationType;
+                interfaceType = Projections.GetDefaultInterfaceTypeForRuntimeClassType(classType);
+                if (interfaceType is null)
+                {
+                    throw new TypeLoadException($"Unable to create a runtime wrapper for a WinRT object of type '{runtimeClassName}'. This type is not a projected type.");
+                }
+                vftblType = interfaceType.FindVftblType() ?? throw new TypeLoadException($"Unable to find a vtable type for the type '{runtimeClassName}'");
+            }
+
+            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
+            var createInterfaceInstanceExpression = Expression.New(interfaceType.GetConstructor(new[] { typeof(ObjectReference<>).MakeGenericType(vftblType) }),
+                    Expression.Call(parms[0],
+                        typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
+
+            if (classType is null)
+            {
+                return Expression.Lambda<Func<IInspectable, object>>(createInterfaceInstanceExpression, parms).Compile();
+            }
+
+            return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.New(classType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { interfaceType }, null),
+                    createInterfaceInstanceExpression),
+                parms).Compile();
+        }
+
     }
 
     struct ComInterfaceEntry

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -54,7 +54,7 @@ namespace ABI.Windows.Foundation
                 try
                 {
                     __instance = global::WinRT.ComWrappersSupport.FindObject<global::Windows.Foundation.IActivationFactory>(thisPtr).ActivateInstance();
-                    instance = MarshalInspectable.FromManaged(__instance);
+                    instance = MarshalInspectable<object>.FromManaged(__instance);
                 }
                 catch (Exception __exception__)
                 {
@@ -84,11 +84,11 @@ namespace ABI.Windows.Foundation
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.ActivateInstance_0(ThisPtr, out __retval));
-                return MarshalInspectable.FromAbi(__retval);
+                return MarshalInspectable<object>.FromAbi(__retval);
             }
             finally
             {
-                MarshalInspectable.DisposeAbi(__retval);
+                MarshalInspectable<object>.DisposeAbi(__retval);
             }
         }
     }
@@ -123,7 +123,7 @@ namespace WinRT
                     if (ctor != null)
                     {
                         var factory = new WinRT.Host.ActivationFactory(ctor);
-                        return MarshalInspectable.FromManaged(factory);
+                        return MarshalInspectable<WinRT.Host.ActivationFactory>.FromManaged(factory);
                     }
                 }
             }

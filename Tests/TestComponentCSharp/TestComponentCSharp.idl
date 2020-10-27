@@ -11,6 +11,7 @@ namespace TestComponentCSharp
     delegate void EventHandler2(Class sender, Int32 arg0);
     delegate void EventHandler3(Class sender, Int32 arg0, String arg1);
     delegate void EventHandlerCollection(Class sender, Windows.Foundation.Collections.IVector<Int32> arg0, Windows.Foundation.Collections.IMap<Int32, String> arg1);
+    delegate Int32 EventWithReturn(Int32 arg);
 
     struct BlittableStruct
     {
@@ -82,10 +83,15 @@ namespace TestComponentCSharp
 
     interface IProperties2 requires IProperties1
     {
-        Int32 ReadWriteProperty{ set; };
+        [noexcept] Int32 ReadWriteProperty{ set; };
         //String DisjointProperty{ set; };
         //String DistinctProperty{ get; set; };
     }
+
+    interface IUriHandler
+    {
+        void AddUriHandler(ProvideUri provideUri);
+    };
 
     static runtimeclass ComImports
     {
@@ -100,6 +106,7 @@ namespace TestComponentCSharp
         //, IArtist
         , IProperties1
         , IProperties2
+        , Microsoft.UI.Xaml.Data.INotifyDataErrorInfo
         //, Windows.Foundation.Collections.IVector<String>
         //, Windows.Foundation.Collections.IMap<Int32, String>
     {
@@ -107,6 +114,10 @@ namespace TestComponentCSharp
         Class();
         Class(Int32 intProperty);
         Class(Int32 intProperty, String stringProperty);
+
+        Windows.UI.Xaml.Interop.TypeName TypeProperty{ get; set; };
+        String GetTypePropertyAbiName();
+        String GetTypePropertyKind();
 
         // static
         static Int32 StaticIntProperty;
@@ -135,6 +146,8 @@ namespace TestComponentCSharp
         void InvokeNestedEvent(Class sender, Windows.Foundation.Collections.IVector<Int32> arg0);
         event Windows.Foundation.TypedEventHandler<Class, Windows.Foundation.Collections.IVector<String> > NestedTypedEvent;
         void InvokeNestedTypedEvent(Class sender, Windows.Foundation.Collections.IVector<String> arg0);
+        event EventWithReturn ReturnEvent;
+        Int32 InvokeReturnEvent(Int32 arg0);
 
         Int32 IntProperty;
         event Windows.Foundation.EventHandler<Int32> IntPropertyChanged;
@@ -173,6 +186,10 @@ namespace TestComponentCSharp
         void RaiseStringPairChanged();
         void CallForStringPair(ProvideStringPair provideStringPair);
         event Windows.Foundation.EventHandler<Windows.Foundation.Collections.IKeyValuePair<String, String> > StringPairPropertyChanged;
+
+        Windows.Foundation.Collections.IVector<IInspectable> GetUriVectorAsIInspectableVector();
+        ProvideUri GetUriDelegate();
+        void AddUriHandler(IUriHandler uriHandler);
 
         // Structs
         BlittableStruct BlittableStructProperty;
@@ -220,7 +237,7 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IVectorView<ComposedNonBlittableStruct> GetNonBlittableStructVector();
         Windows.Foundation.Collections.IVectorView<Object> GetObjectVector();
         Windows.Foundation.Collections.IVectorView<IProperties1> GetInterfaceVector();
-        Windows.Foundation.Collections.IVectorView<Class> GetClassVector();
+        [noexcept] Windows.Foundation.Collections.IVectorView<Class> GetClassVector();
 
         Windows.Foundation.Collections.IIterable<Int32> GetIntIterable();
         void SetIntIterable(Windows.Foundation.Collections.IIterable<Int32> value);
@@ -308,7 +325,11 @@ namespace TestComponentCSharp
         String Catch(String params, out String lock);
 
         // Interface projections
-        static IProperties1 NativeProperties1 { get; };
+        static IProperties1 NativeProperties1{ get; };
+        static Object ServiceProvider{ get; };
+
+        // INotifyDataErrorInfo
+        void RaiseDataErrorChanged();
     }
 
     [threading(sta), marshaling_behavior(standard)]

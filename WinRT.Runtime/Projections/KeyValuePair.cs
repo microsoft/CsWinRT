@@ -14,7 +14,7 @@ using System.Runtime.CompilerServices;
 #pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
 
 namespace Windows.Foundation.Collections
-{ 
+{
     [Guid("02B51929-C1C4-4A7E-8940-0312B5C18500")]
     interface IKeyValuePair<K, V>
     {
@@ -138,7 +138,7 @@ namespace ABI.System.Collections.Generic
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-            private static ConditionalWeakTable<object, ToIKeyValuePair> _adapterTable = 
+            private static ConditionalWeakTable<object, ToIKeyValuePair> _adapterTable =
                 new ConditionalWeakTable<object, ToIKeyValuePair>();
 
             private static ToIKeyValuePair FindAdapter(IntPtr thisPtr)
