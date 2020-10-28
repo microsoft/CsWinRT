@@ -583,8 +583,11 @@ namespace UnitTest
             IntPtr service;
             serviceProvider.GetService(IntPtr.Zero, out service);
             Assert.Equal(new IntPtr(42), service);
-        }
 
+            // Ensure robustness with bad runtime class names (parsing errors, type not found, etc)
+            var badRuntimeClassName = Class.BadRuntimeClassName;
+            Assert.NotNull(badRuntimeClassName);
+        }
 
         [Fact]
         public void TestKeyValuePair()
