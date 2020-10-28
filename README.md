@@ -52,15 +52,16 @@ After a successful command-line build, the cswinrt.sln can be launched from the 
 
 **Note:**  By default, projection projects only generate source files for Release configurations, where cswinrt.exe can execute in seconds.  To generate projection sources for Debug configurations, set the project property GenerateTestProjection to 'true'.  In either case, existing projection sources under the "Generated Files" folder will still be compiled into the projection assembly.  This configuration permits a faster inner loop in Visual Studio.
 
-## Developer Guidance
+## What's New
 
-Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For additional documentation visit <http://aka.ms/cswinrt>.
+[CsWinRT v1.0](https://github.com/microsoft/CsWinRT/releases/tag/1.0.1.201020.1) is our latest public release, and is compatible with the .NET 5 RTM SDK. We may have preview releases to address specific bug fixes before v1.1. Details on the latest changes and versions can be found on the [release notes page](https://github.com/microsoft/CsWinRT/releases).
 
 **Breaking Changes**:
 C#/WinRT breaking changes for .NET 5 RC2 are listed [here](docs/breakingchanges-rc2.md).
 
-**Release Notes**:
-https://github.com/microsoft/CsWinRT/releases
+## Developer Guidance
+
+Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For additional documentation visit <http://aka.ms/cswinrt>.
 
 ## Related Projects
 
