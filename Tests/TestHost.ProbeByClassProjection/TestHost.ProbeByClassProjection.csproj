@@ -3,10 +3,13 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;;net5.0</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
+	<SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Tests\TestComponentCSharp\TestComponentCSharp.vcxproj" />
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+	<ItemGroup>
+    <ProjectReference Include="..\TestComponentCSharp\TestComponentCSharp.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\TestComponent\TestComponent.vcxproj" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
@@ -17,7 +20,6 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <CsWinRTIncludes>TestComponent;TestComponentCSharp</CsWinRTIncludes>
     <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
     <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>

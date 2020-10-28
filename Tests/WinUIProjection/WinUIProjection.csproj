@@ -3,13 +3,11 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
-	<SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
+    <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
   </PropertyGroup>
 
-  <PropertyGroup>
-	<AssemblyName>WinUI</AssemblyName>
-  </PropertyGroup>
-
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+		
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
