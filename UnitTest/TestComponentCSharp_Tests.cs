@@ -2152,5 +2152,47 @@ namespace UnitTest
             CryptographicKey cryptoKey = mac.CreateKey(keyMaterial);
             Assert.NotNull(cryptoKey);
         }
+
+        [Fact]
+        public void TestIBindableIterator()
+        {
+            IBindableIteratorTest bindableIterator = new IBindableIteratorTest();
+            Assert.True(bindableIterator.MoveNext());
+            Assert.True(bindableIterator.HasCurrent);
+            Assert.Equal(27861, bindableIterator.Current);
+        }
+
+        [Fact]
+        public void TestIDictionary()
+        {
+            IDictionaryTest dictionary = new IDictionaryTest();
+            
+            dictionary["key"] = "value";
+            Assert.Equal("value", dictionary["key"]);
+            
+            dictionary.Add("key2", "value2");
+            Assert.Equal(2, dictionary.Count);
+            
+            Assert.True(dictionary.ContainsKey("key2"));
+            
+            KeyValuePair<string, string> k = new KeyValuePair<string, string>("key2", "value2");
+            Assert.True(dictionary.Contains(k));
+            
+            KeyValuePair<string, string>[] pairs = new KeyValuePair<string, string>[2];
+            dictionary.CopyTo(pairs, 0);
+            Assert.Equal(2, pairs.Length);
+
+            dictionary.Remove("key2");
+            Assert.ThrowsAny<Exception>(() => dictionary["key2"]);
+            Assert.False(dictionary.TryGetValue("key2", out var key2Val));
+
+            Assert.True(dictionary.TryGetValue("key", out var keyVal));
+            Assert.Equal("value", keyVal);
+
+            dictionary.Clear();
+            Assert.Empty(dictionary);
+
+            Assert.True(IDictionaryTest.Consume(dictionary));
+        }
     }
 }

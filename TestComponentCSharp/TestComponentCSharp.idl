@@ -339,6 +339,25 @@ namespace TestComponentCSharp
         void Observe(Microsoft.UI.Xaml.Interop.IBindableObservableVector vector);
     }
 
+    //[default_interface]
+    //runtimeclass IBindableVectorTest : Microsoft.UI.Xaml.Interop.IBindableVector
+    //{
+    //    //IBindableVectorTest();
+    //}
+
+    [default_interface]
+    runtimeclass IBindableIteratorTest : Microsoft.UI.Xaml.Interop.IBindableIterator
+    {
+        IBindableIteratorTest();
+    }
+
+    [default_interface]
+    runtimeclass IDictionaryTest : Windows.Foundation.Collections.IMap<String, String>
+    {
+        IDictionaryTest();
+        static Boolean Consume(Windows.Foundation.Collections.IMap<String, String> map);
+    }
+
     // IInspectable-based interop interface
     [uuid(39E050C3-4E74-441A-8DC0-B81104DF949C)]
     interface IUserConsentVerifierInterop
