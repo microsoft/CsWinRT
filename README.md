@@ -30,7 +30,7 @@ Component Authors need to build a C#/WinRT projection for .NET5+ targets.
 
 [WinUI3.0](https://github.com/Microsoft/microsoft-ui-xaml) is the effort to lift official native Microsoft UI controls and features out of the operating system, so app developers can use the latest controls and visuals on any in-market version of the OS. C#/WinRT is needed to support the changes required for lifting the XAML APIs out of Windows.UI.XAML and into Microsoft.UI.XAML.
 
-However, C#/WinRT is a general effort and is intended to support other scenarios and versions of the .NET runtime, compatible down to .NET Standard 2.0.
+However, C#/WinRT is a general effort and is intended to support other scenarios such as building custom projections and authoring C# components.
 
 ## Installing and running C#/WinRT
 
@@ -50,15 +50,15 @@ The build.cmd script takes care of all related configuration steps and is the si
 
 After a successful command-line build, the cswinrt.sln can be launched from the same command prompt, to inherit the necessary environment. 
 
-**Note:**  By default, projection projects only generate source files for Release configurations, where cswinrt.exe can execute in seconds.  To generate projection sources for Debug configurations, set the project property GenerateTestProjection to 'true'.  In either case, existing projection sources under the "Generated Files" folder will still be compiled into the projection assembly.  This configuration permits a faster inner loop in Visual Studio.
-
 ## Developer Guidance
 
 Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For additional documentation visit <http://aka.ms/cswinrt>.
 
-**Breaking Changes:**
-
+**Breaking Changes**:
 C#/WinRT breaking changes for .NET 5 RC2 are listed [here](docs/breakingchanges-rc2.md).
+
+**Release Notes**:
+https://github.com/microsoft/CsWinRT/releases
 
 ## Related Projects
 
