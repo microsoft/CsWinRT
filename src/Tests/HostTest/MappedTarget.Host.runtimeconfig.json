@@ -1,0 +1,13 @@
+{
+  "runtimeOptions": {
+    "tfm": "net5.0",
+    "rollForward": "LatestMinor",
+    "framework": {
+      "name": "Microsoft.NETCore.App",
+      "version": "5.0.0-preview"
+    }
+  },
+  "activatableClasses": {
+    "TestHost.ProbeByClass": "TestHost.ProbeByClass.dll"
+  }
+}

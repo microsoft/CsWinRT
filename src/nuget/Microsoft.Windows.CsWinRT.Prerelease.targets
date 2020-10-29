@@ -1,0 +1,6 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="CsWinRTVerifyPrerelease"> 
+  <Target Name="CsWinRTVerifyPrerelease" 
+    Condition="'$(NetCoreSdkVersion)' != '5.0.100-rc.1.20454.5' and '$(Net5SdkVersion)' != '5.0.100-rc.1.20454.5'"> 
+    <Warning Text="This C#/WinRT prerelease is designed for .Net SDK 5.0.100-rc.1.20454.5. Other prereleases may be incompatible due to breaking changes." /> 
+  </Target> 
+</Project> 
