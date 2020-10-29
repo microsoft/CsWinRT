@@ -15,6 +15,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
     <AllowUnsafeBlocks Condition="'$(CsWinRTComponent)' == 'true'">true</AllowUnsafeBlocks>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
+    <CoreCompileDependsOn>CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn)</CoreCompileDependsOn>
   </PropertyGroup>
   
   <!--Remove Windows.Winmd reference to prevent compile collisions-->
@@ -24,7 +25,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </ItemGroup>
   </Target>
 
-  <Target Name="CsWinRTRemoveWinMDReferences" BeforeTargets="ResolveReferences;BeforeCompile" AfterTargets="AfterResolveReferences">
+  <Target Name="CsWinRTRemoveWinMDReferences" BeforeTargets="BeforeCompile" AfterTargets="ResolveReferences">
     <ItemGroup>
       <!--Move winmd references into private item group to prevent subsequent winmd reference errors-->
       <CsWinRTRemovedReferences Include="@(ReferencePath)" Condition="'%(ReferencePath.Extension)' == '.winmd'" />
