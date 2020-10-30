@@ -1,12 +1,16 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
+using System.Xml;
 
 namespace Generator
 {
@@ -133,6 +137,45 @@ namespace Generator
             peBlob.WriteContentTo(fs);
         }
 
+        private static DiagnosticDescriptor AsyncRule = new DiagnosticDescriptor("WinRTDiagnostic",
+                "WinRT doesn't support implementing Async interfaces",
+                "Runtime components can't implement Async interfaces, use AsyncInfo class methods instead (see: WME Error 1084)",
+                "Usage",
+                DiagnosticSeverity.Error,
+                true, 
+                "Longer description about not implementing async interfaces.");
+
+        private void CatchWinRTDiagnostics(GeneratorExecutionContext context)
+        { 
+            INamedTypeSymbol asyncInterfaceType = context.Compilation.GetTypeByMetadataName("Windows.Foundation.IAsyncAction");
+
+            foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
+            {
+                var model = context.Compilation.GetSemanticModel(tree);
+                var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>();
+                foreach (var cl in classes)
+                {
+                    var classSymbol = model.GetDeclaredSymbol(cl);
+                    if (classSymbol.AllInterfaces.Contains(asyncInterfaceType))
+                    { 
+                        context.ReportDiagnostic(Diagnostic.Create(AsyncRule, cl.GetLocation()));
+                    }
+                }
+            }
+        }
+
+        /* Checks the compilation's diagnostics, logging all that are seen. Return false iff there are no diagnostics  */
+        private bool LookForDiagnostics(GeneratorExecutionContext context)
+        { 
+            var diagnostics = context.Compilation.GetDiagnostics();
+            if (diagnostics.Any())
+            {
+                foreach (Diagnostic d in diagnostics) { Logger.Log("!!! Oops! Found diagnostic: " + d + "  !!!"); }
+                return true;
+            }
+            return false;
+        }
+
         public void Execute(GeneratorExecutionContext context)
         {
             if (!IsCsWinRTComponent(context))
@@ -141,6 +184,17 @@ namespace Generator
             }
 
             Logger.Initialize(context);
+
+            CatchWinRTDiagnostics(context);
+            var diagnostics = context.Compilation.GetDiagnostics();
+
+            Logger.Log("hello Joshua");
+
+            if (diagnostics.Any())
+            {
+                foreach (Diagnostic d in diagnostics) { Logger.Log("!!! Oops! Found diagnostic: " + d + "  !!!"); }
+                return;
+            }
 
             try
             {
@@ -152,11 +206,14 @@ namespace Generator
                     assembly,
                     version,
                     metadataBuilder);
+
                 foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
                 {
+                    Logger.Log("!!!! shouldnt get here !!!!");
                     writer.Model = context.Compilation.GetSemanticModel(tree);
                     writer.Visit(tree.GetRoot());
                 }
+                Logger.Log("!!!! Definitely shouldn't get here !!!!");
                 writer.FinalizeGeneration();
 
                 string winmdFile = GetWinmdOutputFile(context);
