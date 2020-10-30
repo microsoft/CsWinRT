@@ -29,6 +29,6 @@
     <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
   </ItemGroup>
 
-  <Import Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(SimulateCsWinRTNugetReference)' == 'true'" Project="nuget\Microsoft.Windows.CsWinRT.targets" />
+  <Import Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(SimulateCsWinRTNugetReference)' == 'true'" Project="..\nuget\Microsoft.Windows.CsWinRT.targets" />
 
 </Project>
