@@ -2,7 +2,7 @@
 
 All source code for CsWinRT is located in the [`src`](../src) folder in the repository root. This document describes the code organization within `/src`.
 
-## The [`Authoring`](/Authoring) folder
+## The [`Authoring`](../src/Authoring) folder
 
 Contains projects for implementing authoring and hosting support.
 
@@ -30,7 +30,7 @@ Contains source files for producing a C#/WinRT NuGet package, which is regularly
 
 Contains several projects for generating and building projections from the Windows SDK, WinUI, Benchmark (produced by the BenchmarkComponent project), and Test metadata (produced by the TestWinRT and TestComponentCSharp projects).
 
-## The [`Samples`](/Samples) folder
+## The [`Samples`](../src/Samples) folder
 
 - [`Net5ProjectionSample`](../src/Samples/Net5ProjectionSample): Contains an end-to-end sample for component authors, showing how to generate a projection from a C++/WinRT component and consume it using a NuGet package.
 
@@ -40,7 +40,7 @@ Contains several projects for generating and building projections from the Windo
 
 Contains various testing-related projects:
 
--  [`TestComponentCSharp`](../src/Tests/TestComponentCSharp): This is an implementation of a WinRT test component, defined in class.idl and used by the UnitTest project.  To complement the general TestComponent above, the TestComponentCSharp  tests scenarios specific to the C#/WinRT language projection.
+- [`TestComponentCSharp`](../src/Tests/TestComponentCSharp): This is an implementation of a WinRT test component, defined in class.idl and used by the UnitTest project.  To complement the general TestComponent above, the TestComponentCSharp  tests scenarios specific to the C#/WinRT language projection.
 
 - [`UnitTest`](../src/Tests/UnitTest): Unit tests for validating the Windows SDK, WinUI, and Test projections generated above.  All pull requests should ensure that this project executes without errors.
 

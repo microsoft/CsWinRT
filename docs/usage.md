@@ -14,7 +14,7 @@ To invoke cswinrt to generate projection sources for types in the **Contoso** na
 </PropertyGroup>
 ```
 
-To further customize C#/WinRT behavior, refer to the [CsWinRT NuGet documentation](https://github.com/microsoft/CsWinRT/blob/master/nuget/readme.md).
+To further customize C#/WinRT behavior, refer to the [CsWinRT NuGet documentation](nuget.md).
 
 ## Application Project
 
