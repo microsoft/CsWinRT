@@ -52,7 +52,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nuget", "Nuget", "{967889B0
 		nuget\Microsoft.Windows.CsWinRT.nuspec = nuget\Microsoft.Windows.CsWinRT.nuspec
 		nuget\Microsoft.Windows.CsWinRT.props = nuget\Microsoft.Windows.CsWinRT.props
 		nuget\Microsoft.Windows.CsWinRT.targets = nuget\Microsoft.Windows.CsWinRT.targets
-		nuget\readme.md = nuget\readme.md
 		nuget\readme.txt = nuget\readme.txt
 		nuget\SignConfig.xml = nuget\SignConfig.xml
 	EndProjectSection
