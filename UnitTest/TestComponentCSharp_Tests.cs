@@ -2192,7 +2192,13 @@ namespace UnitTest
             dictionary.Clear();
             Assert.Empty(dictionary);
 
-            Assert.True(IDictionaryTest.Consume(dictionary));
+        }
+
+        [Fact]
+        public void TestIDisposable()
+        {
+            IDisposableTest disposable = new IDisposableTest();
+            disposable.Dispose();
         }
     }
 }

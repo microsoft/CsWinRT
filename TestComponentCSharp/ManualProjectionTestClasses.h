@@ -1,6 +1,7 @@
 #pragma once
 #include "IBindableIteratorTest.g.h"
 #include "IDictionaryTest.g.h"
+#include "IDisposableTest.g.h"
 
 namespace winrt::TestComponentCSharp::implementation
 {
@@ -31,6 +32,12 @@ namespace winrt::TestComponentCSharp::implementation
 
 		static bool Consume(Windows::Foundation::Collections::IMap<hstring, hstring> map);
 	};
+
+	struct IDisposableTest : IDisposableTestT<IDisposableTest>
+	{
+		IDisposableTest();
+		void Close();
+	};
 }
 
 namespace winrt::TestComponentCSharp::factory_implementation
@@ -48,6 +55,14 @@ namespace winrt::TestComponentCSharp::factory_implementation
 		hstring ToString()
 		{
 			return L"IDictionaryTest";
+		}
+	};
+
+	struct IDisposableTest : IDisposableTestT<IDisposableTest, implementation::IDisposableTest, Windows::Foundation::IStringable>
+	{
+		hstring ToString()
+		{
+			return L"IDisposableTest";
 		}
 	};
 }

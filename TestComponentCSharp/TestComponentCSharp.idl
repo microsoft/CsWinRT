@@ -358,6 +358,18 @@ namespace TestComponentCSharp
         static Boolean Consume(Windows.Foundation.Collections.IMap<String, String> map);
     }
 
+    [default_interface]
+    runtimeclass IDisposableTest : Windows.Foundation.IClosable
+    {
+        IDisposableTest();
+    }
+    
+    [default_interface]
+    runtimeclass IEnumerableTest //: Windows.Foundation.Collections.IIterable
+    {
+        //IEnumerableTest();
+    }
+
     // IInspectable-based interop interface
     [uuid(39E050C3-4E74-441A-8DC0-B81104DF949C)]
     interface IUserConsentVerifierInterop

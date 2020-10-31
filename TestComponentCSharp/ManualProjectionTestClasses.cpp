@@ -2,6 +2,7 @@
 #include "ManualProjectionTestClasses.h"
 #include "IBindableIteratorTest.g.cpp"
 #include "IDictionaryTest.g.cpp"
+#include "IDisposableTest.g.cpp"
 
 namespace winrt
 {
@@ -85,8 +86,19 @@ namespace winrt::TestComponentCSharp::implementation
 		{
 			return false;
 		}
-
+		if (!map.HasKey(L"key.cpp"))
+		{
+			return false;
+		}
+		
 		return true;
+		
 	}
 	
+	IDisposableTest::IDisposableTest()
+	{
+	}
+	void IDisposableTest::Close()
+	{
+	}
 }
