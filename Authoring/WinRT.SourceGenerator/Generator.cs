@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -137,7 +138,7 @@ namespace Generator
             peBlob.WriteContentTo(fs);
         }
 
-        private static DiagnosticDescriptor AsyncRule = new DiagnosticDescriptor("WinRTDiagnostic",
+        private static DiagnosticDescriptor AsyncRule = new DiagnosticDescriptor("WME1084",
                 "WinRT doesn't support implementing Async interfaces",
                 "Runtime components can't implement Async interfaces, use AsyncInfo class methods instead (see: WME Error 1084)",
                 "Usage",
@@ -145,8 +146,9 @@ namespace Generator
                 true, 
                 "Longer description about not implementing async interfaces.");
 
-        private void CatchWinRTDiagnostics(GeneratorExecutionContext context)
-        { 
+        private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
+        {
+            bool found = false;
             INamedTypeSymbol asyncInterfaceType = context.Compilation.GetTypeByMetadataName("Windows.Foundation.IAsyncAction");
 
             foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
@@ -159,21 +161,12 @@ namespace Generator
                     if (classSymbol.AllInterfaces.Contains(asyncInterfaceType))
                     { 
                         context.ReportDiagnostic(Diagnostic.Create(AsyncRule, cl.GetLocation()));
+                        found = true;
                     }
                 }
             }
-        }
 
-        /* Checks the compilation's diagnostics, logging all that are seen. Return false iff there are no diagnostics  */
-        private bool LookForDiagnostics(GeneratorExecutionContext context)
-        { 
-            var diagnostics = context.Compilation.GetDiagnostics();
-            if (diagnostics.Any())
-            {
-                foreach (Diagnostic d in diagnostics) { Logger.Log("!!! Oops! Found diagnostic: " + d + "  !!!"); }
-                return true;
-            }
-            return false;
+            return found;
         }
 
         public void Execute(GeneratorExecutionContext context)
@@ -185,16 +178,19 @@ namespace Generator
 
             Logger.Initialize(context);
 
-            CatchWinRTDiagnostics(context);
-            var diagnostics = context.Compilation.GetDiagnostics();
-
-            Logger.Log("hello Joshua");
-
-            if (diagnostics.Any())
+            if (CatchWinRTDiagnostics(context))
             {
-                foreach (Diagnostic d in diagnostics) { Logger.Log("!!! Oops! Found diagnostic: " + d + "  !!!"); }
+                Logger.Log("Exiting early runtime component errors found");
+                Logger.Close();
                 return;
             }
+
+            /*
+            foreach (Diagnostic d in context.Compilation.GetMethodBodyDiagnostics()) { Logger.Log("MethodBody diagnostic: " + d.ToString()); }
+            foreach (Diagnostic d in context.Compilation.GetParseDiagnostics()) { Logger.Log("Parse diagnostic: " + d.ToString()); }
+            foreach (Diagnostic d in context.Compilation.GetDiagnostics()) { Logger.Log("Plain ol diagnostic: " + d.ToString()); }
+            foreach (Diagnostic d in context.Compilation.GetDeclarationDiagnostics()) { Logger.Log("Declaration diagnostic: " + d.ToString()); }
+            */
 
             try
             {
@@ -209,11 +205,16 @@ namespace Generator
 
                 foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
                 {
-                    Logger.Log("!!!! shouldnt get here !!!!");
-                    writer.Model = context.Compilation.GetSemanticModel(tree);
+                    var model = context.Compilation.GetSemanticModel(tree);
+                    /*
+                    foreach (Diagnostic d in model.GetSyntaxDiagnostics()) { Logger.Log("[later] MethodBody diagnostic: " + d.ToString()); }
+                    foreach (Diagnostic d in model.GetMethodBodyDiagnostics()) { Logger.Log("[later] MethodBody diagnostic: " + d.ToString()); }
+                    foreach (Diagnostic d in model.GetDiagnostics()) { Logger.Log("[later] Plain ol diagnostic: " + d.ToString()); }
+                    foreach (Diagnostic d in model.GetDeclarationDiagnostics()) { Logger.Log("[later] Declaration diagnostic: " + d.ToString()); }
+                    */
+                    writer.Model = model;
                     writer.Visit(tree.GetRoot());
                 }
-                Logger.Log("!!!! Definitely shouldn't get here !!!!");
                 writer.FinalizeGeneration();
 
                 string winmdFile = GetWinmdOutputFile(context);
