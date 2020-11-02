@@ -4218,7 +4218,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         }
     }
 
-    void write_custom_attributes(writer& w, TypeDef const& type)
+    void write_custom_attributes(writer& w, TypeDef const& type, bool enable_platform_attrib)
     {
         auto write_fixed_arg = [&](writer& w, FixedArgSig arg)
         {
@@ -4366,6 +4366,21 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             {
                 params.push_back(w.write_temp("% = %", arg.name, bind(write_fixed_arg, arg.value)));
             }
+            // ContractVersion attribute ==> SupportedOSPlatform attribute
+            if (!settings.netstandard_compat && enable_platform_attrib && 
+                attribute_name == "ContractVersion" && signature.FixedArgs().size() == 2)
+            {
+                auto& arg0 = signature.FixedArgs()[0];
+                auto& elem = std::get<ElemSig>(arg0.value);
+                auto system_type = std::get<ElemSig::SystemType>(elem.value);
+                auto& contract_name = system_type.name;
+                auto contract_version = std::stoul(params[1]) >> 16;
+                auto& contract_platform = get_contract_platform(contract_name, contract_version);
+                if (!contract_platform.empty())
+                {
+                    attributes["global::System.Runtime.Versioning.SupportedOSPlatform"].push_back("\"" + std::string(contract_platform) + "\"");
+                }
+            }
             attributes[attribute_full] = std::move(params);
         }
         if (auto&& usage = attributes.find("AttributeUsage"); usage != attributes.end())
@@ -4397,7 +4412,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 {
 }
 )",
-            bind<write_custom_attributes>(type),
+            bind<write_custom_attributes>(type, false),
             type_name);
     }
 
@@ -4410,7 +4425,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 %}
 )",
             bind<write_winrt_attribute>(type),
-            bind<write_custom_attributes>(type),
+            bind<write_custom_attributes>(type, false),
             type_name,
             [&](writer& w)
             {
@@ -4446,7 +4461,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             // Interface
             bind<write_winrt_attribute>(type),
             bind<write_guid_attribute>(type),
-            bind<write_custom_attributes>(type),
+            bind<write_custom_attributes>(type, false),
             is_exclusive_to(type) ? "internal" : "public",
             type_name,
             bind<write_type_inheritance>(type, object_type{}, false, false),
@@ -4752,22 +4767,22 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 private readonly % _comp;
 }
 )",
-bind<write_winrt_attribute>(type),
-bind<write_custom_attributes>(type),
-bind<write_class_modifiers>(type),
-type_name,
-bind<write_type_inheritance>(type, base_semantics, false, true),
-type_name,
-wrapped_type_name,
-wrapped_type_name,
-type_name,
-type_name,
-wrapped_type_name,
-type_name,
-wrapped_type_name,
-type_name,
-bind<write_class_members>(type, true),
-wrapped_type_name);
+        bind<write_winrt_attribute>(type),
+        bind<write_custom_attributes>(type, false),
+        bind<write_class_modifiers>(type),
+        type_name,
+        bind<write_type_inheritance>(type, base_semantics, false, true),
+        type_name,
+        wrapped_type_name,
+        wrapped_type_name,
+        type_name,
+        type_name,
+        wrapped_type_name,
+        type_name,
+        wrapped_type_name,
+        type_name,
+        bind<write_class_members>(type, true),
+        wrapped_type_name);
     }
 
     void write_class_netstandard(writer& w, TypeDef const& type)
@@ -4829,7 +4844,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 }
 )",
             bind<write_winrt_attribute>(type),
-            bind<write_custom_attributes>(type),
+            bind<write_custom_attributes>(type, false),
             bind<write_class_modifiers>(type),
             type_name,
             bind<write_type_inheritance>(type, base_semantics, true, false),
@@ -4959,7 +4974,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 %%
 }
 )",
-            bind<write_custom_attributes>(type),
+            bind<write_custom_attributes>(type, true),
             bind<write_class_modifiers>(type),
             type_name,
             bind<write_type_inheritance>(type, base_semantics, true, false),
@@ -5118,7 +5133,7 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<obje
         w.write(R"(%%public delegate % %(%);
 )",
             bind<write_winrt_attribute>(type),
-            bind<write_custom_attributes>(type),
+            bind<write_custom_attributes>(type, false),
             bind<write_projection_return_type>(signature),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             bind_list<write_projection_parameter>(", ", signature.params()));
@@ -5432,7 +5447,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 {
 )", 
         bind<write_winrt_attribute>(type),
-        bind<write_custom_attributes>(type),
+        bind<write_custom_attributes>(type, true),
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
         {
             for (auto&& field : type.FieldList())
@@ -5493,7 +5508,7 @@ public override int GetHashCode() => %;
 )",
             // struct
             bind<write_winrt_attribute>(type),
-            bind<write_custom_attributes>(type),
+            bind<write_custom_attributes>(type, true),
             name,
             name,
             bind_each([](writer& w, auto&& field)

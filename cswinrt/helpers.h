@@ -638,6 +638,239 @@ namespace cswinrt
         return &*nameItr;
     }
 
+    inline const std::string_view get_contract_platform(std::string_view contract_name, int32_t contract_version)
+    {
+        struct contract_platform
+        {
+            int32_t contract_version;
+            std::string_view platform_version;
+        };
+
+        static const struct
+        {
+            std::string_view contract_name;
+            std::vector<contract_platform> versions;
+        } contract_mappings[] =
+        {
+            // Use PreviousPlatforms.linq LinqPad query to generate mapping data
+            { "Windows.AI.MachineLearning.MachineLearningContract",
+                {
+                    { 1, "10.0.17763.0" },
+                    { 2, "10.0.18362.0" },
+                    { 3, "10.0.19041.0" },
+                }
+            },
+            { "Windows.AI.MachineLearning.Preview.MachineLearningPreviewContract",
+                {
+                    { 1, "10.0.17134.0" },
+                    { 2, "10.0.17763.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Calls.Background.CallsBackgroundContract",
+                {
+                    { 1, "10.0.17763.0" },
+                    { 2, "10.0.18362.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Calls.CallsPhoneContract",
+                {
+                    { 4, "10.0.17763.0" },
+                    { 5, "10.0.18362.0" },
+                }
+            },
+            { "Windows.ApplicationModel.Calls.CallsVoipContract",
+                {
+                    { 1, "10.0.10586.0" },
+                    { 2, "10.0.16299.0" },
+                    { 3, "10.0.17134.0" },
+                    { 4, "10.0.17763.0" },
+                }
+            },
+            { "Windows.ApplicationModel.CommunicationBlocking.CommunicationBlockingContract",
+                {
+                    { 2, "10.0.17763.0" },
+                }
+            },
+            { "Windows.ApplicationModel.SocialInfo.SocialInfoContract",
+                {
+                    { 1, "10.0.14393.0" },
+                    { 2, "10.0.15063.0" },
+                }
+            },
+            { "Windows.ApplicationModel.StartupTaskContract",
+                {
+                    { 2, "10.0.16299.0" },
+                    { 3, "10.0.17134.0" },
+                }
+            },
+            { "Windows.Devices.Custom.CustomDeviceContract",
+                {
+                    { 1, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Devices.DevicesLowLevelContract",
+                {
+                    { 2, "10.0.14393.0" },
+                    { 3, "10.0.15063.0" },
+                }
+            },
+            { "Windows.Devices.Printers.PrintersContract",
+                {
+                    { 1, "10.0.10586.0" },
+                }
+            },
+            { "Windows.Devices.SmartCards.SmartCardBackgroundTriggerContract",
+                {
+                    { 3, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Devices.SmartCards.SmartCardEmulatorContract",
+                {
+                    { 5, "10.0.16299.0" },
+                    { 6, "10.0.17763.0" },
+                }
+            },
+            { "Windows.Foundation.FoundationContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.10586.0" },
+                    { 3, "10.0.15063.0" },
+                    { 4, "10.0.19041.0" },
+                }
+            },
+            { "Windows.Foundation.UniversalApiContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.10586.0" },
+                    { 3, "10.0.14393.0" },
+                    { 4, "10.0.15063.0" },
+                    { 5, "10.0.16299.0" },
+                    { 6, "10.0.17134.0" },
+                    { 7, "10.0.17763.0" },
+                    { 8, "10.0.18362.0" },
+                    { 10, "10.0.19041.0" },
+                }
+            },
+            { "Windows.Foundation.VelocityIntegration.VelocityIntegrationContract",
+                {
+                    { 1, "10.0.17134.0" },
+                }
+            },
+            { "Windows.Gaming.XboxLive.StorageApiContract",
+                {
+                    { 1, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Graphics.Printing3D.Printing3DContract",
+                {
+                    { 2, "10.0.10586.0" },
+                    { 3, "10.0.14393.0" },
+                    { 4, "10.0.16299.0" },
+                }
+            },
+            { "Windows.Networking.Connectivity.WwanContract",
+                {
+                    { 1, "10.0.10240.0" },
+                    { 2, "10.0.17134.0" },
+                }
+            },
+            { "Windows.Networking.Sockets.ControlChannelTriggerContract",
+                {
+                    { 3, "10.0.17763.0" },
+                }
+            },
+            { "Windows.Security.Isolation.IsolatedWindowsEnvironmentContract",
+                {
+                    { 1, "10.0.19041.0" },
+                }
+            },
+            { "Windows.Services.Maps.GuidanceContract",
+                {
+                    { 3, "10.0.17763.0" },
+                }
+            },
+            { "Windows.Services.Maps.LocalSearchContract",
+                {
+                    { 4, "10.0.17763.0" },
+                }
+            },
+            { "Windows.Services.Store.StoreContract",
+                {
+                    { 1, "10.0.14393.0" },
+                    { 2, "10.0.15063.0" },
+                    { 3, "10.0.17134.0" },
+                    { 4, "10.0.17763.0" },
+                }
+            },
+            { "Windows.Services.TargetedContent.TargetedContentContract",
+                {
+                    { 1, "10.0.15063.0" },
+                }
+            },
+            { "Windows.Storage.Provider.CloudFilesContract",
+                {
+                    { 4, "10.0.19041.0" },
+                }
+            },
+            { "Windows.System.Profile.ProfileHardwareTokenContract",
+                {
+                    { 1, "10.0.14393.0" },
+                }
+            },
+            { "Windows.System.Profile.ProfileSharedModeContract",
+                {
+                    { 1, "10.0.14393.0" },
+                    { 2, "10.0.15063.0" },
+                }
+            },
+            { "Windows.System.Profile.SystemManufacturers.SystemManufacturersContract",
+                {
+                    { 3, "10.0.17763.0" },
+                }
+            },
+            { "Windows.System.SystemManagementContract",
+                {
+                    { 6, "10.0.17763.0" },
+                    { 7, "10.0.19041.0" },
+                }
+            },
+            { "Windows.UI.ViewManagement.ViewManagementViewScalingContract",
+                {
+                    { 1, "10.0.14393.0" },
+                }
+            },
+            { "Windows.UI.Xaml.Core.Direct.XamlDirectContract",
+                {
+                    { 1, "10.0.17763.0" },
+                    { 2, "10.0.18362.0" },
+                }
+            },
+        };
+
+        auto contractItr = std::lower_bound(std::begin(contract_mappings), std::end(contract_mappings), contract_name, [](auto&& c, std::string_view contract_name)
+        {
+            return c.contract_name < contract_name;
+        });
+
+        if ((contractItr == std::end(contract_mappings)) || (contractItr->contract_name != contract_name))
+        {
+            return {};
+        }
+
+        auto& versions = contractItr->versions;
+        auto versionItr = std::lower_bound(std::begin(versions), std::end(versions), contract_version, [](auto&& v, int32_t contract_version)
+        {
+            return v.contract_version < contract_version;
+        });
+
+        if ((versionItr == std::end(versions)) || (versionItr->contract_version != contract_version))
+        {
+            return {};
+        }
+
+        return versionItr->platform_version;
+    }
+
     enum class typedef_name_type
     {
         Projected,
