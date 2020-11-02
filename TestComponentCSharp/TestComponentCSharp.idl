@@ -330,6 +330,8 @@ namespace TestComponentCSharp
 
         // INotifyDataErrorInfo
         void RaiseDataErrorChanged();
+
+        static Object BadRuntimeClassName{ get; };
     }
 
     [threading(sta), marshaling_behavior(standard)]
