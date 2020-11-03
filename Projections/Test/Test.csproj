@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
-  </PropertyGroup>
+   </PropertyGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\..\TestComponentCSharp\TestComponentCSharp.vcxproj" />
