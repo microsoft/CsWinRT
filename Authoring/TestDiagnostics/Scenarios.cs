@@ -3,9 +3,10 @@ using Windows.Foundation;
 
 namespace TestDiagnostics
 {
-    public class Scenarios : IAsyncAction
+    public class Scenario : IAsyncActionWithProgress<int>
     {
-        public AsyncActionCompletedHandler Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public AsyncActionProgressHandler<int> Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public AsyncActionWithProgressCompletedHandler<int> Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public Exception ErrorCode => throw new NotImplementedException();
 

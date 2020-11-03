@@ -148,20 +148,35 @@ namespace Generator
 
         private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
         {
+            Logger.Log("Joshua Joshua Joshua");
             bool found = false;
             INamedTypeSymbol asyncInterfaceType = context.Compilation.GetTypeByMetadataName("Windows.Foundation.IAsyncAction");
+            string[] DontImplementTheseInterfaces = { "Windows.Foundation.IAsyncAction", 
+                "Windows.Foundation.IAsyncActionWithProgress", 
+                "Windows.Foundation.IAsyncOperation", 
+                "Windows.Foundation.IAsyncOperationWithProgress" };
 
             foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
             {
                 var model = context.Compilation.GetSemanticModel(tree);
                 var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>();
-                foreach (var cl in classes)
+                foreach (ClassDeclarationSyntax classDeclaration in classes)
                 {
-                    var classSymbol = model.GetDeclaredSymbol(cl);
-                    if (classSymbol.AllInterfaces.Contains(asyncInterfaceType))
-                    { 
-                        context.ReportDiagnostic(Diagnostic.Create(AsyncRule, cl.GetLocation()));
-                        found = true;
+                    var classSymbol = model.GetDeclaredSymbol(classDeclaration);
+                    foreach (string interfaceName in DontImplementTheseInterfaces)
+                    {
+                        INamedTypeSymbol interfaceTypeSymbol = context.Compilation.GetTypeByMetadataName(interfaceName);
+                        Logger.Log("interfacename: " + interfaceTypeSymbol.ToString());
+                        foreach (var thing in classSymbol.AllInterfaces)
+                        {
+                            Logger.Log("!!! thing is" + thing.ToString());
+                        }
+                        Logger.Log("did we see it?");
+                        if (classSymbol.AllInterfaces.Contains(interfaceTypeSymbol))
+                        { 
+                            context.ReportDiagnostic(Diagnostic.Create(AsyncRule, classDeclaration.GetLocation()));
+                            found |= true;
+                        }
                     }
                 }
             }
