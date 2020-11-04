@@ -791,7 +791,17 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        unsafe void global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Clear()
+        void global::Windows.Foundation.Collections.IMap<K, V>.Clear()
+        {
+            _ClearHelper();
+        }
+
+        void global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Clear()
+        {
+            _ClearHelper();
+        }
+
+        private unsafe void _ClearHelper()
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
