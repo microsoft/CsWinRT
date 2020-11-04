@@ -78,11 +78,11 @@ public void SetString(IntPtr hstr);
 // public void GetString([MarshalAs(UnmanagedType.HString)] out String s);
 public void GetString(IntPtr out hstr);
 // ...
-// Marshal System.String as fast-pass HSTRING reference
+// Marshal HSTRING to System.String
 IntPtr hstr;
 GetString(out hstr);
 var str = MarshalString.FromAbi(hstr);
-// Marshal HSTRING to System.String
+// Marshal System.String as fast-pass HSTRING reference
 var marshalStr = MarshalString.CreateMarshaler("String");
 SetString(MarshalString.GetAbi(marshalStr));
 ```
