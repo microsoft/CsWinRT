@@ -57,7 +57,7 @@ namespace ABI.System.Collections.Generic
             public FromAbiHelper(global::Windows.Foundation.Collections.IMapView<K, V> mapView, ObjectReference<Vftbl> objRef)
             {
                 _mapView = mapView;
-                _enumerable = (System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>)new IInspectable(objRef);
+                _enumerable = (global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>)new IInspectable(objRef);
             }
 
             public int Count
