@@ -148,7 +148,7 @@ namespace Generator
 
         private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
         {
-            Logger.Log("Joshua Joshua Joshua");
+            Logger.Log("Starting CatchWinRTDiagnostics");
             bool found = false;
             INamedTypeSymbol asyncInterfaceType = context.Compilation.GetTypeByMetadataName("Windows.Foundation.IAsyncAction");
             string[] DontImplementTheseInterfaces = { "Windows.Foundation.IAsyncAction", 
