@@ -138,49 +138,71 @@ namespace Generator
             peBlob.WriteContentTo(fs);
         }
 
+        /* TODO: update the message to know which interface was implemented. 
+         * update format string and passing arguments when raising this rule */
         private static DiagnosticDescriptor AsyncRule = new DiagnosticDescriptor("WME1084",
                 "WinRT doesn't support implementing Async interfaces",
                 "Runtime components can't implement Async interfaces, use AsyncInfo class methods instead (see: WME Error 1084)",
                 "Usage",
-                DiagnosticSeverity.Error,
+                /* Warnings dont fail command line build; winmd generation is prevented regardless of severity.
+                   Make this error when making final touches on this deliverable. */
+                DiagnosticSeverity.Warning, 
                 true, 
                 "Longer description about not implementing async interfaces.");
 
+        static private string[] ProhibitedAsyncInterfaces = {
+                "Windows.Foundation.IAsyncAction", 
+                "Windows.Foundation.IAsyncActionWithProgress`1",
+                "Windows.Foundation.IAsyncOperation`1",
+                "Windows.Foundation.IAsyncOperationWithProgress`2"
+        };
+
+        /* SameAsyncInterface uses the proper ISymbol equality check on the OriginalDefinition of the given symbols */
+        private bool SameAsyncInterface(INamedTypeSymbol interfaceA, INamedTypeSymbol interfaceB)
+        {   
+            /* Using OriginalDefinition b/c the generic field of the metadata type has the template name, e.g. `TProgress`
+             * and the actual interface will have a concrete type, e.g. `int` */
+            return SymbolEqualityComparer.Default.Equals(interfaceA.OriginalDefinition, interfaceB.OriginalDefinition);
+        }
+
+        /* ClassImplementsAsyncInterface returns true if the class represented by the symbol
+           implements any of the interfaces defined in ProhibitedAsyncInterfaces */
+        private bool ClassImplementsAsyncInterface(GeneratorExecutionContext context, INamedTypeSymbol classSymbol, ClassDeclarationSyntax classDeclaration)
+        { 
+            foreach (string prohibitedInterface in ProhibitedAsyncInterfaces)
+            {
+                INamedTypeSymbol asyncInterface = context.Compilation.GetTypeByMetadataName(prohibitedInterface);
+                foreach (var interfaceImplemented in classSymbol.AllInterfaces)
+                {
+                    if (SameAsyncInterface(interfaceImplemented, asyncInterface))
+                    { 
+                        context.ReportDiagnostic(Diagnostic.Create(AsyncRule, classDeclaration.GetLocation()));
+                        return true; 
+                        /* by exiting early, we only report diagnostic for first prohibited interface we see. 
+                         If a class implemented 2 (or more) such interfaces, then we would only report diagnostic error for the first one. 
+                        could thread `found` variable from CatchWinRTDiagnostics here as well, if we want more diagnostics reported 
+                        */
+                    }
+                }
+            }
+            return false;
+        }
+
         private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
         {
-            Logger.Log("Starting CatchWinRTDiagnostics");
-            bool found = false;
-            INamedTypeSymbol asyncInterfaceType = context.Compilation.GetTypeByMetadataName("Windows.Foundation.IAsyncAction");
-            string[] DontImplementTheseInterfaces = { "Windows.Foundation.IAsyncAction", 
-                "Windows.Foundation.IAsyncActionWithProgress", 
-                "Windows.Foundation.IAsyncOperation", 
-                "Windows.Foundation.IAsyncOperationWithProgress" };
-
+            bool found = false; // used by caller to exit early, i.e. don't generate a .winmd
+            
             foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
             {
                 var model = context.Compilation.GetSemanticModel(tree);
                 var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>();
+
                 foreach (ClassDeclarationSyntax classDeclaration in classes)
                 {
                     var classSymbol = model.GetDeclaredSymbol(classDeclaration);
-                    foreach (string interfaceName in DontImplementTheseInterfaces)
-                    {
-                        INamedTypeSymbol interfaceTypeSymbol = context.Compilation.GetTypeByMetadataName(interfaceName);
-                        Logger.Log("interfacename: " + interfaceTypeSymbol.ToString());
-                        foreach (var thing in classSymbol.AllInterfaces)
-                        {
-                            Logger.Log("!!! thing is" + thing.ToString());
-                        }
-                        Logger.Log("did we see it?");
-                        if (classSymbol.AllInterfaces.Contains(interfaceTypeSymbol))
-                        { 
-                            context.ReportDiagnostic(Diagnostic.Create(AsyncRule, classDeclaration.GetLocation()));
-                            found |= true;
-                        }
-                    }
+                    found |= ClassImplementsAsyncInterface(context, classSymbol, classDeclaration);
                 }
             }
-
             return found;
         }
 
@@ -195,17 +217,10 @@ namespace Generator
 
             if (CatchWinRTDiagnostics(context))
             {
-                Logger.Log("Exiting early runtime component errors found");
+                Logger.Log("Exiting early -- errors in authored runtime component found.");
                 Logger.Close();
                 return;
             }
-
-            /*
-            foreach (Diagnostic d in context.Compilation.GetMethodBodyDiagnostics()) { Logger.Log("MethodBody diagnostic: " + d.ToString()); }
-            foreach (Diagnostic d in context.Compilation.GetParseDiagnostics()) { Logger.Log("Parse diagnostic: " + d.ToString()); }
-            foreach (Diagnostic d in context.Compilation.GetDiagnostics()) { Logger.Log("Plain ol diagnostic: " + d.ToString()); }
-            foreach (Diagnostic d in context.Compilation.GetDeclarationDiagnostics()) { Logger.Log("Declaration diagnostic: " + d.ToString()); }
-            */
 
             try
             {
@@ -220,14 +235,7 @@ namespace Generator
 
                 foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
                 {
-                    var model = context.Compilation.GetSemanticModel(tree);
-                    /*
-                    foreach (Diagnostic d in model.GetSyntaxDiagnostics()) { Logger.Log("[later] MethodBody diagnostic: " + d.ToString()); }
-                    foreach (Diagnostic d in model.GetMethodBodyDiagnostics()) { Logger.Log("[later] MethodBody diagnostic: " + d.ToString()); }
-                    foreach (Diagnostic d in model.GetDiagnostics()) { Logger.Log("[later] Plain ol diagnostic: " + d.ToString()); }
-                    foreach (Diagnostic d in model.GetDeclarationDiagnostics()) { Logger.Log("[later] Declaration diagnostic: " + d.ToString()); }
-                    */
-                    writer.Model = model;
+                    writer.Model = context.Compilation.GetSemanticModel(tree);
                     writer.Visit(tree.GetRoot());
                 }
                 writer.FinalizeGeneration();
