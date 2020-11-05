@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.ComponentModel.Design;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -11,7 +11,6 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
-using System.Xml;
 
 namespace Generator
 {
@@ -150,6 +149,15 @@ namespace Generator
                 true, 
                 "Longer description about not implementing async interfaces.");
 
+        /* TODO, similar to above */
+        private static DiagnosticDescriptor ClassConstructorRule = new DiagnosticDescriptor("WME1099",
+            "WinRT doesn't support a class having multiple constructors with the same arity",
+            "WinRT doesn't support a class having multiple constructors with the same arity",
+            "Usage",
+            DiagnosticSeverity.Warning,
+            true,
+            "longer description...");
+
         static private string[] ProhibitedAsyncInterfaces = {
                 "Windows.Foundation.IAsyncAction", 
                 "Windows.Foundation.IAsyncActionWithProgress`1",
@@ -172,17 +180,42 @@ namespace Generator
             foreach (string prohibitedInterface in ProhibitedAsyncInterfaces)
             {
                 INamedTypeSymbol asyncInterface = context.Compilation.GetTypeByMetadataName(prohibitedInterface);
-                foreach (var interfaceImplemented in classSymbol.AllInterfaces)
+                foreach (INamedTypeSymbol interfaceImplemented in classSymbol.AllInterfaces)
                 {
                     if (SameAsyncInterface(interfaceImplemented, asyncInterface))
                     { 
                         context.ReportDiagnostic(Diagnostic.Create(AsyncRule, classDeclaration.GetLocation()));
                         return true; 
                         /* by exiting early, we only report diagnostic for first prohibited interface we see. 
-                         If a class implemented 2 (or more) such interfaces, then we would only report diagnostic error for the first one. 
-                        could thread `found` variable from CatchWinRTDiagnostics here as well, if we want more diagnostics reported 
-                        */
+                        If a class implemented 2 (or more) such interfaces, then we would only report diagnostic error for the first one. 
+                        could thread `found` variable from CatchWinRTDiagnostics here as well, if we want more diagnostics reported */
                     }
+                }
+            }
+            return false;
+        }
+
+        /* HasMultipleConstructorsOfSameArity keeps track of the arity of all constructors seen, 
+         * and reports the diagnostic (and exits) as soon as a duplicate is seen. */
+        private bool HasMultipleConstructorsOfSameArity(GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
+        {
+            IEnumerable<ConstructorDeclarationSyntax> constructors = classDeclaration.ChildNodes().OfType<ConstructorDeclarationSyntax>();
+            
+            /* more performant data structure? or use a Set, in order to not have to call Contains()? */
+            IList<int> aritiesSeenSoFar = new List<int>();
+
+            foreach (ConstructorDeclarationSyntax constructor in constructors)
+            {
+                int arity = constructor.ParameterList.Parameters.Count;
+
+                if (aritiesSeenSoFar.Contains(arity))
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(ClassConstructorRule, constructor.GetLocation()));
+                    return true;
+                }
+                else
+                {
+                    aritiesSeenSoFar.Add(arity);
                 }
             }
             return false;
@@ -190,7 +223,7 @@ namespace Generator
 
         private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
         {
-            bool found = false; // used by caller to exit early, i.e. don't generate a .winmd
+            bool found = false; 
             
             foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
             {
@@ -199,6 +232,10 @@ namespace Generator
 
                 foreach (ClassDeclarationSyntax classDeclaration in classes)
                 {
+                    /* look for multiple constructors of the same arity */
+                    found |= HasMultipleConstructorsOfSameArity(context, classDeclaration);
+                    
+                    /* look for async interfaces */
                     var classSymbol = model.GetDeclaredSymbol(classDeclaration);
                     found |= ClassImplementsAsyncInterface(context, classSymbol, classDeclaration);
                 }
@@ -217,7 +254,7 @@ namespace Generator
 
             if (CatchWinRTDiagnostics(context))
             {
-                Logger.Log("Exiting early -- errors in authored runtime component found.");
+                Logger.Log("Exiting early -- found errors in authored runtime component.");
                 Logger.Close();
                 return;
             }
