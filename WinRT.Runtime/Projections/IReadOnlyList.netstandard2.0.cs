@@ -14,6 +14,7 @@ using System.Diagnostics;
 
 namespace Windows.Foundation.Collections
 {
+    [global::WinRT.WindowsRuntimeType]
     [Guid("BBE1FA4C-B0E3-4583-BAEF-1F1B2E483E56")]
     interface IVectorView<T> : IIterable<T>
     {
@@ -115,8 +116,7 @@ namespace ABI.System.Collections.Generic
 
             internal ToAbiHelper(global::System.Collections.Generic.IReadOnlyList<T> list) => _list = list;
 
-            global::Windows.Foundation.Collections.IIterator<T> global::Windows.Foundation.Collections.IIterable<T>.First() =>
-                new IEnumerator<T>.ToAbiHelper(_list.GetEnumerator());
+            global::System.Collections.Generic.IEnumerator<T> global::Windows.Foundation.Collections.IIterable<T>.First() => _list.GetEnumerator();
 
             private static void EnsureIndexInt32(uint index, int limit = int.MaxValue)
             {

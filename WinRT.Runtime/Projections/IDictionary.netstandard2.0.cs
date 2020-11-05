@@ -14,12 +14,13 @@ using System.Diagnostics;
 
 namespace Windows.Foundation.Collections
 {
+    [global::WinRT.WindowsRuntimeType]
     [Guid("3C2925FE-8519-45C1-AA79-197B6718C1C1")]
     interface IMap<K, V> : IIterable<IKeyValuePair<K, V>>
     {
         V Lookup(K key);
         bool HasKey(K key);
-        IMapView<K, V> GetView();
+        IReadOnlyDictionary<K, V> GetView();
         bool Insert(K key, V value);
         void _Remove(K key);
         void Clear();
@@ -444,9 +445,8 @@ namespace ABI.System.Collections.Generic
 
             public ToAbiHelper(global::System.Collections.Generic.IDictionary<K, V> dictionary) => _dictionary = dictionary;
 
-            global::Windows.Foundation.Collections.IIterator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> global::Windows.Foundation.Collections.IIterable<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.First() =>
-                new IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.ToAbiHelper(
-                    new KeyValuePair<K,V>.Enumerator(_dictionary.GetEnumerator()));
+            global::System.Collections.Generic.IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> global::Windows.Foundation.Collections.IIterable<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.First() =>
+                 new KeyValuePair<K,V>.Enumerator(_dictionary.GetEnumerator());
 
             public V Lookup(K key)
             {
@@ -468,13 +468,13 @@ namespace ABI.System.Collections.Generic
 
             public bool HasKey(K key) => _dictionary.ContainsKey(key);
 
-            global::Windows.Foundation.Collections.IMapView<K, V> global::Windows.Foundation.Collections.IMap<K, V>.GetView()
+            global::System.Collections.Generic.IReadOnlyDictionary<K, V> global::Windows.Foundation.Collections.IMap<K, V>.GetView()
             {
                 if (!(_dictionary is global::System.Collections.Generic.IReadOnlyDictionary<K, V> roDictionary))
                 {
                     roDictionary = new ReadOnlyDictionary<K, V>(_dictionary);
                 }
-                return new IReadOnlyDictionary<K, V>.ToAbiHelper(roDictionary);
+                return roDictionary;
             }
 
             public bool Insert(K key, V value)
@@ -606,14 +606,14 @@ namespace ABI.System.Collections.Generic
             }
             private static unsafe int Do_Abi_GetView_3(IntPtr thisPtr, out IntPtr __return_value__)
             {
-                global::Windows.Foundation.Collections.IMapView<K, V> ____return_value__ = default;
+                global::System.Collections.Generic.IReadOnlyDictionary<K, V> ____return_value__ = default;
 
                 __return_value__ = default;
 
                 try
                 {
                     ____return_value__ = FindAdapter(thisPtr).GetView();
-                    __return_value__ = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromManaged(____return_value__);
+                    __return_value__ = MarshalInterface<global::System.Collections.Generic.IReadOnlyDictionary<K, V>>.FromManaged(____return_value__);
 
                 }
                 catch (Exception __exception__)

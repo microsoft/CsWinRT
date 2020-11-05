@@ -15,11 +15,14 @@ using Microsoft.UI.Xaml.Interop;
 
 namespace Windows.Foundation.Collections
 {
+    [global::WinRT.WindowsRuntimeType]
     [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
     internal interface IIterable<T>
     {
-        IIterator<T> First();
+        IEnumerator<T> First();
     }
+
+    [global::WinRT.WindowsRuntimeType]
     [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
     internal interface IIterator<T>
     {
@@ -93,8 +96,7 @@ namespace ABI.System.Collections.Generic
 
             internal ToAbiHelper(IEnumerable<T> enumerable) => m_enumerable = enumerable;
 
-            public global::Windows.Foundation.Collections.IIterator<T> First() =>
-                new IEnumerator<T>.ToAbiHelper(m_enumerable.GetEnumerator());
+            public global::System.Collections.Generic.IEnumerator<T> First() => m_enumerable.GetEnumerator();
         }
 
         [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
@@ -162,7 +164,7 @@ namespace ABI.System.Collections.Generic
                 () => new FromAbiHelper((global::System.Collections.Generic.IEnumerable<T>)_this));
         }
 
-        unsafe global::Windows.Foundation.Collections.IIterator<T> global::Windows.Foundation.Collections.IIterable<T>.First()
+        unsafe global::System.Collections.Generic.IEnumerator<T> global::Windows.Foundation.Collections.IIterable<T>.First()
         {
             IntPtr __retval = default;
             try
@@ -170,14 +172,14 @@ namespace ABI.System.Collections.Generic
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle));
                 var ThisPtr = _obj.ThisPtr;
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(ThisPtr, out __retval));
-                return ABI.System.Collections.Generic.IEnumerator<T>.FromAbiInternal(__retval);
+                return ABI.System.Collections.Generic.IEnumerator<T>.FromAbi(__retval);
             }
             finally
             {
                 ABI.System.Collections.Generic.IEnumerator<T>.DisposeAbi(__retval);
             }
         }
-
+        //System.Collections.Generic.IEnumerable`1.GetEnumerator()
         global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator() => _FromIterable((IWinRTObject)this).GetEnumerator();
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }

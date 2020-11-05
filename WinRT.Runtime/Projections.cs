@@ -70,6 +70,8 @@ namespace WinRT
             CustomTypeToHelperTypeMappings.Add(typeof(IMapView<,>), typeof(ABI.System.Collections.Generic.IReadOnlyDictionary<,>));
             CustomTypeToHelperTypeMappings.Add(typeof(IVectorView<>), typeof(ABI.System.Collections.Generic.IReadOnlyList<>));
             CustomTypeToHelperTypeMappings.Add(typeof(global::Microsoft.UI.Xaml.Interop.IBindableVector), typeof(ABI.System.Collections.IList));
+            CustomTypeToHelperTypeMappings.Add(typeof(IIterable<>), typeof(global::ABI.System.Collections.Generic.IEnumerable<>));
+            CustomTypeToHelperTypeMappings.Add(typeof(IIterator<>), typeof(global::ABI.System.Collections.Generic.IEnumerator<>));
 
             CustomTypeToAbiTypeNameMappings.Add(typeof(System.Type), "Windows.UI.Xaml.Interop.TypeName");
         }

@@ -14,6 +14,7 @@ using System.Diagnostics;
 
 namespace Windows.Foundation.Collections
 {
+    [global::WinRT.WindowsRuntimeType]
     [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
     interface IMapView<K, V> : IIterable<IKeyValuePair<K, V>>
     {
@@ -270,9 +271,8 @@ namespace ABI.System.Collections.Generic
 
             uint global::Windows.Foundation.Collections.IMapView<K, V>.Size { get => (uint)_dictionary.Count; }
 
-            global::Windows.Foundation.Collections.IIterator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> global::Windows.Foundation.Collections.IIterable<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.First() =>
-                new IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.ToAbiHelper(
-                    new KeyValuePair<K, V>.Enumerator(_dictionary.GetEnumerator()));
+            global::System.Collections.Generic.IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> global::Windows.Foundation.Collections.IIterable<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.First() =>
+                new KeyValuePair<K, V>.Enumerator(_dictionary.GetEnumerator());
 
             public V Lookup(K key)
             {
@@ -308,7 +308,7 @@ namespace ABI.System.Collections.Generic
                 splittableMap.Split(out first, out second);
             }
 
-            private sealed class ConstantSplittableMap : global::Windows.Foundation.Collections.IMapView<K, V>
+            private sealed class ConstantSplittableMap : global::Windows.Foundation.Collections.IMapView<K, V>, global::System.Collections.Generic.IReadOnlyDictionary<K, V>
             {
                 private class KeyValuePairComparator : IComparer<global::System.Collections.Generic.KeyValuePair<K, V>>
                 {
@@ -356,9 +356,15 @@ namespace ABI.System.Collections.Generic
                     return kvArray;
                 }
 
+                public uint Size => (uint)(lastItemIndex - firstItemIndex + 1);
+
+                public global::System.Collections.Generic.IEnumerable<K> Keys => throw new NotImplementedException();
+
+                public global::System.Collections.Generic.IEnumerable<V> Values => throw new NotImplementedException();
+
                 public int Count => lastItemIndex - firstItemIndex + 1;
 
-                public uint Size => (uint)(lastItemIndex - firstItemIndex + 1);
+                public V this[K key] => Lookup(key);
 
                 public V Lookup(K key)
                 {
@@ -378,11 +384,7 @@ namespace ABI.System.Collections.Generic
                 public bool HasKey(K key) =>
                     TryGetValue(key, out _);
 
-                public global::Windows.Foundation.Collections.IIterator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> First() =>
-                    new IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.ToAbiHelper(GetEnumerator());
-
-                private global::System.Collections.Generic.IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> GetEnumerator() =>
-                    new Enumerator(items, firstItemIndex, lastItemIndex);
+                public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> First() => GetEnumerator();
 
                 public void Split(out global::Windows.Foundation.Collections.IMapView<K, V> firstPartition, out global::Windows.Foundation.Collections.IMapView<K, V> secondPartition)
                 {
@@ -413,16 +415,41 @@ namespace ABI.System.Collections.Generic
                     value = items[index].Value;
                     return true;
                 }
+
+                public bool ContainsKey(K key)
+                {
+                    return HasKey(key);
+                }
+
+                global::System.Collections.Generic.IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> global::Windows.Foundation.Collections.IIterable<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.First()
+                {
+                    var itemsAsIKeyValuePairs = new global::Windows.Foundation.Collections.IKeyValuePair<K, V>[items.Length];
+                    for (var i = 0; i < items.Length; i++)
+                    {
+                        itemsAsIKeyValuePairs[i] = new KeyValuePair<K, V>.ToIKeyValuePair(ref items[i]);
+                    }
+                    return new Enumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>(itemsAsIKeyValuePairs, firstItemIndex, lastItemIndex);
+                }
+
+                public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator()
+                {
+                    return new Enumerator<global::System.Collections.Generic.KeyValuePair<K, V>>(items, firstItemIndex, lastItemIndex);
+                }
+
+                IEnumerator global::System.Collections.IEnumerable.GetEnumerator()
+                {
+                    return new Enumerator<global::System.Collections.Generic.KeyValuePair<K, V>>(items, firstItemIndex, lastItemIndex);
+                }
             }
 
-            internal struct Enumerator : global::System.Collections.Generic.IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>
+            internal struct Enumerator<T> : global::System.Collections.Generic.IEnumerator<T>
             {
-                private readonly global::System.Collections.Generic.KeyValuePair<K, V>[] _array;
+                private readonly T[] _array;
                 private readonly int _start;
                 private readonly int _end;
                 private int _current;
 
-                internal Enumerator(global::System.Collections.Generic.KeyValuePair<K, V>[] items, int first, int end)
+                internal Enumerator(T[] items, int first, int end)
                 {
                     _array = items;
                     _start = first;
@@ -440,13 +467,13 @@ namespace ABI.System.Collections.Generic
                     return false;
                 }
 
-                public global::Windows.Foundation.Collections.IKeyValuePair<K, V> Current
+                public T Current
                 {
                     get
                     {
                         if (_current < _start) throw new InvalidOperationException(ErrorStrings.InvalidOperation_EnumNotStarted);
                         if (_current > _end) throw new InvalidOperationException(ErrorStrings.InvalidOperation_EnumEnded);
-                        return new KeyValuePair<K, V>.ToIKeyValuePair(ref _array[_current]);
+                        return _array[_current];
                     }
                 }
 
