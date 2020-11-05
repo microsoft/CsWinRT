@@ -10,10 +10,12 @@ Generally, the RCW/CCW functions in Marshal should be avoided, as they are incom
 |-|-|-|
 | [IUnknown](#IUnknown) | GetIUnknownForObject | ((IWinRTObject)obj).NativeObject |
 | [Ref Counting](#Ref-Counting) | AddRef, Release, FinalReleaseComObject, ReleaseComObject | ObjectReference.Attach, ObjectReference.FromAbi |
-| [Casting](#Casting) | QueryInterface | IObjectReference.As<> |
-| [COM Interop](#COM-Interop) | (TInterop)obj | obj.As<TInterop>, T.As<TInterop> |
+| [Casting](#Casting) | QueryInterface | IObjectReference.As\*\<T> |
+| [COM Interop](#COM-Interop) | (TInterop)obj | obj.As\<TInterop>, T.As\<TInterop> |
 | [Create RCW](#Create-RCW) | GetObjectForIUnknown, GetTypedObjectForIUnknown | FromAbi |
 | [Create CCW](#Create-CCW) | GetComInterfaceForObject | FromManaged |
+| [COM Data](#COM-Data) | GetComObjectData, SetComObjectData, IsComObject | IWinRTObject |
+
 
 ## IUnknown
 The Marshal method for accessing the underlying native COM IntPtr of a projected type:
@@ -133,19 +135,36 @@ IntPtr ptr = MarshalInspectable<T>.FromManaged(obj);
 IntPtr ptr = MarshalGeneric<T>.FromManaged(obj);
 ```
 
+## COM Data
+Use of the Marshal additional data functions:
+```csharp
+var obj = Marshal.GetComObjectData(obj, key);
+Marshal.SetComObjectData(obj, key, data);
+```
+can be replaced with the dictionary property:
+```csharp
+((IWinRTObject)obj).AdditionalTypeData
+```
+
+The COM object classification function:
+```csharp
+Marshal.IsComObject(obj)
+```
+can be replaced with the expression:
+```csharp
+obj is IWinRTObject
+```
+
 ## Unsupported
 The following Marshal CCW/RCW-related functions are not supported in C#/WinRT:
 ```csharp
-AreComObjectsAvailableForCleanup,
+AreComObjectsAvailableForCleanup
 ChangeWrapperHandleStrength
 CleanupUnusedObjectsInCurrentContext
 CreateAggregatedObject
 CreateWrapperOfType
-GetComObjectData
-SetComObjectData
 GetEndComSlot
 GetIDispatchForObject
 GetStartComSlot
 GetUniqueObjectForIUnknown
-IsComObject
 ```
