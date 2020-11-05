@@ -139,8 +139,6 @@ namespace Generator
 
         private static string diagnosticsLink = "https://docs.microsoft.com/en-us/previous-versions/hh977010(v=vs.110)";
 
-        /* TODO: update the format message to know which interface was implemented. 
-         * should take in the interface name and the class name that is implementing the interface */
         private static DiagnosticDescriptor AsyncRule = MakeRule(
             "WME1084",
             "Async Interfaces Rule",
@@ -191,9 +189,9 @@ namespace Generator
                 {
                     if (SameAsyncInterface(interfaceImplemented, asyncInterface))
                     { 
-                        context.ReportDiagnostic(Diagnostic.Create(AsyncRule, classDeclaration.GetLocation())); // believe this is where the arguments to the Rule's format message get passed...
+                        context.ReportDiagnostic(Diagnostic.Create(AsyncRule, classDeclaration.GetLocation(), classDeclaration.Identifier, interfaceImplemented));
                         return true; 
-                        /* by exiting early, we only report diagnostic for first prohibited interface we see. 
+                        /* By exiting early, we only report diagnostic for first prohibited interface we see. 
                         If a class implemented 2 (or more) such interfaces, then we would only report diagnostic error for the first one. 
                         could thread `found` variable from CatchWinRTDiagnostics here as well, if we want more diagnostics reported */
                     }
@@ -217,7 +215,7 @@ namespace Generator
 
                 if (aritiesSeenSoFar.Contains(arity))
                 {
-                    context.ReportDiagnostic(Diagnostic.Create(ClassConstructorRule, constructor.GetLocation()));
+                    context.ReportDiagnostic(Diagnostic.Create(ClassConstructorRule, constructor.GetLocation(), classDeclaration.Identifier, arity));
                     return true;
                 }
                 else

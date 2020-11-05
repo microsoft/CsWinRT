@@ -25,7 +25,7 @@ namespace TestDiagnostics
         // as long as they have different arities by making one take none or 2 arguments 
     }
 
-    /* Would be nice to not have to comment out scenarios... perhaps a file for each case to test?
+    /* Would be nice to not have to comment out scenarios... perhaps a file for each case to test? */
     public sealed class AsyAction : IAsyncAction, IAsyncActionWithProgress<int>
     {
         public AsyncActionCompletedHandler Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -75,7 +75,7 @@ namespace TestDiagnostics
             throw new NotImplementedException();
         }
     }
-
+    
     public class ActionWithProgress : IAsyncActionWithProgress<int>
     {
         AsyncActionProgressHandler<int> IAsyncActionWithProgress<int>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -103,6 +103,7 @@ namespace TestDiagnostics
         }
     }
 
+    /*
     public sealed class OpWithProgress : IAsyncOperationWithProgress<int, bool>
     {
         AsyncOperationProgressHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
