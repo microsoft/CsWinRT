@@ -149,6 +149,13 @@ namespace Generator
             "Class Constructor Rule",
             "Runtime component class {0} cannot have multiple constructors of the same arity {1}");
 
+        private static DiagnosticDescriptor ParameterNamedValueRule = MakeRule(
+            "WME1092",
+            "Parameter Named Value Rule",
+            ("The method {0} has a parameter named {1} which is the same as the default return value name. " 
+            + "Consider using another name for the parameter or use the System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute " 
+            + "to explicitly specify the name of the return value."));
+
         private static DiagnosticDescriptor MakeRule(string id, string title, string messageFormat) 
         {
             return new DiagnosticDescriptor(
@@ -180,7 +187,7 @@ namespace Generator
 
         /* ClassImplementsAsyncInterface returns true if the class represented by the symbol
            implements any of the interfaces defined in ProhibitedAsyncInterfaces */
-        private bool ClassImplementsAsyncInterface(GeneratorExecutionContext context, INamedTypeSymbol classSymbol, ClassDeclarationSyntax classDeclaration)
+        private bool ImplementsAsyncInterface(GeneratorExecutionContext context, INamedTypeSymbol classSymbol, ClassDeclarationSyntax classDeclaration)
         { 
             foreach (string prohibitedInterface in ProhibitedAsyncInterfaces)
             {
@@ -226,6 +233,25 @@ namespace Generator
             return false;
         }
 
+        /* HasParameterNamedValue */
+        private bool HasParameterNamedValue(GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
+        {
+            IEnumerable<MethodDeclarationSyntax> methods = classDeclaration.ChildNodes().OfType<MethodDeclarationSyntax>();
+
+            foreach (MethodDeclarationSyntax method in methods)
+            {
+                foreach (ParameterSyntax parameter in method.ParameterList.Parameters)
+                {
+                    if (parameter.Identifier.Value.Equals("value"))
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(ParameterNamedValueRule, parameter.GetLocation(), method.Identifier, parameter.Identifier));
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
         {
             bool found = false; 
@@ -235,14 +261,20 @@ namespace Generator
                 var model = context.Compilation.GetSemanticModel(tree);
                 var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>();
 
+                /* look for... */
                 foreach (ClassDeclarationSyntax classDeclaration in classes)
-                {
-                    /* look for multiple constructors of the same arity */
+                {                       
+                    /* parameters named value*/
+                    /* TODO: make sure property accessors do not have a parameter named returnValue*/
+                    found |= HasParameterNamedValue(context, classDeclaration);
+
+
+                    /* multiple constructors of the same arity */
                     found |= HasMultipleConstructorsOfSameArity(context, classDeclaration);
                     
-                    /* look for async interfaces */
+                    /* implementing async interfaces */
                     var classSymbol = model.GetDeclaredSymbol(classDeclaration);
-                    found |= ClassImplementsAsyncInterface(context, classSymbol, classDeclaration);
+                    found |= ImplementsAsyncInterface(context, classSymbol, classDeclaration);
                 }
             }
             return found;

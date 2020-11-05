@@ -4,6 +4,39 @@ using Windows.Web.Syndication;
 
 namespace TestDiagnostics
 {
+
+    /* structures...
+     * can only contain fields
+     * all fields must be public
+     * fields cannot be used elsewhere 
+     * valid fields are enumerations, structures, primitive types
+     *   UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum, or itself 
+     */
+
+    public struct UsefulName
+    {
+        const int ci = 5;
+    }
+
+    /* need clarification on the `returnValue` name for property accessors */
+    public sealed class ParameterNamedValue 
+    {
+        public int Identity(int value)
+        {
+            return value;
+        }
+
+        public int specialNumber
+        {
+            get
+            {
+                int returnValue = 38;
+                return returnValue;
+            }
+        }
+    }
+
+    /*
     public sealed class SameArityConstructors
     {
         private int num;
@@ -24,8 +57,9 @@ namespace TestDiagnostics
         // Can test that multiple constructors are allowed (has been verified already, too)
         // as long as they have different arities by making one take none or 2 arguments 
     }
+    */
 
-    /* Would be nice to not have to comment out scenarios... perhaps a file for each case to test? */
+    /* Would be nice to not have to comment out scenarios... perhaps a file for each case to test? 
     public sealed class AsyAction : IAsyncAction, IAsyncActionWithProgress<int>
     {
         public AsyncActionCompletedHandler Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -102,6 +136,7 @@ namespace TestDiagnostics
             throw new NotImplementedException();
         }
     }
+    */
 
     /*
     public sealed class OpWithProgress : IAsyncOperationWithProgress<int, bool>
