@@ -137,26 +137,33 @@ namespace Generator
             peBlob.WriteContentTo(fs);
         }
 
-        /* TODO: update the message to know which interface was implemented. 
-         * update format string and passing arguments when raising this rule */
-        private static DiagnosticDescriptor AsyncRule = new DiagnosticDescriptor("WME1084",
-                "WinRT doesn't support implementing Async interfaces",
-                "Runtime components can't implement Async interfaces, use AsyncInfo class methods instead (see: WME Error 1084)",
-                "Usage",
-                /* Warnings dont fail command line build; winmd generation is prevented regardless of severity.
-                   Make this error when making final touches on this deliverable. */
-                DiagnosticSeverity.Warning, 
-                true, 
-                "Longer description about not implementing async interfaces.");
+        private static string diagnosticsLink = "https://docs.microsoft.com/en-us/previous-versions/hh977010(v=vs.110)";
 
-        /* TODO, similar to above */
-        private static DiagnosticDescriptor ClassConstructorRule = new DiagnosticDescriptor("WME1099",
-            "WinRT doesn't support a class having multiple constructors with the same arity",
-            "WinRT doesn't support a class having multiple constructors with the same arity",
-            "Usage",
-            DiagnosticSeverity.Warning,
-            true,
-            "longer description...");
+        /* TODO: update the format message to know which interface was implemented. 
+         * should take in the interface name and the class name that is implementing the interface */
+        private static DiagnosticDescriptor AsyncRule = MakeRule(
+            "WME1084",
+            "Async Interfaces Rule",
+            "Runtime component class {0} cannot implement async interface {1}; use AsyncInfo class methods instead of async interfaces");
+
+        private static DiagnosticDescriptor ClassConstructorRule = MakeRule(
+            "WME1099",
+            "Class Constructor Rule",
+            "Runtime component class {0} cannot have multiple constructors of the same arity {1}");
+
+        private static DiagnosticDescriptor MakeRule(string id, string title, string messageFormat) 
+        {
+            return new DiagnosticDescriptor(
+                id: id,
+                title: title,
+                messageFormat: messageFormat,
+                category: "Usage",
+                /* Warnings dont fail command line build; winmd generation is prevented regardless of severity.
+                 * Make this error when making final touches on this deliverable. */
+                defaultSeverity: DiagnosticSeverity.Warning,
+                isEnabledByDefault: true,
+                helpLinkUri: diagnosticsLink);
+        }
 
         static private string[] ProhibitedAsyncInterfaces = {
                 "Windows.Foundation.IAsyncAction", 
@@ -184,7 +191,7 @@ namespace Generator
                 {
                     if (SameAsyncInterface(interfaceImplemented, asyncInterface))
                     { 
-                        context.ReportDiagnostic(Diagnostic.Create(AsyncRule, classDeclaration.GetLocation()));
+                        context.ReportDiagnostic(Diagnostic.Create(AsyncRule, classDeclaration.GetLocation())); // believe this is where the arguments to the Rule's format message get passed...
                         return true; 
                         /* by exiting early, we only report diagnostic for first prohibited interface we see. 
                         If a class implemented 2 (or more) such interfaces, then we would only report diagnostic error for the first one. 
