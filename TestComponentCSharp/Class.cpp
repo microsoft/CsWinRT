@@ -442,6 +442,10 @@ namespace winrt::TestComponentCSharp::implementation
     }
     void Class::ObjectProperty(WF::IInspectable const& value)
     {
+        if (auto uri = value.try_as<Windows::Foundation::Uri>())
+        {
+            _uri = uri;
+        }
         _object = value;
     }
     void Class::RaiseObjectChanged()

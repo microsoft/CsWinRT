@@ -932,6 +932,10 @@ namespace WinRT
                 return null;
             }
 
+            if (o is Uri uri)
+            {
+                return ABI.System.Uri.CreateMarshaler(uri);
+            }
             if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
             {
                 return objRef.As<IInspectable.Vftbl>();
