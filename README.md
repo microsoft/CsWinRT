@@ -34,7 +34,7 @@ However, C#/WinRT is a general effort and is intended to support other scenarios
 
 ## Installing and running C#/WinRT
 
-Download the C#/WinRT NuGet package here: <http://aka.ms/cswinrt/nuget>
+Download the C#/WinRT NuGet package here: https://www.nuget.org/packages/Microsoft.Windows.CsWinRT/
 
 C#/WinRT currently requires the following packages, or newer, to build:
 
