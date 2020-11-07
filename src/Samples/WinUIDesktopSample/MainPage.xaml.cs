@@ -9,6 +9,11 @@ using Microsoft.UI.Xaml.Input;
 
 namespace WinUIDesktopSample
 {
+    public class LeakedObject : Page
+    {
+        byte[] bytes = new byte[10_000_000];
+    };
+
     /// <summary>
     /// Interaction logic for MainPage.xaml
     /// </summary>
@@ -17,11 +22,26 @@ namespace WinUIDesktopSample
         public MainPage()
         {
             InitializeComponent();
-            this.AddHandler(UIElement.TappedEvent, new TappedEventHandler(Foo_PointerTapped), true /*handledEventsToo*/);
+            var val = Environment.GetEnvironmentVariable("CsWinRTNet5SdkVersion");
         }
 
-        private void Foo_PointerTapped(object sender, TappedRoutedEventArgs e)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
+            static WeakReference MakeBaseWeakRef() => new WeakReference(new Page());
+
+            static WeakReference MakeDerivedWeakRef() => new WeakReference(new LeakedObject());
+
+            var baseRef = MakeBaseWeakRef();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            var baseLeaked = baseRef.IsAlive ? "base leaked" : "base collected";
+
+            var derivedRef = MakeDerivedWeakRef();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            var derivedLeaked = derivedRef.IsAlive ? "derived leaked" : "derived collected";
+
+            ((Button)sender).Content = baseLeaked + ", " + derivedLeaked;
         }
     }
 }
