@@ -53,10 +53,7 @@ The `build.cmd` script takes care of all related configuration steps and is the 
 
 ## What's New
 
-[CsWinRT v1.0](https://github.com/microsoft/CsWinRT/releases/tag/1.0.1.201020.1) is our latest public release, and is compatible with the .NET 5 RTM SDK. We may have preview releases to address specific bug fixes before v1.1. Details on the latest changes and versions can be found on the [release notes page](https://github.com/microsoft/CsWinRT/releases).
-
-**Breaking Changes**:
-C#/WinRT breaking changes for .NET 5 RC2 are listed [here](docs/breakingchanges-rc2.md).
+[CsWinRT v1.0](https://github.com/microsoft/CsWinRT/releases/tag/1.0.1.201020.1) is our latest public release, and is compatible with the .NET 5 RTM SDK. We may have preview releases to address specific bug fixes before v1.1. Details on breaking changes and known issues can be found on the [release notes page](https://github.com/microsoft/CsWinRT/releases).
 
 ## Developer Guidance
 
