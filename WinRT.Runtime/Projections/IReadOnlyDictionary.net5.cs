@@ -50,6 +50,112 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IReadOnlyDictionary<K, V>));
 
+        private sealed class ReadOnlyDictionaryKeyCollection : global::System.Collections.Generic.IEnumerable<K>
+        {
+            private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
+
+            public ReadOnlyDictionaryKeyCollection(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
+            {
+                if (dictionary == null)
+                    throw new ArgumentNullException(nameof(dictionary));
+
+                this.dictionary = dictionary;
+            }
+
+            public global::System.Collections.Generic.IEnumerator<K> GetEnumerator()
+            {
+                return new ReadOnlyDictionaryKeyEnumerator(dictionary);
+            }
+            IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+
+            private sealed class ReadOnlyDictionaryKeyEnumerator : global::System.Collections.Generic.IEnumerator<K>
+            {
+                private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
+                private global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> enumeration;
+
+                public ReadOnlyDictionaryKeyEnumerator(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
+                {
+                    if (dictionary == null)
+                        throw new ArgumentNullException(nameof(dictionary));
+
+                    this.dictionary = dictionary;
+                    enumeration = dictionary.GetEnumerator();
+                }
+
+                void IDisposable.Dispose()
+                {
+                    enumeration.Dispose();
+                }
+
+                public bool MoveNext()
+                {
+                    return enumeration.MoveNext();
+                }
+
+                object IEnumerator.Current => Current;
+
+                public K Current => enumeration.Current.Key;
+
+                public void Reset()
+                {
+                    enumeration = dictionary.GetEnumerator();
+                }
+            }
+        }
+
+        private sealed class ReadOnlyDictionaryValueCollection : global::System.Collections.Generic.IEnumerable<V>
+        {
+            private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
+
+            public ReadOnlyDictionaryValueCollection(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
+            {
+                if (dictionary == null)
+                    throw new ArgumentNullException(nameof(dictionary));
+
+                this.dictionary = dictionary;
+            }
+
+            public global::System.Collections.Generic.IEnumerator<V> GetEnumerator()
+            {
+                return new ReadOnlyDictionaryValueEnumerator(dictionary);
+            }
+            global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+
+            private sealed class ReadOnlyDictionaryValueEnumerator : global::System.Collections.Generic.IEnumerator<V>
+            {
+                private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
+                private global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> enumeration;
+
+                public ReadOnlyDictionaryValueEnumerator(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
+                {
+                    if (dictionary == null)
+                        throw new ArgumentNullException(nameof(dictionary));
+
+                    this.dictionary = dictionary;
+                    enumeration = dictionary.GetEnumerator();
+                }
+
+                void IDisposable.Dispose()
+                {
+                    enumeration.Dispose();
+                }
+
+                public bool MoveNext()
+                {
+                    return enumeration.MoveNext();
+                }
+
+                object IEnumerator.Current => Current;
+
+                public V Current => enumeration.Current.Value;
+
+                public void Reset()
+                {
+                    enumeration = dictionary.GetEnumerator();
+                }
+            }
+        }
+
         public class FromAbiHelper : global::System.Collections.Generic.IReadOnlyDictionary<K, V>
         {
             private readonly global::Windows.Foundation.Collections.IMapView<K, V> _mapView;
@@ -149,111 +255,6 @@ namespace ABI.System.Collections.Generic
 
             IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
-            private sealed class ReadOnlyDictionaryKeyCollection : global::System.Collections.Generic.IEnumerable<K>
-            {
-                private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
-
-                public ReadOnlyDictionaryKeyCollection(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
-                {
-                    if (dictionary == null)
-                        throw new ArgumentNullException(nameof(dictionary));
-
-                    this.dictionary = dictionary;
-                }
-
-                public global::System.Collections.Generic.IEnumerator<K> GetEnumerator()
-                {
-                    return new ReadOnlyDictionaryKeyEnumerator(dictionary);
-                }
-                IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-
-                private sealed class ReadOnlyDictionaryKeyEnumerator : global::System.Collections.Generic.IEnumerator<K>
-                {
-                    private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
-                    private global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> enumeration;
-
-                    public ReadOnlyDictionaryKeyEnumerator(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
-                    {
-                        if (dictionary == null)
-                            throw new ArgumentNullException(nameof(dictionary));
-
-                        this.dictionary = dictionary;
-                        enumeration = dictionary.GetEnumerator();
-                    }
-
-                    void IDisposable.Dispose()
-                    {
-                        enumeration.Dispose();
-                    }
-
-                    public bool MoveNext()
-                    {
-                        return enumeration.MoveNext();
-                    }
-
-                    object IEnumerator.Current => Current;
-
-                    public K Current => enumeration.Current.Key;
-
-                    public void Reset()
-                    {
-                        enumeration = dictionary.GetEnumerator();
-                    }
-                }
-            }
-
-            private sealed class ReadOnlyDictionaryValueCollection : global::System.Collections.Generic.IEnumerable<V>
-            {
-                private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
-
-                public ReadOnlyDictionaryValueCollection(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
-                {
-                    if (dictionary == null)
-                        throw new ArgumentNullException(nameof(dictionary));
-
-                    this.dictionary = dictionary;
-                }
-
-                public global::System.Collections.Generic.IEnumerator<V> GetEnumerator()
-                {
-                    return new ReadOnlyDictionaryValueEnumerator(dictionary);
-                }
-                global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-
-                private sealed class ReadOnlyDictionaryValueEnumerator : global::System.Collections.Generic.IEnumerator<V>
-                {
-                    private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary;
-                    private global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> enumeration;
-
-                    public ReadOnlyDictionaryValueEnumerator(global::System.Collections.Generic.IReadOnlyDictionary<K, V> dictionary)
-                    {
-                        if (dictionary == null)
-                            throw new ArgumentNullException(nameof(dictionary));
-
-                        this.dictionary = dictionary;
-                        enumeration = dictionary.GetEnumerator();
-                    }
-
-                    void IDisposable.Dispose()
-                    {
-                        enumeration.Dispose();
-                    }
-
-                    public bool MoveNext()
-                    {
-                        return enumeration.MoveNext();
-                    }
-
-                    object IEnumerator.Current => Current;
-
-                    public V Current => enumeration.Current.Value;
-
-                    public void Reset()
-                    {
-                        enumeration = dictionary.GetEnumerator();
-                    }
-                }
-            }
         }
 
         public class ToAbiHelper : global::Windows.Foundation.Collections.IMapView<K, V>
@@ -351,30 +352,14 @@ namespace ABI.System.Collections.Generic
 
                 public uint Size => (uint)(lastItemIndex - firstItemIndex + 1);
 
-                public global::System.Collections.Generic.IEnumerable<K> Keys  
+                public global::System.Collections.Generic.IEnumerable<K> Keys
                 {
-                    get
-                    {
-                        K[] keys = new K[items.Length];
-                        for (var i = 0; i < items.Length; i++)
-                        {
-                            keys[i] = items[i].Key;
-                        }
-                        return keys;
-                    }
+                    get => new ReadOnlyDictionaryKeyCollection(this);
                 }
 
                 public global::System.Collections.Generic.IEnumerable<V> Values
                 {
-                    get
-                    {
-                        V[] values = new V[items.Length];
-                        for (var i = 0; i < items.Length; i++)
-                        {
-                            values[i] = items[i].Value;
-                        }
-                        return values;
-                    }
+                    get => new ReadOnlyDictionaryValueCollection(this);
                 }
 
                 public int Count => lastItemIndex - firstItemIndex + 1;
