@@ -14,7 +14,7 @@ using System.Diagnostics;
 
 namespace Windows.Foundation.Collections
 {
-    [global::WinRT.WindowsRuntimeType]
+
     [Guid("913337E9-11A1-4345-A3A2-4E7F956E222D")]
     interface IVector<T> : IIterable<T>
     {

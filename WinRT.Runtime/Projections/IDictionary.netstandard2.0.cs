@@ -14,13 +14,12 @@ using System.Diagnostics;
 
 namespace Windows.Foundation.Collections
 {
-    [global::WinRT.WindowsRuntimeType]
     [Guid("3C2925FE-8519-45C1-AA79-197B6718C1C1")]
     interface IMap<K, V> : IIterable<IKeyValuePair<K, V>>
     {
         V Lookup(K key);
         bool HasKey(K key);
-        IReadOnlyDictionary<K, V> GetView();
+        IReadOnlyDictionary<K, V> GetView(); //TODO: Needs to be updated
         bool Insert(K key, V value);
         void _Remove(K key);
         void Clear();

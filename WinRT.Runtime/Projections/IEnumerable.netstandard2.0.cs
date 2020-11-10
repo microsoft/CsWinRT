@@ -15,14 +15,14 @@ using Microsoft.UI.Xaml.Interop;
 
 namespace Windows.Foundation.Collections
 {
-    [global::WinRT.WindowsRuntimeType]
+
     [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
     internal interface IIterable<T>
     {
         IEnumerator<T> First();
     }
 
-    [global::WinRT.WindowsRuntimeType]
+
     [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
     internal interface IIterator<T>
     {

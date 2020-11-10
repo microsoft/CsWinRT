@@ -14,13 +14,13 @@ using System.Diagnostics;
 
 namespace Windows.Foundation.Collections
 {
-    [global::WinRT.WindowsRuntimeType]
+    //Need to rethink how to name/define this interface
     [Guid("3C2925FE-8519-45C1-AA79-197B6718C1C1")]
     interface IMap<K, V> : IIterable<IKeyValuePair<K, V>>
     {
         V Lookup(K key);
         bool HasKey(K key);
-        IReadOnlyDictionary<K, V> GetView();
+        IReadOnlyDictionary<K, V> GetView(); 
         bool Insert(K key, V value);
         void _Remove(K key);
         void Clear();
@@ -33,6 +33,7 @@ namespace ABI.System.Collections.Generic
     using global::System;
     using global::System.Runtime.CompilerServices;
 
+    //This interface does not need to implement IMapView. Needs to be refactored
     [DynamicInterfaceCastableImplementation]
     [Guid("3C2925FE-8519-45C1-AA79-197B6718C1C1")]
     interface IDictionary<K, V> : global::System.Collections.Generic.IDictionary<K, V>, global::Windows.Foundation.Collections.IMap<K, V>

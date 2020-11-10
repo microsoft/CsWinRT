@@ -14,7 +14,6 @@ using System.Diagnostics;
 
 namespace Windows.Foundation.Collections
 {
-    [global::WinRT.WindowsRuntimeType]
     [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
     interface IMapView<K, V> : IIterable<IKeyValuePair<K, V>>
     {
