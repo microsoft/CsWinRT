@@ -1551,6 +1551,14 @@ namespace UnitTest
             Assert.Equal(pt.Y, TestObject.PointProperty.Y);
             Assert.True(TestObject.PointProperty == pt);
             Assert.Equal(pt, TestObject.GetPointReference().Value);
+
+            var vector2 = TestObject.PointProperty.ToVector2();
+            Assert.Equal(pt.X, vector2.X);
+            Assert.Equal(pt.Y, vector2.Y);
+
+            TestObject.PointProperty = vector2.ToPoint();
+            Assert.Equal(pt.X, TestObject.PointProperty.X);
+            Assert.Equal(pt.Y, TestObject.PointProperty.Y);
         }
 
         [Fact]
@@ -1573,6 +1581,14 @@ namespace UnitTest
             Assert.Equal(size.Height, TestObject.SizeProperty.Height);
             Assert.Equal(size.Width, TestObject.SizeProperty.Width);
             Assert.True(TestObject.SizeProperty == size);
+
+            var vector2 = TestObject.SizeProperty.ToVector2();
+            Assert.Equal(size.Width, vector2.X);
+            Assert.Equal(size.Height, vector2.Y);
+
+            TestObject.SizeProperty = vector2.ToSize();
+            Assert.Equal(size.Width, TestObject.SizeProperty.Width);
+            Assert.Equal(size.Height, TestObject.SizeProperty.Height);
         }
 
         [Fact]
