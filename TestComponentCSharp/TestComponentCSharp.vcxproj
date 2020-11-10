@@ -82,6 +82,7 @@
     </ClCompile>
     <ClCompile Include="NonAgileClass.cpp" />
     <ClCompile Include="ComImports.cpp" />
+    <ClCompile Include="ManualProjectionTestClasses.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />
