@@ -57,7 +57,7 @@ The `build.cmd` script takes care of all related configuration steps and is the 
 
 ## Developer Guidance
 
-Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For additional documentation visit <http://aka.ms/cswinrt>.
+Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For recommendations on migrating from System.Runtime.InteropServices, see the [COM Interop](docs/interop.md) guide. For additional documentation visit <http://aka.ms/cswinrt>.
 
 ## Related Projects
 
