@@ -19,7 +19,7 @@ namespace Windows.Foundation.Collections
     interface IVector<T> : IIterable<T>
     {
         T GetAt(uint index);
-        IReadOnlyList<T> GetView();
+        IReadOnlyList<T> GetView(); // Combining IVector & IReadOnlyList needs redesign
         bool IndexOf(T value, out uint index);
         void SetAt(uint index, T value);
         void InsertAt(uint index, T value);

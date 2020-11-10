@@ -20,7 +20,7 @@ namespace Windows.Foundation.Collections
     {
         V Lookup(K key);
         bool HasKey(K key);
-        IReadOnlyDictionary<K, V> GetView(); 
+        IReadOnlyDictionary<K, V> GetView(); // Combining IMap & IReadOnlyDictionary needs redesign
         bool Insert(K key, V value);
         void _Remove(K key);
         void Clear();

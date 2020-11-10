@@ -341,29 +341,16 @@ namespace TestComponentCSharp
         void Observe(Microsoft.UI.Xaml.Interop.IBindableObservableVector vector);
     }
 
-    //[default_interface]
-    //runtimeclass IBindableVectorTest : Microsoft.UI.Xaml.Interop.IBindableVector
-    //{
-    //    //IBindableVectorTest();
-    //}
-
     [default_interface]
-    runtimeclass IBindableIteratorTest : Microsoft.UI.Xaml.Interop.IBindableIterator
+    runtimeclass CustomBindableIteratorTest : Microsoft.UI.Xaml.Interop.IBindableIterator
     {
-        IBindableIteratorTest();
+        CustomBindableIteratorTest();
     }
 
     [default_interface]
-    runtimeclass IDictionaryTest : Windows.Foundation.Collections.IMap<String, String>
+    runtimeclass CustomDisposableTest : Windows.Foundation.IClosable
     {
-        IDictionaryTest();
-        static Boolean Consume(Windows.Foundation.Collections.IMap<String, String> map);
-    }
-
-    [default_interface]
-    runtimeclass IDisposableTest : Windows.Foundation.IClosable
-    {
-        IDisposableTest();
+        CustomDisposableTest();
     }
     
     // IInspectable-based interop interface
