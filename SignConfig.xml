@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?> 
-<SignConfigXML> 
-  <job platform="" configuration="" dest="__OUTPATHROOT__" jobname="CsWinRT Binaries" approvers=""> 
-    <file src="__INPATHROOT__\cswinrt.exe" signType="400" dest="__OUTPATHROOT__\cswinrt.exe" /> 
-    <file src="__INPATHROOT__\netstandard2.0\WinRT.Runtime.dll" signType="400" dest="__OUTPATHROOT__\netstandard2.0\WinRT.Runtime.dll" /> 
-    <file src="__INPATHROOT__\net5.0\WinRT.Runtime.dll" signType="400" dest="__OUTPATHROOT__\net5.0\WinRT.Runtime.dll" /> 
-  </job> 
-</SignConfigXML> 

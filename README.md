@@ -34,7 +34,7 @@ However, C#/WinRT is a general effort and is intended to support other scenarios
 
 ## Installing and running C#/WinRT
 
-Download the C#/WinRT NuGet package here: <http://aka.ms/cswinrt/nuget>
+Download the C#/WinRT NuGet package here: https://www.nuget.org/packages/Microsoft.Windows.CsWinRT/
 
 C#/WinRT currently requires the following packages, or newer, to build:
 
@@ -54,7 +54,7 @@ After a successful command-line build, the cswinrt.sln can be launched from the 
 
 ## Developer Guidance
 
-Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For additional documentation visit <http://aka.ms/cswinrt>.
+Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For recommendations on migrating from System.Runtime.InteropServices, see the [COM Interop](docs/interop.md) guide. For additional documentation visit <http://aka.ms/cswinrt>.
 
 **Breaking Changes:**
 
