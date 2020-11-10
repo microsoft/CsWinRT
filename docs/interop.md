@@ -55,10 +55,10 @@ objRef.AsInterface<T>();        // cast to user-defined (non-projected) ComImpor
 ```
 
 ## COM Interop
-The previous runtime support for casting to a [ComImport](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.comimportattribute?view=netcore-3.1)-attributed IUnknown interface:
+The previous runtime support for obtaining a [ComImport](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.comimportattribute?view=netcore-3.1)-attributed IUnknown interop interface:
 ```csharp
 TInterop interop = (TInterop)obj;
-TInterop interop = WindowsRuntimeMarshal.GetActivationFactory(T);
+TInterop interop = WindowsRuntimeMarshal.GetActivationFactory(typeof(T));
 ```
 can be replaced with casting method calls on the projected object or type:
 ```csharp
