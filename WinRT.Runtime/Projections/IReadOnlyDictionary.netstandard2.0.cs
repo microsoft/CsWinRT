@@ -357,9 +357,31 @@ namespace ABI.System.Collections.Generic
 
                 public uint Size => (uint)(lastItemIndex - firstItemIndex + 1);
 
-                public global::System.Collections.Generic.IEnumerable<K> Keys => throw new NotImplementedException();
+                public global::System.Collections.Generic.IEnumerable<K> Keys
+                {
+                    get
+                    {
+                        K[] keys = new K[items.Length];
+                        for (var i = 0; i < items.Length; i++)
+                        {
+                            keys[i] = items[i].Key;
+                        }
+                        return keys;
+                    }
+                }
 
-                public global::System.Collections.Generic.IEnumerable<V> Values => throw new NotImplementedException();
+                public global::System.Collections.Generic.IEnumerable<V> Values
+                {
+                    get
+                    {
+                        V[] values = new V[items.Length];
+                        for (var i = 0; i < items.Length; i++)
+                        {
+                            values[i] = items[i].Value;
+                        }
+                        return values;
+                    }
+                }
 
                 public int Count => lastItemIndex - firstItemIndex + 1;
 
