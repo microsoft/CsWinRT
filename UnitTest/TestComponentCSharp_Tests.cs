@@ -2178,5 +2178,21 @@ namespace UnitTest
             CryptographicKey cryptoKey = mac.CreateKey(keyMaterial);
             Assert.NotNull(cryptoKey);
         }
+
+        [Fact(Skip="Operation not supported")]
+        public void TestIBindableIterator()
+        {
+            CustomBindableIteratorTest bindableIterator = new CustomBindableIteratorTest();
+            Assert.True(bindableIterator.MoveNext());
+            Assert.True(bindableIterator.HasCurrent);
+            Assert.Equal(27861, bindableIterator.Current);
+        }
+
+        [Fact]
+        public void TestIDisposable()
+        {
+            CustomDisposableTest disposable = new CustomDisposableTest();
+            disposable.Dispose();
+        }
     }
 }
