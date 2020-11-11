@@ -624,6 +624,11 @@ namespace UnitTest
         [Fact]
         public void TestObjectCasting()
         {
+            object expected_uri = new Uri("http://aka.ms/cswinrt");
+            TestObject.ObjectProperty = expected_uri;
+            Assert.Equal(expected_uri, TestObject.UriProperty);
+            Assert.Equal(expected_uri, TestObject.ObjectProperty);
+
             var expected = new KeyValuePair<string, string>("key", "value");
             TestObject.ObjectProperty = expected;
             var out_pair = (KeyValuePair<string, string>)TestObject.ObjectProperty;
