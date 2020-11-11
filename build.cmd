@@ -64,6 +64,9 @@ if "%cswinrt_configuration%"=="" (
 if "%cswinrt_version_number%"=="" set cswinrt_version_number=0.0.0.0
 if "%cswinrt_version_string%"=="" set cswinrt_version_string=0.0.0-private.0
 
+if "%cswinrt_basline_breaking_compat_errors%"=="" set cswinrt_basline_breaking_compat_errors=false
+if "%cswinrt_basline_assembly_version_compat_errors%"=="" set cswinrt_basline_assembly_version_compat_errors=false
+
 rem Generate prerelease targets file to exercise build warnings
 set prerelease_targets=nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
 rem Create default %prerelease_targets%
@@ -113,7 +116,7 @@ call :exec .nuget\nuget.exe restore %nuget_params%
 :build
 call get_testwinrt.cmd
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;GenerateTestProjection=true cswinrt.sln 
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_basline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_basline_assembly_version_compat_errors% cswinrt.sln 
 if ErrorLevel 1 (
   echo.
   echo ERROR: Build failed
