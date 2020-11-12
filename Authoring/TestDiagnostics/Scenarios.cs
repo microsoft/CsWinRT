@@ -13,28 +13,30 @@ namespace TestDiagnostics
      *   UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum, or itself 
      */
 
-    public struct UsefulName
+    public struct ExampleStruct
     {
         const int ci = 5;
+        int x;
     }
 
-    /* need clarification on the `returnValue` name for property accessors */
-    public sealed class ParameterNamedValue 
+    public struct StructInAStruct
     {
-        public int Identity(int value)
+        ExampleStruct strct;
+        public int phi
         {
-            return value;
-        }
-
-        public int specialNumber
-        {
-            get
-            {
-                int returnValue = 38;
-                return returnValue;
-            }
+            get { return 5; }
         }
     }
+
+    /*
+    public sealed class ParameterNamedDunderRetVal
+    {
+        public int Identity(int __retval)
+        {
+            return __retval;
+        }
+    }
+    */
 
     /*
     public sealed class SameArityConstructors

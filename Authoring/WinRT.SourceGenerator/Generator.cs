@@ -111,7 +111,7 @@ namespace Generator
                 context.AddSource(Path.GetFileNameWithoutExtension(file), SourceText.From(File.ReadAllText(file), Encoding.UTF8));
             }
 
-            Directory.Delete(outputDir, true);
+            // Directory.Delete(outputDir, true);
         }
 
         private string GetWinmdOutputFile(GeneratorExecutionContext context)
@@ -234,7 +234,7 @@ namespace Generator
         }
 
         /* HasParameterNamedValue */
-        private bool HasParameterNamedValue(GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
+        private bool HasReturnValueNameConflict(GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
         {
             IEnumerable<MethodDeclarationSyntax> methods = classDeclaration.ChildNodes().OfType<MethodDeclarationSyntax>();
 
@@ -242,7 +242,7 @@ namespace Generator
             {
                 foreach (ParameterSyntax parameter in method.ParameterList.Parameters)
                 {
-                    if (parameter.Identifier.Value.Equals("value"))
+                    if (parameter.Identifier.Value.Equals("__retval"))
                     {
                         context.ReportDiagnostic(Diagnostic.Create(ParameterNamedValueRule, parameter.GetLocation(), method.Identifier, parameter.Identifier));
                         return true;
@@ -266,7 +266,7 @@ namespace Generator
                 {                       
                     /* parameters named value*/
                     /* TODO: make sure property accessors do not have a parameter named returnValue*/
-                    found |= HasParameterNamedValue(context, classDeclaration);
+                    found |= HasReturnValueNameConflict(context, classDeclaration);
 
 
                     /* multiple constructors of the same arity */
