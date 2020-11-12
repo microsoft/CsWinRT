@@ -589,3 +589,29 @@ namespace ABI.Windows.Foundation
         }
     }
 }
+
+namespace System.Numerics
+{
+    public static class VectorExtensions
+    {
+        public static global::Windows.Foundation.Point ToPoint(this Vector2 vector)
+        {
+            return new global::Windows.Foundation.Point(vector.X, vector.Y);
+        }
+
+        public static global::Windows.Foundation.Size ToSize(this Vector2 vector)
+        {
+            return new global::Windows.Foundation.Size(vector.X, vector.Y);
+        }
+
+        public static Vector2 ToVector2(this global::Windows.Foundation.Point point)
+        {
+            return new Vector2((float)point.X, (float)point.Y);
+        }
+
+        public static Vector2 ToVector2(this global::Windows.Foundation.Size size)
+        {
+            return new Vector2((float)size.Width, (float)size.Height);
+        }
+    }
+}
