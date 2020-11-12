@@ -14,7 +14,7 @@
   <PropertyGroup>
     <CsWinRTIncludes>SimpleMathComponent</CsWinRTIncludes>
     <CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
-	<CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
+    <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
   </PropertyGroup>
 
   <!--Properties for generating the NuGet package-->
@@ -24,5 +24,10 @@
     <OutputPath>$(GeneratedNugetDir)</OutputPath>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
+
+  <!--Specify Windows SDK Metadata-->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.19041.1" />
+  </ItemGroup>
 
 </Project>
