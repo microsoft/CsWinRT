@@ -26,11 +26,7 @@
     <file src="readme.txt"/>
     <file src="$net5_runtime$" target="lib\net5.0\"/>
     <file src="$source_generator$" target="analyzers\dotnet\cs\"/>
-    
-    <file src="_build\$platform$\$configuration$\WinRT.Host\bin\WinRt.Host.dll" target="lib"/>
-    <file src="_build\$platform$\$configuration$\WinRT.Host\bin\WinRt.Host.pdb" target="lib"/> 
-    <file src="\WinRT.Host.Shim\bin\$configuration$\WinRt.Host.Shim.dll" target="lib"/> 
-    <file src="\WinRT.Host.Shim\bin\$configuration$\WinRt.Host.Shim.pdb" target="lib"/> 
-    <!-- where are the arch specific shims ? -->
+    <file src="$winrt_host$" target ="lib"/>
+    <file src="$winrt_shim$" target ="lib"/>
   </files>
 </package>
