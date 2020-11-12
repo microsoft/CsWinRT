@@ -15,11 +15,14 @@ using Microsoft.UI.Xaml.Interop;
 
 namespace Windows.Foundation.Collections
 {
+
     [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
     internal interface IIterable<T>
     {
-        IIterator<T> First();
+        IEnumerator<T> First(); // Combining IIterable & IEnumerator needs redesign
     }
+
+
     [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
     internal interface IIterator<T>
     {
@@ -90,8 +93,7 @@ namespace ABI.System.Collections.Generic
 
             internal ToAbiHelper(IEnumerable<T> enumerable) => m_enumerable = enumerable;
 
-            public global::Windows.Foundation.Collections.IIterator<T> First() =>
-                new IEnumerator<T>.ToAbiHelper(m_enumerable.GetEnumerator());
+            public global::System.Collections.Generic.IEnumerator<T> First() => m_enumerable.GetEnumerator();
         }
 
         [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
@@ -169,13 +171,13 @@ namespace ABI.System.Collections.Generic
         }
         FromAbiHelper _FromIterable;
 
-        unsafe global::Windows.Foundation.Collections.IIterator<T> global::Windows.Foundation.Collections.IIterable<T>.First()
+        unsafe global::System.Collections.Generic.IEnumerator<T> global::Windows.Foundation.Collections.IIterable<T>.First()
         {
             IntPtr __retval = default;
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(ThisPtr, out __retval));
-                return ABI.System.Collections.Generic.IEnumerator<T>.FromAbiInternal(__retval);
+                return ABI.System.Collections.Generic.IEnumerator<T>.FromAbi(__retval);
             }
             finally
             {

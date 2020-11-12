@@ -12,16 +12,6 @@ using namespace Microsoft::UI::Xaml::Data;
 using namespace Microsoft::UI::Xaml::Interop;
 using Windows::UI::Xaml::Interop::TypeName;
 
-// Until C++/WinRT provides, to ensure that GetRuntimeClasName reports IVectorView rather than IVector
-namespace winrt
-{
-    template <typename T, typename Allocator = std::allocator<T>>
-    Windows::Foundation::Collections::IVectorView<T> single_threaded_vector_view(std::vector<T, Allocator>&& values = {})
-    {
-        return make<impl::input_vector_view<T, std::vector<T, Allocator>>>(std::move(values));
-    }
-}
-
 namespace winrt::TestComponentCSharp::implementation
 {
     namespace statics
@@ -442,6 +432,10 @@ namespace winrt::TestComponentCSharp::implementation
     }
     void Class::ObjectProperty(WF::IInspectable const& value)
     {
+        if (auto uri = value.try_as<Windows::Foundation::Uri>())
+        {
+            _uri = uri;
+        }
         _object = value;
     }
     void Class::RaiseObjectChanged()
