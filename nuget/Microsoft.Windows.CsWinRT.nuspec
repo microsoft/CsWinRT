@@ -26,7 +26,10 @@
     <file src="readme.txt"/>
     <file src="$net5_runtime$" target="lib\net5.0\"/>
     <file src="$source_generator$" target="analyzers\dotnet\cs\"/>
-    <file src="$winrt_host$" target ="native"/>
+    <file src="$winrt_host_x64$" target ="native/x64"/>
+    <file src="$winrt_host_x86$" target ="native/x86"/>
+    <file src="$winrt_host_arm$" target ="native/arm"/>
+    <file src="$winrt_host_arm64$" target ="native/arm64"/>
     <file src="$winrt_shim$" target ="lib\net5.0\"/>
   </files>
 </package>
