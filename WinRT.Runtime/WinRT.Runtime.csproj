@@ -13,7 +13,7 @@
     <PackageId>WinRT.Runtime</PackageId>
     <FileVersion>$(VersionNumber)</FileVersion>
     <Version>$(VersionNumber)</Version>
-    <AssemblyVersion>$(VersionNumber)</AssemblyVersion>
+    <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
     <InformationalVersion>$(VersionNumber)</InformationalVersion>
     <NeutralLanguage>en</NeutralLanguage>
     <Description>C#/WinRT Runtime v$(VersionString)</Description>

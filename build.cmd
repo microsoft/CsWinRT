@@ -36,7 +36,8 @@ set cswinrt_platform=%1
 set cswinrt_configuration=%2
 set cswinrt_version_number=%3
 set cswinrt_version_string=%4
-set "%5"!="" set cswinrt_label=%5
+set cswinrt_assembly_version=%5
+set "%6"!="" set cswinrt_label=%6
 
 if "%cswinrt_platform%"=="" set cswinrt_platform=x64
 
@@ -44,16 +45,16 @@ if /I "%cswinrt_platform%" equ "all" (
   if "%cswinrt_configuration%"=="" (
     set cswinrt_configuration=all
   )
-  call %0 x86 !cswinrt_configuration! !cswinrt_version!
-  call %0 x64 !cswinrt_configuration! !cswinrt_version!
-  call %0 arm !cswinrt_configuration! !cswinrt_version!
-  call %0 arm64 !cswinrt_configuration! !cswinrt_version!
+  call %0 x86 !cswinrt_configuration! !cswinrt_version_number! !cswinrt_version_string! !cswinrt_assembly_version!
+  call %0 x64 !cswinrt_configuration! !cswinrt_version_number! !cswinrt_version_string! !cswinrt_assembly_version!
+  call %0 arm !cswinrt_configuration! !cswinrt_version_number! !cswinrt_version_string! !cswinrt_assembly_version!
+  call %0 arm64 !cswinrt_configuration! !cswinrt_version_number! !cswinrt_version_string! !cswinrt_assembly_version!
   goto :eof
 )
 
 if /I "%cswinrt_configuration%" equ "all" (
-  call %0 %cswinrt_platform% Debug !cswinrt_version!
-  call %0 %cswinrt_platform% Release !cswinrt_version!
+  call %0 %cswinrt_platform% Debug !cswinrt_version_number! !cswinrt_version_string! !cswinrt_assembly_version!
+  call %0 %cswinrt_platform% Release !cswinrt_version_number! !cswinrt_version_string! !cswinrt_assembly_version!
   goto :eof
 )
 
@@ -63,6 +64,7 @@ if "%cswinrt_configuration%"=="" (
 
 if "%cswinrt_version_number%"=="" set cswinrt_version_number=0.0.0.0
 if "%cswinrt_version_string%"=="" set cswinrt_version_string=0.0.0-private.0
+if "%cswinrt_assembly_version%"=="" set cswinrt_assembly_version=0.0.0.0
 
 if "%cswinrt_basline_breaking_compat_errors%"=="" set cswinrt_basline_breaking_compat_errors=false
 if "%cswinrt_basline_assembly_version_compat_errors%"=="" set cswinrt_basline_assembly_version_compat_errors=false
@@ -116,7 +118,7 @@ call :exec .nuget\nuget.exe restore %nuget_params%
 :build
 call get_testwinrt.cmd
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_basline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_basline_assembly_version_compat_errors% cswinrt.sln 
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_basline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_basline_assembly_version_compat_errors% cswinrt.sln 
 if ErrorLevel 1 (
   echo.
   echo ERROR: Build failed
