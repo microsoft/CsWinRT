@@ -14,7 +14,6 @@
   <PropertyGroup>
     <CsWinRTIncludes>SimpleMathComponent</CsWinRTIncludes>
     <CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
-    <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
   </PropertyGroup>
 
   <!--Properties for generating the NuGet package-->
