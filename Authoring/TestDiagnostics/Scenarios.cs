@@ -1,32 +1,56 @@
-﻿using System;
+﻿using ABI.System.Numerics;
+using System;
 using Windows.Foundation;
+using Windows.Foundation.Numerics;
 using Windows.Web.Syndication;
 
 namespace TestDiagnostics
 {
 
-    /* structures...
-     * can only contain fields
-     * all fields must be public
-     * fields cannot be used elsewhere 
-     * valid fields are enumerations, structures, primitive types
+    /* "only structures can contain fields" what does this mean? 
+     *   ? we have samples of classes with fields that are fine...
+     * 
+     * structures can only contain "valid" fields
+     *   ! all fields must be public
+     * "valid" fields are enumerations, structures, primitive types
      *   UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum, or itself 
      */
 
-    public struct ExampleStruct
+    public struct Posn /* Invalid? because property? */
     {
-        const int ci = 5;
-        int x;
+        int z;
+        public int x { get; }
+        public int y { get; }
     }
 
-    public struct StructInAStruct
+    /*
+    public struct StructWithPrivateField_Invalid
     {
-        ExampleStruct strct;
-        public int phi
-        {
-            get { return 5; }
-        }
+        const int ci = 5;
+        private int x;
     }
+
+    public struct StructWithAllValidFields
+    {
+        bool b;
+
+    }
+
+    public struct StructWithObjectField_Invalid // is this really invalid? 
+    { 
+
+    }
+
+    public struct StructWithByteField_Invalid // is this really invalid? 
+    { 
+
+    }
+
+    public struct StructWithWinRTStructField
+    {
+        public Matrix3x2 matrix;
+    }
+    */
 
     /*
     public sealed class ParameterNamedDunderRetVal
