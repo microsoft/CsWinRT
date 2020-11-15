@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using test_component_base;
 using TestComponent;  // Error CS0246? run get_testwinrt.cmd
 using Windows.Foundation;
 using WinRT;
@@ -740,6 +741,16 @@ namespace UnitTest
         {
             Tests.Simple();
             //Assert.Equal((double)Tests.Percentage, (double)100);
+        }
+
+        [Fact]
+        public void TestComposable()
+        {
+            HierarchyA hierarchyA = new HierarchyA();
+            hierarchyA.HierarchyA_Method();
+            var hierarchyB = new HierarchyB();
+            hierarchyB.HierarchyA_Method();
+            hierarchyB.HierarchyB_Method();
         }
     }
 }
