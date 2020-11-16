@@ -269,7 +269,7 @@ namespace Generator
             return false;
         }
 
-        private bool StructHasProperty(GeneratorExecutionContext context, StructDeclarationSyntax structDeclaration)
+        private bool StructHasPropertyField(GeneratorExecutionContext context, StructDeclarationSyntax structDeclaration)
         { 
             var propertyDeclarations = structDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>();
             if (propertyDeclarations.Any())
@@ -297,7 +297,6 @@ namespace Generator
                 List<string> invalidTypes = new List<string> { "object", "byte", "dynamic" };
                 invalidTypes.AddRange(classNames);
                 
-                /*
                 if (invalidTypes.Contains(typeStr))
                 { 
                     context.ReportDiagnostic(Diagnostic.Create(StructHasInvalidFieldRule,
@@ -305,34 +304,6 @@ namespace Generator
                             structDeclaration.Identifier,
                             field.ToString(),
                             typeStr));
-                }
-                */
-
-                if (type.IsKind(SyntaxKind.PredefinedType))
-                {
-                    if (typeStr.Equals("object") || typeStr.Equals("byte"))
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(StructHasInvalidFieldRule,
-                            variable.GetLocation(),
-                            structDeclaration.Identifier,
-                            field.ToString(),
-                            typeStr));
-                        found |= true;
-                    }
-                }
-                
-                if (type.IsKind(SyntaxKind.IdentifierName))
-                {
-                    // Assuming the only other IdentifierNames would be enums or structures ...
-                    if (typeStr.Equals("dynamic") || classNames.Contains(type.GetFirstToken().ToString()))
-                    { 
-                        context.ReportDiagnostic(Diagnostic.Create(StructHasInvalidFieldRule,
-                            variable.GetLocation(),
-                            structDeclaration.Identifier,
-                            field.ToString(), // would be better if it just had the field name
-                            typeStr));
-                        found |= true;
-                    }
                 }
             }
             return found;
@@ -348,11 +319,10 @@ namespace Generator
                 var nodes = tree.GetRoot().DescendantNodes();
 
                 var classes = nodes.OfType<ClassDeclarationSyntax>();
-                var enums   = nodes.OfType<EnumDeclarationSyntax>();
                 var structs = nodes.OfType<StructDeclarationSyntax>();
 
+                // Used in checking structure fields 
                 List<string> classNames = new List<string>();
-                List<SyntaxToken> enumNames = new List<SyntaxToken>();
 
                 /* look for... */
                 foreach (ClassDeclarationSyntax classDeclaration in classes)
@@ -370,74 +340,16 @@ namespace Generator
                     found |= ImplementsAsyncInterface(context, classSymbol, classDeclaration);
                 }
 
-                // don't need this loop if the only other variable identifier possible is for a class or struct 
-                foreach (EnumDeclarationSyntax enumDeclaration in enums)
-                { 
-                    enumNames.Add(enumDeclaration.Identifier);
-                }
-
                 foreach (StructDeclarationSyntax structDeclaration in structs)
                 {
-                    found |= StructHasProperty(context, structDeclaration);
-                    /*var propertyDeclarations = structDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>();
-                    if (propertyDeclarations.Any())
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(StructHasPropertyRule, structDeclaration.GetLocation(), structDeclaration.Identifier, propertyDeclarations.First().Identifier));
-                        found |= true;
-                    }*/
-
-
+                    found |= StructHasPropertyField(context, structDeclaration);
 
                     var fields = structDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>();
                     foreach (var field in fields)
                     {
-
                         found |= StructHasInvalidFields(context, field, structDeclaration, classNames);
-                       
-                        // check if field is private
-                        /*
-                        if (field.GetFirstToken().ToString().Equals("private")) // hmm
-                        {
-                            context.ReportDiagnostic(Diagnostic.Create(StructHasPrivateFieldRule, field.GetLocation(), structDeclaration.Identifier));
-                            found |= true;
-                        }
-
-                        foreach (var variable in field.DescendantNodes().OfType<VariableDeclarationSyntax>())
-                        {
-                            var type = variable.Type;
-                            var typeStr = type.ToString();
-
-                            if (type.IsKind(SyntaxKind.PredefinedType))
-                            {
-                                if (typeStr.Equals("object") || typeStr.Equals("byte"))
-                                { 
-                                    context.ReportDiagnostic(Diagnostic.Create(StructHasInvalidFieldRule,
-                                        variable.GetLocation(),
-                                        structDeclaration.Identifier,
-                                        field.ToString(),
-                                        typeStr));
-                                    found |= true;
-                                }
-                            }
-
-                            if (type.IsKind(SyntaxKind.IdentifierName))
-                            {
-                                // Assuming the only other IdentifierNames would be enums or structures ...
-                                if (classNames.Contains(type.GetFirstToken().ToString()))
-                                { 
-                                    context.ReportDiagnostic(Diagnostic.Create(StructHasInvalidFieldRule,
-                                        variable.GetLocation(),
-                                        structDeclaration.Identifier,
-                                        field.ToString(), // would be better if it just had the field name
-                                        typeStr));
-                                    found |= true;
-                                }
-                            }
-                        }
-                        */
                     }
                 }
-
             }
             return found;
         }
