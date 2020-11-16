@@ -936,6 +936,16 @@ namespace WinRT
             {
                 return objRef.As<IInspectable.Vftbl>();
             }
+            var publicType = o.GetType();
+            Type helperType = Projections.FindCustomHelperTypeMapping(publicType, true);
+            if(helperType != null)
+            {
+                var parms = new[] { Expression.Parameter(typeof(object), "arg") };
+                var createMarshaler = Expression.Lambda<Func<object, IObjectReference>>(
+                    Expression.Call(helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static), 
+                        new[] { Expression.Convert(parms[0], publicType) }), parms).Compile();
+                return createMarshaler(o);
+            }
             using (var ccw = ComWrappersSupport.CreateCCWForObject(ComWrappersSupport.GetRuntimeClassCCWTypeIfAny(o)))
             {
                 return ccw.As<IInspectable.Vftbl>();

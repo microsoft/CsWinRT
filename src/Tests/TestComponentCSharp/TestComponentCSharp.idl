@@ -341,6 +341,18 @@ namespace TestComponentCSharp
         void Observe(Microsoft.UI.Xaml.Interop.IBindableObservableVector vector);
     }
 
+    [default_interface]
+    runtimeclass CustomBindableIteratorTest : Microsoft.UI.Xaml.Interop.IBindableIterator
+    {
+        CustomBindableIteratorTest();
+    }
+
+    [default_interface]
+    runtimeclass CustomDisposableTest : Windows.Foundation.IClosable
+    {
+        CustomDisposableTest();
+    }
+    
     // IInspectable-based interop interface
     [uuid(39E050C3-4E74-441A-8DC0-B81104DF949C)]
     interface IUserConsentVerifierInterop

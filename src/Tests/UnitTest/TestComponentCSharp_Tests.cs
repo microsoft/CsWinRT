@@ -624,6 +624,11 @@ namespace UnitTest
         [Fact]
         public void TestObjectCasting()
         {
+            object expected_uri = new Uri("http://aka.ms/cswinrt");
+            TestObject.ObjectProperty = expected_uri;
+            Assert.Equal(expected_uri, TestObject.UriProperty);
+            Assert.Equal(expected_uri, TestObject.ObjectProperty);
+
             var expected = new KeyValuePair<string, string>("key", "value");
             TestObject.ObjectProperty = expected;
             var out_pair = (KeyValuePair<string, string>)TestObject.ObjectProperty;
@@ -1551,6 +1556,14 @@ namespace UnitTest
             Assert.Equal(pt.Y, TestObject.PointProperty.Y);
             Assert.True(TestObject.PointProperty == pt);
             Assert.Equal(pt, TestObject.GetPointReference().Value);
+
+            var vector2 = TestObject.PointProperty.ToVector2();
+            Assert.Equal(pt.X, vector2.X);
+            Assert.Equal(pt.Y, vector2.Y);
+
+            TestObject.PointProperty = vector2.ToPoint();
+            Assert.Equal(pt.X, TestObject.PointProperty.X);
+            Assert.Equal(pt.Y, TestObject.PointProperty.Y);
         }
 
         [Fact]
@@ -1573,6 +1586,14 @@ namespace UnitTest
             Assert.Equal(size.Height, TestObject.SizeProperty.Height);
             Assert.Equal(size.Width, TestObject.SizeProperty.Width);
             Assert.True(TestObject.SizeProperty == size);
+
+            var vector2 = TestObject.SizeProperty.ToVector2();
+            Assert.Equal(size.Width, vector2.X);
+            Assert.Equal(size.Height, vector2.Y);
+
+            TestObject.SizeProperty = vector2.ToSize();
+            Assert.Equal(size.Width, TestObject.SizeProperty.Width);
+            Assert.Equal(size.Height, TestObject.SizeProperty.Height);
         }
 
         [Fact]
@@ -2172,6 +2193,22 @@ namespace UnitTest
             MacAlgorithmProvider mac = MacAlgorithmProvider.OpenAlgorithm(MacAlgorithmNames.HmacSha1);
             CryptographicKey cryptoKey = mac.CreateKey(keyMaterial);
             Assert.NotNull(cryptoKey);
+        }
+
+        [Fact(Skip="Operation not supported")]
+        public void TestIBindableIterator()
+        {
+            CustomBindableIteratorTest bindableIterator = new CustomBindableIteratorTest();
+            Assert.True(bindableIterator.MoveNext());
+            Assert.True(bindableIterator.HasCurrent);
+            Assert.Equal(27861, bindableIterator.Current);
+        }
+
+        [Fact]
+        public void TestIDisposable()
+        {
+            CustomDisposableTest disposable = new CustomDisposableTest();
+            disposable.Dispose();
         }
     }
 }
