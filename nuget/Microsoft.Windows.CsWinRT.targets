@@ -88,6 +88,12 @@ $(CsWinRTFilters)
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
     <Exec Command="$(CsWinRTCommand)" />
   </Target>
+
+  <Target Name="RemoveShimDll" Condition="'$(CsWinRTComponent)'!='true'">
+    <ItemGroup>
+      <Reference Remove="lib/net5.0/WinRT.Host.Shim.dll"/>
+    </ItemGroup>
+  </Target>
   
   <Target Name="CsWinRTIncludeProjection" BeforeTargets="BeforeCompile" DependsOnTargets="CsWinRTGenerateProjection" Condition="$(CsWinRTEnabled)">
     <ItemGroup>
