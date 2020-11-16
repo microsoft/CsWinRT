@@ -89,7 +89,7 @@ $(CsWinRTFilters)
     <Exec Command="$(CsWinRTCommand)" />
   </Target>
 
-  <Target Name="RemoveShimDll" Condition="'$(CsWinRTComponent)'!='true'">
+  <Target Name="CsWinRTRemoveShimDll" Condition="'$(CsWinRTComponent)'!='true'">
     <ItemGroup>
       <Reference Remove="lib/net5.0/WinRT.Host.Shim.dll"/>
     </ItemGroup>
