@@ -8,7 +8,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <PropertyGroup>
     <CsWinRTMessageImportance Condition="'$(CsWinRTMessageImportance)' == ''">normal</CsWinRTMessageImportance>
     <CsWinRTCommandVerbosity Condition="'$(CsWinRTMessageImportance)' == 'high'">-verbose</CsWinRTCommandVerbosity>
-    <ResolveAssemblyReferencesDependsOn Condition="'$(CsWinRTRemoveWindowsReference)'!='false'">$(ResolveAssemblyReferencesDependsOn);CsWinRTRemoveWindowsReference</ResolveAssemblyReferencesDependsOn>
+    <ResolveAssemblyReferencesDependsOn Condition="'$(CsWinRTRemoveReferences)'!='false'">$(ResolveAssemblyReferencesDependsOn);CsWinRTRemoveReferences</ResolveAssemblyReferencesDependsOn>
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' == ''">true</CsWinRTEnabled>
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' != 'true'">false</CsWinRTEnabled>
     <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
@@ -18,10 +18,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CoreCompileDependsOn>CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn)</CoreCompileDependsOn>
   </PropertyGroup>
   
-  <!--Remove Windows.Winmd reference to prevent compile collisions-->
-  <Target Name="CsWinRTRemoveWindowsReference" Outputs="@(Reference)" Condition="$(CsWinRTEnabled)">
+   <Target Name="CsWinRTRemoveReferences" Outputs="@(Reference)" >
     <ItemGroup>
-      <Reference Remove="Windows"/>
+      <!-- Remove Windows.Winmd reference to prevent compile collisions-->
+      <Reference Condition="'$(CsWinRTEnabled)'=='true'" Remove="Windows"/>
+      <!-- Remove WinRT.Host.Shim.dll reference from projects that are not using an authored component -->
+      <Reference Condition="'$(CsWinRTComponent)'!='true'" Remove="WinRT.Host.Shim.dll"/>
     </ItemGroup>
   </Target>
 
@@ -89,12 +91,6 @@ $(CsWinRTFilters)
     <Exec Command="$(CsWinRTCommand)" />
   </Target>
 
-  <Target Name="CsWinRTRemoveShimDll" Condition="'$(CsWinRTComponent)'!='true'">
-    <ItemGroup>
-      <Reference Remove="lib/net5.0/WinRT.Host.Shim.dll"/>
-    </ItemGroup>
-  </Target>
-  
   <Target Name="CsWinRTIncludeProjection" BeforeTargets="BeforeCompile" DependsOnTargets="CsWinRTGenerateProjection" Condition="$(CsWinRTEnabled)">
     <ItemGroup>
       <Compile Include="$(CsWinRTGeneratedFilesDir)*.cs" Exclude="@(Compile)" />
