@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using test_component_base;
+using test_component_derived.Nested;
 using TestComponent;  // Error CS0246? run get_testwinrt.cmd
 using Windows.Foundation;
 using WinRT;
@@ -746,11 +747,18 @@ namespace UnitTest
         [Fact]
         public void TestComposable()
         {
-            HierarchyA hierarchyA = new HierarchyA();
+            HierarchyA hierarchyA = new HierarchyD();
             hierarchyA.HierarchyA_Method();
-            var hierarchyB = new HierarchyB();
-            hierarchyB.HierarchyA_Method();
-            hierarchyB.HierarchyB_Method();
+            
+            HierarchyD hierarchyD = new HierarchyD();
+            hierarchyD.HierarchyD_Method();
+
+            Assert.True(hierarchyA != hierarchyD);
+
+            var hierarchyDAsHierarchyA = (HierarchyA)hierarchyD;
+            hierarchyDAsHierarchyA.HierarchyA_Method();
+
+            Assert.True(hierarchyDAsHierarchyA == hierarchyD);
         }
     }
 }
