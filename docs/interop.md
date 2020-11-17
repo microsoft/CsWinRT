@@ -71,27 +71,31 @@ TInterop interop = objRef.AsInterface<TInterop>();
 ```
 
 ### Custom Marshaling
-When defining a [ComImport](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.comimportattribute?view=netcore-3.1) interop interface, marshaling of WinRT types must be manual (not using the runtime).  
+**Note:** When defining a [ComImport](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.comimportattribute?view=netcore-3.1) interop interface, WinRT parameters and return values must be passed by their ABI types, and marshaling must be done manually (not using the CLR).  For example, reference types like strings and interfaces must be passed as IntPtr.  Blittable value types can be passed directly. Non-blittable value types must have separate ABI and projected definitions, and marshaling between these values must be done manually.
 
 #### Strings
 The [MarshalAs](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshalasattribute?view=netcore-3.1) attribute no longer supports [UnmanagedType.HString](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.unmanagedtype?view=netcore-3.1).  Instead, strings should be marshaled with the C#/WinRT MarshalString class.
 ```csharp
 // public void SetString([MarshalAs(UnmanagedType.HString)] String s);
 public void SetString(IntPtr hstr);
+
 // public void GetString([MarshalAs(UnmanagedType.HString)] out String s);
 public void GetString(IntPtr out hstr);
+
 // ...
+
 // Marshal HSTRING to System.String
 IntPtr hstr;
 GetString(out hstr);
 var str = MarshalString.FromAbi(hstr);
+
 // Marshal System.String as fast-pass HSTRING reference
 var marshalStr = MarshalString.CreateMarshaler("String");
 SetString(MarshalString.GetAbi(marshalStr));
 ```
 
 #### IInspectables
-The runtime no longer supports marshaling IInspectable-based ComImport interfaces. But these can be approximated with IUnknown:
+**Note:** The runtime no longer supports marshaling IInspectable-based ComImport interfaces. Casting to an IInspectable interface will succeed, but method calls will crash in the CLR. Instead, IInspectable interfaces can be approximated with IUnknown, by explicitly defining the GetIids, GetRuntimeClassName, and GetTrustLevel methods:
 ```csharp
 [ComImport]
 [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -107,7 +111,6 @@ internal unsafe interface IServiceProviderInterop
     void GetService(IntPtr type, out IntPtr service);
 }
 ```
-
 
 ## Create RCW
 The Marshal RCW creation functions:
