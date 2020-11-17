@@ -24,17 +24,9 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
-  <!--The C# compiler package below is not needed with Visual Studio 16.8 Preview 4-->
+  <!--Specify Windows SDK Metadata-->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="3.8.0-4.20472.6" />
     <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.19041.1" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <RestoreSources>
-	https://api.nuget.org/v3/index.json;
-	https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
-    </RestoreSources>
-  </PropertyGroup>
 
 </Project>
