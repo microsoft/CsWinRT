@@ -1,7 +1,7 @@
 # COM Interop Guide
 
 ## Overview
-With .NET 5, direct support of WinRT has been removed from the C# language and runtime, including most of the functionality previously provided in [System.Runtime.InteropServices](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices?view=netcore-3.1).  In some cases, C#/WinRT provides equivalent functionality. In other cases, functionality may no longer be supported. This article provides a migration guide for interop scenarios in C#/WinRT.  
+With .NET 5, direct support of WinRT has been removed from the C# language and CLR, including most of the functionality previously provided in [System.Runtime.InteropServices](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices?view=netcore-3.1).  In some cases, C#/WinRT provides equivalent functionality. In other cases, functionality may no longer be supported. This article provides a migration guide for interop scenarios in C#/WinRT.  
 
 ## Summary
 Generally, the RCW/CCW functions in Marshal should be avoided, as they are incompatible with the new [ComWrappers](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.comwrappers?view=net-5.0) support in .NET 5. Unless otherwise noted, any other functionality in [Marshal](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshal?view=netcore-3.1) should still be available with .NET 5. C#/WinRT interop types are contained in the WinRT namespace.
@@ -55,7 +55,7 @@ objRef.AsInterface<T>();        // cast to user-defined (non-projected) ComImpor
 ```
 
 ## COM Interop
-The previous runtime support for obtaining a [ComImport](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.comimportattribute?view=netcore-3.1)-attributed IUnknown interop interface:
+The previous CLR support for obtaining a [ComImport](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.comimportattribute?view=netcore-3.1)-attributed IUnknown interop interface:
 ```csharp
 TInterop interop = (TInterop)obj;
 TInterop interop = WindowsRuntimeMarshal.GetActivationFactory(typeof(T));
@@ -71,27 +71,31 @@ TInterop interop = objRef.AsInterface<TInterop>();
 ```
 
 ### Custom Marshaling
-When defining a [ComImport](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.comimportattribute?view=netcore-3.1) interop interface, marshaling of WinRT types must be manual (not using the runtime).  
+**Note:** When defining a [ComImport](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.comimportattribute?view=netcore-3.1) interop interface, WinRT parameters and return values must be passed by their ABI types, and marshaling must be done manually (not using the CLR).  For example, reference types like strings and interfaces must be passed as IntPtr.  Blittable value types can be passed directly. Non-blittable value types must have separate ABI and projected definitions, and marshaling between these values must be done manually.
 
 #### Strings
 The [MarshalAs](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshalasattribute?view=netcore-3.1) attribute no longer supports [UnmanagedType.HString](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.unmanagedtype?view=netcore-3.1).  Instead, strings should be marshaled with the C#/WinRT MarshalString class.
 ```csharp
 // public void SetString([MarshalAs(UnmanagedType.HString)] String s);
 public void SetString(IntPtr hstr);
+
 // public void GetString([MarshalAs(UnmanagedType.HString)] out String s);
 public void GetString(IntPtr out hstr);
+
 // ...
+
 // Marshal HSTRING to System.String
 IntPtr hstr;
 GetString(out hstr);
 var str = MarshalString.FromAbi(hstr);
+
 // Marshal System.String as fast-pass HSTRING reference
 var marshalStr = MarshalString.CreateMarshaler("String");
 SetString(MarshalString.GetAbi(marshalStr));
 ```
 
 #### IInspectables
-The runtime no longer supports marshaling IInspectable-based ComImport interfaces. But these can be approximated with IUnknown:
+**Note:** The CLR no longer supports marshaling IInspectable-based ComImport interfaces. Casting to an IInspectable interface will succeed, but method calls will crash in the CLR. Instead, IInspectable interfaces can be approximated with IUnknown, by explicitly defining the GetIids, GetRuntimeClassName, and GetTrustLevel methods:
 ```csharp
 [ComImport]
 [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -99,7 +103,7 @@ The runtime no longer supports marshaling IInspectable-based ComImport interface
 internal unsafe interface IServiceProviderInterop
 {
     // Note: Invoking methods on ComInterfaceType.InterfaceIsIInspectable interfaces
-    // is no longer supported in the runtime, but can be simulated with IUnknown.
+    // is no longer supported in the CLR, but can be simulated with IUnknown.
     void GetIids(out int iidCount, out IntPtr iids);
     void GetRuntimeClassName(out IntPtr className);
     void GetTrustLevel(out TrustLevel trustLevel);
@@ -107,7 +111,6 @@ internal unsafe interface IServiceProviderInterop
     void GetService(IntPtr type, out IntPtr service);
 }
 ```
-
 
 ## Create RCW
 The Marshal RCW creation functions:
