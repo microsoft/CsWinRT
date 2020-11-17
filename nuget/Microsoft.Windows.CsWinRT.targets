@@ -22,7 +22,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <ItemGroup>
       <!-- Remove Windows.Winmd reference to prevent compile collisions-->
       <Reference Condition="'$(CsWinRTEnabled)'=='true'" Remove="Windows"/>
-      <!-- Remove WinRT.Host.Shim.dll reference from projects that are not using an authored component -->
+      <!-- Remove WinRT.Host.Shim.dll references  -->
       <Reference     Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
       <ReferencePath Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
     </ItemGroup>
@@ -91,7 +91,7 @@ $(CsWinRTFilters)
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
     <Exec Command="$(CsWinRTCommand)" />
   </Target>
-
+  
   <Target Name="CsWinRTIncludeProjection" BeforeTargets="BeforeCompile" DependsOnTargets="CsWinRTGenerateProjection" Condition="$(CsWinRTEnabled)">
     <ItemGroup>
       <Compile Include="$(CsWinRTGeneratedFilesDir)*.cs" Exclude="@(Compile)" />
