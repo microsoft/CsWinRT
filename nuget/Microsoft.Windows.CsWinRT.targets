@@ -27,7 +27,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </Target>
 
   <!-- Remove Windows.Winmd reference to prevent compile collisions-->
-  <Target Name="CsWinRTRemoveWindowsReference" Outputs="@(Reference)" Condition="'$(CsWinRTEnabled)'=='true'">
+  <Target Name="CsWinRTRemoveWindowsReference" Outputs="@(Reference)" Condition="$(CsWinRTEnabled)">
    <ItemGroup>
      <Reference Remove="Windows"/>
    </ItemGroup>
