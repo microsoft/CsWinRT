@@ -24,7 +24,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <Reference Condition="'$(CsWinRTEnabled)'=='true'" Remove="Windows"/>
       <!-- Remove WinRT.Host.Shim.dll references  -->
       <Reference     Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
-      <ReferencePath Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
+      <RuntimeCopyLocalItems          Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
+      <ReferenceCopyLocalPaths        Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
+      <_ResolvedCopyLocalBuildAssets  Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
+      <ResolvedCompileFileDefinitions Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
     </ItemGroup>
   </Target>
 
