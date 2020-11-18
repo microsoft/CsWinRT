@@ -21,8 +21,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Remove WinRT.Host.Shim.dll references -->
   <Target Name="CsWinRTRemoveShimDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
     <ItemGroup>
-     <Reference             Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
-     <RuntimeCopyLocalItems Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
+     <Reference                      Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
+     <RuntimeCopyLocalItems          Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
+     <ResolvedCompileFileDefinitions Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
     </ItemGroup>
   </Target>
 
