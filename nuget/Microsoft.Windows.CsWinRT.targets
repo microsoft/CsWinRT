@@ -18,11 +18,19 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CoreCompileDependsOn>CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn)</CoreCompileDependsOn>
   </PropertyGroup>
   
-  <!--Remove Windows.Winmd reference to prevent compile collisions-->
-  <Target Name="CsWinRTRemoveWindowsReference" Outputs="@(Reference)" Condition="$(CsWinRTEnabled)">
+  <!-- Remove WinRT.Host.Shim.dll references -->
+  <Target Name="CsWinRTRemoveShimDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
     <ItemGroup>
-      <Reference Remove="Windows"/>
+     <Reference             Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
+     <RuntimeCopyLocalItems Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
     </ItemGroup>
+  </Target>
+
+  <!-- Remove Windows.Winmd reference to prevent compile collisions-->
+  <Target Name="CsWinRTRemoveWindowsReference" Outputs="@(Reference)" Condition="$(CsWinRTEnabled)">
+   <ItemGroup>
+     <Reference Remove="Windows"/>
+   </ItemGroup>
   </Target>
 
   <Target Name="CsWinRTRemoveWinMDReferences" BeforeTargets="BeforeCompile" AfterTargets="ResolveReferences">
