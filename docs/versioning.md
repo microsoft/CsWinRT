@@ -4,11 +4,11 @@ This document lists our guidelines for incrementing the assembly versions for *W
 
 ## Guidelines
 
-CsWinRT releases Windows SDK projection packages (which include the runtime and projection assemblies) for insertion into the .NET SDK, as well as the CsWinRT NuGet package for custom projection and authoring support. The CsWinRT NuGet package only includes the runtime assembly. Because of this, CsWinRT official releases will coordinate with updates to the SDK projection package based on the feature and servicing release cadence for .NET5.
+CsWinRT releases Windows SDK projection packages (which include the runtime and projection assemblies) for insertion into the .NET SDK, as well as the CsWinRT NuGet package for custom projection and authoring support. The CsWinRT NuGet package only includes the runtime assembly. Because of this, CsWinRT official releases will coordinate with updates to the SDK projection package based on the feature and servicing release cadence for .NET.
 
-Between servicing or feature releases, we may issue "preview" releases of the CsWinRT NuGet package and the SDK projection packages for developers that are blocked on specific bugs or want to try new features. We do not provide support for developers to ship applications or components using any preview releases, and they should instead wait until the specific CsWinRT fix or feature being used ships in a .NET5 servicing or feature release. 
+Between servicing or feature releases, we may issue "preview" releases of the CsWinRT NuGet package and the SDK projection packages for developers that are blocked on specific bugs or want to try new features. We do not provide support for developers to ship applications or components using any preview releases, and they should instead wait until the specific CsWinRT fix or feature being used ships with a .NET servicing or feature release.
 
-Our rule going forwards is to only increment `AssemblyVersion` with .NET5 feature releases if we have additive API surface changes. `AssemblyVersion` will not increment with .NET5 servicing releases. The exception to this rule is the first .NET5 servicing release, which will have an `AssemblyVersion` increment to *WinRT.Runtime.dll*. The reason for this is so we can make changes earlier in hopes of minimizing the number of impacted developers in the future. We expect to have a few additive API surface changes following .NET5 RTM, but long-term AssemblyVersion should stabilize.
+Our rule going forwards is to only increment `AssemblyVersion` with .NET feature releases if we make additive API surface changes. `AssemblyVersion` will not increment with .NET servicing releases. The exception to this rule is the first .NET5 servicing release, which will have an `AssemblyVersion` increment to *WinRT.Runtime.dll*. The reason for this is so we can make changes earlier in hopes of minimizing the number of impacted developers in the future. We expect to have a few additive API surface changes following .NET5 RTM, but long-term AssemblyVersion should stabilize.
 
 The following sections list our guidelines for incrementing `AssemblyVersion` and `AssemblyFileVersion`.
 
@@ -16,12 +16,12 @@ The following sections list our guidelines for incrementing `AssemblyVersion` an
 
 `AssemblyVersion` has the following format for CsWinRT generated assemblies:
 
-| | AssemblyVersion Format | 
-|-|-|-|
+| | AssemblyVersion Format |
+|-|-|
 | **WinRT.Runtime.dll** | *\<major>.\<minor>.0.0* **(\*)** |
 | **Microsoft.Windows.SDK.NET.dll** |  *10.0.<windows_build>.<projection_update>* |
 
-**(\*)** Note: This format for the runtime assembly takes effect starting with `AssemblyVersion` *1.1.0.0*, which aligns with the first .NET5 servicing release.
+**(\*)** **Note**: this format for the runtime assembly takes effect starting with `AssemblyVersion` *1.1.0.0*, which aligns with the first .NET5 servicing release.
 
 The guidelines for incrementing `AssemblyVersion` are as follows. Note that `AssemblyVersion` increments to either assembly are independent of one another.
 
@@ -38,7 +38,7 @@ The guidelines for incrementing `AssemblyVersion` are as follows. Note that `Ass
 `AssemblyFileVersion` is used for deployment and can mark assemblies with the same AssemblyVersion. It can be viewed in Windows from **File Properties** -> **File Version**. `AssemblyFileVersion` has the following format for CsWinRT generated assemblies:
 
 | | AssemblyFileVersion Format | 
-|-|-|-|
+|-|-|
 | **WinRT.Runtime.dll** | *\<major>.\<minor>.\<patch>.\<build>* |
 | **Microsoft.Windows.SDK.NET.dll** |  *10.0.<windows_build>.<package_update>* |
 
@@ -54,9 +54,9 @@ The guidelines for incrementing `AssemblyVersion` are as follows. Note that `Ass
 
 As of .NET5 RTM (5.0.100), `AssemblyVersion` and `AssemblyFileVersion` for the runtime and SDK assemblies are identical. Going forwards, `AssemblyVersion` and `AssemblyFileVersion` will be decoupled.
 
-The CsWinRT NuGet version will stay in sync with the *WinRT.Runtime.dll* `AssemblyFileVersion`, and the SDK projection package version will stay in sync with *Microsoft.Windows.SDK.NET.dll* `AssemblyFileVersion`.
+The CsWinRT NuGet version and SDK projection package version will correspond with the `AssemblyFileVersion` of *WinRT.Runtime.dll* and *Microsoft.Windows.SDK.NET.dll*, respectively.
 
-The table below is an example of how we will increment future version numbers. The **AssemblyVersion** and **AssemblyFileVersion** columns list the *WinRT.Runtime.dll* version followed by the *Microsoft.Windows.SDK.NET.dll* version.
+The table below is an example of how we will increment future version numbers. The **AssemblyVersion** and **AssemblyFileVersion** column cells list the *WinRT.Runtime.dll* version followed by the *Microsoft.Windows.SDK.NET.dll* version.
 
 | Release | AssemblyVersion | AssemblyFileVersion | CsWinRT package version | SDK Projection package version | 
 |-|-|-|-|-|
@@ -74,21 +74,22 @@ The table below is an example of how we will increment future version numbers. T
 
 ### CsWinRT NuGet Prereleases
 
-For CsWinRT NuGet prereleases between any .NET5 servicing or feature releases, *\<patch>* will be incremented for the *WinRT.Runtime.dll* `AssemblyFileVersion` (e.g., 1.1.0 -> 1.1.1). In general, `AssemblyVersion` will not be incremented for prereleases until just prior to a feature release. The NuGet version will have the *-prerelease* suffix, for example between the 5.0.101 and 5.0.102 servicing releases, a CsWinRT prerelease NuGet version would have the format *1.1.1-prerelease.\<build>*.
+For CsWinRT NuGet prereleases between any .NET servicing or feature releases, *\<patch>* will be incremented for the *WinRT.Runtime.dll* `AssemblyFileVersion` (e.g., 1.1.0 -> 1.1.1). In general, `AssemblyVersion` will not be incremented for prereleases until just prior to a feature release. The NuGet version will have the *-prerelease* suffix, for example between the 5.0.101 and 5.0.102 servicing releases, a CsWinRT prerelease NuGet version would have the format *1.1.1-prerelease.\<build>*.
 
 ## Scenarios
 
 1. **[Direct Reference]**: An app developer builds on a lower SDK version than its dependency. For example, an application developer builds with .NET5 RTM (5.0.100) and references a library built with a later SDK version (e.g., .NET 5.0.200). In this scenario, AssemblyVersion was incremented for either of the CsWinRT assemblies in .NET 5.0.200.
-    * The library does not expose Windows SDK types. The application developer will get a runtime error involving a System.IO.FileLoadException when they call any of the library APIs, so they will need to upgrade their SDK version.
+    * The library does not expose Windows SDK types. The application developer will get a runtime error involving a *System.IO.FileLoadException* when calling any of the library APIs, so they will need to upgrade their SDK version.
 
     * The library exposes Windows SDK types. For example, the WinUI library decides to upgrade and build with .NET 5.0.200, as this SDK version contains a fix for one of their scenarios. Before this, WinUI was building their library with an earlier .NET SDK version (e.g., 5.0.100). An application developer using WinUI notices the update and updates their WinUI package version. Since WinUI moved to building against .NET 5.0.200, now the app developer needs to update their .NET SDK version even if they were not using any of those scenarios that required the Windows SDK projection fixes. The application developer will either get a warning or build error, specified below.
 
         * If the application does not consume the exposed SDK types, this results in the following build warning:
-        *Warning MSB3277 Found conflicts between different versions of "Microsoft.Windows.SDK.NET" that could not be resolved.*
+
+            *Warning MSB3277 Found conflicts between different versions of "Microsoft.Windows.SDK.NET" that could not be resolved.*
 
         * If the application does consume the exposed SDK types, this results in a [CS1705 compiler build error](https://docs.microsoft.com/dotnet/csharp/language-reference/compiler-messages/cs1705#:~:text=Compiler%20Error%20CS1705.%20You%20are%20accessing%20a%20type,use%20of%20two%20versions%20of%20the%20same%20assembly.).
 
-2. **[Diamond Dependency]**: An application is built using multiple components, for example WinUI and a library named *SimpleMath*. WinUI has a dependency on .NET 5.0.100 while the *SimpleMath* library is built with .NET 5.0.200. There is an `AssemblyVersion` update in .NET 5.0.200 in this scenario. The application developer must upgrade to the latest version of the .NET SDK for any of its dependencies, in this case .NET 5.0.200. The warnings and errors encountered are manifested in the same manner as in Scenario #1.
+2. **[Diamond Dependency]**: An application is built using multiple components, for example WinUI and a library named *SimpleMath*. The WinUI library is built with .NET 5.0.100 while the *SimpleMath* library is built with .NET 5.0.200. In this scenario, .NET 5.0.200 includes an increment to `AssemblyVersion`. The application developer must upgrade to the latest version of the .NET SDK for any of its dependencies, in this case .NET 5.0.200. The warnings and errors encountered are manifested in the same manner as in Scenario #1.
 
 3. **[Framework Reference Preview Override]**: An application developer runs into a blocking bug with the SDK projections in the latest CsWinRT release. To address this issue, Microsoft releases a preview SDK projection package that the developer can use by adding an override in their project file, for example as follows. This would be a temporary workaround for the developer that should be removed when there is a .NET SDK update.
 
@@ -99,10 +100,10 @@ For CsWinRT NuGet prereleases between any .NET5 servicing or feature releases, *
    </ItemGroup>
     ```
 
-4. **[Long-term Servicing Release]**: An app developer builds with .NET 5.0.102 and references a component built with .NET 5.0.103, which is a later servicing release. `AssemblyVersion` is unchanged for servicing releases (only `AssemblyFileVersion` has been updated), so the developer does not have to do anything and is unaffected.
+4. **[Long-term Servicing Release]**: An app developer builds with .NET 5.0.102 and references a component built with .NET 5.0.103, which servicing update. Since `AssemblyVersion` is unchanged for servicing releases and only `AssemblyFileVersion` has been updated, the developer does not have to update anything and is unaffected.
 
 5. **[Long-term Feature Release]**: An app developer builds with .NET 5.0.200 and references a component built with .NET 5.0.300, which is a feature release. For a feature release there are two possibilities:
-    * `AssemblyVersion` incremented: If either the runtime or projection assembly is incremented in .NET 5.0.300, the app developer faces the same build warnings or errors in Scenario #1.
+    * `AssemblyVersion` was incremented: If either the runtime or projection assembly is incremented in .NET 5.0.300, the app developer faces the same build warnings or errors in Scenario #1.
     * `AssemblyVersion` not incremented: If there are no `AssemblyVersion` increments, the app developer is unaffected as in Scenario #4.
 
-6. **[New Windows OS Version + Windows SDK Version]**: A new Windows OS release and corresponding SDK comes out, such as the Windows Iron (Fe) update. We will provide new SDK projection packages with an updated *<windows_build>*, but the *<projection_update>* would continue from the most recent verison. Support will also be added for a new TFM, for example *net5.0-windows10.0.2xxxx.0*.
+6. **[New Windows OS Version + Windows SDK Version]**: A new Windows OS release and corresponding SDK comes out, such as the Windows Iron (Fe) update. We will provide new SDK projection packages with an updated *<windows_build>*, but the *<projection_update>* number would continue from the most recent verison for consistency. Support will also be added for a new TFM, such as *net5.0-windows10.0.2xxxx.0*.
