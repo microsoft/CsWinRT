@@ -8,7 +8,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <PropertyGroup>
     <CsWinRTMessageImportance Condition="'$(CsWinRTMessageImportance)' == ''">normal</CsWinRTMessageImportance>
     <CsWinRTCommandVerbosity Condition="'$(CsWinRTMessageImportance)' == 'high'">-verbose</CsWinRTCommandVerbosity>
-    <ResolveAssemblyReferencesDependsOn Condition="'$(CsWinRTRemoveReferences)'!='false'">$(ResolveAssemblyReferencesDependsOn);CsWinRTRemoveReferences</ResolveAssemblyReferencesDependsOn>
+    <ResolveAssemblyReferencesDependsOn Condition="'$(CsWinRTRemoveWindowsReference)'!='false'">$(ResolveAssemblyReferencesDependsOn);CsWinRTRemoveWindowsReference</ResolveAssemblyReferencesDependsOn>
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' == ''">true</CsWinRTEnabled>
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' != 'true'">false</CsWinRTEnabled>
     <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
