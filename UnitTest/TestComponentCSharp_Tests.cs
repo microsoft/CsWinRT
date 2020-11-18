@@ -318,6 +318,24 @@ namespace UnitTest
         }
 
 #if NET5_0
+
+        async Task InvokeStreamWriteAsync()
+        {
+            using var fileStream = File.OpenWrite("TestFile.txt");
+            using var winRTStream = fileStream.AsOutputStream();
+
+            var winRTBuffer = new Windows.Storage.Streams.Buffer(capacity: 0);
+
+            await winRTStream.WriteAsync(winRTBuffer);
+            Assert.True(true);
+        }
+
+        [Fact]
+        public void TestStreamWriteAsync()
+        {
+            Assert.True(InvokeStreamWriteAsync().Wait(1000));
+        }
+
         [Fact]
         public void TestAsStream()
         {
