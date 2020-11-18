@@ -89,7 +89,7 @@ For CsWinRT NuGet prereleases between any .NET servicing or feature releases, *\
 
         * If the application does consume the exposed SDK types, this results in a [CS1705 compiler build error](https://docs.microsoft.com/dotnet/csharp/language-reference/compiler-messages/cs1705#:~:text=Compiler%20Error%20CS1705.%20You%20are%20accessing%20a%20type,use%20of%20two%20versions%20of%20the%20same%20assembly.).
 
-2. **[Diamond Dependency]**: An application is built using multiple components, for example WinUI and a library named *SimpleMath*. The WinUI library is built with .NET 5.0.100 while the *SimpleMath* library is built with .NET 5.0.200. In this scenario, .NET 5.0.200 includes an increment to `AssemblyVersion`. The application developer must upgrade to the latest version of the .NET SDK for any of its dependencies, in this case .NET 5.0.200. The warnings and errors encountered are manifested in the same manner as in Scenario #1.
+2. **[Diamond Dependency]**: An application is built using multiple components, for example WinUI and a library named *SimpleMath*. The WinUI library is built with .NET 5.0.100 while the *SimpleMath* library is built with .NET 5.0.200. In this scenario, there is an `AssemblyVersion` update in .NET 5.0.200. The application developer must upgrade to the latest version of the .NET SDK for any of its dependencies, in this case .NET 5.0.200. The warnings and errors encountered are manifested in the same manner as in Scenario #1.
 
 3. **[Framework Reference Preview Override]**: An application developer runs into a blocking bug with the SDK projections in the latest CsWinRT release. To address this issue, Microsoft releases a preview SDK projection package that the developer can use by adding an override in their project file, for example as follows. This would be a temporary workaround for the developer that should be removed when there is a .NET SDK update.
 
@@ -100,7 +100,7 @@ For CsWinRT NuGet prereleases between any .NET servicing or feature releases, *\
    </ItemGroup>
     ```
 
-4. **[Long-term Servicing Release]**: An app developer builds with .NET 5.0.102 and references a component built with .NET 5.0.103, which servicing update. Since `AssemblyVersion` is unchanged for servicing releases and only `AssemblyFileVersion` has been updated, the developer does not have to update anything and is unaffected.
+4. **[Long-term Servicing Release]**: An app developer builds with .NET 5.0.102 and references a component built with .NET 5.0.103, which is a typical servicing update. Since `AssemblyVersion` is unchanged for servicing releases and only `AssemblyFileVersion` has been updated, the developer does not have to update anything and is unaffected.
 
 5. **[Long-term Feature Release]**: An app developer builds with .NET 5.0.200 and references a component built with .NET 5.0.300, which is a feature release. For a feature release there are two possibilities:
     * `AssemblyVersion` was incremented: If either the runtime or projection assembly is incremented in .NET 5.0.300, the app developer faces the same build warnings or errors in Scenario #1.
