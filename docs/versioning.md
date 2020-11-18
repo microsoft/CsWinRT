@@ -64,13 +64,13 @@ The table below is an example of how we will increment future version numbers. T
 | **.NET Servicing Release (5.0.101)** **(\*)** | 1.1.0.0 <br> 10.0.xxxxx.10 | 1.1.0.*\<build>* <br> 10.0.xxxxx.11 | 1.1.0 | 10.0.xxxxx.11 |
 | **.NET Servicing Release (5.0.102)** | 1.1.0.0 <br> 10.0.xxxxx.10 | 1.1.1.*\<build>* <br> 10.0.xxxxx.12 | 1.1.1 | 10.0.xxxxx..12 |
 | **.NET Feature Release (5.0.200)** |
-| Scenario 1: *WinRT.Runtime* API surface changes only | 1.2.0.0 <br> 10.0.xxxxx.10 | 1.2.0.*\<build>* <br> 10.0.xxxxx.13 | 1.2.0 | 10.0.xxxxx.13 |
-|Scenario 2: Windows SDK projection changes only|  1.1.0.0 <br> 10.0.xxxxx.11 | 1.1.2.*\<build>* <br> 10.0.xxxxx.13 | 1.1.2 | 10.0.xxxxx.13 |
-|Scenario 3: Only bug-fixes | 1.1.0.0 <br> 10.0.xxxxx.10 | 1.1.2.*\<build>* <br> 10.0.xxxxx.13 | 1.1.2 | 10.0.xxxxx.13 |
+| * Scenario 1: *WinRT.Runtime* API surface changes only | 1.2.0.0 <br> 10.0.xxxxx.10 | 1.2.0.*\<build>* <br> 10.0.xxxxx.13 | 1.2.0 | 10.0.xxxxx.13 |
+| * Scenario 2: Windows SDK projection changes only|  1.1.0.0 <br> 10.0.xxxxx.11 | 1.1.2.*\<build>* <br> 10.0.xxxxx.13 | 1.1.2 | 10.0.xxxxx.13 |
+| * Scenario 3: Only bug-fixes | 1.1.0.0 <br> 10.0.xxxxx.10 | 1.1.2.*\<build>* <br> 10.0.xxxxx.13 | 1.1.2 | 10.0.xxxxx.13 |
 
-**(\*)** The .NET 5.0.101 servicing release is an exception to any other future servicing releases, as it will include API surface changes and an increment to the *WinRT.Runtime.dll* `AssemblyVersion`. The .NET 5.0.102 servicing release above reflects the assembly versioning rules going forwards, as it will only include bug-fixes and no `AssemblyVersion` increments.
+**(\*)** The .NET 5.0.101 servicing release is an exception to any other future servicing releases, as it will include API surface changes and an increment to `AssemblyVersion` for *WinRT.Runtime.dll*. The row for .NET Servicing Release (5.0.102) reflects the assembly versioning rules for servicing going forwards, as it will only include bug-fixes and no `AssemblyVersion` increments.
 
-**Note**: The *WinRT.Runtime.dll* `AssemblyVersion` will never have a non-zero *\<patch>.\<build>*, with the exception of .NET5 RTM.
+**Note**: `AssemblyVersion` for *WinRT.Runtime.dll* will never have a non-zero *\<patch>.\<build>*, with the exception of .NET5 RTM.
 
 ### CsWinRT NuGet Prereleases
 
