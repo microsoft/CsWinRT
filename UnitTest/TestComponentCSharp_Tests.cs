@@ -2244,5 +2244,12 @@ namespace UnitTest
             CustomDisposableTest disposable = new CustomDisposableTest();
             disposable.Dispose();
         }
+
+        [Fact]
+        public void TestIBindableVector()
+        {
+            CustomBindableVectorTest vector = new CustomBindableVectorTest();
+            Assert.NotNull(vector);
+        }
     }
 }
