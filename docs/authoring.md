@@ -100,3 +100,9 @@ In your C++ app, add a `Directory.Build.targets` file that copies over the neces
 </Project>
 
 ```
+
+## References
+Here are some resources that demonstrate authoring C#/WinRT components and the changes discussed above.
+1. https://github.com/AdamBraden/MyRandom
+2. https://github.com/microsoft/CsWinRT/tree/master/Samples/Net5ProjectionSample
+3. https://github.com/microsoft/CsWinRT/tree/master/Authoring/AuthoringConsumptionTest
