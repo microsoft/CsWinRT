@@ -318,6 +318,22 @@ namespace UnitTest
         }
 
 #if NET5_0
+        async Task InvokeStreamWriteZeroBytes()
+        {
+            var random = new Random(42);
+            byte[] data = new byte[256];
+            random.NextBytes(data);
+
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            await stream.WriteAsync(data, 0, 0);
+            await stream.WriteAsync(data, data.Length, 0);
+        }
+
+        [Fact]
+        public void TestStreamWriteZeroByte()
+        {
+            Assert.True(InvokeStreamWriteZeroBytes().Wait(1000));
+        }
 
         async Task InvokeStreamWriteAsync()
         {
