@@ -2,8 +2,7 @@
 
 ## Overview
 C#/WinRT provides support for authoring Windows Runtime components. You can write a library in C#, and use C#/WinRT's source generator to get a winmd that any WinRT compatible language can use. For example, a library written in C# can be used by a C++ program, via C#/WinRT and C++/WinRT, with just a few tweaks to the C++ project.
-As part of the native (C++) support, the WinRT Hosting dlls (WinRT.Host and WinRT.Host.Shim) need to be in the same folder as the native executable. 
-For now, users need a special target of their own so MSBuild can place the hosting dlls in the correct place. But soon we will implement this so that a package reference to C#/WinRT in the authored component is all that is needed.   
+
 
 ## Authoring the C# Component
 To create a library, select the Class Library (.NET Core) template in Visual Studio. 
@@ -28,11 +27,18 @@ We are working on implementing diagnostics in our tool that will catch these err
 
 2. Not all C# types have been mapped to runtime types, but we are working on completing this coverage. 
 
-## Using the authored component
-Soon, users will only need to add a `ProjectReference` to their consuming app. But until then, modifications are needed.
-For native apps to use your library, you will need to modify the app's project file (e.g. `YourApp.vcxproj`), add a manifest and runtime config file, and a target for copying the required DLLs.
+## Using the authored component in C++
+As part of the native (C++) support, the WinRT Hosting dlls (WinRT.Host and WinRT.Host.Shim) need to be in the same folder as the native executable. 
+For now, users need a special target of their own so MSBuild can place the hosting dlls in the correct place. But soon we will implement this so that a package reference to C#/WinRT in the authored component is all that is needed.   
 
-The following item group demonstrates the needed modifications to the project file:
+Modifications needed: 
+  1. update the consuming app's project file (e.g. `YourApp.vcxproj`)
+  2. add a manifest file and runtimeconfig file 
+  3. add a target for copying the required DLLs.
+
+
+### Project File
+The following item group demonstrates the needed modifications to the project file (1. above):
 
 ```
 <ItemGroup>
@@ -55,8 +61,11 @@ The following item group demonstrates the needed modifications to the project fi
 </ItemGroup> 
 ```
 
+### Manifest and RuntimeConfig
 You'll need to author some files to assist the hosting process by the native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. 
-For information on writing these, see the hosting.md (+link).
+For information on writing these, see the [hosting docs](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md).
+
+### Copying DLLs Target
 
 In your C++ app, add a `Directory.Build.targets` file that copies over the necessary DLLs: 
 ```
@@ -67,11 +76,11 @@ In your C++ app, add a `Directory.Build.targets` file that copies over the neces
   </PropertyGroup>
   
   <Target Name="CopyHostAssets">
-    <Copy SourceFiles="C:\Users\jlarkin\.nuget\packages\microsoft.windows.cswinrt\1.1.0-prerelease.201118.1\native\$(Platform)\WinRT.Host.dll"
+    <Copy SourceFiles="Path\To\Nuget\Packages\microsoft.windows.cswinrt\DownloadedVersion\native\$(Platform)\WinRT.Host.dll"
           DestinationFolder="$(OutDir)" 
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
     
-    <Copy SourceFiles="C:\Users\jlarkin\.nuget\packages\microsoft.windows.cswinrt\1.1.0-prerelease.201118.1\lib\net5.0\WinRT.Host.Shim.dll"
+    <Copy SourceFiles="Path\To\Nuget\Packages\microsoft.windows.cswinrt\DownloadedVersion\lib\net5.0\WinRT.Host.Shim.dll"
           DestinationFolder="$(OutDir)" 
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
 
