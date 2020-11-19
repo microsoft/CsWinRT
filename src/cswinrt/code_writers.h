@@ -1214,6 +1214,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
         auto cache_object = write_factory_cache_object<write_composing_factory_method>(w, composable_type, class_type);
         auto default_interface_name = get_default_interface_name(w, class_type, false);
         auto default_interface_abi_name = get_default_interface_name(w, class_type);
+        bool finalizer_written = false;
 
         for (auto&& method : composable_type.MethodList())
         {
@@ -1263,12 +1264,38 @@ MarshalInspectable<object>.DisposeAbi(ptr);
             }
             else
             {
+                if (!finalizer_written)
+                {
+                    finalizer_written = true;
+                    w.write(R"(
+private readonly ComWrappersAggregationHelper.ClassNative classNative;
+~%()
+{
+if (this.classNative.Release.HasFlag(ComWrappersAggregationHelper.ReleaseFlags.Inner))
+{
+Marshal.Release(this.classNative.Inner);
+}
+if (this.classNative.Release.HasFlag(ComWrappersAggregationHelper.ReleaseFlags.Instance))
+{
+Marshal.Release(this.classNative.Instance);
+}
+if (this.classNative.Release.HasFlag(ComWrappersAggregationHelper.ReleaseFlags.ReferenceTracker))
+{
+Marshal.Release(this.classNative.ReferenceTracker);
+}
+}
+)",
+                        class_type.TypeName());
+                }
+
                 w.write(R"(
 % %(%)%
 {
-object baseInspectable = this.GetType() != typeof(%) ? this : null;
+bool isAggregation = this.GetType() != typeof(%);
+object baseInspectable = isAggregation ? this : null;
 IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
-using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
+// Let ComWrappersAggregationHelper manage refcounts
+//using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
 try
 {
 _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
@@ -1277,12 +1304,16 @@ _lazyInterfaces = new Dictionary<Type, object>()
 {%
 };
 
-ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+// Let ComWrappersAggregationHelper manage wrappers
+//ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
 finally
 {
-MarshalInspectable<object>.DisposeAbi(ptr);
+// Let ComWrappersAggregationHelper manage refcounts
+//MarshalInspectable<object>.DisposeAbi(ptr);
 }
+
+classNative = ComWrappersAggregationHelper.Init(isAggregation, this, composed, ptr);
 }
 )",
                     visibility,

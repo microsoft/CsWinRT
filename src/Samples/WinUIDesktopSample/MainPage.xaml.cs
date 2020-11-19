@@ -9,7 +9,7 @@ using Microsoft.UI.Xaml.Input;
 
 namespace WinUIDesktopSample
 {
-    public class LeakedObject : Page
+    public class Derived : Grid
     {
         byte[] bytes = new byte[10_000_000];
     };
@@ -22,26 +22,23 @@ namespace WinUIDesktopSample
         public MainPage()
         {
             InitializeComponent();
-            var val = Environment.GetEnvironmentVariable("CsWinRTNet5SdkVersion");
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private WeakReference baseRef = new WeakReference(new Grid());
+        private WeakReference derivedRef = new WeakReference(new Derived());
+        private List<object> pressure = new List<object>();
+
+        private void Check_Click(object sender, RoutedEventArgs e)
         {
-            static WeakReference MakeBaseWeakRef() => new WeakReference(new Page());
-
-            static WeakReference MakeDerivedWeakRef() => new WeakReference(new LeakedObject());
-
-            var baseRef = MakeBaseWeakRef();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            var baseLeaked = baseRef.IsAlive ? "base leaked" : "base collected";
-
-            var derivedRef = MakeDerivedWeakRef();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            var derivedLeaked = derivedRef.IsAlive ? "derived leaked" : "derived collected";
-
-            ((Button)sender).Content = baseLeaked + ", " + derivedLeaked;
+            pressure.Add(new byte[10_000_000]);
+            for (int i = 0; i < 10; i++)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+            var baseStatus = baseRef.IsAlive ? "base leaked" : "base collected";
+            var derivedStatus = derivedRef.IsAlive ? "derived leaked" : "derived collected";
+            Status.Text = baseStatus + ", " + derivedStatus;
         }
     }
 }
