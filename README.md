@@ -10,8 +10,6 @@ WinRT APIs are defined in `*.winmd` format, and C#/WinRT includes tooling that g
 
 The C#/WinRT runtime assembly, `WinRT.Runtime.dll`, is required by all C#/WinRT assemblies.  It provides an abstraction layer over the .NET runtime, supporting both .NET Standard 2.0 and .NET 5. The runtime assembly implements several features for all projected C#/WinRT types, including WinRT activation and marshaling logic and [COM wrapper](https://docs.microsoft.com/dotnet/standard/native-interop/com-wrappers) lifetime management.
 
-The following diagrams demonstrate how C#/WinRT is used to create and reference interop assemblies.
-
 ### Create and distribute an interop assembly
 
 Component authors need to build a C#/WinRT projection assembly for .NET5+ consumers. In the diagram below, the **cswinrt.exe** tool processes Windows Metadata (`*.winmd`) files in the "Contoso" namespace to create projection source files. These source files are then compiled into an interop projection assembly named `Contoso.projection.dll`. The projection assembly can then be distributed along with the implementation assemblies (`Contoso.*.dll`) as a NuGet package.
