@@ -318,6 +318,40 @@ namespace UnitTest
         }
 
 #if NET5_0
+        async Task InvokeStreamWriteZeroBytes()
+        {
+            var random = new Random(42);
+            byte[] data = new byte[256];
+            random.NextBytes(data);
+
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            await stream.WriteAsync(data, 0, 0);
+            await stream.WriteAsync(data, data.Length, 0);
+        }
+
+        [Fact]
+        public void TestStreamWriteZeroByte()
+        {
+            Assert.True(InvokeStreamWriteZeroBytes().Wait(1000));
+        }
+
+        async Task InvokeStreamWriteAsync()
+        {
+            using var fileStream = File.OpenWrite("TestFile.txt");
+            using var winRTStream = fileStream.AsOutputStream();
+
+            var winRTBuffer = new Windows.Storage.Streams.Buffer(capacity: 0);
+
+            await winRTStream.WriteAsync(winRTBuffer);
+            Assert.True(true);
+        }
+
+        [Fact]
+        public void TestStreamWriteAsync()
+        {
+            Assert.True(InvokeStreamWriteAsync().Wait(1000));
+        }
+
         [Fact]
         public void TestAsStream()
         {
@@ -2209,6 +2243,13 @@ namespace UnitTest
         {
             CustomDisposableTest disposable = new CustomDisposableTest();
             disposable.Dispose();
+        }
+
+        [Fact]
+        public void TestIBindableVector()
+        {
+            CustomBindableVectorTest vector = new CustomBindableVectorTest();
+            Assert.NotNull(vector);
         }
     }
 }
