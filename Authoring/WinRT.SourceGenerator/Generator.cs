@@ -171,12 +171,18 @@ namespace Generator
                 /* Check all structs */
                 foreach (StructDeclarationSyntax structDeclaration in structs)
                 {
-                    found |= winrtRules.StructHasPropertyField(ref context, structDeclaration);
+                    found |= winrtRules.StructHasFieldOfType<ConstructorDeclarationSyntax>(ref context, structDeclaration);
+                    found |= winrtRules.StructHasFieldOfType<DelegateDeclarationSyntax>(ref context, structDeclaration);
+                    found |= winrtRules.StructHasFieldOfType<EventFieldDeclarationSyntax>(ref context, structDeclaration);
+                    found |= winrtRules.StructHasFieldOfType<IndexerDeclarationSyntax>(ref context, structDeclaration);
+                    found |= winrtRules.StructHasFieldOfType<MethodDeclarationSyntax>(ref context, structDeclaration);
+                    found |= winrtRules.StructHasFieldOfType<OperatorDeclarationSyntax>(ref context, structDeclaration);
+                    found |= winrtRules.StructHasFieldOfType<PropertyDeclarationSyntax>(ref context, structDeclaration);
 
                     var fields = structDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>();
                     foreach (var field in fields)
                     {
-                        found |= winrtRules.StructHasInvalidFields(ref context, field, structDeclaration, classNames);
+                        found |= winrtRules.StructHasFieldOfInvalidType(ref context, field, structDeclaration, classNames);
                     }
                 }
             }

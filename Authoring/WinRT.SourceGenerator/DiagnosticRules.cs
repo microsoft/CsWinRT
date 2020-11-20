@@ -1,12 +1,16 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Generator 
 {
     public class WinRTRules
-    { 
+    {
+        #region RuleDescriptors 
+
         /* MakeRule is a helper function that does most of the boilerplate information needed for Diagnostics
         param id : string, a short identifier for the diagnostic
         param title : string, a few words generally describing the diagnostic
@@ -43,11 +47,6 @@ namespace Generator
             + "Consider using another name for the parameter or use the System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute "
             + "to explicitly specify the name of the return value."));
 
-        static DiagnosticDescriptor StructHasPropertyRule = MakeRule(
-            "WME1060(a)",
-            "Property in a Struct",
-            "The structure {0} has a property {1}. In Windows Runtime, structures can only contain public fields of basic types, enums and structures.");
-
         static DiagnosticDescriptor StructHasPrivateFieldRule = MakeRule(
             "WME1060(b)",
             "Private field in struct",
@@ -56,9 +55,16 @@ namespace Generator
         static DiagnosticDescriptor StructHasInvalidFieldRule = MakeRule(
             "WME1060",
             "Invalid field in struct",
-            ("Structure {0} has field {1} of type {2}. {2} is not a valid Windows Runtime field type. Each field " 
+            ("Structure {0} has field '{1}' of type {2}; {2} is not a valid Windows Runtime field type. Each field " 
+            + "in a Windows Runtime structure can only be UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum, or itself a structure."));
+        
+        static DiagnosticDescriptor StructHasInvalidFieldRule2 = MakeRule(
+            "WME1060",
+            "Invalid field in struct",
+            ("Structure {0} has a field of type {1}; {1} is not a valid Windows Runtime field type. Each field " 
             + "in a Windows Runtime structure can only be UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum, or itself a structure."));
 
+        #endregion
 
         /* The full metadata name of Async interfaces that should not be implemented by Windows Runtime components */
         static string[] ProhibitedAsyncInterfaces = {
@@ -77,7 +83,7 @@ namespace Generator
         }
 
         /* ImplementsAsyncInterface 
-            returns true if the class represented by the symbol implements any of the interfaces defined in ProhibitedAsyncInterfaces */
+         *  returns true if the class represented by the symbol implements any of the interfaces defined in ProhibitedAsyncInterfaces */
         public bool ImplementsAsyncInterface(ref GeneratorExecutionContext context, INamedTypeSymbol classSymbol, ClassDeclarationSyntax classDeclaration)
         { 
             foreach (string prohibitedInterface in ProhibitedAsyncInterfaces)
@@ -99,7 +105,7 @@ namespace Generator
         }
 
         /* HasMultipleConstructorsOfSameArity 
-            keeps track of the arity of all constructors, and reports the diagnostic (and exits) as soon as a two constructors of the same arity are seen. */
+         *  keeps track of the arity of all constructors, and reports the diagnostic (and exits) as soon as a two constructors of the same arity are seen. */
         public bool HasMultipleConstructorsOfSameArity(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
         {
             IEnumerable<ConstructorDeclarationSyntax> constructors = classDeclaration.ChildNodes().OfType<ConstructorDeclarationSyntax>();
@@ -125,8 +131,8 @@ namespace Generator
         }
 
         /* HasParameterNamedValue 
-            the generated code for components uses the name "__retval" for the output variable, 
-            we report diagnostic if a user uses this same identifier as a parameter to a method */
+         *  the generated code for components uses the name "__retval" for the output variable, 
+         *  we report diagnostic if a user uses this same identifier as a parameter to a method */
         public bool HasReturnValueNameConflict(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
         {
             IEnumerable<MethodDeclarationSyntax> methods = classDeclaration.ChildNodes().OfType<MethodDeclarationSyntax>();
@@ -145,34 +151,65 @@ namespace Generator
             return false;
         }
 
-        /* StructHasPropertyField
-            structs cannot have properties in the Windows Runtime */
-        public bool StructHasPropertyField(ref GeneratorExecutionContext context, StructDeclarationSyntax structDeclaration)
-        { 
-            var propertyDeclarations = structDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>();
-            if (propertyDeclarations.Any())
+        /* SimplifySyntaxTypeString 
+         *  returns the more common term for the given kind of syntax; used when creating a diagnostic for an invalid field in a struct */ 
+        private string SimplifySyntaxTypeString(string syntaxType)
+        {
+            switch (syntaxType)
             {
-                context.ReportDiagnostic(Diagnostic.Create(StructHasPropertyRule, structDeclaration.GetLocation(), structDeclaration.Identifier, propertyDeclarations.First().Identifier));
+                case "EventFieldDeclarationSyntax":
+                    return "event";
+                case "ConstructorDeclarationSyntax":
+                    return "constructor";
+                case "DelegateDeclarationSyntax":
+                    return "delegate";
+                case "IndexerDeclarationSyntax":
+                    return "indexer";
+                case "MethodDeclarationSyntax":
+                    return "method";
+                case "OperatorDeclarationSyntax":
+                    return "operator";
+                case "PropertyDeclarationSyntax":
+                    return "property";
+                default:
+                    return "unknown syntax type: " + syntaxType;
+            }
+        }
+
+        /*  StructHasFieldOfType
+         *   returns true iff there is a declaration of a field with the given type argument 
+         *   e.g., if a struct has a property, and T is PropertyDeclarationSyntax, we report a diagnostic and return true */
+        public bool StructHasFieldOfType<T>(ref GeneratorExecutionContext context, StructDeclarationSyntax structDeclaration)
+        {
+            if (structDeclaration.DescendantNodes().OfType<T>().Any())
+            {
+                context.ReportDiagnostic(Diagnostic.Create(StructHasInvalidFieldRule2, 
+                    structDeclaration.GetLocation(), 
+                    structDeclaration.Identifier, 
+                    SimplifySyntaxTypeString(typeof(T).Name)));
                 return true;
             }
             return false;
         }
 
+
         /* StructHasInvalidFields
-            structs can only contain fields of primitive types, enums, and other structs */
-        public bool StructHasInvalidFields(ref GeneratorExecutionContext context, FieldDeclarationSyntax field, StructDeclarationSyntax structDeclaration, List<string> classNames)
+         *   returns true if there is a field declared private, 
+         *   or (inclusive) declared with a type that is a class or one of object, byte or dynamic  */
+        public bool StructHasFieldOfInvalidType(ref GeneratorExecutionContext context, FieldDeclarationSyntax field, StructDeclarationSyntax structDeclaration, List<string> classNames)
         {
             bool found = false; 
 
+            /* No private fields allowed in Windows Runtime components */
             if (field.GetFirstToken().ToString().Equals("private")) // hmm
             {
                 context.ReportDiagnostic(Diagnostic.Create(StructHasPrivateFieldRule, field.GetLocation(), structDeclaration.Identifier));
                 found |= true;
             } 
+
             foreach (var variable in field.DescendantNodes().OfType<VariableDeclarationSyntax>())
             {
-                var type = variable.Type;
-                var typeStr = type.ToString();
+                var typeStr = variable.Type.ToString();
 
                 List<string> invalidTypes = new List<string> { "object", "byte", "dynamic" };
                 invalidTypes.AddRange(classNames);
@@ -184,6 +221,7 @@ namespace Generator
                             structDeclaration.Identifier,
                             field.ToString(),
                             typeStr));
+                    found |= true;
                 }
             }
             return found;

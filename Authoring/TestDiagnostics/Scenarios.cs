@@ -1,4 +1,5 @@
 ﻿using ABI.System.Numerics;
+using ABI.Windows.ApplicationModel.Contacts;
 using System;
 using System.Runtime.ExceptionServices;
 using Windows.Foundation;
@@ -24,6 +25,44 @@ namespace TestDiagnostics
         public SillyClass classField;
     }
 
+    public struct StructWithDelegate_Invalid
+    { 
+        public delegate int ADelegate(int x);
+    }
+
+    public struct StructWithEvent_Invalid
+    { 
+        public event EventHandler<int> EventField;
+    }
+
+    public struct StructWithConstructor_Invalid
+    {
+        int X;
+        StructWithConstructor_Invalid(int x)
+        {
+            X = x;
+        }
+    }
+    
+    public struct StructWithIndexer_Invalid
+    {
+        int[] arr;
+        int this[int i] => arr[i];
+    }
+    
+    public struct StructWithMethods_Invalid
+    {
+        int foo(int x)
+        {
+            return x;
+        }
+    }
+    public struct StructWithConst_Invalid // really invalid ?
+    {
+        const int five = 5;
+    }
+    
+    /*
     public enum BasicEnum
     { 
         First = 0,
@@ -37,15 +76,17 @@ namespace TestDiagnostics
         public int x { get; }
         public int y { get; }
     }
+    */
 
+    /*
     public struct StructWithPrivateField_Invalid
     {
         const int ci = 5;
         private int x;
     }
-    /* */
+    */
 
-    /**/
+    /*
     public struct StructWithAllValidFields
     {
         bool boolean;
@@ -61,9 +102,9 @@ namespace TestDiagnostics
         ushort us;
         string str;
     }
-    /**/
+    */
 
-    /**/
+    /*
     public struct StructWithObjectField_Invalid // is this really invalid? 
     {
         object obj;
@@ -83,9 +124,9 @@ namespace TestDiagnostics
     {
         public Matrix3x2 matrix;
     }
-    /**/
+    */
 
-    /**/
+    /*
     public sealed class ParameterNamedDunderRetVal
     {
         public int Identity(int __retval)
@@ -93,9 +134,9 @@ namespace TestDiagnostics
             return __retval;
         }
     }
-    /**/
+    */
 
-    /**/
+    /*
     public sealed class SameArityConstructors
     {
         private int num;
@@ -116,9 +157,9 @@ namespace TestDiagnostics
         // Can test that multiple constructors are allowed (has been verified already, too)
         // as long as they have different arities by making one take none or 2 arguments 
     }
-    /**/
+    */
 
-    /* Would be nice to not have to comment out scenarios... perhaps a file for each case to test?  */
+    /* Would be nice to not have to comment out scenarios... perhaps a file for each case to test?  
     public sealed class AsyAction : IAsyncAction, IAsyncActionWithProgress<int>
     {
         public AsyncActionCompletedHandler Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -168,7 +209,9 @@ namespace TestDiagnostics
             throw new NotImplementedException();
         }
     }
-    
+    */
+   
+    /*
     public class ActionWithProgress : IAsyncActionWithProgress<int>
     {
         AsyncActionProgressHandler<int> IAsyncActionWithProgress<int>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -195,9 +238,9 @@ namespace TestDiagnostics
             throw new NotImplementedException();
         }
     }
-    /**/
+    */
 
-    /**/
+    /*
     public sealed class OpWithProgress : IAsyncOperationWithProgress<int, bool>
     {
         AsyncOperationProgressHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -250,5 +293,5 @@ namespace TestDiagnostics
             throw new NotImplementedException();
         }
     } 
-    /**/
+    */
 }
