@@ -688,6 +688,21 @@ namespace UnitTest
             var objects = new List<ManagedType>() { new ManagedType(), new ManagedType() };
             var query = from item in objects select item;
             TestObject.ObjectIterableProperty = query;
+
+            TestObject.ObjectProperty = "test";
+            Assert.Equal("test", TestObject.ObjectProperty);
+
+            var objectArray = new ManagedType[] { new ManagedType(), new ManagedType() };
+            TestObject.ObjectIterableProperty = objectArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(objectArray));
+
+            var strArray = new string[] { "str1", "str2", "str3" };
+            TestObject.ObjectIterableProperty = strArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(strArray));
+
+            var uriArray = new Uri[] { new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") };
+            TestObject.ObjectIterableProperty = uriArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(uriArray));
         }
 
         [Fact]

@@ -226,21 +226,14 @@ namespace WinRT
             var newArguments = new Type[genericArguments.Length];
             for (int i = 0; i < genericArguments.Length; i++)
             {
-                if (!IsTypeWindowsRuntimeTypeNoArray(genericArguments[i]))
+                bool argumentCovariant = (genericConstraints[i].GenericParameterAttributes & GenericParameterAttributes.VarianceMask) == GenericParameterAttributes.Covariant;
+                if (argumentCovariant && !genericArguments[i].IsValueType)
                 {
-                    bool argumentCovariant = (genericConstraints[i].GenericParameterAttributes & GenericParameterAttributes.VarianceMask) == GenericParameterAttributes.Covariant;
-                    if (argumentCovariant && !genericArguments[i].IsValueType)
-                    {
-                        newArguments[i] = typeof(object);
-                    }
-                    else
-                    {
-                        return false;
-                    }
+                    newArguments[i] = typeof(object);
                 }
                 else
                 {
-                    newArguments[i] = genericArguments[i];
+                    return false;
                 }
             }
             compatibleType = definition.MakeGenericType(newArguments);
