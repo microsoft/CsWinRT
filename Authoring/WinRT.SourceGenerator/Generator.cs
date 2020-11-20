@@ -119,8 +119,8 @@ namespace Generator
             return Path.Combine(GetGeneratedFilesDir(context), GetAssemblyName(context) + ".winmd");
         }
 
-        private void GenerateWinMD(MetadataBuilder metadataBuilder, string outputFile)
-        {
+        private void GenerateWinMD(MetadataBuilder metadataBuilder, string outputFile) 
+        { 
             Logger.Log("Writing " + outputFile);
             var managedPeBuilder = new ManagedPEBuilder(
                 new PEHeaderBuilder(
@@ -137,217 +137,46 @@ namespace Generator
             peBlob.WriteContentTo(fs);
         }
 
-        private static string diagnosticsLink = "https://docs.microsoft.com/en-us/previous-versions/hh977010(v=vs.110)";
-
-        private static DiagnosticDescriptor AsyncRule = MakeRule(
-            "WME1084",
-            "Async Interfaces Rule",
-            "Runtime component class {0} cannot implement async interface {1}; use AsyncInfo class methods instead of async interfaces");
-
-        private static DiagnosticDescriptor ClassConstructorRule = MakeRule(
-            "WME1099",
-            "Class Constructor Rule",
-            "Runtime component class {0} cannot have multiple constructors of the same arity {1}");
-
-        private static DiagnosticDescriptor ParameterNamedValueRule = MakeRule(
-            "WME1092",
-            "Parameter Named Value Rule",
-            ("The method {0} has a parameter named {1} which is the same as the default return value name. " 
-            + "Consider using another name for the parameter or use the System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute " 
-            + "to explicitly specify the name of the return value."));
-
-        private static DiagnosticDescriptor StructHasPropertyRule = MakeRule(
-            "WME1060(a)",
-            "Property in a Struct",
-            "The structure {0} has a property {1}. In Windows Runtime, structures can only contain public fields of basic types, enums and structures.");
-       
-        private static DiagnosticDescriptor StructHasPrivateFieldRule = MakeRule(
-            "WME1060(b)",
-            "Private field in struct",
-            ("Structure {0} has private field. All fields must be public for Windows Runtime structures."));
-
-        private static DiagnosticDescriptor StructHasInvalidFieldRule = MakeRule(
-            "WME1060",
-            "Invalid field in struct",
-            ("Structure {0} has field {1} of type {2}. {2} is not a valid Windows Runtime field type. Each field " +
-             "in a Windows Runtime structure can only be UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum, or itself a structure.") ); 
-
-
-        private static DiagnosticDescriptor MakeRule(string id, string title, string messageFormat) 
-        {
-            return new DiagnosticDescriptor(
-                id: id,
-                title: title,
-                messageFormat: messageFormat,
-                category: "Usage",
-                /* Warnings dont fail command line build; winmd generation is prevented regardless of severity.
-                 * Make this error when making final touches on this deliverable. */
-                defaultSeverity: DiagnosticSeverity.Warning,
-                isEnabledByDefault: true,
-                helpLinkUri: diagnosticsLink);
-        }
-
-        static private string[] ProhibitedAsyncInterfaces = {
-                "Windows.Foundation.IAsyncAction", 
-                "Windows.Foundation.IAsyncActionWithProgress`1",
-                "Windows.Foundation.IAsyncOperation`1",
-                "Windows.Foundation.IAsyncOperationWithProgress`2"
-        };
-
-        /* SameAsyncInterface uses the proper ISymbol equality check on the OriginalDefinition of the given symbols */
-        private bool SameAsyncInterface(INamedTypeSymbol interfaceA, INamedTypeSymbol interfaceB)
-        {   
-            /* Using OriginalDefinition b/c the generic field of the metadata type has the template name, e.g. `TProgress`
-             * and the actual interface will have a concrete type, e.g. `int` */
-            return SymbolEqualityComparer.Default.Equals(interfaceA.OriginalDefinition, interfaceB.OriginalDefinition);
-        }
-
-        /* ClassImplementsAsyncInterface returns true if the class represented by the symbol
-           implements any of the interfaces defined in ProhibitedAsyncInterfaces */
-        private bool ImplementsAsyncInterface(GeneratorExecutionContext context, INamedTypeSymbol classSymbol, ClassDeclarationSyntax classDeclaration)
+        private bool CatchWinRTDiagnostics(ref GeneratorExecutionContext context) 
         { 
-            foreach (string prohibitedInterface in ProhibitedAsyncInterfaces)
-            {
-                INamedTypeSymbol asyncInterface = context.Compilation.GetTypeByMetadataName(prohibitedInterface);
-                foreach (INamedTypeSymbol interfaceImplemented in classSymbol.AllInterfaces)
-                {
-                    if (SameAsyncInterface(interfaceImplemented, asyncInterface))
-                    { 
-                        context.ReportDiagnostic(Diagnostic.Create(AsyncRule, classDeclaration.GetLocation(), classDeclaration.Identifier, interfaceImplemented));
-                        return true; 
-                        /* By exiting early, we only report diagnostic for first prohibited interface we see. 
-                        If a class implemented 2 (or more) such interfaces, then we would only report diagnostic error for the first one. 
-                        could thread `found` variable from CatchWinRTDiagnostics here as well, if we want more diagnostics reported */
-                    }
-                }
-            }
-            return false;
-        }
-
-        /* HasMultipleConstructorsOfSameArity keeps track of the arity of all constructors seen, 
-         * and reports the diagnostic (and exits) as soon as a duplicate is seen. */
-        private bool HasMultipleConstructorsOfSameArity(GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
-        {
-            IEnumerable<ConstructorDeclarationSyntax> constructors = classDeclaration.ChildNodes().OfType<ConstructorDeclarationSyntax>();
-            
-            /* more performant data structure? or use a Set, in order to not have to call Contains()? */
-            IList<int> aritiesSeenSoFar = new List<int>();
-
-            foreach (ConstructorDeclarationSyntax constructor in constructors)
-            {
-                int arity = constructor.ParameterList.Parameters.Count;
-
-                if (aritiesSeenSoFar.Contains(arity))
-                {
-                    context.ReportDiagnostic(Diagnostic.Create(ClassConstructorRule, constructor.GetLocation(), classDeclaration.Identifier, arity));
-                    return true;
-                }
-                else
-                {
-                    aritiesSeenSoFar.Add(arity);
-                }
-            }
-            return false;
-        }
-
-        /* HasParameterNamedValue */
-        private bool HasReturnValueNameConflict(GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
-        {
-            IEnumerable<MethodDeclarationSyntax> methods = classDeclaration.ChildNodes().OfType<MethodDeclarationSyntax>();
-
-            foreach (MethodDeclarationSyntax method in methods)
-            {
-                foreach (ParameterSyntax parameter in method.ParameterList.Parameters)
-                {
-                    if (parameter.Identifier.Value.Equals("__retval"))
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(ParameterNamedValueRule, parameter.GetLocation(), method.Identifier, parameter.Identifier));
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        private bool StructHasPropertyField(GeneratorExecutionContext context, StructDeclarationSyntax structDeclaration)
-        { 
-            var propertyDeclarations = structDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>();
-            if (propertyDeclarations.Any())
-            {
-                context.ReportDiagnostic(Diagnostic.Create(StructHasPropertyRule, structDeclaration.GetLocation(), structDeclaration.Identifier, propertyDeclarations.First().Identifier));
-                return true;
-            }
-            return false;
-        }
-
-        private bool StructHasInvalidFields(GeneratorExecutionContext context, FieldDeclarationSyntax field, StructDeclarationSyntax structDeclaration, List<string> classNames)
-        {
             bool found = false; 
-
-            if (field.GetFirstToken().ToString().Equals("private")) // hmm
+            WinRTRules winrtRules = new WinRTRules(); 
+            foreach (SyntaxTree tree in context.Compilation.SyntaxTrees) 
             {
-                context.ReportDiagnostic(Diagnostic.Create(StructHasPrivateFieldRule, field.GetLocation(), structDeclaration.Identifier));
-                found |= true;
-            } 
-            foreach (var variable in field.DescendantNodes().OfType<VariableDeclarationSyntax>())
-            {
-                var type = variable.Type;
-                var typeStr = type.ToString();
-
-                List<string> invalidTypes = new List<string> { "object", "byte", "dynamic" };
-                invalidTypes.AddRange(classNames);
-                
-                if (invalidTypes.Contains(typeStr))
-                { 
-                    context.ReportDiagnostic(Diagnostic.Create(StructHasInvalidFieldRule,
-                            variable.GetLocation(),
-                            structDeclaration.Identifier,
-                            field.ToString(),
-                            typeStr));
-                }
-            }
-            return found;
-        }
-
-        private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
-        {
-            bool found = false; 
-            
-            foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
-            {
-                var model = context.Compilation.GetSemanticModel(tree);
+                var model = context.Compilation.GetSemanticModel(tree); 
                 var nodes = tree.GetRoot().DescendantNodes();
-
-                var classes = nodes.OfType<ClassDeclarationSyntax>();
+                
+                var classes = nodes.OfType<ClassDeclarationSyntax>(); 
                 var structs = nodes.OfType<StructDeclarationSyntax>();
 
                 // Used in checking structure fields 
                 List<string> classNames = new List<string>();
 
-                /* look for... */
+                /* Check all classes */
                 foreach (ClassDeclarationSyntax classDeclaration in classes)
-                {
+                { 
                     classNames.Add(classDeclaration.Identifier.ToString());
 
                     /* parameters named __retval*/
-                    found |= HasReturnValueNameConflict(context, classDeclaration);
+                    found |= winrtRules.HasReturnValueNameConflict(ref context, classDeclaration);
 
                     /* multiple constructors of the same arity */
-                    found |= HasMultipleConstructorsOfSameArity(context, classDeclaration);
+                    found |= winrtRules.HasMultipleConstructorsOfSameArity(ref context, classDeclaration);
                     
                     /* implementing async interfaces */
                     var classSymbol = model.GetDeclaredSymbol(classDeclaration);
-                    found |= ImplementsAsyncInterface(context, classSymbol, classDeclaration);
+                    found |= winrtRules.ImplementsAsyncInterface(ref context, classSymbol, classDeclaration);
                 }
 
+                /* Check all structs */
                 foreach (StructDeclarationSyntax structDeclaration in structs)
                 {
-                    found |= StructHasPropertyField(context, structDeclaration);
+                    found |= winrtRules.StructHasPropertyField(ref context, structDeclaration);
 
                     var fields = structDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>();
                     foreach (var field in fields)
                     {
-                        found |= StructHasInvalidFields(context, field, structDeclaration, classNames);
+                        found |= winrtRules.StructHasInvalidFields(ref context, field, structDeclaration, classNames);
                     }
                 }
             }
@@ -363,7 +192,7 @@ namespace Generator
 
             Logger.Initialize(context);
 
-            if (CatchWinRTDiagnostics(context))
+            if (CatchWinRTDiagnostics(ref context))
             {
                 Logger.Log("Exiting early -- found errors in authored runtime component.");
                 Logger.Close();

@@ -7,22 +7,8 @@ using Windows.Web.Syndication;
 
 namespace TestDiagnostics
 {
-
-    /* "only structures can contain fields" what does this mean? 
-     *   ? we have samples of classes with fields that are fine...
-     * 
-     * structures can only contain "valid" fields
-     *   ! all fields must be public
-     * "valid" fields are enumerations, structures, primitive types
-     *   UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum, or itself 
-     *   are bytes okay?
-     */
   
-    public enum BasicEnum
-    { 
-        First = 0,
-        Second = 1
-    }
+    
 
     public sealed class SillyClass
     { 
@@ -32,9 +18,16 @@ namespace TestDiagnostics
         }
     }
 
+    /*  */
     public struct StructWithClass_Invalid
     {
         public SillyClass classField;
+    }
+
+    public enum BasicEnum
+    { 
+        First = 0,
+        Second = 1
     }
 
     public struct Posn_Invalid 
@@ -50,8 +43,9 @@ namespace TestDiagnostics
         const int ci = 5;
         private int x;
     }
+    /* */
 
-    /*
+    /**/
     public struct StructWithAllValidFields
     {
         bool boolean;
@@ -67,8 +61,9 @@ namespace TestDiagnostics
         ushort us;
         string str;
     }
-    */
+    /**/
 
+    /**/
     public struct StructWithObjectField_Invalid // is this really invalid? 
     {
         object obj;
@@ -88,8 +83,9 @@ namespace TestDiagnostics
     {
         public Matrix3x2 matrix;
     }
+    /**/
 
-    /*
+    /**/
     public sealed class ParameterNamedDunderRetVal
     {
         public int Identity(int __retval)
@@ -97,9 +93,9 @@ namespace TestDiagnostics
             return __retval;
         }
     }
-    */
+    /**/
 
-    /*
+    /**/
     public sealed class SameArityConstructors
     {
         private int num;
@@ -120,9 +116,9 @@ namespace TestDiagnostics
         // Can test that multiple constructors are allowed (has been verified already, too)
         // as long as they have different arities by making one take none or 2 arguments 
     }
-    */
+    /**/
 
-    /* Would be nice to not have to comment out scenarios... perhaps a file for each case to test? 
+    /* Would be nice to not have to comment out scenarios... perhaps a file for each case to test?  */
     public sealed class AsyAction : IAsyncAction, IAsyncActionWithProgress<int>
     {
         public AsyncActionCompletedHandler Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -199,9 +195,9 @@ namespace TestDiagnostics
             throw new NotImplementedException();
         }
     }
-    */
+    /**/
 
-    /*
+    /**/
     public sealed class OpWithProgress : IAsyncOperationWithProgress<int, bool>
     {
         AsyncOperationProgressHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -254,5 +250,5 @@ namespace TestDiagnostics
             throw new NotImplementedException();
         }
     } 
-    */
+    /**/
 }
