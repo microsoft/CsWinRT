@@ -1,31 +1,92 @@
-﻿using System;
+﻿using ABI.System.Numerics;
+using System;
+using System.Runtime.ExceptionServices;
 using Windows.Foundation;
+using Windows.Foundation.Numerics;
 using Windows.Web.Syndication;
 
 namespace TestDiagnostics
 {
 
-    /* structures...
-     * can only contain fields
-     * all fields must be public
-     * fields cannot be used elsewhere 
-     * valid fields are enumerations, structures, primitive types
+    /* "only structures can contain fields" what does this mean? 
+     *   ? we have samples of classes with fields that are fine...
+     * 
+     * structures can only contain "valid" fields
+     *   ! all fields must be public
+     * "valid" fields are enumerations, structures, primitive types
      *   UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum, or itself 
+     *   are bytes okay?
      */
-
-    public struct ExampleStruct
-    {
-        const int ci = 5;
-        int x;
+  
+    public enum BasicEnum
+    { 
+        First = 0,
+        Second = 1
     }
 
-    public struct StructInAStruct
-    {
-        ExampleStruct strct;
-        public int phi
+    public sealed class SillyClass
+    { 
+        public double Identity(double d)
         {
-            get { return 5; }
+            return d;
         }
+    }
+
+    public struct StructWithClass_Invalid
+    {
+        public SillyClass classField;
+    }
+
+    public struct Posn_Invalid 
+    {
+        BasicEnum enumField; 
+
+        public int x { get; }
+        public int y { get; }
+    }
+
+    public struct StructWithPrivateField_Invalid
+    {
+        const int ci = 5;
+        private int x;
+    }
+
+    /*
+    public struct StructWithAllValidFields
+    {
+        bool boolean;
+        char character;
+        decimal dec;
+        double dbl;
+        float flt;
+        int i;
+        uint nat;
+        long lng;
+        ulong ulng;
+        short sh;
+        ushort us;
+        string str;
+    }
+    */
+
+    public struct StructWithObjectField_Invalid // is this really invalid? 
+    {
+        object obj;
+
+    }
+    public struct StructWithDynamicField_Invalid // is this really invalid? 
+    {
+        dynamic dyn;
+    }
+
+    public struct StructWithByteField_Invalid // is this really invalid? 
+    {
+        byte b;
+    }
+
+    public struct StructWithWinRTStructField
+    {
+        public Matrix3x2 matrix;
     }
 
     /*

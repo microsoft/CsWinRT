@@ -156,6 +156,23 @@ namespace Generator
             + "Consider using another name for the parameter or use the System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute " 
             + "to explicitly specify the name of the return value."));
 
+        private static DiagnosticDescriptor StructHasPropertyRule = MakeRule(
+            "WME1060(a)",
+            "Property in a Struct",
+            "The structure {0} has a property {1}. In Windows Runtime, structures can only contain public fields of basic types, enums and structures.");
+       
+        private static DiagnosticDescriptor StructHasPrivateFieldRule = MakeRule(
+            "WME1060(b)",
+            "Private field in struct",
+            ("Structure {0} has private field. All fields must be public for Windows Runtime structures."));
+
+        private static DiagnosticDescriptor StructHasInvalidFieldRule = MakeRule(
+            "WME1060",
+            "Invalid field in struct",
+            ("Structure {0} has field {1} of type {2}. {2} is not a valid Windows Runtime field type. Each field " +
+             "in a Windows Runtime structure can only be UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum, or itself a structure.") ); 
+
+
         private static DiagnosticDescriptor MakeRule(string id, string title, string messageFormat) 
         {
             return new DiagnosticDescriptor(
@@ -252,6 +269,46 @@ namespace Generator
             return false;
         }
 
+        private bool StructHasPropertyField(GeneratorExecutionContext context, StructDeclarationSyntax structDeclaration)
+        { 
+            var propertyDeclarations = structDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>();
+            if (propertyDeclarations.Any())
+            {
+                context.ReportDiagnostic(Diagnostic.Create(StructHasPropertyRule, structDeclaration.GetLocation(), structDeclaration.Identifier, propertyDeclarations.First().Identifier));
+                return true;
+            }
+            return false;
+        }
+
+        private bool StructHasInvalidFields(GeneratorExecutionContext context, FieldDeclarationSyntax field, StructDeclarationSyntax structDeclaration, List<string> classNames)
+        {
+            bool found = false; 
+
+            if (field.GetFirstToken().ToString().Equals("private")) // hmm
+            {
+                context.ReportDiagnostic(Diagnostic.Create(StructHasPrivateFieldRule, field.GetLocation(), structDeclaration.Identifier));
+                found |= true;
+            } 
+            foreach (var variable in field.DescendantNodes().OfType<VariableDeclarationSyntax>())
+            {
+                var type = variable.Type;
+                var typeStr = type.ToString();
+
+                List<string> invalidTypes = new List<string> { "object", "byte", "dynamic" };
+                invalidTypes.AddRange(classNames);
+                
+                if (invalidTypes.Contains(typeStr))
+                { 
+                    context.ReportDiagnostic(Diagnostic.Create(StructHasInvalidFieldRule,
+                            variable.GetLocation(),
+                            structDeclaration.Identifier,
+                            field.ToString(),
+                            typeStr));
+                }
+            }
+            return found;
+        }
+
         private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
         {
             bool found = false; 
@@ -259,15 +316,21 @@ namespace Generator
             foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
             {
                 var model = context.Compilation.GetSemanticModel(tree);
-                var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>();
+                var nodes = tree.GetRoot().DescendantNodes();
+
+                var classes = nodes.OfType<ClassDeclarationSyntax>();
+                var structs = nodes.OfType<StructDeclarationSyntax>();
+
+                // Used in checking structure fields 
+                List<string> classNames = new List<string>();
 
                 /* look for... */
                 foreach (ClassDeclarationSyntax classDeclaration in classes)
-                {                       
-                    /* parameters named value*/
-                    /* TODO: make sure property accessors do not have a parameter named returnValue*/
-                    found |= HasReturnValueNameConflict(context, classDeclaration);
+                {
+                    classNames.Add(classDeclaration.Identifier.ToString());
 
+                    /* parameters named __retval*/
+                    found |= HasReturnValueNameConflict(context, classDeclaration);
 
                     /* multiple constructors of the same arity */
                     found |= HasMultipleConstructorsOfSameArity(context, classDeclaration);
@@ -275,6 +338,17 @@ namespace Generator
                     /* implementing async interfaces */
                     var classSymbol = model.GetDeclaredSymbol(classDeclaration);
                     found |= ImplementsAsyncInterface(context, classSymbol, classDeclaration);
+                }
+
+                foreach (StructDeclarationSyntax structDeclaration in structs)
+                {
+                    found |= StructHasPropertyField(context, structDeclaration);
+
+                    var fields = structDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>();
+                    foreach (var field in fields)
+                    {
+                        found |= StructHasInvalidFields(context, field, structDeclaration, classNames);
+                    }
                 }
             }
             return found;
