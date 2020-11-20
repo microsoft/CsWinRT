@@ -1268,22 +1268,8 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                 {
                     finalizer_written = true;
                     w.write(R"(
-private readonly ComWrappersAggregationHelper.ClassNative classNative;
-~%()
-{
-if (this.classNative.Release.HasFlag(ComWrappersAggregationHelper.ReleaseFlags.Inner))
-{
-Marshal.Release(this.classNative.Inner);
-}
-if (this.classNative.Release.HasFlag(ComWrappersAggregationHelper.ReleaseFlags.Instance))
-{
-Marshal.Release(this.classNative.Instance);
-}
-if (this.classNative.Release.HasFlag(ComWrappersAggregationHelper.ReleaseFlags.ReferenceTracker))
-{
-Marshal.Release(this.classNative.ReferenceTracker);
-}
-}
+private ComWrappersHelper.ClassNative classNative;
+~%() => ComWrappersHelper.Cleanup(ref classNative);
 )",
                         class_type.TypeName());
                 }
@@ -1294,7 +1280,7 @@ Marshal.Release(this.classNative.ReferenceTracker);
 bool isAggregation = this.GetType() != typeof(%);
 object baseInspectable = isAggregation ? this : null;
 IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
-// Let ComWrappersAggregationHelper manage refcounts
+// Let ComWrappersHelper manage refcounts
 //using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
 try
 {
@@ -1304,16 +1290,17 @@ _lazyInterfaces = new Dictionary<Type, object>()
 {%
 };
 
-// Let ComWrappersAggregationHelper manage wrappers
+// Let ComWrappersHelper manage wrappers
 //ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
 finally
 {
-// Let ComWrappersAggregationHelper manage refcounts
+// Let ComWrappersHelper manage refcounts
 //MarshalInspectable<object>.DisposeAbi(ptr);
 }
 
-classNative = ComWrappersAggregationHelper.Init(isAggregation, this, composed, ptr);
+classNative = new ComWrappersHelper.ClassNative();
+ComWrappersHelper.Init(ref classNative, isAggregation, this, composed, ptr);
 }
 )",
                     visibility,

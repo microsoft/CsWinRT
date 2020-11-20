@@ -24,11 +24,17 @@ namespace WinUIDesktopSample
             InitializeComponent();
         }
 
-        private WeakReference baseRef = new WeakReference(new Grid());
-        private WeakReference derivedRef = new WeakReference(new Derived());
+        private WeakReference baseRef;
+        private WeakReference derivedRef;
         private List<object> pressure = new List<object>();
 
-        private void Check_Click(object sender, RoutedEventArgs e)
+        private void Alloc_Click(object sender, RoutedEventArgs e)
+        {
+            baseRef = new WeakReference(new Grid());
+            derivedRef = new WeakReference(new Derived());
+        }
+
+    private void Check_Click(object sender, RoutedEventArgs e)
         {
             pressure.Add(new byte[10_000_000]);
             for (int i = 0; i < 10; i++)
