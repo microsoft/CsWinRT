@@ -47,10 +47,10 @@ The guidelines for incrementing `AssemblyVersion` are as follows. Note that `Ass
 `AssemblyFileVersion` will be incremented with each release, regardless of whether there are API changes. This means if `AssemblyVersion` does not increment, we will still increment `AssemblyFileVersion`. The guidelines for incrementing `AssemblyFileVersion` are as follows.
 
 1. For *WinRT.Runtime.dll*:
-    * Increment *\<minor>* or *\<major>*: if there is an increment to `AssemblyVersion`. This update would be in correspondence with the update to `AssemblyVersion`.
-    * Increment *\<patch>* and/or *\<build>*: if there is no increment to `AssemblyVersion`.
+    * Increment *\<minor>* or *\<major>*: if there is an API change these will be updated as needed, which will also cause an increment to `AssemblyVersion`.
+    * Increment *\<patch>* and/or *\<build>*: if there are no API changes and therefore no increment to `AssemblyVersion`. We can manually increment *\<patch>* to be non-zero, and *\<build>* is always automatically incremented.
 2. For *Microsoft.Windows.SDK.NET.dll*:
-    * Increment *\<package_update>*.
+    * Increment *\<package_update>* automatically for each build.
 
 ## Future Version Numbers
 
@@ -58,17 +58,19 @@ As of .NET5 RTM (5.0.100), `AssemblyVersion` and `AssemblyFileVersion` for the r
 
 The CsWinRT NuGet version and SDK projection package version will correspond with the `AssemblyFileVersion` of *WinRT.Runtime.dll* and *Microsoft.Windows.SDK.NET.dll*, respectively.
 
-The table below is an example of how we will increment future version numbers. The **AssemblyVersion** and **AssemblyFileVersion** column cells list the *WinRT.Runtime.dll* version followed by the *Microsoft.Windows.SDK.NET.dll* version.
+The table below is an example of how we will increment future version numbers. 
+- The **AssemblyVersion** and **AssemblyFileVersion** column cells list the *WinRT.Runtime.dll* version followed by the *Microsoft.Windows.SDK.NET.dll* version. 
+- The **NuGet package version** column cells list the CsWinRT NuGet package version followed by the SDK projection package version.
 
-| Release | AssemblyVersion | AssemblyFileVersion | CsWinRT package version | SDK Projection package version | 
+| Release | AssemblyVersion | AssemblyFileVersion | NuGet package version | 
 |-|-|-|-|-|
-| **.NET5 RTM (5.0.100)** | 1.0.1.33301 <br> 10.0.xxxxx.10 | 1.0.1.33301 <br> 10.0.xxxxx.10 | 1.0.1 | 10.0.xxxxx.10 |
-| **.NET Servicing Release (5.0.101)** **\*** | 1.1.0.0 <br> 10.0.xxxxx.10 | 1.1.0.*\<build>* <br> 10.0.xxxxx.11 | 1.1.0 | 10.0.xxxxx.11 |
-| **.NET Servicing Release (5.0.102)** | 1.1.0.0 <br> 10.0.xxxxx.10 | 1.1.1.*\<build>* <br> 10.0.xxxxx.12 | 1.1.1 | 10.0.xxxxx..12 |
+| **.NET5 RTM (5.0.100)** | 1.0.1.33301 <br> 10.0.xxxxx.10 | 1.0.1.33301 <br> 10.0.xxxxx.10 | 1.0.1 <br> 10.0.xxxxx.10 |
+| **.NET Servicing Release (5.0.101)** **\*** | 1.1.0.0 <br> 10.0.xxxxx.10 | 1.1.0.*\<build>* <br> 10.0.xxxxx.11 | 1.1.0 <br> 10.0.xxxxx.11 |
+| **.NET Servicing Release (5.0.102)** | 1.1.0.0 <br> 10.0.xxxxx.10 | 1.1.1.*\<build>* <br> 10.0.xxxxx.12 | 1.1.1 <br> 10.0.xxxxx..12 |
 | **.NET Feature Release (5.0.200)** |
-| Scenario 1: *WinRT.Runtime* API surface changes only | 1.2.0.0 <br> 10.0.xxxxx.10 | 1.2.0.*\<build>* <br> 10.0.xxxxx.13 | 1.2.0 | 10.0.xxxxx.13 |
-| Scenario 2: Windows SDK projection changes only|  1.1.0.0 <br> 10.0.xxxxx.11 | 1.1.2.*\<build>* <br> 10.0.xxxxx.13 | 1.1.2 | 10.0.xxxxx.13 |
-| Scenario 3: Only bug-fixes | 1.1.0.0 <br> 10.0.xxxxx.10 | 1.1.2.*\<build>* <br> 10.0.xxxxx.13 | 1.1.2 | 10.0.xxxxx.13 |
+| Scenario 1: *WinRT.Runtime* API surface changes only | 1.2.0.0 <br> 10.0.xxxxx.10 | 1.2.0.*\<build>* <br> 10.0.xxxxx.13 | 1.2.0 <br> 10.0.xxxxx.13 |
+| Scenario 2: Windows SDK projection changes only|  1.1.0.0 <br> 10.0.xxxxx.11 | 1.1.2.*\<build>* <br> 10.0.xxxxx.13 | 1.1.2 <br> 10.0.xxxxx.13 |
+| Scenario 3: Only bug-fixes | 1.1.0.0 <br> 10.0.xxxxx.10 | 1.1.2.*\<build>* <br> 10.0.xxxxx.13 | 1.1.2 <br> 10.0.xxxxx.13 |
 
 **\*** The .NET 5.0.101 servicing release is an exception to any other future servicing releases, as it will include API surface changes and an increment to `AssemblyVersion` for *WinRT.Runtime.dll*. The **.NET Servicing Release (5.0.102)** row reflects the assembly versioning rules for servicing releases going forwards, as it will only include bug-fixes and no `AssemblyVersion` increments.
 
