@@ -359,4 +359,11 @@ namespace TestComponentCSharp
     {
         Windows.Foundation.IAsyncOperation<Windows.Security.Credentials.UI.UserConsentVerificationResult> RequestVerificationForWindowAsync(UInt64 appWindow, String message, GUID riid);
     }
+
+    [default_interface]
+    runtimeclass CustomBindableVectorTest : Microsoft.UI.Xaml.Interop.IBindableVector
+    {
+        CustomBindableVectorTest();
+    }
+
 }
