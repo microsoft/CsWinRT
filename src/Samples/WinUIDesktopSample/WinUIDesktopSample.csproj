@@ -13,6 +13,10 @@
     <Platforms>x86;x64</Platforms>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
   <ItemGroup>
     <Manifest Include="WinUIDesktopSample.exe.manifest">
       <DeploymentContent>true</DeploymentContent>
