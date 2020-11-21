@@ -149,7 +149,7 @@ namespace Generator
                 var classes = nodes.OfType<ClassDeclarationSyntax>(); 
                 var structs = nodes.OfType<StructDeclarationSyntax>();
 
-                // Used in checking structure fields 
+                // Used in the checking of structure fields 
                 List<string> classNames = new List<string>();
 
                 /* Check all classes */

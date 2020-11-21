@@ -10,7 +10,7 @@ namespace TestDiagnostics
 {
 
     // valid method overload tests
-    public sealed class TwoOverloads_DiffParamCount_OneAttribute_OneInList_Valid
+    public sealed class TwoOverloads_DiffParamCount_Valid
     {
 
         // pretty sure diagnostic will get thrown for this right now BUT it shouldn't 
@@ -85,6 +85,7 @@ namespace TestDiagnostics
     // invalid method overload tests 
     public sealed class TwoOverloads_NoAttribute_Invalid
     {
+        // hmm 
         public string OverloadExample(string s) { return s; }
 
         public int OverloadExample(int n) { return n; }
@@ -103,7 +104,7 @@ namespace TestDiagnostics
 
     public sealed class TwoOverloads_NoAttribute_OneIrrevAttr_Invalid
     {
-
+        // hmm
         [Windows.Foundation.Metadata.Deprecated("hu", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         public string OverloadExample(string s) { return s; }
 

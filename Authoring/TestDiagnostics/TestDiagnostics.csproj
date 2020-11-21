@@ -19,9 +19,9 @@
     <CompilerVisibleProperty Include="GeneratedFilesDir" />
     <CompilerVisibleProperty Include="CsWinRTExe" />
 
-    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
   </ItemGroup>
 

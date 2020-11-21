@@ -3,7 +3,7 @@
   <Target Name="CopyWinMD" AfterTargets="AfterBuild">
     <Copy SourceFiles="$(GeneratedFilesDir)$(AssemblyName).winmd" DestinationFolder="$(OutputPath)" />
   </Target>
- 
+  
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
 
 </Project>
