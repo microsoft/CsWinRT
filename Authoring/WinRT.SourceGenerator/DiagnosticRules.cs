@@ -64,6 +64,23 @@ namespace Generator
             ("Structure {0} has a field of type {1}; {1} is not a valid Windows Runtime field type. Each field " 
             + "in a Windows Runtime structure can only be UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum, or itself a structure."));
 
+        static DiagnosticDescriptor OperatorOverloadedRule = MakeRule(
+            "WME1087",
+            "Operator overload exposed",
+            "{0} is an operator overload. Managed types cannot expose operator overloads in the Windows Runtime");
+
+        static DiagnosticDescriptor MethodOverload_MultipleDefaultAttribute = MakeRule(
+            "WME1059",
+            "Only one overload should be designated default", // todo better msg
+            //"Multiple {0}-parameter overloads of '{1}.{2}' are decorated with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
+            "Multiple {0}-parameter overloads of '{1}' are decorated with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
+
+        static DiagnosticDescriptor MethodOverload_NeedDefaultAttribute = MakeRule(
+            "WME1085",
+            "Multiple overloads seen, one needs a default", // todo better msg
+            //"The {0}-parameter overloads of {1}.{2} must have exactly one method specified as the default overload by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
+            "The {0}-parameter overloads of {1} must have exactly one method specified as the default overload by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
+
         #endregion
 
         /* The full metadata name of Async interfaces that should not be implemented by Windows Runtime components */
@@ -130,23 +147,96 @@ namespace Generator
             return false;
         }
 
+
         /* HasParameterNamedValue 
          *  the generated code for components uses the name "__retval" for the output variable, 
          *  we report diagnostic if a user uses this same identifier as a parameter to a method */
-        public bool HasReturnValueNameConflict(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
+        public bool HasParameterNamedValue(ref GeneratorExecutionContext context, MethodDeclarationSyntax method)
+        { 
+            foreach (ParameterSyntax parameter in method.ParameterList.Parameters) 
+            { 
+                if (parameter.Identifier.Value.Equals("__retval")) 
+                { 
+                    context.ReportDiagnostic(Diagnostic.Create(ParameterNamedValueRule, parameter.GetLocation(), method.Identifier, parameter.Identifier)); 
+                    return true; 
+                } 
+            }
+            return false;
+        }
+
+        public bool HasErrorsInMethods(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
         {
+            bool found = false;
             IEnumerable<MethodDeclarationSyntax> methods = classDeclaration.ChildNodes().OfType<MethodDeclarationSyntax>();
+
+            // the boolean indicates that the method name (the key) has been marked as the DefaultOverload (via an attribute)
+            Dictionary<string, bool> myMap = new Dictionary<string, bool>(); 
 
             foreach (MethodDeclarationSyntax method in methods)
             {
-                foreach (ParameterSyntax parameter in method.ParameterList.Parameters)
+                string methodName = method.Identifier.Text;
+
+                bool seenMethodBefore = myMap.TryGetValue(methodName, out bool methodHasAttrAlready);
+
+                bool hasDefaultOverloadAttribute = false;
+
+                // look at all the attributes on this method and see if any of them is the DefaultOverload attribute 
+                foreach (var attrList in method.AttributeLists)
                 {
-                    if (parameter.Identifier.Value.Equals("__retval"))
+                    foreach (var attr in attrList.Attributes)
                     {
-                        context.ReportDiagnostic(Diagnostic.Create(ParameterNamedValueRule, parameter.GetLocation(), method.Identifier, parameter.Identifier));
-                        return true;
+                        if (attr.Name.ToString().Equals("Windows.Foundation.Metadata.DefaultOverload")) // maybe name is just DefaultOverload?
+                        {
+                            hasDefaultOverloadAttribute = true;
+                            break;
+                        }
                     }
                 }
+
+                // what do we do if it is in there but not with the attribute ?
+                //   what do we do if above AND we see the attribute now
+                //   what do we do if above AND we DONT see the attribute now
+
+                // ... 
+
+                // later if we have seen it before... 
+                // and if it doesnt have it now and it didnt have it before, raise the "add attribute error"
+                //     if it doesnt have it now and it did before, thats fine, 
+                //       note: dont change its mapping!
+
+                // if it has it now and it didn't before, thats fine (make sure to mark it as having it)
+                // if it has it now and it did before, raise "multiple attributes error"
+   
+                // Do we have an overload ? 
+                if (seenMethodBefore) 
+                {
+                    if (hasDefaultOverloadAttribute && !methodHasAttrAlready)
+                    {
+                        // we've seen it, but it didnt have the attribute, so mark that it has it now
+                        myMap[methodName] = true;
+                    }
+                    else if (hasDefaultOverloadAttribute && methodHasAttrAlready)
+                    {
+                        // raise the "dont have multiple default overloads attributed" diagnostic  
+                        context.ReportDiagnostic(Diagnostic.Create(MethodOverload_MultipleDefaultAttribute, method.GetLocation(), method.Arity, method.Identifier));
+                        found |= true;
+                    }
+                    else if (!hasDefaultOverloadAttribute && !methodHasAttrAlready) 
+                    {
+                        // raise the "multiple overloads, one needs the attribute!"
+                        context.ReportDiagnostic(Diagnostic.Create(MethodOverload_NeedDefaultAttribute, method.GetLocation(), method.Arity, method.Identifier));
+                        found |= true;
+                    }
+                }
+                else 
+                { 
+                    // if the method hasn't been seen before, this will make a new pair and mark it 
+                    myMap[methodName] = hasDefaultOverloadAttribute;  // this is where we store it with value false 
+                }
+
+
+                /* make sure no parameter has the name "__retval" */
+                found |= HasParameterNamedValue(ref context, method);
             }
             return false;
         }
@@ -225,6 +315,18 @@ namespace Generator
                 }
             }
             return found;
+        }
+
+        public bool OverloadsOperator(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
+        {
+            var operatorDeclarations = classDeclaration.DescendantNodes().OfType<OperatorDeclarationSyntax>(); 
+            if (operatorDeclarations.Any()) 
+            { 
+                var overloadedOperator = operatorDeclarations.First(); 
+                context.ReportDiagnostic(Diagnostic.Create(OperatorOverloadedRule, overloadedOperator.GetLocation(), overloadedOperator.OperatorKeyword.Text));
+                return true;
+            }
+            return false;
         }
     }
 }

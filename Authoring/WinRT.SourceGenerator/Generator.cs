@@ -157,8 +157,11 @@ namespace Generator
                 { 
                     classNames.Add(classDeclaration.Identifier.ToString());
 
+                    /* exposes an operator overload  */
+                    found |= winrtRules.OverloadsOperator(ref context, classDeclaration); 
+
                     /* parameters named __retval*/
-                    found |= winrtRules.HasReturnValueNameConflict(ref context, classDeclaration);
+                    found |= winrtRules.HasErrorsInMethods(ref context, classDeclaration);
 
                     /* multiple constructors of the same arity */
                     found |= winrtRules.HasMultipleConstructorsOfSameArity(ref context, classDeclaration);
