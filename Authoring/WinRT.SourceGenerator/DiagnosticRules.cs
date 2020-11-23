@@ -164,21 +164,6 @@ namespace Generator
             return false;
         }
 
-
-        // what do we do if it is in there but not with the attribute ?
-        //   what do we do if above AND we see the attribute now
-        //   what do we do if above AND we DONT see the attribute now
-
-        // ... 
-
-        // later if we have seen it before... 
-        // and if it doesnt have it now and it didnt have it before, raise the "add attribute error"
-        //     if it doesnt have it now and it did before, thats fine, 
-        //       note: dont change its mapping!
-
-        // if it has it now and it didn't before, thats fine (make sure to mark it as having it)
-        // if it has it now and it did before, raise "multiple attributes error"
-        
         /// MethodHasAttribute looks at all possible attributes on a given method declaration 
         ///     returns true iff any are (string) equal to the given attribute name 
         private bool MethodHasAttribute(string attrName, MethodDeclarationSyntax method)
@@ -196,14 +181,20 @@ namespace Generator
             return false;
         }
 
-        private bool CheckOverloadAttributes_v2(MethodDeclarationSyntax method, ref Dictionary<string, bool> myMap, ClassDeclarationSyntax classDeclaration, ref GeneratorExecutionContext context)
-        {
-            bool found = false;
-             
-            return found;
-        }
-
-        private bool CheckOverloadAttributes(MethodDeclarationSyntax method, ref Dictionary<string, bool> myMap, ClassDeclarationSyntax classDeclaration, ref GeneratorExecutionContext context)
+        /// <summary>
+        /// Returns true if multiple overloads of a method are found where more than one has been designated as the default overload
+        /// </summary>
+        /// <param name="method">The method to check attributes for</param>
+        /// <param name="methodHasAttributeMap">Keeps track of the method (via name + arity) and whether it was declared with the DefaultOverload attribute</param>
+        /// <param name="overloadsWithoutAttributeMap">Keeps track of the methods that are overloads but don't have the DefaultOverload attribute (yet)</param>
+        /// <param name="classDeclaration">The class the method lives in -- used for creating the diagnostic</param>
+        /// <param name="context">The SourceGenerator context the code lives in</param>
+        /// <returns></returns>
+        private bool CheckOverloadAttributes(MethodDeclarationSyntax method, 
+            ref Dictionary<string, bool> methodHasAttributeMap, 
+            ref Dictionary<string, Diagnostic> overloadsWithoutAttributeMap, 
+            ClassDeclarationSyntax classDeclaration, 
+            ref GeneratorExecutionContext context)
         {
             bool found = false;
             int methodArity = method.ParameterList.Parameters.Count;
@@ -212,34 +203,35 @@ namespace Generator
             // look at all the attributes on this method and see if any of them is the DefaultOverload attribute 
             bool hasDefaultOverloadAttribute = MethodHasAttribute("Windows.Foundation.Metadata.DefaultOverload", method);
             
-            bool seenMethodBefore = myMap.TryGetValue(methodNameWithArity, out bool methodHasAttrAlready);
+            bool seenMethodBefore = methodHasAttributeMap.TryGetValue(methodNameWithArity, out bool methodHasAttrAlready);
+
             // Do we have an overload ? 
             if (seenMethodBefore) 
             { 
                 if (hasDefaultOverloadAttribute && !methodHasAttrAlready)
                 { 
                     // we've seen it, but it didnt have the attribute, so mark that it has it now
-                    myMap[methodNameWithArity] = true;
+                    methodHasAttributeMap[methodNameWithArity] = true;
+                    overloadsWithoutAttributeMap.Remove(methodNameWithArity);
                 }
                 else if (hasDefaultOverloadAttribute && methodHasAttrAlready)
                 {
-                    // raise the "dont have multiple default overloads attributed" diagnostic  
+                    // raise the "can't have multiple default attributes" diagnostic  
                     context.ReportDiagnostic(Diagnostic.Create(MethodOverload_MultipleDefaultAttribute, method.GetLocation(), 
                         methodArity, method.Identifier, classDeclaration.Identifier));
                     found |= true;
                 }
                 else if (!hasDefaultOverloadAttribute && !methodHasAttrAlready) 
                 {
-                    // raise the "multiple overloads, one needs the attribute!"
-                    context.ReportDiagnostic(Diagnostic.Create(MethodOverload_NeedDefaultAttribute, method.GetLocation(), 
-                        methodArity, method.Identifier, classDeclaration.Identifier)); 
-                    found |= true;
+                    // we could see this method later with the attribute, so hold onto the diagnostic for it until we know it doesn't have the attribute
+                    Diagnostic diagnostic = Diagnostic.Create(MethodOverload_NeedDefaultAttribute, method.GetLocation(), methodArity, method.Identifier, classDeclaration.Identifier);
+                    overloadsWithoutAttributeMap[methodNameWithArity] = diagnostic;
                 }
             }
             else 
             { 
-                // if the method hasn't been seen before, this will make a new pair and mark it 
-                myMap[methodNameWithArity] = hasDefaultOverloadAttribute;  // this is where we store it with value false 
+                // first time we're seeing the method, add a pair in the map for its name and whether it has the attribute 
+                methodHasAttributeMap[methodNameWithArity] = hasDefaultOverloadAttribute;
             }
 
             return found;
@@ -250,99 +242,29 @@ namespace Generator
             bool found = false;
             IEnumerable<MethodDeclarationSyntax> methods = classDeclaration.ChildNodes().OfType<MethodDeclarationSyntax>();
 
-            // int indicates how many declarations of this method have been decorated as DefaultOverload 
-            Dictionary<string, int> singularMethods   = new Dictionary<string, int>(); 
-            Dictionary<string, int> overloadedMethods = new Dictionary<string, int>(); 
+            Dictionary<string, bool> methodsHasAttributeMap = new Dictionary<string, bool>();
+            
+            /* we can't throw the diagnostic as soon as we see a second overload without an attribute, 
+             *   as there could be a third overload with the default attribute
+             * we use this map to keep track of these cases, and after we have checked all methods, 
+             *   we check the elements of the map to raise diagnostics for those that didn't get attributed */
+            Dictionary<string, Diagnostic> overloadsWithoutAttributeMap = new Dictionary<string, Diagnostic>();
 
             foreach (MethodDeclarationSyntax method in methods)
             {
-                int methodArity = method.ParameterList.Parameters.Count;
-                string methodNameWithArity = method.Identifier.Text + methodArity.ToString();
-
-                // look at all the attributes on this method and see if any of them is the DefaultOverload attribute 
-                bool hasDefaultOverloadAttribute = MethodHasAttribute("Windows.Foundation.Metadata.DefaultOverload", method);
-
-                // 
-                bool seenOverloadBefore = overloadedMethods.TryGetValue(methodNameWithArity, out int timesAttributed);
-                bool seenSingularBefore = singularMethods.TryGetValue(methodNameWithArity, out int zeroOrOne);
-
-                if (seenSingularBefore)
-                {
-                    singularMethods.Remove(methodNameWithArity);
-                    if (hasDefaultOverloadAttribute && zeroOrOne == 1)
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(MethodOverload_MultipleDefaultAttribute, method.GetLocation(),
-                            methodArity, method.Identifier, classDeclaration.Identifier));
-                        found |= true;
-
-                        // invariant, if its in singular its not in overloaded
-                        overloadedMethods[methodNameWithArity] = 2;
-                    }
-                    else 
-                    {
-                        overloadedMethods[methodNameWithArity] = hasDefaultOverloadAttribute ? 1 : 0;
-                    }
-                }
-                else if (seenOverloadBefore)
-                {
-                    if (hasDefaultOverloadAttribute)
-                    {
-                        if (timesAttributed > 0)
-                        {
-                            context.ReportDiagnostic(Diagnostic.Create(MethodOverload_MultipleDefaultAttribute, method.GetLocation(),
-                                methodArity, method.Identifier, classDeclaration.Identifier));
-                            found |= true;
-                        }
-                        ++overloadedMethods[methodNameWithArity];
-                    } 
-                }
-                else
-                {
-                    singularMethods.Add(methodNameWithArity, hasDefaultOverloadAttribute ? 1 : 0);
-                }
-
-
-                /*
-                // if we know this is an overload 
-                //    and at least one of the (previously seen) overloads has the attribute already
-                //    and the current declaration also has the attribute...
-                // report "cant declare multiple as default"
-                if (seenOverloadBefore && timesAttributed > 0 && hasDefaultOverloadAttribute) // might be more efficient to move the actual call to MethodHasAttribute here ... 
-                {
-                    context.ReportDiagnostic(Diagnostic.Create(MethodOverload_MultipleDefaultAttribute, method.GetLocation(),
-                        methodArity, method.Identifier, classDeclaration.Identifier));
-                    found |= true;
-                }
-                else if (seenOverloadBefore && timesAttributed > 0)
-                {
-                    // just make sure we don't see it in singularMethods again
-                    singularMethods.Remove(methodNameWithArity);
-                }
-
-
-                if (!seenOverloadBefore)
-                {
-                    singularMethods[methodNameWithArity] = hasDefaultOverloadAttribute ? 1 : 0;
-                }
-                */
-                
-                // bool seenMethodBefore = overloadedMethods.TryGetValue(methodNameWithArity, out bool methodHasAttrAlready);
-
-                // found |= CheckOverloadAttributes(method, ref myMap, classDeclaration, ref context);
+                /* Gather information on overloaded methods; make sure there is only one marked DefaultOverload  */
+                found |= CheckOverloadAttributes(method, ref methodsHasAttributeMap, ref overloadsWithoutAttributeMap, classDeclaration, ref context);
 
                 /* make sure no parameter has the name "__retval" */
                 found |= HasParameterNamedValue(ref context, method);
             }
-            foreach (var thing in overloadedMethods)
+
+            foreach (var thing in overloadsWithoutAttributeMap)
             {
-                if (thing.Value == 0)
-                {
-                    context.ReportDiagnostic(Diagnostic.Create(MethodOverload_NeedDefaultAttribute, classDeclaration.GetLocation(),
-                           thing.Key, thing.Key, classDeclaration.Identifier));
-                    found |= true;
-                }
+                context.ReportDiagnostic(thing.Value);
+                found |= true;
             }
-            return false;
+            return found;
         }
 
         /* SimplifySyntaxTypeString 
