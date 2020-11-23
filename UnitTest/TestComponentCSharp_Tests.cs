@@ -707,14 +707,6 @@ namespace UnitTest
             var objectUriArray = new object[] { new Uri("http://github.com") };
             TestObject.ObjectIterableProperty = objectUriArray;
             Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(objectUriArray));
-
-            var listOfListOfUris = new List<List<Uri>>() {
-                new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") },
-                new List<Uri>{ new Uri("http://aka.ms/cswinrt") },
-                new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://microsoft.com") }
-            };
-            TestObject.IterableOfObjectIterablesProperty = listOfListOfUris;
-            Assert.True(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
         }
 
         [Fact]
@@ -2289,6 +2281,14 @@ namespace UnitTest
             };
             TestObject.IterableOfPointIterablesProperty = listOfListOfPoints;
             Assert.True(TestObject.IterableOfPointIterablesProperty.SequenceEqual(listOfListOfPoints));
+
+            var listOfListOfUris = new List<List<Uri>>() {
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") },
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt") },
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://microsoft.com") }
+            };
+            TestObject.IterableOfObjectIterablesProperty = listOfListOfUris;
+            Assert.True(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
         }
     }
 }

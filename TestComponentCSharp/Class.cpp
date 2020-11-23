@@ -487,9 +487,9 @@ namespace winrt::TestComponentCSharp::implementation
     }
     void Class::IterableOfPointIterablesProperty(IIterable<IIterable<WF::Point>> const& value)
     {
-        for (auto pointList : value)
+        for (auto points : value)
         {
-            for (auto point : pointList)
+            for (auto point : points)
             {
             }
         }
@@ -501,9 +501,9 @@ namespace winrt::TestComponentCSharp::implementation
     }
     void Class::IterableOfObjectIterablesProperty(IIterable<IIterable<WF::IInspectable>> const& value)
     {
-        for (auto objectList : value)
+        for (auto objects : value)
         {
-            for (auto object : objectList)
+            for (auto object : objects)
             {
             }
         }
