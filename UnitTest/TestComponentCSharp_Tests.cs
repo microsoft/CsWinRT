@@ -703,6 +703,18 @@ namespace UnitTest
             var uriArray = new Uri[] { new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") };
             TestObject.ObjectIterableProperty = uriArray;
             Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(uriArray));
+
+            var objectUriArray = new object[] { new Uri("http://github.com") };
+            TestObject.ObjectIterableProperty = objectUriArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(objectUriArray));
+
+            var listOfListOfUris = new List<List<Uri>>() {
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") },
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt") },
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://microsoft.com") }
+            };
+            TestObject.IterableOfObjectIterablesProperty = listOfListOfUris;
+            Assert.True(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
         }
 
         [Fact]
@@ -2265,6 +2277,18 @@ namespace UnitTest
         {
             CustomBindableVectorTest vector = new CustomBindableVectorTest();
             Assert.NotNull(vector);
+        }
+
+        [Fact]
+        public void TestCovariance()
+        {
+            var listOfListOfPoints = new List<List<Point>>() {
+                new List<Point>{ new Point(1, 1), new Point(1, 2), new Point(1, 3) },
+                new List<Point>{ new Point(2, 1), new Point(2, 2), new Point(2, 3) },
+                new List<Point>{ new Point(3, 1), new Point(3, 2), new Point(3, 3) }
+            };
+            TestObject.IterableOfPointIterablesProperty = listOfListOfPoints;
+            Assert.True(TestObject.IterableOfPointIterablesProperty.SequenceEqual(listOfListOfPoints));
         }
     }
 }

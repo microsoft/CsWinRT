@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Threading;
@@ -206,6 +207,7 @@ namespace WinRT
                 || type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object;
         }
 
+        // Use TryGetCompatibleWindowsRuntimeTypesForVariantType instead.
         public static bool TryGetCompatibleWindowsRuntimeTypeForVariantType(Type type, out Type compatibleType)
         {
             compatibleType = null;
@@ -226,17 +228,110 @@ namespace WinRT
             var newArguments = new Type[genericArguments.Length];
             for (int i = 0; i < genericArguments.Length; i++)
             {
-                bool argumentCovariant = (genericConstraints[i].GenericParameterAttributes & GenericParameterAttributes.VarianceMask) == GenericParameterAttributes.Covariant;
-                if (argumentCovariant && !genericArguments[i].IsValueType)
+                if (!IsTypeWindowsRuntimeTypeNoArray(genericArguments[i]))
                 {
-                    newArguments[i] = typeof(object);
+                    bool argumentCovariant = (genericConstraints[i].GenericParameterAttributes & GenericParameterAttributes.VarianceMask) == GenericParameterAttributes.Covariant;
+                    if (argumentCovariant && !genericArguments[i].IsValueType)
+                    {
+                        newArguments[i] = typeof(object);
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
                 else
                 {
-                    return false;
+                    newArguments[i] = genericArguments[i];
                 }
             }
             compatibleType = definition.MakeGenericType(newArguments);
+            return true;
+        }
+
+        private static HashSet<Type> GetCompatibleTypes(Type type)
+        {
+            HashSet<Type> compatibleTypes = new HashSet<Type>();
+
+            foreach (var iface in type.GetInterfaces())
+            {
+                if (IsTypeWindowsRuntimeTypeNoArray(iface))
+                {
+                    compatibleTypes.Add(iface);
+                }
+
+                if (iface.IsConstructedGenericType
+                    && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, out var compatibleIfaces))
+                {
+                    compatibleTypes.UnionWith(compatibleIfaces);
+                }
+            }
+
+            Type baseType = type.BaseType;
+            while (baseType != null)
+            {
+                if (IsTypeWindowsRuntimeTypeNoArray(baseType))
+                {
+                    compatibleTypes.Add(baseType);
+                }
+                baseType = baseType.BaseType;
+            }
+
+            return compatibleTypes;
+        }
+
+        internal static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(Type type, out IEnumerable<Type> compatibleTypes)
+        {
+            compatibleTypes = null;
+            if (!type.IsConstructedGenericType)
+            {
+                throw new ArgumentException(nameof(type));
+            }
+
+            var definition = type.GetGenericTypeDefinition();
+
+            if (!IsTypeWindowsRuntimeTypeNoArray(definition))
+            {
+                return false;
+            }
+
+            var genericConstraints = definition.GetGenericArguments();
+            var genericArguments = type.GetGenericArguments();
+            List<List<Type>> compatibleTypesPerGeneric = new List<List<Type>>();
+            for (int i = 0; i < genericArguments.Length; i++)
+            {
+                List<Type> compatibleTypesForGeneric = new List<Type>();
+                bool argumentCovariantObject = (genericConstraints[i].GenericParameterAttributes & GenericParameterAttributes.VarianceMask) == GenericParameterAttributes.Covariant
+                    && !genericArguments[i].IsValueType;
+
+                if (IsTypeWindowsRuntimeTypeNoArray(genericArguments[i]))
+                {
+                    compatibleTypesForGeneric.Add(genericArguments[i]);
+                }
+                else if (!argumentCovariantObject)
+                {
+                    return false;
+                }
+
+                if (argumentCovariantObject)
+                {
+                    compatibleTypesForGeneric.AddRange(GetCompatibleTypes(genericArguments[i]));
+                }
+
+                compatibleTypesPerGeneric.Add(compatibleTypesForGeneric);
+            }
+
+            // https://docs.microsoft.com/en-us/archive/blogs/ericlippert/computing-a-cartesian-product-with-linq
+            IEnumerable<IEnumerable<Type>> newArgumentsList = new[] { Enumerable.Empty<Type>() };
+            foreach (var compatibleTypesForGeneric in compatibleTypesPerGeneric)
+            {
+                newArgumentsList =
+                  from seq in newArgumentsList
+                  from item in compatibleTypesForGeneric
+                  select seq.Concat(new[] { item });
+            }
+
+            compatibleTypes = newArgumentsList.Select(newArguments => definition.MakeGenericType(newArguments.ToArray()));
             return true;
         }
 
