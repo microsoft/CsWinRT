@@ -481,6 +481,34 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _objectIterableChanged.remove(token);
     }
+    IIterable<IIterable<WF::Point>> Class::IterableOfPointIterablesProperty()
+    {
+        return _pointIterableIterable;
+    }
+    void Class::IterableOfPointIterablesProperty(IIterable<IIterable<WF::Point>> const& value)
+    {
+        for (auto points : value)
+        {
+            for (auto point : points)
+            {
+            }
+        }
+        _pointIterableIterable = value;
+    }
+    IIterable<IIterable<WF::IInspectable>> Class::IterableOfObjectIterablesProperty()
+    {
+        return _objectIterableIterable;
+    }
+    void Class::IterableOfObjectIterablesProperty(IIterable<IIterable<WF::IInspectable>> const& value)
+    {
+        for (auto objects : value)
+        {
+            for (auto object : objects)
+            {
+            }
+        }
+        _objectIterableIterable = value;
+    }
     Uri Class::UriProperty()
     {
         return _uri;

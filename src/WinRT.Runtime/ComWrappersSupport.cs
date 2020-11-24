@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -107,14 +107,17 @@ namespace WinRT
                 }
 
                 if (iface.IsConstructedGenericType
-                    && Projections.TryGetCompatibleWindowsRuntimeTypeForVariantType(iface, out var compatibleIface))
+                    && Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, out var compatibleIfaces))
                 {
-                    var compatibleIfaceAbiType = compatibleIface.FindHelperType();
-                    entries.Add(new ComInterfaceEntry
+                    foreach (var compatibleIface in compatibleIfaces)
                     {
-                        IID = GuidGenerator.GetIID(compatibleIfaceAbiType),
-                        Vtable = (IntPtr)compatibleIfaceAbiType.GetAbiToProjectionVftblPtr()
-                    });
+                        var compatibleIfaceAbiType = compatibleIface.FindHelperType();
+                        entries.Add(new ComInterfaceEntry
+                        {
+                            IID = GuidGenerator.GetIID(compatibleIfaceAbiType),
+                            Vtable = (IntPtr)compatibleIfaceAbiType.GetAbiToProjectionVftblPtr()
+                        });
+                    }
                 }
             }
 

@@ -65,6 +65,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ManualProjectionTestClasses.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Class.h">
       <DependentUpon>TestComponentCSharp.idl</DependentUpon>
