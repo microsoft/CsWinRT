@@ -147,7 +147,6 @@ namespace Generator
             return false;
         }
 
-
         /* HasParameterNamedValue 
          *  the generated code for components uses the name "__retval" for the output variable, 
          *  we report diagnostic if a user uses this same identifier as a parameter to a method */
@@ -294,7 +293,7 @@ namespace Generator
 
         /*  StructHasFieldOfType
          *   returns true iff there is a field of the given type in the given struct 
-         *   e.g., if T is PropertyDeclarationSyntax, then if a struct has a property, we report a diagnostic and return true */
+         *   e.g., if T is PropertyDeclarationSyntax, then if the struct has a property, we report a diagnostic and return true */
         public bool StructHasFieldOfType<T>(ref GeneratorExecutionContext context, StructDeclarationSyntax structDeclaration)
         {
             if (structDeclaration.DescendantNodes().OfType<T>().Any())
