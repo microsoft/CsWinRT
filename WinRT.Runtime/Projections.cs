@@ -280,6 +280,42 @@ namespace WinRT
             return compatibleTypes;
         }
 
+        internal static IEnumerable<Type> GetAllPossibleTypeCombinations(IEnumerable<IEnumerable<Type>> compatibleTypesPerGeneric, Type definition)
+        {
+            // Implementation adapted from https://stackoverflow.com/a/4424005
+            var accum = new List<Type>();
+            var compatibleTypesPerGenericArray = compatibleTypesPerGeneric.ToArray();
+            if (compatibleTypesPerGenericArray.Length > 0)
+            {
+                GetAllPossibleTypeCombinationsCore(
+                    accum,
+                    new Stack<Type>(),
+                    compatibleTypesPerGenericArray,
+                    compatibleTypesPerGenericArray.Length - 1);
+            }
+            return accum;
+
+            void GetAllPossibleTypeCombinationsCore(List<Type> accum, Stack<Type> stack, IEnumerable<Type>[] compatibleTypes, int index)
+            {
+                foreach (var type in compatibleTypes[index])
+                {
+                    stack.Push(type);
+                    if (index == 0)
+                    {
+                        // IEnumerable on a System.Collections.Generic.Stack
+                        // enumerates in order of removal (last to first).
+                        // As a result, we get the correct ordering here.
+                        accum.Add(definition.MakeGenericType(stack.ToArray()));
+                    }
+                    else
+                    {
+                        GetAllPossibleTypeCombinationsCore(accum, stack, compatibleTypes, index - 1);
+                    }
+                    stack.Pop();
+                }
+            }
+        }
+
         internal static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(Type type, out IEnumerable<Type> compatibleTypes)
         {
             compatibleTypes = null;
@@ -321,17 +357,7 @@ namespace WinRT
                 compatibleTypesPerGeneric.Add(compatibleTypesForGeneric);
             }
 
-            // https://docs.microsoft.com/en-us/archive/blogs/ericlippert/computing-a-cartesian-product-with-linq
-            IEnumerable<IEnumerable<Type>> newArgumentsList = new[] { Enumerable.Empty<Type>() };
-            foreach (var compatibleTypesForGeneric in compatibleTypesPerGeneric)
-            {
-                newArgumentsList =
-                  from seq in newArgumentsList
-                  from item in compatibleTypesForGeneric
-                  select seq.Concat(new[] { item });
-            }
-
-            compatibleTypes = newArgumentsList.Select(newArguments => definition.MakeGenericType(newArguments.ToArray()));
+            compatibleTypes = GetAllPossibleTypeCombinations(compatibleTypesPerGeneric, definition);
             return true;
         }
 
