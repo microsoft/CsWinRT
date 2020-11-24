@@ -9,58 +9,175 @@ namespace TestDiagnostics
     /* ** jagged array  **  */
 
     // public property in class
-    public sealed class JaggedArraySignature_2D_PublicProperty_Invalid
-    {
-        public int[][] Arr { get; set; }
-    }
-
-    public sealed class JaggedArraySignature_3D_PublicProperty_Invalid
-    {
-        public int[][] Arr { get; set; }
-    }
-
-    // positive test - private property in class
-
-    public sealed class JaggedArraySignature_2D_PrivateProperty_Valid
+    public sealed class JaggedArray_Properties_Invalid
     {
         private int[][] Arr { get; set; }
+        public int[][] ArrP { get; set; }
+        public int[][][] Arr3 { get; set; }
+        private int[][][] Arr3P { get; set; }
     }
 
-    public sealed class JaggedArraySignature_3D_PrivateProperty_Valid
+    internal sealed class JaggedArray_Properties_Valid
     {
         private int[][] Arr { get; set; }
+        public int[][] ArrP { get; set; }
+        public int[][][] Arr3 { get; set; }
+        private int[][][] Arr3P { get; set; }
     }
 
-    internal sealed class JaggedArraySignature_2D_PublicProperty_PrivateClass_Valid
+
+    // tests return type and paramteter cases for 2-dimensional arrays 
+    // we expect diagnostics to be raised since the methods are public
+    public sealed class J2PublicPublic_Invalid
     {
-        public int[][] Arr { get; set; }
+        public int[][] J2_ReturnOnly() 
+        {
+            int[][] arr = new int[2][];
+            arr[0] = new int[1] { 1 };
+            arr[1] = new int[1] { 2 };
+            return arr;
+        }
+        public int[][] J2_ReturnAndInput1(int[][] arr) { return arr; }
+        public int[][] J2_ReturnAndInput2of2(bool a, int[][] arr) { return arr; }
+        public bool J2_NotReturnAndInput2of2(bool a, int[][] arr) { return a; }
+        public bool J2_NotReturnAndInput2of3(bool a, int[][] arr, bool b) { return a; }
+        public int[][] J2_ReturnAndInput2of3(bool a, int[][] arr, bool b) { return arr; }
     }
 
-    internal sealed class JaggedArraySignature_3D_PublicProperty_PrivateClass_Valid
+    internal sealed class J2InternalPublic_Valid
     {
-        public int[][] Arr { get; set; }
+        public int[][] J2_ReturnOnly() 
+        {
+            int[][] arr = new int[2][];
+            arr[0] = new int[1] { 1 };
+            arr[1] = new int[1] { 2 };
+            return arr;
+        }
+        public int[][] J2_ReturnAndInput1(int[][] arr) { return arr; }
+        public int[][] J2_ReturnAndInput2of2(bool a, int[][] arr) { return arr; }
+        public bool J2_NotReturnAndInput2of2(bool a, int[][] arr) { return a; }
+        public bool J2_NotReturnAndInput2of3(bool a, int[][] arr, bool b) { return a; }
+        public int[][] J2_ReturnAndInput2of3(bool a, int[][] arr, bool b) { return arr; }
+
     }
 
-    // positive test - private property in class
-
-    internal sealed class JaggedArraySignature_2D_PrivateProperty_PrivateClass_Valid
+    // tests return type and paramteter cases for 3-dimensional arrays 
+    // we expect diagnostics to be raised since the methods are public
+    public sealed class J3PublicPublic_Invalid
     {
-        private int[][] Arr { get; set; }
+        public int[][][] J3_ReturnOnly() 
+        {
+            int[][] arr2 = new int[2][];
+            arr2[0] = new int[1] { 1 };
+            arr2[1] = new int[1] { 2 };
+
+            int[][][] arr = new int[1][][];
+            arr[0] = arr2;
+            return arr; 
+        }
+        public int[][][] J3_ReturnAndInput1(int[][][] arr) { return arr; }
+        public int[][][] J3_ReturnAndInput2of2(bool a, int[][][] arr) { return arr; }
+        public int[][][] J3_ReturnAndInput2of3(bool a, int[][][] arr, bool b) { return arr; }
+        public bool J3_NotReturnAndInput2of2(bool a, int[][][] arr) { return a; }
+        public bool J3_NotReturnAndInput2of3(bool a, int[][][] arr, bool b) { return a; }
+
     }
 
-    internal sealed class JaggedArraySignature_3D_PrivateProperty_PrivateClass_Valid
+    internal sealed class J3InternalPublic_Valid
     {
-        private int[][] Arr { get; set; }
+        public int[][][] J3_ReturnOnly() 
+        {
+            int[][] arr2 = new int[2][];
+            arr2[0] = new int[1] { 1 };
+            arr2[1] = new int[1] { 2 };
+
+            int[][][] arr = new int[1][][];
+            arr[0] = arr2;
+            return arr; 
+        }
+        public int[][][] J3_ReturnAndInput1(int[][][] arr) { return arr; }
+        public int[][][] J3_ReturnAndInput2of2(bool a, int[][][] arr) { return arr; }
+        public int[][][] J3_ReturnAndInput2of3(bool a, int[][][] arr, bool b) { return arr; }
+        public bool J3_NotReturnAndInput2of2(bool a, int[][][] arr) { return a; }
+        public bool J3_NotReturnAndInput2of3(bool a, int[][][] arr, bool b) { return a; }
+
     }
 
-    // public methods
+    // tests return type and paramteter cases for 3-dimensional arrays 
+    // we expect normal compilation since the methods are private 
+    public sealed class J3PublicPrivate_Invalid
+    {
+        private int[][][] D3_ReturnOnly() 
+        {
+            int[][] arr2 = new int[2][];
+            arr2[0] = new int[1] { 1 };
+            arr2[1] = new int[1] { 2 };
 
-    // positive test - private method 
+            int[][][] arr = new int[1][][];
+            arr[0] = arr2;
+            return arr; 
+        }
+        private int[][][] D3_ReturnAndInput1(int[][][] arr) { return arr; }
+        private int[][][] D3_ReturnAndInput2of2(bool a, int[][][] arr) { return arr; }
+        private int[][][] D3_ReturnAndInput2of3(bool a, int[][][] arr, bool b) { return arr; }
+        private bool D3_NotReturnAndInput2of2(bool a, int[][][] arr) { return a; }
+        private bool D3_NotReturnAndInput2of3(bool a, int[][][] arr, bool b) { return a; }
 
-    // field in struct -- think this will get covered already, but we'll see
+    }
+ 
+    public interface J2MemberOfInterface_Invalid
+    {
+        public int[][] J2_ReturnOnly();
+        public int[][] J2_ReturnAndInput1(int[,] arr);
+        public int[][] J2_ReturnAndInput2of2(bool a, int[][] arr);
+        public bool J2_NotReturnAndInput2of2(bool a, int[][] arr);
+        public bool J2_NotReturnAndInput2of3(bool a, int[][] arr, bool b);
+        public int[][] J2_ReturnAndInput2of3(bool a, int[][] arr, bool b);
+    }
 
-    // declared (public) in interface
+    public interface J2MemberOfInterface_Valid
+    {
+        private int[][] J2_ReturnOnly() 
+        {
+            int[][] arr = new int[2][];
+            arr[0] = new int[1] { 1 };
+            arr[1] = new int[1] { 2 };
+            return arr;
+        }
+        private int[][] J2_ReturnAndInput1(int[][] arr) { return arr; }
+        private int[][] J2_ReturnAndInput2of2(bool a, int[][] arr) { return arr; }
+        private bool J2_NotReturnAndInput2of2(bool a, int[][] arr) { return a; }
+        private bool J2_NotReturnAndInput2of3(bool a, int[][] arr, bool b) { return a; }
+        private int[][] J2_ReturnAndInput2of3(bool a, int[][] arr, bool b) { return arr; }
 
-    // positive test - private in interface
+    }
 
+    public interface J3MemberOfInterface_Invalid
+    {
+        public int[][][] J3_ReturnOnly(); 
+        public int[][][] J3_ReturnAndInput1(int[][][] arr); 
+        public int[][][] J3_ReturnAndInput2of2(bool a, int[][][] arr);
+        public int[][][] J3_ReturnAndInput2of3(bool a, int[][][] arr, bool b);
+        public bool J3_NotReturnAndInput2of2(bool a, int[][][] arr);
+        public bool J3_NotReturnAndInput2of3(bool a, int[][][] arr, bool b); 
+    }
+    
+    public interface J3MemberOfInterface_Valid
+    {
+        private int[][][] J3_ReturnOnly() {
+            int[][] arr2 = new int[2][];
+            arr2[0] = new int[1] { 1 };
+            arr2[1] = new int[1] { 2 };
+
+            int[][][] arr = new int[1][][];
+            arr[0] = arr2;
+            return arr; 
+        }
+        private int[][][] J3_ReturnAndInput1(int[][][] arr) { return arr; }
+        private int[][][] J3_ReturnAndInput2of2(bool a, int[][][] arr) { return arr; }
+        private int[][][] J3_ReturnAndInput2of3(bool a, int[][][] arr, bool b) { return arr; }
+        private bool J3_NotReturnAndInput2of2(bool a, int[][][] arr) { return a; }
+        private bool J3_NotReturnAndInput2of3(bool a, int[][][] arr, bool b) { return a; }
+    }
 }
+

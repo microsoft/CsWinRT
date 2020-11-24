@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Foundation;
 
 namespace TestDiagnostics
 {
@@ -40,20 +41,6 @@ namespace TestDiagnostics
             throw new NotImplementedException();
         }
 
-        void IAsyncInfo.Cancel()
-        {
-            throw new NotImplementedException();
-        }
-
-        void IAsyncInfo.Close()
-        {
-            throw new NotImplementedException();
-        }
-
-        void IAsyncActionWithProgress<int>.GetResults()
-        {
-            throw new NotImplementedException();
-        }
     }
 
     public class ActionWithProgress : IAsyncActionWithProgress<int>

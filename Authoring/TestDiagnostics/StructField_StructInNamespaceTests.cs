@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ABI.System.Numerics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -56,9 +57,7 @@ namespace TestDiagnostics
     {
         const int five = 5;
     }
-    */
 
-    /*
     public enum BasicEnum
     { 
         First = 0,
@@ -72,17 +71,13 @@ namespace TestDiagnostics
         public int x { get; }
         public int y { get; }
     }
-    */
 
-    /*
     public struct StructWithPrivateField_Invalid
     {
         const int ci = 5;
         private int x;
     }
-    */
 
-    /*
     public struct StructWithAllValidFields
     {
         bool boolean;
@@ -98,9 +93,7 @@ namespace TestDiagnostics
         ushort us;
         string str;
     }
-    */
 
-    /*
     public struct StructWithObjectField_Invalid // is this really invalid? 
     {
         object obj;
@@ -119,10 +112,5 @@ namespace TestDiagnostics
     public struct StructWithWinRTStructField
     {
         public Matrix3x2 matrix;
-    }
-    */
-
-    class StructField_StructInClassTests
-    {
     }
 }
