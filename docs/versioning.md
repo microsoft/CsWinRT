@@ -63,7 +63,7 @@ The table below is an example of how we will increment future version numbers.
 - The **NuGet package version** column cells list the CsWinRT NuGet package version followed by the SDK projection package version.
 
 | Release | AssemblyVersion | AssemblyFileVersion | NuGet package version | 
-|-|-|-|-|-|
+|-|-|-|-|
 | **.NET5 RTM (5.0.100)** | 1.0.1.33301 <br> 10.0.xxxxx.10 | 1.0.1.33301 <br> 10.0.xxxxx.10 | 1.0.1 <br> 10.0.xxxxx.10 |
 | **.NET Servicing Release (5.0.101)** **\*** | 1.1.0.0 <br> 10.0.xxxxx.10 | 1.1.0.*\<build>* <br> 10.0.xxxxx.11 | 1.1.0 <br> 10.0.xxxxx.11 |
 | **.NET Servicing Release (5.0.102)** | 1.1.0.0 <br> 10.0.xxxxx.10 | 1.1.1.*\<build>* <br> 10.0.xxxxx.12 | 1.1.1 <br> 10.0.xxxxx..12 |
