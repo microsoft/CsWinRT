@@ -164,5 +164,16 @@ namespace WinRT
         {
             return AdditionalTypeData.GetOrAdd(type, (type) => helperDataFactory());
         }
+
+        public void Resurrect()
+        {
+            if (NativeObject.Resurrect())
+            {
+                foreach (var cached in QueryInterfaceCache)
+                {
+                    cached.Value.Resurrect();
+                }
+            }
+        }
     }
 }

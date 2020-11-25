@@ -1,1 +1,3 @@
-Total Issues: 0
+Compat issues with assembly WinRT.Runtime:
+InterfacesShouldHaveSameMembers : Default interface member 'public void WinRT.IWinRTObject.Resurrect()' is present in the implementation but not in the contract.
+Total Issues: 1

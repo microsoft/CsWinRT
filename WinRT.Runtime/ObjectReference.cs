@@ -136,6 +136,18 @@ namespace WinRT
             disposed = true;
         }
 
+        public bool Resurrect()
+        {
+            if (!disposed)
+            {
+                return false;
+            }
+            disposed = false;
+            AddRef();
+            GC.ReRegisterForFinalize(this);
+            return true;
+        }
+
         protected virtual unsafe void AddRef()
         {
             VftblIUnknown.AddRef(ThisPtr);

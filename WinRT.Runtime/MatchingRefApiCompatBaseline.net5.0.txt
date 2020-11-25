@@ -1,3 +1,6 @@
 Compat issues with assembly WinRT.Runtime:
 TypesMustExist : Type 'System.Numerics.VectorExtensions' does not exist in the reference but it does exist in the implementation.
-Total Issues: 1
+MembersMustExist : Member 'public System.Boolean WinRT.IObjectReference.Resurrect()' does not exist in the reference but it does exist in the implementation.
+InterfacesShouldHaveSameMembers : Default interface member 'public void WinRT.IWinRTObject.Resurrect()' is present in the implementation but not in the reference.
+MembersMustExist : Member 'public void WinRT.IWinRTObject.Resurrect()' does not exist in the reference but it does exist in the implementation.
+Total Issues: 4
