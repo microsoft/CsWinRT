@@ -111,6 +111,17 @@ namespace Generator
             return false;
         }
 
+        private bool MethodIsPublic(MethodDeclarationSyntax m)
+        {
+            foreach (var thing in m.Modifiers)
+            {
+                if (thing.ValueText.Equals("public")) 
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         public bool CheckArraySignature_ClassProperties(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
         {
@@ -118,6 +129,9 @@ namespace Generator
             var props = classDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>();
             foreach (var p in props.Where(PropertyIsPublic))
             {
+
+                found |= IfAnyAndFirstEquals_Prop<QualifiedNameSyntax>(ref context, p, classDeclaration, "System.Array");
+                found |= IfAnyAndFirstEquals_Prop<IdentifierNameSyntax>(ref context, p, classDeclaration, "Array");
                 var arrTypes = p.DescendantNodes().OfType<ArrayTypeSyntax>();
                 if (arrTypes.Any())
                 {
@@ -294,12 +308,23 @@ namespace Generator
         }
 
 
-        private bool IfAnyAndFirstEquals<T>(ref GeneratorExecutionContext context, MethodDeclarationSyntax method, ClassDeclarationSyntax classDeclaration, string typeName)
+        private bool IfAnyAndFirstEquals_Method<T>(ref GeneratorExecutionContext context, MethodDeclarationSyntax method, ClassDeclarationSyntax classDeclaration, string typeName)
         { 
             var qualName = method.DescendantNodes().OfType<T>(); 
             if (qualName.Any() && qualName.First().ToString().Equals(typeName)) 
             { 
                 context.ReportDiagnostic(Diagnostic.Create(ArraySignature_SystemArrayRule, method.GetLocation(), classDeclaration.Identifier, method.Identifier));
+                return true;
+            }
+            return false;
+        }
+        // would be nice to have some abstraction of the above/below method 
+        private bool IfAnyAndFirstEquals_Prop<T>(ref GeneratorExecutionContext context, PropertyDeclarationSyntax prop, ClassDeclarationSyntax classDeclaration, string typeName)
+        { 
+            var qualName = prop.DescendantNodes().OfType<T>(); 
+            if (qualName.Any() && qualName.First().ToString().Equals(typeName)) 
+            { 
+                context.ReportDiagnostic(Diagnostic.Create(ArraySignature_SystemArrayRule, prop.GetLocation(), classDeclaration.Identifier, prop.Identifier));
                 return true;
             }
             return false;
@@ -318,7 +343,7 @@ namespace Generator
              *   we check the elements of the map to raise diagnostics for those that didn't get attributed */
             Dictionary<string, Diagnostic> overloadsWithoutAttributeMap = new Dictionary<string, Diagnostic>();
 
-            foreach (MethodDeclarationSyntax method in methods)
+            foreach (MethodDeclarationSyntax method in methods.Where(MethodIsPublic))
             {
                 /* Gather information on overloaded methods; make sure there is only one marked DefaultOverload  */
                 found |= CheckOverloadAttributes(method, ref methodsHasAttributeMap, ref overloadsWithoutAttributeMap, classDeclaration, ref context);
@@ -326,9 +351,19 @@ namespace Generator
                 /* make sure no parameter has the name "__retval" */
                 found |= HasParameterNamedValue(ref context, method);
 
+
+                var paramLists = method.DescendantNodes().OfType<ParameterListSyntax>();
+                if (paramLists.Any())
+                {
+                    var paramList = paramLists.First();
+                    foreach (var thing in paramList.Parameters)
+                    {
+                        // thing.Type.IsKind(ArrayTypeSyntax);
+                    }
+                }
                 /* see if method return type is System.Array or Array */
-                found |= IfAnyAndFirstEquals<QualifiedNameSyntax>(ref context, method, classDeclaration, "System.Array");
-                found |= IfAnyAndFirstEquals<IdentifierNameSyntax>(ref context, method, classDeclaration, "Array");
+                found |= IfAnyAndFirstEquals_Method<QualifiedNameSyntax>(ref context, method, classDeclaration, "System.Array");
+                found |= IfAnyAndFirstEquals_Method<IdentifierNameSyntax>(ref context, method, classDeclaration, "Array");
                 // need to check all parameters too 
             }
 
