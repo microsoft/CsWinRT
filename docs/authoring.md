@@ -10,7 +10,6 @@ Make sure the `<TargetFramework>` for the project is `net5.0-windows10.0.19041.0
 And add the following to your library's project file:
 ```
   <PropertyGroup>
-    <!-- The Windows SDK metadata will need to update as new versions release -->
     <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
     <CsWinRTComponent>true</CsWinRTComponent>
     <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
@@ -18,7 +17,7 @@ And add the following to your library's project file:
     <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
   </PropertyGroup>
 ```
-And don't forget to include a `PackageReference` to `Microsoft.Windows.CsWinRT`. You can add the nuget feed found in the C#/WinRT README as a nuget source, and install the package in Visual Studio via the `Manage NuGet Packages for Solution` option. 
+And don't forget to include a `PackageReference` to `Microsoft.Windows.CsWinRT`!
 
 
 ## Known Authoring Issues
@@ -27,43 +26,26 @@ We are working on implementing diagnostics in our tool that will catch these err
 
 2. Not all C# types have been mapped to runtime types, but we are working on completing this coverage. 
 
+3. Composable type support is still in progress
+
 ## Using the authored component in C++
 As part of the native (C++) support, the WinRT Hosting dlls (WinRT.Host and WinRT.Host.Shim) need to be in the same folder as the native executable. 
 For now, users need a special target of their own so MSBuild can place the hosting dlls in the correct place. But soon we will implement this so that a package reference to C#/WinRT in the authored component is all that is needed.   
 
 Modifications needed: 
-  1. update the consuming app's project file (e.g. `YourApp.vcxproj`)
-  2. add a manifest file and runtimeconfig file 
+  1. [for native consumption] add a manifest file and runtimeconfig file 
+  2. update the consuming app's project file (e.g. `YourApp.vcxproj`)
   3. add a target for copying the required DLLs.
 
-
-### Project File
-The following item group demonstrates the needed modifications to the project file (1. above):
-
-```
-<ItemGroup>
-    <!-- the winmd -->
-    <Reference Include="PosnLibrary">
-      <HintPath>..\PosnLibrary\Generated Files\PosnLibrary.winmd</HintPath>
-      <IsWinMDFile>true</IsWinMDFile>
-    </Reference>
-    
-    <!-- the runtimeconfig.json -->
-    <None Include="WinRT.Host.runtimeconfig.json">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-    </None>
-    
-    <!-- the manifest -->
-    <Manifest Include="PosnConsole.exe.manifest">
-      <DeploymentContent>true</DeploymentContent>
-    </Manifest>
-</ItemGroup> 
-```
 
 ### Manifest and RuntimeConfig
 You'll need to author some files to assist the hosting process by the native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. 
 For information on writing these, see the [hosting docs](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md).
+
+### Project File
+When updating the app's project file, you'll need to add a `<Reference Include="YourAuthoredLibrary">` node that contains (1) the path to your component's generated WinMD file, (2) the `<IsWinMDFile>` attribute with value `true`. 
+
+For consumption by native components, you'll also need to add `Include` statements for your hosting `runtimeconfig.json` file and the consuming app's `exe.manifest` file. More information on these files can be found in the hosting docs.   
 
 ### Copying DLLs Target
 
@@ -75,12 +57,16 @@ In your C++ app, add a `Directory.Build.targets` file that copies over the neces
     <PrepareForRunDependsOn>CopyHostAssets;$(PrepareForRunDependsOn)</PrepareForRunDependsOn>
   </PropertyGroup>
   
+  <PropertyGroup>
+    <CsWinRTVersion>1.1.0</CsWinRTVersion>
+  </PropertyGroup>
+  
   <Target Name="CopyHostAssets">
-    <Copy SourceFiles="Path\To\Nuget\Packages\microsoft.windows.cswinrt\DownloadedVersion\native\$(Platform)\WinRT.Host.dll"
+    <Copy SourceFiles="Path\To\Nuget\Packages\microsoft.windows.cswinrt\$(CsWinRTVersion)\native\$(Platform)\WinRT.Host.dll"
           DestinationFolder="$(OutDir)" 
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
     
-    <Copy SourceFiles="Path\To\Nuget\Packages\microsoft.windows.cswinrt\DownloadedVersion\lib\net5.0\WinRT.Host.Shim.dll"
+    <Copy SourceFiles="Path\To\Nuget\Packages\microsoft.windows.cswinrt\$(CsWinRTVersion)\lib\net5.0\WinRT.Host.Shim.dll"
           DestinationFolder="$(OutDir)" 
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
 
@@ -104,5 +90,4 @@ In your C++ app, add a `Directory.Build.targets` file that copies over the neces
 ## References
 Here are some resources that demonstrate authoring C#/WinRT components and the changes discussed above.
 1. https://github.com/AdamBraden/MyRandom
-2. https://github.com/microsoft/CsWinRT/tree/master/Samples/Net5ProjectionSample
-3. https://github.com/microsoft/CsWinRT/tree/master/Authoring/AuthoringConsumptionTest
+2. https://github.com/microsoft/CsWinRT/tree/master/Authoring/AuthoringConsumptionTest
