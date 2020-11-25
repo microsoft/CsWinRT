@@ -62,7 +62,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
             finally
             {
                 MarshalString.DisposeMarshaler(__name);
-                MarshalInspectable.DisposeAbi(__retval);
+                MarshalInspectable<object>.DisposeAbi(__retval);
             }
         }
     }

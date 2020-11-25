@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using WinRT.Interop;
 
 namespace WinRT
 {
@@ -13,28 +14,24 @@ namespace WinRT
 
         public SingleInterfaceOptimizedObject(Type type, IObjectReference objRef)
         {
-            this._type = type;
+            _type = type;
             Type helperType = type.FindHelperType();
-            var vftblType = helperType.GetNestedType("Vftbl");
+            var vftblType = helperType.FindVftblType();
             if (vftblType is null)
             {
-                // The helper type might not have a vftbl type if it was linked away.
-                // The only time the Vftbl type would be linked away is when we don't actually use
-                // any of the methods on the interface (it was just a type cast/"is Type" check).
-                // In that case, we can use the IUnknownVftbl-typed ObjectReference since
-                // it has all of the information we'll need.
-                _obj = objRef;
+                _obj = objRef.As<IUnknownVftbl>(GuidGenerator.GetIID(helperType));
             }
-            if (vftblType.IsGenericTypeDefinition)
+            else
             {
-                vftblType = vftblType.MakeGenericType(type.GetGenericArguments());
+                _obj = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
             }
-            this._obj = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
         }
 
         IObjectReference IWinRTObject.NativeObject => _obj;
+        bool IWinRTObject.HasUnwrappableNativeObject => false;
 
         ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
+        ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData { get; } = new();
 
         bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
         {

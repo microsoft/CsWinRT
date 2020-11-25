@@ -14,11 +14,12 @@ using System.Diagnostics;
 
 namespace Windows.Foundation.Collections
 {
+
     [Guid("913337E9-11A1-4345-A3A2-4E7F956E222D")]
     interface IVector<T> : IIterable<T>
     {
         T GetAt(uint index);
-        IVectorView<T> GetView();
+        IReadOnlyList<T> GetView(); // Combining IVector & IReadOnlyList needs redesign
         bool IndexOf(T value, out uint index);
         void SetAt(uint index, T value);
         void InsertAt(uint index, T value);
@@ -256,8 +257,7 @@ namespace ABI.System.Collections.Generic
 
             public ToAbiHelper(global::System.Collections.Generic.IList<T> list) => _list = list;
 
-            global::Windows.Foundation.Collections.IIterator<T> global::Windows.Foundation.Collections.IIterable<T>.First() =>
-                new IEnumerator<T>.ToAbiHelper(_list.GetEnumerator());
+            global::System.Collections.Generic.IEnumerator<T> global::Windows.Foundation.Collections.IIterable<T>.First() => _list.GetEnumerator();
 
             private static void EnsureIndexInt32(uint index, int limit = int.MaxValue)
             {
@@ -287,7 +287,7 @@ namespace ABI.System.Collections.Generic
 
             public uint Size => (uint)_list.Count;
 
-            global::Windows.Foundation.Collections.IVectorView<T> global::Windows.Foundation.Collections.IVector<T>.GetView()
+            global::System.Collections.Generic.IReadOnlyList<T> global::Windows.Foundation.Collections.IVector<T>.GetView()
             {
                 // Note: This list is not really read-only - you could QI for a modifiable
                 // list.  We gain some perf by doing this.  We believe this is acceptable.
@@ -295,7 +295,7 @@ namespace ABI.System.Collections.Generic
                 {
                     roList = new ReadOnlyCollection<T>(_list);
                 }
-                return new IReadOnlyList<T>.ToAbiHelper(roList);
+                return roList;
             }
 
             public bool IndexOf(T value, out uint index)
@@ -544,14 +544,13 @@ namespace ABI.System.Collections.Generic
             }
             private static unsafe int Do_Abi_GetView_2(IntPtr thisPtr, out IntPtr __return_value__)
             {
-                global::Windows.Foundation.Collections.IVectorView<T> ____return_value__ = default;
-
+                global::System.Collections.Generic.IReadOnlyList<T> ____return_value__ = default;
                 __return_value__ = default;
 
                 try
                 {
                     ____return_value__ = FindAdapter(thisPtr).GetView();
-                    __return_value__ = MarshalInterface<global::Windows.Foundation.Collections.IVectorView<T>>.FromManaged(____return_value__);
+                    __return_value__ = MarshalInterface<global::System.Collections.Generic.IReadOnlyList<T>>.FromManaged(____return_value__);
 
                 }
                 catch (Exception __exception__)
@@ -571,7 +570,8 @@ namespace ABI.System.Collections.Generic
 
                 try
                 {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).IndexOf(Marshaler<T>.FromAbi(value), out __index); index = __index;
+                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).IndexOf(Marshaler<T>.FromAbi(value), out __index); 
+                    index = __index;
                     __return_value__ = (byte)(____return_value__ ? 1 : 0);
 
                 }
@@ -725,7 +725,7 @@ namespace ABI.System.Collections.Generic
         }
         public static Guid PIID = Vftbl.PIID;
         
-        private static FromAbiHelper _FromVector(IWinRTObject _this)
+        internal static FromAbiHelper _FromVector(IWinRTObject _this)
         {
             return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IList<T>).TypeHandle,
                 () => new FromAbiHelper((global::Windows.Foundation.Collections.IVector<T>)_this));
@@ -748,7 +748,7 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        unsafe global::Windows.Foundation.Collections.IVectorView<T> global::Windows.Foundation.Collections.IVector<T>.GetView()
+        unsafe global::System.Collections.Generic.IReadOnlyList<T> global::Windows.Foundation.Collections.IVector<T>.GetView()
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
@@ -756,7 +756,7 @@ namespace ABI.System.Collections.Generic
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_2(ThisPtr, out __retval));
-                return MarshalInterface<global::Windows.Foundation.Collections.IVectorView<T>>.FromAbi(__retval);
+                return MarshalInterface<global::System.Collections.Generic.IReadOnlyList<T>>.FromAbi(__retval);
             }
             finally
             {

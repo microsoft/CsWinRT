@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
@@ -47,7 +48,7 @@ namespace ABI.System.Windows.Input
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
-        private class NativeDelegateWrapper
+        private class NativeDelegateWrapper : IWinRTObject
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
             private readonly AgileReference _agileReference = default;
@@ -65,6 +66,11 @@ namespace ABI.System.Windows.Input
                 }
             }
 
+            IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
+            bool IWinRTObject.HasUnwrappableNativeObject => true;
+            ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
+            ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData { get; } = new();
+
             public void Invoke(object sender, EventArgs args)
             {
                 using var agileDelegate = _agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(CanExecuteChangedEventHandler)));
@@ -76,16 +82,16 @@ namespace ABI.System.Windows.Input
                 var __params = new object[] { ThisPtr, null, null };
                 try
                 {
-                    __sender = MarshalInspectable.CreateMarshaler(sender);
-                    __params[1] = MarshalInspectable.GetAbi(__sender);
-                    __args = MarshalInspectable.CreateMarshaler(args);
-                    __params[2] = MarshalInspectable.GetAbi(__args);
+                    __sender = MarshalInspectable<object>.CreateMarshaler(sender);
+                    __params[1] = MarshalInspectable<object>.GetAbi(__sender);
+                    __args = MarshalInspectable<EventArgs>.CreateMarshaler(args);
+                    __params[2] = MarshalInspectable<EventArgs>.GetAbi(__args);
                     abiInvoke.DynamicInvokeAbi(__params);
                 }
                 finally
                 {
-                    MarshalInspectable.DisposeMarshaler(__sender);
-                    MarshalInspectable.DisposeMarshaler(__args);
+                    MarshalInspectable<object>.DisposeMarshaler(__sender);
+                    MarshalInspectable<EventArgs>.DisposeMarshaler(__args);
                 }
 
             }
@@ -105,8 +111,8 @@ namespace ABI.System.Windows.Input
                 global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(thisPtr, (global::System.Delegate invoke) =>
                 {
                     invoke.DynamicInvoke(
-                        MarshalInspectable.FromAbi(sender),
-                        MarshalInspectable.FromAbi(args) as EventArgs ?? EventArgs.Empty);
+                        MarshalInspectable<object>.FromAbi(sender),
+                        MarshalInspectable<EventArgs>.FromAbi(args) ?? EventArgs.Empty);
                 });
             }
             catch (global::System.Exception __exception__)
@@ -183,11 +189,11 @@ namespace ABI.System.Windows.Input
             {
                 bool __result = default;
 
-                result = default;
+                *result = default;
 
                 try
                 {
-                    __result = global::WinRT.ComWrappersSupport.FindObject<global::System.Windows.Input.ICommand>(thisPtr).CanExecute(MarshalInspectable.FromAbi(parameter)); *result = (byte)(__result ? 1 : 0);
+                    __result = global::WinRT.ComWrappersSupport.FindObject<global::System.Windows.Input.ICommand>(thisPtr).CanExecute(MarshalInspectable<object>.FromAbi(parameter)); *result = (byte)(__result ? 1 : 0);
 
                 }
                 catch (global::System.Exception __exception__)
@@ -205,7 +211,7 @@ namespace ABI.System.Windows.Input
             {
                 try
                 {
-                    global::WinRT.ComWrappersSupport.FindObject<global::System.Windows.Input.ICommand>(thisPtr).Execute(MarshalInspectable.FromAbi(parameter));
+                    global::WinRT.ComWrappersSupport.FindObject<global::System.Windows.Input.ICommand>(thisPtr).Execute(MarshalInspectable<object>.FromAbi(parameter));
                 }
                 catch (global::System.Exception __exception__)
                 {
@@ -222,7 +228,7 @@ namespace ABI.System.Windows.Input
 
             private static unsafe int Do_Abi_add_CanExecuteChanged_0(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token)
             {
-                token = default;
+                *token = default;
                 try
                 {
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Windows.Input.ICommand>(thisPtr);
@@ -275,13 +281,13 @@ namespace ABI.System.Windows.Input
             {
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle));
                 var ThisPtr = _obj.ThisPtr;
-                __parameter = MarshalInspectable.CreateMarshaler(parameter);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CanExecute_2(ThisPtr, MarshalInspectable.GetAbi(__parameter), out __retval));
+                __parameter = MarshalInspectable<object>.CreateMarshaler(parameter);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CanExecute_2(ThisPtr, MarshalInspectable<object>.GetAbi(__parameter), out __retval));
                 return __retval != 0;
             }
             finally
             {
-                MarshalInspectable.DisposeMarshaler(__parameter);
+                MarshalInspectable<object>.DisposeMarshaler(__parameter);
             }
         }
 
@@ -292,12 +298,12 @@ namespace ABI.System.Windows.Input
             IObjectReference __parameter = default;
             try
             {
-                __parameter = MarshalInspectable.CreateMarshaler(parameter);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Execute_3(ThisPtr, MarshalInspectable.GetAbi(__parameter)));
+                __parameter = MarshalInspectable<object>.CreateMarshaler(parameter);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Execute_3(ThisPtr, MarshalInspectable<object>.GetAbi(__parameter)));
             }
             finally
             {
-                MarshalInspectable.DisposeMarshaler(__parameter);
+                MarshalInspectable<object>.DisposeMarshaler(__parameter);
             }
         }
 

@@ -29,7 +29,7 @@ namespace ABI.System
             }
         }
 
-        public static Marshaler CreateMarshaler(global::System.Type value)
+        private static (String Name, TypeKind Kind) ToAbi(global::System.Type value)
         {
             TypeKind kind = TypeKind.Custom;
 
@@ -39,7 +39,7 @@ namespace ABI.System
                 {
                     kind = TypeKind.Primitive;
                 }
-                else if (value == typeof(object) || value == typeof(string) || value == typeof(Guid))
+                else if (value == typeof(object) || value == typeof(string) || value == typeof(Guid) || value == typeof(System.Type))
                 {
                     kind = TypeKind.Metadata;
                 }
@@ -49,10 +49,16 @@ namespace ABI.System
                 }
             }
 
+            return (kind == TypeKind.Custom ? value.AssemblyQualifiedName : TypeNameSupport.GetNameForType(value, TypeNameGenerationFlags.None), kind);
+        }
+
+        public static Marshaler CreateMarshaler(global::System.Type value)
+        {
+            var abi = ToAbi(value);
             return new Marshaler
             {
-                Name = MarshalString.CreateMarshaler(TypeNameSupport.GetNameForType(value, TypeNameGenerationFlags.None)),
-                Kind = kind
+                Name = MarshalString.CreateMarshaler(abi.Name),
+                Kind = abi.Kind
             };
         }
 
@@ -72,6 +78,12 @@ namespace ABI.System
             {
                 return null;
             }
+
+            if(value.Kind == TypeKind.Custom)
+            {
+                return global::System.Type.GetType(name);
+            }
+
             return TypeNameSupport.FindTypeByName(name.AsSpan()).type;
         }
 
@@ -80,7 +92,12 @@ namespace ABI.System
 
         public static Type FromManaged(global::System.Type value)
         {
-            return GetAbi(CreateMarshaler(value));
+            var abi = ToAbi(value);
+            return new Type
+            {
+                Name = MarshalString.FromManaged(abi.Name),
+                Kind = abi.Kind
+            };
         }
 
         public static unsafe void CopyManaged(global::System.Type arg, IntPtr dest) =>

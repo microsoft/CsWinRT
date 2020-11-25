@@ -4,25 +4,26 @@
   <PropertyGroup Label="Globals">
     <MinimalCoreWin>true</MinimalCoreWin>
     <VCProjectVersion>15.0</VCProjectVersion>
-    <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+    <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
     <CppWinRTVerbosity>high</CppWinRTVerbosity>
-    <MicrosoftWinUIVersion>3.0.0-preview1.200515.3</MicrosoftWinUIVersion>
-    <!-- Temporary fallback until Microsoft.WinUI nuget supports Net5 TFM -->
+    <CsWinRTVerbosity>high</CsWinRTVerbosity>
+    <!--Note: unlisted at https://www.nuget.org/packages/Microsoft.WinUI/-->
+    <MicrosoftWinUIVersion>3.0.0-preview2.200713.0</MicrosoftWinUIVersion>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <LangVersion>preview</LangVersion>
+    <NoWarn>8305;0618</NoWarn>
+    <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
+    <GenerateTestProjection Condition="'$(GenerateTestProjection)' == ''">false</GenerateTestProjection>
+    <CsWinRTGenerateProjection>$(GenerateTestProjection)</CsWinRTGenerateProjection>
+    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
+    <PlatformToolset>v142</PlatformToolset>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' != 'net5.0'">
     <DefineConstants>$(DefineConstants);MANUAL_IUNKNOWN</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(VisualStudioVersion)' == '15.0'">
-    <PlatformToolset>v141</PlatformToolset>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(VisualStudioVersion)' == '16.0'">
-    <PlatformToolset>v142</PlatformToolset>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -83,6 +84,6 @@
 
   <Import Project="Strings.props" />
 
-  <Import Condition="'$(MSBuildProjectExtension)' == '.csproj'" Project="nuget\Microsoft.Windows.CsWinRT.props" />
+  <Import Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(SimulateCsWinRTNugetReference)' == 'true'" Project="nuget\Microsoft.Windows.CsWinRT.props" />
 
 </Project>

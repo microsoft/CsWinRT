@@ -298,11 +298,12 @@ namespace WinRT
             }
             finally
             {
-                MarshalInspectable.DisposeAbi(instancePtr);
+                MarshalInspectable<object>.DisposeAbi(instancePtr);
             }
         }
 
         public ObjectReference<I> _As<I>() => _IActivationFactory.As<I>();
+        public IObjectReference _As(Guid iid) => _IActivationFactory.As<WinRT.Interop.IUnknownVftbl>(iid);
     }
 
     internal class ActivationFactory<T> : BaseActivationFactory
@@ -312,6 +313,7 @@ namespace WinRT
         static WeakLazy<ActivationFactory<T>> _factory = new WeakLazy<ActivationFactory<T>>();
         public new static I AsInterface<I>() => _factory.Value.Value.AsInterface<I>();
         public static ObjectReference<I> As<I>() => _factory.Value._As<I>();
+        public static IObjectReference As(Guid iid) => _factory.Value._As(iid);
         public static ObjectReference<I> ActivateInstance<I>() => _factory.Value._ActivateInstance<I>();
     }
 
@@ -320,8 +322,7 @@ namespace WinRT
         public IntPtr ActivateInstance()
         {
             T comp = new T();
-            using var marshaler = MarshalInspectable.CreateMarshaler(comp);
-            return marshaler.GetRef();
+            return MarshalInspectable<T>.FromManaged(comp);
         }
     }
 

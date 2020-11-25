@@ -5,21 +5,15 @@
     <RootNamespace>WinRT</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>8</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <Authors>Microsoft Corporation</Authors>
     <Company>Microsoft Corporation</Company>
     <Product>C#/WinRT</Product>
     <PackageId>WinRT.Runtime</PackageId>
     <FileVersion>$(VersionNumber)</FileVersion>
     <Version>$(VersionNumber)</Version>
-    <AssemblyVersion>$(VersionNumber)</AssemblyVersion>
+    <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
     <InformationalVersion>$(VersionNumber)</InformationalVersion>
     <NeutralLanguage>en</NeutralLanguage>
     <Description>C#/WinRT Runtime v$(VersionString)</Description>
@@ -46,5 +40,30 @@
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.4" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
     <PackageReference Include="System.Runtime.Extensions" Version="4.3.1" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
+
+  <!-- API Compat -->
+  <PropertyGroup>
+    <!-- Checks for both breaking changes and for new API additions. -->
+    <RunApiCompatForSrc>true</RunApiCompatForSrc>
+    <RunMatchingRefApiCompat>true</RunMatchingRefApiCompat>
+    <ApiCompatEnforceOptionalRules>true</ApiCompatEnforceOptionalRules>
+    <CsWinRTApiCompatVersion>1.0.1</CsWinRTApiCompatVersion>
+  </PropertyGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
+    <PackageReference Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20560.3" PrivateAssets="All" />
+    <PackageDownload Include="Microsoft.Windows.CsWinRT" Version="[$(CsWinRTApiCompatVersion)]" />
+  </ItemGroup>
+
+  <Target Name="_ResolveResolvedMatchingContract" BeforeTargets="ValidateApiCompatForSrc;RunMatchingRefApiCompat" Condition="'$(TargetFramework)' == 'net5.0'">
+    <ItemGroup>
+      <_ReferencePathDirectories Include="@(ReferencePath -> '%(RootDir)%(Directory)')" />
+      <ResolvedMatchingContract Include="$(NuGetPackageRoot)\Microsoft.Windows.CsWinRT\$(CsWinRTApiCompatVersion)\lib\net5.0\$(TargetFileName)">
+        <DependencyPaths>@(_ReferencePathDirectories-&gt;Distinct(), ',')</DependencyPaths>
+      </ResolvedMatchingContract>
+    </ItemGroup>
+  </Target>
+
 </Project>

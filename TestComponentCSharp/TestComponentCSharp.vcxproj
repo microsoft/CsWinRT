@@ -65,6 +65,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ManualProjectionTestClasses.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Class.h">
       <DependentUpon>TestComponentCSharp.idl</DependentUpon>
@@ -82,6 +83,7 @@
     </ClCompile>
     <ClCompile Include="NonAgileClass.cpp" />
     <ClCompile Include="ComImports.cpp" />
+    <ClCompile Include="ManualProjectionTestClasses.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />

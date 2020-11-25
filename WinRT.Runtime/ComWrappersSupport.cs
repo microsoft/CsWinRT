@@ -56,38 +56,6 @@ namespace WinRT
             }
         }
 
-        public static bool TryUnwrapObject(object o, out IObjectReference objRef)
-        {
-            // The unwrapping here needs to be in exact type match in case the user
-            // has implemented a WinRT interface or inherited from a WinRT class
-            // in a .NET (non-projected) type.
-
-            if (o is Delegate del)
-            {
-                return TryUnwrapObject(del.Target, out objRef);
-            }
-
-            Type type = o.GetType();
-            ObjectReferenceWrapperAttribute objRefWrapper = type.GetCustomAttribute<ObjectReferenceWrapperAttribute>();
-            if (objRefWrapper is object)
-            {
-                objRef = (IObjectReference)type.GetField(objRefWrapper.ObjectReferenceField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).GetValue(o);
-                return true;
-            }
-
-            ProjectedRuntimeClassAttribute projectedClass = type.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
-
-            if (projectedClass is object && projectedClass.DefaultInterfaceProperty != null)
-            {
-                return TryUnwrapObject(
-                    type.GetProperty(projectedClass.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).GetValue(o),
-                    out objRef);
-            }
-
-            objRef = null;
-            return false;
-        }
-
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)
         {
             using var unknownRef = ObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
@@ -134,19 +102,22 @@ namespace WinRT
                     entries.Add(new ComInterfaceEntry
                     {
                         IID = GuidGenerator.GetIID(ifaceAbiType),
-                        Vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                        Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
                     });
                 }
 
                 if (iface.IsConstructedGenericType
-                    && Projections.TryGetCompatibleWindowsRuntimeTypeForVariantType(iface, out var compatibleIface))
+                    && Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, out var compatibleIfaces))
                 {
-                    var compatibleIfaceAbiType = compatibleIface.FindHelperType();
-                    entries.Add(new ComInterfaceEntry
+                    foreach (var compatibleIface in compatibleIfaces)
                     {
-                        IID = GuidGenerator.GetIID(compatibleIfaceAbiType),
-                        Vtable = (IntPtr)compatibleIfaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
-                    });
+                        var compatibleIfaceAbiType = compatibleIface.FindHelperType();
+                        entries.Add(new ComInterfaceEntry
+                        {
+                            IID = GuidGenerator.GetIID(compatibleIfaceAbiType),
+                            Vtable = (IntPtr)compatibleIfaceAbiType.GetAbiToProjectionVftblPtr()
+                        });
+                    }
                 }
             }
 
@@ -155,7 +126,7 @@ namespace WinRT
                 entries.Add(new ComInterfaceEntry
                 {
                     IID = GuidGenerator.GetIID(obj.GetType()),
-                    Vtable = (IntPtr)obj.GetType().GetHelperType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                    Vtable = (IntPtr)obj.GetType().GetHelperType().GetAbiToProjectionVftblPtr()
                 });
             }
 
@@ -166,7 +137,7 @@ namespace WinRT
                 entries.Add(new ComInterfaceEntry
                 {
                     IID = GuidGenerator.GetIID(ifaceAbiType),
-                    Vtable = (IntPtr)ifaceAbiType.FindVftblType().GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                    Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
                 });
             }
             else if (ShouldProvideIReference(obj))
@@ -328,6 +299,44 @@ namespace WinRT
             return CreateFactoryForImplementationType(runtimeClassName, implementationType);
         }
 
+        internal static string GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
+        {
+            string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
+            if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))
+            {
+                // We have a static type which we can use to construct the object.  But, we can't just use it for all scenarios
+                // and primarily use it for tear off scenarios and for scenarios where runtimeclass isn't accurate.
+                // For instance if the static type is an interface, we return an IInspectable to represent the interface.
+                // But it isn't convertable back to the class via the as operator which would be possible if we use runtimeclass.
+                // Similarly for composable types, they can be statically retrieved using the parent class, but can then no longer
+                // be cast to the sub class via as operator even if it is really an instance of it per rutimeclass.
+                // To handle these scenarios, we use the runtimeclass if we find it is assignable to the statically determined type.
+                // If it isn't, we use the statically determined type as it is a tear off.
+
+                Type implementationType = null;
+                if (!string.IsNullOrEmpty(runtimeClassName))
+                {
+                    try
+                    {
+                        (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
+                    }
+                    catch (TypeLoadException)
+                    {
+                    }
+                }
+
+                if (!(implementationType != null &&
+                    (staticallyDeterminedType == implementationType ||
+                     staticallyDeterminedType.IsAssignableFrom(implementationType) ||
+                     staticallyDeterminedType.IsGenericType && implementationType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == staticallyDeterminedType.GetGenericTypeDefinition()))))
+                {
+                    runtimeClassName = TypeNameSupport.GetNameForType(staticallyDeterminedType, TypeNameGenerationFlags.GenerateBoxedName);
+                }
+            }
+
+            return runtimeClassName;
+        }
+
         private static bool ShouldProvideIReference(object obj)
         {
             return obj.GetType().IsValueType || obj is string || obj is Type || obj is Delegate;
@@ -485,7 +494,7 @@ namespace WinRT
             return new ComInterfaceEntry
             {
                 IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<>).MakeGenericType(type)),
-                Vtable = (IntPtr)typeof(BoxedValueIReferenceImpl<>).MakeGenericType(type).GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                Vtable = (IntPtr)typeof(BoxedValueIReferenceImpl<>).MakeGenericType(type).GetAbiToProjectionVftblPtr()
             };
         }
 
@@ -636,7 +645,7 @@ namespace WinRT
             return new ComInterfaceEntry
             {
                 IID = global::WinRT.GuidGenerator.GetIID(typeof(IReferenceArray<>).MakeGenericType(type)),
-                Vtable = (IntPtr)typeof(BoxedArrayIReferenceArrayImpl<>).MakeGenericType(type).GetField("AbiToProjectionVftablePtr", BindingFlags.Public | BindingFlags.Static).GetValue(null)
+                Vtable = (IntPtr)typeof(BoxedArrayIReferenceArrayImpl<>).MakeGenericType(type).GetAbiToProjectionVftblPtr()
             };
         }
 

@@ -76,8 +76,8 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).GetValue(MarshalInspectable.FromAbi(target)); 
-                    *result = MarshalInspectable.FromManaged(__result);
+                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).GetValue(MarshalInspectable<object>.FromAbi(target)); 
+                    *result = MarshalInspectable<object>.FromManaged(__result);
 
                 }
                 catch (Exception __exception__)
@@ -96,7 +96,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).SetValue(MarshalInspectable.FromAbi(target), MarshalInspectable.FromAbi(value));
+                    global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).SetValue(MarshalInspectable<object>.FromAbi(target), MarshalInspectable<object>.FromAbi(value));
                 }
                 catch (Exception __exception__)
                 {
@@ -114,8 +114,8 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).GetIndexedValue(MarshalInspectable.FromAbi(target), MarshalInspectable.FromAbi(index)); 
-                    *result = MarshalInspectable.FromManaged(__result);
+                    __result = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).GetIndexedValue(MarshalInspectable<object>.FromAbi(target), MarshalInspectable<object>.FromAbi(index)); 
+                    *result = MarshalInspectable<object>.FromManaged(__result);
 
                 }
                 catch (Exception __exception__)
@@ -134,7 +134,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 try
                 {
-                    global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).SetIndexedValue(MarshalInspectable.FromAbi(target), MarshalInspectable.FromAbi(value), MarshalInspectable.FromAbi(index));
+                    global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).SetIndexedValue(MarshalInspectable<object>.FromAbi(target), MarshalInspectable<object>.FromAbi(value), MarshalInspectable<object>.FromAbi(index));
                 }
                 catch (Exception __exception__)
                 {

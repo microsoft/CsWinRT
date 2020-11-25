@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
@@ -48,7 +49,11 @@ namespace ABI.System
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
+#if NETSTANDARD2_0
         private class NativeDelegateWrapper
+#else
+        private class NativeDelegateWrapper : IWinRTObject
+#endif
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
             private readonly AgileReference _agileReference = default;
@@ -66,6 +71,13 @@ namespace ABI.System
                 }
             }
 
+#if !NETSTANDARD2_0
+            IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
+            bool IWinRTObject.HasUnwrappableNativeObject => true;
+            ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
+            ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData { get; } = new();
+#endif
+
             public void Invoke(object sender, T args)
             {
                 using var agileDelegate = _agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(EventHandler<T>)));
@@ -77,15 +89,15 @@ namespace ABI.System
                 var __params = new object[] { ThisPtr, null, null };
                 try
                 {
-                    __sender = MarshalInspectable.CreateMarshaler(sender);
-                    __params[1] = MarshalInspectable.GetAbi(__sender);
+                    __sender = MarshalInspectable<object>.CreateMarshaler(sender);
+                    __params[1] = MarshalInspectable<object>.GetAbi(__sender);
                     __args = Marshaler<T>.CreateMarshaler(args);
                     __params[2] = Marshaler<T>.GetAbi(__args);
                     abiInvoke.DynamicInvokeAbi(__params);
                 }
                 finally
                 {
-                    MarshalInspectable.DisposeMarshaler(__sender);
+                    MarshalInspectable<object>.DisposeMarshaler(__sender);
                     Marshaler<T>.DisposeMarshaler(__args);
                 }
 
@@ -105,7 +117,7 @@ namespace ABI.System
             {
                 global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(new IntPtr(thisPtr), (global::System.Delegate invoke) =>
                 {
-                    invoke.DynamicInvoke(MarshalInspectable.FromAbi(sender), Marshaler<T>.FromAbi(args));
+                    invoke.DynamicInvoke(MarshalInspectable<object>.FromAbi(sender), Marshaler<T>.FromAbi(args));
                 });
             }
             catch (global::System.Exception __exception__)

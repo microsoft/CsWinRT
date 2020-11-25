@@ -108,8 +108,7 @@ namespace ABI.System.Collections.Generic
 
             internal ToAbiHelper(global::System.Collections.Generic.IReadOnlyList<T> list) => _list = list;
 
-            global::Windows.Foundation.Collections.IIterator<T> global::Windows.Foundation.Collections.IIterable<T>.First() =>
-                new IEnumerator<T>.ToAbiHelper(_list.GetEnumerator());
+            global::System.Collections.Generic.IEnumerator<T> global::Windows.Foundation.Collections.IIterable<T>.First() => _list.GetEnumerator();
 
             private static void EnsureIndexInt32(uint index, int limit = int.MaxValue)
             {
@@ -343,7 +342,7 @@ namespace ABI.System.Collections.Generic
         }
         public static Guid PIID = Vftbl.PIID;
 
-        private static FromAbiHelper _FromVectorView(IWinRTObject _this)
+        internal static FromAbiHelper _FromVectorView(IWinRTObject _this)
         {
             var _obj = ((ObjectReference<Vftbl>)_this.GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyList<T>).TypeHandle));
             var ThisPtr = _obj.ThisPtr;

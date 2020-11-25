@@ -115,8 +115,7 @@ namespace ABI.System.Collections.Generic
 
             internal ToAbiHelper(global::System.Collections.Generic.IReadOnlyList<T> list) => _list = list;
 
-            global::Windows.Foundation.Collections.IIterator<T> global::Windows.Foundation.Collections.IIterable<T>.First() =>
-                new IEnumerator<T>.ToAbiHelper(_list.GetEnumerator());
+            global::System.Collections.Generic.IEnumerator<T> global::Windows.Foundation.Collections.IIterable<T>.First() => _list.GetEnumerator();
 
             private static void EnsureIndexInt32(uint index, int limit = int.MaxValue)
             {

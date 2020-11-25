@@ -12,16 +12,6 @@ using namespace Microsoft::UI::Xaml::Data;
 using namespace Microsoft::UI::Xaml::Interop;
 using Windows::UI::Xaml::Interop::TypeName;
 
-// Until C++/WinRT provides, to ensure that GetRuntimeClasName reports IVectorView rather than IVector
-namespace winrt
-{
-    template <typename T, typename Allocator = std::allocator<T>>
-    Windows::Foundation::Collections::IVectorView<T> single_threaded_vector_view(std::vector<T, Allocator>&& values = {})
-    {
-        return make<impl::input_vector_view<T, std::vector<T, Allocator>>>(std::move(values));
-    }
-}
-
 namespace winrt::TestComponentCSharp::implementation
 {
     namespace statics
@@ -157,6 +147,40 @@ namespace winrt::TestComponentCSharp::implementation
         }
         _strings = winrt::single_threaded_vector<hstring>({ L"foo", L"bar" });
     }
+
+    void Class::TypeProperty(Windows::UI::Xaml::Interop::TypeName val)
+    {
+        _typeProperty = val;
+    }
+
+    Windows::UI::Xaml::Interop::TypeName Class::TypeProperty()
+    {
+        return _typeProperty;
+    }
+
+    winrt::hstring Class::GetTypePropertyAbiName()
+    {
+        return _typeProperty.Name;
+    }
+
+    winrt::hstring Class::GetTypePropertyKind()
+    {
+        switch (_typeProperty.Kind)
+        {
+        case Windows::UI::Xaml::Interop::TypeKind::Custom:
+            return winrt::hstring(L"Custom");
+        case Windows::UI::Xaml::Interop::TypeKind::Metadata:
+            return winrt::hstring(L"Metadata");
+        default:
+            return winrt::hstring(L"Primitive");
+        }
+    }
+
+    Windows::UI::Xaml::Interop::TypeName TypeProperty()
+    {
+        return Windows::UI::Xaml::Interop::TypeName();
+    }
+
     int32_t Class::StaticIntProperty()
     {
         return statics::_int;
@@ -408,6 +432,10 @@ namespace winrt::TestComponentCSharp::implementation
     }
     void Class::ObjectProperty(WF::IInspectable const& value)
     {
+        if (auto uri = value.try_as<Windows::Foundation::Uri>())
+        {
+            _uri = uri;
+        }
         _object = value;
     }
     void Class::RaiseObjectChanged()
@@ -453,6 +481,34 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _objectIterableChanged.remove(token);
     }
+    IIterable<IIterable<WF::Point>> Class::IterableOfPointIterablesProperty()
+    {
+        return _pointIterableIterable;
+    }
+    void Class::IterableOfPointIterablesProperty(IIterable<IIterable<WF::Point>> const& value)
+    {
+        for (auto points : value)
+        {
+            for (auto point : points)
+            {
+            }
+        }
+        _pointIterableIterable = value;
+    }
+    IIterable<IIterable<WF::IInspectable>> Class::IterableOfObjectIterablesProperty()
+    {
+        return _objectIterableIterable;
+    }
+    void Class::IterableOfObjectIterablesProperty(IIterable<IIterable<WF::IInspectable>> const& value)
+    {
+        for (auto objects : value)
+        {
+            for (auto object : objects)
+            {
+            }
+        }
+        _objectIterableIterable = value;
+    }
     Uri Class::UriProperty()
     {
         return _uri;
@@ -477,6 +533,11 @@ namespace winrt::TestComponentCSharp::implementation
     {
         _uriChanged.remove(token);
     }
+
+    Windows::Foundation::Collections::IVector<Windows::Foundation::IInspectable> Class::GetUriVectorAsIInspectableVector()
+    {
+        return single_threaded_vector<Windows::Foundation::IInspectable>({ Uri(L"https://microsoft.com"), Uri(L"https://github.com") });
+    };
 
     IAsyncOperation<int32_t> Class::GetIntAsync()
     {
@@ -510,6 +571,18 @@ namespace winrt::TestComponentCSharp::implementation
     void Class::StringPairPropertyChanged(winrt::event_token const& token) noexcept
     {
         _stringPairChanged.remove(token);
+    }
+
+    TestComponentCSharp::ProvideUri Class::GetUriDelegate() noexcept
+    {
+        TestComponentCSharp::ProvideUri handler = [] { return Windows::Foundation::Uri(L"http://microsoft.com"); };
+        return handler;
+    }
+
+    void Class::AddUriHandler(TestComponentCSharp::IUriHandler uriHandler)
+    {
+        TestComponentCSharp::ProvideUri handler = [] { return Windows::Foundation::Uri(L"http://github.com"); };
+        uriHandler.AddUriHandler(handler);
     }
 
     BlittableStruct Class::BlittableStructProperty()
@@ -718,7 +791,7 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::single_threaded_vector_view(std::vector<IProperties1>{ *this, *this, *this });
     }
 
-    IVectorView<TestComponentCSharp::Class> Class::GetClassVector()
+    IVectorView<TestComponentCSharp::Class> Class::GetClassVector() noexcept
     {
         return winrt::single_threaded_vector_view(std::vector<TestComponentCSharp::Class>{ *this, *this, *this });
     }
@@ -1031,11 +1104,11 @@ namespace winrt::TestComponentCSharp::implementation
         return _string;
     }
 
-    int32_t Class::ReadWriteProperty()
+    int32_t Class::ReadWriteProperty() 
     {
         return _int;
     }
-    void Class::ReadWriteProperty(int32_t value)
+    void Class::ReadWriteProperty(int32_t value) noexcept
     {
         _int = value;
     }
@@ -1223,16 +1296,16 @@ namespace winrt::TestComponentCSharp::implementation
         throw hresult_not_implemented();
     }
 
-    struct native_properties1 : winrt::implements<native_properties1, TestComponentCSharp::IProperties1>
-    {
-        int32_t ReadWriteProperty()
-        {
-            return 42;
-        }
-    };
-
     TestComponentCSharp::IProperties1 Class::NativeProperties1()
     {
+        struct native_properties1 : winrt::implements<native_properties1, TestComponentCSharp::IProperties1>
+        {
+            int32_t ReadWriteProperty()
+            {
+                return 42;
+            }
+        };
+
         return winrt::make<native_properties1>();
     }
 
@@ -1242,17 +1315,17 @@ namespace winrt::TestComponentCSharp::implementation
         virtual HRESULT __stdcall GetService(int32_t* type, int32_t* service) noexcept = 0;
     };
 
-    struct service_provider : winrt::implements<service_provider, WF::IInspectable, IServiceProviderInterop>
-    {
-        HRESULT __stdcall GetService(int32_t* type, int32_t* service) noexcept override
-        {
-            *service = 42;
-            return 0;
-        }
-    };
-
     WF::IInspectable Class::ServiceProvider()
     {
+        struct service_provider : winrt::implements<service_provider, WF::IInspectable, IServiceProviderInterop>
+        {
+            HRESULT __stdcall GetService(int32_t* type, int32_t* service) noexcept override
+            {
+                *service = 42;
+                return 0;
+            }
+        };
+
         return winrt::make<service_provider>();
     }
 
@@ -1278,6 +1351,19 @@ namespace winrt::TestComponentCSharp::implementation
         auto mock = make<data_errors_changed_event_args>(L"name");
         DataErrorsChangedEventArgs args(detach_abi(mock), take_ownership_from_abi_t());
         _dataErrorsChanged(*this, args);
+    }
+
+    WF::IInspectable Class::BadRuntimeClassName()
+    {
+        struct bad_runtime_classname : winrt::implements<bad_runtime_classname, WF::IInspectable>
+        {
+            hstring GetRuntimeClassName()
+            {
+                return L"BadRuntimeClassName<T>";
+            }
+        };
+
+        return winrt::make<bad_runtime_classname>();
     }
 }
 

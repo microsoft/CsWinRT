@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
@@ -8,6 +9,7 @@ using WinRT;
 
 using Windows.Foundation;
 using Windows.UI;
+using Windows.Storage;
 using Windows.Storage.Streams;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -22,6 +24,15 @@ using System.Collections;
 using WinRT.Interop;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Security.Cryptography;
+using Windows.Security.Cryptography.Core;
+using System.Reflection;
+
+#if NET5_0
+using WeakRefNS = System;
+#else
+using WeakRefNS = WinRT;
+#endif
 
 namespace UnitTest
 {
@@ -34,7 +45,343 @@ namespace UnitTest
             TestObject = new Class();
         }
 
+        [Fact]
+        public void TestGetByte()
+        {
+            var array = new byte[] { 0x01 };
+            var buff = array.AsBuffer();
+            Assert.True(buff.Length == 1);
+            byte b = buff.GetByte(0);
+            Assert.True(b == 0x01);
+        }
+
+        [Fact]
+        public void TestManyBufferExtensionMethods()
+        {
+            var arrayLen3 = new byte[] { 0x01, 0x02, 0x03 };
+            var buffLen3 = arrayLen3.AsBuffer();
+
+            var arrayLen4 = new byte[] { 0x11, 0x12, 0x13, 0x14 };
+            var buffLen4 = arrayLen4.AsBuffer();
+
+            var arrayLen4Again = new byte[4];
+
+            arrayLen3.CopyTo(1, buffLen4, 0, 1); // copy just the second element of the array to the beginning of the buffer 
+            Assert.True(buffLen4.Length == 4);
+            Assert.Throws<ArgumentException>(() => buffLen4.GetByte(5)); // shouldn't have a 5th element
+            Assert.True(buffLen4.GetByte(0) == 0x02); // make sure we got the 2nd element of the array
+            
+            arrayLen3.CopyTo(buffLen4); // Array to Buffer copying
+            Assert.True(buffLen4.Length == 4);
+            Assert.True(buffLen4.GetByte(0) == 0x01); // make sure we updated the first few 
+            Assert.True(buffLen4.GetByte(1) == 0x02); 
+            Assert.True(buffLen4.GetByte(2) == 0x03);
+            Assert.True(buffLen4.GetByte(3) == 0x14); // and kept the last one 
+
+            var buffLen3Again = buffLen3.ToArray().AsBuffer();
+            Assert.True(buffLen3Again.GetByte(0) == 0x01);
+            Assert.True(buffLen3Again.GetByte(1) == 0x02);
+            Assert.True(buffLen3Again.GetByte(2) == 0x03);
+
+            Assert.False(buffLen3.IsSameData(buffLen3Again)); // different memory regions
+
+            buffLen4.CopyTo(arrayLen4Again);  // Buffer to Array copying
+            var array4 = buffLen4.ToArray();
+            Assert.True(arrayLen4Again.Length == array4.Length);
+            for (int i = 0; i < arrayLen4Again.Length; ++i)
+            {
+                Assert.True(arrayLen4Again[i] == array4[i]); // make sure we have equal array
+            }
+        }
+
+        [Fact]
+        public void TestIsSameDataDifferentArrays()
+        {
+            var arr = new byte[] { 0x01, 0x02 };
+            var buf1 = arr.AsBuffer();
+            var arr2 = new byte[] { 0x01, 0x02 };
+            var buf2 = arr2.AsBuffer();
+            Assert.False(buf1.IsSameData(buf2));
+        }
+
+        [Fact]
+        public void TestIsSameDataUsingCopyTo()
+        {
+            var arr = new byte[] { 0x01, 0x02 };
+            var buf1 = arr.AsBuffer();
+            var buf2 = new Windows.Storage.Streams.Buffer(2);
+            buf1.CopyTo(buf2);
+            Assert.False(buf1.IsSameData(buf2));
+        }
+
+        [Fact]
+        public void TestIsSameDataUsingAsBufferTwice()
+        {
+            var arr = new byte[] { 0x01, 0x02 };
+            var buf1 = arr.AsBuffer();
+            var buf2 = arr.AsBuffer();
+            Assert.True(buf1.IsSameData(buf2));
+        }
+
+        [Fact]
+        public void TestIsSameDataUsingToArray()
+        {
+            var arr = new byte[] { 0x01, 0x02 };
+            var buf1 = arr.AsBuffer();
+            var buf2 = buf1.ToArray().AsBuffer();
+            Assert.False(buf1.IsSameData(buf2));
+        }
+
+        [Fact]
+        public void TestBufferAsStreamUsingAsBuffer()
+        {
+            var arr = new byte[] { 0x01, 0x02 };
+            Stream stream = arr.AsBuffer().AsStream();            
+            Assert.True(stream != null);
+            Assert.True(stream.Length == 2);
+        }
+
+        [Fact]
+        public void TestBufferAsStreamWithEmptyBuffer1()
+        { 
+            var buffer = new Windows.Storage.Streams.Buffer(0);
+            Stream stream = buffer.AsStream();
+            Assert.True(stream != null);
+            Assert.True(stream.Length == 0);
+        }
+
+        [Fact]
+        public void TestBufferImproperReadCopyToOutOfBounds()
+        {
+            var array = new byte[] { 0x01, 0x02, 0x03 };
+            var buffer = array.AsBuffer();
+            var biggerBuffer = new Windows.Storage.Streams.Buffer(5);
+            buffer.CopyTo(biggerBuffer);
+            Assert.Throws<ArgumentException>(() => biggerBuffer.ToArray(4, 2));
+        }
+
+        [Fact]
+        public void TestBufferImproperReadCopyToStraddleBounds()
+        {
+            var array = new byte[] { 0x01, 0x02, 0x03 };
+            var buffer = array.AsBuffer();
+            var biggerBuffer = new Windows.Storage.Streams.Buffer(5);
+            buffer.CopyTo(biggerBuffer);
+            Assert.Throws<ArgumentException>(() => biggerBuffer.ToArray(2, 2));
+        }
+
+        [Fact]
+        public void TestBufferImproperReadGetByte()
+        {
+            var array = new byte[] { 0x01, 0x02, 0x03 };
+            var buffer = array.AsBuffer();
+            Assert.Throws<ArgumentException>(() => buffer.GetByte(4));
+        }
+
+        [Fact]
+        public void TestEmptyBufferToArray()
+        {
+            var buffer = new Windows.Storage.Streams.Buffer(0);
+            var array = buffer.ToArray();
+            Assert.True(array.Length == 0);
+        }
+
+        [Fact]
+        public void TestArrayCopyToBufferEndToBeginning()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(3, buf, 0, 0);
+        }
+
+        [Fact]
+        public void TestArrayCopyToBufferEndToEnd2()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(0, buf, 0, 3);
+        }
+
+        [Fact]
+        public void TestArrayCopyToBufferEndToEnd()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(3, buf, 3, 0);
+        }
+
+        [Fact]
+        public void TestArrayCopyToBufferMidToMid()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(1, buf, 1, 0);
+        }
+
+        [Fact]
+        public void TestArrayCopyToBufferMidToEnd()
+        {
+            IBuffer buf = new Windows.Storage.Streams.Buffer(3);
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            arr.CopyTo(1, buf, 3, 0);
+        }
+
+        [Fact]
+        public void TestBufferCopyToArrayEndToEnd()
+        {
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            var buf = arr.AsBuffer();
+            var target = new byte[4];
+            buf.CopyTo(3, target, 4, 0);
+        }
+
+        [Fact]
+        public void BufferToArrayWithZeroCountAtEnd2()
+        {
+            byte[] array = { 0xA1, 0xA2, 0xA3 };
+            var result = array.AsBuffer().ToArray(3, 0);
+            Assert.True(result != null);
+            Assert.True(0 == result.Length);
+        }
+
+        [Fact]
+        public void BufferToArrayWithZeroCountAtEnd_WorksWithSpans()
+        {
+            byte[] array = { 0xA1, 0xA2, 0xA3 };
+            var result = array.AsSpan().Slice(3, 0).ToArray();
+            Assert.True(result != null);
+            Assert.True(0 == result.Length);
+        }
+
+        [Fact]
+        public void TestWinRTBufferWithZeroLength()
+        {
+            byte[] arr = new byte[] { 0x01, 0x02, 0x03 };
+            MemoryStream stream = new MemoryStream(arr, 0, 3, false, true);
+            IBuffer buff = stream.GetWindowsRuntimeBuffer(3, 0);
+            Assert.True(buff != null);
+            Assert.True(buff.Length == 0);
+        }
+
+        [Fact]
+        public void TestEmptyBufferCopyTo()
+        { 
+            var buffer = new Windows.Storage.Streams.Buffer(0);
+            byte[] array = { };
+            buffer.CopyTo(array);
+            Assert.True(array.Length == 0);
+        }
+
+        [Fact]
+        public void TestTypePropertyWithSystemType()
+        {
+            TestObject.TypeProperty = typeof(System.Type);
+            Assert.Equal("Windows.UI.Xaml.Interop.TypeName", TestObject.GetTypePropertyAbiName());
+            Assert.Equal("Metadata", TestObject.GetTypePropertyKind());
+        }
+
+        class CustomDictionary : Dictionary<string, string> { }
+
+        [Fact]
+        public void TestTypePropertyWithCustomType()
+        {
+            TestObject.TypeProperty = typeof(CustomDictionary);
+            var name = TestObject.GetTypePropertyAbiName();
+            Assert.Equal("UnitTest.TestCSharp+CustomDictionary, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", name);
+        }
+
+        [Fact]
+        public void TestVectorCastConversion()
+        {
+            var vector = TestObject.GetUriVectorAsIInspectableVector();
+            var uriVector = vector.Cast<Uri>();
+            var first = uriVector.First();
+            Assert.Equal(vector, uriVector);
+        }
+
+        async Task LookupPorts()
+        {
+            var ports = await Windows.Devices.Enumeration.DeviceInformation.FindAllAsync(
+                Windows.Devices.SerialCommunication.SerialDevice.GetDeviceSelector(),
+                new string[] { "System.ItemNameDisplay" });
+            foreach (var port in ports)
+            {
+                object o = port.Properties["System.ItemNameDisplay"];
+                Assert.NotNull(o);
+            }
+        }
+
+        [Fact]
+        public void TestReadOnlyDictionaryLookup()
+        {
+            Assert.True(LookupPorts().Wait(1000));
+        }
+
 #if NET5_0
+        async Task InvokeStreamWriteZeroBytes()
+        {
+            var random = new Random(42);
+            byte[] data = new byte[256];
+            random.NextBytes(data);
+
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            await stream.WriteAsync(data, 0, 0);
+            await stream.WriteAsync(data, data.Length, 0);
+        }
+
+        [Fact]
+        public void TestStreamWriteZeroByte()
+        {
+            Assert.True(InvokeStreamWriteZeroBytes().Wait(1000));
+        }
+
+        async Task InvokeStreamWriteAsync()
+        {
+            using var fileStream = File.OpenWrite("TestFile.txt");
+            using var winRTStream = fileStream.AsOutputStream();
+
+            var winRTBuffer = new Windows.Storage.Streams.Buffer(capacity: 0);
+
+            await winRTStream.WriteAsync(winRTBuffer);
+            Assert.True(true);
+        }
+
+        [Fact]
+        public void TestStreamWriteAsync()
+        {
+            Assert.True(InvokeStreamWriteAsync().Wait(1000));
+        }
+
+        [Fact]
+        public void TestAsStream()
+        {
+            using InMemoryRandomAccessStream winrtStream = new InMemoryRandomAccessStream();
+            using Stream normalStream = winrtStream.AsStream();
+            using var memoryStream = new MemoryStream();
+            normalStream.CopyTo(memoryStream);
+        }
+
+        async Task InvokeStreamWriteAndReadAsync()
+        {
+            var random = new Random(42);
+            byte[] data = new byte[256];
+            random.NextBytes(data);
+
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            await stream.WriteAsync(data, 0, data.Length);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            byte[] read = new byte[256];
+            await stream.ReadAsync(read, 0, read.Length);
+            Assert.Equal(read, data);
+        }
+
+        [Fact]
+        public void TestStreamWriteAndRead()
+        {
+            Assert.True(InvokeStreamWriteAndReadAsync().Wait(1000));
+        }
+
         [Fact]
         public void TestDynamicInterfaceCastingOnValidInterface()
         {
@@ -47,7 +394,46 @@ namespace UnitTest
         {
             Assert.ThrowsAny<System.Exception>(() => (IStringableInterop)(IWinRTObject)TestObject);
         }
+
+        [Fact]
+        public void TestBuffer()
+        {
+            var arr1 = new byte[] { 0x01, 0x02 };
+            var buff = arr1.AsBuffer();
+            var arr2 = buff.ToArray(0,2);
+            Assert.True(arr1[0] == arr2[0]);
+            Assert.True(arr1[1] == arr2[1]);
+        }
+
 #endif
+
+        async Task TestStorageFileAsync()
+        {
+            var folderPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            StorageFile file = await StorageFile.GetFileFromPathAsync(folderPath + "\\UnitTest.dll");
+            var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(file, FileAccess.Read);
+            Assert.NotNull(handle);
+        }
+
+        [Fact]
+        public void TestStorageFile()
+        {
+            Assert.True(TestStorageFileAsync().Wait(1000));
+        }
+
+        async Task TestStorageFolderAsync()
+        {
+            var folderPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            StorageFolder folder = await StorageFolder.GetFolderFromPathAsync(folderPath);
+            var handle = WindowsRuntimeStorageExtensions.CreateSafeFileHandle(folder, "UnitTest.dll", FileMode.Open, FileAccess.Read);
+            Assert.NotNull(handle);
+        }
+
+        [Fact]
+        public void TestStorageFolder()
+        {
+            Assert.True(TestStorageFolderAsync().Wait(1000));
+        }
 
         async Task InvokeWriteBufferAsync()
         {
@@ -87,9 +473,13 @@ namespace UnitTest
                 (object sender, Uri value) => Assert.Equal(managedUri, value);
             TestObject.RaiseUriChanged();
 
-            var uri2 = MarshalInspectable.FromAbi(ABI.System.Uri.FromManaged(managedUri));
+            var uri2 = MarshalInspectable<System.Uri>.FromAbi(ABI.System.Uri.FromManaged(managedUri));
             var str2 = uri2.ToString();
             Assert.Equal(full_uri, str2);
+
+            var uri3 = MarshalInspectable<object>.FromAbi(ABI.System.Uri.FromManaged(managedUri));
+            var str3 = uri3.ToString();
+            Assert.Equal(full_uri, str3);
         }
 
         [Fact]
@@ -186,6 +576,32 @@ namespace UnitTest
             Assert.Equal(events_received, events_expected);
         }
 
+        class ManagedUriHandler : IUriHandler
+        {
+            public Class TestObject { get; private set; }
+
+            public ManagedUriHandler(Class testObject)
+            {
+                TestObject = testObject;
+            }
+
+            public void AddUriHandler(ProvideUri provideUri)
+            {
+                TestObject.CallForUri(provideUri);
+                Assert.Equal(new Uri("http://github.com"), TestObject.UriProperty);
+            }
+        }
+
+        [Fact]
+        public void TestDelegateUnwrapping()
+        {
+            var obj = TestObject.GetUriDelegate();
+            TestObject.CallForUri(obj);
+            Assert.Equal(new Uri("http://microsoft.com"), TestObject.UriProperty);
+
+            TestObject.AddUriHandler(new ManagedUriHandler(TestObject));
+        }
+
         // TODO: when the public WinUI nuget supports IXamlServiceProvider, just use the projection
         [ComImport]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -219,8 +635,11 @@ namespace UnitTest
             IntPtr service;
             serviceProvider.GetService(IntPtr.Zero, out service);
             Assert.Equal(new IntPtr(42), service);
-        }
 
+            // Ensure robustness with bad runtime class names (parsing errors, type not found, etc)
+            var badRuntimeClassName = Class.BadRuntimeClassName;
+            Assert.NotNull(badRuntimeClassName);
+        }
 
         [Fact]
         public void TestKeyValuePair()
@@ -239,6 +658,11 @@ namespace UnitTest
         [Fact]
         public void TestObjectCasting()
         {
+            object expected_uri = new Uri("http://aka.ms/cswinrt");
+            TestObject.ObjectProperty = expected_uri;
+            Assert.Equal(expected_uri, TestObject.UriProperty);
+            Assert.Equal(expected_uri, TestObject.ObjectProperty);
+
             var expected = new KeyValuePair<string, string>("key", "value");
             TestObject.ObjectProperty = expected;
             var out_pair = (KeyValuePair<string, string>)TestObject.ObjectProperty;
@@ -264,6 +688,25 @@ namespace UnitTest
             var objects = new List<ManagedType>() { new ManagedType(), new ManagedType() };
             var query = from item in objects select item;
             TestObject.ObjectIterableProperty = query;
+
+            TestObject.ObjectProperty = "test";
+            Assert.Equal("test", TestObject.ObjectProperty);
+
+            var objectArray = new ManagedType[] { new ManagedType(), new ManagedType() };
+            TestObject.ObjectIterableProperty = objectArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(objectArray));
+
+            var strArray = new string[] { "str1", "str2", "str3" };
+            TestObject.ObjectIterableProperty = strArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(strArray));
+
+            var uriArray = new Uri[] { new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") };
+            TestObject.ObjectIterableProperty = uriArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(uriArray));
+
+            var objectUriArray = new object[] { new Uri("http://github.com") };
+            TestObject.ObjectIterableProperty = objectUriArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(objectUriArray));
         }
 
         [Fact]
@@ -1166,6 +1609,14 @@ namespace UnitTest
             Assert.Equal(pt.Y, TestObject.PointProperty.Y);
             Assert.True(TestObject.PointProperty == pt);
             Assert.Equal(pt, TestObject.GetPointReference().Value);
+
+            var vector2 = TestObject.PointProperty.ToVector2();
+            Assert.Equal(pt.X, vector2.X);
+            Assert.Equal(pt.Y, vector2.Y);
+
+            TestObject.PointProperty = vector2.ToPoint();
+            Assert.Equal(pt.X, TestObject.PointProperty.X);
+            Assert.Equal(pt.Y, TestObject.PointProperty.Y);
         }
 
         [Fact]
@@ -1188,6 +1639,14 @@ namespace UnitTest
             Assert.Equal(size.Height, TestObject.SizeProperty.Height);
             Assert.Equal(size.Width, TestObject.SizeProperty.Width);
             Assert.True(TestObject.SizeProperty == size);
+
+            var vector2 = TestObject.SizeProperty.ToVector2();
+            Assert.Equal(size.Width, vector2.X);
+            Assert.Equal(size.Height, vector2.Y);
+
+            TestObject.SizeProperty = vector2.ToSize();
+            Assert.Equal(size.Width, TestObject.SizeProperty.Width);
+            Assert.Equal(size.Height, TestObject.SizeProperty.Height);
         }
 
         [Fact]
@@ -1580,27 +2039,27 @@ namespace UnitTest
         public void WeakReferenceOfManagedObject()
         {
             var properties = new ManagedProperties(42);
-            WinRT.WeakReference<IProperties1> weakReference = new WinRT.WeakReference<IProperties1>(properties);
-            weakReference.TryGetTarget(out var propertiesStrong);
+            WeakRefNS.WeakReference<IProperties1> weakReference = new WeakRefNS.WeakReference<IProperties1>(properties);
+            Assert.True(weakReference.TryGetTarget(out var propertiesStrong));
             Assert.Same(properties, propertiesStrong);
         }
 
         [Fact]
         public void WeakReferenceOfNativeObject()
         {
-            var weakReference = new WinRT.WeakReference<Class>(TestObject);
-            weakReference.TryGetTarget(out var classStrong);
+            var weakReference = new WeakRefNS.WeakReference<Class>(TestObject);
+            Assert.True(weakReference.TryGetTarget(out var classStrong));
             Assert.Same(TestObject, classStrong);
         }
 
         [Fact]
         public void WeakReferenceOfNativeObjectRehydratedAfterWrapperIsCollected()
         {
-            static (WinRT.WeakReference<Class> winrt, WeakReference net, IObjectReference objRef) GetWeakReferences()
+            static (WeakRefNS.WeakReference<Class> winrt, WeakReference net, IObjectReference objRef) GetWeakReferences()
             {
                 var obj = new Class();
                 ComWrappersSupport.TryUnwrapObject(obj, out var objRef);
-                return (new WinRT.WeakReference<Class>(obj), new WeakReference(obj), objRef);
+                return (new WeakRefNS.WeakReference<Class>(obj), new WeakReference(obj), objRef);
             }
 
             var (winrt, net, objRef) = GetWeakReferences();
@@ -1615,9 +2074,13 @@ namespace UnitTest
         [Fact]
         public void TestUnwrapInspectable()
         {
-            using var objRef = MarshalInspectable.CreateMarshaler(TestObject);
+            using var objRef = MarshalInspectable<object>.CreateMarshaler(TestObject);
             var inspectable = IInspectable.FromAbi(objRef.ThisPtr);
             Assert.True(ComWrappersSupport.TryUnwrapObject(inspectable, out _));
+
+            using var objRef2 = MarshalInspectable<Class>.CreateMarshaler(TestObject);
+            var inspectable2 = IInspectable.FromAbi(objRef2.ThisPtr);
+            Assert.True(ComWrappersSupport.TryUnwrapObject(inspectable2, out _));
         }
 
         [Fact]
@@ -1772,6 +2235,60 @@ namespace UnitTest
             TestObject.CopyProperties(nativeProperties);
 
             Assert.Equal(TestObject.ReadWriteProperty, nativeProperties.ReadWriteProperty);
+        }
+
+        // Test scenario where type reported by runtimeclass name is not a valid type (i.e. internal type).
+        [Fact]
+        public void TestNonProjectedRuntimeClass()
+        {
+            string key = ".....";
+            IBuffer keyMaterial = CryptographicBuffer.ConvertStringToBinary(key, BinaryStringEncoding.Utf8);
+            MacAlgorithmProvider mac = MacAlgorithmProvider.OpenAlgorithm(MacAlgorithmNames.HmacSha1);
+            CryptographicKey cryptoKey = mac.CreateKey(keyMaterial);
+            Assert.NotNull(cryptoKey);
+        }
+
+        [Fact(Skip="Operation not supported")]
+        public void TestIBindableIterator()
+        {
+            CustomBindableIteratorTest bindableIterator = new CustomBindableIteratorTest();
+            Assert.True(bindableIterator.MoveNext());
+            Assert.True(bindableIterator.HasCurrent);
+            Assert.Equal(27861, bindableIterator.Current);
+        }
+
+        [Fact]
+        public void TestIDisposable()
+        {
+            CustomDisposableTest disposable = new CustomDisposableTest();
+            disposable.Dispose();
+        }
+
+        [Fact]
+        public void TestIBindableVector()
+        {
+            CustomBindableVectorTest vector = new CustomBindableVectorTest();
+            Assert.NotNull(vector);
+        }
+
+        [Fact]
+        public void TestCovariance()
+        {
+            var listOfListOfPoints = new List<List<Point>>() {
+                new List<Point>{ new Point(1, 1), new Point(1, 2), new Point(1, 3) },
+                new List<Point>{ new Point(2, 1), new Point(2, 2), new Point(2, 3) },
+                new List<Point>{ new Point(3, 1), new Point(3, 2), new Point(3, 3) }
+            };
+            TestObject.IterableOfPointIterablesProperty = listOfListOfPoints;
+            Assert.True(TestObject.IterableOfPointIterablesProperty.SequenceEqual(listOfListOfPoints));
+
+            var listOfListOfUris = new List<List<Uri>>() {
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") },
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt") },
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://microsoft.com") }
+            };
+            TestObject.IterableOfObjectIterablesProperty = listOfListOfUris;
+            Assert.True(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
         }
     }
 }

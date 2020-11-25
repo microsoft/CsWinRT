@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Threading;
@@ -19,6 +20,7 @@ namespace WinRT
         private static readonly Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>();
         private static readonly Dictionary<Type, string> CustomTypeToAbiTypeNameMappings = new Dictionary<Type, string>();
         private static readonly HashSet<string> ProjectedRuntimeClassNames = new HashSet<string>();
+        private static readonly HashSet<Type> ProjectedCustomTypeRuntimeClasses = new HashSet<Type>();
 
         static Projections()
         {
@@ -64,12 +66,14 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(Vector3), typeof(ABI.System.Numerics.Vector3), "Windows.Foundation.Numerics.Vector3");
             RegisterCustomAbiTypeMappingNoLock(typeof(Vector4), typeof(ABI.System.Numerics.Vector4), "Windows.Foundation.Numerics.Vector4");
 
+            // TODO: Ideally we should not need these
             CustomTypeToHelperTypeMappings.Add(typeof(IMap<,>), typeof(ABI.System.Collections.Generic.IDictionary<,>));
             CustomTypeToHelperTypeMappings.Add(typeof(IVector<>), typeof(ABI.System.Collections.Generic.IList<>));
             CustomTypeToHelperTypeMappings.Add(typeof(IMapView<,>), typeof(ABI.System.Collections.Generic.IReadOnlyDictionary<,>));
             CustomTypeToHelperTypeMappings.Add(typeof(IVectorView<>), typeof(ABI.System.Collections.Generic.IReadOnlyList<>));
             CustomTypeToHelperTypeMappings.Add(typeof(global::Microsoft.UI.Xaml.Interop.IBindableVector), typeof(ABI.System.Collections.IList));
 
+            CustomTypeToAbiTypeNameMappings.Add(typeof(System.Type), "Windows.UI.Xaml.Interop.TypeName");
         }
 
         public static void RegisterCustomAbiTypeMapping(Type publicType, Type abiType, string winrtTypeName, bool isRuntimeClass = false)
@@ -94,14 +98,20 @@ namespace WinRT
             if (isRuntimeClass)
             {
                 ProjectedRuntimeClassNames.Add(winrtTypeName);
+                ProjectedCustomTypeRuntimeClasses.Add(publicType);
             }
         }
 
-        public static Type FindCustomHelperTypeMapping(Type publicType)
+        public static Type FindCustomHelperTypeMapping(Type publicType, bool filterToRuntimeClass = false)
         {
             rwlock.EnterReadLock();
             try
             {
+                if(filterToRuntimeClass && !ProjectedCustomTypeRuntimeClasses.Contains(publicType))
+                {
+                    return null;
+                }
+
                 if (publicType.IsGenericType)
                 {
                     return CustomTypeToHelperTypeMappings.TryGetValue(publicType.GetGenericTypeDefinition(), out Type abiTypeDefinition)
@@ -197,6 +207,7 @@ namespace WinRT
                 || type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object;
         }
 
+        // Use TryGetCompatibleWindowsRuntimeTypesForVariantType instead.
         public static bool TryGetCompatibleWindowsRuntimeTypeForVariantType(Type type, out Type compatibleType)
         {
             compatibleType = null;
@@ -238,6 +249,118 @@ namespace WinRT
             return true;
         }
 
+        private static HashSet<Type> GetCompatibleTypes(Type type)
+        {
+            HashSet<Type> compatibleTypes = new HashSet<Type>();
+
+            foreach (var iface in type.GetInterfaces())
+            {
+                if (IsTypeWindowsRuntimeTypeNoArray(iface))
+                {
+                    compatibleTypes.Add(iface);
+                }
+
+                if (iface.IsConstructedGenericType
+                    && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, out var compatibleIfaces))
+                {
+                    compatibleTypes.UnionWith(compatibleIfaces);
+                }
+            }
+
+            Type baseType = type.BaseType;
+            while (baseType != null)
+            {
+                if (IsTypeWindowsRuntimeTypeNoArray(baseType))
+                {
+                    compatibleTypes.Add(baseType);
+                }
+                baseType = baseType.BaseType;
+            }
+
+            return compatibleTypes;
+        }
+
+        internal static IEnumerable<Type> GetAllPossibleTypeCombinations(IEnumerable<IEnumerable<Type>> compatibleTypesPerGeneric, Type definition)
+        {
+            // Implementation adapted from https://stackoverflow.com/a/4424005
+            var accum = new List<Type>();
+            var compatibleTypesPerGenericArray = compatibleTypesPerGeneric.ToArray();
+            if (compatibleTypesPerGenericArray.Length > 0)
+            {
+                GetAllPossibleTypeCombinationsCore(
+                    accum,
+                    new Stack<Type>(),
+                    compatibleTypesPerGenericArray,
+                    compatibleTypesPerGenericArray.Length - 1);
+            }
+            return accum;
+
+            void GetAllPossibleTypeCombinationsCore(List<Type> accum, Stack<Type> stack, IEnumerable<Type>[] compatibleTypes, int index)
+            {
+                foreach (var type in compatibleTypes[index])
+                {
+                    stack.Push(type);
+                    if (index == 0)
+                    {
+                        // IEnumerable on a System.Collections.Generic.Stack
+                        // enumerates in order of removal (last to first).
+                        // As a result, we get the correct ordering here.
+                        accum.Add(definition.MakeGenericType(stack.ToArray()));
+                    }
+                    else
+                    {
+                        GetAllPossibleTypeCombinationsCore(accum, stack, compatibleTypes, index - 1);
+                    }
+                    stack.Pop();
+                }
+            }
+        }
+
+        internal static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(Type type, out IEnumerable<Type> compatibleTypes)
+        {
+            compatibleTypes = null;
+            if (!type.IsConstructedGenericType)
+            {
+                throw new ArgumentException(nameof(type));
+            }
+
+            var definition = type.GetGenericTypeDefinition();
+
+            if (!IsTypeWindowsRuntimeTypeNoArray(definition))
+            {
+                return false;
+            }
+
+            var genericConstraints = definition.GetGenericArguments();
+            var genericArguments = type.GetGenericArguments();
+            List<List<Type>> compatibleTypesPerGeneric = new List<List<Type>>();
+            for (int i = 0; i < genericArguments.Length; i++)
+            {
+                List<Type> compatibleTypesForGeneric = new List<Type>();
+                bool argumentCovariantObject = (genericConstraints[i].GenericParameterAttributes & GenericParameterAttributes.VarianceMask) == GenericParameterAttributes.Covariant
+                    && !genericArguments[i].IsValueType;
+
+                if (IsTypeWindowsRuntimeTypeNoArray(genericArguments[i]))
+                {
+                    compatibleTypesForGeneric.Add(genericArguments[i]);
+                }
+                else if (!argumentCovariantObject)
+                {
+                    return false;
+                }
+
+                if (argumentCovariantObject)
+                {
+                    compatibleTypesForGeneric.AddRange(GetCompatibleTypes(genericArguments[i]));
+                }
+
+                compatibleTypesPerGeneric.Add(compatibleTypesForGeneric);
+            }
+
+            compatibleTypes = GetAllPossibleTypeCombinations(compatibleTypesPerGeneric, definition);
+            return true;
+        }
+
         internal static bool TryGetDefaultInterfaceTypeForRuntimeClassType(Type runtimeClass, out Type defaultInterface)
         {
             runtimeClass = runtimeClass.GetRuntimeClassCCWType() ?? runtimeClass;
@@ -268,29 +391,38 @@ namespace WinRT
             return defaultInterface;
         }
 
-        internal static bool TryGetMarshalerTypeForProjectedRuntimeClass(IObjectReference objectReference, out Type type)
+        internal static bool TryGetMarshalerTypeForProjectedRuntimeClass<T>(IObjectReference objectReference, out Type type)
         {
-            if(objectReference.TryAs<IInspectable.Vftbl>(out var inspectablePtr) == 0)
+            Type projectedType = typeof(T);
+            if (projectedType == typeof(object))
             {
-                rwlock.EnterReadLock();
-                try
+                if (objectReference.TryAs<IInspectable.Vftbl>(out var inspectablePtr) == 0)
                 {
-                    IInspectable inspectable = inspectablePtr;
-                    string runtimeClassName = inspectable.GetRuntimeClassName(true);
-                    if (runtimeClassName is object)
+                    rwlock.EnterReadLock();
+                    try
                     {
-                        if (ProjectedRuntimeClassNames.Contains(runtimeClassName))
+                        IInspectable inspectable = inspectablePtr;
+                        string runtimeClassName = inspectable.GetRuntimeClassName(true);
+                        if (runtimeClassName is object)
                         {
-                            type = CustomTypeToHelperTypeMappings[CustomAbiTypeNameToTypeMappings[runtimeClassName]];
-                            return true;
+                            if (ProjectedRuntimeClassNames.Contains(runtimeClassName))
+                            {
+                                type = CustomTypeToHelperTypeMappings[CustomAbiTypeNameToTypeMappings[runtimeClassName]];
+                                return true;
+                            }
                         }
                     }
+                    finally
+                    {
+                        inspectablePtr.Dispose();
+                        rwlock.ExitReadLock();
+                    }
                 }
-                finally
-                {
-                    inspectablePtr.Dispose();
-                    rwlock.ExitReadLock();
-                }
+            }
+            else
+            {
+                type = FindCustomHelperTypeMapping(projectedType, true);
+                return type != null;
             }
             type = null;
             return false;

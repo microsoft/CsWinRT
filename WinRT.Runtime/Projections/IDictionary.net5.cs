@@ -14,12 +14,13 @@ using System.Diagnostics;
 
 namespace Windows.Foundation.Collections
 {
+    //Need to rethink how to name/define this interface
     [Guid("3C2925FE-8519-45C1-AA79-197B6718C1C1")]
     interface IMap<K, V> : IIterable<IKeyValuePair<K, V>>
     {
         V Lookup(K key);
         bool HasKey(K key);
-        IMapView<K, V> GetView();
+        IReadOnlyDictionary<K, V> GetView(); // Combining IMap & IReadOnlyDictionary needs redesign
         bool Insert(K key, V value);
         void _Remove(K key);
         void Clear();
@@ -32,6 +33,7 @@ namespace ABI.System.Collections.Generic
     using global::System;
     using global::System.Runtime.CompilerServices;
 
+    //This interface does not need to implement IMapView. Needs to be refactored
     [DynamicInterfaceCastableImplementation]
     [Guid("3C2925FE-8519-45C1-AA79-197B6718C1C1")]
     interface IDictionary<K, V> : global::System.Collections.Generic.IDictionary<K, V>, global::Windows.Foundation.Collections.IMap<K, V>
@@ -142,9 +144,9 @@ namespace ABI.System.Collections.Generic
                 Insert(_map, key, value);
             }
 
-            public ICollection<K> Keys { get => new DictionaryKeyCollection(this); }
+            public global::System.Collections.Generic.ICollection<K> Keys { get => new DictionaryKeyCollection(this); }
 
-            public ICollection<V> Values { get => new DictionaryValueCollection(this); }
+            public global::System.Collections.Generic.ICollection<V> Values { get => new DictionaryValueCollection(this); }
 
             public bool ContainsKey(K key)
             {
@@ -161,7 +163,7 @@ namespace ABI.System.Collections.Generic
                 if (ContainsKey(key))
                     throw new ArgumentException(ErrorStrings.Argument_AddingDuplicate);
 
-                Insert((this as global::Windows.Foundation.Collections.IMap<K, V>), key, value);
+                Insert(_map, key, value);
             }
 
             public bool Remove(K key)
@@ -199,7 +201,7 @@ namespace ABI.System.Collections.Generic
 
                 try
                 {
-                    value = Lookup((this as global::Windows.Foundation.Collections.IMap<K, V>), key);
+                    value = Lookup(_map, key);
                     return true;
                 }
                 catch (KeyNotFoundException)
@@ -271,12 +273,12 @@ namespace ABI.System.Collections.Generic
 
                 public bool IsReadOnly => true;
 
-                void ICollection<K>.Add(K item)
+                void global::System.Collections.Generic.ICollection<K>.Add(K item)
                 {
                     throw new NotSupportedException(ErrorStrings.NotSupported_KeyCollectionSet);
                 }
 
-                void ICollection<K>.Clear()
+                void global::System.Collections.Generic.ICollection<K>.Clear()
                 {
                     throw new NotSupportedException(ErrorStrings.NotSupported_KeyCollectionSet);
                 }
@@ -286,7 +288,7 @@ namespace ABI.System.Collections.Generic
                     return dictionary.ContainsKey(item);
                 }
 
-                bool ICollection<K>.Remove(K item)
+                bool global::System.Collections.Generic.ICollection<K>.Remove(K item)
                 {
                     throw new NotSupportedException(ErrorStrings.NotSupported_KeyCollectionSet);
                 }
@@ -365,12 +367,12 @@ namespace ABI.System.Collections.Generic
 
                 public bool IsReadOnly => true;
 
-                void ICollection<V>.Add(V item)
+                void global::System.Collections.Generic.ICollection<V>.Add(V item)
                 {
                     throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
                 }
 
-                void ICollection<V>.Clear()
+                void global::System.Collections.Generic.ICollection<V>.Clear()
                 {
                     throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
                 }
@@ -384,7 +386,7 @@ namespace ABI.System.Collections.Generic
                     return false;
                 }
 
-                bool ICollection<V>.Remove(V item)
+                bool global::System.Collections.Generic.ICollection<V>.Remove(V item)
                 {
                     throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
                 }
@@ -438,9 +440,8 @@ namespace ABI.System.Collections.Generic
 
             public ToAbiHelper(global::System.Collections.Generic.IDictionary<K, V> dictionary) => _dictionary = dictionary;
 
-            global::Windows.Foundation.Collections.IIterator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> global::Windows.Foundation.Collections.IIterable<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.First() =>
-                new IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.ToAbiHelper(
-                    new KeyValuePair<K, V>.Enumerator(_dictionary.GetEnumerator()));
+            global::System.Collections.Generic.IEnumerator<global::Windows.Foundation.Collections.IKeyValuePair<K, V>> global::Windows.Foundation.Collections.IIterable<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.First() =>
+                new KeyValuePair<K, V>.Enumerator(_dictionary.GetEnumerator());
 
             public V Lookup(K key)
             {
@@ -462,13 +463,13 @@ namespace ABI.System.Collections.Generic
 
             public bool HasKey(K key) => _dictionary.ContainsKey(key);
 
-            global::Windows.Foundation.Collections.IMapView<K, V> global::Windows.Foundation.Collections.IMap<K, V>.GetView()
+            global::System.Collections.Generic.IReadOnlyDictionary<K, V> global::Windows.Foundation.Collections.IMap<K, V>.GetView()
             {
                 if (!(_dictionary is global::System.Collections.Generic.IReadOnlyDictionary<K, V> roDictionary))
                 {
                     roDictionary = new ReadOnlyDictionary<K, V>(_dictionary);
                 }
-                return new IReadOnlyDictionary<K, V>.ToAbiHelper(roDictionary);
+                return roDictionary;
             }
 
             public bool Insert(K key, V value)
@@ -600,14 +601,14 @@ namespace ABI.System.Collections.Generic
             }
             private static unsafe int Do_Abi_GetView_3(IntPtr thisPtr, out IntPtr __return_value__)
             {
-                global::Windows.Foundation.Collections.IMapView<K, V> ____return_value__ = default;
+                global::System.Collections.Generic.IReadOnlyDictionary<K, V> ____return_value__ = default;
 
                 __return_value__ = default;
 
                 try
                 {
                     ____return_value__ = FindAdapter(thisPtr).GetView();
-                    __return_value__ = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromManaged(____return_value__);
+                    __return_value__ = MarshalInterface<global::System.Collections.Generic.IReadOnlyDictionary<K, V>>.FromManaged(____return_value__);
 
                 }
                 catch (Exception __exception__)
@@ -734,7 +735,7 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        unsafe global::Windows.Foundation.Collections.IMapView<K, V> global::Windows.Foundation.Collections.IMap<K, V>.GetView()
+        unsafe global::System.Collections.Generic.IReadOnlyDictionary<K, V> global::Windows.Foundation.Collections.IMap<K, V>.GetView()
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
@@ -742,7 +743,7 @@ namespace ABI.System.Collections.Generic
             try
             {
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_3(ThisPtr, out __retval));
-                return MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__retval);
+                return MarshalInterface<global::System.Collections.Generic.IReadOnlyDictionary<K, V>>.FromAbi(__retval);
             }
             finally
             {
@@ -791,7 +792,17 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        unsafe void global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Clear()
+        void global::Windows.Foundation.Collections.IMap<K, V>.Clear()
+        {
+            _ClearHelper();
+        }
+
+        void global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Clear()
+        {
+            _ClearHelper();
+        }
+
+        private unsafe void _ClearHelper()
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
@@ -815,8 +826,8 @@ namespace ABI.System.Collections.Generic
                 () => new FromAbiHelper((global::Windows.Foundation.Collections.IMap<K, V>)(IWinRTObject)obj));
         }
 
-        ICollection<K> global::System.Collections.Generic.IDictionary<K, V>.Keys => _FromMap((IWinRTObject)this).Keys;
-        ICollection<V> global::System.Collections.Generic.IDictionary<K, V>.Values => _FromMap((IWinRTObject)this).Values;
+        global::System.Collections.Generic.ICollection<K> global::System.Collections.Generic.IDictionary<K, V>.Keys => _FromMap((IWinRTObject)this).Keys;
+        global::System.Collections.Generic.ICollection<V> global::System.Collections.Generic.IDictionary<K, V>.Values => _FromMap((IWinRTObject)this).Values;
         int global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Count => _FromMap((IWinRTObject)this).Count;
         bool global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.IsReadOnly => _FromMap((IWinRTObject)this).IsReadOnly;
         V global::System.Collections.Generic.IDictionary<K, V>.this[K key] { get => _FromMap((IWinRTObject)this)[key]; set => _FromMap((IWinRTObject)this)[key] = value; }

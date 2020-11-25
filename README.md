@@ -34,29 +34,30 @@ However, C#/WinRT is a general effort and is intended to support other scenarios
 
 ## Installing and running C#/WinRT
 
-Download the C#/WinRT NuGet package here: <http://aka.ms/cswinrt/nuget>
+Download the C#/WinRT NuGet package here: https://www.nuget.org/packages/Microsoft.Windows.CsWinRT/
 
 C#/WinRT currently requires the following packages, or newer, to build:
 
-- Visual Studio 16.8 Preview 3
-- Microsoft.Net.Compilers.Toolset 3.8.0-3.20428.4
-- .NET 5 SDK 5.0.100-rc.1.20454.5
-- Nuget.exe 5.8.0-preview.2
+- [Visual Studio 16.8](https://visualstudio.microsoft.com/downloads/) 
+- [.NET 5.0 SDK](https://dotnet.microsoft.com/download/dotnet/5.0) 
+- [nuget.exe 5.8.0-preview.3](https://www.nuget.org/downloads)
 - WinUI 3 3.0.0-preview1.200515.3
 
-**Note:** As prereleases may make breaking changes before final release, any other combinations above may work but are not supported and will generate a build warning.
+The `build.cmd` script takes care of all related configuration steps and is the simplest way to get started building C#/WinRT. It installs prerequisites such as nuget and the .NET 5 SDK, configures the environment to use .NET 5 (creating a `global.json` if necessary), builds the compiler, and builds and executes the unit tests. To build C#/WinRT, follow these steps: 
 
-The build.cmd script takes care of all related configuration steps and is the simplest way to get started building C#/WinRT. The build script is intended to be executed from a Visual Studio Developer command prompt.  It installs prerequisites such as nuget and the .NET 5 SDK, configures the environment to use .NET 5 (creating a global.json if necessary), builds the compiler, and builds and executes the unit tests.
-
-After a successful command-line build, the cswinrt.sln can be launched from the same command prompt, to inherit the necessary environment. 
+- Open a Visual Studio Developer command prompt pointing at the repo.
+- Run `build.cmd`. 
+- To launch the project in Visual Studio, run `devenv cswinrt.sln` from the same command prompt. This will inherit the necessary environment.
 
 **Note:**  By default, projection projects only generate source files for Release configurations, where cswinrt.exe can execute in seconds.  To generate projection sources for Debug configurations, set the project property GenerateTestProjection to 'true'.  In either case, existing projection sources under the "Generated Files" folder will still be compiled into the projection assembly.  This configuration permits a faster inner loop in Visual Studio.
 
-**Note:** When building the first time, the build clones the testwinrt project. The build depends on this project, but msbuild doesn't consistently pick up the change when the repo is first cloned repo. You may need to build a second time if this is your first build to address the timing issue.
+## What's New
+
+[CsWinRT v1.0](https://github.com/microsoft/CsWinRT/releases/tag/1.0.1.201020.1) is our latest public release, and is compatible with the .NET 5 RTM SDK. We may have preview releases to address specific bug fixes before v1.1. Details on breaking changes and known issues can be found on the [release notes page](https://github.com/microsoft/CsWinRT/releases).
 
 ## Developer Guidance
 
-Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For additional documentation visit <http://aka.ms/cswinrt>.
+Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For recommendations on migrating from System.Runtime.InteropServices, see the [COM Interop](docs/interop.md) guide. For additional documentation visit <http://aka.ms/cswinrt>.
 
 ## Related Projects
 

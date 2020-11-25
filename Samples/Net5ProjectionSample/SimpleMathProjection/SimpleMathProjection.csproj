@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+	
+  <ItemGroup>
+    <ProjectReference Include="..\SimpleMathComponent\SimpleMathComponent.vcxproj" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="1.0.1" />
+  </ItemGroup>
+
+  <!--CsWinRT properties-->
+  <PropertyGroup>
+    <CsWinRTIncludes>SimpleMathComponent</CsWinRTIncludes>
+    <CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
+  </PropertyGroup>
+
+  <!--Properties for generating the NuGet package-->
+  <PropertyGroup>
+    <GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
+    <NuspecFile>$(GeneratedNugetDir)SimpleMathProjection.nuspec</NuspecFile>
+    <OutputPath>$(GeneratedNugetDir)</OutputPath>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <!--Specify Windows SDK Metadata-->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.19041.1" />
+  </ItemGroup>
+
+</Project>

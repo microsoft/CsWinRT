@@ -84,6 +84,19 @@ namespace WinRT
                 }
             }
 
+            if (resolvedType is null)
+            { 
+                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    Type type = assembly.GetType(runtimeClassName);
+                    if (type is object)
+                    {
+                        resolvedType = type;
+                        break;
+                    }
+                }
+            }
+
             if (resolvedType is object)
             {
                 if (genericTypes != null)

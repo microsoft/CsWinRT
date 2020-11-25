@@ -9,6 +9,12 @@ namespace winrt::TestComponentCSharp::implementation
     {
         Class();
 
+        Windows::UI::Xaml::Interop::TypeName _typeProperty;
+        void TypeProperty(Windows::UI::Xaml::Interop::TypeName val);
+        Windows::UI::Xaml::Interop::TypeName TypeProperty();
+        winrt::hstring GetTypePropertyAbiName();
+        winrt::hstring GetTypePropertyKind();
+
         winrt::event<EventHandler0> _event0;
         winrt::event<EventHandler1> _event1;
         winrt::event<EventHandler2> _event2;
@@ -17,6 +23,8 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IVector<int32_t>>> _nestedEvent;
         winrt::event<Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, Windows::Foundation::Collections::IVector<hstring>>> _nestedTypedEvent;
         winrt::event<TestComponentCSharp::EventWithReturn> _returnEvent;
+
+        Windows::Foundation::Collections::IVector<Windows::Foundation::IInspectable> GetUriVectorAsIInspectableVector();
 
         int32_t _int = 0;
         winrt::event<Windows::Foundation::EventHandler<int32_t>> _intChanged;
@@ -29,6 +37,8 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::IInspectable _object;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::IInspectable>> _objectChanged;
         Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> _objectIterable;
+        Windows::Foundation::Collections::IIterable<Windows::Foundation::Collections::IIterable<Windows::Foundation::Point>> _pointIterableIterable;
+        Windows::Foundation::Collections::IIterable<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>> _objectIterableIterable;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>>> _objectIterableChanged;
         Windows::Foundation::Uri _uri;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Uri>> _uriChanged;
@@ -129,6 +139,7 @@ namespace winrt::TestComponentCSharp::implementation
         void StringPropertyChanged(winrt::event_token const& token) noexcept;
         void RaiseStringChanged();
         void CallForString(TestComponentCSharp::ProvideString const& provideString);
+        void AddUriHandler(TestComponentCSharp::IUriHandler uriHandler);
         hstring StringProperty2();
         void StringProperty2(hstring const& value);
         Windows::Foundation::Collections::IVector<hstring> StringsProperty();
@@ -144,6 +155,10 @@ namespace winrt::TestComponentCSharp::implementation
         void CallForObjectIterable(TestComponentCSharp::ProvideObjectIterable const& provideObjectIterable);
         winrt::event_token ObjectIterablePropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>> const& handler);
         void ObjectIterablePropertyChanged(winrt::event_token const& token) noexcept;
+        Windows::Foundation::Collections::IIterable<Windows::Foundation::Collections::IIterable<Windows::Foundation::Point>> IterableOfPointIterablesProperty();
+        void IterableOfPointIterablesProperty(Windows::Foundation::Collections::IIterable<Windows::Foundation::Collections::IIterable<Windows::Foundation::Point>> const& value);
+        Windows::Foundation::Collections::IIterable<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>> IterableOfObjectIterablesProperty();
+        void IterableOfObjectIterablesProperty(Windows::Foundation::Collections::IIterable<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>> const& value);
         Windows::Foundation::Uri UriProperty();
         void UriProperty(Windows::Foundation::Uri const& value);
         void RaiseUriChanged();
@@ -157,6 +172,7 @@ namespace winrt::TestComponentCSharp::implementation
         void CallForStringPair(TestComponentCSharp::ProvideStringPair const& provideStringPair);
         winrt::event_token StringPairPropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IKeyValuePair<hstring, hstring>> const& handler);
         void StringPairPropertyChanged(winrt::event_token const& token) noexcept;
+        TestComponentCSharp::ProvideUri GetUriDelegate() noexcept;
         BlittableStruct BlittableStructProperty();
         void BlittableStructProperty(BlittableStruct const& value);
         BlittableStruct GetBlittableStruct();
@@ -201,7 +217,7 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ComposedNonBlittableStruct> GetNonBlittableStructVector();
         Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> GetObjectVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> GetInterfaceVector();
-        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector();
+        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector() noexcept;
 
         Windows::Foundation::Collections::IIterable<int32_t> GetIntIterable();
         void SetIntIterable(Windows::Foundation::Collections::IIterable<int32_t> const& value);
@@ -316,7 +332,7 @@ namespace winrt::TestComponentCSharp::implementation
         //int32_t DrawTo();
         int32_t ReadWriteProperty();
         //int32_t DistinctProperty();
-        void ReadWriteProperty(int32_t value);
+        void ReadWriteProperty(int32_t value) noexcept;
         //hstring DistinctProperty();
         //void DistinctProperty(hstring const& value);
 
@@ -326,6 +342,8 @@ namespace winrt::TestComponentCSharp::implementation
         void ErrorsChanged(winrt::event_token const& token) noexcept;
         Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> GetErrors(hstring const& propertyName);
         void RaiseDataErrorChanged();
+
+        static Windows::Foundation::IInspectable BadRuntimeClassName();
     };
 }
 
