@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using test_component_base;
+using test_component_derived.Nested;
 using TestComponent;  // Error CS0246? run get_testwinrt.cmd
 using Windows.Foundation;
 using WinRT;
@@ -740,6 +742,34 @@ namespace UnitTest
         {
             Tests.Simple();
             //Assert.Equal((double)Tests.Percentage, (double)100);
+        }
+		
+        [Fact]
+        public void TestComposable()
+        {
+            HierarchyA hierarchyA = new HierarchyA();
+            Assert.Equal("HierarchyA.HierarchyA_Method", hierarchyA.HierarchyA_Method());
+
+            HierarchyA hierarchyBAsHierarchyA = new HierarchyB();
+            Assert.Equal("HierarchyB.HierarchyA_Method", hierarchyBAsHierarchyA.HierarchyA_Method());
+
+            HierarchyB hierarchyB = new HierarchyB();
+            Assert.Equal("HierarchyB.HierarchyB_Method", hierarchyB.HierarchyB_Method());
+
+            HierarchyC hierarchyC = new HierarchyC();
+            Assert.Equal("HierarchyC.HierarchyB_Method", hierarchyC.HierarchyB_Method());
+
+            HierarchyB hierarchyCAsHierarchyB = new HierarchyC();
+            Assert.Equal("HierarchyC.HierarchyB_Method", hierarchyCAsHierarchyB.HierarchyB_Method());
+            Assert.Equal("HierarchyB.HierarchyA_Method", hierarchyCAsHierarchyB.HierarchyA_Method());
+
+            HierarchyD hierarchyD = new HierarchyD();
+            hierarchyD.HierarchyD_Method();
+
+            var hierarchyDAsHierarchyA = (HierarchyA)hierarchyD;
+            Assert.Equal("HierarchyB.HierarchyA_Method", hierarchyDAsHierarchyA.HierarchyA_Method());
+
+            Assert.True(hierarchyDAsHierarchyA == hierarchyD);
         }
     }
 }
