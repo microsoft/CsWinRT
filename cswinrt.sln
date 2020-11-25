@@ -80,6 +80,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthoringSample", "Authorin
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AuthoringConsumptionTest", "Authoring\AuthoringConsumptionTest\AuthoringConsumptionTest.vcxproj", "{0212A7C5-8D3F-443C-9EBC-1F28091FDF88}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_component_base", "TestWinRT\test_component_base\test_component_base.vcxproj", "{13333A6F-6A4A-48CD-865C-0F65135EB018}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_component_derived", "TestWinRT\test_component_derived\test_component_derived.vcxproj", "{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{13333A6F-6A4A-48CD-865C-0F65135EB018} = {13333A6F-6A4A-48CD-865C-0F65135EB018}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -390,6 +397,42 @@ Global
 		{0212A7C5-8D3F-443C-9EBC-1F28091FDF88}.Release|x64.Build.0 = Release|x64
 		{0212A7C5-8D3F-443C-9EBC-1F28091FDF88}.Release|x86.ActiveCfg = Release|Win32
 		{0212A7C5-8D3F-443C-9EBC-1F28091FDF88}.Release|x86.Build.0 = Release|Win32
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Debug|ARM.ActiveCfg = Debug|ARM
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Debug|ARM.Build.0 = Debug|ARM
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Debug|ARM64.Build.0 = Debug|ARM64
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Debug|x64.ActiveCfg = Debug|x64
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Debug|x64.Build.0 = Debug|x64
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Debug|x86.ActiveCfg = Debug|Win32
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Debug|x86.Build.0 = Debug|Win32
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Release|Any CPU.ActiveCfg = Release|Win32
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Release|ARM.ActiveCfg = Release|ARM
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Release|ARM.Build.0 = Release|ARM
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Release|ARM64.ActiveCfg = Release|ARM64
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Release|ARM64.Build.0 = Release|ARM64
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Release|x64.ActiveCfg = Release|x64
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Release|x64.Build.0 = Release|x64
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Release|x86.ActiveCfg = Release|Win32
+		{13333A6F-6A4A-48CD-865C-0F65135EB018}.Release|x86.Build.0 = Release|Win32
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Debug|ARM.ActiveCfg = Debug|ARM
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Debug|ARM.Build.0 = Debug|ARM
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Debug|ARM64.Build.0 = Debug|ARM64
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Debug|x64.ActiveCfg = Debug|x64
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Debug|x64.Build.0 = Debug|x64
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Debug|x86.ActiveCfg = Debug|Win32
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Debug|x86.Build.0 = Debug|Win32
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Release|Any CPU.ActiveCfg = Release|Win32
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Release|ARM.ActiveCfg = Release|ARM
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Release|ARM.Build.0 = Release|ARM
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Release|ARM64.ActiveCfg = Release|ARM64
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Release|ARM64.Build.0 = Release|ARM64
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Release|x64.ActiveCfg = Release|x64
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Release|x64.Build.0 = Release|x64
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Release|x86.ActiveCfg = Release|Win32
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
