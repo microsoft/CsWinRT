@@ -688,6 +688,25 @@ namespace UnitTest
             var objects = new List<ManagedType>() { new ManagedType(), new ManagedType() };
             var query = from item in objects select item;
             TestObject.ObjectIterableProperty = query;
+
+            TestObject.ObjectProperty = "test";
+            Assert.Equal("test", TestObject.ObjectProperty);
+
+            var objectArray = new ManagedType[] { new ManagedType(), new ManagedType() };
+            TestObject.ObjectIterableProperty = objectArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(objectArray));
+
+            var strArray = new string[] { "str1", "str2", "str3" };
+            TestObject.ObjectIterableProperty = strArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(strArray));
+
+            var uriArray = new Uri[] { new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") };
+            TestObject.ObjectIterableProperty = uriArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(uriArray));
+
+            var objectUriArray = new object[] { new Uri("http://github.com") };
+            TestObject.ObjectIterableProperty = objectUriArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(objectUriArray));
         }
 
         [Fact]
@@ -2250,6 +2269,26 @@ namespace UnitTest
         {
             CustomBindableVectorTest vector = new CustomBindableVectorTest();
             Assert.NotNull(vector);
+        }
+
+        [Fact]
+        public void TestCovariance()
+        {
+            var listOfListOfPoints = new List<List<Point>>() {
+                new List<Point>{ new Point(1, 1), new Point(1, 2), new Point(1, 3) },
+                new List<Point>{ new Point(2, 1), new Point(2, 2), new Point(2, 3) },
+                new List<Point>{ new Point(3, 1), new Point(3, 2), new Point(3, 3) }
+            };
+            TestObject.IterableOfPointIterablesProperty = listOfListOfPoints;
+            Assert.True(TestObject.IterableOfPointIterablesProperty.SequenceEqual(listOfListOfPoints));
+
+            var listOfListOfUris = new List<List<Uri>>() {
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") },
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt") },
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://microsoft.com") }
+            };
+            TestObject.IterableOfObjectIterablesProperty = listOfListOfUris;
+            Assert.True(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
         }
     }
 }
