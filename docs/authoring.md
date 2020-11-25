@@ -10,6 +10,7 @@ Make sure the `<TargetFramework>` for the project is one of `net5.0-windows10.0.
 And add the following to your library's project file:
 ```
   <PropertyGroup>
+    <!-- update the Windows SDK version to reflect your TargetFramework -->
     <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
     <CsWinRTComponent>true</CsWinRTComponent>
     <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
