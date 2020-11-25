@@ -6,7 +6,7 @@ C#/WinRT provides support for authoring Windows Runtime components. You can writ
 
 ## Authoring the C# Component
 To create a library, select the Class Library (.NET Core) template in Visual Studio. 
-Make sure the `<TargetFramework>` for the project is `net5.0-windows10.0.19041.0`. 
+Make sure the `<TargetFramework>` for the project is one of `net5.0-windows10.0.19041.0`, `net5.0-windows10.0.18362.0` or `net5.0-windows10.0.17763.0`. 
 And add the following to your library's project file:
 ```
   <PropertyGroup>
@@ -89,5 +89,5 @@ In your C++ app, add a `Directory.Build.targets` file that copies over the neces
 
 ## References
 Here are some resources that demonstrate authoring C#/WinRT components and the changes discussed above.
-1. https://github.com/AdamBraden/MyRandom
-2. https://github.com/microsoft/CsWinRT/tree/master/Authoring/AuthoringConsumptionTest
+1. https://github.com/microsoft/CsWinRT/tree/master/Authoring/AuthoringConsumptionTest
+2. https://github.com/AdamBraden/MyRandom
