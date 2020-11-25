@@ -81,7 +81,64 @@ namespace Generator
             //"The {0}-parameter overloads of {1}.{2} must have exactly one method specified as the default overload by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
             "In class {2}: The {0}-parameter overloads of {1} must have exactly one method specified as the default overload by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
 
+        static DiagnosticDescriptor ArraySignature_JaggedArrayRule = MakeRule(
+            "WME10??",
+            "Array signature found with jagged array, which is not a valid WinRT type", // todo better msg
+            "In type {0}: the method {1} has signature that contains a jagged array; use a different type like List");
+
+        static DiagnosticDescriptor ArraySignature_MultiDimensionalArrayRule = MakeRule(
+            "WME10??",
+            "Array signature found with multi-dimensional array, which is not a valid WinRT type", // todo better msg
+            "In type {0}: the method {1} has signature that contains a multi-dimensional array; use a different type like List");
+
+        static DiagnosticDescriptor ArraySignature_SystemArrayRule = MakeRule(
+            "WME10??",
+            "Array signature found with System.Array instance, which is not a valid WinRT type", // todo better msg
+            "In type {0}: the method {1} has signature that contains a System.Array instance; use a different type like List");
+        // "Method {0} has a multi-dimensional array of type {1} in its signature. Arrays in Windows Runtime must be one dimensional"
+
         #endregion
+
+        private bool PropertyIsPublic(PropertyDeclarationSyntax p)
+        {
+            foreach (var thing in p.Modifiers)
+            {
+                if (thing.ValueText.Equals("public")) 
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        public bool CheckArraySignature_ClassProperties(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
+        {
+            bool found = false;
+            var props = classDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>();
+            foreach (var p in props.Where(PropertyIsPublic))
+            {
+                var arrTypes = p.DescendantNodes().OfType<ArrayTypeSyntax>();
+                if (arrTypes.Any())
+                {
+                    foreach (var arrType in arrTypes)
+                    {
+                        var rankSpecs = arrType.DescendantNodes().OfType<ArrayRankSpecifierSyntax>();
+                        if (rankSpecs.Count() > 1)
+                        {
+                            context.ReportDiagnostic(Diagnostic.Create(ArraySignature_JaggedArrayRule, p.GetLocation(), classDeclaration.Identifier, p.Identifier));
+                            found |= true;
+                        }
+                        else if (rankSpecs.Count() == 1 && rankSpecs.First().ToString().Contains(","))
+                        {
+                            context.ReportDiagnostic(Diagnostic.Create(ArraySignature_MultiDimensionalArrayRule, p.GetLocation(), classDeclaration.Identifier, p.Identifier));
+                            found |= true;
+                        } 
+                    }
+                }
+            }
+            return found;
+        }
 
         /* The full metadata name of Async interfaces that should not be implemented by Windows Runtime components */
         static string[] ProhibitedAsyncInterfaces = {
@@ -236,6 +293,18 @@ namespace Generator
             return found;
         }
 
+
+        private bool IfAnyAndFirstEquals<T>(ref GeneratorExecutionContext context, MethodDeclarationSyntax method, ClassDeclarationSyntax classDeclaration, string typeName)
+        { 
+            var qualName = method.DescendantNodes().OfType<T>(); 
+            if (qualName.Any() && qualName.First().ToString().Equals(typeName)) 
+            { 
+                context.ReportDiagnostic(Diagnostic.Create(ArraySignature_SystemArrayRule, method.GetLocation(), classDeclaration.Identifier, method.Identifier));
+                return true;
+            }
+            return false;
+        }
+
         public bool HasErrorsInMethods(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
         {
             bool found = false;
@@ -256,6 +325,11 @@ namespace Generator
 
                 /* make sure no parameter has the name "__retval" */
                 found |= HasParameterNamedValue(ref context, method);
+
+                /* see if method return type is System.Array or Array */
+                found |= IfAnyAndFirstEquals<QualifiedNameSyntax>(ref context, method, classDeclaration, "System.Array");
+                found |= IfAnyAndFirstEquals<IdentifierNameSyntax>(ref context, method, classDeclaration, "Array");
+                // need to check all parameters too 
             }
 
             foreach (var thing in overloadsWithoutAttributeMap)

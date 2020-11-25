@@ -6,53 +6,26 @@ using System.Threading.Tasks;
 
 namespace TestDiagnostics
 {
-    /* ** multidimensional array  ** */
-
-    /*
-     * Properties in Class 
+    /* 
+     * Valid tests include `internal` classes and `private` properties  
+     *   and public methods in `ineternal` classes ?
      */
-    public sealed class MultidimensionalArraySignature_2D_Invalid
-    {
-        public int[,] Arr { get; set; }
-        private int[,] PrivArr { get; set; }
-
-    }
-
-    public sealed class MultidimensionalArraySignature_3D_Invalid
-    {
-        public int[,,] Arr { get; set; }
-        private int[,,] PrivArr { get; set; }
-    }
-
-    // we don't care about private or internal methods or classes
-
     internal class MultidimensionalArraySignature_2D_PrivateClass_Valid
     {
-        public int[,] Arr { get; set; }
-        private int[,] PrivArr { get; set; }
+        public int[,] Arr_2d { get; set; }
+        public int[,,] Arr_3d { get; set; }
+        private int[,] PrivArr_2d { get; set; }
+        private int[,,] PrivArr_3d { get; set; }
     }
 
-    internal sealed class MultidimensionalArraySignature_3D_PrivateClass_Valid
+    public sealed class MultidimensionalArraySignature_3D_Valid
     {
-        public int[,,] Arr { get; set; }
-        private int[,,] PrivArr { get; set; }
+        private int[,] PrivArr_2d { get; set; }
+        private int[,,] PrivArr_3d { get; set; }
     }
 
-
-    // tests return type and paramteter cases for 2-dimensional arrays 
-    // we expect diagnostics to be raised since the methods are public
-    public sealed class D2PublicPublic
-    {
-        public int[,] D2_ReturnOnly() { return new int[4, 2]; }
-        public int[,] D2_ReturnAndInput1(int[,] arr) { return arr; }
-        public int[,] D2_ReturnAndInput2of2(bool a, int[,] arr) { return arr; }
-        public bool D2_NotReturnAndInput2of2(bool a, int[,] arr) { return a; }
-        public bool D2_NotReturnAndInput2of3(bool a, int[,] arr, bool b) { return a; }
-        public int[,] D2_ReturnAndInput2of3(bool a, int[,] arr, bool b) { return arr; }
-
-    }
-
-    internal sealed class D2InternalPublic
+    //  methods ??
+    internal sealed class D2InternalPublic_Valid
     {
         public int[,] D2_ReturnOnly() { return new int[4, 2]; }
         public int[,] D2_ReturnAndInput1(int[,] arr) { return arr; }
@@ -63,20 +36,7 @@ namespace TestDiagnostics
 
     }
 
-    // tests return type and paramteter cases for 3-dimensional arrays 
-    // we expect diagnostics to be raised since the methods are public
-    public sealed class D3PublicPublic
-    {
-        public int[,,] D3_ReturnOnly() { return new int[2, 1, 3] { { { 1, 1, 1 } }, { { 2, 2, 2 } } }; }
-        public int[,,] D3_ReturnAndInput1(int[,,] arr) { return arr; }
-        public int[,,] D3_ReturnAndInput2of2(bool a, int[,,] arr) { return arr; }
-        public int[,,] D3_ReturnAndInput2of3(bool a, int[,,] arr, bool b) { return arr; }
-        public bool D3_NotReturnAndInput2of2(bool a, int[,,] arr) { return a; }
-        public bool D3_NotReturnAndInput2of3(bool a, int[,,] arr, bool b) { return a; }
-
-    }
-
-    internal sealed class D3InternalPublic
+    internal sealed class D3InternalPublic_Valid
     {
         public int[,,] D3_ReturnOnly() { return new int[2, 1, 3] { { { 1, 1, 1 } }, { { 2, 2, 2 } } }; }
         public int[,,] D3_ReturnAndInput1(int[,,] arr) { return arr; }
@@ -89,7 +49,7 @@ namespace TestDiagnostics
 
     // tests return type and paramteter cases for 3-dimensional arrays 
     // we expect normal compilation since the methods are private 
-    public sealed class D3PublicPrivate
+    public sealed class MultiDimPublicPrivate_Valid
     {
         private int[,,] D3_ReturnOnly() { return new int[2, 1, 3] { { { 1, 1, 1 } }, { { 2, 2, 2 } } }; }
         private int[,,] D3_ReturnAndInput1(int[,,] arr) { return arr; }
@@ -97,6 +57,47 @@ namespace TestDiagnostics
         private int[,,] D3_ReturnAndInput2of3(bool a, int[,,] arr, bool b) { return arr; }
         private bool D3_NotReturnAndInput2of2(bool a, int[,,] arr) { return a; }
         private bool D3_NotReturnAndInput2of3(bool a, int[,,] arr, bool b) { return a; }
+
+    }
+
+    public interface MultiDimArrayTests_ValidInterface_NoMultiDim
+    {
+        int[] foo();
+        bool bar(int[] arr);
+    }
+
+    /* 
+     * Invalid tests include public properties in public classes, public interface methods, 
+     */
+    public sealed class MultidimensionalArraySignature_2D_Invalid
+    {
+        public int[,] Arr_2d { get; set; }
+        public int[,,] Arr_3d { get; set; }
+        private int[,] PrivArr_2d { get; set; } /* below should pass through undetected (private property) */
+    }
+
+    // tests return type and paramteter cases for 2-dimensional arrays 
+    // we expect diagnostics to be raised since the methods are public
+    public sealed class D2PublicPublic_Invalid
+    {
+        public int[,] D2_ReturnOnly() { return new int[4, 2]; }
+        public int[,] D2_ReturnAndInput1(int[,] arr) { return arr; }
+        public int[,] D2_ReturnAndInput2of2(bool a, int[,] arr) { return arr; }
+        public bool D2_NotReturnAndInput2of2(bool a, int[,] arr) { return a; }
+        public bool D2_NotReturnAndInput2of3(bool a, int[,] arr, bool b) { return a; }
+        public int[,] D2_ReturnAndInput2of3(bool a, int[,] arr, bool b) { return arr; }
+
+    }
+
+    // do methods count?? I think so...
+    public sealed class D3PublicPublic_Invalid
+    {
+        public int[,,] D3_ReturnOnly() { return new int[2, 1, 3] { { { 1, 1, 1 } }, { { 2, 2, 2 } } }; }
+        public int[,,] D3_ReturnAndInput1(int[,,] arr) { return arr; }
+        public int[,,] D3_ReturnAndInput2of2(bool a, int[,,] arr) { return arr; }
+        public int[,,] D3_ReturnAndInput2of3(bool a, int[,,] arr, bool b) { return arr; }
+        public bool D3_NotReturnAndInput2of2(bool a, int[,,] arr) { return a; }
+        public bool D3_NotReturnAndInput2of3(bool a, int[,,] arr, bool b) { return a; }
 
     }
 
@@ -107,11 +108,7 @@ namespace TestDiagnostics
         public int[,,] D3Method(bool b) { return new int[2, 1, 3] { { { 1, 1, 1 } }, { { 2, 2, 2 } } }; }
     }
 
-    /*
-     * negative test - public methods as members of an interface 
-     */
-
-    public interface D2MemberOfInterface_N
+    public interface D2MemberOfInterface_Invalid
     {
         public int[,] D2_ReturnOnly();
         public int[,] D2_ReturnAndInput1(int[,] arr);
@@ -121,18 +118,7 @@ namespace TestDiagnostics
         public int[,] D2_ReturnAndInput2of3(bool a, int[,] arr, bool b);
     }
 
-    public interface D2MemberOfInterface_P
-    {
-        private int[,] D2_ReturnOnly() { return new int[4, 2]; }
-        private int[,] D2_ReturnAndInput1(int[,] arr) { return arr; }
-        private int[,] D2_ReturnAndInput2of2(bool a, int[,] arr) { return arr; }
-        private bool D2_NotReturnAndInput2of2(bool a, int[,] arr) { return a; }
-        private bool D2_NotReturnAndInput2of3(bool a, int[,] arr, bool b) { return a; }
-        private int[,] D2_ReturnAndInput2of3(bool a, int[,] arr, bool b) { return arr; }
-
-    }
-
-    public interface D3MemberOfInterface_N
+    public interface D3MemberOfInterface_Invalid
     {
         public int[,,] D3_ReturnOnly(); 
         public int[,,] D3_ReturnAndInput1(int[,,] arr); 
@@ -141,37 +127,27 @@ namespace TestDiagnostics
         public bool D3_NotReturnAndInput2of2(bool a, int[,,] arr);
         public bool D3_NotReturnAndInput2of3(bool a, int[,,] arr, bool b); 
     }
-    
-    public interface D3MemberOfInterface_P
-    {
-        private int[,,] D3_ReturnOnly() { return new int[2, 1, 3] { { { 1, 1, 1 } }, { { 2, 2, 2 } } }; }
-        private int[,,] D3_ReturnAndInput1(int[,,] arr) { return arr; }
-        private int[,,] D3_ReturnAndInput2of2(bool a, int[,,] arr) { return arr; }
-        private int[,,] D3_ReturnAndInput2of3(bool a, int[,,] arr, bool b) { return arr; }
-        private bool D3_NotReturnAndInput2of2(bool a, int[,,] arr) { return a; }
-        private bool D3_NotReturnAndInput2of3(bool a, int[,,] arr, bool b) { return a; }
+
+    namespace SubNamespace
+    { 
+        public interface SubNamespacInterface_D2Methods_Invalid
+        { 
+            public int[,] D2_ReturnOnly(); 
+            public int[,] D2_ReturnAndInput1(int[,] arr); 
+            public int[,] D2_ReturnAndInput2of2(bool a, int[,] arr);
+            public int[,] D2_ReturnAndInput2of3(bool a, int[,] arr, bool b);
+            public bool D2_NotReturnAndInput2of2(bool a, int[,] arr);
+            public bool D2_NotReturnAndInput2of3(bool a, int[,] arr, bool b); 
+        }
+
+        public interface SubNamespaceInterface_D3Methods_Invalid
+        { 
+            public int[,,] D3_ReturnOnly(); 
+            public int[,,] D3_ReturnAndInput1(int[,,] arr); 
+            public int[,,] D3_ReturnAndInput2of2(bool a, int[,,] arr);
+            public int[,,] D3_ReturnAndInput2of3(bool a, int[,,] arr, bool b);
+            public bool D3_NotReturnAndInput2of2(bool a, int[,,] arr);
+            public bool D3_NotReturnAndInput2of3(bool a, int[,,] arr, bool b); 
+        }
     }
 } // End TestDiagnostics namespace
-
-
-// maybe we need all the interface tests at the top level ? 
-public interface TopLevel_PrivateD3MemberOfInterface
-    { 
-        public int[,,] D3_ReturnOnly(); 
-        public int[,,] D3_ReturnAndInput1(int[,,] arr); 
-        public int[,,] D3_ReturnAndInput2of2(bool a, int[,,] arr);
-        public int[,,] D3_ReturnAndInput2of3(bool a, int[,,] arr, bool b);
-        public bool D3_NotReturnAndInput2of2(bool a, int[,,] arr);
-        public bool D3_NotReturnAndInput2of3(bool a, int[,,] arr, bool b); 
-    }
-
-public interface TopLevel_D2MemberOfInterface_P
-{
-    private int[,] D2_ReturnOnly() { return new int[4, 2]; }
-    private int[,] D2_ReturnAndInput1(int[,] arr) { return arr; }
-    private int[,] D2_ReturnAndInput2of2(bool a, int[,] arr) { return arr; }
-    private bool D2_NotReturnAndInput2of2(bool a, int[,] arr) { return a; }
-    private bool D2_NotReturnAndInput2of3(bool a, int[,] arr, bool b) { return a; }
-    private int[,] D2_ReturnAndInput2of3(bool a, int[,] arr, bool b) { return arr; }
-
-}

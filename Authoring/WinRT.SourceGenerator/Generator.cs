@@ -152,10 +152,15 @@ namespace Generator
                 // Used in the checking of structure fields 
                 List<string> classNames = new List<string>();
 
+                // need an interfaces loop for the array signature rule 
+
                 /* Check all classes */
                 foreach (ClassDeclarationSyntax classDeclaration in classes)
-                { 
+                {
                     classNames.Add(classDeclaration.Identifier.ToString());
+
+                    /* exports multidimensional array */
+                    found |= winrtRules.CheckArraySignature_ClassProperties(ref context, classDeclaration);
 
                     /* exposes an operator overload  */
                     found |= winrtRules.OverloadsOperator(ref context, classDeclaration); 
