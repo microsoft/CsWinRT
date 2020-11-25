@@ -176,6 +176,8 @@ namespace TestComponentCSharp
         void RaiseObjectIterableChanged();
         void CallForObjectIterable(ProvideObjectIterable provideObjectIterable);
         event Windows.Foundation.EventHandler<Windows.Foundation.Collections.IIterable<Object> > ObjectIterablePropertyChanged;
+        Windows.Foundation.Collections.IIterable<Windows.Foundation.Collections.IIterable<Windows.Foundation.Point> > IterableOfPointIterablesProperty;
+        Windows.Foundation.Collections.IIterable<Windows.Foundation.Collections.IIterable<Object> > IterableOfObjectIterablesProperty;
 
         Windows.Foundation.Uri UriProperty;
         void RaiseUriChanged();
