@@ -126,7 +126,8 @@ This is generally done via a `Directory.Build.targets` file like so:
     <Copy SourceFiles="Path\To\Nuget\Packages\microsoft.windows.cswinrt\$(CsWinRTVersion)\lib\net5.0\WinRT.Host.Shim.dll"
           DestinationFolder="$(OutDir)" 
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
-
+    
+    <!-- Note: the following three source paths may not need the $(Platform) entry for your app -->
     <Copy SourceFiles="..\YourC#Library\bin\$(Platform)\$(Configuration)\net5.0-windows10.0.19041.0\WinRT.Runtime.dll" 
           DestinationFolder="$(OutDir)" 
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
