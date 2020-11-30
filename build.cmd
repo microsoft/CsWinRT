@@ -11,13 +11,13 @@ set path=%DOTNET_ROOT%;%path%
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTNet5SdkVersion%' -InstallDir "%DOTNET_ROOT%" -Architecture 'x64' ^
--AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet' "
+-Version '%CsWinRTNet5SdkVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' ^
+-AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTNet5SdkVersion%' -InstallDir "%DOTNET_ROOT(86)%" -Architecture 'x86' ^
--AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet' "
+-Version '%CsWinRTNet5SdkVersion%' -InstallDir '%DOTNET_ROOT(86)%' -Architecture 'x86' ^
+-AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 
 :globaljson
 rem Create global.json for current .NET SDK, and with allowPrerelease=true
@@ -113,10 +113,10 @@ if not exist .nuget md .nuget
 if not exist .nuget\nuget.exe powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v5.8.0-preview.2/nuget.exe -OutFile .nuget\nuget.exe"
 .nuget\nuget update -self
 rem Note: packages.config-based (vcxproj) projects do not support msbuild /t:restore
+call get_testwinrt.cmd
 call :exec .nuget\nuget.exe restore %nuget_params%
 
 :build
-call get_testwinrt.cmd
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
 call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_basline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_basline_assembly_version_compat_errors% cswinrt.sln 
 if ErrorLevel 1 (
