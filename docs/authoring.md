@@ -44,9 +44,9 @@ We are working on implementing diagnostics in our tool that will catch these err
 ## Using the authored component
 
 Modifications needed: 
-  1. add a reference in the consuming app to your component
-  2. add a manifest file and runtimeconfig file [for native consumption only] 
-  3. add a MSBuild target for copying the required DLLs.
+  1. Reference to your authored component in the consuming app
+  2. Add a manifest file and runtimeconfig file [for native consumption only] 
+  3. Use a MSBuild targets for copying necessary DLLs
 
 
 ### Add the reference to your authored component
