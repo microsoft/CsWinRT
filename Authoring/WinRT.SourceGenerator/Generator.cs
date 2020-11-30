@@ -137,6 +137,30 @@ namespace Generator
             peBlob.WriteContentTo(fs);
         }
 
+        private bool ClassIsPublic(ClassDeclarationSyntax m)
+        {
+            foreach (var thing in m.Modifiers)
+            {
+                if (thing.ValueText.Equals("public")) 
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private bool InterfaceIsPublic(InterfaceDeclarationSyntax m)
+        {
+            foreach (var thing in m.Modifiers)
+            {
+                if (thing.ValueText.Equals("public")) 
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private bool CatchWinRTDiagnostics(ref GeneratorExecutionContext context) 
         { 
             bool found = false; 
@@ -146,7 +170,8 @@ namespace Generator
                 var model = context.Compilation.GetSemanticModel(tree); 
                 var nodes = tree.GetRoot().DescendantNodes();
                 
-                var classes = nodes.OfType<ClassDeclarationSyntax>(); 
+                var classes = nodes.OfType<ClassDeclarationSyntax>().Where(ClassIsPublic); 
+                var interfaces = nodes.OfType<InterfaceDeclarationSyntax>().Where(InterfaceIsPublic);
                 var structs = nodes.OfType<StructDeclarationSyntax>();
 
                 // Used in the checking of structure fields 
@@ -160,7 +185,7 @@ namespace Generator
                     classNames.Add(classDeclaration.Identifier.ToString());
 
                     /* exports multidimensional array */
-                    found |= winrtRules.CheckArraySignature_ClassProperties(ref context, classDeclaration);
+                    found |= winrtRules.Class_CheckArraySignature(ref context, classDeclaration);
 
                     /* exposes an operator overload  */
                     found |= winrtRules.OverloadsOperator(ref context, classDeclaration); 
@@ -174,6 +199,11 @@ namespace Generator
                     /* implementing async interfaces */
                     var classSymbol = model.GetDeclaredSymbol(classDeclaration);
                     found |= winrtRules.ImplementsAsyncInterface(ref context, classSymbol, classDeclaration);
+                }
+
+                foreach (InterfaceDeclarationSyntax interfaceDeclaration in interfaces)
+                {
+                    found |= winrtRules.Interface_CheckArraySignature(ref context, interfaceDeclaration);
                 }
 
                 /* Check all structs */

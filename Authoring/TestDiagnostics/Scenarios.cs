@@ -12,7 +12,6 @@ namespace TestDiagnostics
  
     // ----------------------------------------------------------------------------    
 
-    // todo: fix the error message on operator -- says "operator" instead of "+"
     public sealed class ClassThatOverloadsOperator
     {
         public static ClassThatOverloadsOperator operator +(ClassThatOverloadsOperator thing)

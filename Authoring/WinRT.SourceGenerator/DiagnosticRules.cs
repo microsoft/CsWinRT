@@ -123,37 +123,7 @@ namespace Generator
             return false;
         }
 
-        public bool CheckArraySignature_ClassProperties(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
-        {
-            bool found = false;
-            var props = classDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>();
-            foreach (var p in props.Where(PropertyIsPublic))
-            {
-
-                found |= IfAnyAndFirstEquals_Prop<QualifiedNameSyntax>(ref context, p, classDeclaration, "System.Array");
-                found |= IfAnyAndFirstEquals_Prop<IdentifierNameSyntax>(ref context, p, classDeclaration, "Array");
-                var arrTypes = p.DescendantNodes().OfType<ArrayTypeSyntax>();
-                if (arrTypes.Any())
-                {
-                    foreach (var arrType in arrTypes)
-                    {
-                        var rankSpecs = arrType.DescendantNodes().OfType<ArrayRankSpecifierSyntax>();
-                        if (rankSpecs.Count() > 1)
-                        {
-                            context.ReportDiagnostic(Diagnostic.Create(ArraySignature_JaggedArrayRule, p.GetLocation(), classDeclaration.Identifier, p.Identifier));
-                            found |= true;
-                        }
-                        else if (rankSpecs.Count() == 1 && rankSpecs.First().ToString().Contains(","))
-                        {
-                            context.ReportDiagnostic(Diagnostic.Create(ArraySignature_MultiDimensionalArrayRule, p.GetLocation(), classDeclaration.Identifier, p.Identifier));
-                            found |= true;
-                        } 
-                    }
-                }
-            }
-            return found;
-        }
-
+        #region AsyncInterfaces
         /* The full metadata name of Async interfaces that should not be implemented by Windows Runtime components */
         static string[] ProhibitedAsyncInterfaces = {
                 "Windows.Foundation.IAsyncAction", 
@@ -192,6 +162,9 @@ namespace Generator
             return false;
         }
 
+        #endregion
+
+        #region Misc
         /* HasMultipleConstructorsOfSameArity 
          *  keeps track of the arity of all constructors, and reports the diagnostic (and exits) as soon as a two constructors of the same arity are seen. */
         public bool HasMultipleConstructorsOfSameArity(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
@@ -252,18 +225,18 @@ namespace Generator
         }
 
         /// <summary>
-        /// Returns true if multiple overloads of a method are found where more than one has been designated as the default overload
+        /// Keeps track of repeated declarations of a method (overloads) and raises diagnostics according to the rule that exactly one overload should be attributed the default
         /// </summary>
         /// <param name="method">The method to check attributes for</param>
         /// <param name="methodHasAttributeMap">Keeps track of the method (via name + arity) and whether it was declared with the DefaultOverload attribute</param>
         /// <param name="overloadsWithoutAttributeMap">Keeps track of the methods that are overloads but don't have the DefaultOverload attribute (yet)</param>
-        /// <param name="classDeclaration">The class the method lives in -- used for creating the diagnostic</param>
+        /// <param name="classIdentifier">The class the method lives in -- used for creating the diagnostic</param>
         /// <param name="context">The SourceGenerator context the code lives in</param>
-        /// <returns></returns>
+        /// <returns>True iff multiple overloads of a method are found, where more than one has been designated as the default overload</returns>
         private bool CheckOverloadAttributes(MethodDeclarationSyntax method, 
             ref Dictionary<string, bool> methodHasAttributeMap, 
             ref Dictionary<string, Diagnostic> overloadsWithoutAttributeMap, 
-            ClassDeclarationSyntax classDeclaration, 
+            SyntaxToken classIdentifier, 
             ref GeneratorExecutionContext context)
         {
             bool found = false;
@@ -288,13 +261,13 @@ namespace Generator
                 {
                     // raise the "can't have multiple default attributes" diagnostic  
                     context.ReportDiagnostic(Diagnostic.Create(MethodOverload_MultipleDefaultAttribute, method.GetLocation(), 
-                        methodArity, method.Identifier, classDeclaration.Identifier));
+                        methodArity, method.Identifier, classIdentifier));
                     found |= true;
                 }
                 else if (!hasDefaultOverloadAttribute && !methodHasAttrAlready) 
                 {
                     // we could see this method later with the attribute, so hold onto the diagnostic for it until we know it doesn't have the attribute
-                    Diagnostic diagnostic = Diagnostic.Create(MethodOverload_NeedDefaultAttribute, method.GetLocation(), methodArity, method.Identifier, classDeclaration.Identifier);
+                    Diagnostic diagnostic = Diagnostic.Create(MethodOverload_NeedDefaultAttribute, method.GetLocation(), methodArity, method.Identifier, classIdentifier);
                     overloadsWithoutAttributeMap[methodNameWithArity] = diagnostic;
                 }
             }
@@ -307,29 +280,149 @@ namespace Generator
             return found;
         }
 
+        /// <summary>
+        /// Checks to see if the class declares any operators (overloading them)
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="classDeclaration"></param>
+        /// <returns>True iff an operator is overloaded by the given class</returns>
+        public bool OverloadsOperator(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
+        {
+            var operatorDeclarations = classDeclaration.DescendantNodes().OfType<OperatorDeclarationSyntax>(); 
+            if (operatorDeclarations.Any()) 
+            { 
+                var overloadedOperator = operatorDeclarations.First(); 
+                context.ReportDiagnostic(Diagnostic.Create(OperatorOverloadedRule, overloadedOperator.GetLocation(), overloadedOperator.OperatorToken));
+                return true;
+            }
+            return false;
+        }
 
-        private bool IfAnyAndFirstEquals_Method<T>(ref GeneratorExecutionContext context, MethodDeclarationSyntax method, ClassDeclarationSyntax classDeclaration, string typeName)
+        #endregion
+
+        #region ArraySignatureChecking
+
+        /// <summary>
+        /// Looks at all the methods declared on the given interface and checks them for improper array types (System.Array instances, multidimensional, jagged)
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="interfaceDeclaration"></param>
+        /// <returns>True iff any of the invalid array types are used in any of the method signatures on the given interface</returns>
+        public bool Interface_CheckArraySignature(ref GeneratorExecutionContext context, InterfaceDeclarationSyntax interfaceDeclaration)
+        {
+            bool found = false;
+            var methodDeclarations = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
+            foreach (var method in methodDeclarations) // interfaces don't have private methods, right?
+            {
+                found |= Method_CheckForSystemArrayType<QualifiedNameSyntax>(ref context, method, interfaceDeclaration.Identifier, "System.Array");
+                found |= Method_CheckForSystemArrayType<IdentifierNameSyntax>(ref context, method, interfaceDeclaration.Identifier, "Array");
+                found |= CheckForInvalidArrayType(method.DescendantNodes().OfType<ArrayTypeSyntax>(), ref context, interfaceDeclaration.Identifier, method.Identifier, method.GetLocation());
+            }
+            return found;
+        }
+
+        /// <summary>
+        /// Looks at all the properties of the given class and checks them for improper array types (System.Array instances, multidimensional, jagged)
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="classDeclaration"></param>
+        /// <returns>True iff any of the invalid array types are used in any of the propertyy signatures in the given class</returns>
+        public bool Class_CheckArraySignature(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
+        {
+            bool found = false;
+            var props = classDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>();
+            foreach (var prop in props.Where(PropertyIsPublic))
+            {
+                found |= Property_CheckForSystemArrayType<QualifiedNameSyntax>(ref context, prop, classDeclaration.Identifier, "System.Array");
+                found |= Property_CheckForSystemArrayType<IdentifierNameSyntax>(ref context, prop, classDeclaration.Identifier, "Array");
+                found |= CheckForInvalidArrayType(prop.DescendantNodes().OfType<ArrayTypeSyntax>(), ref context, classDeclaration.Identifier, prop.Identifier, prop.GetLocation());
+            }
+            return found;
+        }
+
+        /// <summary>
+        /// Look at all the array types and if any are of the form [][]+ or [,+] then raise the corresponding diagnostic and return true
+        /// </summary>
+        /// <param name="arrTypes"></param>
+        /// <param name="context"></param>
+        /// <param name="typeIdentifier">The type the array lives in</param>
+        /// <param name="fieldIdentifier">The code the array is a part of the signature for; e.g. property or method</param>
+        /// <param name="loc"></param>
+        /// <returns>True iff any of the array types given are multidimensional or jagged</returns>
+        private bool CheckForInvalidArrayType(IEnumerable<ArrayTypeSyntax> arrTypes, ref GeneratorExecutionContext context, SyntaxToken typeIdentifier, SyntaxToken fieldIdentifier, Location loc)
+        {
+            if (arrTypes.Any())
+            {
+                foreach (var arrType in arrTypes)
+                {
+                    var rankSpecs = arrType.DescendantNodes().OfType<ArrayRankSpecifierSyntax>();
+                    if (rankSpecs.Count() > 1)
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(ArraySignature_JaggedArrayRule, loc, typeIdentifier, fieldIdentifier));
+                        return true; // could do or-eq on a `found` boolean instead of exiting as soon as we see invalid...
+                    }
+                    else if (rankSpecs.Count() == 1 && rankSpecs.First().ToString().Contains(","))
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(ArraySignature_MultiDimensionalArrayRule, loc, typeIdentifier, fieldIdentifier));
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Checks method signatures with nodes of the generic type given for the given typename
+        /// </summary>
+        /// <typeparam name="T">
+        /// The method is generic because we need to use this on fields that are of type QualifiedNameSyntax and IdentifierSyntax; e.g. the System.Array type and Array type
+        /// </typeparam>
+        /// <param name="context">Compilation unit</param>
+        /// <param name="method">The method declaration</param>
+        /// <param name="classIdentifier">The type the method lives in</param>
+        /// <param name="typeName">The string representation of the type we are looking for -- either "Array" or "System.Array"</param>
+        /// <returns>True iff the return type of the given method matches the given type</returns>
+        private bool Method_CheckForSystemArrayType<T>(ref GeneratorExecutionContext context, MethodDeclarationSyntax method, SyntaxToken classIdentifier, string typeName)
         { 
             var qualName = method.DescendantNodes().OfType<T>(); 
             if (qualName.Any() && qualName.First().ToString().Equals(typeName)) 
             { 
-                context.ReportDiagnostic(Diagnostic.Create(ArraySignature_SystemArrayRule, method.GetLocation(), classDeclaration.Identifier, method.Identifier));
-                return true;
-            }
-            return false;
-        }
-        // would be nice to have some abstraction of the above/below method 
-        private bool IfAnyAndFirstEquals_Prop<T>(ref GeneratorExecutionContext context, PropertyDeclarationSyntax prop, ClassDeclarationSyntax classDeclaration, string typeName)
-        { 
-            var qualName = prop.DescendantNodes().OfType<T>(); 
-            if (qualName.Any() && qualName.First().ToString().Equals(typeName)) 
-            { 
-                context.ReportDiagnostic(Diagnostic.Create(ArraySignature_SystemArrayRule, prop.GetLocation(), classDeclaration.Identifier, prop.Identifier));
+                context.ReportDiagnostic(Diagnostic.Create(ArraySignature_SystemArrayRule, method.GetLocation(), classIdentifier, method.Identifier));
                 return true;
             }
             return false;
         }
 
+        /// <summary>
+        /// Checks property signatures with nodes of the generic type given for the given typename
+        /// </summary>
+        /// <typeparam name="T">
+        /// The method is generic because we need to use this on fields that are of type QualifiedNameSyntax and IdentifierSyntax; e.g. the System.Array type and Array type
+        /// </typeparam>
+        /// <param name="context">Compilation unit</param>
+        /// <param name="prop">The property declaration</param>
+        /// <param name="classIdentifier">The type the property lives in</param>
+        /// <param name="typeName">The string representation of the type we are looking for -- either "Array" or "System.Array"</param>
+        /// <returns>True if the return type of the given property matches the given type</returns>
+        private bool Property_CheckForSystemArrayType<T>(ref GeneratorExecutionContext context, PropertyDeclarationSyntax prop, SyntaxToken classIdentifier, string typeName)
+        { 
+            var qualName = prop.DescendantNodes().OfType<T>(); 
+            if (qualName.Any() && qualName.First().ToString().Equals(typeName)) 
+            { 
+                context.ReportDiagnostic(Diagnostic.Create(ArraySignature_SystemArrayRule, prop.GetLocation(), classIdentifier, prop.Identifier));
+                return true;
+            }
+            return false;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Loops over each method declared in the given class and checks for various diagnostics
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="classDeclaration"></param>
+        /// <returns>True iff any of the diagnostics checked for are found.</returns>
         public bool HasErrorsInMethods(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
         {
             bool found = false;
@@ -346,27 +439,17 @@ namespace Generator
             foreach (MethodDeclarationSyntax method in methods.Where(MethodIsPublic))
             {
                 /* Gather information on overloaded methods; make sure there is only one marked DefaultOverload  */
-                found |= CheckOverloadAttributes(method, ref methodsHasAttributeMap, ref overloadsWithoutAttributeMap, classDeclaration, ref context);
+                found |= CheckOverloadAttributes(method, ref methodsHasAttributeMap, ref overloadsWithoutAttributeMap, classDeclaration.Identifier, ref context);
 
                 /* make sure no parameter has the name "__retval" */
                 found |= HasParameterNamedValue(ref context, method);
 
-
-                var paramLists = method.DescendantNodes().OfType<ParameterListSyntax>();
-                if (paramLists.Any())
-                {
-                    var paramList = paramLists.First();
-                    foreach (var thing in paramList.Parameters)
-                    {
-                        // thing.Type.IsKind(ArrayTypeSyntax);
-                    }
-                }
-                /* see if method return type is System.Array or Array */
-                found |= IfAnyAndFirstEquals_Method<QualifiedNameSyntax>(ref context, method, classDeclaration, "System.Array");
-                found |= IfAnyAndFirstEquals_Method<IdentifierNameSyntax>(ref context, method, classDeclaration, "Array");
-                // need to check all parameters too 
+                /* see if method signature contains the types System.Array or Array */
+                found |= Method_CheckForSystemArrayType<QualifiedNameSyntax>(ref context, method, classDeclaration.Identifier, "System.Array");
+                found |= Method_CheckForSystemArrayType<IdentifierNameSyntax>(ref context, method, classDeclaration.Identifier, "Array");
             }
 
+            /* Finishes up the work started by `CheckOverloadAttributes` */
             foreach (var thing in overloadsWithoutAttributeMap)
             {
                 context.ReportDiagnostic(thing.Value);
@@ -375,8 +458,10 @@ namespace Generator
             return found;
         }
 
+        #region StructChecks
+
         /* SimplifySyntaxTypeString 
-         *  returns the more common term for the given kind of syntax; used when creating a diagnostic for an invalid field in a struct */ 
+         *  returns the more common term for the given kind of syntax; used when creating a diagnostic for an invalid field in a struct */
         private string SimplifySyntaxTypeString(string syntaxType)
         {
             switch (syntaxType)
@@ -416,7 +501,6 @@ namespace Generator
             return false;
         }
 
-
         /* StructHasInvalidFields
          *   returns true if there is a field declared private, 
          *   or (inclusive) declared with a type that is a class or one of object, byte or dynamic  */
@@ -451,16 +535,6 @@ namespace Generator
             return found;
         }
 
-        public bool OverloadsOperator(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
-        {
-            var operatorDeclarations = classDeclaration.DescendantNodes().OfType<OperatorDeclarationSyntax>(); 
-            if (operatorDeclarations.Any()) 
-            { 
-                var overloadedOperator = operatorDeclarations.First(); 
-                context.ReportDiagnostic(Diagnostic.Create(OperatorOverloadedRule, overloadedOperator.GetLocation(), overloadedOperator.OperatorKeyword.Text));
-                return true;
-            }
-            return false;
-        }
+        #endregion
     }
 }

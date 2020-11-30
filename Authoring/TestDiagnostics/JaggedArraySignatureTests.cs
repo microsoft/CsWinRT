@@ -65,8 +65,8 @@ namespace TestDiagnostics
     // public property in class
     public sealed class JaggedArray_Properties_Invalid
     {
-        private int[][] Arr { get; set; } // this didn't
-        public int[][] ArrP { get; set; } // this got dinged
+        private int[][] ArrP { get; set; } // this didn't
+        public int[][] Arr { get; set; } // this got dinged
         public int[][][] Arr3 { get; set; } // this got dinged
         private int[][][] Arr3P { get; set; }
     }

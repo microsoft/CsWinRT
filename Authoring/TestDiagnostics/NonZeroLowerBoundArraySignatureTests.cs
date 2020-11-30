@@ -129,29 +129,19 @@ namespace TestDiagnostics
         //  methods ??
    internal sealed class NZLBInternalPublic_Valid
    {
-       public System.Array NZLB_ReturnOnly() { return new int[4, 2]; }
+       public System.Array NZLB_ReturnOnly() { return Array.CreateInstance(typeof(int), new int[] { 4 }); }
        public System.Array NZLB_ReturnAndInput1(System.Array arr) { return arr; }
        public System.Array NZLB_ReturnAndInput2of2(bool a, System.Array arr) { return arr; }
        public bool NZLB_NotReturnAndInput2of2(bool a, System.Array arr) { return a; }
        public bool NZLB_NotReturnAndInput2of3(bool a, System.Array arr, bool b) { return a; }
        public System.Array NZLB_ReturnAndInput2of3(bool a, System.Array arr, bool b) { return arr; }
-   }
-
-   internal sealed class D3InternalPublic_Valid
-   {
-       public System.Array NZLB_ReturnOnly() { return new int[2, 1, 3] { { { 1, 1, 1 } }, { { 2, 2, 2 } } }; }
-       public System.Array NZLB_ReturnAndInput1(System.Array arr) { return arr; }
-       public System.Array NZLB_ReturnAndInput2of2(bool a, System.Array arr) { return arr; }
-       public System.Array NZLB_ReturnAndInput2of3(bool a, System.Array arr, bool b) { return arr; }
-       public bool NZLB_NotReturnAndInput2of2(bool a, System.Array arr) { return a; }
-       public bool NZLB_NotReturnAndInput2of3(bool a, System.Array arr, bool b) { return a; }
    }
 
    // tests return type and paramteter cases for 3-dimensional arrays 
    // we expect normal compilation since the methods are private 
    public sealed class NZLBPublicPrivate_Valid
    {
-       private System.Array NZLB_ReturnOnly() { return new int[2, 1, 3] { { { 1, 1, 1 } }, { { 2, 2, 2 } } }; }
+       private System.Array NZLB_ReturnOnly() { return Array.CreateInstance(typeof(int), new int[] { 4 }); }
        private System.Array NZLB_ReturnAndInput1(System.Array arr) { return arr; }
        private System.Array NZLB_ReturnAndInput2of2(bool a, System.Array arr) { return arr; }
        private System.Array NZLB_ReturnAndInput2of3(bool a, System.Array arr, bool b) { return arr; }
@@ -177,7 +167,7 @@ namespace TestDiagnostics
    // we expect diagnostics to be raised since the methods are public
    public sealed class NZLBPublicPublic_Invalid
    {
-       public System.Array NZLB_ReturnOnly() { return new int[4, 2]; }
+       public System.Array NZLB_ReturnOnly() { return Array.CreateInstance(typeof(int), new int[] { 4 }); }
        public System.Array NZLB_ReturnAndInput1(System.Array arr) { return arr; }
        public System.Array NZLB_ReturnAndInput2of2(bool a, System.Array arr) { return arr; }
        public bool NZLB_NotReturnAndInput2of2(bool a, System.Array arr) { return a; }
