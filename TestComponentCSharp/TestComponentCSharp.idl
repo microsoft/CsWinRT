@@ -176,6 +176,8 @@ namespace TestComponentCSharp
         void RaiseObjectIterableChanged();
         void CallForObjectIterable(ProvideObjectIterable provideObjectIterable);
         event Windows.Foundation.EventHandler<Windows.Foundation.Collections.IIterable<Object> > ObjectIterablePropertyChanged;
+        Windows.Foundation.Collections.IIterable<Windows.Foundation.Collections.IIterable<Windows.Foundation.Point> > IterableOfPointIterablesProperty;
+        Windows.Foundation.Collections.IIterable<Windows.Foundation.Collections.IIterable<Object> > IterableOfObjectIterablesProperty;
 
         Windows.Foundation.Uri UriProperty;
         void RaiseUriChanged();
@@ -341,10 +343,29 @@ namespace TestComponentCSharp
         void Observe(Microsoft.UI.Xaml.Interop.IBindableObservableVector vector);
     }
 
+    [default_interface]
+    runtimeclass CustomBindableIteratorTest : Microsoft.UI.Xaml.Interop.IBindableIterator
+    {
+        CustomBindableIteratorTest();
+    }
+
+    [default_interface]
+    runtimeclass CustomDisposableTest : Windows.Foundation.IClosable
+    {
+        CustomDisposableTest();
+    }
+    
     // IInspectable-based interop interface
     [uuid(39E050C3-4E74-441A-8DC0-B81104DF949C)]
     interface IUserConsentVerifierInterop
     {
         Windows.Foundation.IAsyncOperation<Windows.Security.Credentials.UI.UserConsentVerificationResult> RequestVerificationForWindowAsync(UInt64 appWindow, String message, GUID riid);
     }
+
+    [default_interface]
+    runtimeclass CustomBindableVectorTest : Microsoft.UI.Xaml.Interop.IBindableVector
+    {
+        CustomBindableVectorTest();
+    }
+
 }

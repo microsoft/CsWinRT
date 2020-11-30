@@ -2754,7 +2754,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
     }
 
 
-    void write_interface_members(writer& w, TypeDef const& type, std::set<std::string> const& generic_methods)
+    void write_interface_members(writer& w, TypeDef const& type)
     {
         bool generic_type = distance(type.GenericParam()) > 0;
 
@@ -3926,7 +3926,6 @@ return __ex.HResult;
     }
 
     void write_vtable(writer& w, TypeDef const& type, std::string const& type_name,
-        std::set<std::string>& generic_methods,
         std::string const& nongenerics_class,
         std::vector<std::string>& nongeneric_delegates)
     {
@@ -4105,7 +4104,6 @@ IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
                                 {
                                     w.write("%, ", pair.first);
                                 }, generic_abi_types));
-                            generic_methods.insert(vmethod_name);
                         }
                     }, methods),
                     bind_each(method_marshals_to_abi)
@@ -4475,7 +4473,6 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
         auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
         auto is_generic = distance(type.GenericParam()) > 0;
-        std::set<std::string> generic_methods;
         std::vector<std::string> nongeneric_delegates;
 
         std::map<std::string, required_interface> required_interfaces;
@@ -4505,7 +4502,7 @@ _obj = obj;%
             type_name,
             bind<write_type_name>(type, typedef_name_type::CCW, false),
             // Vftbl
-            bind<write_vtable>(type, type_name, generic_methods, nongenerics_class, nongeneric_delegates),
+            bind<write_vtable>(type, type_name, nongenerics_class, nongeneric_delegates),
             // Interface impl
             [&](writer& w) {
                 if (!is_generic)
@@ -4554,7 +4551,7 @@ public static Guid PIID = Vftbl.PIID;
                         required_interface.second.adapter);
                 }
             },
-            bind<write_interface_members>(type, generic_methods),
+            bind<write_interface_members>(type),
             bind<write_event_sources>(type),
             [&](writer& w) {
                 for (auto required_interface : required_interfaces)
@@ -4587,7 +4584,6 @@ public static class %
 
         auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
 
-        std::set<std::string> generic_methods;
         std::vector<std::string> nongeneric_delegates;
 
         std::map<std::string, required_interface> required_interfaces;
@@ -4612,7 +4608,7 @@ internal unsafe interface % : %
                 auto methods = type.MethodList();
                 if (is_generic)
                 {
-                    write_vtable(w, type, type_name, generic_methods, nongenerics_class, nongeneric_delegates);
+                    write_vtable(w, type, type_name, nongenerics_class, nongeneric_delegates);
                 }
                 else
                 {
@@ -4644,7 +4640,7 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
                     bind_each<write_event_abi_invoke>(type.EventList()));
                 }
             }),
-            bind<write_interface_members>(type, generic_methods),
+            bind<write_interface_members>(type),
             bind<write_event_source_tables>(type),
             [&](writer& w) {
                 for (auto required_interface : required_interfaces)

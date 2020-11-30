@@ -504,8 +504,8 @@ namespace cswinrt
             },
             { "Microsoft.UI.Xaml.Interop",
                 {
-                    { "IBindableIterable", "System.Collections", "IEnumerable", true },
-                    { "IBindableVector", "System.Collections", "IList", true },
+                    { "IBindableIterable", "System.Collections", "IEnumerable", true, true },
+                    { "IBindableVector", "System.Collections", "IList", true, true },
                     { "INotifyCollectionChanged", "System.Collections.Specialized", "INotifyCollectionChanged", true },
                     { "NotifyCollectionChangedAction", "System.Collections.Specialized", "NotifyCollectionChangedAction" },
                     { "NotifyCollectionChangedEventArgs", "System.Collections.Specialized", "NotifyCollectionChangedEventArgs", true },

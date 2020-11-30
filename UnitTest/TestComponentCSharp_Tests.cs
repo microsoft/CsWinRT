@@ -299,7 +299,59 @@ namespace UnitTest
             Assert.Equal(vector, uriVector);
         }
 
+        async Task LookupPorts()
+        {
+            var ports = await Windows.Devices.Enumeration.DeviceInformation.FindAllAsync(
+                Windows.Devices.SerialCommunication.SerialDevice.GetDeviceSelector(),
+                new string[] { "System.ItemNameDisplay" });
+            foreach (var port in ports)
+            {
+                object o = port.Properties["System.ItemNameDisplay"];
+                Assert.NotNull(o);
+            }
+        }
+
+        [Fact]
+        public void TestReadOnlyDictionaryLookup()
+        {
+            Assert.True(LookupPorts().Wait(1000));
+        }
+
 #if NET5_0
+        async Task InvokeStreamWriteZeroBytes()
+        {
+            var random = new Random(42);
+            byte[] data = new byte[256];
+            random.NextBytes(data);
+
+            using var stream = new InMemoryRandomAccessStream().AsStream();
+            await stream.WriteAsync(data, 0, 0);
+            await stream.WriteAsync(data, data.Length, 0);
+        }
+
+        [Fact]
+        public void TestStreamWriteZeroByte()
+        {
+            Assert.True(InvokeStreamWriteZeroBytes().Wait(1000));
+        }
+
+        async Task InvokeStreamWriteAsync()
+        {
+            using var fileStream = File.OpenWrite("TestFile.txt");
+            using var winRTStream = fileStream.AsOutputStream();
+
+            var winRTBuffer = new Windows.Storage.Streams.Buffer(capacity: 0);
+
+            await winRTStream.WriteAsync(winRTBuffer);
+            Assert.True(true);
+        }
+
+        [Fact]
+        public void TestStreamWriteAsync()
+        {
+            Assert.True(InvokeStreamWriteAsync().Wait(1000));
+        }
+
         [Fact]
         public void TestAsStream()
         {
@@ -353,7 +405,7 @@ namespace UnitTest
             Assert.True(arr1[1] == arr2[1]);
         }
 
- #endif
+#endif
 
         async Task TestStorageFileAsync()
         {
@@ -606,6 +658,11 @@ namespace UnitTest
         [Fact]
         public void TestObjectCasting()
         {
+            object expected_uri = new Uri("http://aka.ms/cswinrt");
+            TestObject.ObjectProperty = expected_uri;
+            Assert.Equal(expected_uri, TestObject.UriProperty);
+            Assert.Equal(expected_uri, TestObject.ObjectProperty);
+
             var expected = new KeyValuePair<string, string>("key", "value");
             TestObject.ObjectProperty = expected;
             var out_pair = (KeyValuePair<string, string>)TestObject.ObjectProperty;
@@ -631,6 +688,25 @@ namespace UnitTest
             var objects = new List<ManagedType>() { new ManagedType(), new ManagedType() };
             var query = from item in objects select item;
             TestObject.ObjectIterableProperty = query;
+
+            TestObject.ObjectProperty = "test";
+            Assert.Equal("test", TestObject.ObjectProperty);
+
+            var objectArray = new ManagedType[] { new ManagedType(), new ManagedType() };
+            TestObject.ObjectIterableProperty = objectArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(objectArray));
+
+            var strArray = new string[] { "str1", "str2", "str3" };
+            TestObject.ObjectIterableProperty = strArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(strArray));
+
+            var uriArray = new Uri[] { new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") };
+            TestObject.ObjectIterableProperty = uriArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(uriArray));
+
+            var objectUriArray = new object[] { new Uri("http://github.com") };
+            TestObject.ObjectIterableProperty = objectUriArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(objectUriArray));
         }
 
         [Fact]
@@ -1533,6 +1609,14 @@ namespace UnitTest
             Assert.Equal(pt.Y, TestObject.PointProperty.Y);
             Assert.True(TestObject.PointProperty == pt);
             Assert.Equal(pt, TestObject.GetPointReference().Value);
+
+            var vector2 = TestObject.PointProperty.ToVector2();
+            Assert.Equal(pt.X, vector2.X);
+            Assert.Equal(pt.Y, vector2.Y);
+
+            TestObject.PointProperty = vector2.ToPoint();
+            Assert.Equal(pt.X, TestObject.PointProperty.X);
+            Assert.Equal(pt.Y, TestObject.PointProperty.Y);
         }
 
         [Fact]
@@ -1555,6 +1639,14 @@ namespace UnitTest
             Assert.Equal(size.Height, TestObject.SizeProperty.Height);
             Assert.Equal(size.Width, TestObject.SizeProperty.Width);
             Assert.True(TestObject.SizeProperty == size);
+
+            var vector2 = TestObject.SizeProperty.ToVector2();
+            Assert.Equal(size.Width, vector2.X);
+            Assert.Equal(size.Height, vector2.Y);
+
+            TestObject.SizeProperty = vector2.ToSize();
+            Assert.Equal(size.Width, TestObject.SizeProperty.Width);
+            Assert.Equal(size.Height, TestObject.SizeProperty.Height);
         }
 
         [Fact]
@@ -2154,6 +2246,49 @@ namespace UnitTest
             MacAlgorithmProvider mac = MacAlgorithmProvider.OpenAlgorithm(MacAlgorithmNames.HmacSha1);
             CryptographicKey cryptoKey = mac.CreateKey(keyMaterial);
             Assert.NotNull(cryptoKey);
+        }
+
+        [Fact(Skip="Operation not supported")]
+        public void TestIBindableIterator()
+        {
+            CustomBindableIteratorTest bindableIterator = new CustomBindableIteratorTest();
+            Assert.True(bindableIterator.MoveNext());
+            Assert.True(bindableIterator.HasCurrent);
+            Assert.Equal(27861, bindableIterator.Current);
+        }
+
+        [Fact]
+        public void TestIDisposable()
+        {
+            CustomDisposableTest disposable = new CustomDisposableTest();
+            disposable.Dispose();
+        }
+
+        [Fact]
+        public void TestIBindableVector()
+        {
+            CustomBindableVectorTest vector = new CustomBindableVectorTest();
+            Assert.NotNull(vector);
+        }
+
+        [Fact]
+        public void TestCovariance()
+        {
+            var listOfListOfPoints = new List<List<Point>>() {
+                new List<Point>{ new Point(1, 1), new Point(1, 2), new Point(1, 3) },
+                new List<Point>{ new Point(2, 1), new Point(2, 2), new Point(2, 3) },
+                new List<Point>{ new Point(3, 1), new Point(3, 2), new Point(3, 3) }
+            };
+            TestObject.IterableOfPointIterablesProperty = listOfListOfPoints;
+            Assert.True(TestObject.IterableOfPointIterablesProperty.SequenceEqual(listOfListOfPoints));
+
+            var listOfListOfUris = new List<List<Uri>>() {
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://github.com") },
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt") },
+                new List<Uri>{ new Uri("http://aka.ms/cswinrt"), new Uri("http://microsoft.com") }
+            };
+            TestObject.IterableOfObjectIterablesProperty = listOfListOfUris;
+            Assert.True(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
         }
     }
 }

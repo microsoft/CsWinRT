@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using test_component_base;
+using test_component_derived.Nested;
 using TestComponent;  // Error CS0246? run get_testwinrt.cmd
 using Windows.Foundation;
 using WinRT;
@@ -573,6 +575,34 @@ namespace UnitTest
             IDictionary<string, string> b = null;
             var c = Tests.Collection3(a, out b);
             Assert.True(SequencesEqual(a, b, c));
+
+            c["bananas"] = "4";
+            Assert.Equal("4", c["bananas"]);
+
+            c.Add("kiwi", "5");
+            Assert.Equal(5, c.Count);
+
+            Assert.True(c.ContainsKey("oranges"));
+
+            KeyValuePair<string, string> k = new KeyValuePair<string, string>("pears", "3");
+            Assert.True(c.Contains(k));
+
+            KeyValuePair<string, string>[] pairs = new KeyValuePair<string, string>[5];
+            c.CopyTo(pairs, 0);
+            Assert.Equal(5, pairs.Length);
+
+            c.Remove("kiwi");
+            Assert.ThrowsAny<Exception>(() => c["kiwi"]);
+            Assert.False(c.TryGetValue("kiwi", out var kiwiVal));
+
+            Assert.True(c.TryGetValue("apples", out var keyVal));
+            Assert.Equal("1", keyVal);
+
+            Assert.Equal(4, c.Keys.Count());
+            Assert.Equal(4, c.Values.Count());
+
+            c.Clear();
+            Assert.Empty(c);
         }
 
         [Fact]
@@ -587,6 +617,12 @@ namespace UnitTest
             IReadOnlyDictionary<string, string> b = null;
             var c = Tests.Collection4(a, out b);
             Assert.True(SequencesEqual(a, b, c));
+
+            Assert.Equal("2", c["oranges"]);
+            Assert.Equal(3, c.Count());
+            Assert.True(c.ContainsKey("pears"));
+            Assert.Equal(3, c.Values.Count());
+            Assert.Equal(3, c.Keys.Count());
         }
 
         [Fact]
@@ -596,7 +632,26 @@ namespace UnitTest
             IList<string> b = null;
             var c = Tests.Collection5(a, out b);
             Assert.True(SequencesEqual(a, b, c));
-        }
+
+            Assert.Equal(1, c.IndexOf("oranges"));
+            Assert.NotNull(c.AsAgile());
+            c.Add("bananas");
+
+            c[3] = "strawberries";
+            Assert.Equal("strawberries", c[3]);
+            Assert.False(c.Contains("bananas"));
+            
+            c.Insert(3, "kiwis");
+            Assert.True(c.Remove("kiwis"));
+            c.RemoveAt(3);
+
+            string[] copied = new string[c.Count];
+            c.CopyTo(copied, 0);
+
+            var enumerator = c.GetEnumerator();
+            Assert.True(enumerator.MoveNext());
+            Assert.NotNull(enumerator.Current);
+         }
 
         [Fact]
         public void CastListToEnum_String()
@@ -615,7 +670,11 @@ namespace UnitTest
             IReadOnlyList<string> b = null;
             var c = Tests.Collection6(a, out b);
             Assert.True(SequencesEqual(a, b, c));
-        }
+
+            Assert.Equal("oranges", a[1]);
+            Assert.Equal(3, a.Count());
+            Assert.NotNull(a.GetEnumerator());
+        } 
 
         [Fact]
         public void Collections_IEnumerable_Call()
@@ -683,6 +742,34 @@ namespace UnitTest
         {
             Tests.Simple();
             //Assert.Equal((double)Tests.Percentage, (double)100);
+        }
+
+        [Fact]
+        public void TestComposable()
+        {
+            HierarchyA hierarchyA = new HierarchyA();
+            Assert.Equal("HierarchyA.HierarchyA_Method", hierarchyA.HierarchyA_Method());
+
+            HierarchyA hierarchyBAsHierarchyA = new HierarchyB();
+            Assert.Equal("HierarchyB.HierarchyA_Method", hierarchyBAsHierarchyA.HierarchyA_Method());
+
+            HierarchyB hierarchyB = new HierarchyB();
+            Assert.Equal("HierarchyB.HierarchyB_Method", hierarchyB.HierarchyB_Method());
+
+            HierarchyC hierarchyC = new HierarchyC();
+            Assert.Equal("HierarchyC.HierarchyB_Method", hierarchyC.HierarchyB_Method());
+
+            HierarchyB hierarchyCAsHierarchyB = new HierarchyC();
+            Assert.Equal("HierarchyC.HierarchyB_Method", hierarchyCAsHierarchyB.HierarchyB_Method());
+            Assert.Equal("HierarchyB.HierarchyA_Method", hierarchyCAsHierarchyB.HierarchyA_Method());
+
+            HierarchyD hierarchyD = new HierarchyD();
+            hierarchyD.HierarchyD_Method();
+
+            var hierarchyDAsHierarchyA = (HierarchyA)hierarchyD;
+            Assert.Equal("HierarchyB.HierarchyA_Method", hierarchyDAsHierarchyA.HierarchyA_Method());
+
+            Assert.True(hierarchyDAsHierarchyA == hierarchyD);
         }
     }
 }

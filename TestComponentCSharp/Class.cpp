@@ -12,16 +12,6 @@ using namespace Microsoft::UI::Xaml::Data;
 using namespace Microsoft::UI::Xaml::Interop;
 using Windows::UI::Xaml::Interop::TypeName;
 
-// Until C++/WinRT provides, to ensure that GetRuntimeClasName reports IVectorView rather than IVector
-namespace winrt
-{
-    template <typename T, typename Allocator = std::allocator<T>>
-    Windows::Foundation::Collections::IVectorView<T> single_threaded_vector_view(std::vector<T, Allocator>&& values = {})
-    {
-        return make<impl::input_vector_view<T, std::vector<T, Allocator>>>(std::move(values));
-    }
-}
-
 namespace winrt::TestComponentCSharp::implementation
 {
     namespace statics
@@ -442,6 +432,10 @@ namespace winrt::TestComponentCSharp::implementation
     }
     void Class::ObjectProperty(WF::IInspectable const& value)
     {
+        if (auto uri = value.try_as<Windows::Foundation::Uri>())
+        {
+            _uri = uri;
+        }
         _object = value;
     }
     void Class::RaiseObjectChanged()
@@ -486,6 +480,34 @@ namespace winrt::TestComponentCSharp::implementation
     void Class::ObjectIterablePropertyChanged(winrt::event_token const& token) noexcept
     {
         _objectIterableChanged.remove(token);
+    }
+    IIterable<IIterable<WF::Point>> Class::IterableOfPointIterablesProperty()
+    {
+        return _pointIterableIterable;
+    }
+    void Class::IterableOfPointIterablesProperty(IIterable<IIterable<WF::Point>> const& value)
+    {
+        for (auto points : value)
+        {
+            for (auto point : points)
+            {
+            }
+        }
+        _pointIterableIterable = value;
+    }
+    IIterable<IIterable<WF::IInspectable>> Class::IterableOfObjectIterablesProperty()
+    {
+        return _objectIterableIterable;
+    }
+    void Class::IterableOfObjectIterablesProperty(IIterable<IIterable<WF::IInspectable>> const& value)
+    {
+        for (auto objects : value)
+        {
+            for (auto object : objects)
+            {
+            }
+        }
+        _objectIterableIterable = value;
     }
     Uri Class::UriProperty()
     {

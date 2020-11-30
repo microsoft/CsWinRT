@@ -37,6 +37,8 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::IInspectable _object;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::IInspectable>> _objectChanged;
         Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> _objectIterable;
+        Windows::Foundation::Collections::IIterable<Windows::Foundation::Collections::IIterable<Windows::Foundation::Point>> _pointIterableIterable;
+        Windows::Foundation::Collections::IIterable<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>> _objectIterableIterable;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>>> _objectIterableChanged;
         Windows::Foundation::Uri _uri;
         winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::Uri>> _uriChanged;
@@ -153,6 +155,10 @@ namespace winrt::TestComponentCSharp::implementation
         void CallForObjectIterable(TestComponentCSharp::ProvideObjectIterable const& provideObjectIterable);
         winrt::event_token ObjectIterablePropertyChanged(Windows::Foundation::EventHandler<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>> const& handler);
         void ObjectIterablePropertyChanged(winrt::event_token const& token) noexcept;
+        Windows::Foundation::Collections::IIterable<Windows::Foundation::Collections::IIterable<Windows::Foundation::Point>> IterableOfPointIterablesProperty();
+        void IterableOfPointIterablesProperty(Windows::Foundation::Collections::IIterable<Windows::Foundation::Collections::IIterable<Windows::Foundation::Point>> const& value);
+        Windows::Foundation::Collections::IIterable<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>> IterableOfObjectIterablesProperty();
+        void IterableOfObjectIterablesProperty(Windows::Foundation::Collections::IIterable<Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable>> const& value);
         Windows::Foundation::Uri UriProperty();
         void UriProperty(Windows::Foundation::Uri const& value);
         void RaiseUriChanged();

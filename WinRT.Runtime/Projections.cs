@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Threading;
@@ -65,6 +66,7 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(Vector3), typeof(ABI.System.Numerics.Vector3), "Windows.Foundation.Numerics.Vector3");
             RegisterCustomAbiTypeMappingNoLock(typeof(Vector4), typeof(ABI.System.Numerics.Vector4), "Windows.Foundation.Numerics.Vector4");
 
+            // TODO: Ideally we should not need these
             CustomTypeToHelperTypeMappings.Add(typeof(IMap<,>), typeof(ABI.System.Collections.Generic.IDictionary<,>));
             CustomTypeToHelperTypeMappings.Add(typeof(IVector<>), typeof(ABI.System.Collections.Generic.IList<>));
             CustomTypeToHelperTypeMappings.Add(typeof(IMapView<,>), typeof(ABI.System.Collections.Generic.IReadOnlyDictionary<,>));
@@ -205,6 +207,7 @@ namespace WinRT
                 || type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object;
         }
 
+        // Use TryGetCompatibleWindowsRuntimeTypesForVariantType instead.
         public static bool TryGetCompatibleWindowsRuntimeTypeForVariantType(Type type, out Type compatibleType)
         {
             compatibleType = null;
@@ -243,6 +246,118 @@ namespace WinRT
                 }
             }
             compatibleType = definition.MakeGenericType(newArguments);
+            return true;
+        }
+
+        private static HashSet<Type> GetCompatibleTypes(Type type)
+        {
+            HashSet<Type> compatibleTypes = new HashSet<Type>();
+
+            foreach (var iface in type.GetInterfaces())
+            {
+                if (IsTypeWindowsRuntimeTypeNoArray(iface))
+                {
+                    compatibleTypes.Add(iface);
+                }
+
+                if (iface.IsConstructedGenericType
+                    && TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, out var compatibleIfaces))
+                {
+                    compatibleTypes.UnionWith(compatibleIfaces);
+                }
+            }
+
+            Type baseType = type.BaseType;
+            while (baseType != null)
+            {
+                if (IsTypeWindowsRuntimeTypeNoArray(baseType))
+                {
+                    compatibleTypes.Add(baseType);
+                }
+                baseType = baseType.BaseType;
+            }
+
+            return compatibleTypes;
+        }
+
+        internal static IEnumerable<Type> GetAllPossibleTypeCombinations(IEnumerable<IEnumerable<Type>> compatibleTypesPerGeneric, Type definition)
+        {
+            // Implementation adapted from https://stackoverflow.com/a/4424005
+            var accum = new List<Type>();
+            var compatibleTypesPerGenericArray = compatibleTypesPerGeneric.ToArray();
+            if (compatibleTypesPerGenericArray.Length > 0)
+            {
+                GetAllPossibleTypeCombinationsCore(
+                    accum,
+                    new Stack<Type>(),
+                    compatibleTypesPerGenericArray,
+                    compatibleTypesPerGenericArray.Length - 1);
+            }
+            return accum;
+
+            void GetAllPossibleTypeCombinationsCore(List<Type> accum, Stack<Type> stack, IEnumerable<Type>[] compatibleTypes, int index)
+            {
+                foreach (var type in compatibleTypes[index])
+                {
+                    stack.Push(type);
+                    if (index == 0)
+                    {
+                        // IEnumerable on a System.Collections.Generic.Stack
+                        // enumerates in order of removal (last to first).
+                        // As a result, we get the correct ordering here.
+                        accum.Add(definition.MakeGenericType(stack.ToArray()));
+                    }
+                    else
+                    {
+                        GetAllPossibleTypeCombinationsCore(accum, stack, compatibleTypes, index - 1);
+                    }
+                    stack.Pop();
+                }
+            }
+        }
+
+        internal static bool TryGetCompatibleWindowsRuntimeTypesForVariantType(Type type, out IEnumerable<Type> compatibleTypes)
+        {
+            compatibleTypes = null;
+            if (!type.IsConstructedGenericType)
+            {
+                throw new ArgumentException(nameof(type));
+            }
+
+            var definition = type.GetGenericTypeDefinition();
+
+            if (!IsTypeWindowsRuntimeTypeNoArray(definition))
+            {
+                return false;
+            }
+
+            var genericConstraints = definition.GetGenericArguments();
+            var genericArguments = type.GetGenericArguments();
+            List<List<Type>> compatibleTypesPerGeneric = new List<List<Type>>();
+            for (int i = 0; i < genericArguments.Length; i++)
+            {
+                List<Type> compatibleTypesForGeneric = new List<Type>();
+                bool argumentCovariantObject = (genericConstraints[i].GenericParameterAttributes & GenericParameterAttributes.VarianceMask) == GenericParameterAttributes.Covariant
+                    && !genericArguments[i].IsValueType;
+
+                if (IsTypeWindowsRuntimeTypeNoArray(genericArguments[i]))
+                {
+                    compatibleTypesForGeneric.Add(genericArguments[i]);
+                }
+                else if (!argumentCovariantObject)
+                {
+                    return false;
+                }
+
+                if (argumentCovariantObject)
+                {
+                    compatibleTypesForGeneric.AddRange(GetCompatibleTypes(genericArguments[i]));
+                }
+
+                compatibleTypesPerGeneric.Add(compatibleTypesForGeneric);
+            }
+
+            compatibleTypes = GetAllPossibleTypeCombinations(compatibleTypesPerGeneric, definition);
             return true;
         }
 
