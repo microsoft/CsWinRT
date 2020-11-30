@@ -4,10 +4,22 @@
 C#/WinRT provides support for authoring Windows Runtime components. You can write a library in C#, and use C#/WinRT's source generator to get a winmd that any WinRT compatible language can use. For example, a library written in C# can be used by a C++ program, via C#/WinRT and C++/WinRT, with just a few tweaks to the C++ project.
 
 
+## References
+Here are some resources that demonstrate authoring C#/WinRT components and the details discussed in this document.
+1. https://github.com/microsoft/CsWinRT/tree/master/Authoring/AuthoringConsumptionTest
+2. https://github.com/AdamBraden/MyRandom
+
+
 ## Authoring the C# Component
-To create a library, select the Class Library (.NET Core) template in Visual Studio. 
-Make sure the `<TargetFramework>` for the project is one of `net5.0-windows10.0.19041.0`, `net5.0-windows10.0.18362.0` or `net5.0-windows10.0.17763.0`. 
-And add the following to your library's project file:
+To create a library, select the Class Library (.NET Core) template in Visual Studio. C#/WinRT projects require SDK specific .NET frameworks.
+
+Accepted `<TargetFramework>` properties |
+--- |
+`net5.0-windows10.0.19041.0` |
+`net5.0-windows10.0.18362.0` |
+`net5.0-windows10.0.17763.0` |
+
+The library you are authoring should specify the following properties in its project file: 
 ```
   <PropertyGroup>
     <!-- update the Windows SDK version to reflect your TargetFramework -->
@@ -37,7 +49,7 @@ Modifications needed:
   3. add a MSBuild target for copying the required DLLs.
 
 
-### Add reference to authored component
+### Add the reference to your authored component
 **In Visual Studio** Under the Project node, right click on "References", click "Add Reference", then "Browse" and add the `.winmd` file generated in your authored component. 
 
 For consumption by native components, you'll also need to add `Include` statements for your hosting `runtimeconfig.json` file and the consuming app's `exe.manifest` file. More information on these files can be found in the hosting docs.   
@@ -46,11 +58,16 @@ For consumption by native components, you'll also need to add `Include` statemen
 As part of the native (C++) support, the WinRT Hosting dlls (WinRT.Host and WinRT.Host.Shim) need to be in the same folder as the native executable. 
 For now, users need a special target of their own so MSBuild can place the hosting dlls in the correct place. But soon we will implement this so that a package reference to C#/WinRT in the authored component is all that is needed.   
 
-You'll need to author some files to assist the hosting process by the native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. To do this, **In Visual Studio**, you can right click on the project node on the "Solution Explorer" window, and click "Add", then "New Item". Search for the "Text File" template and name your file "YourNativeApp.exe.manifest"; repeat this for the "WinRT.Host.runtimeconfig.json" file. This adds the nodes `<Manifest Include=... >` and `<None Include=... >` to your native app's project file -- **you need to update these to have `<DeploymentContent>true</DeploymentContent>` in order for them to be placed in the output directory with your executable**.  
+You'll need to author some files to assist the hosting process by the native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. 
+
+To do this, **in Visual Studio**, right click on the project node on the "Solution Explorer" window, click "Add", then "New Item". Search for the "Text File" template and name your file "YourNativeApp.exe.manifest".
+Repeat this for the "WinRT.Host.runtimeconfig.json" file. 
+
+This process adds the nodes `<Manifest Include=... >` and `<None Include=... >` to your native app's project file -- **you need to update these to have `<DeploymentContent>true</DeploymentContent>` for them to be placed in the output directory with your executable**.  
 
 You should read the [hosting docs](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md) as well, for more information on these files.
 
-You'll need to use C++/WinRT to consume the `winmd` too, so make sure you have it installed, and have added `#include <winrt/YourAuthoredLibrary.h>` to the file `pch.h` of the native app.  
+You'll need to use [C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/intro-to-using-cpp-with-winrt) to consume the `winmd` too, so make sure you have it installed, and have added `#include <winrt/YourAuthoredLibrary.h>` to the file `pch.h` of the native app.  
 
 In summary, here is the fragment of additions made to the native app's project file:
 ```
@@ -127,7 +144,3 @@ This is generally done via a `Directory.Build.targets` file like so:
 
 ```
 
-## References
-Here are some resources that demonstrate authoring C#/WinRT components and the changes discussed above.
-1. https://github.com/microsoft/CsWinRT/tree/master/Authoring/AuthoringConsumptionTest
-2. https://github.com/AdamBraden/MyRandom
