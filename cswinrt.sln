@@ -81,6 +81,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AuthoringConsumptionTest", "Authoring\AuthoringConsumptionTest\AuthoringConsumptionTest.vcxproj", "{0212A7C5-8D3F-443C-9EBC-1F28091FDF88}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestDiagnostics", "Authoring\TestDiagnostics\TestDiagnostics.csproj", "{9D94052B-137A-40EE-957C-8B9E355FA15C}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_component_base", "TestWinRT\test_component_base\test_component_base.vcxproj", "{13333A6F-6A4A-48CD-865C-0F65135EB018}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_component_derived", "TestWinRT\test_component_derived\test_component_derived.vcxproj", "{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}"
