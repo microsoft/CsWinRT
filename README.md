@@ -13,7 +13,7 @@ WinRT APIs are defined in `*.winmd` format, and C#/WinRT includes tooling that g
 Component Authors need to build a C#/WinRT projection for .NET5+ targets.
 
 <img alt="Creating projection"
-    src="Diagram_CreateProjection.jpg"
+    src="docs/images/Diagram_CreateProjection.jpg"
     width="70%" height="50%">
 
 ### Application Developers
@@ -21,7 +21,7 @@ Component Authors need to build a C#/WinRT projection for .NET5+ targets.
 .NET5+ apps reference the NuGet package, which pulls in the projection assembly instead of a winmd.
 
 <img alt = "Adding projection"
-    src="Diagram_AddProjection.jpg"
+    src="docs/images/Diagram_AddProjection.jpg"
     width="70%" height="50%">
 
 ## Motivation
@@ -57,7 +57,7 @@ The `build.cmd` script takes care of all related configuration steps and is the 
 
 ## Developer Guidance
 
-Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For recommendations on migrating from System.Runtime.InteropServices, see the [COM Interop](docs/interop.md) guide. For additional documentation visit <http://aka.ms/cswinrt>.
+Please read the [usage](docs/usage.md) and [repository structure](docs/structure.md) docs for a detailed breakdown. For recommendations on migrating from System.Runtime.InteropServices, see the [COM Interop](docs/interop.md) guide. For additional documentation visit <http://aka.ms/cswinrt>.
 
 ## Related Projects
 
