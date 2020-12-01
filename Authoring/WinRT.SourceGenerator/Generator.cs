@@ -120,7 +120,7 @@ namespace Generator
         }
 
         private void GenerateWinMD(MetadataBuilder metadataBuilder, string outputFile) 
-        { 
+        {
             Logger.Log("Writing " + outputFile);
             var managedPeBuilder = new ManagedPEBuilder(
                 new PEHeaderBuilder(
@@ -137,30 +137,7 @@ namespace Generator
             peBlob.WriteContentTo(fs);
         }
 
-        private bool ClassIsPublic(ClassDeclarationSyntax m)
-        {
-            foreach (var thing in m.Modifiers)
-            {
-                if (thing.ValueText.Equals("public")) 
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private bool InterfaceIsPublic(InterfaceDeclarationSyntax m)
-        {
-            foreach (var thing in m.Modifiers)
-            {
-                if (thing.ValueText.Equals("public")) 
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
+        
         private bool CatchWinRTDiagnostics(ref GeneratorExecutionContext context) 
         { 
             bool found = false; 
@@ -170,14 +147,12 @@ namespace Generator
                 var model = context.Compilation.GetSemanticModel(tree); 
                 var nodes = tree.GetRoot().DescendantNodes();
                 
-                var classes = nodes.OfType<ClassDeclarationSyntax>().Where(ClassIsPublic); 
-                var interfaces = nodes.OfType<InterfaceDeclarationSyntax>().Where(InterfaceIsPublic);
+                var classes = nodes.OfType<ClassDeclarationSyntax>().Where(winrtRules.ClassIsPublic); 
+                var interfaces = nodes.OfType<InterfaceDeclarationSyntax>().Where(winrtRules.InterfaceIsPublic);
                 var structs = nodes.OfType<StructDeclarationSyntax>();
 
                 // Used in the checking of structure fields 
                 List<string> classNames = new List<string>();
-
-                // need an interfaces loop for the array signature rule 
 
                 /* Check all classes */
                 foreach (ClassDeclarationSyntax classDeclaration in classes)

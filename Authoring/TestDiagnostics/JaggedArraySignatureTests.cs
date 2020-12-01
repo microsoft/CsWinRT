@@ -12,8 +12,8 @@ namespace TestDiagnostics
     internal sealed class JaggedArray_Properties_Valid
     {
         private int[][] Arr { get; set; }
-        public int[][] ArrP { get; set; } // this got dinged
-        public int[][][] Arr3 { get; set; } // this got dinged
+        public int[][] ArrP { get; set; }
+        public int[][][] Arr3 { get; set; }
         private int[][][] Arr3P { get; set; }
     }
 

@@ -159,9 +159,8 @@ namespace TestDiagnostics
        public System.Array Arr_3d { get; set; }
        private System.Array PrivArr_2d { get; set; } /* below should pass through undetected (private property) */
    }
-        // tests return type and paramteter cases for 2-dimensional arrays 
-   // we expect diagnostics to be raised since the methods are public
-   public sealed class NZLBPublicPublic_Invalid
+   
+    public sealed class NZLBPublicPublic_Invalid
    {
        public System.Array NZLB_ReturnOnly() { return Array.CreateInstance(typeof(int), new int[] { 4 }); }
        public System.Array NZLB_ReturnAndInput1(System.Array arr) { return arr; }

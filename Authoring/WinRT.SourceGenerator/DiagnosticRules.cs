@@ -123,6 +123,31 @@ namespace Generator
             return false;
         }
 
+        public bool ClassIsPublic(ClassDeclarationSyntax m)
+        {
+            foreach (var thing in m.Modifiers)
+            {
+                if (thing.ValueText.Equals("public")) 
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool InterfaceIsPublic(InterfaceDeclarationSyntax m)
+        {
+            foreach (var thing in m.Modifiers)
+            {
+                if (thing.ValueText.Equals("public")) 
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
         #region AsyncInterfaces
         /* The full metadata name of Async interfaces that should not be implemented by Windows Runtime components */
         static string[] ProhibitedAsyncInterfaces = {

@@ -6,10 +6,6 @@ using System.Threading.Tasks;
 
 namespace TestDiagnostics
 {
-    /* 
-     * Valid tests include `internal` classes and `private` properties  
-     *   and public methods in `ineternal` classes ?
-     */
     internal class MultidimensionalArraySignature_2D_PrivateClass_Valid
     {
         public int[,] Arr_2d { get; set; }
@@ -24,7 +20,6 @@ namespace TestDiagnostics
         private int[,,] PrivArr_3d { get; set; }
     }
 
-    //  methods ??
     internal sealed class D2InternalPublic_Valid
     {
         public int[,] D2_ReturnOnly() { return new int[4, 2]; }
@@ -47,8 +42,6 @@ namespace TestDiagnostics
 
     }
 
-    // tests return type and paramteter cases for 3-dimensional arrays 
-    // we expect normal compilation since the methods are private 
     public sealed class MultiDimPublicPrivate_Valid
     {
         private int[,,] D3_ReturnOnly() { return new int[2, 1, 3] { { { 1, 1, 1 } }, { { 2, 2, 2 } } }; }
@@ -76,8 +69,6 @@ namespace TestDiagnostics
         private int[,] PrivArr_2d { get; set; } /* below should pass through undetected (private property) */
     }
 
-    // tests return type and paramteter cases for 2-dimensional arrays 
-    // we expect diagnostics to be raised since the methods are public
     public sealed class D2PublicPublic_Invalid
     {
         public int[,] D2_ReturnOnly() { return new int[4, 2]; }
@@ -89,7 +80,6 @@ namespace TestDiagnostics
 
     }
 
-    // do methods count?? I think so...
     public sealed class D3PublicPublic_Invalid
     {
         public int[,,] D3_ReturnOnly() { return new int[2, 1, 3] { { { 1, 1, 1 } }, { { 2, 2, 2 } } }; }
@@ -98,11 +88,8 @@ namespace TestDiagnostics
         public int[,,] D3_ReturnAndInput2of3(bool a, int[,,] arr, bool b) { return arr; }
         public bool D3_NotReturnAndInput2of2(bool a, int[,,] arr) { return a; }
         public bool D3_NotReturnAndInput2of3(bool a, int[,,] arr, bool b) { return a; }
-
     }
 
-    // field in struct -- think this will get covered already, but we'll see
-    // yeah you can't even have methods in fields in Windows Runtime 
     public struct D2FieldInStruct
     {
         public int[,,] D3Method(bool b) { return new int[2, 1, 3] { { { 1, 1, 1 } }, { { 2, 2, 2 } } }; }
