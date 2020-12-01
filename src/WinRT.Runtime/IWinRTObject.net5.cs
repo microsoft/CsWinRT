@@ -165,7 +165,7 @@ namespace WinRT
             return AdditionalTypeData.GetOrAdd(type, (type) => helperDataFactory());
         }
 
-        public void Resurrect()
+        internal void Resurrect()
         {
             if (NativeObject.Resurrect())
             {

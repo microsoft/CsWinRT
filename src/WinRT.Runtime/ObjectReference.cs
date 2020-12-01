@@ -16,6 +16,8 @@ namespace WinRT
     {
         protected bool disposed;
         private readonly IntPtr _thisPtr;
+        private object _disposedLock = new object();
+
         public IntPtr ThisPtr
         {
             get
@@ -117,7 +119,13 @@ namespace WinRT
 
         protected void ThrowIfDisposed()
         {
-            if (disposed) throw new ObjectDisposedException("ObjectReference");
+            if (disposed)
+            {
+                lock (_disposedLock)
+                {
+                    if (disposed) throw new ObjectDisposedException("ObjectReference");
+                }
+            }
         }
 
         public void Dispose()
@@ -128,24 +136,30 @@ namespace WinRT
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposed)
+            lock (_disposedLock)
             {
-                return;
+                if (disposed)
+                {
+                    return;
+                }
+                Release();
+                disposed = true;
             }
-            Release();
-            disposed = true;
         }
 
-        public bool Resurrect()
+        internal bool Resurrect()
         {
-            if (!disposed)
+            lock (_disposedLock)
             {
-                return false;
+                if (!disposed)
+                {
+                    return false;
+                }
+                disposed = false;
+                AddRef();
+                GC.ReRegisterForFinalize(this);
+                return true;
             }
-            disposed = false;
-            AddRef();
-            GC.ReRegisterForFinalize(this);
-            return true;
         }
 
         protected virtual unsafe void AddRef()
