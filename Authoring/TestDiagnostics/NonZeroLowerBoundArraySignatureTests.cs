@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace TestDiagnostics
 {
 
-    /* ** non-zero lowerbound array ** */
+    /* NZLB = non-zero lowerbound array */
 
     // public property in class
     public sealed class NonZeroLowerBound_PublicProperty_Invalid
@@ -109,10 +109,6 @@ namespace TestDiagnostics
         System.Array Method3();
     }
 
-   /* 
-    * Valid tests include `internal` classes and `private` properties  
-    *   and public methods in `ineternal` classes ?
-    */
    internal class NZLBArraySignature_2D_PrivateClass_Valid
    {
        public System.Array Arr_2d { get; set; }
@@ -149,7 +145,7 @@ namespace TestDiagnostics
        private bool NZLB_NotReturnAndInput2of3(bool a, System.Array arr, bool b) { return a; }
    }
 
-   public interface NZLB_ValidInterface_NoNZLB
+   public interface NZLB_ValidInterface
    {
        int[] foo();
        bool bar(int[] arr);

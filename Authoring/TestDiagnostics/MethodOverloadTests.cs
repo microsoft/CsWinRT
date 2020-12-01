@@ -6,18 +6,10 @@ using System.Threading.Tasks;
 
 namespace TestDiagnostics
 {
-    // valid method overload tests
     public sealed class TwoOverloads_DiffParamCount_Valid
     {
-
-        // pretty sure diagnostic will get thrown for this right now BUT it shouldn't 
-
-        // the fix could be to append the method name (as a string) with its arity (as a string) and add that as the key to the map
-        // so the map isnt exactly the method name, but methodnameN where N is the arity of the methodname at that time
-        // think this fix would mean no logic has to change on the "have we seen this methodname before and did it have the attribute"
-        public string OverloadExample(string s) { return s; }
-
-        public int OverloadExample(int n, int m) { return n; }
+       public string OverloadExample(string s) { return s; }
+       public int OverloadExample(int n, int m) { return n; }
     }
 
     public sealed class TwoOverloads_OneAttribute_OneInList_Valid
@@ -82,7 +74,6 @@ namespace TestDiagnostics
     // invalid method overload tests 
     public sealed class TwoOverloads_NoAttribute_Invalid
     {
-        // hmm 
         public string OverloadExample(string s) { return s; }
 
         public int OverloadExample(int n) { return n; }
@@ -101,7 +92,6 @@ namespace TestDiagnostics
 
     public sealed class TwoOverloads_NoAttribute_OneIrrevAttr_Invalid
     {
-        // hmm
         [Windows.Foundation.Metadata.Deprecated("hu", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         public string OverloadExample(string s) { return s; }
 

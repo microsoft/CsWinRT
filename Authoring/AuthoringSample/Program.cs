@@ -6,7 +6,6 @@ using WinRT;
 
 namespace AuthoringSample
 {
-
     public enum BasicEnum
     {
         First = -1,

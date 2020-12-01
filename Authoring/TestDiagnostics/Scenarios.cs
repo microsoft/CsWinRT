@@ -10,8 +10,6 @@ using Windows.Web.Syndication;
 namespace TestDiagnostics
 {
  
-    // ----------------------------------------------------------------------------    
-
     public sealed class ClassThatOverloadsOperator
     {
         public static ClassThatOverloadsOperator operator +(ClassThatOverloadsOperator thing)
@@ -20,7 +18,6 @@ namespace TestDiagnostics
         }
     }
 
-    
     public sealed class ParameterNamedDunderRetVal
     {
         public int Identity(int __retval)
