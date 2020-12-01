@@ -201,8 +201,9 @@ namespace Windows.Storage.Streams
                     int buffSize = 0x4000;
                     if (bytesToWrite < buffSize)
                         buffSize = (int)bytesToWrite;
-
-                    await dataStream.CopyToAsync(stream, buffSize, cancelToken).ConfigureAwait(continueOnCapturedContext: false);
+                    
+                    if (buffSize > 0)
+                        await dataStream.CopyToAsync(stream, buffSize, cancelToken).ConfigureAwait(continueOnCapturedContext: false);
 
                     if (progressListener != null)
                         progressListener.Report((uint)bytesToWrite);
