@@ -736,14 +736,6 @@ namespace UnitTest
             });
         }
 
-        // Nota Bene: this test case must always remain the final one
-        [Fact]
-        public void Z_Check_Coverage()
-        {
-            Tests.Simple();
-            //Assert.Equal((double)Tests.Percentage, (double)100);
-        }
-		
         [Fact]
         public void TestComposable()
         {
@@ -770,6 +762,14 @@ namespace UnitTest
             Assert.Equal("HierarchyB.HierarchyA_Method", hierarchyDAsHierarchyA.HierarchyA_Method());
 
             Assert.True(hierarchyDAsHierarchyA == hierarchyD);
+        }
+
+        // Nota Bene: this test case must always remain the final one
+        [Fact]
+        public void Z_Check_Coverage()
+        {
+            Tests.Simple();
+            //Assert.Equal((double)Tests.Percentage, (double)100);
         }
     }
 }
