@@ -447,6 +447,7 @@ namespace Generator
                 /* see if method signature contains the types System.Array or Array */
                 found |= Method_CheckForSystemArrayType<QualifiedNameSyntax>(ref context, method, classDeclaration.Identifier, "System.Array");
                 found |= Method_CheckForSystemArrayType<IdentifierNameSyntax>(ref context, method, classDeclaration.Identifier, "Array");
+                found |= CheckForInvalidArrayType(method.DescendantNodes().OfType<ArrayTypeSyntax>(), ref context, classDeclaration.Identifier, method.Identifier, method.GetLocation());
             }
 
             /* Finishes up the work started by `CheckOverloadAttributes` */

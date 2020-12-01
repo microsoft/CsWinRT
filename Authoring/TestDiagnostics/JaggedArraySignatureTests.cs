@@ -112,7 +112,7 @@ namespace TestDiagnostics
     
     // tests return type and paramteter cases for 3-dimensional arrays 
     // we expect normal compilation since the methods are private 
-    public sealed class J3PublicPrivate_Invalid
+    public sealed class J3PublicPrivate_Valid
     {
         private int[][][] D3_ReturnOnly() 
         {
