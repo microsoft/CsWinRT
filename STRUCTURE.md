@@ -18,7 +18,7 @@ Contains the WinRT.Runtime project for building the C#/WinRT runtime assembly, *
 
 - WinRT activation and marshaling logic
 - Custom type mappings, primarily for WinUI
-- [CCW](https://docs.microsoft.com/dotnet/standard/native-interop/com-callable-wrapper) and [RCW](https://docs.microsoft.com/dotnet/standard/native-interop/runtime-callable-wrapper) management
+- [COM Wrapper](https://docs.microsoft.com/dotnet/api/system.runtime.interopservices.comwrappers?view=net-5.0) management
 - IDynamicInterfaceCastable and ComImport casting support
 - Extension methods common to projected types
 
