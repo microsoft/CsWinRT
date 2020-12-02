@@ -1269,7 +1269,16 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                     finalizer_written = true;
                     w.write(R"(
 private ComWrappersHelper.ClassNative classNative;
-~%() => ComWrappersHelper.Cleanup(ref classNative);
+~%()
+{
+if (classNative.Inner != IntPtr.Zero)
+{ 
+// detach _inner in aggregation scenario
+Marshal.AddRef(classNative.Inner);
+_inner.Dispose();
+}
+ComWrappersHelper.Cleanup(ref classNative);
+}
 )",
                         class_type.TypeName());
                 }
@@ -1285,6 +1294,8 @@ IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
 try
 {
 _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+// do not increment COM refcount to prevent aggregation strong reference cycles
+Marshal.Release(ptr);   
 _defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%

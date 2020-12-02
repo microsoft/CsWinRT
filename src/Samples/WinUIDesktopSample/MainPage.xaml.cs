@@ -114,8 +114,16 @@ namespace WinUIDesktopSample
         {
             ComWrappersHelper.Init<ARRPage>(ref this.classNative, this, &GCW, &CI);
 
-            // Create and hold wrapper around Inner, as cswinrt base classes do - causes leak
+            Marshal.AddRef(classNative.Inner);
+            var rc = Marshal.Release(classNative.Inner);
+            
+            // Create and hold wrapper around Inner, as cswinrt base classes do, but
             _inner = ComWrappersSupport.GetObjectReferenceForInterface(classNative.Inner);
+            // do not increment COM refcount to prevent aggregation strong reference cycles
+            Marshal.Release(classNative.Inner);
+            
+            Marshal.AddRef(classNative.Inner);
+            rc = Marshal.Release(classNative.Inner);
 
             var inst = Marshal.PtrToStructure<VtblPtr>(this.classNative.Instance);
             this.vtable = Marshal.PtrToStructure<ARRPageVtbl>(inst.Vtbl);
@@ -123,6 +131,8 @@ namespace WinUIDesktopSample
 
         ~ARRPage()
         {
+            Marshal.AddRef(classNative.Inner);
+            _inner.Dispose();
             ComWrappersHelper.Cleanup(ref this.classNative);
         }
 
