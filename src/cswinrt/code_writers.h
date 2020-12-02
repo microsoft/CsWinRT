@@ -4390,6 +4390,14 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         }
     }
 
+    void write_authoring_metadata_type(writer& w, TypeDef const& type)
+    {
+        w.write(R"(%%internal class % {})",
+            bind<write_winrt_attribute>(type),
+            bind<write_custom_attributes>(type),
+            bind<write_type_name>(type, typedef_name_type::CCW, false));
+    }
+
     void write_contract(writer& w, TypeDef const& type)
     {
         auto type_name = write_type_name_temp(w, type);
@@ -5136,7 +5144,11 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<obje
 
     void write_delegate(writer& w, TypeDef const& type)
     {
-        if (settings.component) return;
+        if (settings.component)
+        {
+            write_authoring_metadata_type(w, type);
+            return;
+        }
 
         method_signature signature{ get_delegate_invoke(type) };
         w.write(R"(%%public delegate % %(%);
@@ -5443,7 +5455,11 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 
     void write_enum(writer& w, TypeDef const& type)
     {
-        if (settings.component) return;
+        if (settings.component)
+        {
+            write_authoring_metadata_type(w, type);
+            return;
+        }
 
         if (is_flags_enum(type))
         {
@@ -5472,7 +5488,11 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 
     void write_struct(writer& w, TypeDef const& type)
     {
-        if (settings.component) return;
+        if (settings.component)
+        {
+            write_authoring_metadata_type(w, type);
+            return;
+        }
 
         auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
 

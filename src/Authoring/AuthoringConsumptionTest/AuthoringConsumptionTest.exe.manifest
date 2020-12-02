@@ -7,6 +7,10 @@
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass
+        name="AuthoringSample.CustomDictionary"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
         name="AuthoringSample.CustomWWW"
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />

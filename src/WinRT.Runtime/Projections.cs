@@ -183,7 +183,7 @@ namespace WinRT
 
         private static bool IsTypeWindowsRuntimeTypeNoArray(Type type)
         {
-            type = type.GetRuntimeClassCCWType() ?? type;
+            type = type.GetAuthoringMetadataType() ?? type;
             if (type.IsConstructedGenericType)
             {
                 if(IsTypeWindowsRuntimeTypeNoArray(type.GetGenericTypeDefinition()))

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
@@ -9,16 +9,10 @@
     <CsWinRTComponent>true</CsWinRTComponent>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
+    <CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources>
   </PropertyGroup>
 
-  <ItemGroup>
-    <CompilerVisibleProperty Include="AssemblyName" />
-    <CompilerVisibleProperty Include="AssemblyVersion" />
-    <CompilerVisibleProperty Include="CsWinRTComponent" />
-    <CompilerVisibleProperty Include="CsWinRTEnableLogging" />
-    <CompilerVisibleProperty Include="GeneratedFilesDir" />
-    <CompilerVisibleProperty Include="CsWinRTExe" />
-    
+  <ItemGroup>    
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
