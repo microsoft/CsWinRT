@@ -1,5 +1,10 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
 using WinRT;
@@ -40,6 +45,8 @@ namespace AuthoringSample
         public event ComplexDelegate ComplexDelegateEvent;
         private event ComplexDelegate ComplexDelegateEvent2;
 
+        private DateTimeOffset dateTime = DateTime.Today;
+
         public Point GetPoint()
         {
             Point p = new Point
@@ -48,6 +55,21 @@ namespace AuthoringSample
                 Y = 3
             };
             return p;
+        }
+
+        public void SetDate(DateTimeOffset dateTime)
+        {
+            this.dateTime = dateTime;
+        }
+
+        public DateTimeOffset GetDate()
+        {
+            return dateTime;
+        }
+
+        public TimeSpan GetTimespan()
+        {
+            return new TimeSpan(100);
         }
 
         public CustomWWW GetCustomWWW()
@@ -158,6 +180,10 @@ namespace AuthoringSample
         public int Factor { get; set; }
         private int Factor2 { get; set; }
         public uint DelegateValue { get; set; }
+        public IDisposable DisposableObject { get; set; }
+        public DisposableClass DisposableClassObject { get; set; }
+        public IList<object> ObjectList { get; set; }
+        public IAsyncOperation<Int32> IntAsyncOperation { get; set; }
 
         public TestClass()
         {
@@ -206,6 +232,60 @@ namespace AuthoringSample
             return Factor;
         }
 
+        public void SetProjectedDisposableObject()
+        {
+            DisposableObject = new DisposableClass();
+            DisposableClassObject = new DisposableClass();
+        }
+
+        public void SetNonProjectedDisposableObject()
+        {
+            DisposableObject = new NonProjectedDisposableClass();
+        }
+        
+        public IList<IDisposable> GetDisposableObjects()
+        {
+            return new List<IDisposable>() { 
+                new DisposableClass(),
+                new NonProjectedDisposableClass(),
+                new DisposableClass()
+            };
+        }
+
+        public static IReadOnlyList<Uri> GetUris()
+        {
+            return new List<Uri>() {
+                new Uri("http://github.com"),
+                new Uri("http://microsoft.com")
+            };
+        }
+
+        public IAsyncOperation<Int32> GetIntAsyncOperation()
+        {
+            int val = IntAsyncOperation.GetResults();
+
+            var task = Task<int>.Run(() => {
+                Thread.Sleep(100);
+                return val;
+            });
+            return task.AsAsyncOperation();
+        }
+
+        public int SetIntAsyncOperation(IAsyncOperation<Int32> op)
+        {
+            return op.GetResults();
+        }
+
+        public int GetObjectListSum()
+        {
+            int sum = 0;
+            foreach(var obj in ObjectList)
+            {
+                sum += (int) (obj as int?);
+            }
+            return sum;
+        }
+
         // Method overloading
 
         public int GetNumber()
@@ -249,10 +329,117 @@ namespace AuthoringSample
 
     }
 
+    public sealed class DisposableClass : IDisposable
+    {
+        public bool IsDisposed { get; set; }
+
+        public DisposableClass()
+        {
+            IsDisposed = false;
+        }
+
+        public void Dispose()
+        {
+            IsDisposed = true;
+        }
+    }
+
+    internal sealed class NonProjectedDisposableClass : IDisposable
+    {
+        public bool IsDisposed { get; set; }
+
+        public NonProjectedDisposableClass()
+        {
+            IsDisposed = false;
+        }
+
+        public void Dispose()
+        {
+            IsDisposed = true;
+        }
+    }
+
     internal class InternalClass
     {
         public static void Get()
         {
+        }
+    }
+
+    public sealed class CustomDictionary : IDictionary<string, BasicStruct>
+    {
+        private readonly Dictionary<string, BasicStruct> _dictionary;
+
+        public CustomDictionary()
+        {
+            _dictionary = new Dictionary<string, BasicStruct>();
+        }
+
+        public BasicStruct this[string key] { 
+            get => _dictionary[key];
+            set => _dictionary[key] = value;
+        }
+
+        public ICollection<string> Keys => _dictionary.Keys;
+
+        public ICollection<BasicStruct> Values => _dictionary.Values;
+
+        public int Count => _dictionary.Count;
+
+        public bool IsReadOnly => false;
+
+        public void Add(string key, BasicStruct value)
+        {
+            _dictionary.Add(key, value);
+        }
+
+        public void Add(KeyValuePair<string, BasicStruct> item)
+        {
+            _dictionary.Add(item.Key, item.Value);
+        }
+
+        public void Clear()
+        {
+            _dictionary.Clear();
+        }
+
+        public bool Contains(KeyValuePair<string, BasicStruct> item)
+        {
+            return _dictionary.ContainsKey(item.Key);
+        }
+
+        public bool ContainsKey(string key)
+        {
+            return _dictionary.ContainsKey(key);
+        }
+
+        public void CopyTo(KeyValuePair<string, BasicStruct>[] array, int arrayIndex)
+        {
+        }
+
+        public IEnumerator<KeyValuePair<string, BasicStruct>> GetEnumerator()
+        {
+            return _dictionary.GetEnumerator();
+        }
+
+        public bool Remove(string key)
+        {
+            return _dictionary.Remove(key);
+        }
+
+        public bool Remove(KeyValuePair<string, BasicStruct> item)
+        {
+            return _dictionary.Remove(item.Key);
+        }
+
+        public bool TryGetValue(string key, [MaybeNullWhen(false)] out BasicStruct value)
+        {
+            return _dictionary.TryGetValue(key, out value);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _dictionary.GetEnumerator();
         }
     }
 }

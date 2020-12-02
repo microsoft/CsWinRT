@@ -171,3 +171,103 @@ TEST(AuthoringTest, CCWCaching)
     EXPECT_EQ(copy.GetFlagsEnum(), FlagsEnum::Fourth);
     EXPECT_EQ(basicClass, copy);
 }
+
+IAsyncOperation<int32_t> GetIntAsync(int num)
+{
+    co_return num;
+}
+
+TEST(AuthoringTest, CustomTypes)
+{
+    BasicClass basicClass;
+
+    auto dateTime = basicClass.GetDate();
+    EXPECT_TRUE(dateTime.time_since_epoch().count() != 0);
+
+    auto now = winrt::clock::now();
+    basicClass.SetDate(now);
+    auto dateTime2 = basicClass.GetDate();
+    EXPECT_EQ(dateTime2, now);
+    EXPECT_TRUE(dateTime != dateTime2);
+
+    auto timeSpan = basicClass.GetTimespan();
+    EXPECT_EQ(timeSpan.count(), 100);
+
+    TestClass testClass;
+    testClass.SetProjectedDisposableObject();
+
+    testClass.DisposableObject().Close();
+    EXPECT_FALSE(testClass.DisposableClassObject().IsDisposed());
+    testClass.DisposableClassObject().Close();
+    EXPECT_TRUE(testClass.DisposableClassObject().IsDisposed());
+
+    testClass.SetNonProjectedDisposableObject();
+    testClass.DisposableObject().Close();
+
+    testClass.IntAsyncOperation(GetIntAsync(24));
+    EXPECT_EQ(testClass.GetIntAsyncOperation().get(), 24);
+    testClass.SetIntAsyncOperation(GetIntAsync(50));
+
+    auto vector = winrt::single_threaded_vector(std::vector<IInspectable>{ winrt::box_value(0), winrt::box_value(1), winrt::box_value(2) });
+    testClass.ObjectList(vector);
+    EXPECT_EQ(testClass.GetObjectListSum(), 3);
+
+    auto disposableObjects = testClass.GetDisposableObjects();
+    EXPECT_EQ(disposableObjects.Size(), 3);
+    for(auto obj : disposableObjects)
+    {
+        obj.Close();
+    }
+
+    for (auto uri : TestClass::GetUris())
+    {
+        EXPECT_NE(uri, nullptr);
+    }
+    EXPECT_EQ(TestClass::GetUris().Size(), 2);
+    EXPECT_NE(TestClass::GetUris().First(), nullptr);
+}
+
+TEST(AuthoringTest, CustomTypeInterfaceImplementations)
+{
+    CustomDictionary dictionary;
+
+    BasicStruct basicStruct{1, 2};
+    BasicStruct basicStruct2{ 2, 2 };
+    BasicStruct basicStruct3{ 3, 3 };
+    EXPECT_FALSE(dictionary.Insert(L"first", basicStruct));
+    EXPECT_FALSE(dictionary.Insert(L"second", basicStruct3));
+    EXPECT_TRUE(dictionary.Insert(L"second", basicStruct2));
+    EXPECT_FALSE(dictionary.Insert(L"third", basicStruct3));
+    EXPECT_EQ(dictionary.Size(), 3);
+
+    EXPECT_TRUE(dictionary.HasKey(L"first"));
+    EXPECT_FALSE(dictionary.HasKey(L"fourth"));
+    EXPECT_TRUE(dictionary.HasKey(L"third"));
+
+    hstring keys[] = {L"first", L"second", L"third" };
+    BasicStruct values[] = { basicStruct, basicStruct2, basicStruct3 };
+    int idx = 0;
+    for (auto entry : dictionary)
+    {
+        EXPECT_EQ(entry.Key(), keys[idx]);
+        EXPECT_EQ(entry.Value(), values[idx]);
+        idx++;
+    }
+    EXPECT_EQ(idx, 3);
+
+    idx = 0;
+    for (auto entry : dictionary.GetView())
+    {
+        EXPECT_EQ(entry.Key(), keys[idx]);
+        EXPECT_EQ(entry.Value(), values[idx]);
+        idx++;
+    }
+    EXPECT_EQ(idx, 3);
+
+    EXPECT_EQ(dictionary.GetView().TryLookup(L"second").value(), basicStruct2);
+    EXPECT_FALSE(dictionary.GetView().TryLookup(L"fourth").has_value());
+
+    Windows::Foundation::Collections::IMap map = dictionary;
+    map.Clear();
+    EXPECT_EQ(map.Size(), 0);
+}

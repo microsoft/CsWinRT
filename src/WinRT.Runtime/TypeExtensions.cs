@@ -81,6 +81,11 @@ namespace WinRT
 
         public static Type GetRuntimeClassCCWType(this Type type)
         {
+            return type.IsClass ? type.GetAuthoringMetadataType() : null;
+        }
+
+        internal static Type GetAuthoringMetadataType(this Type type)
+        {
             var ccwTypeName = $"ABI.Impl.{type.FullName}";
             return Type.GetType(ccwTypeName, false) ?? type.Assembly.GetType(ccwTypeName, false);
         }
