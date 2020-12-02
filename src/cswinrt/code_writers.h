@@ -4350,8 +4350,8 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         {
             auto [attribute_namespace, attribute_name] = attribute.TypeNamespaceAndName();
             attribute_name = attribute_name.substr(0, attribute_name.length() - "Attribute"sv.length());
-            // Guid and Flags are handled explicitly
-            if (attribute_name == "Guid" || attribute_name == "Flags") continue;
+            // GCPressure, Guid, Flags are handled separately
+            if (attribute_name == "GCPressure" || attribute_name == "Guid" || attribute_name == "Flags") continue;
             auto attribute_full = (attribute_name == "AttributeUsage") ? "AttributeUsage" :
                 w.write_temp("%.%", attribute_namespace, attribute_name);
             std::vector<std::string> params;
@@ -4786,6 +4786,15 @@ wrapped_type_name);
         auto base_semantics = get_type_semantics(type.Extends());
         auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
 
+        auto gc_pressure_amount = 0;
+        if (auto gc_pressure_attr = get_attribute(type, "Windows.Foundation.Metadata", "GCPressureAttribute"))
+        {
+            auto sig = gc_pressure_attr.Value();
+            auto const& args = sig.NamedArgs();
+            auto amount = std::get<int32_t>(std::get<ElemSig::EnumValue>(std::get<ElemSig>(args[0].value.value).value).value);
+            gc_pressure_amount = amount == 0 ? 12000 : amount == 1 ? 120000 : 1200000;
+        }
+
         w.write(R"(%[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
 %public %class %%, IEquatable<%>
 {
@@ -4809,7 +4818,8 @@ _defaultLazy = new Lazy<%>(() => ifc);
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
 };
-}
+%}
+%
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
 public static bool operator !=(% x, % y) => !(x == y);
@@ -4843,6 +4853,22 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             bind<write_base_constructor_dispatch_netstandard>(base_semantics),
             default_interface_abi_name,
             bind<write_lazy_interface_initialization>(type),
+            [&](writer& w)
+            {
+                if (!gc_pressure_amount) return;
+                w.write("GC.AddMemoryPressure(%);\n", gc_pressure_amount);
+            },
+            [&](writer& w)
+            {
+                if (!gc_pressure_amount) return;
+                w.write(R"(~%()
+{
+GC.RemoveMemoryPressure(%);
+}
+)", 
+                    type_name,
+                    gc_pressure_amount);
+            },
             type_name,
             type_name,
             type_name,
