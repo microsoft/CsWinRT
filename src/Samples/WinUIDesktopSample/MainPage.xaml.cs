@@ -8,9 +8,15 @@ using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using WinRT;
 
 namespace WinUIDesktopSample
 {
+    public class DerivedGrid : Grid
+    {
+        byte[] bytes = new byte[10_000_000];
+    };
+
     public class Derived : ARRPage
     {
         byte[] bytes = new byte[10_000_000];
@@ -43,12 +49,16 @@ namespace WinUIDesktopSample
 
         private WeakReference baseRef;
         private WeakReference derivedRef;
+        private WeakReference gridRef;
+        private WeakReference derivedGridRef;
         private List<object> pressure = new List<object>();
 
         private void Alloc_Click(object sender, RoutedEventArgs e)
         {
             baseRef = new WeakReference(new ARRPage());
             derivedRef = new WeakReference(new Derived());
+            gridRef = new WeakReference(new Grid());
+            derivedGridRef = new WeakReference(new DerivedGrid());
         }
 
         private void Check_Click(object sender, RoutedEventArgs e)
@@ -59,9 +69,11 @@ namespace WinUIDesktopSample
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
-            var baseStatus = baseRef.IsAlive ? "base leaked" : "base collected";
-            var derivedStatus = derivedRef.IsAlive ? "derived leaked" : "derived collected";
-            Status.Text = baseStatus + ", " + derivedStatus;
+            var baseStatus = baseRef.IsAlive ? "ARRPage leaked" : "ARRPage collected";
+            var derivedStatus = derivedRef.IsAlive ? "Derived leaked" : "Derived collected";
+            var gridStatus = gridRef.IsAlive ? "Grid leaked" : "Grid collected";
+            var derivedGridStatus = derivedGridRef.IsAlive ? "DerivedGrid leaked" : "DerivedGrid collected";
+            Status.Text = baseStatus + ", " + derivedStatus + ", " + gridStatus + ", " + derivedGridStatus;
         }
     }
 
@@ -73,6 +85,7 @@ namespace WinUIDesktopSample
     public class ARRPage : ICustomQueryInterface
     {
         private static readonly ComWrappers cw = new ARRComWrappers();
+        private WinRT.IObjectReference _inner = null;
 
         private static ComWrappers GCW()
         {
@@ -100,6 +113,9 @@ namespace WinUIDesktopSample
         public unsafe ARRPage()
         {
             ComWrappersHelper.Init<ARRPage>(ref this.classNative, this, &GCW, &CI);
+
+            // Create and hold wrapper around Inner, as cswinrt base classes do - causes leak
+            _inner = ComWrappersSupport.GetObjectReferenceForInterface(classNative.Inner);
 
             var inst = Marshal.PtrToStructure<VtblPtr>(this.classNative.Instance);
             this.vtable = Marshal.PtrToStructure<ARRPageVtbl>(inst.Vtbl);
