@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TestDiagnostics
 {
-
+    /*
     public sealed class SillyClass
     {
         public double Identity(double d)
@@ -113,4 +113,5 @@ namespace TestDiagnostics
     {
         public Matrix3x2 matrix;
     }
+    */
 }

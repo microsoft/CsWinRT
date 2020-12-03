@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace TestDiagnostics
 {
+    /*
     internal class MultidimensionalArraySignature_2D_PrivateClass_Valid
     {
         public int[,] Arr_2d { get; set; }
@@ -58,15 +59,18 @@ namespace TestDiagnostics
         int[] foo();
         bool bar(int[] arr);
     }
+    */
 
     /* 
      * Invalid tests include public properties in public classes, public interface methods, 
      */
+
+     /*
     public sealed class MultidimensionalArraySignature_2D_Invalid
     {
         public int[,] Arr_2d { get; set; }
         public int[,,] Arr_3d { get; set; }
-        private int[,] PrivArr_2d { get; set; } /* below should pass through undetected (private property) */
+        private int[,] PrivArr_2d { get; set; } 
     }
 
     public sealed class D2PublicPublic_Invalid
@@ -137,4 +141,5 @@ namespace TestDiagnostics
             public bool D3_NotReturnAndInput2of3(bool a, int[,,] arr, bool b); 
         }
     }
+    */
 } // End TestDiagnostics namespace

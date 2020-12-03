@@ -9,7 +9,7 @@ using Windows.Web.Syndication;
 
 namespace TestDiagnostics
 {
- 
+    /*
     public sealed class ClassThatOverloadsOperator
     {
         public static ClassThatOverloadsOperator operator +(ClassThatOverloadsOperator thing)
@@ -46,5 +46,5 @@ namespace TestDiagnostics
         // Can test that multiple constructors are allowed (has been verified already, too)
         // as long as they have different arities by making one take none or 2 arguments 
     }
-
+    */
 }

@@ -10,6 +10,7 @@ namespace TestDiagnostics
     /* NZLB = non-zero lowerbound array */
 
     // public property in class
+    /*
     public sealed class NonZeroLowerBound_PublicProperty_Invalid
     {
         public int[] Arr
@@ -150,14 +151,18 @@ namespace TestDiagnostics
        int[] foo();
        bool bar(int[] arr);
    }
+   */
+
    /* 
     * Invalid tests include public properties in public classes, public interface methods, 
     */
+
+    /*
    public sealed class NZLBArraySignature_2D_Invalid
    {
        public System.Array Arr_2d { get; set; }
        public System.Array Arr_3d { get; set; }
-       private System.Array PrivArr_2d { get; set; } /* below should pass through undetected (private property) */
+       private System.Array PrivArr_2d { get; set; } 
    }
    
     public sealed class NZLBPublicPublic_Invalid
@@ -192,4 +197,5 @@ namespace TestDiagnostics
            public bool D2_NotReturnAndInput2of3(bool a, System.Array arr, bool b);
        }
    }
+   */
 } 

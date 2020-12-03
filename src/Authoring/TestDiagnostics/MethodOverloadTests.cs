@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace TestDiagnostics
 {
+    /*
     public sealed class TwoOverloads_DiffParamCount_Valid
     {
        public string OverloadExample(string s) { return s; }
@@ -165,4 +166,5 @@ namespace TestDiagnostics
         [Windows.Foundation.Metadata.DefaultOverload()]
         public bool OverloadExample(bool b) { return b; }
     }
+    */
 }
