@@ -40,6 +40,7 @@ C#/WinRT currently requires the following packages, or newer, to build:
 
 - [Visual Studio 16.8](https://visualstudio.microsoft.com/downloads/) 
 - [.NET 5.0 SDK](https://dotnet.microsoft.com/download/dotnet/5.0) 
+- [.NET Core 2.1 SDK](https://dotnet.microsoft.com/download/dotnet-core/2.1)
 - [nuget.exe 5.8.0-preview.3](https://www.nuget.org/downloads)
 - WinUI 3 3.0.0-preview1.200515.3
 
