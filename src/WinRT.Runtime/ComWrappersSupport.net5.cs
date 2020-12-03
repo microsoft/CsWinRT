@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -73,6 +74,12 @@ namespace WinRT
             // and consumers get a string object for a Windows.Foundation.IReference<String>.
             // We need to do the same thing for System.Type because there can be multiple WUX.Interop.TypeName's
             // for a single System.Type.
+
+            // Resurrect IWinRTObject's disposed IObjectReferences, if necessary
+            if (rcw is IWinRTObject winrtObj)
+            {
+                winrtObj.Resurrect();
+            }
 
             return rcw switch
             {

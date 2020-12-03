@@ -66,8 +66,8 @@ if "%cswinrt_version_number%"=="" set cswinrt_version_number=0.0.0.0
 if "%cswinrt_version_string%"=="" set cswinrt_version_string=0.0.0-private.0
 if "%cswinrt_assembly_version%"=="" set cswinrt_assembly_version=0.0.0.0
 
-if "%cswinrt_basline_breaking_compat_errors%"=="" set cswinrt_basline_breaking_compat_errors=false
-if "%cswinrt_basline_assembly_version_compat_errors%"=="" set cswinrt_basline_assembly_version_compat_errors=false
+if "%cswinrt_baseline_breaking_compat_errors%"=="" set cswinrt_baseline_breaking_compat_errors=false
+if "%cswinrt_baseline_assembly_version_compat_errors%"=="" set cswinrt_baseline_assembly_version_compat_errors=false
 
 rem Generate prerelease targets file to exercise build warnings
 set prerelease_targets=nuget\Microsoft.Windows.CsWinRT.Prerelease.targets
@@ -79,10 +79,11 @@ echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK %CsWi
 echo   ^</Target^> >> %prerelease_targets%
 echo ^</Project^> >> %prerelease_targets%
 
-rem VS 16.8 BuildTools support (temporary, until VS 16.8 is deployed to Azure Devops agents in 12/2020) 
-msbuild -ver | findstr 16.8 >nul
+goto :skip_build_tools
+rem VS 16.X BuildTools support (when a prerelease VS is required, until it is deployed to Azure Devops agents) 
+msbuild -ver | findstr 16.X >nul
 if ErrorLevel 1 (
-  echo Using VS Build Tools 16.8 
+  echo Using VS Build Tools 16.X 
   if %cswinrt_platform%==x86 (
     set msbuild_path="%cd%\.buildtools\MSBuild\Current\Bin\\"
   ) else (
@@ -97,6 +98,7 @@ if ErrorLevel 1 (
   set msbuild_path=
   set nuget_params= 
 )
+:skip_build_tools
 
 if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
@@ -118,7 +120,7 @@ call :exec .nuget\nuget.exe restore %nuget_params%
 
 :build
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_basline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_basline_assembly_version_compat_errors% cswinrt.sln 
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% cswinrt.sln 
 if ErrorLevel 1 (
   echo.
   echo ERROR: Build failed

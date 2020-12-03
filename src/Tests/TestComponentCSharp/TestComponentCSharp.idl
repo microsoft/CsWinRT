@@ -99,7 +99,7 @@ namespace TestComponentCSharp
         static Int32 NumObjects{ get; };
     }
 
-    [default_interface]
+    [default_interface, gc_pressure(Windows.Foundation.Metadata.GCPressureAmount.High)]
     runtimeclass Class :
         Windows.Foundation.IStringable
         //, ICowboy
