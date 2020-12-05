@@ -73,6 +73,24 @@ namespace WinRT
             }
         }
 
+        public static IObjectReference GetWeakObjectReferenceForInterface(IntPtr externalComObject)
+        {
+            using var unknownRef = WeakObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
+
+            if (unknownRef.TryAs<IUnknownVftbl>(typeof(ABI.WinRT.Interop.IAgileObject.Vftbl).GUID, out var agileRef) >= 0)
+            {
+                agileRef.Dispose();
+                return unknownRef.As<IUnknownVftbl>();
+            }
+            else
+            {
+                return new WeakObjectReferenceWithContext<IUnknownVftbl>(
+                    unknownRef.Count,
+                    unknownRef.ThisPtr,
+                    Context.GetContextCallback());
+            }
+        }
+
         public static void RegisterProjectionAssembly(Assembly assembly) => TypeNameSupport.RegisterProjectionAssembly(assembly);
 
         internal static object GetRuntimeClassCCWTypeIfAny(object obj)

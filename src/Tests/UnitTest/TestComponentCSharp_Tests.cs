@@ -2290,5 +2290,31 @@ namespace UnitTest
             TestObject.IterableOfObjectIterablesProperty = listOfListOfUris;
             Assert.True(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
         }
+
+        [Fact]
+        public void TestCollectionOfDelegateWithObjectCapture()
+        {
+            static WeakReference CreateObject(bool withCapture)
+            { 
+                var obj = new Class();
+                var captured = withCapture ? obj : null;
+                obj.StringPropertyChanged +=
+                       (Class sender, string value) => Assert.Equal(sender, captured);
+                return new WeakReference(obj);
+            };
+
+            // Succeeds, as there's no cycle between object and event handler
+            var withoutCapture = CreateObject(withCapture: false);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.False(withoutCapture.IsAlive);
+
+            // Fails, because there's a cycle between object and event handler,
+            // With both net5 & netstandard2, but succeeds with UWP.
+            var withCapture = CreateObject(withCapture: true);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.True(withCapture.IsAlive);
+        }
     }
 }

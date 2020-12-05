@@ -55,10 +55,24 @@ namespace WinUIDesktopSample
 
         private void Alloc_Click(object sender, RoutedEventArgs e)
         {
-            baseRef = new WeakReference(new ARRPage());
-            derivedRef = new WeakReference(new Derived());
-            gridRef = new WeakReference(new Grid());
-            derivedGridRef = new WeakReference(new DerivedGrid());
+            var page = new ARRPage();
+            baseRef = new WeakReference(page);
+            var derived = new Derived();
+            derivedRef = new WeakReference(derived);
+            var grid = new Grid();
+            // Accessing _defaultLazy.Value will also cause a leak by QI-ing through _inner
+            // Attach/detach fix insufficient - need to protect all accesses to _inner via IReferenceTracker
+            // Even with backing out 2 AddRefs for _default, grid still leaks with event handler attached
+            //var ah = grid.ActualHeight;
+            grid.SizeChanged += (object sender, SizeChangedEventArgs e) =>
+            {
+                // uncomment following line to create a reference cycle between grid and delegate, causing leak
+                //if (sender == grid)
+                    throw new NotImplementedException();
+            };
+            gridRef = new WeakReference(grid);
+            var derivedGrid = new DerivedGrid();
+            derivedGridRef = new WeakReference(derivedGrid);
         }
 
         private void Check_Click(object sender, RoutedEventArgs e)
@@ -85,7 +99,7 @@ namespace WinUIDesktopSample
     public class ARRPage : ICustomQueryInterface
     {
         private static readonly ComWrappers cw = new ARRComWrappers();
-        private WinRT.IObjectReference _inner = null;
+        private WinRT.IObjectReference _inner = null;   // simulate cswinrt class
 
         private static ComWrappers GCW()
         {
@@ -116,12 +130,16 @@ namespace WinUIDesktopSample
 
             Marshal.AddRef(classNative.Inner);
             var rc = Marshal.Release(classNative.Inner);
-            
+
             // Create and hold wrapper around Inner, as cswinrt base classes do, but
+            // do not increment COM refcount to prevent aggregation strong reference cycle
             _inner = ComWrappersSupport.GetObjectReferenceForInterface(classNative.Inner);
-            // do not increment COM refcount to prevent aggregation strong reference cycles
             Marshal.Release(classNative.Inner);
-            
+
+#if USE_TRACKER
+            if(this.classNative.Tracker != null)
+                this.classNative.Tracker.AddRefFromTrackerSource();
+#endif
             Marshal.AddRef(classNative.Inner);
             rc = Marshal.Release(classNative.Inner);
 
@@ -131,6 +149,10 @@ namespace WinUIDesktopSample
 
         ~ARRPage()
         {
+#if USE_TRACKER
+            if (this.classNative.Tracker != null)
+                this.classNative.Tracker.ReleaseFromTrackerSource();
+#endif
             Marshal.AddRef(classNative.Inner);
             _inner.Dispose();
             ComWrappersHelper.Cleanup(ref this.classNative);
@@ -159,6 +181,20 @@ namespace WinUIDesktopSample
         }
     }
 
+    [ComImport]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("11d3b13a-180e-4789-a8be-7712882893e6")]
+    interface IReferenceTracker
+    {
+        void ConnectFromTrackerSource();
+        void DisconnectFromTrackerSource();
+        void FindTrackerTargets(IntPtr callback);
+        void GetReferenceTrackerManager(out IntPtr value);
+        void AddRefFromTrackerSource();
+        void ReleaseFromTrackerSource();
+        void PegFromTrackerSource();
+    };
+
     class ComWrappersHelper
     {
         private static Guid IID_IReferenceTracker = new Guid("11d3b13a-180e-4789-a8be-7712882893e6");
@@ -178,6 +214,10 @@ namespace WinUIDesktopSample
             public IntPtr Instance;
             public IntPtr Inner;
             public IntPtr ReferenceTracker;
+#if USE_TRACKER
+            // doesn't seem to make a difference in breaking cycles/leaks
+            public IReferenceTracker Tracker;
+#endif
         }
 
         public unsafe static void Init<T>(
@@ -186,6 +226,10 @@ namespace WinUIDesktopSample
             delegate*<ComWrappers> GetComWrapper,
             delegate*<IntPtr, out IntPtr, IntPtr> CreateInstance)
         {
+#if USE_TRACKER
+            classNative.Tracker = null;
+#endif
+
             bool isAggregation = typeof(T) != thisInstance.GetType();
 
             {
@@ -244,11 +288,26 @@ namespace WinUIDesktopSample
                     {
                         createObjectFlags |= CreateObjectFlags.TrackerObject;
 
+#if USE_TRACKER
+                        Marshal.AddRef(classNative.ReferenceTracker);
+                        var rc= Marshal.Release(classNative.ReferenceTracker);
+
+                        static IReferenceTracker MarshalReferenceTracker(IntPtr ptr) => (IReferenceTracker)Marshal.GetObjectForIUnknown(ptr);
+                        classNative.Tracker = MarshalReferenceTracker(classNative.ReferenceTracker);
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+
+                        classNative.Tracker.AddRefFromTrackerSource();
+
+                        Marshal.AddRef(classNative.ReferenceTracker);
+                        rc = Marshal.Release(classNative.ReferenceTracker);
+#else
                         // IReferenceTracker is not needed in aggregation scenarios.
                         // It is not needed because all QueryInterface() calls on an
                         // object are followed by an immediately release of the returned
                         // pointer - see below for details.
                         Marshal.Release(classNative.ReferenceTracker);
+#endif
 
                         // .NET 5 limitation
                         //
@@ -333,6 +392,7 @@ namespace WinUIDesktopSample
                     // No longer needed.
                     // ** Never release.
                     classNative.Release |= ReleaseFlags.None; // ReferenceTracker
+                    //classNative.Release |= ReleaseFlags.ReferenceTracker;
                 }
             }
             else

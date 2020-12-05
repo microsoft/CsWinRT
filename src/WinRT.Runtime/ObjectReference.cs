@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -27,7 +28,18 @@ namespace WinRT
             }
         }
 
-        protected  unsafe IUnknownVftbl VftblIUnknown
+#if DEBUG
+        private unsafe uint RefCount 
+        {
+            get
+            {
+                VftblIUnknown.AddRef(ThisPtr);
+                return VftblIUnknown.Release(ThisPtr);
+            }
+        }
+#endif
+
+        protected unsafe IUnknownVftbl VftblIUnknown
         {
             get
             {
@@ -54,7 +66,7 @@ namespace WinRT
         public unsafe ObjectReference<T> As<T>(Guid iid)
         {
             ThrowIfDisposed();
-            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
+            Marshal.ThrowExceptionForHR(QueryInterface(ref iid, out IntPtr thatPtr));
             return ObjectReference<T>.Attach(ref thatPtr);
         }
 
@@ -63,7 +75,7 @@ namespace WinRT
             if (typeof(TInterface).GetCustomAttribute(typeof(System.Runtime.InteropServices.ComImportAttribute)) is object)
             {
                 Guid iid = typeof(TInterface).GUID;
-                Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr comPtr));
+                Marshal.ThrowExceptionForHR(QueryInterface(ref iid, out IntPtr comPtr));
                 try
                 {
                     return (TInterface)Marshal.GetObjectForIUnknown(comPtr);
@@ -89,10 +101,10 @@ namespace WinRT
         {
             objRef = null;
             ThrowIfDisposed();
-            int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
+            int hr = QueryInterface(ref iid, out IntPtr thatPtr);
             if (hr >= 0)
             {
-                objRef = ObjectReference<T>.Attach(ref thatPtr); 
+                objRef = ObjectReference<T>.Attach(ref thatPtr);
             }
             return hr;
         }
@@ -162,6 +174,11 @@ namespace WinRT
             }
         }
 
+        protected virtual unsafe int QueryInterface(ref Guid iid, out IntPtr thatPtr)
+        {
+            return VftblIUnknown.QueryInterface(ThisPtr, ref iid, out thatPtr);
+        }
+
         protected virtual unsafe void AddRef()
         {
             VftblIUnknown.AddRef(ThisPtr);
@@ -222,7 +239,7 @@ namespace WinRT
                 return null;
             }
             var obj = new ObjectReference<T>(thisPtr, vftblT);
-            obj.VftblIUnknown.AddRef(obj.ThisPtr);
+            obj.AddRef();
             return obj;
         }
 
@@ -236,7 +253,7 @@ namespace WinRT
             return FromAbi(thisPtr, vftblT);
         }
 
-        private static unsafe T GetVtable(IntPtr thisPtr)
+        protected static unsafe T GetVtable(IntPtr thisPtr)
         {
             var vftblPtr = Unsafe.AsRef<VftblPtr>(thisPtr.ToPointer());
             T vftblT;
@@ -268,8 +285,8 @@ namespace WinRT
         private static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = Guid.Parse("0A299774-3E4E-FC42-1D9D-72CEE105CA57");
         private readonly IntPtr _contextCallbackPtr;
 
-        internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr)
-            :base(thisPtr)
+        internal ObjectReferenceWithContext(IntPtr intPtr, IntPtr contextCallbackPtr)
+            : base(intPtr)
         {
             _contextCallbackPtr = contextCallbackPtr;
         }
@@ -291,7 +308,7 @@ namespace WinRT
         public override unsafe int TryAs<U>(Guid iid, out ObjectReference<U> objRef)
         {
             objRef = null;
-            int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
+            int hr = QueryInterface(ref iid, out IntPtr thatPtr);
             if (hr >= 0)
             {
                 using (var contextCallbackReference = ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.FromAbi(_contextCallbackPtr))
@@ -301,5 +318,157 @@ namespace WinRT
             }
             return hr;
         }
+    }
+    
+    internal class WeakCount
+    {
+        internal int Increment() => 
+            System.Threading.Interlocked.Increment(ref _count);
+
+        internal int Decrement()
+        {
+            var count = System.Threading.Interlocked.Decrement(ref _count);
+            if (count < 0)
+            {
+                throw new InvalidOperationException("WeakObjectReference has been over-released!");
+            }
+            return count;
+        }
+
+        private int _count;
+    }
+
+    internal class WeakObjectReference<T> : ObjectReference<T>
+    {
+        public WeakCount Count { get; private set; }
+
+        internal WeakObjectReference(IntPtr ptr) : base(ptr)
+        {
+            Count = new WeakCount();
+            WeakAddRef();
+        }
+
+        internal WeakObjectReference(WeakCount count, IntPtr ptr) : base(ptr)
+        {
+            Count = count;
+            WeakAddRef();
+        }
+
+        public static ObjectReference<T> Attach(ref IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+            var obj = new WeakObjectReference<T>(thisPtr);
+            thisPtr = IntPtr.Zero;
+            return obj;
+        }
+
+        public static WeakObjectReference<T> FromAbi(IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero)
+            {
+                return null;
+            }
+            var obj = new WeakObjectReference<T>(thisPtr);
+            return obj;
+        }
+
+        private protected void StrongAddRef() => base.AddRef();
+
+        private protected void StrongRelease() => base.Release();
+
+        private protected void WeakAddRef()
+        {
+            Count.Increment();
+        }
+
+        private protected void WeakRelease()
+        {
+            var count = Count.Decrement();
+            if (count < 0)
+            {
+                throw new InvalidOperationException("Weak object reference has been over-released!");
+            }
+            if (count == 0)
+            {
+                StrongRelease();
+            }
+        }
+
+        protected override unsafe int QueryInterface(ref Guid iid, out IntPtr thatPtr)
+        {
+            int hr = base.QueryInterface(ref iid, out thatPtr);
+            //if (hr >= 0)
+            //{
+            //    WeakAddRef();
+            //    StrongRelease();
+            //}
+            return hr;
+        }
+
+        protected override unsafe void AddRef() => WeakAddRef();
+
+        protected override unsafe void Release() => WeakRelease();
+
+        public override unsafe int TryAs<T>(Guid iid, out ObjectReference<T> objRef)
+        {
+            objRef = null;
+            ThrowIfDisposed();
+            int hr = QueryInterface(ref iid, out IntPtr thatPtr);
+            if (hr >= 0)
+            {
+//                objRef = WeakObjectReference<T>.Attach(ref thatPtr);
+                objRef = ObjectReference<T>.Attach(ref thatPtr);
+            }
+            return hr;
+        }
+    }
+
+    internal class WeakObjectReferenceWithContext<T> : WeakObjectReference<T>
+    {
+        private static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = Guid.Parse("0A299774-3E4E-FC42-1D9D-72CEE105CA57");
+        private readonly IntPtr _contextCallbackPtr;
+
+        internal WeakObjectReferenceWithContext(WeakCount count, IntPtr thisPtr, IntPtr contextCallbackPtr)
+            : base(count, thisPtr)
+        {
+            _contextCallbackPtr = contextCallbackPtr;
+        }
+
+        protected override unsafe void Release()
+        {
+            disposed = true;
+            if (Count.Decrement() != 0)
+            {
+                return;
+            }
+
+            ComCallData data = default;
+            IntPtr contextCallbackPtr = _contextCallbackPtr;
+
+            var contextCallback = new ABI.WinRT.Interop.IContextCallback(ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.Attach(ref contextCallbackPtr));
+
+            contextCallback.ContextCallback(_ =>
+            {
+                StrongRelease();
+                return 0;
+            }, &data, IID_ICallbackWithNoReentrancyToApplicationSTA, 5);
+        }
+
+        //public override unsafe int TryAs<U>(Guid iid, out ObjectReference<U> objRef)
+        //{
+        //    objRef = null;
+        //    int hr = QueryInterface(ref iid, out IntPtr thatPtr);
+        //    if (hr >= 0)
+        //    {
+        //        using (var contextCallbackReference = ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.FromAbi(_contextCallbackPtr))
+        //        {
+        //            objRef = new WeakObjectReferenceWithContext<U>(Count, thatPtr, contextCallbackReference.GetRef());
+        //        }
+        //    }
+        //    return hr;
+        //}
     }
 }
