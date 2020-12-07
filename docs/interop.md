@@ -100,8 +100,7 @@ SetString(MarshalString.GetAbi(marshalStr));
 ##### Projected
 If possible, the interop interface should be defined in IDL and a C#/WinRT projection produced for it. This automatically generates all marshaling logic so that calling code can pass and receive projected types. This definition of `IUserConsentVerifierInterop` from one of our test components is an example of this: 
 
-```
-
+```csharp
 // IInspectable-based interop interface
 [uuid(39E050C3-4E74-441A-8DC0-B81104DF949C)]
 interface IUserConsentVerifierInterop
@@ -112,7 +111,7 @@ interface IUserConsentVerifierInterop
 
 And here is an example of using it -- from the test `TestFactoryCast` in our file `TestComponentCSharp_Tests`:
 
-```
+```csharp
 // IInspectable-based (projected) interop interface
 var interop = Windows.Security.Credentials.UI.UserConsentVerifier.As<IUserConsentVerifierInterop>();
 ```
