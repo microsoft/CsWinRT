@@ -11,7 +11,7 @@ Here are some resources that demonstrate authoring C#/WinRT components and the d
 
 
 ## Authoring the C# Component
-To create a library, select the Class Library (.NET Core) template in Visual Studio. C#/WinRT projects require SDK specific .NET frameworks.
+To create a library, select the Class Library (.NET Core) template in Visual Studio. C#/WinRT projects require Windows API version specific .NET frameworks.
 
 Accepted `<TargetFramework>` properties |
 --- |
@@ -22,7 +22,7 @@ Accepted `<TargetFramework>` properties |
 The library you are authoring should specify the following properties in its project file: 
 ```
   <PropertyGroup>
-    <!-- update the Windows SDK version to reflect your TargetFramework -->
+    <!-- update the Windows API version to reflect your TargetFramework -->
     <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
     <CsWinRTComponent>true</CsWinRTComponent>
     <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
@@ -37,11 +37,15 @@ And don't forget to include a `PackageReference` to `Microsoft.Windows.CsWinRT`!
 1. There are some programs you could write as/in your component that aren't available in the Windows Runtime. 
 We are working on implementing diagnostics in our tool that will catch these errors before a winmd is generated for your component.
 
-2. Not all C# types have been mapped to runtime types, but we are working on completing this coverage. 
+2. Not all C# types have been mapped to WinRT types, but we are working on completing this coverage. 
 
 3. Composable type support is still in progress
 
 ## Using the authored component
+
+To use the component in a C# app, the authored component just needs to be added as a project/package reference.
+
+For native (C++) apps, more steps are needed.
 
 Modifications needed: 
   1. Reference to your authored component in the consuming app
@@ -51,8 +55,6 @@ Modifications needed:
 
 ### Add the reference to your authored component
 **In Visual Studio** Under the Project node, right click on "References", click "Add Reference", then "Browse" and add the `.winmd` file generated in your authored component. 
-
-For consumption by native components, you'll also need to add `Include` statements for your hosting `runtimeconfig.json` file and the consuming app's `exe.manifest` file. More information on these files can be found in the hosting docs.   
 
 ### For native app (C++) consumption
 As part of the native (C++) support, the WinRT Hosting dlls (WinRT.Host and WinRT.Host.Shim) need to be in the same folder as the native executable. 
@@ -92,7 +94,7 @@ In summary, here is the fragment of additions made to the native app's project f
 
 ### Copying DLLs Target
 
-1. In the project folder for the component you are authoring, you will need to update an ItemGroup so MSBuild places the proper WinRT Dlls in the output directory. This is needed by the targets file we need to add to C++ apps to copy the WinRT Dlls to the native app's output directory.
+1. In the project folder for the component you are authoring, you will need to add a `PropertyGroup` so MSBuild places the proper WinRT Dlls in the output directory. This is needed by the targets file we need to add to C++ apps to copy the WinRT Dlls to the native app's output directory.
 
 This is generally done via a `Directory.Build.targets` file like so:
 ```
@@ -119,11 +121,11 @@ This is generally done via a `Directory.Build.targets` file like so:
   </PropertyGroup>
   
   <Target Name="CopyHostAssets">
-    <Copy SourceFiles="Path\To\Nuget\Packages\microsoft.windows.cswinrt\$(CsWinRTVersion)\native\$(Platform)\WinRT.Host.dll"
+    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.windows.cswinrt\$(CsWinRTVersion)\native\$(Platform)\WinRT.Host.dll"
           DestinationFolder="$(OutDir)" 
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
     
-    <Copy SourceFiles="Path\To\Nuget\Packages\microsoft.windows.cswinrt\$(CsWinRTVersion)\lib\net5.0\WinRT.Host.Shim.dll"
+    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.windows.cswinrt\$(CsWinRTVersion)\lib\net5.0\WinRT.Host.Shim.dll"
           DestinationFolder="$(OutDir)" 
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
     
