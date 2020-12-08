@@ -166,7 +166,7 @@ namespace Generator
                     found |= winrtRules.OverloadsOperator(ref context, classDeclaration); 
 
                     /* parameters named __retval*/
-                    found |= winrtRules.HasErrorsInMethods(ref context, classDeclaration);
+                    found |= winrtRules.ClassHasInvalidMethods(ref context, classDeclaration);
 
                     /* multiple constructors of the same arity */
                     found |= winrtRules.HasMultipleConstructorsOfSameArity(ref context, classDeclaration);
@@ -178,7 +178,7 @@ namespace Generator
 
                 foreach (InterfaceDeclarationSyntax interfaceDeclaration in interfaces)
                 {
-                    found |= winrtRules.CheckIMethodsForArrayTypes(ref context, interfaceDeclaration);
+                    found |= winrtRules.InterfaceHasInvalidMethods(ref context, interfaceDeclaration);
                 }
 
                 /* Check all structs */

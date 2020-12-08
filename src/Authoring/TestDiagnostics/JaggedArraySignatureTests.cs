@@ -54,7 +54,7 @@ namespace TestDiagnostics
     public interface JaggedArrayTests_ValidInterface
     {
         int[] foo();
-        bool bar(int[] arr);
+        bool bar([ReadOnlyArray()] int[] arr);
     }
 
     public sealed class J3PublicPrivate_Valid
@@ -88,6 +88,7 @@ namespace TestDiagnostics
         private int[][][] Arr3P { get; set; }
     }
 
+    /*
     public sealed class J2PublicPublic_Invalid
     {
         public int[][] J2_ReturnOnly() 
@@ -142,7 +143,7 @@ namespace TestDiagnostics
         public bool J3_NotReturnAndInput2of2(bool a, int[][][] arr);
         public bool J3_NotReturnAndInput2of3(bool a, int[][][] arr, bool b);
     }
-
+    
     namespace SubNamespace
     { 
         public interface SubNamespaceInterface_J2Methods_Invalid
@@ -154,7 +155,8 @@ namespace TestDiagnostics
             public bool J2_NotReturnAndInput2of3(bool a, int[][] arr, bool b);
             public int[][] J2_ReturnAndInput2of3(bool a, int[][] arr, bool b);
         }
-        
+       
+        /*
         public interface SubNamespaceInterface_J3Methods_Invalid
         {
             public int[][][] J3_ReturnOnly(); 
@@ -165,5 +167,6 @@ namespace TestDiagnostics
             public bool J3_NotReturnAndInput2of3(bool a, int[][][] arr, bool b); 
         }
     } // end SubNamespace
+   */
 } 
 
