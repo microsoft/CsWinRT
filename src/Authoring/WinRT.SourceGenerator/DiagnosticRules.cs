@@ -162,7 +162,7 @@ namespace Generator
 
         #region ModifierHelpers
 
-        private bool ModifierIs(SyntaxTokenList modifiers, string str)
+        private bool ModifiersContains(SyntaxTokenList modifiers, string str)
         {
             foreach (var modifier in modifiers)
             {
@@ -174,10 +174,10 @@ namespace Generator
             return false;
         }
 
-        private bool PropertyIsPublic(PropertyDeclarationSyntax p) { return ModifierIs(p.Modifiers, "public"); }
-        private bool MethodIsPublic(MethodDeclarationSyntax m) { return ModifierIs(m.Modifiers, "public"); }
-        public bool ClassIsPublic(ClassDeclarationSyntax c) { return ModifierIs(c.Modifiers, "public"); }
-        public bool InterfaceIsPublic(InterfaceDeclarationSyntax i) { return ModifierIs(i.Modifiers, "public"); }
+        private bool PropertyIsPublic(PropertyDeclarationSyntax p) { return ModifiersContains(p.Modifiers, "public"); }
+        private bool MethodIsPublic(MethodDeclarationSyntax m) { return ModifiersContains(m.Modifiers, "public"); }
+        public bool ClassIsPublic(ClassDeclarationSyntax c) { return ModifiersContains(c.Modifiers, "public"); }
+        public bool InterfaceIsPublic(InterfaceDeclarationSyntax i) { return ModifiersContains(i.Modifiers, "public"); }
 
         #endregion
 
@@ -288,10 +288,18 @@ namespace Generator
             }
             return false;
         }
-
+        
+        private bool SignatureContainsTypeName<T>(ref GeneratorExecutionContext context, IEnumerable<T> qualName, string typeName, SyntaxToken classIdentifier, Location loc, SyntaxToken signatureKind)
+        {
+            if (qualName.Any() && qualName.First().ToString().Equals(typeName))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(ArraySignature_SystemArrayRule, loc, classIdentifier, signatureKind)); // this could be where property name is not good
+                return true;
+            }
+            return false;
+        }
         #endregion
 
-        #region good
         /// <summary>
         /// Keeps track of repeated declarations of a method (overloads) and raises diagnostics according to the rule that exactly one overload should be attributed the default
         /// </summary>
@@ -352,7 +360,6 @@ namespace Generator
 
             return found;
         }
-        #endregion
 
         #region Misc
 
@@ -373,11 +380,9 @@ namespace Generator
             }
             return false;
         }
-
         #endregion
 
         #region ArraySignatureChecking
-
         /// <summary>
         /// Looks at all the methods declared on the given interface and checks them for improper array types (System.Array instances, multidimensional, jagged)
         /// </summary>
@@ -386,40 +391,20 @@ namespace Generator
         /// <returns>True iff any of the invalid array types are used in any of the method signatures on the given interface</returns>
         public bool CheckIMethodsForArrayTypes(ref GeneratorExecutionContext context, InterfaceDeclarationSyntax interfaceDeclaration)
         {
+            bool found = false;
             var methodDeclarations = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
-            return Foo(methodDeclarations, interfaceDeclaration.Identifier, ref context);
-            /*foreach (var method in methodDeclarations) // interfaces don't have private methods, right?
+            foreach (var method in methodDeclarations) 
             {
-                // found |= SignatureHasArrayType<QualifiedNameSyntax>(ref context, method, interfaceDeclaration.Identifier, "System.Array");
-
                 var qualName = method.DescendantNodes().OfType<QualifiedNameSyntax>();
                 found |= SignatureContainsTypeName(ref context, qualName, "System.Array", interfaceDeclaration.Identifier, method.GetLocation(), method.Identifier);
-
-                // found |= SignatureHasArrayType<IdentifierNameSyntax>(ref context, method, interfaceDeclaration.Identifier, "Array");
 
                 var idName = method.DescendantNodes().OfType<IdentifierNameSyntax>();
                 found |= SignatureContainsTypeName(ref context, idName, "Array", interfaceDeclaration.Identifier, method.GetLocation(), method.Identifier);
 
                 found |= ArrayIsntOneDim(method.DescendantNodes().OfType<ArrayTypeSyntax>(), ref context, interfaceDeclaration.Identifier, method.Identifier, method.GetLocation());
-            }
-            return found;
-            */
-        }
 
 
-        private bool Foo<T>(IEnumerable<T> props, SyntaxToken typeId, ref GeneratorExecutionContext context)
-            where T : MemberDeclarationSyntax
-        {
-            bool found = false;
-            foreach (var prop in props)
-            {
-                var qualName = prop.DescendantNodes().OfType<QualifiedNameSyntax>();
-                found |= SignatureContainsTypeName(ref context, qualName, "System.Array", typeId, prop.GetLocation(), prop.ToString());
-
-                var idName = prop.DescendantNodes().OfType<IdentifierNameSyntax>();
-                found |= SignatureContainsTypeName(ref context, idName, "Array", typeId, prop.GetLocation(), prop.ToString());
-
-                found |= ArrayIsntOneDim(prop.DescendantNodes().OfType<ArrayTypeSyntax>(), ref context, typeId, prop.ToString(), prop.GetLocation());
+                found |= CheckParamsForArrayAttributes(method, interfaceDeclaration.Identifier, ref context);
             }
             return found;
         }
@@ -432,10 +417,9 @@ namespace Generator
         /// <returns>True iff any of the invalid array types are used in any of the propertyy signatures in the given class</returns>
         public bool CheckPropertiesForArrayTypes(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
         {
-            // bool found = false;
+            bool found = false;
             var props = classDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(PropertyIsPublic);
-            return Foo(props, classDeclaration.Identifier, ref context);
-            /*foreach (var prop in props)
+            foreach (var prop in props)
             {
                 var qualName = prop.DescendantNodes().OfType<QualifiedNameSyntax>(); 
                 found |= SignatureContainsTypeName(ref context, qualName, "System.Array", classDeclaration.Identifier, prop.GetLocation(), prop.Identifier);
@@ -446,7 +430,6 @@ namespace Generator
                 found |= ArrayIsntOneDim(prop.DescendantNodes().OfType<ArrayTypeSyntax>(), ref context, classDeclaration.Identifier, prop.Identifier, prop.GetLocation());
             }
             return found;
-            */
         }
 
         /// <summary>
@@ -458,7 +441,7 @@ namespace Generator
         /// <param name="fieldIdentifier">The code the array is a part of the signature for; e.g. property or method</param>
         /// <param name="loc"></param>
         /// <returns>True iff any of the array types given are multidimensional or jagged</returns>
-        private bool ArrayIsntOneDim(IEnumerable<ArrayTypeSyntax> arrTypes, ref GeneratorExecutionContext context, SyntaxToken typeIdentifier, string fieldIdentifier, Location loc)
+        private bool ArrayIsntOneDim(IEnumerable<ArrayTypeSyntax> arrTypes, ref GeneratorExecutionContext context, SyntaxToken typeIdentifier, SyntaxToken fieldIdentifier, Location loc)
         {
             foreach (var arrType in arrTypes)
             {
@@ -478,68 +461,9 @@ namespace Generator
             return false;
         }
 
-        private bool SignatureContainsTypeName<T>(ref GeneratorExecutionContext context, IEnumerable<T> qualName, string typeName, SyntaxToken classIdentifier, Location loc, string signatureKind)
-        {
-            if (qualName.Any() && qualName.First().ToString().Equals(typeName))
-            {
-                context.ReportDiagnostic(Diagnostic.Create(ArraySignature_SystemArrayRule, loc, classIdentifier, signatureKind)); // this could be where property name is not good
-                return true;
-            }
-            return false;
-        }
 
         #endregion
-
-        #region cutHuh
-        /// <summary>
-        /// Checks property signatures with nodes of the generic type given for the given typename
-        /// </summary>
-        /// <typeparam name="T">
-        /// The method is generic because we need to use this on fields that are of type QualifiedNameSyntax and IdentifierSyntax; e.g. the System.Array type and Array type
-        /// </typeparam>
-        /// <param name="context">Compilation unit</param>
-        /// <param name="prop">The property declaration</param>
-        /// <param name="classIdentifier">The type the property lives in</param>
-        /// <param name="typeName">The string representation of the type we are looking for -- either "Array" or "System.Array"</param>
-        /// <returns>True if the return type of the given property matches the given type</returns>
-        private bool Property_CheckForSystemArrayType<T>(ref GeneratorExecutionContext context, PropertyDeclarationSyntax prop, SyntaxToken classIdentifier, string typeName)
-        {
-            var qualName = prop.DescendantNodes().OfType<T>();
-            return SignatureContainsTypeName<T>(ref context, qualName, typeName, classIdentifier, prop.GetLocation(), prop.Identifier.Text.ToString());
-            /*
-             * if (qualName.Any() && qualName.First().ToString().Equals(typeName)) 
-            { 
-                context.ReportDiagnostic(Diagnostic.Create(ArraySignature_SystemArrayRule, prop.GetLocation(), classIdentifier, prop.Identifier));
-                return true;
-            }
-            return false;
-            */
-        }
-        /// <summary>
-        /// Checks method signatures to see if a given type is used 
-        /// </summary>
-        /// <typeparam name="T">
-        /// Typenames can come in two forms, qualified name or identifier
-        /// </typeparam>
-        /// <param name="context">Compilation unit</param>
-        /// <param name="method">Method whose return type and paramters are seen</param>
-        /// <param name="classIdentifier">The type the method lives in</param>
-        /// <param name="typeName">The string representation of the type we are looking for -- either "Array" or "System.Array"</param>
-        /// <returns>True iff the return type of the given method matches the given type</returns>
-        private bool SignatureHasArrayType<T>(ref GeneratorExecutionContext context, MethodDeclarationSyntax method, SyntaxToken classIdentifier, string typeName)
-        {
-            var qualName = method.DescendantNodes().OfType<T>();
-            return SignatureContainsTypeName<T>(ref context, qualName, typeName, classIdentifier, method.GetLocation(), method.Identifier.Text.ToString());
-            /*if (qualName.Any() && qualName.First().ToString().Equals(typeName)) 
-            { 
-                context.ReportDiagnostic(Diagnostic.Create(ArraySignature_SystemArrayRule, method.GetLocation(), classIdentifier, method.Identifier));
-                return true;
-            }
-            return false;
-            */
-        }
-        #endregion
-
+     
         private bool ParamHasInOrOutAttribute(ParameterSyntax param)
         {
             string baseString = "System.Runtime.InteropServices.";
@@ -552,13 +476,19 @@ namespace Generator
         }
 
         /// <summary>
-        /// TODO!! Checks to see if param is an output param
         /// e.g. `int foo(out int i) { ... }`
         /// </summary>
         /// <param name="param"></param>
         /// <returns></returns>
         private bool ParamMarkedOutput(ParameterSyntax param)
         {
+            foreach (var cn in param.ChildNodes().OfType<SyntaxToken>())
+            {
+                if (cn.IsKind(SyntaxKind.OutKeyword))
+                {
+                    return true;
+                }
+            }
             return false;
         }
 
@@ -615,14 +545,10 @@ namespace Generator
                             found |= true;
                         }
                     }
-                    else if (hasWriteOnlyArray) { }
-                    else
-                    {
-                        if (!isOutputParam)
-                        {
-                            context.ReportDiagnostic(Diagnostic.Create(ArrayParamNotMarked, method.GetLocation(), method.Identifier, param.Identifier));
-                            found |= true;
-                        }
+                    else if (!hasWriteOnlyArray && !isOutputParam) 
+                    { 
+                        context.ReportDiagnostic(Diagnostic.Create(ArrayParamNotMarked, method.GetLocation(), method.Identifier, param.Identifier));
+                        found |= true;
                     }
                 }
                 else if (hasWriteOnlyArray || hasReadOnlyArray)
@@ -634,11 +560,6 @@ namespace Generator
 
             return found;
         }
-
-        private bool CheckArrayTypesInSignature()
-        {
-            return false;
-        } 
 
         /// <summary>
         /// Loops over each method declared in the given class and checks for various diagnostics
@@ -677,14 +598,14 @@ namespace Generator
                 // found |= SignatureHasArrayType<QualifiedNameSyntax>(ref context, method, classDeclaration.Identifier, "System.Array");
 
                 var qualName = method.DescendantNodes().OfType<QualifiedNameSyntax>();
-                found |=  SignatureContainsTypeName(ref context, qualName, "System.Array", classDeclaration.Identifier, method.GetLocation(), method.Identifier.Text.ToString());
+                found |=  SignatureContainsTypeName(ref context, qualName, "System.Array", classDeclaration.Identifier, method.GetLocation(), method.Identifier);
 
                 // found |= SignatureHasArrayType<IdentifierNameSyntax>(ref context, method, classDeclaration.Identifier, "Array");
                 var idName = method.DescendantNodes().OfType<IdentifierNameSyntax>();
-                found |=  SignatureContainsTypeName(ref context, idName, "Array", classDeclaration.Identifier, method.GetLocation(), method.Identifier.Text.ToString());
+                found |=  SignatureContainsTypeName(ref context, idName, "Array", classDeclaration.Identifier, method.GetLocation(), method.Identifier);
 
                 //
-                found |= ArrayIsntOneDim(method.DescendantNodes().OfType<ArrayTypeSyntax>(), ref context, classDeclaration.Identifier, method.Identifier.Text.ToString(), method.GetLocation());
+                found |= ArrayIsntOneDim(method.DescendantNodes().OfType<ArrayTypeSyntax>(), ref context, classDeclaration.Identifier, method.Identifier, method.GetLocation());
             }
 
             /* Finishes up the work started by `CheckOverloadAttributes` */

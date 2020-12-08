@@ -18,7 +18,13 @@ namespace TestDiagnostics
 
     public interface IHaveAMethodNamedArray
     {
-        void Array(int i); // shouldn't get hit, but might
+        void Array(int i);
+        int[] Foo(out int[] arr);
+    }
+
+    public sealed class OutParam
+    {
+        public void Foo(out int[] arr) { arr = new int[] { }; }
     }
 /*
     // method with `ref` param 
