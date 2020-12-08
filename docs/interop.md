@@ -98,7 +98,23 @@ SetString(MarshalString.GetAbi(marshalStr));
 **Note:** The CLR still supports marshaling COM (IUnknown), but not WinRT (IInspectable), interop interfaces. There are two approaches to marshaling IInspectable interfaces in C#/WinRT. 
 
 ##### Projected
-If possible, the interop interface should be defined in IDL and a C#/WinRT projection produced for it. This automatically generates all marshaling logic so that calling code can pass and receive projected types. For an example of this, see the [IUserConsentVerifierInterop definition](https://github.com/microsoft/CsWinRT/blob/master/TestComponentCSharp/TestComponentCSharp.idl#L356) and [related test code](https://github.com/microsoft/CsWinRT/blob/master/UnitTest/TestComponentCSharp_Tests.cs#L1039).
+If possible, the interop interface should be defined in IDL and a C#/WinRT projection produced for it. This automatically generates all marshaling logic so that calling code can pass and receive projected types. This definition of `IUserConsentVerifierInterop` from one of our test components is an example of this: 
+
+```csharp
+// IInspectable-based interop interface
+[uuid(39E050C3-4E74-441A-8DC0-B81104DF949C)]
+interface IUserConsentVerifierInterop
+{
+  Windows.Foundation.IAsyncOperation<Windows.Security.Credentials.UI.UserConsentVerificationResult> RequestVerificationForWindowAsync(UInt64 appWindow, String message, GUID riid);
+}
+```
+
+And here is an example of using it -- from the test `TestFactoryCast` in our file `TestComponentCSharp_Tests`:
+
+```csharp
+// IInspectable-based (projected) interop interface
+var interop = Windows.Security.Credentials.UI.UserConsentVerifier.As<IUserConsentVerifierInterop>();
+```
 
 ##### ComImport
 Another technique is to define the interface in C#, with the ComImport attribute attached. This uses the CLR's support for marshaling COM (IUnknown) interfaces, which is still supported. This technique can be adapted to WinRT (IInspectable) interfaces, with a minor change. Normally, defining the interface with ComInterfaceType.InterfaceIsIInspectable will succeed in the cast operation, but method calls will crash in the CLR. Instead, define the interface with ComInterfaceType.InterfaceIsIUnknown and explicitly add the IInspectable methods - GetIids, GetRuntimeClassName, and GetTrustLevel:

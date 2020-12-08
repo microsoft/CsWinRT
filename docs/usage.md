@@ -2,7 +2,7 @@
 
 ## Component Project
 
-A component project adds a NuGet reference to C#/WinRT to invoke cswinrt.exe at build time, generate projection sources, and compile these into an interop assembly. For an example of this, see the [Projection Sample](https://github.com/microsoft/CsWinRT/tree/master/Samples/Net5ProjectionSample). Command line options can be displayed by running **cswinrt -?**.  The interop assembly is then typically distributed as a NuGet package itself. 
+A component project adds a NuGet reference to C#/WinRT to invoke cswinrt.exe at build time, generate projection sources, and compile these into an interop assembly. For an example of this, see the [Projection Sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/Net5ProjectionSample). Command line options can be displayed by running **cswinrt -?**.  The interop assembly is then typically distributed as a NuGet package itself. 
 
 ### Example 
 
