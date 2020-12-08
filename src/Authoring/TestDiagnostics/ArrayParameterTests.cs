@@ -20,7 +20,7 @@ namespace TestDiagnostics
     {
         void Array(int i); // shouldn't get hit, but might
     }
-
+/*
     // method with `ref` param 
     public sealed class OnlyParam
     {
@@ -91,4 +91,5 @@ namespace TestDiagnostics
         // array as param but not marked either way
         public void ArrayNotMarked(int i, int[] arr) { }
     }
+*/
 }

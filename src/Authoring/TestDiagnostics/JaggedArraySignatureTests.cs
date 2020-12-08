@@ -9,7 +9,6 @@ namespace TestDiagnostics
     /*
      * Valid tests
      */
-     /*
     internal sealed class JaggedArray_Properties_Valid
     {
         private int[][] Arr { get; set; }
@@ -76,13 +75,11 @@ namespace TestDiagnostics
         private bool D3_NotReturnAndInput2of2(bool a, int[][][] arr) { return a; }
         private bool D3_NotReturnAndInput2of3(bool a, int[][][] arr, bool b) { return a; }
     }
-    */
 
     /*
      * Invalid tests
      */
     
-    /* 
     public sealed class JaggedArray_Properties_Invalid
     {
         private int[][] ArrP { get; set; } 
@@ -168,6 +165,5 @@ namespace TestDiagnostics
             public bool J3_NotReturnAndInput2of3(bool a, int[][][] arr, bool b); 
         }
     } // end SubNamespace
-    */
 } 
 
