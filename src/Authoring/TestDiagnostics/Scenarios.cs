@@ -10,6 +10,16 @@ using Windows.Web.Syndication;
 namespace TestDiagnostics
 {
     /*
+    public interface IHaveAMethodWithRefParam
+    {
+        void foo(ref int i);
+    }
+
+    public sealed class ClassWithMethodUsingRefParam
+    {
+        public void MethodWithRefParam(ref int i) { i++; }
+    }
+
     public sealed class ClassThatOverloadsOperator
     {
         public static ClassThatOverloadsOperator operator +(ClassThatOverloadsOperator thing)

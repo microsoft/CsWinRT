@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace TestDiagnostics
 {
-    /*
     internal class MultidimensionalArraySignature_2D_PrivateClass_Valid
     {
         public int[,] Arr_2d { get; set; }
@@ -54,18 +53,11 @@ namespace TestDiagnostics
 
     }
 
-    public interface MultiDimArrayTests_ValidInterface_NoMultiDim
-    {
-        int[] foo();
-        bool bar(int[] arr);
-    }
-    */
-
     /* 
      * Invalid tests include public properties in public classes, public interface methods, 
      */
 
-     /*
+    /*
     public sealed class MultidimensionalArraySignature_2D_Invalid
     {
         public int[,] Arr_2d { get; set; }
@@ -142,4 +134,4 @@ namespace TestDiagnostics
         }
     }
     */
-} // End TestDiagnostics namespace
+} 

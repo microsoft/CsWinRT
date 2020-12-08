@@ -1,8 +1,4 @@
-﻿using ABI.Windows.Foundation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace TestDiagnostics
 {
@@ -19,19 +15,15 @@ namespace TestDiagnostics
     {
         public WriteOnlyArray() { }
     }
-    
-    public interface IHaveAMethodWithRefParam
-    {
-        void foo(ref int i);
-    }
 
-    public interface IHaveAMethodNamedArray
+    /*
+    public interface IHaveAMethodNamedArray_Valid
     {
         void Array(int i);
         int[] Foo(out int[] arr);
     }
 
-    public sealed class OutParam
+    public sealed class OutParam_Valid
     {
         public void Foo(out int[] arr) { arr = new int[] { }; }
     }
@@ -39,9 +31,6 @@ namespace TestDiagnostics
     // method with `ref` param 
     public sealed class OnlyParam
     {
-        // todo: move this method/test out into a different file
-        public void MethodWithRefParam(ref int i) { i++; }
-
         //  array param with both attributes 
         public void BothAttributes_Separate([WriteOnlyArray()][ReadOnlyArray()] int[] arr) { }
 
@@ -78,7 +67,7 @@ namespace TestDiagnostics
 
     public sealed class TwoParam
     { 
-        public void BothAttributes(int i, [WriteOnlyArray()][ReadOnlyArray()] int[] arr) { }
+         public void BothAttributes(int i, [WriteOnlyArray()][ReadOnlyArray()] int[] arr) { }
         // array marked `out` but marked with ReadOnlyArray Attribute
         public void MarkedOutAndReadOnly(int i, [ReadOnlyArray()] out int[] arr) { arr = new int[] { }; }
         public void MarkedReadOnly_Valid(int i, [ReadOnlyArray()] int[] arr) { }
@@ -126,8 +115,7 @@ namespace TestDiagnostics
         public void ArrayMarkedIn2([ReadOnlyArray()] int[] xs, [In] int[] arr) { }
         public void ArrayMarkedOut([ReadOnlyArray()] int[] xs, [Out] int[] arr) { }
 
-        // method has param marked with  ReadOnlyArray / WriteOnlyArray 
-        //  but param isnt array
+        // method has param marked with  ReadOnlyArray / WriteOnlyArray but param isnt array
         public void NonArrayMarkedReadOnly([ReadOnlyArray()] int[] xs, [ReadOnlyArray()] int i) { }
         public void NonArrayMarkedWriteOnly([ReadOnlyArray()] int[] xs, [WriteOnlyArray()] int i) { }
         public void NonArrayMarkedWriteOnly2([ReadOnlyArray()] int i, [WriteOnlyArray()] int[] arr) { }
@@ -140,4 +128,5 @@ namespace TestDiagnostics
         // array as param but not marked either way
         public void ArrayNotMarked([ReadOnlyArray()] int[] xs, int[] arr) { }
     }
+    */
 }

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace TestDiagnostics
 {
-    /*
     public sealed class TwoOverloads_DiffParamCount_Valid
     {
        public string OverloadExample(string s) { return s; }
@@ -72,6 +71,7 @@ namespace TestDiagnostics
         public int OverloadExample(int n) { return n; }
     }
 
+    /*
     // invalid method overload tests 
     public sealed class TwoOverloads_NoAttribute_Invalid
     {

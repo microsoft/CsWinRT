@@ -567,17 +567,24 @@ namespace Generator
             bool found = false; 
 
             /* No private fields allowed in Windows Runtime components */
-            if (SyntaxTokenIs(field.GetFirstToken(), "private"))
-            {
+            if (!ModifiersContains(field.Modifiers, "public"))
+            { 
                 context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.StructHasPrivateFieldRule, field.GetLocation(), structDeclaration.Identifier));
                 found |= true;
-            } 
+            }
+
+            // TODO: see what happens for a struct with a const modifier in old dotnet
+            if (ModifiersContains(field.Modifiers, "const"))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.StructHasConstFieldRule, field.GetLocation(), structDeclaration.Identifier));
+                found |= true;
+            }
 
             foreach (var variable in field.DescendantNodes().OfType<VariableDeclarationSyntax>())
             {
                 var typeStr = variable.Type.ToString();
 
-                List<string> invalidTypes = new List<string> { "object", "byte", "dynamic" };
+                List<string> invalidTypes = new List<string> { "object", "dynamic" };
                 invalidTypes.AddRange(classNames);
                 
                 if (invalidTypes.Contains(typeStr))

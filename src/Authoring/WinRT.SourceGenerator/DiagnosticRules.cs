@@ -52,7 +52,13 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor StructHasPrivateFieldRule = MakeRule(
             "WME1060(b)",
             "Private field in struct",
-            "Structure {0} has private field. All fields must be public for Windows Runtime structures.");
+            "Structure {0} has non-public field. All fields must be public for Windows Runtime structures.");
+
+
+        public static DiagnosticDescriptor StructHasConstFieldRule = MakeRule(
+            "WME1060(b)",
+            "Const field in struct",
+            "Structure {0} has const field. Constants can only appear on Windows Runtime enumerations.");
 
         public static DiagnosticDescriptor StructHasInvalidFieldRule = MakeRule(
             "WME1060",

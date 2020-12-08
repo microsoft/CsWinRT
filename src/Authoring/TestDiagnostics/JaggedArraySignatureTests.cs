@@ -80,6 +80,7 @@ namespace TestDiagnostics
      * Invalid tests
      */
     
+    /*
     public sealed class JaggedArray_Properties_Invalid
     {
         private int[][] ArrP { get; set; } 
@@ -88,7 +89,6 @@ namespace TestDiagnostics
         private int[][][] Arr3P { get; set; }
     }
 
-    /*
     public sealed class J2PublicPublic_Invalid
     {
         public int[][] J2_ReturnOnly() 
