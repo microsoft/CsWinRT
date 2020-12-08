@@ -160,13 +160,13 @@ namespace Generator
                     classNames.Add(classDeclaration.Identifier.ToString());
 
                     /* exports multidimensional array */
-                    found |= winrtRules.Class_CheckArraySignature(ref context, classDeclaration);
+                    found |= winrtRules.CheckPropertiesForArrayTypes(ref context, classDeclaration);
 
                     /* exposes an operator overload  */
                     found |= winrtRules.OverloadsOperator(ref context, classDeclaration); 
 
                     /* parameters named __retval*/
-                    found |= winrtRules.HasErrorsInMethods(ref context, classDeclaration);
+                    found |= winrtRules.ClassHasInvalidMethods(ref context, classDeclaration);
 
                     /* multiple constructors of the same arity */
                     found |= winrtRules.HasMultipleConstructorsOfSameArity(ref context, classDeclaration);
@@ -178,7 +178,7 @@ namespace Generator
 
                 foreach (InterfaceDeclarationSyntax interfaceDeclaration in interfaces)
                 {
-                    found |= winrtRules.Interface_CheckArraySignature(ref context, interfaceDeclaration);
+                    found |= winrtRules.InterfaceHasInvalidMethods(ref context, interfaceDeclaration);
                 }
 
                 /* Check all structs */

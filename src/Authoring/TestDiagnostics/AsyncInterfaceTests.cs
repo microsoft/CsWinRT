@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 
 namespace TestDiagnostics
-{
+{ 
+    /*
     public sealed class AsyAction : IAsyncAction, IAsyncActionWithProgress<int>
     {
         public AsyncActionCompletedHandler Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -122,4 +123,5 @@ namespace TestDiagnostics
             throw new NotImplementedException();
         }
     }
+    */
 }

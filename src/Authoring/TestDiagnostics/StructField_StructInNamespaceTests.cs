@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TestDiagnostics
 {
-
+    /*
     public sealed class SillyClass
     {
         public double Identity(double d)
@@ -53,9 +53,11 @@ namespace TestDiagnostics
             return x;
         }
     }
-    public struct StructWithConst_Invalid // really invalid ?
+    
+    public struct StructWithConst_Invalid 
     {
         const int five = 5;
+        private int six;
     }
 
     public enum BasicEnum
@@ -94,23 +96,23 @@ namespace TestDiagnostics
         string str;
     }
 
-    public struct StructWithObjectField_Invalid // is this really invalid? 
+    public struct StructWithObjectField_Invalid
     {
-        object obj;
-
+        public object obj;
     }
-    public struct StructWithDynamicField_Invalid // is this really invalid? 
+    public struct StructWithDynamicField_Invalid 
     {
-        dynamic dyn;
+        public dynamic dyn;
     }
 
-    public struct StructWithByteField_Invalid // is this really invalid? 
+    public struct StructWithByteField_Valid
     {
-        byte b;
+        public byte b;
     }
 
     public struct StructWithWinRTStructField
     {
         public Matrix3x2 matrix;
     }
+    */
 }

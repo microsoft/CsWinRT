@@ -71,6 +71,7 @@ namespace TestDiagnostics
         public int OverloadExample(int n) { return n; }
     }
 
+    /*
     // invalid method overload tests 
     public sealed class TwoOverloads_NoAttribute_Invalid
     {
@@ -165,4 +166,5 @@ namespace TestDiagnostics
         [Windows.Foundation.Metadata.DefaultOverload()]
         public bool OverloadExample(bool b) { return b; }
     }
+    */
 }
