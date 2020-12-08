@@ -11,9 +11,25 @@
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass
+        name="AuthoringSample.CustomReadOnlyDictionary"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringSample.CustomVector"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringSample.CustomVectorView"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />        
+    <activatableClass
         name="AuthoringSample.CustomWWW"
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringSample.DisposableClass"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />    
     <activatableClass
         name="AuthoringSample.TestClass"
         threadingModel="both"
