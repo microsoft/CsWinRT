@@ -8,10 +8,10 @@ namespace Generator
 {
     public class WinRTRules
     {
-        private bool SyntaxTokenIs(SyntaxToken stx, string str) { return stx.Value.Equals(str); }
 
         #region ModifierHelpers
-
+        private bool SyntaxTokenIs(SyntaxToken stx, string str) { return stx.Value.Equals(str); }
+        
         private bool ModifiersContains(SyntaxTokenList modifiers, string str)
         {
             foreach (var modifier in modifiers)
@@ -143,7 +143,10 @@ namespace Generator
                 "Windows.Foundation.IAsyncOperationWithProgress`2"
         };
 
-        /* SameAsyncInterface uses the proper ISymbol equality check on the OriginalDefinition of the given symbols */
+        /// <summary>
+        /// uses the proper ISymbol equality check on the OriginalDefinition of the given symbols
+        /// </summary> 
+        /// <returns>true iff the two types are equivalent</returns>
         private bool SameAsyncInterface(INamedTypeSymbol interfaceA, INamedTypeSymbol interfaceB)
         {
             /* Using OriginalDefinition b/c the generic field of the metadata type has the template name, e.g. `TProgress`
@@ -151,8 +154,13 @@ namespace Generator
             return SymbolEqualityComparer.Default.Equals(interfaceA.OriginalDefinition, interfaceB.OriginalDefinition);
         }
 
-        /* ImplementsAsyncInterface 
-         *  returns true if the class represented by the symbol implements any of the interfaces defined in ProhibitedAsyncInterfaces */
+        /// <summary>
+        /// returns true if the class represented by the symbol implements any of the interfaces defined in ProhibitedAsyncInterfaces
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="classSymbol"></param>
+        /// <param name="classDeclaration"></param>
+        /// <returns>True iff the given class implements any of the IAsync interfaces that are not valid in Windows Runtime</returns>
         public bool ImplementsAsyncInterface(ref GeneratorExecutionContext context, INamedTypeSymbol classSymbol, ClassDeclarationSyntax classDeclaration)
         {
             foreach (string prohibitedInterface in ProhibitedAsyncInterfaces)
@@ -540,9 +548,14 @@ namespace Generator
             }
         }
 
-        /*  StructHasFieldOfType
-         *   returns true iff there is a field of the given type in the given struct 
-         *   e.g., if T is PropertyDeclarationSyntax, then if the struct has a property, we report a diagnostic and return true */
+        /// <summary>
+        /// returns true iff there is a field of the given type in the given struct 
+        /// e.g., if T is PropertyDeclarationSyntax, then if the struct has a property, we report a diagnostic and return true */
+        /// </summary>
+        /// <typeparam name="T">T can vary over MethodDeclartion, EventDeclaration, etc... </typeparam>
+        /// <param name="context"></param>
+        /// <param name="structDeclaration"></param>
+        /// <returns></returns>
         public bool StructHasFieldOfType<T>(ref GeneratorExecutionContext context, StructDeclarationSyntax structDeclaration)
         {
             if (structDeclaration.DescendantNodes().OfType<T>().Any())
@@ -556,9 +569,11 @@ namespace Generator
             return false;
         }
 
-        /* StructHasInvalidFields
-         *   returns true if there is a field declared private, 
-         *   or (inclusive) declared with a type that is a class or one of object, byte or dynamic  */
+        /// <summary>
+        /// returns true if there is a field declared private, 
+        /// or (inclusive) declared with a type that is a class or one of object, byte or dynamic
+        /// </summary> 
+        /// <returns>True if the struct has a field of an type that is not supported in Windows Runtime</returns>
         public bool StructHasFieldOfInvalidType(ref GeneratorExecutionContext context, 
             FieldDeclarationSyntax field, 
             StructDeclarationSyntax structDeclaration, 
@@ -573,7 +588,6 @@ namespace Generator
                 found |= true;
             }
 
-            // TODO: see what happens for a struct with a const modifier in old dotnet
             if (ModifiersContains(field.Modifiers, "const"))
             {
                 context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.StructHasConstFieldRule, field.GetLocation(), structDeclaration.Identifier));
