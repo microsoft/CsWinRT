@@ -1157,7 +1157,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
 
     static std::string get_default_interface_name(writer& w, TypeDef const& type, bool abiNamespace = true)
     {
-        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), abiNamespace ? typedef_name_type::ABI : typedef_name_type::Projected, false));
+        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), abiNamespace ? typedef_name_type::ABI : typedef_name_type::CCW, false));
     }
 
     void write_factory_constructors(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
@@ -4390,7 +4390,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
     void write_authoring_metadata_type(writer& w, TypeDef const& type)
     {
-        w.write(R"(%%internal class % {})",
+        w.write("%%internal class % {}\n",
             bind<write_winrt_attribute>(type),
             bind<write_custom_attributes>(type),
             bind<write_type_name>(type, typedef_name_type::CCW, false));
@@ -4729,11 +4729,11 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
     {
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
         auto wrapped_type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
-        auto default_interface_abi_name = get_default_interface_name(w, type, true);
+        auto default_interface_name = get_default_interface_name(w, type, false);
         auto base_semantics = get_type_semantics(type.Extends());
 
-        w.write(R"(
-%%internal %class %%
+        w.write(R"(%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
+%internal %class %%
 {
 public %(% comp)
 {
@@ -4757,6 +4757,7 @@ private readonly % _comp;
 }
 )",
 bind<write_winrt_attribute>(type),
+default_interface_name,
 bind<write_custom_attributes>(type),
 bind<write_class_modifiers>(type),
 type_name,

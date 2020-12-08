@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -130,6 +131,38 @@ namespace AuthoringSample
             return basicClass;
         }
 
+        public BasicStruct[] ReturnArray([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] BasicStruct[] basicStructs)
+        {
+            BasicStruct[] copy = new BasicStruct[basicStructs.Length];
+            for(int idx = 0; idx < copy.Length; idx++)
+            {
+                copy[idx] = basicStructs[idx];
+            }
+            return copy;
+        }
+
+        public int GetSum([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr)
+        {
+            return arr.Sum();
+        }
+
+        public void PopulateArray([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] arr)
+        {
+            for(int idx = 0; idx < arr.Length; idx++)
+            {
+                arr[idx] = idx + 1;
+            }
+        }
+
+        public void GetArrayOfLength(int length, out int[] arr)
+        {
+            arr = new int[length];
+            for (int idx = 0; idx < arr.Length; idx++)
+            {
+                arr[idx] = idx + 1;
+            }
+        }
+
         private void PrivateFunction()
         {
         }
@@ -184,6 +217,7 @@ namespace AuthoringSample
         public DisposableClass DisposableClassObject { get; set; }
         public IList<object> ObjectList { get; set; }
         public IAsyncOperation<Int32> IntAsyncOperation { get; set; }
+        public Type Type { get; set; }
 
         public TestClass()
         {
@@ -284,6 +318,21 @@ namespace AuthoringSample
                 sum += (int) (obj as int?);
             }
             return sum;
+        }
+
+        public int GetSum(CustomDictionary dictionary, string element)
+        {
+            if(dictionary.Count != 0 && dictionary.ContainsKey(element))
+            {
+                return dictionary[element].X + dictionary[element].Y;
+            }
+
+            return -1;
+        }
+
+        public void SetTypeToTestClass()
+        {
+            Type = typeof(TestClass);
         }
 
         // Method overloading
@@ -440,6 +489,208 @@ namespace AuthoringSample
         IEnumerator IEnumerable.GetEnumerator()
         {
             return _dictionary.GetEnumerator();
+        }
+    }
+
+    public sealed class CustomReadOnlyDictionary : IReadOnlyDictionary<string, BasicStruct>
+    {
+        private readonly CustomDictionary _dictionary;
+
+        // Remove constructor once factory only activation works.
+        public CustomReadOnlyDictionary()
+        {
+            _dictionary = null;
+            _dictionary = new CustomDictionary();
+
+            BasicStruct basicStruct = new BasicStruct
+            {
+                X = 1,
+                Y = 2
+            };
+            BasicStruct basicStruct2 = new BasicStruct
+            {
+                X = 2,
+                Y = 2
+            };
+            BasicStruct basicStruct3 = new BasicStruct
+            {
+                X = 3,
+                Y = 3
+            };
+            _dictionary.Add("first", basicStruct);
+            _dictionary.Add("second", basicStruct2);
+            _dictionary.Add("third", basicStruct3);
+        }
+
+        public CustomReadOnlyDictionary(CustomDictionary dictionary)
+        {
+            _dictionary = dictionary;
+        }
+
+        public BasicStruct this[string key] => _dictionary[key];
+
+        public IEnumerable<string> Keys => _dictionary.Keys;
+
+        public IEnumerable<BasicStruct> Values => _dictionary.Values;
+
+        public int Count => _dictionary.Count;
+
+        public bool ContainsKey(string key)
+        {
+            return _dictionary.ContainsKey(key);
+        }
+
+        public IEnumerator<KeyValuePair<string, BasicStruct>> GetEnumerator()
+        {
+            return _dictionary.GetEnumerator();
+        }
+
+        public bool TryGetValue(string key, [MaybeNullWhen(false)] out BasicStruct value)
+        {
+            return _dictionary.TryGetValue(key, out value);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _dictionary.GetEnumerator();
+        }
+    }
+
+    // Evaluate whether it should be supported - .NET native doesn't.
+    // TODO: conflict with IDisposable
+    /*
+    public sealed class CustomEnumerator : IEnumerator<DisposableClass>
+    {
+        private readonly DisposableClass[] _disposableObjects;
+        private readonly IEnumerator _enumerator;
+
+        public CustomEnumerator()
+        {
+        }
+
+        public CustomEnumerator(DisposableClass[] disposableObjects)
+        {
+            _disposableObjects = disposableObjects;
+            _enumerator = _disposableObjects.GetEnumerator();
+        }
+
+        public DisposableClass Current => (DisposableClass)_enumerator.Current;
+
+        object IEnumerator.Current => _enumerator.Current;
+
+        public void Dispose()
+        {
+        }
+
+        public bool MoveNext()
+        {
+            return _enumerator.MoveNext();
+        }
+
+        public void Reset()
+        {
+            _enumerator.Reset();
+        }
+    }
+    */
+
+    public sealed class CustomVector : IList<DisposableClass>
+    {
+        private IList<DisposableClass> _list;
+
+        public CustomVector()
+        {
+            _list = new List<DisposableClass>();
+        }
+
+        public CustomVector(IList<DisposableClass> list)
+        {
+            _list = list;
+        }
+
+        public DisposableClass this[int index] { get => _list[index]; set => _list[index] = value; }
+
+        public int Count => _list.Count();
+
+        public bool IsReadOnly => false;
+
+        public void Add(DisposableClass item)
+        {
+            _list.Add(item);
+        }
+
+        public void Clear()
+        {
+            _list.Clear();
+        }
+
+        public bool Contains(DisposableClass item)
+        {
+            return _list.Contains(item);
+        }
+
+        public void CopyTo(DisposableClass[] array, int arrayIndex)
+        {
+            _list.CopyTo(array, arrayIndex);
+        }
+
+        public IEnumerator<DisposableClass> GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
+        public int IndexOf(DisposableClass item)
+        {
+            return _list.IndexOf(item);
+        }
+
+        public void Insert(int index, DisposableClass item)
+        {
+            _list.Insert(index, item);
+        }
+
+        public bool Remove(DisposableClass item)
+        {
+            return _list.Remove(item);
+        }
+
+        public void RemoveAt(int index)
+        {
+            _list.RemoveAt(index);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+    }
+
+    public sealed class CustomVectorView : IReadOnlyList<DisposableClass>
+    {
+        private CustomVector _customVector;
+
+        public CustomVectorView()
+        {
+            _customVector = new CustomVector();
+        }
+
+        public CustomVectorView(CustomVector customVector)
+        {
+            _customVector = customVector;
+        }
+
+        public DisposableClass this[int index] => _customVector[index];
+
+        public int Count => _customVector.Count;
+
+        public IEnumerator<DisposableClass> GetEnumerator()
+        {
+            return _customVector.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _customVector.GetEnumerator();
         }
     }
 }
