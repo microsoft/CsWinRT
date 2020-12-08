@@ -10,7 +10,6 @@ namespace TestDiagnostics
      * what happens if you put another random attribute on an array param? 
      * check in WRC3 project ...
     */
-
     public class ReadOnlyArray : System.Attribute
     {
         public ReadOnlyArray() { }
