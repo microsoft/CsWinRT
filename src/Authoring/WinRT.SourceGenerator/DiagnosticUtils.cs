@@ -382,7 +382,6 @@ namespace Generator
                     found |= true;
                 }
                 
-
                 if (ParamHasInOrOutAttribute(param))
                 {
                     // recommend using ReadOnlyArray or WriteOnlyArray
@@ -457,9 +456,6 @@ namespace Generator
 
             foreach (MethodDeclarationSyntax method in methods.Where(MethodIsPublic))
             {
-                // TODO: add diagnostic for ref keyword
-                var paramList = method.ChildNodes().OfType<ParameterListSyntax>();
-    
                 found |= CheckParamsForArrayAttributes(method, ref context);
 
                 /* Gather information on overloaded methods; make sure there is only one marked DefaultOverload  */
@@ -469,16 +465,12 @@ namespace Generator
                 found |= HasConflictingParameterName(ref context, method);
 
                 /* see if method signature contains the types System.Array or Array */
-                // found |= SignatureHasArrayType<QualifiedNameSyntax>(ref context, method, classDeclaration.Identifier, "System.Array");
-
                 var qualName = method.DescendantNodes().OfType<QualifiedNameSyntax>();
                 found |=  SignatureContainsTypeName(ref context, qualName, "System.Array", classDeclaration.Identifier, method.GetLocation(), method.Identifier);
 
-                // found |= SignatureHasArrayType<IdentifierNameSyntax>(ref context, method, classDeclaration.Identifier, "Array");
                 var idName = method.DescendantNodes().OfType<IdentifierNameSyntax>();
                 found |=  SignatureContainsTypeName(ref context, idName, "Array", classDeclaration.Identifier, method.GetLocation(), method.Identifier);
 
-                //
                 found |= ArrayIsntOneDim(method.DescendantNodes().OfType<ArrayTypeSyntax>(), ref context, classDeclaration.Identifier, method.Identifier, method.GetLocation());
             }
 

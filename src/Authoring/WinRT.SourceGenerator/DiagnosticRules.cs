@@ -2,6 +2,13 @@
 
 namespace WinRT.SourceGenerator
 {
+    public class CheckEqual : System.Attribute
+    {
+        public CheckEqual(DiagnosticDescriptor d)
+        { 
+        }
+    }
+
     public class DiagnosticRules
     {
         /// <summary>
