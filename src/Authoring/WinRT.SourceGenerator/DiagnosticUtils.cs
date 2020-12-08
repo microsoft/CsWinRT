@@ -112,14 +112,14 @@ namespace Generator
                 else if (hasDefaultOverloadAttribute && methodHasAttrAlready)
                 {
                     // raise the "can't have multiple default attributes" diagnostic  
-                    context.ReportDiagnostic(Diagnostic.Create(MethodOverload_MultipleDefaultAttribute, method.GetLocation(),
+                    context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.MethodOverload_MultipleDefaultAttribute, method.GetLocation(),
                         methodArity, method.Identifier, classId));
                     found |= true;
                 }
                 else if (!hasDefaultOverloadAttribute && !methodHasAttrAlready)
                 {
                     // we could see this method later with the attribute, so hold onto the diagnostic for it until we know it doesn't have the attribute
-                    Diagnostic diagnostic = Diagnostic.Create(MethodOverload_NeedDefaultAttribute, method.GetLocation(), methodArity, method.Identifier, classId);
+                    Diagnostic diagnostic = Diagnostic.Create(DiagnosticRules.MethodOverload_NeedDefaultAttribute, method.GetLocation(), methodArity, method.Identifier, classId);
                     overloadsWithoutAttributeMap[methodNameWithArity] = diagnostic;
                 }
             }
@@ -378,7 +378,7 @@ namespace Generator
                 // Nothing can be marked `ref`
                 if (ParamMarkedRef(param))
                 {
-                    context.ReportDiagnostic(Diagnostic.Create(RefParameterFound, method.GetLocation(), method.Identifier, param.Identifier));
+                    context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.RefParameterFound, method.GetLocation(), method.Identifier, param.Identifier));
                     found |= true;
                 }
                 
@@ -388,13 +388,13 @@ namespace Generator
                     // recommend using ReadOnlyArray or WriteOnlyArray
                     if (isArrayType)
                     {
-                        context.ReportDiagnostic(Diagnostic.Create(ArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier));
+                        context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.ArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier));
                         found |= true;
                     }
                     // if not array type, stil can't use [In] or [Out]
                     else
                     {
-                        context.ReportDiagnostic(Diagnostic.Create(NonArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier));
+                        context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.NonArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier));
                         found |= true;
                     }
                 }
@@ -404,19 +404,19 @@ namespace Generator
                     // can't be both ReadOnly and WriteOnly
                     if (hasReadOnlyArray && hasWriteOnlyArray)
                     {
-                        context.ReportDiagnostic(Diagnostic.Create(ArrayParamMarkedBoth, method.GetLocation(), method.Identifier, param.Identifier));
+                        context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.ArrayParamMarkedBoth, method.GetLocation(), method.Identifier, param.Identifier));
                         found |= true;
                     }
                     // can't be both output (writeonly) and marked read only
                     else if (hasReadOnlyArray && isOutputParam)
                     {
-                        context.ReportDiagnostic(Diagnostic.Create(ArrayOutputParamMarkedRead, method.GetLocation(), method.Identifier, param.Identifier));
+                        context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.ArrayOutputParamMarkedRead, method.GetLocation(), method.Identifier, param.Identifier));
                         found |= true;
                     }
                     // must have some indication of ReadOnly or WriteOnly
                     else if (!hasWriteOnlyArray && !hasReadOnlyArray && !isOutputParam) 
                     { 
-                        context.ReportDiagnostic(Diagnostic.Create(ArrayParamNotMarked, method.GetLocation(), method.Identifier, param.Identifier
+                        context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.ArrayParamNotMarked, method.GetLocation(), method.Identifier, param.Identifier
                             , hasWriteOnlyArray, hasReadOnlyArray, isOutputParam));
                         found |= true;
                     }
@@ -424,7 +424,7 @@ namespace Generator
                 // Non-array types shouldn't have attributes meant for arrays
                 else if (hasWriteOnlyArray || hasReadOnlyArray)
                 {
-                    context.ReportDiagnostic(Diagnostic.Create(NonArrayMarked, method.GetLocation(), method.Identifier, param.Identifier));
+                    context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.NonArrayMarked, method.GetLocation(), method.Identifier, param.Identifier));
                     found |= true;
                 }
             }
