@@ -1156,6 +1156,13 @@ namespace WinRT
                 CopyManaged = MarshalGeneric<T>.CopyManaged;
                 DisposeMarshaler = MarshalGeneric<T>.DisposeMarshaler;
                 DisposeAbi = (object box) => { };
+                CreateMarshalerArray = (T[] array) => MarshalGeneric<T>.CreateMarshalerArray(array);
+                GetAbiArray = (object box) => MarshalGeneric<T>.GetAbiArray(box);
+                FromAbiArray = (object box) => MarshalGeneric<T>.FromAbiArray(box);
+                FromManagedArray = (T[] array) => MarshalGeneric<T>.FromManagedArray(array);
+                CopyManagedArray = (T[] array, IntPtr data) => MarshalGeneric<T>.CopyManagedArray(array, data);
+                DisposeMarshalerArray = (object box) => MarshalInterface<T>.DisposeMarshalerArray(box);
+                DisposeAbiArray = (object box) => MarshalInterface<T>.DisposeAbiArray(box);
             }
             else if (type.IsValueType || type == typeof(Type))
             {
