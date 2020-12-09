@@ -57,10 +57,10 @@
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj">
       <Project>{ffa9a78b-f53f-43ee-af87-24a80f4c330a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
+    <ProjectReference Include="..\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
       <Project>{0bb8f82d-874e-45aa-bca3-20ce0562164a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\WinRT.Host\WinRT.Host.vcxproj">
+    <ProjectReference Include="..\WinRT.Host\WinRT.Host.vcxproj">
       <Project>{7e33bcb7-19c5-4061-981d-ba695322708a}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj">
