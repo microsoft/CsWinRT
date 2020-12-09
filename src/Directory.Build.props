@@ -8,7 +8,7 @@
     <CppWinRTVerbosity>high</CppWinRTVerbosity>
     <CsWinRTVerbosity>high</CsWinRTVerbosity>
     <!--Note: unlisted at https://www.nuget.org/packages/Microsoft.WinUI/-->
-    <MicrosoftWinUIVersion>3.0.0-preview2.200713.0</MicrosoftWinUIVersion>
+    <MicrosoftWinUIVersion>3.0.0-preview3.201113.0</MicrosoftWinUIVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <LangVersion>preview</LangVersion>
