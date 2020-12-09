@@ -241,6 +241,14 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IVectorView<IProperties1> GetInterfaceVector();
         [noexcept] Windows.Foundation.Collections.IVectorView<Class> GetClassVector();
 
+        Windows.Foundation.Collections.IVectorView<Class> GetClassVectorSubset(Windows.Foundation.Collections.IVectorView<Class> classVector, Int32 startIndex);
+        Windows.Foundation.Collections.IVectorView<Object> GetObjectVectorSubset(Windows.Foundation.Collections.IVectorView<Object> objectVector, Int32 startIndex);
+        Windows.Foundation.Collections.IVectorView<IProperties1> GetPropertiesVectorSubset(Windows.Foundation.Collections.IVectorView<IProperties1> propertiesVector, Int32 startIndex);
+        Windows.Foundation.Collections.IVectorView<Boolean> GetBooleanVectorSubset(Windows.Foundation.Collections.IVectorView<Boolean> booleanVector, Int32 startIndex);
+        Windows.Foundation.Collections.IVectorView<String> GetStringVectorSubset(Windows.Foundation.Collections.IVectorView<String> stringVector, Int32 startIndex);
+        Windows.Foundation.Collections.IVectorView<BlittableStruct> GetBlittableVectorSubset(Windows.Foundation.Collections.IVectorView<BlittableStruct> blittableVector, Int32 startIndex);
+        Windows.Foundation.Collections.IVectorView<NonBlittableStringStruct> GetNonBlittableVectorSubset(Windows.Foundation.Collections.IVectorView<NonBlittableStringStruct> nonBlittableVector, Int32 startIndex);
+
         Windows.Foundation.Collections.IIterable<Int32> GetIntIterable();
         void SetIntIterable(Windows.Foundation.Collections.IIterable<Int32> value);
 
