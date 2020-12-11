@@ -7,8 +7,9 @@
         mc:Ignorable="d"
         Height="450" Width="800">
     <StackPanel>
+        <Button x:Name="Test" Content="Test GC" Click="Test_Click" />
         <Button x:Name="Alloc" Content="Alloc Objects" Click="Alloc_Click" />
         <Button x:Name="Check" Content="Check Leaks" Click="Check_Click" />
-        <TextBlock x:Name="Status" Text="(click Alloc Objects once, Check Leaks repeatedly)" />
+        <TextBlock x:Name="Status" Text="(click Alloc Objects)" />
     </StackPanel>
 </Page>

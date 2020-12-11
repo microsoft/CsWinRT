@@ -2,7 +2,7 @@
   "profiles": {
     "WinUIDesktopSample": {
       "commandName": "Project",
-      "nativeDebugging": false
+      "nativeDebugging": true
     }
   }
 }

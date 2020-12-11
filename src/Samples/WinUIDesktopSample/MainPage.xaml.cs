@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -51,7 +52,32 @@ namespace WinUIDesktopSample
         private WeakReference derivedRef;
         private WeakReference gridRef;
         private WeakReference derivedGridRef;
-        private List<object> pressure = new List<object>();
+        //private List<object> pressure = new List<object>();
+
+        private void Test_Click(object sender, RoutedEventArgs e)
+        {
+            static WeakReference CreateObject(bool withCapture)
+            {
+                var obj = new Grid();
+                var captured = withCapture ? obj : null;
+                obj.SizeChanged +=
+                       (object sender, SizeChangedEventArgs e) => Debug.Assert(sender == captured);
+                return new WeakReference(obj);
+            };
+
+            // Succeeds, as there's no cycle between object and event handler
+            //var withoutCapture = CreateObject(withCapture: false);
+            //GC.Collect();
+            //GC.WaitForPendingFinalizers();
+            //Debug.Assert(!withoutCapture.IsAlive);
+
+            // Fails, because there's a cycle between object and event handler
+            var withCapture = CreateObject(withCapture: true);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Status.Text = withCapture.IsAlive ? "Grid leaked" : "Grid collected";
+        }
+
 
         private void Alloc_Click(object sender, RoutedEventArgs e)
         {
@@ -67,22 +93,25 @@ namespace WinUIDesktopSample
             grid.SizeChanged += (object sender, SizeChangedEventArgs e) =>
             {
                 // uncomment following line to create a reference cycle between grid and delegate, causing leak
-                //if (sender == grid)
+                if (sender == grid)
                     throw new NotImplementedException();
             };
             gridRef = new WeakReference(grid);
             var derivedGrid = new DerivedGrid();
             derivedGridRef = new WeakReference(derivedGrid);
+
+            Status.Text = "(click Check Leaks repeatedly)";
         }
 
         private void Check_Click(object sender, RoutedEventArgs e)
         {
-            pressure.Add(new byte[10_000_000]);
+            //pressure.Add(new byte[10_000_000]);
             for (int i = 0; i < 10; i++)
             {
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
+            return;
             var baseStatus = baseRef.IsAlive ? "ARRPage leaked" : "ARRPage collected";
             var derivedStatus = derivedRef.IsAlive ? "Derived leaked" : "Derived collected";
             var gridStatus = gridRef.IsAlive ? "Grid leaked" : "Grid collected";
