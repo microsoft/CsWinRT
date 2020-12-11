@@ -6,10 +6,11 @@
         xmlns:local="WinUIDesktopSample"
         mc:Ignorable="d"
         Height="450" Width="800">
-    <StackPanel>
-        <Button x:Name="Test" Content="Test GC" Click="Test_Click" />
-        <Button x:Name="Alloc" Content="Alloc Objects" Click="Alloc_Click" />
-        <Button x:Name="Check" Content="Check Leaks" Click="Check_Click" />
-        <TextBlock x:Name="Status" Text="(click Alloc Objects)" />
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Button x:Name="WithoutCapture" Click="WithoutCapture_Click">Grid and handler without capture</Button>
+        <Button x:Name="WithCapture" Click="WithCapture_Click">Grid and handler with capture</Button>
+        <Button x:Name="Alloc" Click="Alloc_Click">1. Allocate various aggregates</Button>
+        <Button x:Name="Check" Click="Check_Click">2. Check for leaks of aggregates</Button>
+        <TextBlock x:Name="Status" Text="(click a button)" />
     </StackPanel>
 </Page>

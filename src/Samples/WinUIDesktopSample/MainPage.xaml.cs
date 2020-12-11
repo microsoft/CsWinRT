@@ -54,30 +54,32 @@ namespace WinUIDesktopSample
         private WeakReference derivedGridRef;
         //private List<object> pressure = new List<object>();
 
-        private void Test_Click(object sender, RoutedEventArgs e)
+        static WeakReference CreateObject(bool withCapture)
         {
-            static WeakReference CreateObject(bool withCapture)
-            {
-                var obj = new Grid();
-                var captured = withCapture ? obj : null;
-                obj.SizeChanged +=
-                       (object sender, SizeChangedEventArgs e) => Debug.Assert(sender == captured);
-                return new WeakReference(obj);
-            };
+            var obj = new Grid();
+            var captured = withCapture ? obj : null;
+            obj.SizeChanged +=
+                    (object sender, SizeChangedEventArgs e) => Debug.Assert(sender == captured);
+            return new WeakReference(obj);
+        }
 
+        private void WithoutCapture_Click(object sender, RoutedEventArgs e)
+        {
             // Succeeds, as there's no cycle between object and event handler
-            //var withoutCapture = CreateObject(withCapture: false);
-            //GC.Collect();
-            //GC.WaitForPendingFinalizers();
-            //Debug.Assert(!withoutCapture.IsAlive);
+            var withoutCapture = CreateObject(withCapture: false);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Status.Text = withoutCapture.IsAlive ? "Grid leaked" : "Grid collected";
+        }
 
-            // Fails, because there's a cycle between object and event handler
+        private void WithCapture_Click(object sender, RoutedEventArgs e)
+        {
+            // Fails due to cycle between object and event handler (unlike UWP)
             var withCapture = CreateObject(withCapture: true);
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Status.Text = withCapture.IsAlive ? "Grid leaked" : "Grid collected";
         }
-
 
         private void Alloc_Click(object sender, RoutedEventArgs e)
         {
