@@ -47,13 +47,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinUI", "Projections\WinUI\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nuget", "Nuget", "{967889B0-4C40-4EA2-8F11-26ECB88205FF}"
 	ProjectSection(SolutionItems) = preProject
-		nuget\LICENSE = nuget\LICENSE
-		nuget\Microsoft.Windows.CsWinRT.nuspec = nuget\Microsoft.Windows.CsWinRT.nuspec
-		nuget\Microsoft.Windows.CsWinRT.props = nuget\Microsoft.Windows.CsWinRT.props
-		nuget\Microsoft.Windows.CsWinRT.targets = nuget\Microsoft.Windows.CsWinRT.targets
-		nuget\readme.md = nuget\readme.md
-		nuget\readme.txt = nuget\readme.txt
-		nuget\SignConfig.xml = nuget\SignConfig.xml
+		..\nuget\LICENSE = ..\nuget\LICENSE
+		..\nuget\Microsoft.Windows.CsWinRT.nuspec = ..\nuget\Microsoft.Windows.CsWinRT.nuspec
+		..\nuget\Microsoft.Windows.CsWinRT.props = ..\nuget\Microsoft.Windows.CsWinRT.props
+		..\nuget\Microsoft.Windows.CsWinRT.targets = ..\nuget\Microsoft.Windows.CsWinRT.targets
+		..\nuget\readme.md = ..\nuget\readme.md
+		..\nuget\readme.txt = ..\nuget\readme.txt
+		..\nuget\SignConfig.xml = ..\nuget\SignConfig.xml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "Benchmarks\Benchmarks.csproj", "{B34C96F4-3660-4B2D-8ABD-A4B428166DC7}"
@@ -458,6 +458,8 @@ Global
 		{E0C26D3A-504A-4826-BAE2-DE775F865B2A} = {DA5AE0BA-E43D-4282-BC80-807DDE0C22C0}
 		{41E2A272-150F-42F5-AD40-047AAD9088A0} = {DA5AE0BA-E43D-4282-BC80-807DDE0C22C0}
 		{0212A7C5-8D3F-443C-9EBC-1F28091FDF88} = {DA5AE0BA-E43D-4282-BC80-807DDE0C22C0}
+		{13333A6F-6A4A-48CD-865C-0F65135EB018} = {CFB651EC-DAA4-4A11-ABCD-C77F90602EB5}
+		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E} = {CFB651EC-DAA4-4A11-ABCD-C77F90602EB5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5AE8C9D7-2613-4E1A-A4F2-579BAC28D0A2}
