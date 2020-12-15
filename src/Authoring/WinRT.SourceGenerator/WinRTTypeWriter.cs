@@ -20,7 +20,7 @@ namespace Generator
         public bool ByRef;
 
         public Parameter(Symbol type, string name, ParameterAttributes attributes)
-            :this(type, name, attributes, attributes == ParameterAttributes.Out)
+            : this(type, name, attributes, attributes == ParameterAttributes.Out)
         {
         }
 
@@ -44,7 +44,8 @@ namespace Generator
 
         public Parameter(IParameterSymbol parameterSymbol)
         {
-            bool isWriteOnlyArray = parameterSymbol.Type is IArrayTypeSymbol && 
+            // Set out parameter attribute if write only array.
+            bool isWriteOnlyArray = parameterSymbol.Type is IArrayTypeSymbol &&
                 parameterSymbol.GetAttributes().Where(
                     attr => attr.AttributeClass.ToString() == "System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray"
                 ).Count() != 0;
@@ -55,9 +56,28 @@ namespace Generator
             ByRef = parameterSymbol.RefKind == RefKind.Out;
         }
 
-        public Parameter(ParameterSyntax parameter, SemanticModel model)
-            :this(model.GetDeclaredSymbol(parameter))
+        public static Parameter[] GetParameters(ParameterListSyntax parameterList, SemanticModel model)
         {
+            int numParameters = parameterList.Parameters.Count;
+            Parameter[] parameters = new Parameter[numParameters];
+            for (int idx = 0; idx < numParameters; idx++)
+            {
+                parameters[idx] = new Parameter(model.GetDeclaredSymbol(parameterList.Parameters[idx]));
+            }
+
+            return parameters;
+        }
+
+        public static Parameter[] GetParameters(IMethodSymbol method)
+        {
+            int numParameters = method.Parameters.Count();
+            Parameter[] parameters = new Parameter[numParameters];
+            for (int idx = 0; idx < numParameters; idx++)
+            {
+                parameters[idx] = new Parameter(method.Parameters[idx]);
+            }
+
+            return parameters;
         }
     }
 
@@ -132,13 +152,13 @@ namespace Generator
 
         public void AddMethod(ISymbol node, string name, MethodDefinitionHandle handle)
         {
-            if(!MethodDefinitions.ContainsKey(node))
+            if (!MethodDefinitions.ContainsKey(node))
             {
                 MethodDefinitions[node] = new List<MethodDefinitionHandle>();
                 MethodReferences[node] = new List<EntityHandle>();
             }
 
-            if(!MethodsByName.ContainsKey(name))
+            if (!MethodsByName.ContainsKey(name))
             {
                 MethodsByName[name] = new List<ISymbol>();
             }
@@ -243,7 +263,7 @@ namespace Generator
 
             public (string, string, string, bool, bool) GetMapping(ISymbol containingType = null)
             {
-                return multipleMappingFunc != null ? 
+                return multipleMappingFunc != null ?
                     multipleMappingFunc(containingType) : (@namespace, name, assembly, isSystemType, isValueType);
             }
         }
@@ -419,7 +439,7 @@ namespace Generator
 
         private BlobHandle GetStrongNameKey(string assembly)
         {
-            if(assembly == "mscorlib")
+            if (assembly == "mscorlib")
             {
                 byte[] mscorlibStrongName = { 0xb7, 0x7a, 0x5c, 0x56, 0x19, 0x34, 0xe0, 0x89 };
                 return metadataBuilder.GetOrAddBlob(mscorlibStrongName);
@@ -462,7 +482,7 @@ namespace Generator
                 Where(attribute => attribute.AttributeClass.Name == "WindowsRuntimeTypeAttribute");
             if (winrtTypeAttribute.Any())
             {
-                return (string) winrtTypeAttribute.First().ConstructorArguments[0].Value;
+                return (string)winrtTypeAttribute.First().ConstructorArguments[0].Value;
             }
 
             return null;
@@ -476,7 +496,7 @@ namespace Generator
             string fullType = QualifiedName(@namespace, name);
             var assembly = GetAssemblyForWinRTType(symbol);
             if (assembly == null)
-            {   
+            {
                 if (MappedCSharpTypes.ContainsKey(fullType))
                 {
                     (@namespace, name, assembly, _, _) = MappedCSharpTypes[fullType].GetMapping(currentTypeDeclaration.Node);
@@ -519,9 +539,9 @@ namespace Generator
             {
                 typeEncoder.Type(symbol.Handle, false);
             }
-            else if(symbol.IsGeneric())
+            else if (symbol.IsGeneric())
             {
-                if(symbol.IsArray)
+                if (symbol.IsArray)
                 {
                     typeEncoder.SZArray().GenericTypeParameter(symbol.GenericIndex);
                 }
@@ -538,7 +558,7 @@ namespace Generator
             {
                 EncodeSymbol(new Symbol(arrayType.ElementType), typeEncoder.SZArray());
             }
-            else if(symbol.Type is INamedTypeSymbol namedType && namedType.TypeArguments.Length != 0)
+            else if (symbol.Type is INamedTypeSymbol namedType && namedType.TypeArguments.Length != 0)
             {
                 var genericType = typeEncoder.GenericInstantiation(GetTypeReference(symbol.Type), namedType.TypeArguments.Length, false);
                 int parameterIndex = 0;
@@ -555,7 +575,7 @@ namespace Generator
                     parameterIndex++;
                 }
             }
-            else if(IsEncodableAsSpecialType(symbol.Type.SpecialType))
+            else if (IsEncodableAsSpecialType(symbol.Type.SpecialType))
             {
                 EncodeSpecialType(symbol.Type.SpecialType, typeEncoder);
             }
@@ -572,7 +592,7 @@ namespace Generator
 
         private void EncodeReturnType(Symbol symbol, ReturnTypeEncoder returnTypeEncoder)
         {
-            if(symbol == null)
+            if (symbol == null)
             {
                 returnTypeEncoder.Void();
             }
@@ -580,7 +600,7 @@ namespace Generator
             {
                 EncodeSymbol(symbol, returnTypeEncoder.Type());
             }
-            else if(symbol.Type.SpecialType == SpecialType.System_Void)
+            else if (symbol.Type.SpecialType == SpecialType.System_Void)
             {
                 returnTypeEncoder.Void();
             }
@@ -663,7 +683,7 @@ namespace Generator
             {
                 methodAttributes |= MethodAttributes.RTSpecialName;
             }
-            else if(isStatic)
+            else if (isStatic)
             {
                 methodAttributes |= MethodAttributes.Static;
             }
@@ -703,13 +723,7 @@ namespace Generator
 
             base.VisitMethodDeclaration(node);
 
-            int numParameters = node.ParameterList.Parameters.Count;
-            Parameter[] parameters = new Parameter[numParameters];
-            for(int idx = 0; idx < numParameters; idx++)
-            {
-                parameters[idx] = new Parameter(node.ParameterList.Parameters[idx], Model);
-            }
-
+            Parameter[] parameters = Parameter.GetParameters(node.ParameterList, Model);
             var methodDefinitionHandle = AddMethodDefinition(
                 methodSymbol.Name,
                 parameters,
@@ -873,7 +887,7 @@ namespace Generator
                 string setMethodName = "put_" + symbol.Name;
                 var setMethod = AddMethodDefinition(
                     setMethodName,
-                    new Parameter[] { new Parameter(symbol.Type, "value", ParameterAttributes.In ) },
+                    new Parameter[] { new Parameter(symbol.Type, "value", ParameterAttributes.In) },
                     null,
                     false,
                     node.Parent is InterfaceDeclarationSyntax,
@@ -950,10 +964,10 @@ namespace Generator
         // as attributes don't use the TypeName mapping.
         private static (string, string, string, bool, bool) GetSystemTypeCustomMapping(ISymbol containingSymbol)
         {
-            bool isDefinedInAttribute = 
+            bool isDefinedInAttribute =
                 containingSymbol != null && (containingSymbol as INamedTypeSymbol).BaseType?.ToString() == "System.Attribute";
-            return isDefinedInAttribute ? 
-                ("System", "Type", "mscorlib", true, false) : 
+            return isDefinedInAttribute ?
+                ("System", "Type", "mscorlib", true, false) :
                 ("Windows.UI.Xaml.Interop", "TypeName", "Windows.Foundation.UniversalApiContract", false, true);
         }
 
@@ -999,7 +1013,7 @@ namespace Generator
 
             void AddProperty(string name, Symbol type, bool setProperty)
             {
-                if(isDefinition)
+                if (isDefinition)
                 {
                     AddPropertyDefinition(name, type, symbol, setProperty, false);
                 }
@@ -1048,12 +1062,12 @@ namespace Generator
                 AddMethod("GetView", null, GetType("System.Collections.Generic.IReadOnlyDictionary`2", true));
                 AddMethod(
                     "HasKey",
-                    new [] { new Parameter(GetType(null, true, 0), "key", ParameterAttributes.In) },
+                    new[] { new Parameter(GetType(null, true, 0), "key", ParameterAttributes.In) },
                     GetType("System.Boolean")
                 );
                 AddMethod(
                     "Insert",
-                    new[] { 
+                    new[] {
                         new Parameter(GetType(null, true, 0), "key", ParameterAttributes.In),
                         new Parameter(GetType(null, true, 1), "value", ParameterAttributes.In)
                     },
@@ -1133,7 +1147,7 @@ namespace Generator
                 AddMethod("GetView", null, GetType("System.Collections.Generic.IReadOnlyList`1", true));
                 AddMethod(
                     "IndexOf",
-                    new[] { 
+                    new[] {
                         new Parameter(GetType(null, true, 0), "value", ParameterAttributes.In),
                         new Parameter(GetType("System.UInt32"), "index", ParameterAttributes.Out)
                     },
@@ -1199,7 +1213,7 @@ namespace Generator
 
         private void ProcessTypeDeclaration(BaseTypeDeclarationSyntax node, Action visitTypeDeclaration)
         {
-            if(!IsPublicNode(node))
+            if (!IsPublicNode(node))
             {
                 return;
             }
@@ -1207,7 +1221,7 @@ namespace Generator
             var symbol = Model.GetDeclaredSymbol(node);
             currentTypeDeclaration = new TypeDeclaration(symbol);
 
-            if(node is ClassDeclarationSyntax)
+            if (node is ClassDeclarationSyntax)
             {
                 ProcessCustomMappedInterfaces(symbol);
             }
@@ -1220,7 +1234,7 @@ namespace Generator
                 TypeAttributes.AutoLayout |
                 TypeAttributes.AnsiClass;
 
-            if (IsSealedNode(node) || 
+            if (IsSealedNode(node) ||
                 (node is EnumDeclarationSyntax ||
                     node is StructDeclarationSyntax))
             {
@@ -1228,13 +1242,13 @@ namespace Generator
             }
 
             EntityHandle baseType = default;
-            if(node is InterfaceDeclarationSyntax)
+            if (node is InterfaceDeclarationSyntax)
             {
-                typeAttributes |= 
+                typeAttributes |=
                     TypeAttributes.Interface |
                     TypeAttributes.Abstract;
             }
-            else if(node is ClassDeclarationSyntax)
+            else if (node is ClassDeclarationSyntax)
             {
                 typeAttributes |=
                     TypeAttributes.Class |
@@ -1246,7 +1260,7 @@ namespace Generator
                     foreach (var type in node.BaseList.Types)
                     {
                         var typeSymbol = Model.GetTypeInfo(type.Type).Type;
-                        if(typeSymbol.TypeKind == TypeKind.Class)
+                        if (typeSymbol.TypeKind == TypeKind.Class)
                         {
                             baseType = GetTypeReference(typeSymbol);
                             break;
@@ -1259,12 +1273,12 @@ namespace Generator
                     baseType = GetTypeReference("System", "Object", "mscorlib");
                 }
             }
-            else if(node is StructDeclarationSyntax)
+            else if (node is StructDeclarationSyntax)
             {
                 typeAttributes |= TypeAttributes.SequentialLayout;
                 baseType = GetTypeReference("System", "ValueType", "mscorlib");
             }
-            else if(node is EnumDeclarationSyntax)
+            else if (node is EnumDeclarationSyntax)
             {
                 baseType = GetTypeReference("System", "Enum", "mscorlib");
             }
@@ -1310,7 +1324,7 @@ namespace Generator
                 base.VisitClassDeclaration(node);
 
                 // implicit constructor if none defined
-                if(!hasConstructor)
+                if (!hasConstructor)
                 {
                     string constructorMethodName = ".ctor";
                     var methodDefinitionHandle = AddMethodDefinition(
@@ -1345,7 +1359,7 @@ namespace Generator
                 AddSynthesizedInterfaces(classDeclaration);
 
                 // No synthesized default interface generated
-                if(classDeclaration.DefaultInterface == null && classSymbol.Interfaces.Length != 0)
+                if (classDeclaration.DefaultInterface == null && classSymbol.Interfaces.Length != 0)
                 {
                     AddDefaultInterfaceImplAttribute(classDeclaration.InterfaceImplDefinitions[classSymbol.Interfaces[0]]);
                 }
@@ -1378,21 +1392,20 @@ namespace Generator
                     encoder.Scalar().SystemType(constant.Type.ToString());
                     break;
                 case TypedConstantKind.Array:
-                {
-                    LiteralsEncoder arrayEncoder = encoder.Vector().Count(constant.Values.Length);
-                    foreach(var arrayConstant in constant.Values)
                     {
-                        EncodeTypedConstant(arrayConstant, arrayEncoder.AddLiteral());
+                        LiteralsEncoder arrayEncoder = encoder.Vector().Count(constant.Values.Length);
+                        foreach (var arrayConstant in constant.Values)
+                        {
+                            EncodeTypedConstant(arrayConstant, arrayEncoder.AddLiteral());
+                        }
+                        break;
                     }
-                    break;
-                }
             }
-
         }
 
         private void EncodeFixedArguments(IList<TypedConstant> arguments, FixedArgumentsEncoder argumentsEncoder)
         {
-            foreach(var argument in arguments)
+            foreach (var argument in arguments)
             {
                 EncodeTypedConstant(argument, argumentsEncoder.AddArgument());
             }
@@ -1458,11 +1471,11 @@ namespace Generator
             var fieldSymbol = fieldMembers.First() as IFieldSymbol;
             Logger.Log("found field: " + fieldSymbol);
 
-            if(fieldSymbol.Type.SpecialType == SpecialType.System_Object)
+            if (fieldSymbol.Type.SpecialType == SpecialType.System_Object)
             {
                 encoder.Object();
             }
-            else if(fieldSymbol.Type.SpecialType == SpecialType.System_Array)
+            else if (fieldSymbol.Type.SpecialType == SpecialType.System_Array)
             {
                 // TODO array type encoder
                 encoder.SZArray();
@@ -1498,7 +1511,7 @@ namespace Generator
             foreach (var argument in primitiveArguments)
             {
                 var encoder = argumentsEncoder.AddArgument().Scalar();
-                if(argument is string type)
+                if (argument is string type)
                 {
                     encoder.SystemType(type);
                 }
@@ -1511,7 +1524,7 @@ namespace Generator
 
         private void AddDefaultVersionAttribute(EntityHandle parentHandle, int version = -1)
         {
-            if(version == -1)
+            if (version == -1)
             {
                 version = Version.Parse(this.version).Major;
             }
@@ -1534,7 +1547,7 @@ namespace Generator
             List<ITypeSymbol> types = new List<ITypeSymbol>(2);
             List<object> arguments = new List<object>(2);
 
-            if(factoryInterface != null)
+            if (factoryInterface != null)
             {
                 types.Add(Model.Compilation.GetTypeByMetadataName("System.Type"));
                 arguments.Add(factoryInterface);
@@ -1690,7 +1703,7 @@ namespace Generator
             }
 
             Logger.Log("# constructor found: " + attributeType.Constructors.Length);
-            var matchingConstructor = attributeType.Constructors.Where(constructor => 
+            var matchingConstructor = attributeType.Constructors.Where(constructor =>
                 constructor.Parameters.Length == primitiveValues.Count &&
                 constructor.Parameters.Select(param => param.Type).SequenceEqual(primitiveTypes));
 
@@ -1756,7 +1769,7 @@ namespace Generator
             base.VisitAttributeList(node);
 
             // Skip assembly attributes
-            if(node.Target != null && node.Target.Identifier.ValueText == "assembly")
+            if (node.Target != null && node.Target.Identifier.ValueText == "assembly")
             {
                 return;
             }
@@ -1853,13 +1866,7 @@ namespace Generator
                 )
             );
 
-            int numParameters = node.ParameterList.Parameters.Count;
-            Parameter[] parameters = new Parameter[numParameters];
-            for (int idx = 0; idx < numParameters; idx++)
-            {
-                parameters[idx] = new Parameter(node.ParameterList.Parameters[idx], Model);
-            }
-
+            Parameter[] parameters = Parameter.GetParameters(node.ParameterList, Model);
             currentTypeDeclaration.AddMethod(
                 symbol,
                 "Invoke",
@@ -1890,7 +1897,7 @@ namespace Generator
             currentTypeDeclaration.Handle = typeDefinitionHandle;
             AddGuidAttribute(typeDefinitionHandle, symbol.ToString());
         }
-        
+
         public void AddEventDeclaration(IEventSymbol @event, bool isInterfaceParent)
         {
             Logger.Log("defining event " + @event.Name);
@@ -2004,13 +2011,7 @@ namespace Generator
             base.VisitConstructorDeclaration(node);
 
             var symbol = Model.GetDeclaredSymbol(node);
-            int numParameters = node.ParameterList.Parameters.Count;
-            Parameter[] parameters = new Parameter[numParameters];
-            for (int idx = 0; idx < numParameters; idx++)
-            {
-                parameters[idx] = new Parameter(node.ParameterList.Parameters[idx], Model);
-            }
-
+            Parameter[] parameters = Parameter.GetParameters(node.ParameterList, Model);
             var methodDefinitionHandle = AddMethodDefinition(
                 ".ctor",
                 parameters,
@@ -2021,21 +2022,15 @@ namespace Generator
                 true,
                 true);
             currentTypeDeclaration.AddMethod(symbol, ".ctor", methodDefinitionHandle);
-            hasDefaultConstructor |= (numParameters == 0);
+            hasDefaultConstructor |= (parameters.Length == 0);
         }
 
         void AddMethodDeclaration(IMethodSymbol method, bool isInterfaceParent)
         {
             Logger.Log("add method from symbol: " + method.Name);
 
-            int numParameters = method.Parameters.Count();
-            Parameter[] parameters = new Parameter[numParameters];
-            for (int idx = 0; idx < numParameters; idx++)
-            {
-                parameters[idx] = new Parameter(method.Parameters[idx]);
-            }
-
             string methodName = method.MethodKind == MethodKind.Constructor ? ".ctor" : method.Name;
+            Parameter[] parameters = Parameter.GetParameters(method);
             var methodDefinitionHandle = AddMethodDefinition(
                 methodName,
                 parameters,
@@ -2052,14 +2047,8 @@ namespace Generator
         {
             Logger.Log("adding factory method: " + method.Name);
 
-            int numParameters = method.Parameters.Count();
-            Parameter[] parameters = new Parameter[numParameters];
-            for (int idx = 0; idx < numParameters; idx++)
-            {
-                parameters[idx] = new Parameter(method.Parameters[idx]);
-            }
-
             string methodName = "Create" + classSymbol.Name;
+            Parameter[] parameters = Parameter.GetParameters(method);
             var methodDefinitionHandle = AddMethodDefinition(
                 methodName,
                 parameters,
@@ -2087,16 +2076,16 @@ namespace Generator
 
             foreach (var member in type.GetMembers())
             {
-                if(member is IMethodSymbol method &&
+                if (member is IMethodSymbol method &&
                     (method.MethodKind == MethodKind.Ordinary || method.MethodKind == MethodKind.Constructor))
                 {
                     AddMethodDeclaration(method, isInterface);
                 }
-                else if(member is IPropertySymbol property)
+                else if (member is IPropertySymbol property)
                 {
                     AddPropertyDeclaration(property, isInterface);
                 }
-                else if(member is IEventSymbol @event)
+                else if (member is IEventSymbol @event)
                 {
                     AddEventDeclaration(@event, isInterface);
                 }
@@ -2169,15 +2158,8 @@ namespace Generator
             Logger.Log("adding method reference: " + method.Name);
 
             bool isInterfaceParent = method.ContainingType.TypeKind == TypeKind.Interface;
-            int numParameters = method.Parameters.Count();
-            Parameter[] parameters = new Parameter[numParameters];
-            for (int idx = 0; idx < numParameters; idx++)
-            {
-                parameters[idx] = new Parameter(method.Parameters[idx]);
-            }
-
             string methodName = method.MethodKind == MethodKind.Constructor ? ".ctor" : method.Name;
-
+            Parameter[] parameters = Parameter.GetParameters(method);
             var referenceHandle = AddMethodReference(
                 methodName,
                 parameters,
@@ -2253,7 +2235,7 @@ namespace Generator
 
             foreach (var member in type.GetMembers())
             {
-                if (member is IMethodSymbol method && 
+                if (member is IMethodSymbol method &&
                     (method.MethodKind == MethodKind.Ordinary || method.MethodKind == MethodKind.Constructor))
                 {
                     AddMethodReference(method);
@@ -2292,14 +2274,14 @@ namespace Generator
         string GetSynthesizedInterfaceName(string className, SynthesizedInterfaceType type)
         {
             // TODO: handle existing types by appending number suffix
-            return "I" + className + 
+            return "I" + className +
                 type switch
-            {
-                SynthesizedInterfaceType.Default => "Class",
-                SynthesizedInterfaceType.Factory => "Factory",
-                SynthesizedInterfaceType.Static => "Static",
-                _ => "",
-            };
+                {
+                    SynthesizedInterfaceType.Default => "Class",
+                    SynthesizedInterfaceType.Factory => "Factory",
+                    SynthesizedInterfaceType.Static => "Static",
+                    _ => "",
+                };
         }
 
         void AddSynthesizedInterfaces(TypeDeclaration classDeclaration)
@@ -2308,7 +2290,7 @@ namespace Generator
             INamedTypeSymbol classSymbol = classDeclaration.Node as INamedTypeSymbol;
             foreach (var @interface in classSymbol.AllInterfaces)
             {
-                foreach(var interfaceMember in @interface.GetMembers())
+                foreach (var interfaceMember in @interface.GetMembers())
                 {
                     classMembersFromInterfaces.Add(classSymbol.FindImplementationForInterfaceMember(interfaceMember));
                 }
@@ -2355,8 +2337,8 @@ namespace Generator
                     hasTypes = true;
                     AddFactoryMethod(classSymbol, constructorMethod);
                 }
-                else if((interfaceType == SynthesizedInterfaceType.Default && !classMember.Key.IsStatic && 
-                         !classMembersFromInterfaces.Contains(classMember.Key)) || 
+                else if ((interfaceType == SynthesizedInterfaceType.Default && !classMember.Key.IsStatic &&
+                         !classMembersFromInterfaces.Contains(classMember.Key)) ||
                     (interfaceType == SynthesizedInterfaceType.Static && classMember.Key.IsStatic))
                 {
                     if (classMember.Key is IMethodSymbol method && method.MethodKind == MethodKind.Ordinary)
@@ -2403,7 +2385,7 @@ namespace Generator
                 string qualifiedInterfaceName = QualifiedName(classDeclaration.Node.ContainingNamespace.ToString(), interfaceName);
                 typeDefinitionMapping[qualifiedInterfaceName] = typeDeclaration;
 
-                if(interfaceType == SynthesizedInterfaceType.Default)
+                if (interfaceType == SynthesizedInterfaceType.Default)
                 {
                     classDeclaration.DefaultInterface = qualifiedInterfaceName;
                     var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
@@ -2420,9 +2402,9 @@ namespace Generator
 
                 if (interfaceType == SynthesizedInterfaceType.Factory)
                 {
-                    AddActivatableAttribute(classDeclaration.Handle, (uint) GetVersion(classSymbol, true), qualifiedInterfaceName);
+                    AddActivatableAttribute(classDeclaration.Handle, (uint)GetVersion(classSymbol, true), qualifiedInterfaceName);
                 }
-                else if(interfaceType == SynthesizedInterfaceType.Static)
+                else if (interfaceType == SynthesizedInterfaceType.Static)
                 {
                     classDeclaration.StaticInterface = qualifiedInterfaceName;
                     AddStaticAttribute(classDeclaration.Handle, (uint)GetVersion(classSymbol, true), qualifiedInterfaceName);
@@ -2434,13 +2416,13 @@ namespace Generator
         {
             var versionAttribute = type.GetAttributes().
                 Where(attribute => attribute.AttributeClass.Name == "VersionAttribute");
-            if(!versionAttribute.Any())
+            if (!versionAttribute.Any())
             {
-                return setDefaultIfNotSet  ? Version.Parse(this.version).Major : - 1;
+                return setDefaultIfNotSet ? Version.Parse(this.version).Major : -1;
             }
 
-            uint version = (uint) versionAttribute.First().ConstructorArguments[0].Value;
-            return (int) version;
+            uint version = (uint)versionAttribute.First().ConstructorArguments[0].Value;
+            return (int)version;
         }
 
         void AddType(INamedTypeSymbol type)
@@ -2453,7 +2435,7 @@ namespace Generator
             {
                 AddProjectedType(type);
             }
-            else if(MappedCSharpTypes.ContainsKey(qualifiedName))
+            else if (MappedCSharpTypes.ContainsKey(qualifiedName))
             {
                 var (@namespace, name, assembly, isSystemType, _) = MappedCSharpTypes[qualifiedName].GetMapping();
                 if (isSystemType)
@@ -2484,7 +2466,7 @@ namespace Generator
                 foreach (var implementedInterface in classSymbol.AllInterfaces)
                 {
                     var implementedInterfaceQualifiedName = QualifiedName(implementedInterface);
-                    if(ImplementedInterfacesWithoutMapping.Contains(implementedInterfaceQualifiedName))
+                    if (ImplementedInterfacesWithoutMapping.Contains(implementedInterfaceQualifiedName))
                     {
                         continue;
                     }
@@ -2596,7 +2578,7 @@ namespace Generator
             foreach (var node in nodesWithAttributes)
             {
                 EntityHandle parentHandle = default;
-                if(node is INamedTypeSymbol namedType)
+                if (node is INamedTypeSymbol namedType)
                 {
                     parentHandle = typeDefinitionMapping[namedType.ToString()].Handle;
                 }
