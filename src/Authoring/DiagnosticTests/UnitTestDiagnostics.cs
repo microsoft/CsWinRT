@@ -186,6 +186,10 @@ namespace DiagnosticTests
                 yield return new TestCaseData(TestArrayParamAttrUnary_8, DiagnosticRules.NonArrayMarkedInOrOut).SetName("TestArrayParamAttrUnary_8");
                 yield return new TestCaseData(TestArrayParamAttrUnary_9, DiagnosticRules.NonArrayMarkedInOrOut).SetName("TestArrayParamAttrUnary_9");
                 yield return new TestCaseData(TestArrayParamAttrUnary_10, DiagnosticRules.ArrayParamNotMarked).SetName("TestArrayParamAttrUnary_10");
+                yield return new TestCaseData(TestArrayParamAttrUnary_11, DiagnosticRules.NonArrayMarkedInOrOut).SetName("TestArrayParamAttrUnary_11");
+                yield return new TestCaseData(TestArrayParamAttrUnary_12, DiagnosticRules.NonArrayMarkedInOrOut).SetName("TestArrayParamAttrUnary_12");
+                yield return new TestCaseData(TestArrayParamAttrUnary_13, DiagnosticRules.ArrayMarkedInOrOut).SetName("TestArrayParamAttrUnary_13");
+                yield return new TestCaseData(TestArrayParamAttrUnary_14, DiagnosticRules.ArrayMarkedInOrOut).SetName("TestArrayParamAttrUnary_14");
                 yield return new TestCaseData(TestArrayParamAttrBinary_1, DiagnosticRules.ArrayParamMarkedBoth).SetName("TestArrayParamAttrBinary_1");
                 yield return new TestCaseData(TestArrayParamAttrBinary_2, DiagnosticRules.ArrayParamMarkedBoth).SetName("TestArrayParamAttrBinary_2");
                 yield return new TestCaseData(TestArrayParamAttrBinary_3, DiagnosticRules.ArrayOutputParamMarkedRead).SetName("TestArrayParamAttrBinary_3");

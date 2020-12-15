@@ -917,6 +917,26 @@ public sealed class OnlyParam
 {
         public void ArrayNotMarked(int[] arr) { }
 }";
+        private const string TestArrayParamAttrUnary_11 = @"
+public sealed class OnlyParam
+{
+        public void ParamMarkedIn([System.Runtime.InteropServices.In] int arr) { }
+}";
+        private const string TestArrayParamAttrUnary_12 = @"
+public sealed class OnlyParam
+{
+        public void ParamMarkedOut([System.Runtime.InteropServices.Out] int arr) { }
+}";
+        private const string TestArrayParamAttrUnary_13 = @"
+public sealed class OnlyParam
+{
+        public void ArrayMarkedIn([System.Runtime.InteropServices.In] int[] arr) { }
+}";
+        private const string TestArrayParamAttrUnary_14 = @"
+public sealed class OnlyParam
+{
+        public void ArrayMarkedOut([System.Runtime.InteropServices.Out] int[] arr) { }
+}";
         private const string TestArrayParamAttrBinary_1 = @"
 public sealed class TwoParam
 {

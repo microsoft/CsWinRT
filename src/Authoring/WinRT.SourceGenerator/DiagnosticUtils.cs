@@ -14,17 +14,13 @@ namespace Generator
         
         private bool ModifiersContains(SyntaxTokenList modifiers, string str)
         {
-            foreach (var modifier in modifiers)
-            {
-                if (SyntaxTokenIs(modifier, str)) { return true; }
-            }
-            return false;
+            return modifiers.Any(modifier => modifier.ValueText == str);
         }
 
-        private bool PropertyIsPublic(PropertyDeclarationSyntax p) { return ModifiersContains(p.Modifiers, "public"); }
-        private bool MethodIsPublic(MethodDeclarationSyntax m) { return ModifiersContains(m.Modifiers, "public"); }
-        public bool ClassIsPublic(ClassDeclarationSyntax c) { return ModifiersContains(c.Modifiers, "public"); }
-        public bool InterfaceIsPublic(InterfaceDeclarationSyntax i) { return ModifiersContains(i.Modifiers, "public"); }
+        public bool IsPublic<T>(T p) where T : MemberDeclarationSyntax
+        { 
+            return ModifiersContains(p.Modifiers, "public");  
+        }
 
         #endregion
 
@@ -200,22 +196,21 @@ namespace Generator
         /// <returns>True if multiple constructors of the same arity exist for the given class</returns>
         public bool HasMultipleConstructorsOfSameArity(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
         {
-            IEnumerable<ConstructorDeclarationSyntax> constructors = classDeclaration.ChildNodes().OfType<ConstructorDeclarationSyntax>();
+            IEnumerable<ConstructorDeclarationSyntax> constructors = classDeclaration.ChildNodes().OfType<ConstructorDeclarationSyntax>().Where(IsPublic);
 
-            // A true entry means a constructor of that arity has been seen
-            Dictionary<int, bool> aritiesSeenSoFar = new Dictionary<int, bool>();
+            HashSet<int> aritiesSeenSoFar = new HashSet<int>();
 
             foreach (ConstructorDeclarationSyntax constructor in constructors)
             {
                 int arity = constructor.ParameterList.Parameters.Count;
-                if (aritiesSeenSoFar.ContainsKey(arity))
+                if (aritiesSeenSoFar.Contains(arity))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.ClassConstructorRule, constructor.GetLocation(), classDeclaration.Identifier, arity));
                     return true;
                 }
                 else
                 {
-                    aritiesSeenSoFar[arity] = true;
+                    aritiesSeenSoFar.Add(arity);
                 }
             }
             return false;
@@ -264,12 +259,12 @@ namespace Generator
         public bool OverloadsOperator(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
         {
             var operatorDeclarations = classDeclaration.DescendantNodes().OfType<OperatorDeclarationSyntax>();
+
             foreach (var op in operatorDeclarations)
             { 
                 context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.OperatorOverloadedRule, op.GetLocation(), op.OperatorToken));
-                return true;
             } 
-            return false;
+            return operatorDeclarations.Count() != 0;
         }
 
         #region ArraySignatureChecking
@@ -283,7 +278,7 @@ namespace Generator
         public bool CheckPropertiesForArrayTypes(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
         {
             bool found = false;
-            var props = classDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(PropertyIsPublic);
+            var props = classDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
             foreach (var prop in props)
             {
                 var loc = prop.GetLocation();
@@ -336,8 +331,8 @@ namespace Generator
 
         private bool ParamHasInOrOutAttribute(ParameterSyntax param)
         {
-            string baseString = ""; //"System.Runtime.InteropServices.";
-            return ParamHasAttribute(baseString + "In", param) || ParamHasAttribute(baseString + "Out", param);
+            string[] ls = new string[] { "In", "Out", "System.Runtime.InteropServices.In", "System.Runtime.InteropServices.Out" };
+            return ls.Where(str => ParamHasAttribute(str, param)).Any();
         }
 
         /// <summary>
@@ -471,7 +466,7 @@ namespace Generator
              *   we check the elements of the map to raise diagnostics for those that didn't get attributed */
             Dictionary<string, Diagnostic> overloadsWithoutAttributeMap = new Dictionary<string, Diagnostic>();
 
-            foreach (MethodDeclarationSyntax method in methods.Where(MethodIsPublic))
+            foreach (MethodDeclarationSyntax method in methods.Where(IsPublic))
             {
                 found |= CheckParamsForArrayAttributes(method, ref context);
 
@@ -591,7 +586,7 @@ namespace Generator
             bool found = false; 
 
             /* No private fields allowed in Windows Runtime components */
-            if (!ModifiersContains(field.Modifiers, "public"))
+            if (!IsPublic(field))
             { 
                 context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.StructHasPrivateFieldRule, field.GetLocation(), structDeclaration.Identifier));
                 found |= true;

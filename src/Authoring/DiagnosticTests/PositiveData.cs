@@ -2,9 +2,8 @@ namespace DiagnosticTests
 {
     public partial class TestDiagnostics
     {
-        // TODO: get the proper namespace for the Matrix3x2 type
         private const string Valid_StructWithWinRTField = @"
-using ABI.System.Numerics;
+using System.Numerics;
 namespace Test
 {
     public struct StructWithWinRTStructField

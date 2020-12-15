@@ -111,7 +111,7 @@ namespace Generator
                 context.AddSource(Path.GetFileNameWithoutExtension(file), SourceText.From(File.ReadAllText(file), Encoding.UTF8));
             }
 
-            // Directory.Delete(outputDir, true);
+            Directory.Delete(outputDir, true);
         }
 
         private string GetWinmdOutputFile(GeneratorExecutionContext context)
@@ -147,8 +147,8 @@ namespace Generator
                 var model = context.Compilation.GetSemanticModel(tree);
                 var nodes = tree.GetRoot().DescendantNodes();
 
-                var classes = nodes.OfType<ClassDeclarationSyntax>().Where(winrtRules.ClassIsPublic);
-                var interfaces = nodes.OfType<InterfaceDeclarationSyntax>().Where(winrtRules.InterfaceIsPublic);
+                var classes = nodes.OfType<ClassDeclarationSyntax>().Where(winrtRules.IsPublic);
+                var interfaces = nodes.OfType<InterfaceDeclarationSyntax>().Where(winrtRules.IsPublic);
                 var structs = nodes.OfType<StructDeclarationSyntax>();
 
                 // Used in the checking of structure fields 
