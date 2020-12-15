@@ -57,7 +57,7 @@ namespace Generator
 
         private string GetTempFolder(bool clearSourceFilesFromFolder = false)
         {
-            if(_tempFolder == null || !File.Exists(_tempFolder))
+            if (_tempFolder == null || !File.Exists(_tempFolder))
             {
                 string outputDir = Path.Combine(Path.GetTempPath(), "CsWinRT", Path.GetRandomFileName()).TrimEnd('\\');
                 Directory.CreateDirectory(outputDir);
@@ -105,7 +105,7 @@ namespace Generator
             Logger.Log(cswinrtProcess.StandardError.ReadToEnd());
             cswinrtProcess.WaitForExit();
 
-            foreach(var file in Directory.GetFiles(outputDir, "*.cs", SearchOption.TopDirectoryOnly))
+            foreach (var file in Directory.GetFiles(outputDir, "*.cs", SearchOption.TopDirectoryOnly))
             {
                 Logger.Log("Adding " + file);
                 context.AddSource(Path.GetFileNameWithoutExtension(file), SourceText.From(File.ReadAllText(file), Encoding.UTF8));
@@ -137,17 +137,17 @@ namespace Generator
             peBlob.WriteContentTo(fs);
         }
 
-        
-        private bool CatchWinRTDiagnostics(ref GeneratorExecutionContext context) 
-        { 
-            bool found = false; 
-            WinRTRules winrtRules = new WinRTRules(); 
-            foreach (SyntaxTree tree in context.Compilation.SyntaxTrees) 
+
+        private bool CatchWinRTDiagnostics(ref GeneratorExecutionContext context)
+        {
+            bool found = false;
+            WinRTRules winrtRules = new WinRTRules();
+            foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
             {
-                var model = context.Compilation.GetSemanticModel(tree); 
+                var model = context.Compilation.GetSemanticModel(tree);
                 var nodes = tree.GetRoot().DescendantNodes();
-                
-                var classes = nodes.OfType<ClassDeclarationSyntax>().Where(winrtRules.ClassIsPublic); 
+
+                var classes = nodes.OfType<ClassDeclarationSyntax>().Where(winrtRules.ClassIsPublic);
                 var interfaces = nodes.OfType<InterfaceDeclarationSyntax>().Where(winrtRules.InterfaceIsPublic);
                 var structs = nodes.OfType<StructDeclarationSyntax>();
 
@@ -163,14 +163,14 @@ namespace Generator
                     found |= winrtRules.CheckPropertiesForArrayTypes(ref context, classDeclaration);
 
                     /* exposes an operator overload  */
-                    found |= winrtRules.OverloadsOperator(ref context, classDeclaration); 
+                    found |= winrtRules.OverloadsOperator(ref context, classDeclaration);
 
                     /* parameters named __retval*/
                     found |= winrtRules.ClassHasInvalidMethods(ref context, classDeclaration);
 
                     /* multiple constructors of the same arity */
                     found |= winrtRules.HasMultipleConstructorsOfSameArity(ref context, classDeclaration);
-                    
+
                     /* implementing async interfaces */
                     var classSymbol = model.GetDeclaredSymbol(classDeclaration);
                     found |= winrtRules.ImplementsAsyncInterface(ref context, classSymbol, classDeclaration);
@@ -202,14 +202,38 @@ namespace Generator
             return found;
         }
 
+        private void AddArrayAttributes(ref GeneratorExecutionContext context)
+        { 
+            context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(@"
+namespace System.Runtime.InteropServices.WindowsRuntime
+{
+    [global::System.AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+    internal sealed class ReadOnlyArrayAttribute : global::System.Attribute
+    {
+    }
+    [global::System.AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+    internal sealed class WriteOnlyArrayAttribute : global::System.Attribute
+    {
+    }
+}", Encoding.UTF8));
+
+
+        }
+
         public void Execute(GeneratorExecutionContext context)
         {
+            /* Temporary workaround needed when unit testing -- need to specify 
+             * this property on the unit test's source code's anlayzer config options 
+             * *****
             if (!IsCsWinRTComponent(context))
             {
                 return;
             }
+            */
 
             Logger.Initialize(context);
+
+            AddArrayAttributes(ref context);
 
             if (CatchWinRTDiagnostics(ref context))
             {

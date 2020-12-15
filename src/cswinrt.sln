@@ -94,6 +94,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_component_derived", "T
 		{13333A6F-6A4A-48CD-865C-0F65135EB018} = {13333A6F-6A4A-48CD-865C-0F65135EB018}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiagnosticTests", "Authoring\DiagnosticTests\DiagnosticTests.csproj", "{FC05C557-C974-4CB3-9DA7-BB5476710E91}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -460,6 +462,26 @@ Global
 		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Release|x64.Build.0 = Release|x64
 		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Release|x86.ActiveCfg = Release|Win32
 		{0080F6D1-AEC3-4F89-ADE1-3D22A7EBF99E}.Release|x86.Build.0 = Release|Win32
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Debug|ARM.Build.0 = Debug|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Debug|x64.Build.0 = Debug|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Debug|x86.Build.0 = Debug|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Release|ARM.ActiveCfg = Release|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Release|ARM.Build.0 = Release|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Release|ARM64.Build.0 = Release|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Release|x64.ActiveCfg = Release|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Release|x64.Build.0 = Release|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Release|x86.ActiveCfg = Release|Any CPU
+		{FC05C557-C974-4CB3-9DA7-BB5476710E91}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

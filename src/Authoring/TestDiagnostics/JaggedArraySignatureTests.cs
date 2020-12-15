@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace TestDiagnostics
 {
+    public interface IF { int id(int x); }
     /*
      * Valid tests
      */
@@ -49,12 +50,6 @@ namespace TestDiagnostics
         public int[][][] J3_ReturnAndInput2of3(bool a, int[][][] arr, bool b) { return arr; }
         public bool J3_NotReturnAndInput2of2(bool a, int[][][] arr) { return a; }
         public bool J3_NotReturnAndInput2of3(bool a, int[][][] arr, bool b) { return a; }
-    }
-
-    public interface JaggedArrayTests_ValidInterface
-    {
-        int[] foo();
-        bool bar([ReadOnlyArray()] int[] arr);
     }
 
     public sealed class J3PublicPrivate_Valid

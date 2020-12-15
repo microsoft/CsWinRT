@@ -1,76 +1,122 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TestDiagnostics
 {
 
-    /* NZLB = non-zero lowerbound array */
+    /* 
+     * Invalid tests include public properties in public classes, public interface methods, 
+     */
 
-   /* 
-    * Invalid tests include public properties in public classes, public interface methods, 
-    */
-
-    /*
-    public sealed class NonZeroLowerBound_PublicProperty_Invalid
+    public sealed class ArrayInstanceProperty1
     {
         public int[] Arr
         {
             get { return (int[])Array.CreateInstance(typeof(int), new int[] { 4 }, new int[] { 1 }); }
         }
+    } 
 
-        public System.Array Arr2
+    public sealed class ArrayInstanceProperty2
+    {
+        public System.Array Arr
         {
             get { return Array.CreateInstance(typeof(int), new int[] { 4 }, new int[] { 1 }); }
         }
+    } 
 
-        public int[] Arr3
+    public sealed class ArrayInstanceProperty3
+    {
+        public int[] Arr
         {
             get { return (int[])Array.CreateInstance(typeof(int), new int[] { 4 }); }
         }
+    } 
 
-        public System.Array Arr4
+    public sealed class ArrayInstanceProperty4
+    {
+        public System.Array Arr
         {
             get { return Array.CreateInstance(typeof(int), new int[] { 4 }); }
         }
     } 
  
-    public interface InterfaceWithNonZeroLowerBound_Invalid
+    public interface ArrayInstanceInterface1
     {
         System.Array Id(System.Array arr);
+    }
+    public interface ArrayInstanceInterface2
+    {
         void Method2(System.Array arr);
+    }
+    
+    public interface ArrayInstanceInterface3
+    {
         System.Array Method3();
     }
 
-
-    public sealed class NZLBArraySignature_2D_Invalid
-   {
-       public System.Array Arr_2d { get; set; }
-       public System.Array Arr_3d { get; set; }
-       private System.Array PrivArr_2d { get; set; } 
-   }
+    public sealed class SystemArrayProperty
+    {
+       public System.Array Arr { get; set; }
+    }
+    public sealed class SystemArrayProperty_Valid
+    {
+       private System.Array PrivArr { get; set; } 
+    }
    
-    public sealed class NZLBPublicPublic_Invalid
-   {
-       public System.Array NZLB_ReturnOnly() { return Array.CreateInstance(typeof(int), new int[] { 4 }); }
-       public System.Array NZLB_ReturnAndInput1(System.Array arr) { return arr; }
-       public System.Array NZLB_ReturnAndInput2of2(bool a, System.Array arr) { return arr; }
-       public bool NZLB_NotReturnAndInput2of2(bool a, System.Array arr) { return a; }
-       public bool NZLB_NotReturnAndInput2of3(bool a, System.Array arr, bool b) { return a; }
-       public System.Array NZLB_ReturnAndInput2of3(bool a, System.Array arr, bool b) { return arr; }
-   }
+    public sealed class JustReturn 
+    {
+       public System.Array SystemArrayMethod() { return Array.CreateInstance(typeof(int), new int[] { 4 }); }
+    }
 
+    public sealed class UnaryAndReturn
+    {
+       public System.Array SystemArrayMethod(System.Array arr) { return arr; }
+    }
+    
+    public sealed class SecondInput
+    {
+       public bool SystemArrayMethod(bool a, System.Array arr) { return a; }
+    }
+
+    public sealed class SecondInput2
+    {
+       public bool SystemArrayMethod(bool a, System.Array arr, bool b) { return a; }
+    }
+
+    public sealed class SecondInputAndReturnType
+    {
+       public System.Array SystemArrayMethod(bool a, System.Array arr) { return arr; }
+    }
+
+    public sealed class SecondInputAndReturnType2
+    {
+       public System.Array SystemArrayMethod(bool a, System.Array arr, bool b) { return arr; }
+    }
+
+    public interface SystemArrayInReturnTypeInterface
+    {
+       public System.Array SystemArrayMethod();
+    }
+    public interface UnaryAndReturnTypeInterface
+    {
+       public System.Array SystemArrayMethod(System.Array arr);
+    }
+    public interface SecondArgAndReturnTypeInterface
+    {
+       public System.Array SystemArrayMethod(bool a, System.Array arr);
+    }
+    public interface SecondArgInterface
+    {
+       public bool SystemArrayMethod(bool a, System.Array arr);
+    }
+    // pick up here
     public interface NZLBMemberOfInterface_Invalid
-   {
-       public System.Array NZLB_ReturnOnly();
-       public System.Array NZLB_ReturnAndInput1(System.Array arr);
-       public System.Array NZLB_ReturnAndInput2of2(bool a, System.Array arr);
-       public bool NZLB_NotReturnAndInput2of2(bool a, System.Array arr);
+    {
        public bool NZLB_NotReturnAndInput2of3(bool a, System.Array arr, bool b);
+    }
+    public interface NZLBMemberOfInterface_Invalid2
+    {
        public System.Array NZLB_ReturnAndInput2of3(bool a, System.Array arr, bool b);
-   }
+    }
 
     namespace SubNamespace
     {
@@ -88,7 +134,9 @@ namespace TestDiagnostics
 
     /*
      * Valid tests
-     */ 
+     */
+
+    /* 
     public sealed class NonZeroLowerBound_PrivateProperty_Valid
     {
         private int[] PrivArr
@@ -192,4 +240,5 @@ namespace TestDiagnostics
         private bool NZLB_NotReturnAndInput2of2(bool a, System.Array arr) { return a; }
         private bool NZLB_NotReturnAndInput2of3(bool a, System.Array arr, bool b) { return a; }
     }
+    */
 } 

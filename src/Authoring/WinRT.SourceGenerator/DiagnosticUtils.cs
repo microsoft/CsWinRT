@@ -137,21 +137,34 @@ namespace Generator
         #region AsyncInterfaces
         /* The full metadata name of Async interfaces that should not be implemented by Windows Runtime components */
         static string[] ProhibitedAsyncInterfaces = {
-                "Windows.Foundation.IAsyncAction",
-                "Windows.Foundation.IAsyncActionWithProgress`1",
-                "Windows.Foundation.IAsyncOperation`1",
-                "Windows.Foundation.IAsyncOperationWithProgress`2"
+                "IAsyncAction",
+                "IAsyncActionWithProgress`1",
+                "IAsyncOperation`1",
+                "IAsyncOperationWithProgress`2"
         };
 
-        /// <summary>
-        /// uses the proper ISymbol equality check on the OriginalDefinition of the given symbols
-        /// </summary> 
-        /// <returns>true iff the two types are equivalent</returns>
-        private bool SameAsyncInterface(INamedTypeSymbol interfaceA, INamedTypeSymbol interfaceB)
+
+        private static bool ImplementsInterface(INamedTypeSymbol typeSymbol, string typeToCheck)
         {
-            /* Using OriginalDefinition b/c the generic field of the metadata type has the template name, e.g. `TProgress`
-             * and the actual interface will have a concrete type, e.g. `int` */
-            return SymbolEqualityComparer.Default.Equals(interfaceA.OriginalDefinition, interfaceB.OriginalDefinition);
+            if (typeSymbol == null)
+            {
+                return false;
+            }
+
+            if (typeSymbol.BaseType.MetadataName == typeToCheck)
+            {
+                return true;
+            }
+
+            foreach (var implementedInterface in typeSymbol.AllInterfaces)
+            {
+                if (implementedInterface.MetadataName == typeToCheck)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -165,17 +178,13 @@ namespace Generator
         {
             foreach (string prohibitedInterface in ProhibitedAsyncInterfaces)
             {
-                INamedTypeSymbol asyncInterface = context.Compilation.GetTypeByMetadataName(prohibitedInterface);
-                foreach (INamedTypeSymbol interfaceImplemented in classSymbol.AllInterfaces)
+                if (ImplementsInterface(classSymbol, prohibitedInterface))
                 {
-                    if (SameAsyncInterface(interfaceImplemented, asyncInterface))
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.AsyncRule, classDeclaration.GetLocation(), classDeclaration.Identifier, interfaceImplemented));
-                        return true;
-                        /* By exiting early, we only report diagnostic for first prohibited interface we see. 
-                        If a class implemented 2 (or more) such interfaces, then we would only report diagnostic error for the first one. 
-                        could thread `found` variable from CatchWinRTDiagnostics here as well, if we want more diagnostics reported */
-                    }
+                    context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.AsyncRule, classDeclaration.GetLocation(), classDeclaration.Identifier, prohibitedInterface));
+                    return true;
+                    /* By exiting early, we only report diagnostic for first prohibited interface we see. 
+                     * If a class implemented 2 (or more) such interfaces, then we would only report diagnostic error for the first one. 
+                     * could thread `found` variable from CatchWinRTDiagnostics here as well, if we want more diagnostics reported */
                 }
             }
             return false;
@@ -379,8 +388,8 @@ namespace Generator
             foreach (ParameterSyntax param in method.ParameterList.Parameters)
             {
                 var isArrayType = param.ChildNodes().OfType<ArrayTypeSyntax>().Any();
-                bool hasReadOnlyArray = ParamHasAttribute("ReadOnlyArray", param);
-                bool hasWriteOnlyArray = ParamHasAttribute("WriteOnlyArray", param);
+                bool hasReadOnlyArray = ParamHasAttribute("System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray", param);
+                bool hasWriteOnlyArray = ParamHasAttribute("System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray", param);
                 bool isOutputParam = ParamMarkedOutput(param);
 
                 // Nothing can be marked `ref`
