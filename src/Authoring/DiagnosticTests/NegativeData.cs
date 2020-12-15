@@ -682,6 +682,28 @@ namespace Test
             public SillyClass classField;
         }
 }";
+        private const string StructWithClassField2 = @"
+namespace Test 
+{
+        public sealed class SillyClass
+        {
+            public double Identity(double d)
+            {
+                return d;
+            }
+
+            public SillyClass() { }
+        }
+}
+
+namespace Prod
+{
+        public struct StructWithClass_Invalid
+        {
+            public Test.SillyClass classField;
+        }
+}";
+
         private const string StructWithDelegateField = @"
 namespace Test {
 public struct StructWithDelegate_Invalid

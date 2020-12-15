@@ -223,6 +223,7 @@ namespace DiagnosticTests
                 yield return new TestCaseData(RefParam_InterfaceMethod, DiagnosticRules.RefParameterFound).SetName("Test For Method With Ref Param - Interface");
                 // startuc field tests
                 yield return new TestCaseData(StructWithClassField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Class Field");
+                yield return new TestCaseData(StructWithClassField2, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Class Field2");
                 yield return new TestCaseData(StructWithDelegateField, DiagnosticRules.StructHasInvalidFieldRule2).SetName("Struct with Delegate Field");
                 yield return new TestCaseData(StructWithIndexer, DiagnosticRules.StructHasInvalidFieldRule2).SetName("Struct with Indexer Field");
                 yield return new TestCaseData(StructWithMethods, DiagnosticRules.StructHasInvalidFieldRule2).SetName("Struct with Method Field");

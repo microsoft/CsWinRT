@@ -137,6 +137,11 @@ namespace Generator
             peBlob.WriteContentTo(fs);
         }
 
+        private string BuildClassName(ClassDeclarationSyntax classDeclaration)
+        {
+            NamespaceDeclarationSyntax @namespace = (NamespaceDeclarationSyntax)classDeclaration.Parent;
+            return @namespace.Name + "." + classDeclaration.Identifier.ToString();
+        }
 
         private bool CatchWinRTDiagnostics(ref GeneratorExecutionContext context)
         {
@@ -157,7 +162,7 @@ namespace Generator
                 /* Check all classes */
                 foreach (ClassDeclarationSyntax classDeclaration in classes)
                 {
-                    classNames.Add(classDeclaration.Identifier.ToString());
+                    classNames.Add(BuildClassName(classDeclaration));
 
                     /* exports multidimensional array */
                     found |= winrtRules.CheckPropertiesForArrayTypes(ref context, classDeclaration);
