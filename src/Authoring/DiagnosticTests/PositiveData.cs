@@ -175,6 +175,22 @@ public sealed class Valid_Jagged3D_PublicClassPrivateMethods
         private bool D3_NotReturnAndInput2of3(bool a, int[][][] arr, bool b) { return a; }
     }
 }";
+        private const string Valid_Jagged2D_Property = @"
+namespace Test
+{
+    public sealed class Jagged2D_Property1
+    {
+        private int[][] ArrP { get; set; } 
+    }
+}";
+        private const string Valid_Jagged3D_Property = @"
+namespace Test
+{
+    public sealed class Jagged3D_Property2
+    {
+        private int[][][] Arr3P { get; set; }
+    }
+}";
         // prop
         private const string Valid_MultiDimArray_PrivateClassPublicProperty1 = @"
 namespace Test
@@ -766,19 +782,22 @@ namespace Test
 {
     public struct StructWithAllValidFields
     {
-        bool boolean;
-        char character;
-        decimal dec;
-        double dbl;
-        float flt;
-        int i;
-        uint nat;
-        long lng;
-        ulong ulng;
-        short sh;
-        ushort us;
-        string str;
+        public bool boolean;
+        public char character;
+        public decimal dec;
+        public double dbl;
+        public float flt;
+        public int i;
+        public uint nat;
+        public long lng;
+        public ulong ulng;
+        public short sh;
+        public ushort us;
+        public string str;
     }
 }";
+
+
+
     }
 }

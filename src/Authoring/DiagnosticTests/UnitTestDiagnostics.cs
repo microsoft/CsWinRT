@@ -27,8 +27,9 @@ namespace DiagnosticTests
         public void CheckNoDiagnostic(string source)
         { 
             Compilation compilation = CreateCompilation(source);
-            RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator()); 
-            Assert.That(diagnosticsFound.IsEmpty);
+            RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator());
+            var WinRTDiagnostics = diagnosticsFound.Where(diag => diag.Id.StartsWith("WME"));
+            Assert.That(!WinRTDiagnostics.Any());
         }
 
         /// <summary>
@@ -107,10 +108,8 @@ namespace DiagnosticTests
 
 
                 // jagged array tests 
-                yield return new TestCaseData(Jagged2D_Property1, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Property 1");
                 yield return new TestCaseData(Jagged2D_Property2, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Property 2");
                 yield return new TestCaseData(Jagged3D_Property1, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Property 1");
-                yield return new TestCaseData(Jagged3D_Property2, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Property 2");
                 yield return new TestCaseData(Jagged2D_ClassMethod1, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Class Method 1");
                 yield return new TestCaseData(Jagged2D_ClassMethod2, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Class Method 2");
                 yield return new TestCaseData(Jagged2D_ClassMethod3, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Class Method 3");
@@ -220,16 +219,17 @@ namespace DiagnosticTests
                 yield return new TestCaseData(RefParam_InterfaceMethod, DiagnosticRules.RefParameterFound).SetName("Test For Method With Ref Param - Interface");
                 // startuc field tests
                 yield return new TestCaseData(StructWithClassField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Class Field");
-                yield return new TestCaseData(StructWithDelegateField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Delegate Field");
-                yield return new TestCaseData(StructWithIndexer, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Indexer Field");
-                yield return new TestCaseData(StructWithMethods, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Method Field");
-                yield return new TestCaseData(StructWithConst, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Const Field");
-                yield return new TestCaseData(StructWithProperty, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Property Field");
-                yield return new TestCaseData(StructWithPrivateField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Private Field");
+                yield return new TestCaseData(StructWithDelegateField, DiagnosticRules.StructHasInvalidFieldRule2).SetName("Struct with Delegate Field");
+                yield return new TestCaseData(StructWithIndexer, DiagnosticRules.StructHasInvalidFieldRule2).SetName("Struct with Indexer Field");
+                yield return new TestCaseData(StructWithMethods, DiagnosticRules.StructHasInvalidFieldRule2).SetName("Struct with Method Field");
+                yield return new TestCaseData(StructWithConst, DiagnosticRules.StructHasConstFieldRule).SetName("Struct with Const Field");
+                yield return new TestCaseData(StructWithProperty, DiagnosticRules.StructHasInvalidFieldRule2).SetName("Struct with Property Field");
+                yield return new TestCaseData(StructWithPrivateField, DiagnosticRules.StructHasPrivateFieldRule).SetName("Struct with Private Field");
                 yield return new TestCaseData(StructWithObjectField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Object Field");
                 yield return new TestCaseData(StructWithDynamicField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Dynamic Field");
-                yield return new TestCaseData(StructWithByteField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Byte Field");
-                yield return new TestCaseData(StructWithConstructor, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Constructor Field");
+                // bytes are valid in structs I think? yield return new TestCaseData(StructWithByteField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Byte Field");
+                yield return new TestCaseData(StructWithConstructor, DiagnosticRules.StructHasInvalidFieldRule2).SetName("Struct with Constructor Field");
+                yield return new TestCaseData(StructWithPrimitiveTypesMissingPublicKeyword, DiagnosticRules.StructHasPrivateFieldRule).SetName("Struct with Constructor Field");
                 // system.array tests
                 yield return new TestCaseData(ArrayInstanceProperty1, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 1");
                 yield return new TestCaseData(ArrayInstanceProperty2, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 2");
@@ -269,9 +269,9 @@ namespace DiagnosticTests
             get
             {
                 // ReadOnlyArray / WriteOnlyArray Attribute
-                yield return new TestCaseData(Valid_ArrayParamAttrUnary_1).SetName("Valid - ArrayParamAttrUnary_1");
-                yield return new TestCaseData(Valid_ArrayParamAttrUnary_2).SetName("Valid - ArrayParamAttrUnary_2");
-                yield return new TestCaseData(Valid_ArrayParamAttrUnary_3).SetName("Valid - ArrayParamAttrUnary_3");
+                yield return new TestCaseData(Valid_ArrayParamAttrUnary_1).SetName("Valid - Unary - Array marked read only");
+                yield return new TestCaseData(Valid_ArrayParamAttrUnary_2).SetName("Valid - Unary - Array marked write only");
+                yield return new TestCaseData(Valid_ArrayParamAttrUnary_3).SetName("Valid - Unary - Array marked out and write only");
                 yield return new TestCaseData(Valid_ArrayParamAttrUnary_4).SetName("Valid - ArrayParamAttrUnary_4");
                 yield return new TestCaseData(Valid_ArrayParamAttrUnary_5).SetName("Valid - ArrayParamAttrUnary_5");
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_1).SetName("Valid - ArrayParamAttrBinary_1");
@@ -354,6 +354,8 @@ namespace DiagnosticTests
                 yield return new TestCaseData(Valid_Jagged2D_PrivateClassPublicMethods).SetName("Valid - Jagged Array private class / public method");
                 yield return new TestCaseData(Valid_Jagged3D_PrivateClassPublicMethods).SetName("Valid - Jagged Array private class / public method");
                 yield return new TestCaseData(Valid_Jagged3D_PublicClassPrivateMethods).SetName("Valid - Jagged Array public class / private method");
+                yield return new TestCaseData(Valid_Jagged2D_Property).SetName("Valid - Jagged 2D Array public property");
+                yield return new TestCaseData(Valid_Jagged3D_Property).SetName("Valid - Jagged 3D Array public property");
                 // overload attributes
                 yield return new TestCaseData(Valid_TwoOverloads_DiffParamCount).SetName("Valid - DefaultOverload attribute 1");
                 yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_OneInList).SetName("Valid - DefaultOverload attribute 2");

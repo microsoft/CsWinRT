@@ -689,6 +689,25 @@ public struct StructWithDelegate_Invalid
         public delegate int ADelegate(int x);
     }
 }";
+        private const string StructWithPrimitiveTypesMissingPublicKeyword = @"
+namespace Test
+{
+    public struct StructWithAllValidFields
+    {
+        bool boolean;
+        char character;
+        decimal dec;
+        double dbl;
+        float flt;
+        int i;
+        uint nat;
+        long lng;
+        ulong ulng;
+        short sh;
+        ushort us;
+        string str;
+    }
+}";
         // constructor of same arity 
         private const string ConstructorsOfSameArity = @"
 namespace TestNamespace
@@ -1251,14 +1270,6 @@ namespace Test
     }
 }";
         // jagged 2d/3d prop
-        private const string Jagged2D_Property1 = @"
-namespace Test
-{
-    public sealed class Jagged2D_Property1
-    {
-        private int[][] ArrP { get; set; } 
-    }
-}";
         private const string Jagged2D_Property2 = @"
 namespace Test
 {
@@ -1273,14 +1284,6 @@ namespace Test
     public sealed class Jagged3D_Property1
     {
         public int[][][] Arr3 { get; set; }
-    }
-}";
-        private const string Jagged3D_Property2 = @"
-namespace Test
-{
-    public sealed class Jagged3D_Property2
-    {
-        private int[][][] Arr3P { get; set; }
     }
 }";
         // jagged 2d class method 
