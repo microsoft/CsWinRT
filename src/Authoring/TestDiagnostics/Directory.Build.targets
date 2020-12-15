@@ -1,9 +1,0 @@
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
-  <Target Name="CopyWinMD" AfterTargets="AfterBuild">
-    <Copy SourceFiles="$(GeneratedFilesDir)$(AssemblyName).winmd" DestinationFolder="$(OutputPath)" />
-  </Target>
-  
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
-
-</Project>
