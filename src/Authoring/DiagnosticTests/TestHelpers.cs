@@ -1,7 +1,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.VisualBasic;
 using NUnit.Framework;
 using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -14,13 +16,12 @@ namespace DiagnosticTests
         /// </summary>
         /// <param name="source">string of source code</param>
         /// <returns></returns>
-        public static Compilation CreateCompilation(string source)
+         private Compilation CreateCompilation(string source)
            => CSharpCompilation.Create(
                assemblyName: "compilation",
                syntaxTrees: new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Preview)) },
                references: new[] { MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location) },
                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
 
         /// <summary>
         /// CreateDriver makes a CSharpGeneratorDriver
@@ -28,13 +29,13 @@ namespace DiagnosticTests
         /// <param name="compilation"></param>
         /// <param name="generators"></param>
         /// <returns></returns>
-        public static GeneratorDriver CreateDriver(Compilation compilation, params ISourceGenerator[] generators)
+        private static GeneratorDriver CreateDriver(Compilation compilation, params ISourceGenerator[] generators)
             => CSharpGeneratorDriver.Create(
                 generators: ImmutableArray.Create(generators),
                 additionalTexts: ImmutableArray<AdditionalText>.Empty,
                 parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
-                optionsProvider: null); // todo: pass the CsWinRTComponent config option here so we don't have to comment out the check in the source generator 
-
+                optionsProvider: null); 
+        // todo: pass the CsWinRTComponent config option here so we don't have to comment out the check in the source generator 
 
         /// <summary>
         /// RunGenerators makes a driver and applies the given generators to the compilation, storing diagnostics in an out param
@@ -43,10 +44,25 @@ namespace DiagnosticTests
         /// <param name="diagnostics"></param>
         /// <param name="generators"></param>
         /// <returns></returns>
-        public static Compilation RunGenerators(Compilation compilation, out ImmutableArray<Diagnostic> diagnostics, params ISourceGenerator[] generators)
+        private static Compilation RunGenerators(Compilation compilation, out ImmutableArray<Diagnostic> diagnostics, params ISourceGenerator[] generators)
         {
             CreateDriver(compilation, generators).RunGeneratorsAndUpdateCompilation(compilation, out var updatedCompilation, out diagnostics);
             return updatedCompilation;
+        }
+
+        /// <summary>
+        /// Create a HashSet of DiagnosticDescriptor from the Array of Diagnostic
+        /// </summary>
+        /// <param name="arr"></param>
+        /// <returns></returns>
+        private HashSet<DiagnosticDescriptor> MakeDiagnosticSet(ImmutableArray<Diagnostic> arr)
+        { 
+            HashSet<DiagnosticDescriptor> setSoFar = new HashSet<DiagnosticDescriptor>();
+            foreach (var d in arr)
+            {
+                setSoFar.Add(d.Descriptor);
+            }
+            return setSoFar;
         }
     }
 }

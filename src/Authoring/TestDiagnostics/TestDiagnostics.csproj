@@ -6,7 +6,8 @@
     <LangVersion>preview</LangVersion>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
-    <CsWinRTComponent>true</CsWinRTComponent>
+    <!-- temporary, so builds dont fail -->
+    <CsWinRTComponent>false</CsWinRTComponent>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
     <OutputType>Library</OutputType>
@@ -20,7 +21,7 @@
     <CompilerVisibleProperty Include="GeneratedFilesDir" />
     <CompilerVisibleProperty Include="CsWinRTExe" />
 
-    <ProjectReference Include="..\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+    <!-- <ProjectReference Include="..\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" /> -->
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />

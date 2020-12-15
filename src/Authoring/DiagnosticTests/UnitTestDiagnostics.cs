@@ -7,22 +7,6 @@ using System.Linq;
 
 namespace DiagnosticTests
 {
-    
-    /*
-         *  todo fix the `using` statement, based on Mano's PR comment 
-         *  ********************
-        
-        private const string StructWithWinRTField = @"
-using Some.Namespace
-namespace Test
-{
-public struct StructWithWinRTStructField
-    {
-        public Matrix3x2 matrix;
-    }
-}";
-         */
-
     [TestFixture]
     public partial class TestDiagnostics
     {
@@ -51,33 +35,148 @@ public struct StructWithWinRTStructField
         /// CodeHasDiagnostic takes some source code (string) and a Diagnostic descriptor, 
         /// it checks that a diagnostic with the same description was raised by the source generator 
         /// </summary> 
-        [Test, TestCaseSource(nameof(WinRTComponentCases))]
-        public void CodeHasDiagnostics(string testCode, params DiagnosticDescriptor[] rules)
+        [Test, TestCaseSource(nameof(InvalidCases))]
+        public void CodeHasDiagnostic(string testCode, DiagnosticDescriptor rule)
         { 
             Compilation compilation = CreateCompilation(testCode);
             RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator());
-            HashSet<DiagnosticDescriptor> diagDescsFound = new HashSet<DiagnosticDescriptor>();
-            
-            foreach (var d in diagnosticsFound)
-            {
-                diagDescsFound.Add(d.Descriptor);
-            }
-
-            foreach (var rule in rules)
-            { 
-                Assert.That(diagDescsFound.Contains(rule));
-            }
+            HashSet<DiagnosticDescriptor> diagDescsFound = MakeDiagnosticSet(diagnosticsFound);
+            Assert.That(diagDescsFound.Contains(rule));
         }
 
-        private static IEnumerable<TestCaseData> WinRTComponentCases
+        #region InvalidTests
+        private static IEnumerable<TestCaseData> InvalidCases
         {
             get 
             {
+                // multi-dimensional array tests
+                yield return new TestCaseData(MultiDim_2DProp, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Array Property");
+                yield return new TestCaseData(MultiDim_3DProp, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Array Property");
+                
+                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod1, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Class Method 1");
+                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod2, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Class Method 2");
+                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod3, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Class Method 3");
+                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod4, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Class Method 4");
+                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod5, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Class Method 5");
+                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod6, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Class Method 6");
+
+                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod1, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Class Method 1");
+                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod2, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Class Method 2");
+                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod3, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Class Method 3");
+                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod4, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Class Method 4");
+                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod5, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Class Method 5");
+                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod6, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Class Method 6");
+                
+                yield return new TestCaseData(MultiDim_2D_Interface1, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Interface Method 1");
+                yield return new TestCaseData(MultiDim_2D_Interface2, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Interface Method 2");
+                yield return new TestCaseData(MultiDim_2D_Interface3, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Interface Method 3");
+                yield return new TestCaseData(MultiDim_2D_Interface4, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Interface Method 4");
+                yield return new TestCaseData(MultiDim_2D_Interface5, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Interface Method 5");
+                yield return new TestCaseData(MultiDim_2D_Interface6, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Interface Method 6");
+              
+                yield return new TestCaseData(MultiDim_3D_Interface1, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Interface Method 1");
+                yield return new TestCaseData(MultiDim_3D_Interface2, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Interface Method 2");
+                yield return new TestCaseData(MultiDim_3D_Interface3, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Interface Method 3");
+                yield return new TestCaseData(MultiDim_3D_Interface4, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Interface Method 4");
+                yield return new TestCaseData(MultiDim_3D_Interface5, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Interface Method 5");
+                yield return new TestCaseData(MultiDim_3D_Interface6, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Interface Method 6");
+                yield return new TestCaseData(SubNamespaceInterface_D2Method1, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule)
+                    .SetName("MultiDim 2D Subnamespace Interface Method 1");
+                yield return new TestCaseData(SubNamespaceInterface_D2Method2, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule)
+                    .SetName("MultiDim 2D Subnamespace Interface Method 2");
+                yield return new TestCaseData(SubNamespaceInterface_D2Method3, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule)
+                    .SetName("MultiDim 2D Subnamespace Interface Method 3");
+                yield return new TestCaseData(SubNamespaceInterface_D2Method4, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule)
+                    .SetName("MultiDim 2D Subnamespace Interface Method 4");
+                yield return new TestCaseData(SubNamespaceInterface_D2Method5, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule)
+                    .SetName("MultiDim 2D Subnamespace Interface Method 5");
+                yield return new TestCaseData(SubNamespaceInterface_D2Method6, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule)
+                    .SetName("MultiDim 2D Subnamespace Interface Method 6");
+                yield return new TestCaseData(SubNamespaceInterface_D3Method1, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule)
+                    .SetName("MultiDim 3D Subnamespace Interface Method 1");
+                yield return new TestCaseData(SubNamespaceInterface_D3Method2, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule)
+                    .SetName("MultiDim 3D Subnamespace Interface Method 2");
+                yield return new TestCaseData(SubNamespaceInterface_D3Method3, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule)
+                    .SetName("MultiDim 3D Subnamespace Interface Method 3");
+                yield return new TestCaseData(SubNamespaceInterface_D3Method4, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule)
+                    .SetName("MultiDim 3D Subnamespace Interface Method 4");
+                yield return new TestCaseData(SubNamespaceInterface_D3Method5, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule)
+                    .SetName("MultiDim 3D Subnamespace Interface Method 5");
+                yield return new TestCaseData(SubNamespaceInterface_D3Method6, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule)
+                    .SetName("MultiDim 3D Subnamespace Interface Method 6");
+
+
+                // jagged array tests 
+                yield return new TestCaseData(Jagged2D_Property1, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Property 1");
+                yield return new TestCaseData(Jagged2D_Property2, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Property 2");
+                yield return new TestCaseData(Jagged3D_Property1, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Property 1");
+                yield return new TestCaseData(Jagged3D_Property2, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Property 2");
+                yield return new TestCaseData(Jagged2D_ClassMethod1, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Class Method 1");
+                yield return new TestCaseData(Jagged2D_ClassMethod2, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Class Method 2");
+                yield return new TestCaseData(Jagged2D_ClassMethod3, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Class Method 3");
+                yield return new TestCaseData(Jagged2D_ClassMethod4, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Class Method 4");
+                yield return new TestCaseData(Jagged2D_ClassMethod5, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Class Method 5");
+                yield return new TestCaseData(Jagged2D_ClassMethod6, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Class Method 6");
+                yield return new TestCaseData(Jagged3D_ClassMethod1, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Class Method 1");
+                yield return new TestCaseData(Jagged3D_ClassMethod2, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Class Method 2");
+                yield return new TestCaseData(Jagged3D_ClassMethod3, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Class Method 3");
+                yield return new TestCaseData(Jagged3D_ClassMethod4, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Class Method 4");
+                yield return new TestCaseData(Jagged3D_ClassMethod5, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Class Method 5");
+                yield return new TestCaseData(Jagged3D_ClassMethod6, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Class Method 6");
+                yield return new TestCaseData(Jagged2D_InterfaceMethod1, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Interface Method 1");
+                yield return new TestCaseData(Jagged2D_InterfaceMethod2, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Interface Method 2");
+                yield return new TestCaseData(Jagged2D_InterfaceMethod3, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Interface Method 3");
+                yield return new TestCaseData(Jagged2D_InterfaceMethod4, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Interface Method 4");
+                yield return new TestCaseData(Jagged2D_InterfaceMethod5, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Interface Method 5");
+                yield return new TestCaseData(Jagged2D_InterfaceMethod6, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Interface Method 6");
+                yield return new TestCaseData(Jagged3D_InterfaceMethod1, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Interface Method 1");
+                yield return new TestCaseData(Jagged3D_InterfaceMethod2, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Interface Method 2");
+                yield return new TestCaseData(Jagged3D_InterfaceMethod3, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Interface Method 3");
+                yield return new TestCaseData(Jagged3D_InterfaceMethod4, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Interface Method 4");
+                yield return new TestCaseData(Jagged3D_InterfaceMethod5, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Interface Method 5");
+                yield return new TestCaseData(Jagged3D_InterfaceMethod6, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Interface Method 6");
+                yield return new TestCaseData(SubNamespace_Jagged2DInterface1, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array SubNamespace Interface Method 1");
+                yield return new TestCaseData(SubNamespace_Jagged2DInterface2, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array SubNamespace Interface Method 2");
+                yield return new TestCaseData(SubNamespace_Jagged2DInterface3, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array SubNamespace Interface Method 3");
+                yield return new TestCaseData(SubNamespace_Jagged2DInterface4, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array SubNamespace Interface Method 4");
+                yield return new TestCaseData(SubNamespace_Jagged2DInterface5, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array SubNamespace Interface Method 5");
+                yield return new TestCaseData(SubNamespace_Jagged2DInterface6, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array SubNamespace Interface Method 6");
+                yield return new TestCaseData(SubNamespace_Jagged3DInterface1, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array SubNamespace Interface Method 1");
+                yield return new TestCaseData(SubNamespace_Jagged3DInterface2, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array SubNamespace Interface Method 2");
+                yield return new TestCaseData(SubNamespace_Jagged3DInterface3, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array SubNamespace Interface Method 3");
+                yield return new TestCaseData(SubNamespace_Jagged3DInterface4, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array SubNamespace Interface Method 4");
+                yield return new TestCaseData(SubNamespace_Jagged3DInterface5, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array SubNamespace Interface Method 5");
+                yield return new TestCaseData(SubNamespace_Jagged3DInterface6, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array SubNamespace Interface Method 6");
+
+                // overload attribute tests
+                yield return new TestCaseData(TwoOverloads_NoAttribute, DiagnosticRules.MethodOverload_NeedDefaultAttribute)
+                    .SetName("DefaultOverload - Need Attribute 1");
+                yield return new TestCaseData(TwoOverloads_NoAttribute_OneIrrevAttr, DiagnosticRules.MethodOverload_NeedDefaultAttribute)
+                    .SetName("DefaultOverload - Need Attribute 2");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_OneInList, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Multiple Attribute 1");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_BothInList, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Multiple Attribute 2");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_TwoLists, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Multiple Attribute 3");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_OneInSeparateList_OneNot, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Multiple Attribute 4");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_BothInSeparateList, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Multiple Attribute 5");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Multiple Attribute 6");
+                yield return new TestCaseData(ThreeOverloads_TwoAttributes, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Multiple Attribute 7");
+               
+                // .......................................................................................................................................
+                // multiple class constructors of same arity
                 yield return new TestCaseData(ConstructorsOfSameArity, DiagnosticRules.ClassConstructorRule).SetName("Multiple constructors of same arity");
+                // implementing async interface
                 yield return new TestCaseData(ImplementsIAsyncOperation, DiagnosticRules.AsyncRule).SetName("Implements IAsyncOperation");
                 yield return new TestCaseData(ImplementsIAsyncOperationWithProgress, DiagnosticRules.AsyncRule).SetName("Implements IAsyncOperationWithProgress");
                 yield return new TestCaseData(ImplementsIAsyncAction, DiagnosticRules.AsyncRule).SetName("Implements IAsyncAction");
                 yield return new TestCaseData(ImplementsIAsyncActionWithProgress, DiagnosticRules.AsyncRule).SetName("Implements IAsyncActionWithProgress");
+                // readonly/writeonlyArray attribute
                 yield return new TestCaseData(TestArrayParamAttrUnary_1, DiagnosticRules.ArrayParamMarkedBoth).SetName("TestArrayParamAttrUnary_1");
                 yield return new TestCaseData(TestArrayParamAttrUnary_2, DiagnosticRules.ArrayParamMarkedBoth).SetName("TestArrayParamAttrUnary_2");
                 yield return new TestCaseData(TestArrayParamAttrUnary_3, DiagnosticRules.ArrayOutputParamMarkedRead).SetName("TestArrayParamAttrUnary_3");
@@ -112,10 +211,14 @@ public struct StructWithWinRTStructField
                 yield return new TestCaseData(TestArrayParamAttrBinary_22, DiagnosticRules.NonArrayMarkedInOrOut).SetName("TestArrayParamAttrBinary_22");
                 yield return new TestCaseData(TestArrayParamAttrBinary_23, DiagnosticRules.NonArrayMarkedInOrOut).SetName("TestArrayParamAttrBinary_23");
                 yield return new TestCaseData(TestArrayParamAttrBinary_24, DiagnosticRules.ArrayParamNotMarked).SetName("TestArrayParamAttrBinary_24");
+                // name clash with params (__retval)
                 yield return new TestCaseData(DunderRetValParam, DiagnosticRules.ParameterNamedValueRule).SetName("Test Parameter Name Conflict (__retval)");
+                // operator overloading
                 yield return new TestCaseData(OperatorOverload_Class, DiagnosticRules.OperatorOverloadedRule).SetName("Test Overload of Operator");
+                // ref param
                 yield return new TestCaseData(RefParam_ClassMethod, DiagnosticRules.RefParameterFound).SetName("Test For Method With Ref Param - Class");
                 yield return new TestCaseData(RefParam_InterfaceMethod, DiagnosticRules.RefParameterFound).SetName("Test For Method With Ref Param - Interface");
+                // startuc field tests
                 yield return new TestCaseData(StructWithClassField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Class Field");
                 yield return new TestCaseData(StructWithDelegateField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Delegate Field");
                 yield return new TestCaseData(StructWithIndexer, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Indexer Field");
@@ -127,15 +230,45 @@ public struct StructWithWinRTStructField
                 yield return new TestCaseData(StructWithDynamicField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Dynamic Field");
                 yield return new TestCaseData(StructWithByteField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Byte Field");
                 yield return new TestCaseData(StructWithConstructor, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Constructor Field");
+                // system.array tests
+                yield return new TestCaseData(ArrayInstanceProperty1, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 1");
+                yield return new TestCaseData(ArrayInstanceProperty2, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 2");
+                yield return new TestCaseData(ArrayInstanceProperty3, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 3");
+                yield return new TestCaseData(ArrayInstanceProperty4, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 4");
+                yield return new TestCaseData(SystemArrayProperty5, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 5");
+                yield return new TestCaseData(ArrayInstanceInterface1, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 1");
+                yield return new TestCaseData(ArrayInstanceInterface2, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 2");
+                yield return new TestCaseData(ArrayInstanceInterface3, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 3");
+                yield return new TestCaseData(SystemArrayJustReturn, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Method - Return only");
+                yield return new TestCaseData(SystemArrayUnaryAndReturn, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Method - Unary and return");
+                yield return new TestCaseData(SystemArraySecondArgClass, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Method - Arg 2/2");
+                yield return new TestCaseData(SystemArraySecondArg2Class, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Method - Arg 2/3");
+                yield return new TestCaseData(SystemArraySecondArgAndReturnTypeClass, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Class 1");
+                yield return new TestCaseData(SystemArraySecondArgAndReturnTypeClass2, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Class 2");
+                yield return new TestCaseData(SystemArrayNilArgsButReturnTypeInterface, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 4");
+                yield return new TestCaseData(SystemArrayUnaryAndReturnTypeInterface, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 5");
+                yield return new TestCaseData(SystemArraySecondArgAndReturnTypeInterface, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 6");
+                yield return new TestCaseData(SystemArraySecondArgAndReturnTypeInterface2, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 7");
+                yield return new TestCaseData(SystemArraySecondArgInterface, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 8");
+                yield return new TestCaseData(SystemArraySecondArgInterface2, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 9");
+                yield return new TestCaseData(SystemArraySubNamespace_ReturnOnly, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Subnamespace Interface 1/6");
+                yield return new TestCaseData(SystemArraySubNamespace_ReturnAndInput1, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Subnamespace Interface 2/6");
+                yield return new TestCaseData(SystemArraySubNamespace_ReturnAndInput2of2, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Subnamespace Interface 3/6");
+                yield return new TestCaseData(SystemArraySubNamespace_ReturnAndInput2of3, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Subnamespace Interface 4/6");
+                yield return new TestCaseData(SystemArraySubNamespace_NotReturnAndInput2of2, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Subnamespace Interface 5/6");
+                yield return new TestCaseData(SystemArraySubNamespace_NotReturnAndInput2of3, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Subnamespace Interface 6/6");
             }
         }
 
+        #endregion
+
         #region ValidTests
- 
+
         private static IEnumerable<TestCaseData> ValidCases
         {
             get
             {
+                // ReadOnlyArray / WriteOnlyArray Attribute
                 yield return new TestCaseData(Valid_ArrayParamAttrUnary_1).SetName("Valid - ArrayParamAttrUnary_1");
                 yield return new TestCaseData(Valid_ArrayParamAttrUnary_2).SetName("Valid - ArrayParamAttrUnary_2");
                 yield return new TestCaseData(Valid_ArrayParamAttrUnary_3).SetName("Valid - ArrayParamAttrUnary_3");
@@ -150,624 +283,89 @@ public struct StructWithWinRTStructField
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_7).SetName("Valid - ArrayParamAttrBinary_7");
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_8).SetName("Valid - ArrayParamAttrBinary_8");
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_9).SetName("Valid - ArrayParamAttrBinary_9");
-                yield return new TestCaseData(StructWithAllValidFields).SetName("Valid - Struct with only fields of basic types");
+                // Struct field 
+                yield return new TestCaseData(Valid_StructWithPrimitiveTypes).SetName("Valid - Struct with only fields of basic types");
+                yield return new TestCaseData(Valid_StructWithWinRTField).SetName("(TODO - fix the namespace) Valid - Struct with struct field");
+                // SystemArray  
+                yield return new TestCaseData(Valid_SystemArrayProperty).SetName("Valid - System.Array private property");
+                yield return new TestCaseData(Valid_SystemArray_Interface1).SetName("Valid - System.Array internal interface 1");
+                yield return new TestCaseData(Valid_SystemArray_Interface2).SetName("Valid - System.Array internal interface 2");
+                yield return new TestCaseData(Valid_SystemArray_Interface3).SetName("Valid - System.Array internal interface 3");
+                yield return new TestCaseData(Valid_SystemArray_InternalClass1).SetName("Valid - System.Array internal class 1");
+                yield return new TestCaseData(Valid_SystemArray_InternalClass2).SetName("Valid - System.Array internal class 2");
+                yield return new TestCaseData(Valid_SystemArray_InternalClass3).SetName("Valid - System.Array internal class 3");
+                yield return new TestCaseData(Valid_SystemArray_InternalClass4).SetName("Valid - System.Array internal class 4");
+                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty1).SetName("Valid - System.Array public class / private property 1");
+                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty2).SetName("Valid - System.Array public class / private property 2");
+                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty3).SetName("Valid - System.Array public class / private property 3");
+                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty4).SetName("Valid - System.Array public class / private property 4");
+                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty5).SetName("Valid - System.Array public class / private property 5");
+                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty6).SetName("Valid - System.Array public class / private property 6");
+                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods1).SetName("Valid - System.Array internal class / public method 1");
+                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods2).SetName("Valid - System.Array internal class / public method 2");
+                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods3).SetName("Valid - System.Array internal class / public method 3");
+                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods4).SetName("Valid - System.Array internal class / public method 4");
+                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods5).SetName("Valid - System.Array internal class / public method 5");
+                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods6).SetName("Valid - System.Array internal class / public method 6");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty1).SetName("Valid - System.Array internal class / public property 1");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty2).SetName("Valid - System.Array internal class / public property 2");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty3).SetName("Valid - System.Array internal class / public property 3");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty4).SetName("Valid - System.Array internal class / public property 4");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty5).SetName("Valid - System.Array internal class / public property 5");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty6).SetName("Valid - System.Array internal class / public property 6");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty7).SetName("Valid - System.Array internal class / public property 7");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty8).SetName("Valid - System.Array internal class / public property 8");
+                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod1).SetName("Valid - System.Array public class / private method 1");
+                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod2).SetName("Valid - System.Array public class / private method 2");
+                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod3).SetName("Valid - System.Array public class / private method 3");
+                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod4).SetName("Valid - System.Array public class / private method 4");
+                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod5).SetName("Valid - System.Array public class / private method 5");
+                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod6).SetName("Valid - System.Array public class / private method 6");
+                // multi dim array tests 
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod1).SetName("Valid - MultiDim public class / private method 1");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod2).SetName("Valid - MultiDim public class / private method 2");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod3).SetName("Valid - MultiDim public class / private method 3");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod4).SetName("Valid - MultiDim public class / private method 4");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod5).SetName("Valid - MultiDim public class / private method 5");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod6).SetName("Valid - MultiDim public class / private method 6");
+                
+                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod1).SetName("Valid - MultiDim 3D private class / public method 1");
+                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod2).SetName("Valid - MultiDim 3D private class / public method 2");
+                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod3).SetName("Valid - MultiDim 3D private class / public method 3");
+                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod4).SetName("Valid - MultiDim 3D private class / public method 4");
+                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod5).SetName("Valid - MultiDim 3D private class / public method 5");
+                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod6).SetName("Valid - MultiDim 3D private class / public method 6");
+                
+                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod1).SetName("Valid - MultiDim 2D private class / public method 1");
+                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod2).SetName("Valid - MultiDim 2D private class / public method 2");
+                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod3).SetName("Valid - MultiDim 2D private class / public method 3");
+                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod4).SetName("Valid - MultiDim 2D private class / public method 4");
+                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod5).SetName("Valid - MultiDim 2D private class / public method 5");
+                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod6).SetName("Valid - MultiDim 2D private class / public method 6");
+                
+                yield return new TestCaseData(Valid_MultiDimArray_PrivateClassPublicProperty1).SetName("Valid - MultiDim 2D private class / public property 1");
+                yield return new TestCaseData(Valid_MultiDimArray_PrivateClassPublicProperty2).SetName("Valid - MultiDim 2D private class / public property 2");
+                yield return new TestCaseData(Valid_MultiDimArray_PrivateClassPublicProperty3).SetName("Valid - MultiDim 2D private class / public property 3");
+                yield return new TestCaseData(Valid_MultiDimArray_PrivateClassPublicProperty4).SetName("Valid - MultiDim 2D private class / public property 4");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateProperty1).SetName("Valid - MultiDim 2D public class / private property 1");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateProperty2).SetName("Valid - MultiDim 2D public class / private property 2");
+                // jagged array tests
+                yield return new TestCaseData(Valid_JaggedMix_PrivateClassPublicProperty).SetName("Valid - Jagged Array private class / private property");
+                yield return new TestCaseData(Valid_Jagged2D_PrivateClassPublicMethods).SetName("Valid - Jagged Array private class / public method");
+                yield return new TestCaseData(Valid_Jagged3D_PrivateClassPublicMethods).SetName("Valid - Jagged Array private class / public method");
+                yield return new TestCaseData(Valid_Jagged3D_PublicClassPrivateMethods).SetName("Valid - Jagged Array public class / private method");
+                // overload attributes
+                yield return new TestCaseData(Valid_TwoOverloads_DiffParamCount).SetName("Valid - DefaultOverload attribute 1");
+                yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_OneInList).SetName("Valid - DefaultOverload attribute 2");
+                yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_OneIrrelevatAttribute).SetName("Valid - DefaultOverload attribute 3");
+                yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_TwoLists).SetName("Valid - DefaultOverload attribute 4");
+                yield return new TestCaseData(Valid_ThreeOverloads_OneAttribute).SetName("Valid - DefaultOverload attribute 5");
+                yield return new TestCaseData(Valid_ThreeOverloads_OneAttribute_2).SetName("Valid - DefaultOverload attribute 6");
+                yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_3).SetName("Valid - DefaultOverload attribute 7");
             }
         }
 
-        private const string Valid_ArrayParamAttrUnary_1 = @"
-namespace TestNamespace 
-{
-  public sealed class OnlyParam
-  { 
-    public int GetSum([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { return 0; } 
-  }
-}";
-        private const string Valid_ArrayParamAttrUnary_2 = @"
-namespace TestNamespace 
-{
-  public sealed class OnlyParam
-  { 
-     public void MarkedWriteOnly_Valid([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] arr) { }
-  }
-}";
-        private const string Valid_ArrayParamAttrUnary_3 = @"
-namespace TestNamespace 
-{
-  public sealed class OnlyParam
-  { 
-        public void MarkedOutAndWriteOnly_Valid([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] out int[] arr) { arr = new int[] { }; }
-  }
-}";
-        private const string Valid_ArrayParamAttrUnary_4 = @"
-namespace TestNamespace 
-{
-  public sealed class OnlyParam
-  { 
-        public void MarkedOutOnly_Valid(out int[] arr) { arr = new int[] { }; }
-  }
-}";
-        private const string Valid_ArrayParamAttrUnary_5 = @"
-namespace TestNamespace 
-{
-  public sealed class OnlyParam
-  { 
-        public void ArrayNotMarked_Valid(out int[] arr) { arr = new int[] { };  }
-  }
-}";
-        private const string Valid_ArrayParamAttrBinary_1 = @"
-namespace TestNamespace 
-{
-  public sealed class TwoParam
-  { 
-    public int GetSum(int i, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { return 0; } 
-  }
-}";
-        private const string Valid_ArrayParamAttrBinary_2 = @"
-namespace TestNamespace 
-{
-  public sealed class TwoParam
-  { 
-     public void MarkedWriteOnly_Valid(int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] arr) { }
-  }
-}";
-        private const string Valid_ArrayParamAttrBinary_3 = @"
-namespace TestNamespace 
-{
-  public sealed class TwoParam
-  { 
-        public void MarkedOutAndWriteOnly_Valid(int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] out int[] arr) { arr = new int[] { }; }
-  }
-}";
-        private const string Valid_ArrayParamAttrBinary_4 = @"
-namespace TestNamespace 
-{
-  public sealed class TwoParam
-  { 
-        public void MarkedOutOnly_Valid(int i, out int[] arr) { arr = new int[] { }; }
-  }
-}";
-        private const string Valid_ArrayParamAttrBinary_5 = @"
-namespace TestNamespace 
-{
-  public sealed class TwoParam
-  { 
-        public void ArrayNotMarked_Valid(int i, out int[] arr) { arr = new int[] { };  }
-  }
-}";
-        private const string Valid_ArrayParamAttrBinary_6 = @"
-namespace TestNamespace 
-{
-  public sealed class TwoArray
-  { 
-        public void MarkedReadOnly_Valid([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
-  }
-}";
-        private const string Valid_ArrayParamAttrBinary_7 = @"
-namespace TestNamespace 
-{
-  public sealed class TwoArray
-  { 
-        public void MarkedWriteOnly_Valid([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] arr) { }
-  }
-}";
-        private const string Valid_ArrayParamAttrBinary_8 = @"
-namespace TestNamespace 
-{
-  public sealed class TwoArray
-  { 
-        public void MarkedOutAndWriteOnly_Valid([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] out int[] arr) { arr = new int[] { }; }
-  }
-}";
-        private const string Valid_ArrayParamAttrBinary_9 = @"
-namespace TestNamespace 
-{
-  public sealed class TwoArray
-  { 
-        public void MarkedOut_Valid([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] xs, out int[] arr) { arr = new int[] { }; }
-  }
-}";
-        private const string StructWithAllValidFields = @"
-namespace Test
-{
-    public struct StructWithAllValidFields
-    {
-        bool boolean;
-        char character;
-        decimal dec;
-        double dbl;
-        float flt;
-        int i;
-        uint nat;
-        long lng;
-        ulong ulng;
-        short sh;
-        ushort us;
-        string str;
-    }
-}";
-
         #endregion
 
-        #region DataTests
-
-        private const string StructWithByteField = @"
-namespace Test
-{
-public struct StructWithByteField_Valid
-    {
-        public byte b;
-    }
-}";
-        private const string StructWithConstructor = @"
- namespace Test
-{
-   public struct StructWithConstructor_Invalid
-    {
-        int X;
-        StructWithConstructor_Invalid(int x)
-        {
-            X = x;
-        }
-    }
-} ";
-        private const string StructWithClassField = @"
-namespace Test 
-{
-        public sealed class SillyClass
-        {
-            public double Identity(double d)
-            {
-                return d;
-            }
-
-            public SillyClass() { }
-        }
-
-        public struct StructWithClass_Invalid
-        {
-            public SillyClass classField;
-        }
-}";
-        private const string StructWithDelegateField = @"
-namespace Test {
-public struct StructWithDelegate_Invalid
-    {
-        public delegate int ADelegate(int x);
-    }
-}";
-        private const string ConstructorsOfSameArity = @"
-namespace TestNamespace
-{
-public sealed class SameArityConstructors
-{
-    private int num;
-    private string word;
-
-    public SameArityConstructors(int i)
-    {
-        num = i;
-        word = ""dog"";
-    }
-      
-    public SameArityConstructors(string s)
-    {
-        num = 38;
-        word = s;
-    } 
-}
-}";
-        private const string ImplementsIAsyncOperationWithProgress = @"
-using Windows.Foundation;
-using System;
-namespace TestNamespace
-{
-   public sealed class OpWithProgress : IAsyncOperationWithProgress<int, bool>
-    {
-        AsyncOperationProgressHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        AsyncOperationWithProgressCompletedHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
-
-        uint IAsyncInfo.Id => throw new NotImplementedException();
-
-        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
-
-        void IAsyncInfo.Cancel()
-        {
-            throw new NotImplementedException();
-        }
-
-        void IAsyncInfo.Close()
-        {
-            throw new NotImplementedException();
-        }
-
-        int IAsyncOperationWithProgress<int, bool>.GetResults()
-        {
-            throw new NotImplementedException();
-        }
-    } 
-}";
-        private const string ImplementsIAsyncActionWithProgress = @"
-using Windows.Foundation;
-using System;
-namespace TestNamespace
-{
-public class ActionWithProgress : IAsyncActionWithProgress<int>
-    {
-        AsyncActionProgressHandler<int> IAsyncActionWithProgress<int>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        AsyncActionWithProgressCompletedHandler<int> IAsyncActionWithProgress<int>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
-
-        uint IAsyncInfo.Id => throw new NotImplementedException();
-
-        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
-
-        void IAsyncInfo.Cancel()
-        {
-            throw new NotImplementedException();
-        }
-
-        void IAsyncInfo.Close()
-        {
-            throw new NotImplementedException();
-        }
-
-        void IAsyncActionWithProgress<int>.GetResults()
-        {
-            throw new NotImplementedException();
-        }
-    }
-}";
-        private const string ImplementsIAsyncOperation = @"
-using Windows.Foundation;
-using System;
-namespace TestNamespace
-{
-    public sealed class Op : IAsyncOperation<int>
-    {
-        AsyncOperationCompletedHandler<int> IAsyncOperation<int>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
-
-        uint IAsyncInfo.Id => throw new NotImplementedException();
-
-        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
-
-        void IAsyncInfo.Cancel()
-        {
-            throw new NotImplementedException();
-        }
-
-        void IAsyncInfo.Close()
-        {
-            throw new NotImplementedException();
-        }
-
-        int IAsyncOperation<int>.GetResults()
-        {
-            throw new NotImplementedException();
-        }
-    } 
-}";
-        private const string ImplementsIAsyncAction = @"
-using Windows.Foundation;
-using System;
-namespace TestNamespace
-{
-   public sealed class AsyAction : IAsyncAction
-    {
-        public AsyncActionCompletedHandler Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        public Exception ErrorCode => throw new NotImplementedException();
-
-        public uint Id => throw new NotImplementedException();
-
-        public AsyncStatus Status => throw new NotImplementedException();
-
-        AsyncActionProgressHandler<int> IAsyncActionWithProgress<int>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        AsyncActionWithProgressCompletedHandler<int> IAsyncActionWithProgress<int>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
-
-        uint IAsyncInfo.Id => throw new NotImplementedException();
-
-        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
-
-        public void Cancel()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Close()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetResults()
-        {
-            throw new NotImplementedException();
-        }
-    } 
-}";
-        private const string TestArrayParamAttrUnary_1 = @"
-public sealed class OnlyParam
-{
-        public void BothAttributes_Separate([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray][System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
-}";
-        private const string TestArrayParamAttrUnary_2 = @"
-public sealed class OnlyParam
-{
-        public void BothAttributes_Together([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray, System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
-}";
-        private const string TestArrayParamAttrUnary_3 = @"
-public sealed class OnlyParam
-{
-        public void MarkedOutAndReadOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] out int[] arr) { arr = new int[] { }; }
-}";
-        private const string TestArrayParamAttrUnary_4 = @"
-public sealed class OnlyParam
-{
-        public void ArrayMarkedIn([In] int[] arr) { }
-}";
-        private const string TestArrayParamAttrUnary_5 = @"
-public sealed class OnlyParam
-{
-        public void ArrayMarkedOut([Out] int[] arr) { }
-}";
-        private const string TestArrayParamAttrUnary_6 = @"
-public sealed class OnlyParam
-{
-        public void NonArrayMarkedReadOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int arr) { }
-}";
-        private const string TestArrayParamAttrUnary_7 = @"
-public sealed class OnlyParam
-{
-        public void NonArrayMarkedWriteOnly([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int arr) { }
-}";
-        private const string TestArrayParamAttrUnary_8 = @"
-public sealed class OnlyParam
-{
-        public void ParamMarkedIn([In] int arr) { }
-}";
-        private const string TestArrayParamAttrUnary_9 = @"
-public sealed class OnlyParam
-{
-        public void ParamMarkedOut([Out] int arr) { }
-}";
-        private const string TestArrayParamAttrUnary_10 = @"
-public sealed class OnlyParam
-{
-        public void ArrayNotMarked(int[] arr) { }
-}";
-        private const string TestArrayParamAttrBinary_1 = @"
-public sealed class TwoParam
-{
-        public void BothAttributes_Separate(int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray][System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
-}";
-        private const string TestArrayParamAttrBinary_2 = @"
-public sealed class TwoParam
-{
-        public void BothAttributes_Together(int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray, System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
-}";
-        private const string TestArrayParamAttrBinary_3 = @"
-public sealed class TwoParam
-{
-        public void MarkedOutAndReadOnly(int i, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] out int[] arr) { arr = new int[] { }; }
-}";
-        private const string TestArrayParamAttrBinary_4 = @"
-public sealed class TwoParam
-{
-        public void ArrayMarkedIn(int i, [In] int[] arr) { }
-}";
-        private const string TestArrayParamAttrBinary_5 = @"
-public sealed class TwoParam
-{
-        public void ArrayMarkedOut(int i, [Out] int[] arr) { }
-}";
-        private const string TestArrayParamAttrBinary_6 = @"
-public sealed class TwoParam
-{
-        public void NonArrayMarkedReadOnly(int i, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int arr) { }
-}";
-        private const string TestArrayParamAttrBinary_7 = @"
-public sealed class TwoParam
-{
-        public void NonArrayMarkedWriteOnly(int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int arr) { }
-}";
-        private const string TestArrayParamAttrBinary_8 = @"
-public sealed class TwoParam
-{
-        public void ParamMarkedIn(int i, [In] int arr) { }
-}";
-        private const string TestArrayParamAttrBinary_9 = @"
-public sealed class TwoParam
-{
-        public void ParamMarkedOut(int i, [Out] int arr) { }
-}";
-        private const string TestArrayParamAttrBinary_10 = @"
-public sealed class TwoParam
-{
-        public void ArrayNotMarked(int i, int[] arr) { }
-}";
-        private const string TestArrayParamAttrBinary_11 = @"
-public sealed class TwoArray
-{
-        public void OneValidOneInvalid_1(
-[System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] xs, 
-[System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray]
-[System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] ys) { }
-}";
-        private const string TestArrayParamAttrBinary_12 = @"
-public sealed class TwoArray
-{
-        public void OneValidOneInvalid_2(
-[System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray]
-[System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, 
-[System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] ys) { }
-}";
-        private const string TestArrayParamAttrBinary_13 = @"
-public sealed class TwoArray
-{
-        public void MarkedOutAndReadOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] out int[] arr) { arr = new int[] { }; }
-}";
-        private const string TestArrayParamAttrBinary_14 = @"
-public sealed class TwoParam
-{
-        public void ArrayMarkedIn(int i, [In] int[] arr) { }
-}";
-        private const string TestArrayParamAttrBinary_15 = @"
-public sealed class TwoArray
-{
-        public void ArrayMarkedIn2([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [In] int[] arr) { }
-}";
-        private const string TestArrayParamAttrBinary_16 = @"
-public sealed class TwoArray
-{
-        public void ArrayMarkedOut([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [Out] int[] arr) { }
-}";
-        private const string TestArrayParamAttrBinary_17 = @"
-public sealed class TwoArray
-{
-        public void ArrayNotMarked(int i, int[] arr) { }
-}";
-        private const string TestArrayParamAttrBinary_18 = @"
-public sealed class TwoArray
-{
-        public void NonArrayMarkedReadOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int i) { }
-}";
-        private const string TestArrayParamAttrBinary_19 = @"
-public sealed class TwoArray
-{
-        public void NonArrayMarkedWriteOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int i) { }
-}";
-        private const string TestArrayParamAttrBinary_20 = @"
-public sealed class TwoArray
-{
-        public void NonArrayMarkedWriteOnly2([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] arr) { }
-}";
-        private const string TestArrayParamAttrBinary_21 = @"
-public sealed class TwoArray
-{
-        public void ParamMarkedIn([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [In] int arr) { }
-}";
-        private const string TestArrayParamAttrBinary_22 = @"
-public sealed class TwoArray
-{
-        public void ParamMarkedOut([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [Out] int arr) { }
-}";
-        private const string TestArrayParamAttrBinary_23 = @"
-public sealed class TwoArray
-{
-        public void ParamMarkedOut2([Out] int arr, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs) { }
-}";
-        private const string TestArrayParamAttrBinary_24 = @"
-public sealed class TwoArray
-{
-        public void ArrayNotMarked([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, int[] arr) { }
-}";
-        private const string RefParam_InterfaceMethod = @"
-public interface IHaveAMethodWithRefParam
-    {
-        void foo(ref int i);
-    }
-";
-        private const string RefParam_ClassMethod = @"
-public sealed class ClassWithMethodUsingRefParam
-    {
-        public void MethodWithRefParam(ref int i) { i++; }
-    }
-";
-        private const string OperatorOverload_Class = @"
-    public sealed class ClassThatOverloadsOperator
-    {
-        public static ClassThatOverloadsOperator operator +(ClassThatOverloadsOperator thing)
-        {
-            return thing;
-        }
-    }";
-        private const string DunderRetValParam = @"
-public sealed class ParameterNamedDunderRetVal
-    {
-        public int Identity(int __retval)
-        {
-            return __retval;
-        }
-    }
-";
-        private const string StructWithIndexer = @"
-namespace Test
-{
-public struct StructWithIndexer_Invalid
-    {
-        int[] arr;
-        int this[int i] => arr[i];
-    }
-}";
-        private const string StructWithMethods = @"
-namespace Test
-{
-public struct StructWithMethods_Invalid
-    {
-        int foo(int x)
-        {
-            return x;
-        }
-    }
-}";
-        private const string StructWithConst = @"
-namespace Test
-{
-    public struct StructWithConst_Invalid 
-    {
-        const int five = 5;
-        private int six;
-    }
-}";
-        private const string StructWithProperty = @"
-namespace Test
-{
-    public enum BasicEnum
-    { 
-        First = 0,
-        Second = 1
-    }
-
-    public struct Posn_Invalid 
-    {
-        BasicEnum enumField; 
-
-        public int x { get; }
-        public int y { get; }
-    }
-}";
-        private const string StructWithPrivateField = @"
-namespace Test
-{
-public struct StructWithPrivateField_Invalid
-    {
-        const int ci = 5;
-        private int x;
-    }
-}";
-        private const string StructWithObjectField = @"
-namespace Test
-{
-public struct StructWithObjectField_Invalid
-    {
-        public object obj;
-    }
-}";
-        private const string StructWithDynamicField = @"
-namespace Test
-{
-public struct StructWithDynamicField_Invalid 
-    {
-        public dynamic dyn;
-    }
-}";
-
-        #endregion
     }
 }
