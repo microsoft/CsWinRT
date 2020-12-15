@@ -14,6 +14,20 @@ namespace Generator
     [Generator]
     public class SourceGenerator : ISourceGenerator
     {
+        private static readonly string ArrayAttributes = @"
+namespace System.Runtime.InteropServices.WindowsRuntime
+{
+    [global::System.AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+    internal sealed class ReadOnlyArrayAttribute : global::System.Attribute
+    {
+    }
+
+    [global::System.AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+    internal sealed class WriteOnlyArrayAttribute : global::System.Attribute
+    {
+    }
+}";
+
         private string _tempFolder;
 
         private static string GetAssemblyName(GeneratorExecutionContext context)
@@ -170,19 +184,7 @@ namespace Generator
 
             try
             {
-                context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(@"
-namespace System.Runtime.InteropServices.WindowsRuntime
-{
-    [global::System.AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-    internal sealed class ReadOnlyArrayAttribute : global::System.Attribute
-    {
-    }
-
-    [global::System.AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-    internal sealed class WriteOnlyArrayAttribute : global::System.Attribute
-    {
-    }
-}", Encoding.UTF8));
+                context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(ArrayAttributes, Encoding.UTF8));
 
                 string assembly = GetAssemblyName(context);
                 string version = GetAssemblyVersion(context);
