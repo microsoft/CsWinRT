@@ -268,6 +268,7 @@ namespace Generator
             }
         }
 
+        // This should be in sync with the reverse mapping from WinRT.Runtime/Projections.cs and cswinrt/helpers.h.
         private static readonly Dictionary<string, MappedType> MappedCSharpTypes = new Dictionary<string, MappedType>()
         {
             { "System.DateTimeOffset", new MappedType("Windows.Foundation", "DateTime", "Windows.Foundation.FoundationContract", true) },

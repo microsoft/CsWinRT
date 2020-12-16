@@ -9,7 +9,8 @@
     <CsWinRTComponent>true</CsWinRTComponent>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
-    <CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources>
+    <!-- Enable to diagnose generation issues -->
+    <!-- <CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources> -->
   </PropertyGroup>
 
   <ItemGroup>    
