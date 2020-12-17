@@ -6,7 +6,7 @@ using WinRT.SourceGenerator;
 
 namespace Generator 
 {
-    public partial class WinRTRules
+    public class WinRTRules
     {
         private void Report(ref GeneratorExecutionContext context, DiagnosticDescriptor d, Location loc, params object[] args) 
         { 
@@ -221,20 +221,16 @@ namespace Generator
             return false;
         }
 
-        /// <summary>
-        /// Checks each type in the given list of types and sees if any are equal to the given type name
-        /// </summary>
-        /// <typeparam name="T"></typeparam> /// <param name="context"></param>
+        /// <summary>Checks each type in the given list of types and sees if any are equal to the given type name</summary>
+        /// <typeparam name="T"></typeparam><param name="context"></param>
         /// <param name="typesInSignature">A list of the descendent nodes that are of the given type, possibly empty. 
-        /// empty example: this property doesnt have any qualified types in its signature /// </param>
-        /// <param name="typeName">check to see if this type appears in the signature</param>
-        /// <param name="classId">name of the class this field is in</param> /// <param name="loc">syntax location</param> /// <param name="fieldKind">either property or method</param>
+        /// empty example: this property doesnt have any qualified types in its signature</param>
+        /// <param name="typeName">check to see if this type appears in the signature</param><param name="diag">diagnostic to report if we see the typeName</param>
         /// <returns>true if the given type is the same as the one in the list</returns>
         private bool SignatureContainsTypeName<T>(ref GeneratorExecutionContext context, IEnumerable<T> typesInSignature, string typeName, Diagnostic diag)
         {
             foreach (T name in typesInSignature)
             {
-                // TODO better equality possible? try the semantic model...
                 if (name.ToString().Equals(typeName))
                 {
                     context.ReportDiagnostic(diag);
@@ -256,9 +252,8 @@ namespace Generator
             return operatorDeclarations.Count() != 0;
         }
 
-        /// <summary>
-        /// Looks at all the properties of the given class and checks them for improper array types (System.Array instances, multidimensional, jagged) /// </summary>
-        /// <param name="context"></param> /// <param name="classDeclaration"></param>
+        /// <summary>Looks at all the properties of the given class and checks them for improper array types (System.Array instances, multidimensional, jagged)</summary>
+        /// <param name="context"></param><param name="classDeclaration"></param>
         /// <returns>True iff any of the invalid array types are used in any of the propertyy signatures in the given class</returns>
         public bool CheckPropertySignature(ref GeneratorExecutionContext context, IEnumerable<PropertyDeclarationSyntax> props, SyntaxToken typeId)
         {
@@ -282,11 +277,15 @@ namespace Generator
         }
 
         /// <summary>
-        /// Look at all the array types and if any are of the form [][]+ or [,+] then raise the corresponding diagnostic and return true /// </summary>
+        /// Look at all the array types and if any are of the form [][]+ or [,+] then raise the corresponding diagnostic and return true</summary>
         /// <param name="arrTypes"></param><param name="context"></param><param name="typeIdentifier">The type the array lives in</param>
         /// <param name="fieldId">The code the array is a part of the signature for; e.g. property or method</param><param name="loc"></param>
         /// <returns>True iff any of the array types given are multidimensional or jagged</returns>
-        private bool ArrayIsntOneDim(IEnumerable<ArrayTypeSyntax> arrTypes, ref GeneratorExecutionContext context, SyntaxToken typeIdentifier, SyntaxToken fieldId, Location loc)
+        private bool ArrayIsntOneDim(IEnumerable<ArrayTypeSyntax> arrTypes, 
+            ref GeneratorExecutionContext context, 
+            SyntaxToken typeIdentifier, 
+            SyntaxToken fieldId, 
+            Location loc)
         {
             foreach (var arrType in arrTypes)
             {
@@ -311,7 +310,7 @@ namespace Generator
         /// The code generation process makes functions with output param `__retval`, 
         /// we will shadow a user variable named the same thing -- so raise a diagnostic instead</summary>
         /// <param name="context">compilation unit to raise diagnostic on</param><param name="method">the method whose parameteres we are inspecting</param>
-        /// <returns></returns>
+        /// <returns>True if any parameter is named "__retval"</returns>
         public bool HasConflictingParameterName(ref GeneratorExecutionContext context, MethodDeclarationSyntax method)
         {
             var hasInvalidParams = method.ParameterList.Parameters.Where(param => SyntaxTokenIs(param.Identifier, "__retval")).Any();
@@ -442,8 +441,7 @@ namespace Generator
 
         /// <summary>
         /// returns true iff there is a field of the given type in the given struct 
-        /// e.g., if T is PropertyDeclarationSyntax, then if the struct has a property, we report a diagnostic and return true */
-        /// </summary>
+        /// e.g., if T is PropertyDeclarationSyntax, then if the struct has a property, we report a diagnostic and return true</summary>
         /// <typeparam name="T">T can vary over MethodDeclartion, EventDeclaration, etc... </typeparam>
         /// <param name="context"></param>
         /// <param name="structDeclaration"></param>
@@ -460,7 +458,7 @@ namespace Generator
 
         /// <summary>
         /// returns true if there is a field declared private, 
-        /// or (inclusive) declared with a type that is a class or one of object, byte or dynamic /// </summary> 
+        /// or (inclusive) declared with a type that is a class or one of object, byte or dynamic</summary> 
         /// <param name="context"></param><param name="field">The field to inspect</param><param name="structId">The name of the struct the field belongs to</param>
         /// <param name="typeNames">A list of qualified class and interface names, which are invalid types to use in a struct for WinRT Component</param>
         /// <returns>True if the struct has a field of an type that is not supported in Windows Runtime</returns>

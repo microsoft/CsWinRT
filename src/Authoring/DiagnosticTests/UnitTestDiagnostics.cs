@@ -16,13 +16,12 @@ namespace DiagnosticTests
         /// 
         /// And have a DiagnosticDescriptor for the one to check for, they live in WinRT.SourceGenerator.DiagnosticRules
         /// 
-        /// Then go to the DiagnosticValidData class here and add an entry for it
+        /// Then go to the ValidCases/InvalidCases property here and add an entry for it
 
 
         /// <summary>
         /// CheckNoDiagnostic asserts that no diagnostics are raised on the 
-        /// compilation produced from the cswinrt source generator based on the given source code
-        /// </summary>
+        /// compilation produced from the cswinrt source generator based on the given source code /// </summary>
         /// <param name="source"></param>
         [Test, TestCaseSource(nameof(ValidCases))] 
         public void CheckNoDiagnostic(string source)
