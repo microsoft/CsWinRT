@@ -53,6 +53,62 @@ namespace DiagnosticTests
         {
             get 
             {
+                yield return new TestCaseData(StructWithInterfaceField, DiagnosticRules.StructHasInvalidFieldRule2).SetName("Struct with Interface field");
+
+                yield return new TestCaseData(UnsealedClass, DiagnosticRules.UnsealedClassRule).SetName("Unsealed class 1");
+                yield return new TestCaseData(UnsealedClass2, DiagnosticRules.UnsealedClassRule).SetName("Unselaed class 2");
+                yield return new TestCaseData(GenericClass, DiagnosticRules.GenericTypeRule).SetName("Class marked generic");
+                yield return new TestCaseData(GenericInterface, DiagnosticRules.GenericTypeRule).SetName("Interface marked generic");
+                yield return new TestCaseData(ClassInheritsException, DiagnosticRules.ClassInheritsException).SetName("Class inherits System.Exception");
+                
+                yield return new TestCaseData(InterfaceWithOverloadNoAttribute, DiagnosticRules.MethodOverload_NeedDefaultAttribute).SetName("interface needs default overload attribute");
+                yield return new TestCaseData(InterfaceWithOverloadAttributeTwice, DiagnosticRules.MethodOverload_MultipleDefaultAttribute).SetName("interface has too many default overload attribute");
+
+                // Enumerable<T>
+                yield return new TestCaseData(InterfaceWithGenericEnumerableReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic Enumerable return type");
+                yield return new TestCaseData(InterfaceWithGenericEnumerableInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic Enumerable input");
+                yield return new TestCaseData(ClassWithGenericEnumerableReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic Enumerable return type");
+                yield return new TestCaseData(ClassWithGenericEnumerableInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic Enumerable input");
+                
+                yield return new TestCaseData(IfaceWithGenEnumerableProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("interface with Generic Enumerable property");
+                yield return new TestCaseData(ClassWithGenEnumerableProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("class with Generic Enumerable return property");
+                 
+                // KVP<T,S> 
+                yield return new TestCaseData(InterfaceWithGenericKVPairReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic KeyValuePair return type");
+                yield return new TestCaseData(InterfaceWithGenericKVPairInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic KeyValuePair input");
+                yield return new TestCaseData(ClassWithGenericKVPairReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic KeyValuePair return type");
+                yield return new TestCaseData(ClassWithGenericKVPairInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic KeyValuePair input");
+                
+                yield return new TestCaseData(IfaceWithGenKVPairProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("interface with Generic KeyValuePair property");
+                yield return new TestCaseData(ClassWithGenKVPairProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("class with Generic KeyValuePair return property");
+
+                // readonlydict<T,S>
+                yield return new TestCaseData(InterfaceWithGenericRODictReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic RODictionary return type");
+                yield return new TestCaseData(InterfaceWithGenericRODictInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic RODictionary input");
+                yield return new TestCaseData(ClassWithGenericRODictReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic RODictionary return type");
+                yield return new TestCaseData(ClassWithGenericRODictInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic RODictionary input");
+                
+                yield return new TestCaseData(IfaceWithGenRODictProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("interface with Generic RODictionary property");
+                yield return new TestCaseData(ClassWithGenRODictProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("class with Generic RODictionary return property");
+                
+                // dict<T,S>
+                yield return new TestCaseData(InterfaceWithGenericDictReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic Dictionary return type");
+                yield return new TestCaseData(InterfaceWithGenericDictInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic Dictionary input");
+                yield return new TestCaseData(ClassWithGenericDictReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic Dictionary return type");
+                yield return new TestCaseData(ClassWithGenericDictInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic Dictionary input");
+                
+                yield return new TestCaseData(IfaceWithGenDictProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("interface with Generic Dictionary property");
+                yield return new TestCaseData(ClassWithGenDictProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("class with Generic Dictionary return property");
+                
+                // list<T> 
+                yield return new TestCaseData(InterfaceWithGenericListReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic List return type");
+                yield return new TestCaseData(InterfaceWithGenericListInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic List input");
+                yield return new TestCaseData(ClassWithGenericListReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic List return type");
+                yield return new TestCaseData(ClassWithGenericListInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic List input");
+                
+                yield return new TestCaseData(IfaceWithGenListProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("interface with Generic List property");
+                yield return new TestCaseData(ClassWithGenListProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("class with Generic List return property");
+                
                 // multi-dimensional array tests
                 yield return new TestCaseData(MultiDim_2DProp, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Array Property");
                 yield return new TestCaseData(MultiDim_3DProp, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Array Property");
@@ -309,6 +365,32 @@ namespace DiagnosticTests
         {
             get
             {
+                yield return new TestCaseData(Valid_ClassWithGenericDictInput_Private).SetName("Valid - generic dictionary as input to private method");
+                yield return new TestCaseData(Valid_ClassWithGenericDictReturnType_Private).SetName("Valid - generic dictionary as return type of private method");
+                yield return new TestCaseData(Valid_ClassWithPrivateGenDictProp).SetName("Valid - generic dictionary as private prop to class");
+                yield return new TestCaseData(Valid_IfaceWithPrivateGenDictProp).SetName("Valid - generic dictionary as private prop to interface");
+
+                yield return new TestCaseData(Valid_ClassWithGenericRODictInput_Private).SetName("Valid - generic read only dictionary as input to private method");
+                yield return new TestCaseData(Valid_ClassWithGenericRODictReturnType_Private).SetName("Valid - generic read only dictionary as return type of private method");
+                yield return new TestCaseData(Valid_ClassWithPrivateGenRODictProp).SetName("Valid - generic read only dictionary as private prop to class");
+                yield return new TestCaseData(Valid_IfaceWithPrivateGenRODictProp).SetName("Valid - generic read only dictionary as private prop to interface");
+
+                yield return new TestCaseData(Valid_ClassWithGenericKVPairInput_Private).SetName("Valid - generic key value pair as input to private method");
+                yield return new TestCaseData(Valid_ClassWithGenericKVPairReturnType_Private).SetName("Valid - generic key value pair as return type of private method");
+                yield return new TestCaseData(Valid_ClassWithPrivateGenKVPairProp).SetName("Valid - generic key value pair as private prop to class");
+                yield return new TestCaseData(Valid_IfaceWithPrivateGenKVPairProp).SetName("Valid - generic key value pair as private prop to interface");
+
+                yield return new TestCaseData(Valid_ClassWithGenericEnumerableInput_Private).SetName("Valid - generic enumerable as input to private method");
+                yield return new TestCaseData(Valid_ClassWithGenericEnumerableReturnType_Private).SetName("Valid - generic enumerable as return type of private method");
+                yield return new TestCaseData(Valid_ClassWithPrivateGenEnumerableProp).SetName("Valid - generic enumerable as private prop to class");
+                yield return new TestCaseData(Valid_IfaceWithPrivateGenEnumerableProp).SetName("Valid - generic enumerable as private prop to interface");
+
+                yield return new TestCaseData(Valid_ClassWithGenericListInput_Private).SetName("Valid - generic list as input to private method");
+                yield return new TestCaseData(Valid_ClassWithGenericListReturnType_Private).SetName("Valid - generic list as return type of private method");
+                yield return new TestCaseData(Valid_ClassWithPrivateGenListProp).SetName("Valid - generic list as private prop to class");
+                yield return new TestCaseData(Valid_IfaceWithPrivateGenListProp).SetName("Valid - generic list as private prop to interface");
+
+                yield return new TestCaseData(Valid_InterfaceWithOverloadAttribute).SetName("Valid - interface with overloads and one marked as default");
                 // ReadOnlyArray / WriteOnlyArray Attribute
                 yield return new TestCaseData(Valid_ArrayParamAttrUnary_1).SetName("Valid - Unary - Array marked read only");
                 yield return new TestCaseData(Valid_ArrayParamAttrUnary_2).SetName("Valid - Unary - Array marked write only");

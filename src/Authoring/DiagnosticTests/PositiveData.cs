@@ -3,6 +3,192 @@ namespace DiagnosticTests
     public partial class TestDiagnostics
     {
         // WIP
+        // Dict
+        private const string Valid_ClassWithGenericDictReturnType_Private = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private Dictionary<int,int> ReturnsDict(int length) { return new Dictionary<int,int>(); }
+    }
+}";
+        private const string Valid_ClassWithGenericDictInput_Private = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private int ReturnsInt(Dictionary<int,int> ls) { return 0; }
+    }
+}";
+        private const string Valid_ClassWithPrivateGenDictProp = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private System.Collections.Generic.Dictionary<int,int> IntList { get; set; }
+    }
+}";
+        private const string Valid_IfaceWithPrivateGenDictProp = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+       private Dictionary<int,int> Dict { get; set; }
+    }
+}";
+        // RODict
+        private const string Valid_ClassWithGenericRODictReturnType_Private = @"
+using System.Collections.ObjectModel;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private ReadOnlyDictionary<int,int> ReturnsRODict(int length) { return new ReadOnlyDictionary<int,int>(); }
+    }
+}";
+        private const string Valid_ClassWithGenericRODictInput_Private = @"
+using System.Collections.ObjectModel;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private int ReturnsInt(ReadOnlyDictionary<int,int> ls) { return 0; }
+    }
+}";
+        private const string Valid_ClassWithPrivateGenRODictProp = @"
+using System.Collections.ObjectModel;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private ReadOnlyDictionary<int,int> RODict { get; set; }
+    }
+}";
+        private const string Valid_IfaceWithPrivateGenRODictProp = @"
+using System.Collections.ObjectModel;
+namespace Test
+{
+    public interface MyInterface
+    {
+       private ReadOnlyDictionary<int,int> RODict { get; set; }
+    }
+}";
+        // KeyValuePair 
+        private const string Valid_ClassWithGenericKVPairReturnType_Private = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private KeyValuePair<int,int> ReturnsKVPair(int length) { return new KeyValuePair<int,int>(); }
+    }
+}";
+        private const string Valid_ClassWithGenericKVPairInput_Private = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private int ReturnsInt(KeyValuePair<int,int> ls) { return 0; }
+    }
+}";
+        private const string Valid_ClassWithPrivateGenKVPairProp = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private KeyValuePair<int,int> KVPair { get; set; }
+    }
+}";
+        private const string Valid_IfaceWithPrivateGenKVPairProp = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+       private KeyValuePair<int,int> KVPair { get; set; }
+    }
+}";
+        // Enumerable
+        private const string Valid_ClassWithGenericEnumerableReturnType_Private = @"
+using System.Linq;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private Enumerable<int> ReturnsIntList(int length) { return new Enumerable<int>(); }
+    }
+}";
+        private const string Valid_ClassWithGenericEnumerableInput_Private = @"
+using System.Linq;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private int ReturnsIntList(Enumerable<int> ls) { return 0; }
+    }
+}";
+        private const string Valid_ClassWithPrivateGenEnumerableProp = @"
+using System.Linq;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private Enumerable<int> IntList { get; set; }
+    }
+}";
+        private const string Valid_IfaceWithPrivateGenEnumerableProp = @"
+using System.Linq;
+namespace Test
+{
+    public interface MyInterface
+    {
+       private Enumerable<int> Enumer { get; set; }
+    }
+}";
+        // List
+        private const string Valid_ClassWithGenericListReturnType_Private = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private List<int> ReturnsIntList(int length) { return List<int>(); }
+    }
+}";
+        private const string Valid_ClassWithGenericListInput_Private = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private int ReturnsIntList(List<int> ls) { return 0; }
+    }
+}";
+        private const string Valid_ClassWithPrivateGenListProp = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        private List<int> IntList { get; set; }
+    }
+}";
+        private const string Valid_IfaceWithPrivateGenListProp = @"
+namespace Test
+{
+    public interface MyInterface
+    {
+       private List<int> IntList { get; set; }
+    }
+}";
+       
+        // Namespaces
         private const string Valid_NamespaceUse1 = @"
 namespace My.WindowsComponent
 {
@@ -15,6 +201,17 @@ namespace My.WindowsComponent
 }";
         
         //// DefaultOverload attribute
+        private const string Valid_InterfaceWithOverloadAttribute = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public interface MyInterface
+    {
+        int Foo(int n);
+        [DefaultOverload]
+        int Foo(string s);
+    }
+}";
         private const string Valid_TwoOverloads_DiffParamCount = @"
 namespace Test
 {

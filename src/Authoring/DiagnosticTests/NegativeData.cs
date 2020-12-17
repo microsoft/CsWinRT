@@ -2,8 +2,315 @@ namespace DiagnosticTests
 {
     public partial class TestDiagnostics
     {
+        // Generic Dictionary 
+        private const string InterfaceWithGenericDictReturnType = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+        Dictionary<int,bool> MakeDictionary(int length);
+    }
+}";
+        private const string InterfaceWithGenericDictInput = @"
 
-        // Cases to add -- WIP
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+        int ReturnInt(System.Collections.Generic.Dictionary<int,bool> ls);
+    }
+}";
+        private const string ClassWithGenericDictReturnType = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public System.Collections.Generic.Dictionary<int,int> ReturnsDict(int length) { return new Dictionary<int,int>(); };
+    }
+}";
+        private const string ClassWithGenericDictInput = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public int ReturnsInt(Dictionary<int,int> ls) { return 0; }
+    }
+}";
+        private const string IfaceWithGenDictProp = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+        public Dictionary<int, int> Dict { get; set; }
+    }
+}";
+        private const string ClassWithGenDictProp = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public Dictionary<int,int> Dict { get; set; }
+    }
+}";
+        // Generic ReadOnlyDictionary
+        private const string InterfaceWithGenericRODictReturnType = @"
+using System.Collections.ObjectModel;
+namespace Test
+{
+    public interface MyInterface
+    {
+        System.Collections.ObjectModel.ReadOnlyDictionary<int,int> MakeIntList(int length);
+    }
+}";
+        private const string InterfaceWithGenericRODictInput = @"
+using System.Collections.ObjectModel;
+namespace Test
+{
+    public interface MyInterface
+    {
+        int InputIsRODict(ReadOnlyDictionary<int,int> rodict);
+    }
+}";
+        private const string ClassWithGenericRODictReturnType = @"
+using System.Collections.ObjectModel;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public ReadOnlyDictionary<int,int> ReturnsRODict(int length) { return new ReadOnlyDictionary<int,int>(); }
+    }
+}";
+        private const string ClassWithGenericRODictInput = @"
+using System.Collections.ObjectModel;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public int ReturnsInt(ReadOnlyDictionary<int,int> ls) { return 0; }
+    }
+}";
+        private const string IfaceWithGenRODictProp = @"
+using System.Collections.ObjectModel;
+namespace Test
+{
+    public interface MyInterface
+    {
+        public ReadOnlyDictionary<int,int> RODict { get; set; }
+    }
+}";
+        private const string ClassWithGenRODictProp = @"
+using System.Collections.ObjectModel;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public ReadOnlyDictionary<int,int> RODict { get; set; }
+    }
+}";
+        // Generic KeyValuePair
+        private const string InterfaceWithGenericKVPairReturnType = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+        KeyValuePair<int,int> KVPair(int length);
+    }
+}";
+        private const string InterfaceWithGenericKVPairInput = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+        int ReturnsInt(System.Collections.Generic.KeyValuePair<int,int> kvp);
+    }
+}";
+        private const string ClassWithGenericKVPairReturnType = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public KeyValuePair<int,int> ReturnsKVPair(int length);
+    }
+}";
+        private const string ClassWithGenericKVPairInput = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public int ReturnsInt(KeyValuePair<int,int> ls) { return 0; }
+    }
+}";
+        private const string IfaceWithGenKVPairProp = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+        public KeyValuePair<int,int> KVpair { get; set; }
+    }
+}";
+        private const string ClassWithGenKVPairProp = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public KeyValuePair<int,int> KVpair { get; set; }
+    }
+}";
+        // Generic Enumerable 
+        private const string InterfaceWithGenericEnumerableReturnType = @"
+using System.Linq;
+namespace Test
+{
+    public interface MyInterface
+    {
+        Enumerable<int> MakeIntList(int length);
+    }
+}";
+        private const string InterfaceWithGenericEnumerableInput = @"
+using System.Linq;
+namespace Test
+{
+    public interface MyInterface
+    {
+        int ReturnsInt(Enumerable<int> ls);
+    }
+}";
+        private const string ClassWithGenericEnumerableReturnType = @"
+using System.Linq;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public Enumerable<int> ReturnsEnumerable(int length) { return new Enumerable<int>(); }
+    }
+}";
+        private const string ClassWithGenericEnumerableInput = @"
+using System.Linq;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public int ReturnsInt(Enumerable<int> ls) { return 0; }
+    }
+}";
+        private const string IfaceWithGenEnumerableProp = @"
+using System.Linq;
+namespace Test
+{
+    public interface MyInterface
+    {
+        public System.Linq.Enumerable<int> Enumer { get; set; }
+    }
+}";
+        private const string ClassWithGenEnumerableProp = @"
+using System.Linq;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public Enumerable<int> Enumer { get; set; }
+    }
+}";
+        private const string ClassWithGenEnumerableProp_Nested = @"
+using System.Collections.Generic;
+using System.Linq;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public Enumerable<KeyValuePair<int,int>> Enumer { get; set; }
+    }
+}";
+        // Generic List 
+        private const string InterfaceWithGenericListReturnType = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+        List<int> MakeIntList(int length);
+    }
+}";
+        private const string InterfaceWithGenericListInput = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+        int SizeOfIntList(List<int> ls);
+    }
+}";
+        private const string ClassWithGenericListReturnType = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public List<int> ReturnsIntList(int length);
+    }
+}";
+        private const string ClassWithGenericListInput = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public int ReturnsIntList(List<int> ls) { return 0; }
+    }
+}";
+        private const string IfaceWithGenListProp = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+        public List<int> IntList { get; set; }
+    }
+}";
+        private const string ClassWithGenListProp = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public System.Collections.Generic.List<int> IntList { get; set; }
+    }
+}";
+        
+        private const string InterfaceWithOverloadNoAttribute = @"
+namespace Test
+{
+    public interface MyInterface
+    {
+        int Foo(int n);
+        int Foo(string s);
+    }
+}";
+        private const string InterfaceWithOverloadAttributeTwice = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public interface MyInterface
+    {
+        [DefaultOverload]
+        int Foo(int n);
+        [DefaultOverload]
+        int Foo(string s);
+    }
+}";
+ 
         private const string StructWithInterfaceField = @"
 namespace Test 
 {
@@ -51,15 +358,7 @@ namespace Test
         int Foo(T input); 
     }
 }";
-
-        private const string InterfaceInheritsException = @"
-namespace Test 
-{ 
-    public interface IfaceWithExceptions : System.Exception 
-    { 
-        int Foo(T input); 
-    }
-}";
+ 
         private const string ClassInheritsException = @"
 namespace Test 
 { 
@@ -118,6 +417,7 @@ namespace Test
         }
     }
 }";
+
         // multidim array
         private const string MultiDim_2DProp = @"
 namespace Test

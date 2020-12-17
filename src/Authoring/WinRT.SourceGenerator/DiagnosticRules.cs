@@ -23,6 +23,45 @@ namespace WinRT.SourceGenerator
                 helpLinkUri: "https://docs.microsoft.com/en-us/previous-versions/hh977010(v=vs.110)");
         }
 
+        public static DiagnosticDescriptor GenericTypeRule = MakeRule(
+            "WME",
+            "Class (or interface) is generic",
+            "Type {0} is generic. Windows Runtime types cannot be generic.");
+
+        public static DiagnosticDescriptor ClassInheritsException = MakeRule(
+            "WME",
+            "Class inherits invalid type",
+            "Windows Runtime class {0} has an invalid base type {1}. Exporting custom exception types is now allowed.");
+
+        public static DiagnosticDescriptor UnsealedClassRule = MakeRule(
+            "WME",
+            "Class is unsealed",
+            "Exporting unsealed types is not supported. Please mark type {0} as sealed.");
+
+        /* 
+        Method '{0}' has a parameter of type '{1}' in its signature. 
+        Although this generic type is not a valid Windows Runtime type, the type or its generic parameters implement interfaces that are valid Windows Runtime types. 
+        Consider changing the type '{1}' in the method signature to one of the following types instead: 
+        'System.Collections.Generic.IEnumerable<T>, System.Collections.Generic.IList<T>, System.Collections.Generic.IReadOnlyList<T>'.	
+        */
+        
+        public static DiagnosticDescriptor MethodHasUnsupportedTypeRule = MakeRule(
+            "WME",
+            "Method exposes unsupported type in Windows Runtime",
+            "Method {0} has a parameter of type {1} in its signature. The type {1} is not a valid Windows Runtime type.");
+
+       /*
+        Property '{0}' has a parameter of type '{1}' in its signature. 
+        Although this generic type is not a valid Windows Runtime type, the type or its generic parameters implement interfaces that are valid Windows Runtime types. 
+        Consider changing the type '{1}' in the method signature to one of the following types instead:
+        'System.Collections.Generic.IEnumerable<T>, System.Collections.Generic.IList<T>, System.Collections.Generic.IReadOnlyList<T>'.
+         */
+        
+        public static DiagnosticDescriptor PropertyHasUnsupportedTypeRule = MakeRule(
+            "WME",
+            "Property exposes unsupported type in Windows Runtime",
+            "Property {0} has a parameter of type {1} in its signature. The type {1} is not a valid Windows Runtime type.");
+
         public static DiagnosticDescriptor StructWithNoFieldsRule = MakeRule(
             "WME1060",
             "Empty struct rule",
