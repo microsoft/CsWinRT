@@ -23,13 +23,13 @@ namespace Generator
         private string GetAssemblyName(GeneratorExecutionContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.AssemblyName", out var assemblyName);
-            return assemblyName ?? "DiagnosticTests";
+            return assemblyName;
         }
 
         private string GetAssemblyVersion(GeneratorExecutionContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.AssemblyVersion", out var assemblyVersion);
-            return assemblyVersion ?? "1.00.0.0";
+            return assemblyVersion;
         }
 
         public static string GetGeneratedFilesDir(GeneratorExecutionContext context)

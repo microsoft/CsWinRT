@@ -399,18 +399,13 @@ namespace Generator
 
             /* we can't throw the diagnostic as soon as we see a second overload without an attribute, 
              *   as there could be a third overload with the default attribute
-             * we use this map to keep track of these cases, and after we have checked all methods, 
-             *   we check the elements of the map to raise diagnostics for those that didn't get attributed */
+             * So store a diagnostic in case we see all methods and none of this overload have the attribute */
             Dictionary<string, Diagnostic> overloadsWithoutAttributeMap = new Dictionary<string, Diagnostic>();
 
             // var methodDeclarations = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
             foreach (MethodDeclarationSyntax method in methodDeclarations)
             {
-
-                /* Gather information on overloaded methods; make sure there is only one marked DefaultOverload  */
-                // we need to do this check on interface methods too
                 found |= CheckOverloadAttributes(ref context, method, ref methodsHasAttributeMap, ref overloadsWithoutAttributeMap, typeId);
-                /* make sure no parameter has the name "__retval" */
                 found |= HasConflictingParameterName(ref context, method);
                 found |= CheckMethod(ref context, method, typeId);
             }
