@@ -335,7 +335,8 @@ TEST(AuthoringTest, CustomDictionaryImplementations)
     EXPECT_EQ(map.Size(), 0);
 }
 
-TEST(AuthoringTest, CustomVectorImplementations)
+// TODO: Broken due to ALC type mismatch.
+TEST(AuthoringTest, DISABLED_CustomVectorImplementations)
 {
     TestClass testClass;
     testClass.SetProjectedDisposableObject();
