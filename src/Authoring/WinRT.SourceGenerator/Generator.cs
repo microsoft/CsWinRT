@@ -233,8 +233,6 @@ namespace Generator
 
             Logger.Initialize(context);
 
-            AddArrayAttributes(ref context);
-
             if (CatchWinRTDiagnostics(ref context))
             {
                 Logger.Log("Exiting early -- found errors in authored runtime component.");

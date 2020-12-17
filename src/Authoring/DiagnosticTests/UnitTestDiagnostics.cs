@@ -10,12 +10,16 @@ namespace DiagnosticTests
     [TestFixture]
     public partial class TestDiagnostics
     {
-        /// Add unit tests by creating a source code like this:
-        /// private const string MyNewTest = @"namespace Test { ... }";
-        /// 
-        /// And have a DiagnosticDescriptor for the one to check for, they live in WinRT.SourceGenerator.DiagnosticRules
-        /// 
-        /// Then go to the ValidCases/InvalidCases property here and add an entry for it
+        /* UnitTests require the "IsCsWinRTComponent" check in Generator.cs to be commented out, 
+            until we can pass AnalyzerConfigOptions in our TestHelpers.cs file
+           ---
+           Add unit tests by creating a source code like this:
+           private const string MyNewTest = @"namespace Test { ... }";
+           
+           And have a DiagnosticDescriptor for the one to check for, they live in WinRT.SourceGenerator.DiagnosticRules
+           
+           Then go to the ValidCases/InvalidCases property here and add an entry for it
+        */
 
 
         /// <summary>

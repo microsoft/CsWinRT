@@ -376,7 +376,7 @@ namespace Generator
                     // must have some indication of ReadOnly or WriteOnly
                     else if (!hasWriteOnlyArray && !hasReadOnlyArray && !isOutputParam) 
                     {
-                        Report(ref context, DiagnosticRules.ArrayParamNotMarked, method.GetLocation(), method.Identifier, param.Identifier, hasWriteOnlyArray, hasReadOnlyArray, isOutputParam);
+                        Report(ref context, DiagnosticRules.ArrayParamNotMarked, method.GetLocation(), method.Identifier, param.Identifier);
                         found |= true;
                     }
                 }
