@@ -8,15 +8,97 @@ namespace Generator
 {
     public partial class WinRTRules
     {
+        private void Report(ref GeneratorExecutionContext context, DiagnosticDescriptor d, Location loc, params object[] args) 
+        { 
+            context.ReportDiagnostic(Diagnostic.Create(d, loc, args)); 
+        }
+
+        private bool SymbolSetHasString(HashSet<INamedTypeSymbol> typeNames, string typeStr)
+        {
+            return typeNames.Where(sym => sym.ToString().Contains(typeStr)).Any();
+        }
+
         private bool SyntaxTokenIs(SyntaxToken stx, string str) { return stx.Value.Equals(str); }
         
         private bool ModifiersContains(SyntaxTokenList modifiers, string str) { return modifiers.Any(modifier => modifier.ValueText == str); }
 
         public bool IsPublic<T>(T p) where T : MemberDeclarationSyntax { return ModifiersContains(p.Modifiers, "public");  }
 
+        private static bool ImplementsInterface(INamedTypeSymbol typeSymbol, string typeToCheck)
+        {
+            if (typeSymbol == null)
+            {
+                return false;
+            }
+
+            if (typeSymbol.BaseType != null && typeSymbol.BaseType.MetadataName == typeToCheck)
+            {
+                return true;
+            }
+
+            foreach (var implementedInterface in typeSymbol.AllInterfaces)
+            {
+                if (implementedInterface.MetadataName == typeToCheck)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Attributes can come in one list or many, e.g. [A()][B()] vs. [A(),B()]
+        /// look at all possible attributes and see if any match the given string</summary>
+        /// <param name="attrName">attribute names need to be fully qualified, e.g. DefaultOverload is really Windows.Foundation.Metadata.DefaultOverload</param>
+        /// <param name="ls">all the syntax nodes that correspond to an attribute list</param>
+        /// <returns>true iff the given attribute is in the list</returns>
+        private bool MatchesAnyAttribute(string attrName, SyntaxList<AttributeListSyntax> ls)
+        {
+            foreach (var attrList in ls)
+            {
+                foreach (var attr in attrList.Attributes)
+                {
+                    if (attr.Name.ToString().Equals(attrName))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Looks at all possible attributes on a given parameter declaration 
+        /// </summary>
+        /// <returns>
+        /// returns true iff any are (string) equal to the given attribute name 
+        /// </returns>
+        private bool ParamHasAttribute(string attrName, ParameterSyntax param) { return MatchesAnyAttribute(attrName, param.AttributeLists); }
+
+        private static readonly string[] InAndOutAttributeNames = { "In", "Out", "System.Runtime.InteropServices.In", "System.Runtime.InteropServices.Out" };
+        private static readonly string[] OverloadAttributeNames = { "Windows.Foundation.Metadata.DefaultOverload", "DefaultOverload" };
+
+        private bool ParamHasInOrOutAttribute(ParameterSyntax param)
+        {
+            return InAndOutAttributeNames.Where(str => ParamHasAttribute(str, param)).Any();
+        }
+
+        private bool MethodHasDefaultOverloadAttribute(MethodDeclarationSyntax method)
+        {
+            return OverloadAttributeNames.Where(str => MatchesAnyAttribute(str, method.AttributeLists)).Any();
+        }
+
+        /// <summary>e.g. `int foo(out int i) { ... }` /// </summary>
+        /// <param name="param"></param>True if the parameter has the `ref` modifier<returns></returns>
+        private bool ParamMarkedOutput(ParameterSyntax param) { return ModifiersContains(param.Modifiers, "out"); }
+
+        /// <summary>e.g. `int foo(ref int i) { ... }` </summary>
+        /// <param name="param">the parameter to look for the ref keyword on</param>
+        /// <returns>True if the parameter has the `ref` modifier</returns>
+        private bool ParamMarkedRef(ParameterSyntax param) { return ModifiersContains(param.Modifiers, "ref"); }
+
         /* SimplifySyntaxTypeString 
          *  returns the more common term for the given kind of syntax; used when creating a diagnostic for an invalid field in a struct */
-        // can the caller here check the actual type ?
         private string SimplifySyntaxTypeString(string syntaxType)
         {
             switch (syntaxType)
@@ -32,69 +114,16 @@ namespace Generator
             }
         }
 
-
-        #region AttributeHelpers
-
         /// <summary>
-        /// Attributes can come in one list or many, e.g. [A()][B()] vs. [A(),B()]
-        /// look at all possible attributes and see if any match the given string
-        /// </summary>
-        /// <param name="attrName">
-        /// attribute names need to be fully qualified, 
-        /// e.g. DefaultOverload is really Windows.Foundation.Metadata.DefaultOverload
-        /// </param>
-        /// <param name="ls">all the syntax nodes that correspond to an attribute list</param>
-        /// <returns>true iff the given attribute is in the list</returns>
-        private bool MatchesAnyAttribute(string attrName, SyntaxList<AttributeListSyntax> ls)
-        {
-            foreach (var attrList in ls)
-            {
-                foreach (var attr in attrList.Attributes)
-                {
-                    /* Note! 
-                     * Do we want to change this to a different kind of equality check?
-                     * Look at the references of it and see who calls them, 
-                      * what information is available
-                    */
-                    if (attr.Name.ToString().Equals(attrName))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Looks at all possible attributes on a given method declaration 
-        /// </summary>
-        /// <returns>
-        /// returns true iff any are (string) equal to the given attribute name 
-        /// </returns>
-        private bool MethodHasAttribute(string attrName, MethodDeclarationSyntax method) { return MatchesAnyAttribute(attrName, method.AttributeLists); }
-
-        /// <summary>
-        /// Looks at all possible attributes on a given parameter declaration 
-        /// </summary>
-        /// <returns>
-        /// returns true iff any are (string) equal to the given attribute name 
-        /// </returns>
-        private bool ParamHasAttribute(string attrName, ParameterSyntax param) { return MatchesAnyAttribute(attrName, param.AttributeLists); }
-
-        /// <summary>
-        /// Keeps track of repeated declarations of a method (overloads) and raises diagnostics according to the rule that exactly one overload should be attributed the default
-        /// </summary>
-        /// <param name="method">Look for overloads of this method, checking the attributes as well attributes for</param>
+        /// Keeps track of repeated declarations of a method (overloads) and raises diagnostics according to the rule that exactly one overload should be attributed the default</summary>
+        /// <param name="context"></param><param name="method">Look for overloads of this method, checking the attributes as well attributes for</param>
         /// <param name="methodHasAttributeMap">
         /// Keeps track of the method (via qualified name + arity) and whether it was declared with the DefaultOverload attribute
-        /// this variable is ref because we are mutating this map with each method, so we only look at a method a second time if it has an overload but no attribute
-        /// </param>
+        /// this variable is ref because we are mutating this map with each method, so we only look at a method a second time if it has an overload but no attribute</param>
         /// <param name="overloadsWithoutAttributeMap">
         ///     Keeps track of the methods that are overloads but don't have the DefaultOverload attribute (yet)
-        ///     Used after this function executes, hence the reference parameter 
-        /// </param>
+        ///     Used after this function executes, hence the reference parameter</param>
         /// <param name="classId">The class the method lives in -- used for creating the diagnostic</param>
-        /// <param name="context">The SourceGenerator context the code lives in</param>
         /// <returns>True iff multiple overloads of a method are found, where more than one has been designated as the default overload</returns>
         private bool CheckOverloadAttributes(ref GeneratorExecutionContext context,
             MethodDeclarationSyntax method,
@@ -103,12 +132,11 @@ namespace Generator
             SyntaxToken classId)
         {
             bool found = false;
-            // TODO: get the method's qualified name
             int methodArity = method.ParameterList.Parameters.Count;
             string methodNameWithArity = method.Identifier.Text + methodArity.ToString();
 
             // look at all the attributes on this method and see if any of them is the DefaultOverload attribute 
-            bool hasDefaultOverloadAttribute = MatchesAnyAttribute("Windows.Foundation.Metadata.DefaultOverload", method.AttributeLists);
+            bool hasDefaultOverloadAttribute = MethodHasDefaultOverloadAttribute(method);
             bool seenMethodBefore = methodHasAttributeMap.TryGetValue(methodNameWithArity, out bool methodHasAttrAlready);
 
             // Do we have an overload ? 
@@ -141,62 +169,31 @@ namespace Generator
             return found;
         } 
 
-        #endregion
-
-        #region AsyncInterfaces
-        /* The full metadata name of Async interfaces that should not be implemented by Windows Runtime components */
-        static string[] ProhibitedAsyncInterfaces = {
+        private static readonly string[] ProhibitedAsyncInterfaces = {
                 "IAsyncAction",
                 "IAsyncActionWithProgress`1",
                 "IAsyncOperation`1",
                 "IAsyncOperationWithProgress`2"
         };
 
-
-        private static bool ImplementsInterface(INamedTypeSymbol typeSymbol, string typeToCheck)
-        {
-            if (typeSymbol == null)
-            {
-                return false;
-            }
-
-            if (typeSymbol.BaseType != null && typeSymbol.BaseType.MetadataName == typeToCheck)
-            {
-                return true;
-            }
-
-            foreach (var implementedInterface in typeSymbol.AllInterfaces)
-            {
-                if (implementedInterface.MetadataName == typeToCheck)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         /// <summary>
         /// Returns true if the class represented by the symbol 
         /// implements any of the interfaces defined in ProhibitedAsyncInterfaces (e.g., IAsyncAction, ...) /// </summary>
-        /// <param name="context"></param><param name="classSymbol"></param><param name="classDeclaration"></param>
+        /// <param name="context"></param><param name="typeSymbol"></param><param name="classDeclaration"></param>
         /// <returns>True iff the given class implements any of the IAsync interfaces that are not valid in Windows Runtime</returns>
-        public bool ImplementsAsyncInterface(ref GeneratorExecutionContext context, INamedTypeSymbol classSymbol, ClassDeclarationSyntax classDeclaration)
+        public bool ImplementsAsyncInterface<T>(ref GeneratorExecutionContext context, INamedTypeSymbol typeSymbol, T typeDeclaration)
+            where T : TypeDeclarationSyntax
         {
             foreach (string prohibitedInterface in ProhibitedAsyncInterfaces)
             {
-                if (ImplementsInterface(classSymbol, prohibitedInterface))
+                if (ImplementsInterface(typeSymbol, prohibitedInterface))
                 {
-                    Report(ref context, DiagnosticRules.AsyncRule, classDeclaration.GetLocation(), classDeclaration.Identifier, prohibitedInterface);
+                    Report(ref context, DiagnosticRules.AsyncRule, typeDeclaration.GetLocation(), typeDeclaration.Identifier, prohibitedInterface);
                     return true;
-                    /* By exiting early, we only report diagnostic for first prohibited interface we see. 
-                     * If a class implemented 2 (or more) such interfaces, then we would only report diagnostic error for the first one. */
                 }
             }
             return false;
         }
-
-        #endregion
 
         /// <summary>
         /// Raises a diagnostic when multiple constructors for a class are defined with the same arity.</summary>
@@ -233,21 +230,14 @@ namespace Generator
         /// <param name="typeName">check to see if this type appears in the signature</param>
         /// <param name="classId">name of the class this field is in</param> /// <param name="loc">syntax location</param> /// <param name="fieldKind">either property or method</param>
         /// <returns>true if the given type is the same as the one in the list</returns>
-        private bool SignatureContainsTypeName<T>(ref GeneratorExecutionContext context, 
-            IEnumerable<T> typesInSignature, 
-            string typeName, 
-            Diagnostic diag
-            /*SyntaxToken classId, 
-            Location loc, 
-            SyntaxToken fieldKind*/)
+        private bool SignatureContainsTypeName<T>(ref GeneratorExecutionContext context, IEnumerable<T> typesInSignature, string typeName, Diagnostic diag)
         {
             foreach (T name in typesInSignature)
             {
-                // better equality possible? try the semantic model...
+                // TODO better equality possible? try the semantic model...
                 if (name.ToString().Equals(typeName))
                 {
                     context.ReportDiagnostic(diag);
-                    // Report(ref context, DiagnosticRules.ArraySignature_SystemArrayRule, loc, classId, fieldKind);
                     return true;
                 }
             }
@@ -262,34 +252,27 @@ namespace Generator
         public bool OverloadsOperator(ref GeneratorExecutionContext context, ClassDeclarationSyntax classDeclaration)
         {
             var operatorDeclarations = classDeclaration.DescendantNodes().OfType<OperatorDeclarationSyntax>();
-            
             foreach (var op in operatorDeclarations) { Report(ref context, DiagnosticRules.OperatorOverloadedRule, op.GetLocation(), op.OperatorToken); } 
             return operatorDeclarations.Count() != 0;
         }
 
-        #region ArraySignatureChecking
-        
         /// <summary>
         /// Looks at all the properties of the given class and checks them for improper array types (System.Array instances, multidimensional, jagged) /// </summary>
         /// <param name="context"></param> /// <param name="classDeclaration"></param>
         /// <returns>True iff any of the invalid array types are used in any of the propertyy signatures in the given class</returns>
-        public bool CheckPropertySignature(ref GeneratorExecutionContext context, IEnumerable<PropertyDeclarationSyntax> props, SyntaxToken typeId /*ClassDeclarationSyntax classDeclaration*/)
+        public bool CheckPropertySignature(ref GeneratorExecutionContext context, IEnumerable<PropertyDeclarationSyntax> props, SyntaxToken typeId)
         {
             bool found = false;
-            // var props = classDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
             foreach (var prop in props)
             {
                 var loc = prop.GetLocation();
                 var propId = prop.Identifier;
 
                 var qualifiedTypes = prop.DescendantNodes().OfType<QualifiedNameSyntax>(); 
-                // found |= SignatureContainsTypeName(ref context, qualName, "System.Array",    classId, loc, propId);
                 var d = Diagnostic.Create(DiagnosticRules.ArraySignature_SystemArrayRule, loc, typeId, propId);
                 found |= SignatureContainsTypeName(ref context, qualifiedTypes, "System.Array", d);
                 
-
                 var types = prop.DescendantNodes().OfType<IdentifierNameSyntax>(); 
-                // found |= SignatureContainsTypeName(ref context, types, "Array", classId, loc, propId);
                 var d2 = Diagnostic.Create(DiagnosticRules.ArraySignature_SystemArrayRule, loc, typeId, propId);
                 found |= SignatureContainsTypeName(ref context, types, "Array", d2);
                 
@@ -323,27 +306,7 @@ namespace Generator
             }
             return false;
         }
-
-        #endregion
-
-        #region Parameters
-
-        private bool ParamHasInOrOutAttribute(ParameterSyntax param)
-        {
-            string[] ls = new string[] { "In", "Out", "System.Runtime.InteropServices.In", "System.Runtime.InteropServices.Out" };
-            return ls.Where(str => ParamHasAttribute(str, param)).Any();
-        }
-
-        /// <summary>
-        /// e.g. `int foo(out int i) { ... }` /// </summary>
-        /// <param name="param"></param>True if the parameter has the `ref` modifier<returns></returns>
-        private bool ParamMarkedOutput(ParameterSyntax param) { return ModifiersContains(param.Modifiers, "out"); }
-
-        /// <summary>  e.g. `int foo(ref int i) { ... }` </summary>
-        /// <param name="param">the parameter to look for the ref keyword on</param>
-        /// <returns>True if the parameter has the `ref` modifier</returns>
-        private bool ParamMarkedRef(ParameterSyntax param) { return ModifiersContains(param.Modifiers, "ref"); }
-
+        
         /// <summary>
         /// The code generation process makes functions with output param `__retval`, 
         /// we will shadow a user variable named the same thing -- so raise a diagnostic instead</summary>
@@ -358,8 +321,6 @@ namespace Generator
             }
             return hasInvalidParams;
         }
-
-        private void Report(ref GeneratorExecutionContext context, DiagnosticDescriptor d, Location loc, params object[] args) { context.ReportDiagnostic(Diagnostic.Create(d, loc, args)); }
 
         /// <summary>
         ///  Checks to see if an array parameter has been marked with both Write and Read attributes
@@ -431,10 +392,6 @@ namespace Generator
             return found;
         }
 
-        #endregion
-
-        #region CheckingMethods
-
         public bool HasInvalidMethods<T>(ref GeneratorExecutionContext context, IEnumerable<MethodDeclarationSyntax> methodDeclarations, SyntaxToken typeId)
             where T : TypeDeclarationSyntax
         {
@@ -466,7 +423,6 @@ namespace Generator
             }
             return found;
         }
-
         private bool CheckMethod(ref GeneratorExecutionContext context, MethodDeclarationSyntax method, SyntaxToken parentNodeId)
         {
             bool found = false;
@@ -478,15 +434,11 @@ namespace Generator
 
             var d = Diagnostic.Create(DiagnosticRules.ArraySignature_SystemArrayRule, loc, parentNodeId, methodId);
             found |= SignatureContainsTypeName(ref context, qualifiedTypes, "System.Array", d);  
-            //found |= SignatureContainsTypeName(ref context, types, "Array", parentNodeId, loc, methodId);
             found |= SignatureContainsTypeName(ref context, types, "Array", d);
-
             found |= ArrayIsntOneDim(arrays, ref context, parentNodeId, methodId, loc);
             found |= CheckParamsForArrayAttributes(method, ref context);
             return found;
         }
-
-        #endregion
 
         /// <summary>
         /// returns true iff there is a field of the given type in the given struct 
@@ -504,11 +456,6 @@ namespace Generator
                 return true;
             }
             return false;
-        }
-
-        private bool SymbolSetHasString(HashSet<INamedTypeSymbol> typeNames, string typeStr)
-        {
-            return typeNames.Where(sym => sym.ToString().Contains(typeStr)).Any();
         }
 
         /// <summary>

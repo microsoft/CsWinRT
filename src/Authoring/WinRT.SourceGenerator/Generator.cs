@@ -111,7 +111,6 @@ namespace Generator
                 Logger.Log("Adding " + file);
                 context.AddSource(Path.GetFileNameWithoutExtension(file), SourceText.From(File.ReadAllText(file), Encoding.UTF8));
             }
-
             Directory.Delete(outputDir, true);
         }
 
@@ -175,30 +174,28 @@ namespace Generator
                 var interfaces = nodes.OfType<InterfaceDeclarationSyntax>().Where(winrtRules.IsPublic);
                 var structs = nodes.OfType<StructDeclarationSyntax>();
                 
-                /* Check all classes */
                 foreach (ClassDeclarationSyntax classDeclaration in classes)
                 {
-                    /* exposes an operator overload  */
                     found |= winrtRules.OverloadsOperator(ref context, classDeclaration);
-
-                    /* multiple constructors of the same arity */
                     found |= winrtRules.HasMultipleConstructorsOfSameArity(ref context, classDeclaration);
-
-                    // the below three can be linked with interface invalid methods I think...
                     found |= winrtRules.ImplementsAsyncInterface(ref context, model.GetDeclaredSymbol(classDeclaration), classDeclaration);
-
+                    
                     var props = classDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(winrtRules.IsPublic);
                     found |= winrtRules.CheckPropertySignature(ref context, props, classDeclaration.Identifier);
-
+                    
                     var publicMethods = classDeclaration.ChildNodes().OfType<MethodDeclarationSyntax>().Where(winrtRules.IsPublic);
                     found |= winrtRules.HasInvalidMethods<ClassDeclarationSyntax>(ref context, publicMethods,classDeclaration.Identifier);
                 }
 
                 foreach (InterfaceDeclarationSyntax interfaceDeclaration in interfaces)
                 {
+                    found |= winrtRules.ImplementsAsyncInterface(ref context, model.GetDeclaredSymbol(interfaceDeclaration), interfaceDeclaration);
+                    
+                    var props = interfaceDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>();
+                    found |= winrtRules.CheckPropertySignature(ref context, props, interfaceDeclaration.Identifier);
+                    
                     var methods = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
                     found |= winrtRules.HasInvalidMethods<InterfaceDeclarationSyntax>(ref context, methods, interfaceDeclaration.Identifier);
-                    found |= winrtRules.CheckPropertySignature(ref context, interfaceDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>(), interfaceDeclaration.Identifier);
                 }
 
                 /* Check all structs */

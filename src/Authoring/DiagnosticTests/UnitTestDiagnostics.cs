@@ -149,6 +149,27 @@ namespace DiagnosticTests
                 yield return new TestCaseData(SubNamespace_Jagged3DInterface6, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array SubNamespace Interface Method 6");
 
                 // overload attribute tests
+               yield return new TestCaseData(TwoOverloads_NoAttribute_NamesHaveNumber, DiagnosticRules.MethodOverload_NeedDefaultAttribute)
+                    .SetName("DefaultOverload - Need Attribute 1 - Name has number");
+                yield return new TestCaseData(TwoOverloads_NoAttribute, DiagnosticRules.MethodOverload_NeedDefaultAttribute)
+                    .SetName("DefaultOverload - Need Attribute 1"); 
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_OneInList_Unqualified, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Two Overloads, Two Attributes, One in list - Unqualified");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_BothInList_Unqualified, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Two Overloads, Two Attributes, Both in list - Unqualified");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_TwoLists_Unqualified, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Two Overloads, Two Attributes, Two lists - Unqualified");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_OneInSeparateList_OneNot_Unqualified, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Two Overloads, One in separate list, one not - Unqualified");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_BothInSeparateList_Unqualified, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Two Overlodas, Two Attributes, Both in separate list - Unqualified");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_Unqualified, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Two Overloads, Two Attributes - Unqualified");
+                yield return new TestCaseData(ThreeOverloads_TwoAttributes_Unqualified, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
+                    .SetName("DefaultOverload - Three Overloads, Two Attributes - Unqualified");
+
+                yield return new TestCaseData(TwoOverloads_NoAttribute_NamesHaveNumber, DiagnosticRules.MethodOverload_NeedDefaultAttribute)
+                    .SetName("DefaultOverload - Need Attribute 1 - Name has number");
                 yield return new TestCaseData(TwoOverloads_NoAttribute, DiagnosticRules.MethodOverload_NeedDefaultAttribute)
                     .SetName("DefaultOverload - Need Attribute 1");
                 yield return new TestCaseData(TwoOverloads_NoAttribute_OneIrrevAttr, DiagnosticRules.MethodOverload_NeedDefaultAttribute)
@@ -172,6 +193,17 @@ namespace DiagnosticTests
                 // multiple class constructors of same arity
                 yield return new TestCaseData(ConstructorsOfSameArity, DiagnosticRules.ClassConstructorRule).SetName("Multiple constructors of same arity");
                 // implementing async interface
+
+                yield return new TestCaseData(InterfaceImplementsIAsyncOperation, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncOperation");
+                yield return new TestCaseData(InterfaceImplementsIAsyncOperationWithProgress, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncOperationWithProgress");
+                yield return new TestCaseData(InterfaceImplementsIAsyncAction, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncAction");
+                yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncActionWithProgress");
+
+                yield return new TestCaseData(InterfaceImplementsIAsyncOperation2, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncOperation in full");
+                yield return new TestCaseData(InterfaceImplementsIAsyncOperationWithProgress2, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncOperationWithProgress in full");
+                yield return new TestCaseData(InterfaceImplementsIAsyncAction2, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncAction in full");
+                yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress2, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncActionWithProgress in full");
+
                 yield return new TestCaseData(ClassImplementsIAsyncOperation, DiagnosticRules.AsyncRule).SetName("Implements IAsyncOperation");
                 yield return new TestCaseData(ClassImplementsIAsyncOperationWithProgress, DiagnosticRules.AsyncRule).SetName("Implements IAsyncOperationWithProgress");
                 yield return new TestCaseData(ClassImplementsIAsyncAction, DiagnosticRules.AsyncRule).SetName("Implements IAsyncAction");

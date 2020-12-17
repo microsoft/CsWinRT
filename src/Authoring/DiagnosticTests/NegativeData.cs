@@ -3,9 +3,29 @@ namespace DiagnosticTests
     public partial class TestDiagnostics
     {
 
-        private const string EmptyStruct = @"namespace Test { public struct Mt {} }";
+        // Cases to add -- WIP
+        private const string StructWithInterfaceField = @"
+namespace Test 
+{
+        public interface Foo 
+        {
+            int Id(int i);
+        }
 
+        public struct StructWithIface_Invalid
+        {
+            public Foo ifaceField;
+        }
+}";
 
+        private const string UnsealedClass = @"namespace Test { public class UnsealedClass { public UnsealedClass() {} } }";
+        private const string UnsealedClass2 = @"namespace Test { public class UnsealedClass { private UnsealedClass() {} } }"; 
+
+        private const string GenericClass = @"namespace Test { public sealed class GenericClass<T> { public UnsealedClass<T>() {} } }";
+        private const string GenericInterface = @"namespace Test { public interface GenIface<T> { int Foo(T input); }";
+
+        private const string InterfaceInheritsException = @"namespace Test { public interface IfaceWithExceptions : System.Exception { int Foo(T input); }";
+        private const string ClassInheritsException = @"namespace Test { public sealed class ClassWithExceptions : System.Exception { public ClassWithExceptions() {} }";
 
         // namespace tests -- WIP
         private const string _NamespaceTest1 = @"
@@ -648,85 +668,6 @@ public interface SubNamespace_NotReturnAndInput2of3
         } 
 }
 }";
-        // struct 
-        private const string StructWithConstructor = @"
- namespace Test
-{
-   public struct StructWithConstructor_Invalid
-    {
-        int X;
-        StructWithConstructor_Invalid(int x)
-        {
-            X = x;
-        }
-    }
-} ";
-        private const string StructWithClassField = @"
-namespace Test 
-{
-        public sealed class SillyClass
-        {
-            public double Identity(double d)
-            {
-                return d;
-            }
-
-            public SillyClass() { }
-        }
-
-        public struct StructWithClass_Invalid
-        {
-            public SillyClass classField;
-        }
-}";
-        private const string StructWithClassField2 = @"
-namespace Test 
-{
-        public sealed class SillyClass
-        {
-            public double Identity(double d)
-            {
-                return d;
-            }
-
-            public SillyClass() { }
-        }
-}
-
-namespace Prod
-{
-        public struct StructWithClass_Invalid
-        {
-            public Test.SillyClass classField;
-        }
-}";
-
-        private const string StructWithDelegateField = @"
-namespace Test {
-public struct StructWithDelegate_Invalid
-    {
-        public delegate int ADelegate(int x);
-    }
-}";
-        private const string StructWithPrimitiveTypesMissingPublicKeyword = @"
-namespace Test
-{
-    public struct StructWithAllValidFields
-    {
-        bool boolean;
-        char character;
-        decimal dec;
-        double dbl;
-        float flt;
-        int i;
-        uint nat;
-        long lng;
-        ulong ulng;
-        short sh;
-        ushort us;
-        string str;
-    }
-}";
         // constructor of same arity 
         private const string ConstructorsOfSameArity = @"
 namespace TestNamespace
@@ -1252,6 +1193,84 @@ public sealed class ParameterNamedDunderRetVal
     }
 ";
         // struct fields 
+        private const string StructWithConstructor = @"
+ namespace Test
+{
+   public struct StructWithConstructor_Invalid
+    {
+        int X;
+        StructWithConstructor_Invalid(int x)
+        {
+            X = x;
+        }
+    }
+} ";
+        private const string StructWithClassField = @"
+namespace Test 
+{
+        public sealed class SillyClass
+        {
+            public double Identity(double d)
+            {
+                return d;
+            }
+
+            public SillyClass() { }
+        }
+
+        public struct StructWithClass_Invalid
+        {
+            public SillyClass classField;
+        }
+}";
+        private const string StructWithClassField2 = @"
+namespace Test 
+{
+        public sealed class SillyClass
+        {
+            public double Identity(double d)
+            {
+                return d;
+            }
+
+            public SillyClass() { }
+        }
+}
+
+namespace Prod
+{
+        public struct StructWithClass_Invalid
+        {
+            public Test.SillyClass classField;
+        }
+}";
+        private const string StructWithDelegateField = @"
+namespace Test {
+public struct StructWithDelegate_Invalid
+    {
+        public delegate int ADelegate(int x);
+    }
+}";
+        private const string StructWithPrimitiveTypesMissingPublicKeyword = @"
+namespace Test
+{
+    public struct StructWithAllValidFields
+    {
+        bool boolean;
+        char character;
+        decimal dec;
+        double dbl;
+        float flt;
+        int i;
+        uint nat;
+        long lng;
+        ulong ulng;
+        short sh;
+        ushort us;
+        string str;
+    }
+}";
+        private const string EmptyStruct = @"namespace Test { public struct Mt {} }";
         private const string StructWithIndexer = @"
 namespace Test
 {
@@ -1321,7 +1340,124 @@ public struct StructWithDynamicField_Invalid
         public dynamic dyn;
     }
 }";
+        private const string TwoOverloads_NoAttribute_NamesHaveNumber = @"
+namespace Test
+{
+    public sealed class TwoOverloads_NoAttribute_WithNum
+    {
+        public string OverloadExample1(string s) { return s; }
+
+        public int OverloadExample1(int n) { return n; }
+    }
+}";
         // DefaultOverload attribute tests
+        private const string TwoOverloads_TwoAttribute_OneInList_Unqualified = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class TwoOverloads_TwoAttribute_OneInList
+    {
+
+        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+         DefaultOverload]
+        public string OverloadExample(string s) { return s; } 
+
+        [DefaultOverload]
+        public int OverloadExample(int n) { return n; }
+    }
+}";
+        private const string TwoOverloads_TwoAttribute_BothInList_Unqualified = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class TwoOverloads_TwoAttribute_BothInList
+    {
+
+        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+         DefaultOverload()]
+        public string OverloadExample(string s) { return s; }
+
+        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+         DefaultOverload()]
+        public int OverloadExample(int n) { return n; }
+    }
+}";
+        private const string TwoOverloads_TwoAttribute_TwoLists_Unqualified = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class TwoOverloads_TwoAttribute_TwoLists
+    {
+
+        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [DefaultOverload()]
+        public string OverloadExample(string s) { return s; } 
+
+        [DefaultOverload()]
+        public int OverloadExample(int n) { return n; }
+    }
+}";
+        private const string TwoOverloads_TwoAttribute_OneInSeparateList_OneNot_Unqualified = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class TwoOverloads_TwoAttribute_OneInSeparateList_OneNot
+    {
+
+        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [DefaultOverload]
+        public string OverloadExample(string s) { return s; }
+
+        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+         DefaultOverload]
+        public int OverloadExample(int n) { return n; }
+    }
+}";
+        private const string TwoOverloads_TwoAttribute_BothInSeparateList_Unqualified = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class TwoOverloads_TwoAttribute_BothInSeparateList
+    {
+
+        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [DefaultOverload()]
+        public string OverloadExample(string s) { return s; }
+
+        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [DefaultOverload]
+        public int OverloadExample(int n) { return n; }
+    }
+}";
+        private const string TwoOverloads_TwoAttribute_Unqualified = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class TwoOverloads_TwoAttribute
+    {
+
+        [DefaultOverload]
+        public string OverloadExample(string s) { return s; }
+
+        [DefaultOverload]
+        public int OverloadExample(int n) { return n; }
+    }
+}";
+        private const string ThreeOverloads_TwoAttributes_Unqualified= @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class ThreeOverloads_TwoAttributes
+    {
+        public string OverloadExample(string s) { return s; }
+
+        [DefaultOverload]
+        public int OverloadExample(int n) { return n; }
+
+        [DefaultOverload]
+        public bool OverloadExample(bool b) { return b; }
+    }
+}";
         private const string TwoOverloads_NoAttribute = @"
 namespace Test
 {
