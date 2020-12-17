@@ -10,7 +10,6 @@ namespace DiagnosticTests
     [TestFixture]
     public partial class TestDiagnostics
     {
-
         /// Add unit tests by creating a source code like this:
         /// private const string MyNewTest = @"namespace Test { ... }";
         /// 
@@ -53,6 +52,7 @@ namespace DiagnosticTests
                 // multi-dimensional array tests
                 yield return new TestCaseData(MultiDim_2DProp, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Array Property");
                 yield return new TestCaseData(MultiDim_3DProp, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Array Property");
+                yield return new TestCaseData(MultiDim_3DProp_Whitespace, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 3D Array Property With whitespace");
                 
                 yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod1, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Class Method 1");
                 yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod2, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Class Method 2");
@@ -148,7 +148,7 @@ namespace DiagnosticTests
                 yield return new TestCaseData(SubNamespace_Jagged3DInterface6, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array SubNamespace Interface Method 6");
 
                 // overload attribute tests
-               yield return new TestCaseData(TwoOverloads_NoAttribute_NamesHaveNumber, DiagnosticRules.MethodOverload_NeedDefaultAttribute)
+                yield return new TestCaseData(TwoOverloads_NoAttribute_NamesHaveNumber, DiagnosticRules.MethodOverload_NeedDefaultAttribute)
                     .SetName("DefaultOverload - Need Attribute 1 - Name has number");
                 yield return new TestCaseData(TwoOverloads_NoAttribute, DiagnosticRules.MethodOverload_NeedDefaultAttribute)
                     .SetName("DefaultOverload - Need Attribute 1"); 
@@ -322,7 +322,8 @@ namespace DiagnosticTests
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_9).SetName("Valid - ArrayParamAttrBinary_9");
                 // Struct field 
                 yield return new TestCaseData(Valid_StructWithPrimitiveTypes).SetName("Valid - Struct with only fields of basic types");
-                yield return new TestCaseData(Valid_StructWithWinRTField).SetName("Valid - Struct with struct field");
+                yield return new TestCaseData(Valid_StructWithImportedStruct).SetName("Valid - Struct with struct field");
+                yield return new TestCaseData(Valid_StructWithImportedStructQualified).SetName("Valid - Struct with qualified struct field");
                 // SystemArray  
                 yield return new TestCaseData(Valid_SystemArrayProperty).SetName("Valid - System.Array private property");
                 yield return new TestCaseData(Valid_SystemArray_Interface1).SetName("Valid - System.Array internal interface 1");

@@ -18,14 +18,56 @@ namespace Test
         }
 }";
 
-        private const string UnsealedClass = @"namespace Test { public class UnsealedClass { public UnsealedClass() {} } }";
-        private const string UnsealedClass2 = @"namespace Test { public class UnsealedClass { private UnsealedClass() {} } }"; 
+        private const string UnsealedClass = @"
+namespace Test 
+{ 
+    public class UnsealedClass 
+    { 
+        public UnsealedClass() {} 
+    } 
+}";
+        private const string UnsealedClass2 = @"
+namespace Test 
+{ 
+    public class UnsealedClass 
+    { 
+        private UnsealedClass() {} 
+    } 
+}"; 
 
-        private const string GenericClass = @"namespace Test { public sealed class GenericClass<T> { public UnsealedClass<T>() {} } }";
-        private const string GenericInterface = @"namespace Test { public interface GenIface<T> { int Foo(T input); }";
+        private const string GenericClass = @"
+namespace Test 
+{ 
+    public sealed class GenericClass<T> 
+    { 
+        public UnsealedClass<T>() {} 
+    } 
+}";
+        private const string GenericInterface = @"
+namespace Test 
+{ 
+    public interface GenIface<T> 
+    { 
+        int Foo(T input); 
+    }
+}";
 
-        private const string InterfaceInheritsException = @"namespace Test { public interface IfaceWithExceptions : System.Exception { int Foo(T input); }";
-        private const string ClassInheritsException = @"namespace Test { public sealed class ClassWithExceptions : System.Exception { public ClassWithExceptions() {} }";
+        private const string InterfaceInheritsException = @"
+namespace Test 
+{ 
+    public interface IfaceWithExceptions : System.Exception 
+    { 
+        int Foo(T input); 
+    }
+}";
+        private const string ClassInheritsException = @"
+namespace Test 
+{ 
+    public sealed class ClassWithExceptions : System.Exception 
+    { 
+        public ClassWithExceptions() {} 
+    }
+}";
 
         // namespace tests -- WIP
         private const string _NamespaceTest1 = @"
@@ -92,6 +134,15 @@ namespace Test
     public sealed class MultiDim_3DProp
     {
         public int[,,] Arr_3d { get; set; }
+        private int[,] PrivArr_2d { get; set; } 
+    }
+}";
+        private const string MultiDim_3DProp_Whitespace = @"
+namespace Test
+{
+    public sealed class MultiDim_3DProp
+    {
+        public int[ , , ] Arr_3d { get; set; }
         private int[,] PrivArr_2d { get; set; } 
     }
 }";
@@ -672,23 +723,23 @@ public interface SubNamespace_NotReturnAndInput2of3
         private const string ConstructorsOfSameArity = @"
 namespace TestNamespace
 {
-public sealed class SameArityConstructors
-{
-    private int num;
-    private string word;
+    public sealed class SameArityConstructors
+    {
+        private int num;
+        private string word;
 
-    public SameArityConstructors(int i)
-    {
-        num = i;
-        word = ""dog"";
-    }
+        public SameArityConstructors(int i)
+        {
+            num = i;
+            word = ""dog"";
+        }
       
-    public SameArityConstructors(string s)
-    {
-        num = 38;
-        word = s;
-    } 
-}
+        public SameArityConstructors(string s)
+        {
+            num = 38;
+            word = s;
+        } 
+    }
 }";
         // async interfaces  
         private const string ClassImplementsIAsyncOperationWithProgress = @"
@@ -696,7 +747,7 @@ using Windows.Foundation;
 using System;
 namespace TestNamespace
 {
-   public sealed class OpWithProgress : IAsyncOperationWithProgress<int, bool>
+    public sealed class OpWithProgress : IAsyncOperationWithProgress<int, bool>
     {
         AsyncOperationProgressHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         AsyncOperationWithProgressCompletedHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -728,7 +779,7 @@ using Windows.Foundation;
 using System;
 namespace TestNamespace
 {
-public class ActionWithProgress : IAsyncActionWithProgress<int>
+    public class ActionWithProgress : IAsyncActionWithProgress<int>
     {
         AsyncActionProgressHandler<int> IAsyncActionWithProgress<int>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         AsyncActionWithProgressCompletedHandler<int> IAsyncActionWithProgress<int>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -791,7 +842,7 @@ using Windows.Foundation;
 using System;
 namespace TestNamespace
 {
-   public sealed class AsyAction : IAsyncAction
+    public sealed class AsyAction : IAsyncAction
     {
         public AsyncActionCompletedHandler Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
@@ -828,22 +879,37 @@ namespace TestNamespace
 }";
         private const string InterfaceImplementsIAsyncOperationWithProgress = @"
 using Windows.Foundation; using System;
-namespace TestNamespace { public interface OpWithProgress : IAsyncOperationWithProgress<int, bool> {} }";
+namespace TestNamespace 
+{ 
+    public interface OpWithProgress : IAsyncOperationWithProgress<int, bool> {} 
+}";
         private const string InterfaceImplementsIAsyncActionWithProgress = @"
-using Windows.Foundation; using System;
-namespace TestNamespace { public class ActionWithProgress : IAsyncActionWithProgress<int> {} }";
+using Windows.Foundation; 
+using System;
+namespace TestNamespace 
+{ 
+    public class ActionWithProgress : IAsyncActionWithProgress<int> {} 
+}";
         private const string InterfaceImplementsIAsyncOperation = @"
-using Windows.Foundation; using System;
-namespace TestNamespace { public interface IAsyncOperation : IAsyncOperation<int> {} }";
+using Windows.Foundation; 
+using System;
+namespace TestNamespace 
+{ 
+    public interface IAsyncOperation : IAsyncOperation<int> {} 
+}";
         private const string InterfaceImplementsIAsyncAction = @"
-using Windows.Foundation; using System;
-namespace TestNamespace { public interface AsyAction : IAsyncAction {} }";
+using Windows.Foundation;
+using System;
+namespace TestNamespace 
+{ 
+    public interface AsyAction : IAsyncAction {} 
+}";
         private const string InterfaceImplementsIAsyncOperationWithProgress2 = @"
 using Windows.Foundation;
 using System;
 namespace TestNamespace
 {
-   public interface OpWithProgress : IAsyncOperationWithProgress<int, bool>
+    public interface OpWithProgress : IAsyncOperationWithProgress<int, bool>
     {
         AsyncOperationProgressHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         AsyncOperationWithProgressCompletedHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -864,7 +930,7 @@ using Windows.Foundation;
 using System;
 namespace TestNamespace
 {
-public class ActionWithProgress : IAsyncActionWithProgress<int>
+    public class ActionWithProgress : IAsyncActionWithProgress<int>
     {
         AsyncActionProgressHandler<int> IAsyncActionWithProgress<int>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         AsyncActionWithProgressCompletedHandler<int> IAsyncActionWithProgress<int>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -927,7 +993,7 @@ using Windows.Foundation;
 using System;
 namespace TestNamespace
 {
-   public sealed class AsyAction : IAsyncAction
+    public sealed class AsyAction : IAsyncAction
     {
         public AsyncActionCompletedHandler Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
@@ -1270,7 +1336,11 @@ namespace Test
         string str;
     }
 }";
-        private const string EmptyStruct = @"namespace Test { public struct Mt {} }";
+        private const string EmptyStruct = @"
+namespace Test 
+{ 
+    public struct Mt {} 
+}";
         private const string StructWithIndexer = @"
 namespace Test
 {
@@ -1358,7 +1428,7 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_OneInList
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          DefaultOverload]
         public string OverloadExample(string s) { return s; } 
 
@@ -1373,11 +1443,11 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_BothInList
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          DefaultOverload()]
         public string OverloadExample(string s) { return s; }
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          DefaultOverload()]
         public int OverloadExample(int n) { return n; }
     }
@@ -1389,7 +1459,7 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_TwoLists
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [DefaultOverload()]
         public string OverloadExample(string s) { return s; } 
 
@@ -1404,11 +1474,11 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_OneInSeparateList_OneNot
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [DefaultOverload]
         public string OverloadExample(string s) { return s; }
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          DefaultOverload]
         public int OverloadExample(int n) { return n; }
     }
@@ -1420,11 +1490,11 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_BothInSeparateList
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [DefaultOverload()]
         public string OverloadExample(string s) { return s; }
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [DefaultOverload]
         public int OverloadExample(int n) { return n; }
     }
@@ -1474,7 +1544,7 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_OneInList
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; } 
 
@@ -1487,7 +1557,7 @@ namespace Test
 {
     public sealed class TwoOverloads_NoAttribute_OneIrrevAttr
     {
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         public string OverloadExample(string s) { return s; }
 
         public int OverloadExample(int n) { return n; }
@@ -1499,11 +1569,11 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_BothInList
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; }
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          Windows.Foundation.Metadata.DefaultOverload()]
         public int OverloadExample(int n) { return n; }
     }
@@ -1514,7 +1584,7 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_TwoLists
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; } 
 
@@ -1528,11 +1598,11 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_OneInSeparateList_OneNot
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; }
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          Windows.Foundation.Metadata.DefaultOverload()]
         public int OverloadExample(int n) { return n; }
     }
@@ -1543,11 +1613,11 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_BothInSeparateList
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; }
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [Windows.Foundation.Metadata.DefaultOverload()]
         public int OverloadExample(int n) { return n; }
     }
