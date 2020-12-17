@@ -224,32 +224,12 @@ namespace Generator
             return found;
         }
 
-        private void AddArrayAttributes(ref GeneratorExecutionContext context)
-        { 
-            context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(@"
-namespace System.Runtime.InteropServices.WindowsRuntime
-{
-    [global::System.AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-    internal sealed class ReadOnlyArrayAttribute : global::System.Attribute
-    {
-    }
-    [global::System.AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
-    internal sealed class WriteOnlyArrayAttribute : global::System.Attribute
-    {
-    }
-}", Encoding.UTF8));
-        }
-
         public void Execute(GeneratorExecutionContext context)
         {
-            /* Temporary workaround needed when unit testing -- need to specify 
-             * this property on the unit test's source code's anlayzer config options 
-             * *****
             if (!IsCsWinRTComponent(context))
             {
                 return;
             }
-            */
 
             Logger.Initialize(context);
 
