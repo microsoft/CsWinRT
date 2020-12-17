@@ -1301,6 +1301,7 @@ namespace UnitTest
                 Assert.Equal(TestObject, objs[i]);
             }
         }
+
         [Fact]
         public void TestSimpleCCWs()
         {
