@@ -219,14 +219,6 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> GetInterfaceVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector() noexcept;
 
-        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVectorSubset(Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> const& classVector, int32_t startIndex);
-        Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> GetObjectVectorSubset(Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> const& objectVector, int32_t startIndex);
-        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> GetPropertiesVectorSubset(Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> const& propertiesVector, int32_t startIndex);
-        Windows::Foundation::Collections::IVectorView<bool> GetBooleanVectorSubset(Windows::Foundation::Collections::IVectorView<bool> const& booleanVector, int32_t startIndex);
-        Windows::Foundation::Collections::IVectorView<hstring> GetStringVectorSubset(Windows::Foundation::Collections::IVectorView<hstring> const& stringVector, int32_t startIndex);
-        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::BlittableStruct> GetBlittableVectorSubset(Windows::Foundation::Collections::IVectorView<TestComponentCSharp::BlittableStruct> const& blittableVector, int32_t startIndex);
-        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::NonBlittableStringStruct> GetNonBlittableVectorSubset(Windows::Foundation::Collections::IVectorView<TestComponentCSharp::NonBlittableStringStruct> const& nonBlittableVector, int32_t startIndex);
-
         Windows::Foundation::Collections::IIterable<int32_t> GetIntIterable();
         void SetIntIterable(Windows::Foundation::Collections::IIterable<int32_t> const& value);
 

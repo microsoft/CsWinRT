@@ -796,69 +796,6 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::single_threaded_vector_view(std::vector<TestComponentCSharp::Class>{ *this, *this, *this });
     }
 
-    Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> Class::GetClassVectorSubset(
-        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> const& classVector,
-        int32_t startIndex)
-    {
-        std::array<TestComponentCSharp::Class, 3> subset{};
-        classVector.GetMany(startIndex, subset);
-        return winrt::single_threaded_vector_view(std::vector<TestComponentCSharp::Class>{subset.begin(), subset.end()});
-    }
-
-    Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> Class::GetObjectVectorSubset(
-        Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> const& objectVector,
-        int32_t startIndex)
-    {
-        std::array<Windows::Foundation::IInspectable, 3> subset{};
-        objectVector.GetMany(startIndex, subset);
-        return winrt::single_threaded_vector_view(std::vector<Windows::Foundation::IInspectable>{subset.begin(), subset.end()});
-    }
-
-    Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> Class::GetPropertiesVectorSubset(
-        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> const& propertiesVector,
-        int32_t startIndex)
-    {
-        std::array<TestComponentCSharp::IProperties1, 3> subset{};
-        propertiesVector.GetMany(startIndex, subset);
-        return winrt::single_threaded_vector_view(std::vector<TestComponentCSharp::IProperties1>{subset.begin(), subset.end()});
-    }
-
-    Windows::Foundation::Collections::IVectorView<bool> Class::GetBooleanVectorSubset(
-        Windows::Foundation::Collections::IVectorView<bool> const& boolVector,
-        int32_t startIndex)
-    {
-        std::array<bool, 3> subset{};
-        boolVector.GetMany(startIndex, subset);
-        return winrt::single_threaded_vector_view(std::vector<bool>{subset.begin(), subset.end()});
-    }
-
-    Windows::Foundation::Collections::IVectorView<hstring> Class::GetStringVectorSubset(
-        Windows::Foundation::Collections::IVectorView<hstring> const& stringVector,
-        int32_t startIndex)
-    {
-        std::array<hstring, 3> subset{};
-        stringVector.GetMany(startIndex, subset);
-        return winrt::single_threaded_vector_view(std::vector<hstring>{subset.begin(), subset.end()});
-    }
-
-    Windows::Foundation::Collections::IVectorView<TestComponentCSharp::BlittableStruct> Class::GetBlittableVectorSubset(
-        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::BlittableStruct> const& blittableVector,
-        int32_t startIndex)
-    {
-        std::array<TestComponentCSharp::BlittableStruct, 3> subset{};
-        blittableVector.GetMany(startIndex, subset);
-        return winrt::single_threaded_vector_view(std::vector<TestComponentCSharp::BlittableStruct>{subset.begin(), subset.end()});
-    }
-
-    Windows::Foundation::Collections::IVectorView<TestComponentCSharp::NonBlittableStringStruct> Class::GetNonBlittableVectorSubset(
-        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::NonBlittableStringStruct> const& nonBlittableVector,
-        int32_t startIndex)
-    {
-        std::array<TestComponentCSharp::NonBlittableStringStruct, 3> subset{};
-        nonBlittableVector.GetMany(startIndex, subset);
-        return winrt::single_threaded_vector_view(std::vector<TestComponentCSharp::NonBlittableStringStruct>{subset.begin(), subset.end()});
-    }
-
     void Class::CompleteAsync()
     {
         CompleteAsync(S_OK);
