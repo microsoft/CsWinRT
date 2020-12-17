@@ -94,7 +94,7 @@ namespace Test
 namespace OtherNamespace
 {
 
-// WME1044 ?
+    // WME1044 ?
     public sealed class Class1
     {
         int x;
@@ -108,7 +108,7 @@ namespace OtherNamespace
         private const string _NamespaceTest3 = @"
 namespace Test
 { 
-// WME1067 ??
+    // WME1067 ??
     namespace InnerNamespace
     {
         public sealed class Class1
@@ -481,7 +481,6 @@ namespace Test
         private const string ArrayInstanceProperty1 = @"
 namespace Test
 {
-    // this might be valid...
     public sealed class ArrayInstanceProperty1
     {
         public int[] Arr
@@ -504,7 +503,6 @@ public sealed class ArrayInstanceProperty2
         private const string ArrayInstanceProperty3 = @"
 namespace Test
 {
-    // this might be valid...
     public sealed class ArrayInstanceProperty3
     {
         public int[] Arr
@@ -562,7 +560,7 @@ namespace Test
 {
     public sealed class JustReturn 
     {
-       public System.Array SystemArrayMethod() { return Array.CreateInstance(typeof(int), new int[] { 4 }); }
+        public System.Array SystemArrayMethod() { return Array.CreateInstance(typeof(int), new int[] { 4 }); }
     }
 }";
         private const string SystemArrayUnaryAndReturn = @"
@@ -570,31 +568,31 @@ namespace Test
 {
     public sealed class UnaryAndReturn
     {
-       public System.Array SystemArrayMethod(System.Array arr) { return arr; }
+        public System.Array SystemArrayMethod(System.Array arr) { return arr; }
     }
 }";
         private const string SystemArraySecondArgClass = @"
 namespace Test
 {
-   public sealed class SecondArgClass
+    public sealed class SecondArgClass
     {
-       public bool SystemArrayMethod(bool a, System.Array arr) { return a; }
+        public bool SystemArrayMethod(bool a, System.Array arr) { return a; }
     }
 }";
         private const string SystemArraySecondArg2Class = @"
 namespace Test
 {
-public sealed class SecondArg2Class
+    public sealed class SecondArg2Class
     {
-       public bool SystemArrayMethod(bool a, System.Array arr, bool b) { return a; }
+        public bool SystemArrayMethod(bool a, System.Array arr, bool b) { return a; }
     }
 }";
         private const string SystemArraySecondArgAndReturnTypeClass = @"
 namespace Test
 {
     public sealed class SecondArgAndReturnType
-    {
-       public System.Array SystemArrayMethod(bool a, System.Array arr) { return arr; }
+    { 
+        public System.Array SystemArrayMethod(bool a, System.Array arr) { return arr; }
     }
 }";
         private const string SystemArraySecondArgAndReturnTypeClass2 = @"
@@ -602,122 +600,122 @@ namespace Test
 {
     public sealed class SecondArgAndReturnTypeClass2
     {
-       public System.Array SystemArrayMethod(bool a, System.Array arr, bool b) { return arr; }
+        public System.Array SystemArrayMethod(bool a, System.Array arr, bool b) { return arr; }
     }
 }";
         private const string SystemArrayNilArgsButReturnTypeInterface = @"
 namespace Test
 {
-public interface NilArgsButReturnTypeInterface
+    public interface NilArgsButReturnTypeInterface
     {
-       public System.Array SystemArrayMethod();
+        public System.Array SystemArrayMethod();
     }
 }";
         private const string SystemArrayUnaryAndReturnTypeInterface = @"
 namespace Test
 {
-public interface UnaryAndReturnTypeInterface
+    public interface UnaryAndReturnTypeInterface
     {
-       public System.Array SystemArrayMethod(System.Array arr);
+        public System.Array SystemArrayMethod(System.Array arr);
     }
 }";
         private const string SystemArraySecondArgAndReturnTypeInterface = @"
 namespace Test
 {
-public interface SecondArgAndReturnTypeInterface
+    public interface SecondArgAndReturnTypeInterface
     {
-       public System.Array SystemArrayMethod(bool a, System.Array arr);
+        public System.Array SystemArrayMethod(bool a, System.Array arr);
     }
 }";
         private const string SystemArraySecondArgAndReturnTypeInterface2 = @"
 namespace Test
 {
- public interface SecondArgAndReturnTypeInterface2
+    public interface SecondArgAndReturnTypeInterface2
     {
-       public System.Array SystemArrayMetho(bool a, System.Array arr, bool b);
+        public System.Array SystemArrayMetho(bool a, System.Array arr, bool b);
     }
 }";
         private const string SystemArraySecondArgInterface = @"
 namespace Test
 {
- public interface SecondArgInterface
+    public interface SecondArgInterface
     {
-       public bool SystemArrayMethod(bool a, System.Array arr);
+        public bool SystemArrayMethod(bool a, System.Array arr);
     }
 }";
         private const string SystemArraySecondArgInterface2 = @"
 namespace Test
 {
-public interface SecondArgInterface2
+    public interface SecondArgInterface2
     {
-       public bool SystemArrayMethod(bool a, System.Array arr, bool b);
+        public bool SystemArrayMethod(bool a, System.Array arr, bool b);
     }
 }";
         private const string SystemArraySubNamespace_ReturnOnly = @"
 namespace Test
 {
     namespace SubNamespace
-{
-public interface SubNamespace_ReturnOnly
+    {
+        public interface SubNamespace_ReturnOnly
         {
            public System.Array SystemArrayMethod();
         } 
-}
+    }
 }";
         private const string SystemArraySubNamespace_ReturnAndInput1 = @"
 namespace Test
 {
     namespace SubNamespace
-{
-public interface SubNamespace_ReturnAndInput1
+    {
+        public interface SubNamespace_ReturnAndInput1
         {
            public System.Array SystemArrayMethod(System.Array arr);
         }
-}
+    }
 }";
         private const string SystemArraySubNamespace_ReturnAndInput2of2 = @"
 namespace Test
 {
     namespace SubNamespace
-{
-public interface SubNamespace_ReturnAndInput2of2
+    {
+        public interface SubNamespace_ReturnAndInput2of2
         {
            public System.Array SystemArrayMethod(bool a, System.Array arr);
         }
-}
+    }
 }";
         private const string SystemArraySubNamespace_ReturnAndInput2of3 = @"
 namespace Test
 {
     namespace SubNamespace
-{
-public interface SubNamespace_ReturnAndInput2of3
+    {
+        public interface SubNamespace_ReturnAndInput2of3
         {
            public System.Array SystemArrayMethod(bool a, System.Array arr, bool b);
         } 
-}
+    }
 }";
         private const string SystemArraySubNamespace_NotReturnAndInput2of2 = @"
 namespace Test
 {
     namespace SubNamespace
-{
- public interface SubNamespace_NotReturnAndInput2of2
+    {
+        public interface SubNamespace_NotReturnAndInput2of2
         {
            public bool SystemArrayMethod(bool a, System.Array arr);
         } 
-}
+    }
 }";
         private const string SystemArraySubNamespace_NotReturnAndInput2of3 = @"
 namespace Test
 {
     namespace SubNamespace
-{
-public interface SubNamespace_NotReturnAndInput2of3
+    {
+        public interface SubNamespace_NotReturnAndInput2of3
         {
            public bool SystemArrayMethod(bool a, System.Array arr, bool b);
         } 
-}
+    }
 }";
         // constructor of same arity 
         private const string ConstructorsOfSameArity = @"
@@ -1031,238 +1029,374 @@ namespace TestNamespace
 
         // readonlyarray / writeonlyarray attribute
         private const string TestArrayParamAttrUnary_1 = @"
-public sealed class OnlyParam
+namespace Test
 {
-        public void BothAttributes_Separate([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray][System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
+    public sealed class OnlyParam
+    {
+        public void BothAttributes_Separate([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray]
+                                            [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) 
+        { 
+            return;
+        }
+    }
 }";
         private const string TestArrayParamAttrUnary_2 = @"
-public sealed class OnlyParam
+namespace Test
 {
+    public sealed class OnlyParam
+    {
         public void BothAttributes_Together([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray, System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrUnary_3 = @"
-public sealed class OnlyParam
+namespace Test
 {
+    public sealed class OnlyParam
+    {
         public void MarkedOutAndReadOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] out int[] arr) { arr = new int[] { }; }
+    }
 }";
         private const string TestArrayParamAttrUnary_4 = @"
-public sealed class OnlyParam
+namespace Test
 {
+    public sealed class OnlyParam
+    {
         public void ArrayMarkedIn([In] int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrUnary_5 = @"
-public sealed class OnlyParam
+namespace Test
 {
+    public sealed class OnlyParam
+    {
         public void ArrayMarkedOut([Out] int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrUnary_6 = @"
-public sealed class OnlyParam
+namespace Test
 {
+    public sealed class OnlyParam
+    {
         public void NonArrayMarkedReadOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int arr) { }
+    }
 }";
         private const string TestArrayParamAttrUnary_7 = @"
-public sealed class OnlyParam
+namespace Test
 {
+    public sealed class OnlyParam
+    {
         public void NonArrayMarkedWriteOnly([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int arr) { }
+    }
 }";
         private const string TestArrayParamAttrUnary_8 = @"
-public sealed class OnlyParam
+namespace Test
 {
+    public sealed class OnlyParam
+    {
         public void ParamMarkedIn([In] int arr) { }
+    }
 }";
         private const string TestArrayParamAttrUnary_9 = @"
-public sealed class OnlyParam
+namespace Test
 {
+    public sealed class OnlyParam
+    {
         public void ParamMarkedOut([Out] int arr) { }
+    }
 }";
         private const string TestArrayParamAttrUnary_10 = @"
-public sealed class OnlyParam
+namespace Test
 {
+    public sealed class OnlyParam
+    {
         public void ArrayNotMarked(int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrUnary_11 = @"
-public sealed class OnlyParam
+namespace Test
 {
+    public sealed class OnlyParam
+    {
         public void ParamMarkedIn([System.Runtime.InteropServices.In] int arr) { }
+    }
 }";
         private const string TestArrayParamAttrUnary_12 = @"
-public sealed class OnlyParam
+namespace Test
 {
+    public sealed class OnlyParam
+    {
         public void ParamMarkedOut([System.Runtime.InteropServices.Out] int arr) { }
+    }
 }";
         private const string TestArrayParamAttrUnary_13 = @"
-public sealed class OnlyParam
+namespace Test
 {
+    public sealed class OnlyParam
+    {
         public void ArrayMarkedIn([System.Runtime.InteropServices.In] int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrUnary_14 = @"
-public sealed class OnlyParam
+namespace Test
 {
+    public sealed class OnlyParam
+    {
         public void ArrayMarkedOut([System.Runtime.InteropServices.Out] int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_1 = @"
-public sealed class TwoParam
+namespace Test
 {
+    public sealed class TwoParam
+    {
         public void BothAttributes_Separate(int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray][System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_2 = @"
-public sealed class TwoParam
+namespace Test
 {
+    public sealed class TwoParam
+    {
         public void BothAttributes_Together(int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray, System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_3 = @"
-public sealed class TwoParam
+namespace Test
 {
+    public sealed class TwoParam
+    {
         public void MarkedOutAndReadOnly(int i, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] out int[] arr) { arr = new int[] { }; }
+    }
 }";
         private const string TestArrayParamAttrBinary_4 = @"
-public sealed class TwoParam
+namespace Test
 {
+    public sealed class TwoParam
+    {
         public void ArrayMarkedIn(int i, [In] int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_5 = @"
-public sealed class TwoParam
+namespace Test
 {
+    public sealed class TwoParam
+    {
         public void ArrayMarkedOut(int i, [Out] int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_6 = @"
-public sealed class TwoParam
+namespace Test
 {
+    public sealed class TwoParam
+    {
         public void NonArrayMarkedReadOnly(int i, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_7 = @"
-public sealed class TwoParam
+namespace Test
 {
+    public sealed class TwoParam
+    {
         public void NonArrayMarkedWriteOnly(int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_8 = @"
-public sealed class TwoParam
+namespace Test
 {
+    public sealed class TwoParam
+    {
         public void ParamMarkedIn(int i, [In] int arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_9 = @"
-public sealed class TwoParam
+namespace Test
 {
+    public sealed class TwoParam
+    {
         public void ParamMarkedOut(int i, [Out] int arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_10 = @"
-public sealed class TwoParam
+namespace Test
 {
+    public sealed class TwoParam
+    {
         public void ArrayNotMarked(int i, int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_11 = @"
-public sealed class TwoArray
+namespace Test
 {
+    public sealed class TwoArray
+    {
         public void OneValidOneInvalid_1(
-[System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] xs, 
-[System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray]
-[System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] ys) { }
+            [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] xs, 
+            [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray]
+            [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] ys) 
+        {
+            return;
+        }
+    }
 }";
         private const string TestArrayParamAttrBinary_12 = @"
-public sealed class TwoArray
+namespace Test
 {
+    public sealed class TwoArray
+    {
         public void OneValidOneInvalid_2(
-[System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray]
-[System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, 
-[System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] ys) { }
+            [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray]
+            [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, 
+            [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] ys) 
+        { 
+            return; 
+        }
+    }
 }";
         private const string TestArrayParamAttrBinary_13 = @"
-public sealed class TwoArray
+namespace Test
 {
-        public void MarkedOutAndReadOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] out int[] arr) { arr = new int[] { }; }
+    public sealed class TwoArray
+    {
+        public void MarkedOutAndReadOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] out int[] arr) 
+        { 
+            arr = new int[] { }; 
+        }
+    }
 }";
         private const string TestArrayParamAttrBinary_14 = @"
-public sealed class TwoParam
-{
+namespace Test{
+    public sealed class TwoParam
+    {
         public void ArrayMarkedIn(int i, [In] int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_15 = @"
-public sealed class TwoArray
+namespace Test 
 {
+    public sealed class TwoArray
+    {
         public void ArrayMarkedIn2([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [In] int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_16 = @"
-public sealed class TwoArray
+namespace Test
 {
+    public sealed class TwoArray
+    {
         public void ArrayMarkedOut([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [Out] int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_17 = @"
-public sealed class TwoArray
+namespace Test
 {
+    public sealed class TwoArray
+    {
         public void ArrayNotMarked(int i, int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_18 = @"
-public sealed class TwoArray
+namespace Test
 {
+    public sealed class TwoArray
+    {
         public void NonArrayMarkedReadOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int i) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_19 = @"
-public sealed class TwoArray
+namespace Test
 {
+    public sealed class TwoArray
+    {
         public void NonArrayMarkedWriteOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int i) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_20 = @"
-public sealed class TwoArray
-{
+namespace Test
+{ 
+    public sealed class TwoArray
+    {
         public void NonArrayMarkedWriteOnly2([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_21 = @"
-public sealed class TwoArray
+namespace Test
 {
+    public sealed class TwoArray
+    {
         public void ParamMarkedIn([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [In] int arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_22 = @"
-public sealed class TwoArray
+namespace Test
 {
+    public sealed class TwoArray
+    {
         public void ParamMarkedOut([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [Out] int arr) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_23 = @"
-public sealed class TwoArray
+namespace Test
 {
+    public sealed class TwoArray
+    {
         public void ParamMarkedOut2([Out] int arr, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs) { }
+    }
 }";
         private const string TestArrayParamAttrBinary_24 = @"
-public sealed class TwoArray
+namespace Test
 {
+    public sealed class TwoArray
+    {
         public void ArrayNotMarked([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, int[] arr) { }
+    }
 }";
         // ref param 
         private const string RefParam_InterfaceMethod = @"
-public interface IHaveAMethodWithRefParam
+namespace Test
+{
+    public interface IHaveAMethodWithRefParam
     {
         void foo(ref int i);
     }
-";
+}";
         private const string RefParam_ClassMethod = @"
-public sealed class ClassWithMethodUsingRefParam
+namespace Test
+{
+    public sealed class ClassWithMethodUsingRefParam
     {
         public void MethodWithRefParam(ref int i) { i++; }
     }
-";
+}";
         // operator overload 
         private const string OperatorOverload_Class = @"
+namespace Test
+{
     public sealed class ClassThatOverloadsOperator
     {
         public static ClassThatOverloadsOperator operator +(ClassThatOverloadsOperator thing)
         {
             return thing;
         }
-    }";
+    }
+}";
+
         // param name conflict 
         private const string DunderRetValParam = @"
-public sealed class ParameterNamedDunderRetVal
+namespace Test
+{
+    public sealed class ParameterNamedDunderRetVal
     {
         public int Identity(int __retval)
         {
             return __retval;
         }
     }
-";
+}";
         // struct fields 
         private const string StructWithConstructor = @"
- namespace Test
+namespace Test
 {
-   public struct StructWithConstructor_Invalid
+    public struct StructWithConstructor_Invalid
     {
         int X;
         StructWithConstructor_Invalid(int x)
@@ -1274,45 +1408,46 @@ public sealed class ParameterNamedDunderRetVal
         private const string StructWithClassField = @"
 namespace Test 
 {
-        public sealed class SillyClass
+    public sealed class SillyClass
+    {
+        public double Identity(double d)
         {
-            public double Identity(double d)
-            {
-                return d;
-            }
-
-            public SillyClass() { }
+            return d;
         }
 
-        public struct StructWithClass_Invalid
-        {
-            public SillyClass classField;
-        }
+        public SillyClass() { }
+    }
+
+    public struct StructWithClass_Invalid
+    {
+        public SillyClass classField;
+    }
 }";
         private const string StructWithClassField2 = @"
 namespace Test 
 {
-        public sealed class SillyClass
+    public sealed class SillyClass
+    {
+        public double Identity(double d)
         {
-            public double Identity(double d)
-            {
-                return d;
-            }
-
-            public SillyClass() { }
+            return d;
         }
+
+        public SillyClass() { }
+    }
 }
 
 namespace Prod
 {
-        public struct StructWithClass_Invalid
-        {
-            public Test.SillyClass classField;
-        }
+    public struct StructWithClass_Invalid
+    {
+        public Test.SillyClass classField;
+    }
 }";
         private const string StructWithDelegateField = @"
-namespace Test {
-public struct StructWithDelegate_Invalid
+namespace Test 
+{
+    public struct StructWithDelegate_Invalid
     {
         public delegate int ADelegate(int x);
     }
@@ -1344,7 +1479,7 @@ namespace Test
         private const string StructWithIndexer = @"
 namespace Test
 {
-public struct StructWithIndexer_Invalid
+    public struct StructWithIndexer_Invalid
     {
         int[] arr;
         int this[int i] => arr[i];
@@ -1353,7 +1488,7 @@ public struct StructWithIndexer_Invalid
         private const string StructWithMethods = @"
 namespace Test
 {
-public struct StructWithMethods_Invalid
+    public struct StructWithMethods_Invalid
     {
         int foo(int x)
         {
@@ -1389,7 +1524,7 @@ namespace Test
         private const string StructWithPrivateField = @"
 namespace Test
 {
-public struct StructWithPrivateField_Invalid
+    public struct StructWithPrivateField_Invalid
     {
         private int x;
     }
@@ -1397,7 +1532,7 @@ public struct StructWithPrivateField_Invalid
         private const string StructWithObjectField = @"
 namespace Test
 {
-public struct StructWithObjectField_Invalid
+    public struct StructWithObjectField_Invalid
     {
         public object obj;
     }
@@ -1405,7 +1540,7 @@ public struct StructWithObjectField_Invalid
         private const string StructWithDynamicField = @"
 namespace Test
 {
-public struct StructWithDynamicField_Invalid 
+    public struct StructWithDynamicField_Invalid 
     {
         public dynamic dyn;
     }
@@ -1473,7 +1608,6 @@ namespace Test
 {
     public sealed class TwoOverloads_TwoAttribute_OneInSeparateList_OneNot
     {
-
         [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [DefaultOverload]
         public string OverloadExample(string s) { return s; }
@@ -1489,7 +1623,6 @@ namespace Test
 {
     public sealed class TwoOverloads_TwoAttribute_BothInSeparateList
     {
-
         [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [DefaultOverload()]
         public string OverloadExample(string s) { return s; }
@@ -1505,7 +1638,6 @@ namespace Test
 {
     public sealed class TwoOverloads_TwoAttribute
     {
-
         [DefaultOverload]
         public string OverloadExample(string s) { return s; }
 
@@ -1543,7 +1675,6 @@ namespace Test
 {
     public sealed class TwoOverloads_TwoAttribute_OneInList
     {
-
         [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; } 
@@ -1568,7 +1699,6 @@ namespace Test
 {
     public sealed class TwoOverloads_TwoAttribute_BothInList
     {
-
         [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; }
@@ -1583,7 +1713,6 @@ namespace Test
 {
     public sealed class TwoOverloads_TwoAttribute_TwoLists
     {
-
         [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; } 
@@ -1597,7 +1726,6 @@ namespace Test
 {
     public sealed class TwoOverloads_TwoAttribute_OneInSeparateList_OneNot
     {
-
         [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; }
@@ -1612,7 +1740,6 @@ namespace Test
 {
     public sealed class TwoOverloads_TwoAttribute_BothInSeparateList
     {
-
         [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; }
@@ -1627,7 +1754,6 @@ namespace Test
 {
     public sealed class TwoOverloads_TwoAttribute
     {
-
         [Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; }
 
@@ -1679,7 +1805,6 @@ namespace Test
             arr[1] = new int[1] { 2 };
             return arr;
         }
-        
     }
 }";
         private const string Jagged2D_ClassMethod2 = @"
@@ -1995,7 +2120,6 @@ namespace Test
 namespace Test
 {
     namespace SubNamespace
-
     {
         public interface SubNamespace_Jagged3DInterface5
         {
