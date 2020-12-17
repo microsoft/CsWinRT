@@ -55,8 +55,25 @@ namespace ABI.System.Collections.Generic
         public static IntPtr FromManaged(global::System.Collections.Generic.KeyValuePair<K, V> obj) =>
             CreateMarshaler(obj)?.GetRef() ?? IntPtr.Zero;
 
+        internal static unsafe void CopyManaged(global::System.Collections.Generic.KeyValuePair<K, V> o, IntPtr dest)
+        {
+            using var objRef = CreateMarshaler(o);
+            *(IntPtr*)dest.ToPointer() = objRef?.GetRef() ?? IntPtr.Zero;
+        }
+
+        internal static MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.MarshalerArray CreateMarshalerArray(global::System.Collections.Generic.KeyValuePair<K, V>[] array) =>
+            MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
+
+        internal static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.GetAbiArray(box);
+
+        internal static global::System.Collections.Generic.KeyValuePair<K, V>[] FromAbiArray(object box) =>
+            MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.FromAbiArray(box, (o) => FromAbi(o));
+
         public static (int length, IntPtr data) FromManagedArray(global::System.Collections.Generic.KeyValuePair<K, V>[] array) =>
             MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.FromManagedArray(array, (o) => FromManaged(o));
+
+        internal static unsafe void CopyManagedArray(global::System.Collections.Generic.KeyValuePair<K, V>[] array, IntPtr data) =>
+            MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.CopyManagedArray(array, data, (o, dest) => CopyManaged(o, dest));
 
         public static void DisposeMarshaler(IObjectReference value) =>
             MarshalInterfaceHelper<global::Windows.Foundation.Collections.IKeyValuePair<K, V>>.DisposeMarshaler(value);

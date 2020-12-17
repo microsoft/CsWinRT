@@ -74,6 +74,11 @@ namespace WinRT
             return type.GetHelperType().GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).ReturnType;
         }
 
+        internal static Type GetMarshalerArrayType(this Type type)
+        {
+            return type.GetHelperType().GetMethod("CreateMarshalerArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.ReturnType;
+        }
+
         public static bool IsDelegate(this Type type)
         {
             return typeof(Delegate).IsAssignableFrom(type);

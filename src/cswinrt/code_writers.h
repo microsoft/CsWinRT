@@ -1272,6 +1272,7 @@ using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref c
 try
 {
 _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+if(baseInspectable == null) _inner = _inner.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 _defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
@@ -1294,6 +1295,7 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                     method.Name(),
                     bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
                     [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
+                    default_interface_name,
                     default_interface_name,
                     default_interface_name,
                     default_interface_name,
