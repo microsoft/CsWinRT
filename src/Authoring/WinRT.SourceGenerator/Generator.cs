@@ -11,6 +11,7 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
+using WinRT.SourceGenerator;
 
 namespace Generator
 {
@@ -137,16 +138,28 @@ namespace Generator
             peBlob.WriteContentTo(fs);
         }
 
-        private string BuildClassName(ClassDeclarationSyntax classDeclaration)
-        {
-            NamespaceDeclarationSyntax @namespace = (NamespaceDeclarationSyntax)classDeclaration.Parent;
-            return @namespace.Name + "." + classDeclaration.Identifier.ToString();
-        }
-
         private bool CatchWinRTDiagnostics(ref GeneratorExecutionContext context)
         {
             bool found = false;
             WinRTRules winrtRules = new WinRTRules();
+            // classes and interfaces defined, should not appear as struct fields!
+            HashSet<INamedTypeSymbol> userCreatedTypes = new HashSet<INamedTypeSymbol>();
+            // populate the above set 
+            foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
+            {
+                var model = context.Compilation.GetSemanticModel(tree);
+                var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().Where(winrtRules.IsPublic);
+                var interfaces = tree.GetRoot().DescendantNodes().OfType<InterfaceDeclarationSyntax>().Where(winrtRules.IsPublic);
+                foreach (var @class in classes) 
+                {
+                    userCreatedTypes.Add(model.GetDeclaredSymbol(@class));
+                }
+                foreach (var @interface in interfaces)
+                {
+                    userCreatedTypes.Add(model.GetDeclaredSymbol(@interface));
+                }
+            }
+
             foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
             {
                 var model = context.Compilation.GetSemanticModel(tree);
@@ -155,34 +168,31 @@ namespace Generator
                 var classes = nodes.OfType<ClassDeclarationSyntax>().Where(winrtRules.IsPublic);
                 var interfaces = nodes.OfType<InterfaceDeclarationSyntax>().Where(winrtRules.IsPublic);
                 var structs = nodes.OfType<StructDeclarationSyntax>();
-
-                // Used in the checking of structure fields 
-                List<string> classNames = new List<string>();
-
+                
                 /* Check all classes */
                 foreach (ClassDeclarationSyntax classDeclaration in classes)
                 {
-                    classNames.Add(BuildClassName(classDeclaration));
-
-                    /* exports multidimensional array */
-                    found |= winrtRules.CheckPropertiesForArrayTypes(ref context, classDeclaration);
-
+            
                     /* exposes an operator overload  */
                     found |= winrtRules.OverloadsOperator(ref context, classDeclaration);
-
-                    /* parameters named __retval*/
-                    found |= winrtRules.ClassHasInvalidMethods(ref context, classDeclaration);
 
                     /* multiple constructors of the same arity */
                     found |= winrtRules.HasMultipleConstructorsOfSameArity(ref context, classDeclaration);
 
-                    /* implementing async interfaces */
-                    var classSymbol = model.GetDeclaredSymbol(classDeclaration);
-                    found |= winrtRules.ImplementsAsyncInterface(ref context, classSymbol, classDeclaration);
+                    // the below three can be lniked with interface invalid methods I think...
+                    found |= winrtRules.ImplementsAsyncInterface(ref context, model.GetDeclaredSymbol(classDeclaration), classDeclaration);
+                    found |= winrtRules.CheckPropertiesForArrayTypes(ref context, classDeclaration);
+
+                    found |= winrtRules.ClassHasInvalidMethods(ref context, classDeclaration);
+                    // var publicMethods = classDeclaration.ChildNodes().OfType<MethodDeclarationSyntax>().Where(winrtRules.IsPublic);
+                    // found |= winrtRules.HasInvalidMethods<ClassDeclarationSyntax>(ref context, publicMethods, classDeclaration.Identifier);
+
                 }
 
                 foreach (InterfaceDeclarationSyntax interfaceDeclaration in interfaces)
                 {
+                    // var methods = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
+                    // found |= winrtRules.HasInvalidMethods<ClassDeclarationSyntax>(ref context, methods, interfaceDeclaration.Identifier);
                     found |= winrtRules.InterfaceHasInvalidMethods(ref context, interfaceDeclaration);
                 }
 
@@ -198,9 +208,13 @@ namespace Generator
                     found |= winrtRules.StructHasFieldOfType<PropertyDeclarationSyntax>(ref context, structDeclaration);
 
                     var fields = structDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>();
-                    foreach (var field in fields)
+                    foreach (var field in fields) 
+                    { 
+                        found |= winrtRules.CheckFieldValidity(ref context, field, structDeclaration.Identifier, userCreatedTypes, model); 
+                    }
+                    if (!fields.Any())
                     {
-                        found |= winrtRules.StructHasFieldOfInvalidType(ref context, field, structDeclaration, classNames);
+                        context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.StructWithNoFieldsRule, structDeclaration.GetLocation(), model.GetDeclaredSymbol(structDeclaration)));
                     }
                 }
             }

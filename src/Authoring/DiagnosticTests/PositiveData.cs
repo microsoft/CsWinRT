@@ -2,6 +2,28 @@ namespace DiagnosticTests
 {
     public partial class TestDiagnostics
     {
+        private const string Valid_NamespaceUse1 = @"
+namespace My.WindowsComponent
+{
+    public sealed Class1 { public int X { get; set; }  }
+
+    namespace InnerComponent
+    {
+        public sealed class Class2 { public int Y { get; } }
+    }
+}
+";
+        /**/
+        /* Need to check method parameters now, just like we */
+
+        private const string Valid_StructWithByteField = @"
+namespace Test
+{
+public struct StructWithByteField_Valid
+    {
+        public byte b;
+    }
+}";
         private const string Valid_StructWithWinRTField = @"
 using System.Numerics;
 namespace Test

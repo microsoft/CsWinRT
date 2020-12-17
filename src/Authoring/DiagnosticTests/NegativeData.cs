@@ -2,6 +2,11 @@ namespace DiagnosticTests
 {
     public partial class TestDiagnostics
     {
+
+        private const string EmptyStruct = @"namespace Test { public struct Mt {} }";
+
+
+
         // namespace tests -- WIP
         private const string _NamespaceTest1 = @"
 namespace Test
@@ -644,14 +649,6 @@ public interface SubNamespace_NotReturnAndInput2of3
 }
 }";
         // struct 
-        private const string StructWithByteField = @"
-namespace Test
-{
-public struct StructWithByteField_Valid
-    {
-        public byte b;
-    }
-}";
         private const string StructWithConstructor = @"
  namespace Test
 {
@@ -753,7 +750,7 @@ public sealed class SameArityConstructors
 }
 }";
         // async interfaces  
-        private const string ImplementsIAsyncOperationWithProgress = @"
+        private const string ClassImplementsIAsyncOperationWithProgress = @"
 using Windows.Foundation;
 using System;
 namespace TestNamespace
@@ -785,7 +782,7 @@ namespace TestNamespace
         }
     } 
 }";
-        private const string ImplementsIAsyncActionWithProgress = @"
+        private const string ClassImplementsIAsyncActionWithProgress = @"
 using Windows.Foundation;
 using System;
 namespace TestNamespace
@@ -817,7 +814,7 @@ public class ActionWithProgress : IAsyncActionWithProgress<int>
         }
     }
 }";
-        private const string ImplementsIAsyncOperation = @"
+        private const string ClassImplementsIAsyncOperation = @"
 using Windows.Foundation;
 using System;
 namespace TestNamespace
@@ -848,7 +845,7 @@ namespace TestNamespace
         }
     } 
 }";
-        private const string ImplementsIAsyncAction = @"
+        private const string ClassImplementsIAsyncAction = @"
 using Windows.Foundation;
 using System;
 namespace TestNamespace
@@ -888,6 +885,143 @@ namespace TestNamespace
         }
     } 
 }";
+        private const string InterfaceImplementsIAsyncOperationWithProgress = @"
+using Windows.Foundation; using System;
+namespace TestNamespace { public interface OpWithProgress : IAsyncOperationWithProgress<int, bool> {} }";
+        private const string InterfaceImplementsIAsyncActionWithProgress = @"
+using Windows.Foundation; using System;
+namespace TestNamespace { public class ActionWithProgress : IAsyncActionWithProgress<int> {} }";
+        private const string InterfaceImplementsIAsyncOperation = @"
+using Windows.Foundation; using System;
+namespace TestNamespace { public interface IAsyncOperation : IAsyncOperation<int> {} }";
+        private const string InterfaceImplementsIAsyncAction = @"
+using Windows.Foundation; using System;
+namespace TestNamespace { public interface AsyAction : IAsyncAction {} }";
+        private const string InterfaceImplementsIAsyncOperationWithProgress2 = @"
+using Windows.Foundation;
+using System;
+namespace TestNamespace
+{
+   public interface OpWithProgress : IAsyncOperationWithProgress<int, bool>
+    {
+        AsyncOperationProgressHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        AsyncOperationWithProgressCompletedHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
+
+        uint IAsyncInfo.Id => throw new NotImplementedException();
+
+        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
+
+        void IAsyncInfo.Cancel()
+        void IAsyncInfo.Close();
+        int IAsyncOperationWithProgress<int, bool>.GetResults();
+    }
+}";
+        private const string InterfaceImplementsIAsyncActionWithProgress2 = @"
+using Windows.Foundation;
+using System;
+namespace TestNamespace
+{
+public class ActionWithProgress : IAsyncActionWithProgress<int>
+    {
+        AsyncActionProgressHandler<int> IAsyncActionWithProgress<int>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        AsyncActionWithProgressCompletedHandler<int> IAsyncActionWithProgress<int>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
+
+        uint IAsyncInfo.Id => throw new NotImplementedException();
+
+        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
+
+        void IAsyncInfo.Cancel()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IAsyncInfo.Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IAsyncActionWithProgress<int>.GetResults()
+        {
+            throw new NotImplementedException();
+        }
+    }
+}";
+        private const string InterfaceImplementsIAsyncOperation2 = @"
+using Windows.Foundation;
+using System;
+namespace TestNamespace
+{
+    public sealed class Op : IAsyncOperation<int>
+    {
+        AsyncOperationCompletedHandler<int> IAsyncOperation<int>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
+
+        uint IAsyncInfo.Id => throw new NotImplementedException();
+
+        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
+
+        void IAsyncInfo.Cancel()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IAsyncInfo.Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        int IAsyncOperation<int>.GetResults()
+        {
+            throw new NotImplementedException();
+        }
+    } 
+}";
+        private const string InterfaceImplementsIAsyncAction2 = @"
+using Windows.Foundation;
+using System;
+namespace TestNamespace
+{
+   public sealed class AsyAction : IAsyncAction
+    {
+        public AsyncActionCompletedHandler Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public Exception ErrorCode => throw new NotImplementedException();
+
+        public uint Id => throw new NotImplementedException();
+
+        public AsyncStatus Status => throw new NotImplementedException();
+
+        AsyncActionProgressHandler<int> IAsyncActionWithProgress<int>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        AsyncActionWithProgressCompletedHandler<int> IAsyncActionWithProgress<int>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
+
+        uint IAsyncInfo.Id => throw new NotImplementedException();
+
+        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
+
+        public void Cancel()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GetResults()
+        {
+            throw new NotImplementedException();
+        }
+    } 
+}";
+
         // readonlyarray / writeonlyarray attribute
         private const string TestArrayParamAttrUnary_1 = @"
 public sealed class OnlyParam
@@ -1144,7 +1278,6 @@ namespace Test
     public struct StructWithConst_Invalid 
     {
         const int five = 5;
-        private int six;
     }
 }";
         private const string StructWithProperty = @"
@@ -1169,7 +1302,6 @@ namespace Test
 {
 public struct StructWithPrivateField_Invalid
     {
-        const int ci = 5;
         private int x;
     }
 }";

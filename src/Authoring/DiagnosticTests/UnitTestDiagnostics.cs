@@ -11,16 +11,17 @@ namespace DiagnosticTests
     public partial class TestDiagnostics
     {
 
-        /// <summary>
-        /// CheckNoDiagnostic asserts that no diagnostics are raised on the 
-        /// compilation produced from the cswinrt source generator based on the given source code
-        /// 
         /// Add unit tests by creating a source code like this:
         /// private const string MyNewTest = @"namespace Test { ... }";
         /// 
         /// And have a DiagnosticDescriptor for the one to check for, they live in WinRT.SourceGenerator.DiagnosticRules
         /// 
         /// Then go to the DiagnosticValidData class here and add an entry for it
+
+
+        /// <summary>
+        /// CheckNoDiagnostic asserts that no diagnostics are raised on the 
+        /// compilation produced from the cswinrt source generator based on the given source code
         /// </summary>
         /// <param name="source"></param>
         [Test, TestCaseSource(nameof(ValidCases))] 
@@ -171,10 +172,10 @@ namespace DiagnosticTests
                 // multiple class constructors of same arity
                 yield return new TestCaseData(ConstructorsOfSameArity, DiagnosticRules.ClassConstructorRule).SetName("Multiple constructors of same arity");
                 // implementing async interface
-                yield return new TestCaseData(ImplementsIAsyncOperation, DiagnosticRules.AsyncRule).SetName("Implements IAsyncOperation");
-                yield return new TestCaseData(ImplementsIAsyncOperationWithProgress, DiagnosticRules.AsyncRule).SetName("Implements IAsyncOperationWithProgress");
-                yield return new TestCaseData(ImplementsIAsyncAction, DiagnosticRules.AsyncRule).SetName("Implements IAsyncAction");
-                yield return new TestCaseData(ImplementsIAsyncActionWithProgress, DiagnosticRules.AsyncRule).SetName("Implements IAsyncActionWithProgress");
+                yield return new TestCaseData(ClassImplementsIAsyncOperation, DiagnosticRules.AsyncRule).SetName("Implements IAsyncOperation");
+                yield return new TestCaseData(ClassImplementsIAsyncOperationWithProgress, DiagnosticRules.AsyncRule).SetName("Implements IAsyncOperationWithProgress");
+                yield return new TestCaseData(ClassImplementsIAsyncAction, DiagnosticRules.AsyncRule).SetName("Implements IAsyncAction");
+                yield return new TestCaseData(ClassImplementsIAsyncActionWithProgress, DiagnosticRules.AsyncRule).SetName("Implements IAsyncActionWithProgress");
                 // readonly/writeonlyArray attribute
                 yield return new TestCaseData(TestArrayParamAttrUnary_1, DiagnosticRules.ArrayParamMarkedBoth).SetName("TestArrayParamAttrUnary_1");
                 yield return new TestCaseData(TestArrayParamAttrUnary_2, DiagnosticRules.ArrayParamMarkedBoth).SetName("TestArrayParamAttrUnary_2");
@@ -221,7 +222,8 @@ namespace DiagnosticTests
                 // ref param
                 yield return new TestCaseData(RefParam_ClassMethod, DiagnosticRules.RefParameterFound).SetName("Test For Method With Ref Param - Class");
                 yield return new TestCaseData(RefParam_InterfaceMethod, DiagnosticRules.RefParameterFound).SetName("Test For Method With Ref Param - Interface");
-                // startuc field tests
+                // struct field tests
+                yield return new TestCaseData(EmptyStruct, DiagnosticRules.StructWithNoFieldsRule).SetName("Empty struct");
                 yield return new TestCaseData(StructWithClassField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Class Field");
                 yield return new TestCaseData(StructWithClassField2, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Class Field2");
                 yield return new TestCaseData(StructWithDelegateField, DiagnosticRules.StructHasInvalidFieldRule2).SetName("Struct with Delegate Field");
@@ -232,9 +234,8 @@ namespace DiagnosticTests
                 yield return new TestCaseData(StructWithPrivateField, DiagnosticRules.StructHasPrivateFieldRule).SetName("Struct with Private Field");
                 yield return new TestCaseData(StructWithObjectField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Object Field");
                 yield return new TestCaseData(StructWithDynamicField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Dynamic Field");
-                // bytes are valid in structs I think? yield return new TestCaseData(StructWithByteField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Byte Field");
                 yield return new TestCaseData(StructWithConstructor, DiagnosticRules.StructHasInvalidFieldRule2).SetName("Struct with Constructor Field");
-                yield return new TestCaseData(StructWithPrimitiveTypesMissingPublicKeyword, DiagnosticRules.StructHasPrivateFieldRule).SetName("Struct with Constructor Field");
+                yield return new TestCaseData(StructWithPrimitiveTypesMissingPublicKeyword, DiagnosticRules.StructHasPrivateFieldRule).SetName("Struct with missing public field");
                 // system.array tests
                 yield return new TestCaseData(ArrayInstanceProperty1, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 1");
                 yield return new TestCaseData(ArrayInstanceProperty2, DiagnosticRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 2");
@@ -290,7 +291,7 @@ namespace DiagnosticTests
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_9).SetName("Valid - ArrayParamAttrBinary_9");
                 // Struct field 
                 yield return new TestCaseData(Valid_StructWithPrimitiveTypes).SetName("Valid - Struct with only fields of basic types");
-                yield return new TestCaseData(Valid_StructWithWinRTField).SetName("(TODO - fix the namespace) Valid - Struct with struct field");
+                yield return new TestCaseData(Valid_StructWithWinRTField).SetName("Valid - Struct with struct field");
                 // SystemArray  
                 yield return new TestCaseData(Valid_SystemArrayProperty).SetName("Valid - System.Array private property");
                 yield return new TestCaseData(Valid_SystemArray_Interface1).SetName("Valid - System.Array internal interface 1");

@@ -25,6 +25,11 @@ namespace WinRT.SourceGenerator
                 helpLinkUri: "https://docs.microsoft.com/en-us/previous-versions/hh977010(v=vs.110)");
         }
 
+        public static DiagnosticDescriptor StructWithNoFieldsRule = MakeRule(
+            "WME1060",
+            "Empty struct rule",
+            "Structure {0} contains no public fields. Windows Runtime structures must contain at least one public field.");
+
         public static DiagnosticDescriptor AsyncRule = MakeRule(
             "WME1084",
             "Async Interfaces Rule",
@@ -79,8 +84,8 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor MethodOverload_NeedDefaultAttribute = MakeRule(
             "WME1085",
             "Multiple overloads seen, one needs a default", // todo better msg
-                                                            //"The {0}-parameter overloads of {1}.{2} must have exactly one method specified as the default overload by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
-                                                            // 
+            //"The {0}-parameter overloads of {1}.{2} must have exactly one method specified as the default overload 
+            // by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
             "In class {2}: The {0}-parameter overloads of {1} must have exactly one method specified as the default overload by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
 
         public static DiagnosticDescriptor ArraySignature_JaggedArrayRule = MakeRule(
@@ -98,7 +103,7 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor ArraySignature_SystemArrayRule = MakeRule(
             "WME10??",
             "Array signature found with System.Array instance, which is not a valid WinRT type", // todo better msg
-                                                                                                 //                                                                                     //
+                                                                                                 //     //
             "In type {0}: the method {1} has signature that contains a System.Array instance; use a different type like List");
         // "Method {0} has a multi-dimensional array of type {1} in its signature. Arrays in Windows Runtime must be one dimensional"
 
