@@ -2,6 +2,73 @@ namespace DiagnosticTests
 {
     public partial class TestDiagnostics
     {
+
+        // Cases to add -- WIP
+        private const string StructWithInterfaceField = @"
+namespace Test 
+{
+        public interface Foo 
+        {
+            int Id(int i);
+        }
+
+        public struct StructWithIface_Invalid
+        {
+            public Foo ifaceField;
+        }
+}";
+
+        private const string UnsealedClass = @"
+namespace Test 
+{ 
+    public class UnsealedClass 
+    { 
+        public UnsealedClass() {} 
+    } 
+}";
+        private const string UnsealedClass2 = @"
+namespace Test 
+{ 
+    public class UnsealedClass 
+    { 
+        private UnsealedClass() {} 
+    } 
+}"; 
+
+        private const string GenericClass = @"
+namespace Test 
+{ 
+    public sealed class GenericClass<T> 
+    { 
+        public UnsealedClass<T>() {} 
+    } 
+}";
+        private const string GenericInterface = @"
+namespace Test 
+{ 
+    public interface GenIface<T> 
+    { 
+        int Foo(T input); 
+    }
+}";
+
+        private const string InterfaceInheritsException = @"
+namespace Test 
+{ 
+    public interface IfaceWithExceptions : System.Exception 
+    { 
+        int Foo(T input); 
+    }
+}";
+        private const string ClassInheritsException = @"
+namespace Test 
+{ 
+    public sealed class ClassWithExceptions : System.Exception 
+    { 
+        public ClassWithExceptions() {} 
+    }
+}";
+
         // namespace tests -- WIP
         private const string _NamespaceTest1 = @"
 namespace Test
@@ -67,6 +134,15 @@ namespace Test
     public sealed class MultiDim_3DProp
     {
         public int[,,] Arr_3d { get; set; }
+        private int[,] PrivArr_2d { get; set; } 
+    }
+}";
+        private const string MultiDim_3DProp_Whitespace = @"
+namespace Test
+{
+    public sealed class MultiDim_3DProp
+    {
+        public int[ , , ] Arr_3d { get; set; }
         private int[,] PrivArr_2d { get; set; } 
     }
 }";
@@ -643,100 +719,35 @@ public interface SubNamespace_NotReturnAndInput2of3
         } 
 }
 }";
-        // struct 
-        private const string StructWithByteField = @"
-namespace Test
-{
-public struct StructWithByteField_Valid
-    {
-        public byte b;
-    }
-}";
-        private const string StructWithConstructor = @"
- namespace Test
-{
-   public struct StructWithConstructor_Invalid
-    {
-        int X;
-        StructWithConstructor_Invalid(int x)
-        {
-            X = x;
-        }
-    }
-} ";
-        private const string StructWithClassField = @"
-namespace Test 
-{
-        public sealed class SillyClass
-        {
-            public double Identity(double d)
-            {
-                return d;
-            }
-
-            public SillyClass() { }
-        }
-
-        public struct StructWithClass_Invalid
-        {
-            public SillyClass classField;
-        }
-}";
-        private const string StructWithDelegateField = @"
-namespace Test {
-public struct StructWithDelegate_Invalid
-    {
-        public delegate int ADelegate(int x);
-    }
-}";
-        private const string StructWithPrimitiveTypesMissingPublicKeyword = @"
-namespace Test
-{
-    public struct StructWithAllValidFields
-    {
-        bool boolean;
-        char character;
-        decimal dec;
-        double dbl;
-        float flt;
-        int i;
-        uint nat;
-        long lng;
-        ulong ulng;
-        short sh;
-        ushort us;
-        string str;
-    }
-}";
         // constructor of same arity 
         private const string ConstructorsOfSameArity = @"
 namespace TestNamespace
 {
-public sealed class SameArityConstructors
-{
-    private int num;
-    private string word;
+    public sealed class SameArityConstructors
+    {
+        private int num;
+        private string word;
 
-    public SameArityConstructors(int i)
-    {
-        num = i;
-        word = ""dog"";
-    }
+        public SameArityConstructors(int i)
+        {
+            num = i;
+            word = ""dog"";
+        }
       
-    public SameArityConstructors(string s)
-    {
-        num = 38;
-        word = s;
-    } 
-}
+        public SameArityConstructors(string s)
+        {
+            num = 38;
+            word = s;
+        } 
+    }
 }";
         // async interfaces  
-        private const string ImplementsIAsyncOperationWithProgress = @"
+        private const string ClassImplementsIAsyncOperationWithProgress = @"
 using Windows.Foundation;
 using System;
 namespace TestNamespace
 {
-   public sealed class OpWithProgress : IAsyncOperationWithProgress<int, bool>
+    public sealed class OpWithProgress : IAsyncOperationWithProgress<int, bool>
     {
         AsyncOperationProgressHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         AsyncOperationWithProgressCompletedHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -763,12 +774,12 @@ namespace TestNamespace
         }
     } 
 }";
-        private const string ImplementsIAsyncActionWithProgress = @"
+        private const string ClassImplementsIAsyncActionWithProgress = @"
 using Windows.Foundation;
 using System;
 namespace TestNamespace
 {
-public class ActionWithProgress : IAsyncActionWithProgress<int>
+    public class ActionWithProgress : IAsyncActionWithProgress<int>
     {
         AsyncActionProgressHandler<int> IAsyncActionWithProgress<int>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         AsyncActionWithProgressCompletedHandler<int> IAsyncActionWithProgress<int>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -795,7 +806,7 @@ public class ActionWithProgress : IAsyncActionWithProgress<int>
         }
     }
 }";
-        private const string ImplementsIAsyncOperation = @"
+        private const string ClassImplementsIAsyncOperation = @"
 using Windows.Foundation;
 using System;
 namespace TestNamespace
@@ -826,12 +837,12 @@ namespace TestNamespace
         }
     } 
 }";
-        private const string ImplementsIAsyncAction = @"
+        private const string ClassImplementsIAsyncAction = @"
 using Windows.Foundation;
 using System;
 namespace TestNamespace
 {
-   public sealed class AsyAction : IAsyncAction
+    public sealed class AsyAction : IAsyncAction
     {
         public AsyncActionCompletedHandler Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
@@ -866,6 +877,158 @@ namespace TestNamespace
         }
     } 
 }";
+        private const string InterfaceImplementsIAsyncOperationWithProgress = @"
+using Windows.Foundation; using System;
+namespace TestNamespace 
+{ 
+    public interface OpWithProgress : IAsyncOperationWithProgress<int, bool> {} 
+}";
+        private const string InterfaceImplementsIAsyncActionWithProgress = @"
+using Windows.Foundation; 
+using System;
+namespace TestNamespace 
+{ 
+    public class ActionWithProgress : IAsyncActionWithProgress<int> {} 
+}";
+        private const string InterfaceImplementsIAsyncOperation = @"
+using Windows.Foundation; 
+using System;
+namespace TestNamespace 
+{ 
+    public interface IAsyncOperation : IAsyncOperation<int> {} 
+}";
+        private const string InterfaceImplementsIAsyncAction = @"
+using Windows.Foundation;
+using System;
+namespace TestNamespace 
+{ 
+    public interface AsyAction : IAsyncAction {} 
+}";
+        private const string InterfaceImplementsIAsyncOperationWithProgress2 = @"
+using Windows.Foundation;
+using System;
+namespace TestNamespace
+{
+    public interface OpWithProgress : IAsyncOperationWithProgress<int, bool>
+    {
+        AsyncOperationProgressHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        AsyncOperationWithProgressCompletedHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
+
+        uint IAsyncInfo.Id => throw new NotImplementedException();
+
+        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
+
+        void IAsyncInfo.Cancel()
+        void IAsyncInfo.Close();
+        int IAsyncOperationWithProgress<int, bool>.GetResults();
+    }
+}";
+        private const string InterfaceImplementsIAsyncActionWithProgress2 = @"
+using Windows.Foundation;
+using System;
+namespace TestNamespace
+{
+    public class ActionWithProgress : IAsyncActionWithProgress<int>
+    {
+        AsyncActionProgressHandler<int> IAsyncActionWithProgress<int>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        AsyncActionWithProgressCompletedHandler<int> IAsyncActionWithProgress<int>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
+
+        uint IAsyncInfo.Id => throw new NotImplementedException();
+
+        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
+
+        void IAsyncInfo.Cancel()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IAsyncInfo.Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IAsyncActionWithProgress<int>.GetResults()
+        {
+            throw new NotImplementedException();
+        }
+    }
+}";
+        private const string InterfaceImplementsIAsyncOperation2 = @"
+using Windows.Foundation;
+using System;
+namespace TestNamespace
+{
+    public sealed class Op : IAsyncOperation<int>
+    {
+        AsyncOperationCompletedHandler<int> IAsyncOperation<int>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
+
+        uint IAsyncInfo.Id => throw new NotImplementedException();
+
+        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
+
+        void IAsyncInfo.Cancel()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IAsyncInfo.Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        int IAsyncOperation<int>.GetResults()
+        {
+            throw new NotImplementedException();
+        }
+    } 
+}";
+        private const string InterfaceImplementsIAsyncAction2 = @"
+using Windows.Foundation;
+using System;
+namespace TestNamespace
+{
+    public sealed class AsyAction : IAsyncAction
+    {
+        public AsyncActionCompletedHandler Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public Exception ErrorCode => throw new NotImplementedException();
+
+        public uint Id => throw new NotImplementedException();
+
+        public AsyncStatus Status => throw new NotImplementedException();
+
+        AsyncActionProgressHandler<int> IAsyncActionWithProgress<int>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        AsyncActionWithProgressCompletedHandler<int> IAsyncActionWithProgress<int>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
+
+        uint IAsyncInfo.Id => throw new NotImplementedException();
+
+        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
+
+        public void Cancel()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GetResults()
+        {
+            throw new NotImplementedException();
+        }
+    } 
+}";
+
         // readonlyarray / writeonlyarray attribute
         private const string TestArrayParamAttrUnary_1 = @"
 public sealed class OnlyParam
@@ -1096,6 +1259,88 @@ public sealed class ParameterNamedDunderRetVal
     }
 ";
         // struct fields 
+        private const string StructWithConstructor = @"
+ namespace Test
+{
+   public struct StructWithConstructor_Invalid
+    {
+        int X;
+        StructWithConstructor_Invalid(int x)
+        {
+            X = x;
+        }
+    }
+} ";
+        private const string StructWithClassField = @"
+namespace Test 
+{
+        public sealed class SillyClass
+        {
+            public double Identity(double d)
+            {
+                return d;
+            }
+
+            public SillyClass() { }
+        }
+
+        public struct StructWithClass_Invalid
+        {
+            public SillyClass classField;
+        }
+}";
+        private const string StructWithClassField2 = @"
+namespace Test 
+{
+        public sealed class SillyClass
+        {
+            public double Identity(double d)
+            {
+                return d;
+            }
+
+            public SillyClass() { }
+        }
+}
+
+namespace Prod
+{
+        public struct StructWithClass_Invalid
+        {
+            public Test.SillyClass classField;
+        }
+}";
+        private const string StructWithDelegateField = @"
+namespace Test {
+public struct StructWithDelegate_Invalid
+    {
+        public delegate int ADelegate(int x);
+    }
+}";
+        private const string StructWithPrimitiveTypesMissingPublicKeyword = @"
+namespace Test
+{
+    public struct StructWithAllValidFields
+    {
+        bool boolean;
+        char character;
+        decimal dec;
+        double dbl;
+        float flt;
+        int i;
+        uint nat;
+        long lng;
+        ulong ulng;
+        short sh;
+        ushort us;
+        string str;
+    }
+}";
+        private const string EmptyStruct = @"
+namespace Test 
+{ 
+    public struct Mt {} 
+}";
         private const string StructWithIndexer = @"
 namespace Test
 {
@@ -1122,7 +1367,6 @@ namespace Test
     public struct StructWithConst_Invalid 
     {
         const int five = 5;
-        private int six;
     }
 }";
         private const string StructWithProperty = @"
@@ -1147,7 +1391,6 @@ namespace Test
 {
 public struct StructWithPrivateField_Invalid
     {
-        const int ci = 5;
         private int x;
     }
 }";
@@ -1167,7 +1410,124 @@ public struct StructWithDynamicField_Invalid
         public dynamic dyn;
     }
 }";
+        private const string TwoOverloads_NoAttribute_NamesHaveNumber = @"
+namespace Test
+{
+    public sealed class TwoOverloads_NoAttribute_WithNum
+    {
+        public string OverloadExample1(string s) { return s; }
+
+        public int OverloadExample1(int n) { return n; }
+    }
+}";
         // DefaultOverload attribute tests
+        private const string TwoOverloads_TwoAttribute_OneInList_Unqualified = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class TwoOverloads_TwoAttribute_OneInList
+    {
+
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+         DefaultOverload]
+        public string OverloadExample(string s) { return s; } 
+
+        [DefaultOverload]
+        public int OverloadExample(int n) { return n; }
+    }
+}";
+        private const string TwoOverloads_TwoAttribute_BothInList_Unqualified = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class TwoOverloads_TwoAttribute_BothInList
+    {
+
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+         DefaultOverload()]
+        public string OverloadExample(string s) { return s; }
+
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+         DefaultOverload()]
+        public int OverloadExample(int n) { return n; }
+    }
+}";
+        private const string TwoOverloads_TwoAttribute_TwoLists_Unqualified = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class TwoOverloads_TwoAttribute_TwoLists
+    {
+
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [DefaultOverload()]
+        public string OverloadExample(string s) { return s; } 
+
+        [DefaultOverload()]
+        public int OverloadExample(int n) { return n; }
+    }
+}";
+        private const string TwoOverloads_TwoAttribute_OneInSeparateList_OneNot_Unqualified = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class TwoOverloads_TwoAttribute_OneInSeparateList_OneNot
+    {
+
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [DefaultOverload]
+        public string OverloadExample(string s) { return s; }
+
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+         DefaultOverload]
+        public int OverloadExample(int n) { return n; }
+    }
+}";
+        private const string TwoOverloads_TwoAttribute_BothInSeparateList_Unqualified = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class TwoOverloads_TwoAttribute_BothInSeparateList
+    {
+
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [DefaultOverload()]
+        public string OverloadExample(string s) { return s; }
+
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [DefaultOverload]
+        public int OverloadExample(int n) { return n; }
+    }
+}";
+        private const string TwoOverloads_TwoAttribute_Unqualified = @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class TwoOverloads_TwoAttribute
+    {
+
+        [DefaultOverload]
+        public string OverloadExample(string s) { return s; }
+
+        [DefaultOverload]
+        public int OverloadExample(int n) { return n; }
+    }
+}";
+        private const string ThreeOverloads_TwoAttributes_Unqualified= @"
+using Windows.Foundation.Metadata;
+namespace Test
+{
+    public sealed class ThreeOverloads_TwoAttributes
+    {
+        public string OverloadExample(string s) { return s; }
+
+        [DefaultOverload]
+        public int OverloadExample(int n) { return n; }
+
+        [DefaultOverload]
+        public bool OverloadExample(bool b) { return b; }
+    }
+}";
         private const string TwoOverloads_NoAttribute = @"
 namespace Test
 {
@@ -1184,7 +1544,7 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_OneInList
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; } 
 
@@ -1197,7 +1557,7 @@ namespace Test
 {
     public sealed class TwoOverloads_NoAttribute_OneIrrevAttr
     {
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         public string OverloadExample(string s) { return s; }
 
         public int OverloadExample(int n) { return n; }
@@ -1209,11 +1569,11 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_BothInList
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; }
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          Windows.Foundation.Metadata.DefaultOverload()]
         public int OverloadExample(int n) { return n; }
     }
@@ -1224,7 +1584,7 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_TwoLists
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; } 
 
@@ -1238,11 +1598,11 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_OneInSeparateList_OneNot
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; }
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1), 
          Windows.Foundation.Metadata.DefaultOverload()]
         public int OverloadExample(int n) { return n; }
     }
@@ -1253,11 +1613,11 @@ namespace Test
     public sealed class TwoOverloads_TwoAttribute_BothInSeparateList
     {
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [Windows.Foundation.Metadata.DefaultOverload()]
         public string OverloadExample(string s) { return s; }
 
-        [Windows.Foundation.Metadata.Deprecated(""hu"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
+        [Windows.Foundation.Metadata.Deprecated(""deprecated"", Windows.Foundation.Metadata.DeprecationType.Deprecate, 1)]
         [Windows.Foundation.Metadata.DefaultOverload()]
         public int OverloadExample(int n) { return n; }
     }

@@ -2,16 +2,20 @@ namespace DiagnosticTests
 {
     public partial class TestDiagnostics
     {
-        private const string Valid_StructWithWinRTField = @"
-using System.Numerics;
-namespace Test
+        // WIP
+        private const string Valid_NamespaceUse1 = @"
+namespace My.WindowsComponent
 {
-    public struct StructWithWinRTStructField
+    public sealed Class1 { public int X { get; set; }  }
+
+    namespace InnerComponent
     {
-        public Matrix3x2 matrix;
+        public sealed class Class2 { public int Y { get; } }
     }
-}";
-        // ** DefaultOverload attribute
+}
+";
+        
+        //// DefaultOverload attribute
         private const string Valid_TwoOverloads_DiffParamCount = @"
 namespace Test
 {
@@ -99,7 +103,7 @@ namespace Test
         public int OverloadExample(int n) { return n; }
     }
 }";
-        // ** Jagged array
+        //// Jagged array
         private const string Valid_JaggedMix_PrivateClassPublicProperty = @"
 namespace Test
 {
@@ -387,7 +391,7 @@ namespace Test
         private bool D3_NotReturnAndInput2of3(bool a, int[,,] arr, bool b) { return a; }
     }
 }";
-        // ** System.Array 
+        //// System.Array 
         private const string Valid_SystemArray_Interface1 = @"
 namespace Test
 {
@@ -662,7 +666,7 @@ namespace Test
        private System.Array PrivArr { get; set; } 
     }
 }";
-        // ReadOnlyArray / WriteOnlyArray
+        //// ReadOnlyArray / WriteOnlyArray
         private const string Valid_ArrayParamAttrUnary_1 = @"
 namespace TestNamespace 
 {
@@ -775,7 +779,33 @@ namespace TestNamespace
         public void MarkedOut_Valid([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] xs, out int[] arr) { arr = new int[] { }; }
   }
 }";
-        // Struct field 
+        //// Struct field 
+        private const string Valid_StructWithByteField = @"
+namespace Test
+{
+public struct StructWithByteField_Valid
+    {
+        public byte b;
+    }
+}";
+        private const string Valid_StructWithImportedStruct = @"
+using System.Numerics;
+namespace Test
+{
+    public struct StructWithWinRTStructField
+    {
+        public Matrix3x2 matrix;
+    }
+}";
+        private const string Valid_StructWithImportedStructQualified = @"
+using System.Numerics;
+namespace Test
+{
+    public struct StructWithWinRTStructField
+    {
+        public System.Numerics.Matrix3x2 matrix;
+    }
+}";
         private const string Valid_StructWithPrimitiveTypes = @"
 namespace Test
 {
@@ -795,8 +825,5 @@ namespace Test
         public string str;
     }
 }";
-
-
-
     }
 }
