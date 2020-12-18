@@ -53,61 +53,60 @@ namespace DiagnosticTests
         {
             get 
             {
-                yield return new TestCaseData(StructWithInterfaceField, DiagnosticRules.StructHasInvalidFieldRule2).SetName("Struct with Interface field");
 
                 yield return new TestCaseData(UnsealedClass, DiagnosticRules.UnsealedClassRule).SetName("Unsealed class 1");
-                yield return new TestCaseData(UnsealedClass2, DiagnosticRules.UnsealedClassRule).SetName("Unselaed class 2");
+                yield return new TestCaseData(UnsealedClass2, DiagnosticRules.UnsealedClassRule).SetName("Unsealed class 2");
                 yield return new TestCaseData(GenericClass, DiagnosticRules.GenericTypeRule).SetName("Class marked generic");
                 yield return new TestCaseData(GenericInterface, DiagnosticRules.GenericTypeRule).SetName("Interface marked generic");
-                yield return new TestCaseData(ClassInheritsException, DiagnosticRules.ClassInheritsException).SetName("Class inherits System.Exception");
+                yield return new TestCaseData(ClassInheritsException, DiagnosticRules.NonWinRTInterface).SetName("Class inherits System.Exception");
                 
                 yield return new TestCaseData(InterfaceWithOverloadNoAttribute, DiagnosticRules.MethodOverload_NeedDefaultAttribute).SetName("interface needs default overload attribute");
                 yield return new TestCaseData(InterfaceWithOverloadAttributeTwice, DiagnosticRules.MethodOverload_MultipleDefaultAttribute).SetName("interface has too many default overload attribute");
 
                 // Enumerable<T>
-                yield return new TestCaseData(InterfaceWithGenericEnumerableReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic Enumerable return type");
-                yield return new TestCaseData(InterfaceWithGenericEnumerableInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic Enumerable input");
-                yield return new TestCaseData(ClassWithGenericEnumerableReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic Enumerable return type");
-                yield return new TestCaseData(ClassWithGenericEnumerableInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic Enumerable input");
+                yield return new TestCaseData(InterfaceWithGenericEnumerableReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic Enumerable return type");
+                yield return new TestCaseData(InterfaceWithGenericEnumerableInput, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic Enumerable input");
+                yield return new TestCaseData(ClassWithGenericEnumerableReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic Enumerable return type");
+                yield return new TestCaseData(ClassWithGenericEnumerableInput, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic Enumerable input");
                 
-                yield return new TestCaseData(IfaceWithGenEnumerableProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("interface with Generic Enumerable property");
-                yield return new TestCaseData(ClassWithGenEnumerableProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("class with Generic Enumerable return property");
+                yield return new TestCaseData(IfaceWithGenEnumerableProp, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic Enumerable property");
+                yield return new TestCaseData(ClassWithGenEnumerableProp, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic Enumerable return property");
                  
                 // KVP<T,S> 
-                yield return new TestCaseData(InterfaceWithGenericKVPairReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic KeyValuePair return type");
-                yield return new TestCaseData(InterfaceWithGenericKVPairInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic KeyValuePair input");
-                yield return new TestCaseData(ClassWithGenericKVPairReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic KeyValuePair return type");
-                yield return new TestCaseData(ClassWithGenericKVPairInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic KeyValuePair input");
+                yield return new TestCaseData(InterfaceWithGenericKVPairReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic KeyValuePair return type");
+                yield return new TestCaseData(InterfaceWithGenericKVPairInput, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic KeyValuePair input");
+                yield return new TestCaseData(ClassWithGenericKVPairReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic KeyValuePair return type");
+                yield return new TestCaseData(ClassWithGenericKVPairInput, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic KeyValuePair input");
                 
-                yield return new TestCaseData(IfaceWithGenKVPairProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("interface with Generic KeyValuePair property");
-                yield return new TestCaseData(ClassWithGenKVPairProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("class with Generic KeyValuePair return property");
+                yield return new TestCaseData(IfaceWithGenKVPairProp, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic KeyValuePair property");
+                yield return new TestCaseData(ClassWithGenKVPairProp, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic KeyValuePair return property");
 
                 // readonlydict<T,S>
-                yield return new TestCaseData(InterfaceWithGenericRODictReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic RODictionary return type");
-                yield return new TestCaseData(InterfaceWithGenericRODictInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic RODictionary input");
-                yield return new TestCaseData(ClassWithGenericRODictReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic RODictionary return type");
-                yield return new TestCaseData(ClassWithGenericRODictInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic RODictionary input");
+                yield return new TestCaseData(InterfaceWithGenericRODictReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic RODictionary return type");
+                yield return new TestCaseData(InterfaceWithGenericRODictInput, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic RODictionary input");
+                yield return new TestCaseData(ClassWithGenericRODictReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic RODictionary return type");
+                yield return new TestCaseData(ClassWithGenericRODictInput, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic RODictionary input");
                 
-                yield return new TestCaseData(IfaceWithGenRODictProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("interface with Generic RODictionary property");
-                yield return new TestCaseData(ClassWithGenRODictProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("class with Generic RODictionary return property");
+                yield return new TestCaseData(IfaceWithGenRODictProp, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic RODictionary property");
+                yield return new TestCaseData(ClassWithGenRODictProp, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic RODictionary return property");
                 
                 // dict<T,S>
-                yield return new TestCaseData(InterfaceWithGenericDictReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic Dictionary return type");
-                yield return new TestCaseData(InterfaceWithGenericDictInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic Dictionary input");
-                yield return new TestCaseData(ClassWithGenericDictReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic Dictionary return type");
-                yield return new TestCaseData(ClassWithGenericDictInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic Dictionary input");
+                yield return new TestCaseData(InterfaceWithGenericDictReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic Dictionary return type");
+                yield return new TestCaseData(InterfaceWithGenericDictInput, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic Dictionary input");
+                yield return new TestCaseData(ClassWithGenericDictReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic Dictionary return type");
+                yield return new TestCaseData(ClassWithGenericDictInput, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic Dictionary input");
                 
-                yield return new TestCaseData(IfaceWithGenDictProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("interface with Generic Dictionary property");
-                yield return new TestCaseData(ClassWithGenDictProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("class with Generic Dictionary return property");
+                yield return new TestCaseData(IfaceWithGenDictProp, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic Dictionary property");
+                yield return new TestCaseData(ClassWithGenDictProp, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic Dictionary return property");
                 
                 // list<T> 
-                yield return new TestCaseData(InterfaceWithGenericListReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic List return type");
-                yield return new TestCaseData(InterfaceWithGenericListInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("interface with Generic List input");
-                yield return new TestCaseData(ClassWithGenericListReturnType, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic List return type");
-                yield return new TestCaseData(ClassWithGenericListInput, DiagnosticRules.MethodHasUnsupportedTypeRule).SetName("class with Generic List input");
+                yield return new TestCaseData(InterfaceWithGenericListReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic List return type");
+                yield return new TestCaseData(InterfaceWithGenericListInput, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic List input");
+                yield return new TestCaseData(ClassWithGenericListReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic List return type");
+                yield return new TestCaseData(ClassWithGenericListInput, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic List input");
                 
-                yield return new TestCaseData(IfaceWithGenListProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("interface with Generic List property");
-                yield return new TestCaseData(ClassWithGenListProp, DiagnosticRules.PropertyHasUnsupportedTypeRule).SetName("class with Generic List return property");
+                yield return new TestCaseData(IfaceWithGenListProp, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic List property");
+                yield return new TestCaseData(ClassWithGenListProp, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic List return property");
                 
                 // multi-dimensional array tests
                 yield return new TestCaseData(MultiDim_2DProp, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule).SetName("MultiDim 2D Array Property");
@@ -253,20 +252,20 @@ namespace DiagnosticTests
                 yield return new TestCaseData(ConstructorsOfSameArity, DiagnosticRules.ClassConstructorRule).SetName("Multiple constructors of same arity");
                 // implementing async interface
 
-                yield return new TestCaseData(InterfaceImplementsIAsyncOperation, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncOperation");
-                yield return new TestCaseData(InterfaceImplementsIAsyncOperationWithProgress, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncOperationWithProgress");
-                yield return new TestCaseData(InterfaceImplementsIAsyncAction, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncAction");
-                yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncActionWithProgress");
+                yield return new TestCaseData(InterfaceImplementsIAsyncOperation, DiagnosticRules.NonWinRTInterface).SetName("Interface Implements IAsyncOperation");
+                yield return new TestCaseData(InterfaceImplementsIAsyncOperationWithProgress, DiagnosticRules.NonWinRTInterface).SetName("Interface Implements IAsyncOperationWithProgress");
+                yield return new TestCaseData(InterfaceImplementsIAsyncAction, DiagnosticRules.NonWinRTInterface).SetName("Interface Implements IAsyncAction");
+                yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress, DiagnosticRules.NonWinRTInterface).SetName("Interface Implements IAsyncActionWithProgress");
 
-                yield return new TestCaseData(InterfaceImplementsIAsyncOperation2, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncOperation in full");
-                yield return new TestCaseData(InterfaceImplementsIAsyncOperationWithProgress2, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncOperationWithProgress in full");
-                yield return new TestCaseData(InterfaceImplementsIAsyncAction2, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncAction in full");
-                yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress2, DiagnosticRules.AsyncRule).SetName("Interface Implements IAsyncActionWithProgress in full");
+                yield return new TestCaseData(InterfaceImplementsIAsyncOperation2, DiagnosticRules.NonWinRTInterface).SetName("Interface Implements IAsyncOperation in full");
+                yield return new TestCaseData(InterfaceImplementsIAsyncOperationWithProgress2, DiagnosticRules.NonWinRTInterface).SetName("Interface Implements IAsyncOperationWithProgress in full");
+                yield return new TestCaseData(InterfaceImplementsIAsyncAction2, DiagnosticRules.NonWinRTInterface).SetName("Interface Implements IAsyncAction in full");
+                yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress2, DiagnosticRules.NonWinRTInterface).SetName("Interface Implements IAsyncActionWithProgress in full");
 
-                yield return new TestCaseData(ClassImplementsIAsyncOperation, DiagnosticRules.AsyncRule).SetName("Implements IAsyncOperation");
-                yield return new TestCaseData(ClassImplementsIAsyncOperationWithProgress, DiagnosticRules.AsyncRule).SetName("Implements IAsyncOperationWithProgress");
-                yield return new TestCaseData(ClassImplementsIAsyncAction, DiagnosticRules.AsyncRule).SetName("Implements IAsyncAction");
-                yield return new TestCaseData(ClassImplementsIAsyncActionWithProgress, DiagnosticRules.AsyncRule).SetName("Implements IAsyncActionWithProgress");
+                yield return new TestCaseData(ClassImplementsIAsyncOperation, DiagnosticRules.NonWinRTInterface).SetName("Implements IAsyncOperation");
+                yield return new TestCaseData(ClassImplementsIAsyncOperationWithProgress, DiagnosticRules.NonWinRTInterface).SetName("Implements IAsyncOperationWithProgress");
+                yield return new TestCaseData(ClassImplementsIAsyncAction, DiagnosticRules.NonWinRTInterface).SetName("Implements IAsyncAction");
+                yield return new TestCaseData(ClassImplementsIAsyncActionWithProgress, DiagnosticRules.NonWinRTInterface).SetName("Implements IAsyncActionWithProgress");
                 // readonly/writeonlyArray attribute
                 yield return new TestCaseData(TestArrayParamAttrUnary_1, DiagnosticRules.ArrayParamMarkedBoth).SetName("TestArrayParamAttrUnary_1");
                 yield return new TestCaseData(TestArrayParamAttrUnary_2, DiagnosticRules.ArrayParamMarkedBoth).SetName("TestArrayParamAttrUnary_2");
@@ -315,6 +314,7 @@ namespace DiagnosticTests
                 yield return new TestCaseData(RefParam_InterfaceMethod, DiagnosticRules.RefParameterFound).SetName("Test For Method With Ref Param - Interface");
                 // struct field tests
                 yield return new TestCaseData(EmptyStruct, DiagnosticRules.StructWithNoFieldsRule).SetName("Empty struct");
+                yield return new TestCaseData(StructWithInterfaceField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Interface field");
                 yield return new TestCaseData(StructWithClassField, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Class Field");
                 yield return new TestCaseData(StructWithClassField2, DiagnosticRules.StructHasInvalidFieldRule).SetName("Struct with Class Field2");
                 yield return new TestCaseData(StructWithDelegateField, DiagnosticRules.StructHasInvalidFieldRule2).SetName("Struct with Delegate Field");

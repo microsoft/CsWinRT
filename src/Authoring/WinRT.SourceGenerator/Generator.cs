@@ -217,23 +217,29 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 
                 foreach (ClassDeclarationSyntax classDeclaration in classes)
                 {
+                    var sym = model.GetDeclaredSymbol(classDeclaration);
+                    found |= winrtRules.UnsealedClass(ref context, sym, classDeclaration);
+
                     found |= winrtRules.OverloadsOperator(ref context, classDeclaration);
                     found |= winrtRules.HasMultipleConstructorsOfSameArity(ref context, classDeclaration);
-                    found |= winrtRules.ImplementsAsyncInterface(ref context, model.GetDeclaredSymbol(classDeclaration), classDeclaration);
+                    
+                    found |= winrtRules.TypeIsGeneric(ref context, classDeclaration);
+                    found |= winrtRules.ImplementsInvalidInterface(ref context, sym, classDeclaration);
                     
                     var props = classDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(winrtRules.IsPublic);
-                    found |= winrtRules.CheckPropertySignature(ref context, props, classDeclaration.Identifier);
+                    found |= winrtRules.CheckSignatureOfProperties(ref context, props, classDeclaration.Identifier);
                     
                     var publicMethods = classDeclaration.ChildNodes().OfType<MethodDeclarationSyntax>().Where(winrtRules.IsPublic);
-                    found |= winrtRules.HasInvalidMethods<ClassDeclarationSyntax>(ref context, publicMethods,classDeclaration.Identifier);
+                    found |= winrtRules.HasInvalidMethods<ClassDeclarationSyntax>(ref context, publicMethods, classDeclaration.Identifier);
                 }
 
                 foreach (InterfaceDeclarationSyntax interfaceDeclaration in interfaces)
                 {
-                    found |= winrtRules.ImplementsAsyncInterface(ref context, model.GetDeclaredSymbol(interfaceDeclaration), interfaceDeclaration);
+                    found |= winrtRules.TypeIsGeneric(ref context, interfaceDeclaration);
+                    found |= winrtRules.ImplementsInvalidInterface(ref context, model.GetDeclaredSymbol(interfaceDeclaration), interfaceDeclaration);
                     
-                    var props = interfaceDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>();
-                    found |= winrtRules.CheckPropertySignature(ref context, props, interfaceDeclaration.Identifier);
+                    var props = interfaceDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(winrtRules.IsPublic);
+                    found |= winrtRules.CheckSignatureOfProperties(ref context, props, interfaceDeclaration.Identifier);
                     
                     var methods = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
                     found |= winrtRules.HasInvalidMethods<InterfaceDeclarationSyntax>(ref context, methods, interfaceDeclaration.Identifier);
@@ -252,7 +258,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
                     var fields = structDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>();
                     foreach (var field in fields) 
-                    { 
+                    {
                         found |= winrtRules.CheckFieldValidity(ref context, field, structDeclaration.Identifier, userCreatedTypes); 
                     }
                     if (!fields.Any())
