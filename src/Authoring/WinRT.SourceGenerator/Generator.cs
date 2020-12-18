@@ -1,18 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
-using WinRT.SourceGenerator;
 
 namespace Generator
 {
@@ -178,94 +173,15 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             peBlob.WriteContentTo(fs);
         }
 
-        private Tuple<HashSet<INamedTypeSymbol>,HashSet<INamedTypeSymbol>> CollectDefinedTypes(GeneratorExecutionContext context)
-        {
-            WinRTRules winrtRules = new WinRTRules();
-            HashSet<INamedTypeSymbol> userCreatedTypes = new HashSet<INamedTypeSymbol>();
-            HashSet<INamedTypeSymbol> userCreatedStructs = new HashSet<INamedTypeSymbol>();
-
-            foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
-            {
-                var model = context.Compilation.GetSemanticModel(tree);
-
-                var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().Where(winrtRules.IsPublic);
-                foreach (var @class in classes) 
-                {
-                    userCreatedTypes.Add(model.GetDeclaredSymbol(@class));
-                }
-
-                var interfaces = tree.GetRoot().DescendantNodes().OfType<InterfaceDeclarationSyntax>().Where(winrtRules.IsPublic);
-                foreach (var @interface in interfaces)
-                {
-                    userCreatedTypes.Add(model.GetDeclaredSymbol(@interface));
-                }
-
-                var structs = tree.GetRoot().DescendantNodes().OfType<StructDeclarationSyntax>().Where(winrtRules.IsPublic);
-                foreach (var @struct in structs)
-                {
-                    userCreatedStructs.Add(model.GetDeclaredSymbol(@struct));
-                }
-            }
-            return new Tuple<HashSet<INamedTypeSymbol>,HashSet<INamedTypeSymbol>>(userCreatedTypes, userCreatedStructs);
-        }
-
         private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
         {
-            WinRTRules winrtRules = new WinRTRules(context);
+            // "Test" is a workaround, GetAssemblyName returns null when used by unit tests 
+            // shouldn't need workaround once we can pass AnalyzerConfigOptionsProvider in DiagnosticTests.Helpers.cs
+            string assemblyName = GetAssemblyName(context) ?? "Test";
 
-            var tuple = CollectDefinedTypes(context);
-            HashSet<INamedTypeSymbol> userCreatedTypes = tuple.Item1;
-            HashSet<INamedTypeSymbol> userCreatedStructs = tuple.Item2;
-
-            winrtRules.HasSomePublicTypes(userCreatedTypes, userCreatedStructs);
-            
-            foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
-            {
-                var model = context.Compilation.GetSemanticModel(tree);
-                var nodes = tree.GetRoot().DescendantNodes();
-
-                var classes = nodes.OfType<ClassDeclarationSyntax>().Where(winrtRules.IsPublic);
-                foreach (ClassDeclarationSyntax classDeclaration in classes)
-                {
-                    var sym = model.GetDeclaredSymbol(classDeclaration);
-                    winrtRules.UnsealedClass(sym, classDeclaration);
-
-                    winrtRules.OverloadsOperator(classDeclaration);
-                    winrtRules.HasMultipleConstructorsOfSameArity(classDeclaration);
-
-                    var classId = classDeclaration.Identifier;
-                    winrtRules.TypeIsGeneric(sym, classDeclaration);
-                    winrtRules.ImplementsInvalidInterface(sym, classDeclaration);
-                    
-                    var props = classDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(winrtRules.IsPublic);
-                    winrtRules.CheckSignatureOfProperties(props, classId);
-                    
-                    var publicMethods = classDeclaration.ChildNodes().OfType<MethodDeclarationSyntax>().Where(winrtRules.IsPublic);
-                    winrtRules.CheckMethods<ClassDeclarationSyntax>(publicMethods, classId);
-                }
-
-                var interfaces = nodes.OfType<InterfaceDeclarationSyntax>().Where(winrtRules.IsPublic);
-                foreach (InterfaceDeclarationSyntax interfaceDeclaration in interfaces)
-                {
-                    var sym = model.GetDeclaredSymbol(interfaceDeclaration);
-                    
-                    winrtRules.TypeIsGeneric(sym, interfaceDeclaration);
-                    winrtRules.ImplementsInvalidInterface(sym, interfaceDeclaration);
-                    
-                    var props = interfaceDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(winrtRules.IsPublic);
-                    winrtRules.CheckSignatureOfProperties(props, interfaceDeclaration.Identifier);
-                    
-                    var methods = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
-                    winrtRules.CheckMethods<InterfaceDeclarationSyntax>(methods, interfaceDeclaration.Identifier);
-                }
-
-                var structs = nodes.OfType<StructDeclarationSyntax>();
-                foreach (StructDeclarationSyntax structDeclaration in structs)
-                {
-                    winrtRules.CheckStructField(structDeclaration, userCreatedTypes, model.GetDeclaredSymbol(structDeclaration)); 
-                }
-            }
-            return winrtRules.Found();
+            WinRTScanner winrtScanner = new WinRTScanner(context, assemblyName);
+            winrtScanner.FindDiagnostics();
+            return winrtScanner.Found();
         }
 
         public void Execute(GeneratorExecutionContext context)
@@ -279,6 +195,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             Logger.Initialize(context);
 
+            // temporary
+            context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(ArrayAttributes, Encoding.UTF8));
+
             if (CatchWinRTDiagnostics(context))
             {
                 Logger.Log("Exiting early -- found errors in authored runtime component.");
@@ -288,7 +207,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             try
             {
-                context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(ArrayAttributes, Encoding.UTF8));
+                // context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(ArrayAttributes, Encoding.UTF8));
 
                 string assembly = GetAssemblyName(context);
                 string version = GetAssemblyVersion(context);

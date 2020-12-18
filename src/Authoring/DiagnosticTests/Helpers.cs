@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace DiagnosticTests
 {
-    public partial class TestDiagnostics
+    public partial class UnitTesting
     {
         /// <summary>
         /// CreateCompilation creates a CSharpCompilation 

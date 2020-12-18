@@ -1,7 +1,81 @@
 namespace DiagnosticTests
 {
-    public partial class TestDiagnostics
+    public partial class UnitTesting
     {
+
+        // Namespaces
+        private const string Valid_NestedNamespace = @"
+// Assuming the winmd is RuntimeComponent, the error gets thrown since namespace `A` has no common prefix with RuntimeComponent
+namespace Test 
+{
+    public sealed class Blank { public Blank() { } }
+    namespace A
+    {
+        public sealed class Class4 { public Class4() { } }
+    }
+}";
+        private const string Valid_NestedNamespace2 = @"
+// Assuming the winmd is RuntimeComponent, the error gets thrown since namespace `A` has no common prefix with RuntimeComponent
+namespace Test 
+{
+    public sealed class Blank { public Blank() { } }
+    namespace A
+    {
+        public sealed class Class4 { public Class4() { } }
+
+        namespace B
+        {
+            public sealed class F() { public F() {} }
+        }
+    }
+}";
+        private const string Valid_NestedNamespace3 = @"
+namespace Test.Component
+{
+    public sealed Class1 { public int X { get; set; }  }
+
+    namespace InnerComponent
+    {
+        public sealed class Class2 { public int Y { get; } }
+    }
+}";
+
+        private const string Valid_NestedNamespace4 = @"
+namespace Test.Component
+{
+    public sealed Class1 { public int X { get; set; }  }
+
+    namespace InnerComponent
+    {
+        public sealed class Class2 { public int Y { get; } }
+    }
+}";
+        private const string Valid_NamespacesDiffer = @"
+namespace Test 
+{
+    public sealed class Blank { public Blank() { } }
+
+    namespace InnerA
+    { 
+        public sealed class AnotherBlank { public AnotherBlank() { } }
+    }
+
+    namespace InnerB
+    { 
+        public sealed class AnotherBlank { public AnotherBlank() { } }
+    }
+}";
+        private const string Valid_NamespaceAndPrefixedNamespace = @"
+namespace Test
+{
+    public sealed class Blank { public Blank() { } }
+}
+
+namespace Test.A
+{
+    public sealed class AClass { public AClass() { } }
+}
+";
         // Dict
         private const string Valid_ClassWithGenericDictReturnType_Private = @"
 using System.Collections.Generic;
@@ -77,6 +151,60 @@ namespace Test
     }
 }";
         // KeyValuePair 
+        private const string Valid_InterfaceWithGenericKVPairReturnType = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+        KeyValuePair<int,int> KVPair(int length);
+    }
+}";
+        private const string Valid_InterfaceWithGenericKVPairInput = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+        int ReturnsInt(System.Collections.Generic.KeyValuePair<int,int> kvp);
+    }
+}";
+        private const string Valid_ClassWithGenericKVPairReturnType = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public KeyValuePair<int,int> ReturnsKVPair(int length);
+    }
+}";
+        private const string Valid_ClassWithGenericKVPairInput = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public int ReturnsInt(KeyValuePair<int,int> ls) { return 0; }
+    }
+}";
+        private const string Valid_IfaceWithGenKVPairProp = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public interface MyInterface
+    {
+        public KeyValuePair<int,int> KVpair { get; set; }
+    }
+}";
+        private const string Valid_ClassWithGenKVPairProp = @"
+using System.Collections.Generic;
+namespace Test
+{
+    public sealed class MyClass
+    {
+        public KeyValuePair<int,int> KVpair { get; set; }
+    }
+}";
         private const string Valid_ClassWithGenericKVPairReturnType_Private = @"
 using System.Collections.Generic;
 namespace Test
@@ -184,17 +312,6 @@ namespace Test
     public interface MyInterface
     {
        private List<int> IntList { get; set; }
-    }
-}";
-        // Namespaces
-        private const string Valid_NamespaceUse1 = @"
-namespace My.WindowsComponent
-{
-    public sealed Class1 { public int X { get; set; }  }
-
-    namespace InnerComponent
-    {
-        public sealed class Class2 { public int Y { get; } }
     }
 }";
         //// DefaultOverload attribute
@@ -1022,7 +1139,7 @@ namespace Test
 }";
         //// ReadOnlyArray / WriteOnlyArray
         private const string Valid_ArrayParamAttrUnary_1 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class OnlyParam
     { 
@@ -1030,7 +1147,7 @@ namespace TestNamespace
     }
 }";
         private const string Valid_ArrayParamAttrUnary_2 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class OnlyParam
     { 
@@ -1038,7 +1155,7 @@ namespace TestNamespace
     }
 }";
         private const string Valid_ArrayParamAttrUnary_3 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class OnlyParam
     { 
@@ -1046,7 +1163,7 @@ namespace TestNamespace
     }
 }";
         private const string Valid_ArrayParamAttrUnary_4 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class OnlyParam
     { 
@@ -1054,7 +1171,7 @@ namespace TestNamespace
     }
 }";
         private const string Valid_ArrayParamAttrUnary_5 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class OnlyParam
     { 
@@ -1062,7 +1179,7 @@ namespace TestNamespace
     }
 }";
         private const string Valid_ArrayParamAttrBinary_1 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class TwoParam
     { 
@@ -1070,7 +1187,7 @@ namespace TestNamespace
     }
 }";
         private const string Valid_ArrayParamAttrBinary_2 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class TwoParam
     { 
@@ -1078,7 +1195,7 @@ namespace TestNamespace
     }
 }";
         private const string Valid_ArrayParamAttrBinary_3 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class TwoParam
     { 
@@ -1086,7 +1203,7 @@ namespace TestNamespace
     }
 }";
         private const string Valid_ArrayParamAttrBinary_4 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class TwoParam
     { 
@@ -1094,7 +1211,7 @@ namespace TestNamespace
     }
 }";
         private const string Valid_ArrayParamAttrBinary_5 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class TwoParam
     { 
@@ -1102,7 +1219,7 @@ namespace TestNamespace
     }
 }";
         private const string Valid_ArrayParamAttrBinary_6 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class TwoArray
     { 
@@ -1110,7 +1227,7 @@ namespace TestNamespace
     }
 }";
         private const string Valid_ArrayParamAttrBinary_7 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class TwoArray
     { 
@@ -1118,7 +1235,7 @@ namespace TestNamespace
     }
 }";
         private const string Valid_ArrayParamAttrBinary_8 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class TwoArray
     { 
@@ -1126,7 +1243,7 @@ namespace TestNamespace
     }
 }";
         private const string Valid_ArrayParamAttrBinary_9 = @"
-namespace TestNamespace 
+namespace Test 
 {
     public sealed class TwoArray
     { 

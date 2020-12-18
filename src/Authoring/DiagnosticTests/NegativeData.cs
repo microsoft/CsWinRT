@@ -1,9 +1,72 @@
 namespace DiagnosticTests
 {
-    public partial class TestDiagnostics
+    public partial class UnitTesting
     {
 
         // namespace tests -- WIP
+        private const string NamespacesDifferByCase = @"
+namespace Test
+{
+    public sealed class Blank { public Blank() { } }
+
+    namespace Sample
+    { 
+        public sealed class AnotherBlank { public AnotherBlank() { } }
+    }
+
+    namespace samplE 
+    { 
+        public sealed class AnotherBlank { public AnotherBlank() { } }
+    }
+}";
+
+        private const string DisjointNamespaces = @"
+// Assuming the winmd is Test, the error gets thrown since namespace `A` has no common prefix with Test
+namespace Test 
+{
+    public sealed class Blank { public Blank() { } }
+}
+
+namespace A
+{
+    public sealed class Class4 { public Class4() { } }
+}";
+
+
+
+        private const string DisjointNamespaces2 = @"
+namespace Test 
+{
+    public sealed class Blank { public Blank() { } }
+}
+
+namespace A
+{
+    public sealed class Class4 { public Class4() { } }
+    namespace B
+    {
+        public sealed class F() { public F() {} }
+    }
+}";
+
+
+
+        private const string DisjointNamespaces3 = @"
+// Assuming the winmd is RuntimeComponent, the error gets thrown since namespace `A` has no common prefix with RuntimeComponent
+namespace Test 
+{
+    public sealed class Blank { public Blank() { } }
+    namespace B 
+    {
+        public sealed class F() { public F() {} }
+    }
+}
+
+namespace A
+{
+    public sealed class Class4 { public Class4() { } }
+}";
+
         private const string NoPublicTypes = @"
 namespace Test
 {
@@ -33,7 +96,7 @@ namespace Test
 }
 }";
         private const string _NamespaceTest2 = @"
-namespace OtherNamespace
+namespace Test
 {
 
     // WME1044 ?
@@ -60,7 +123,6 @@ namespace Test
         }
     }
 }";
-
 
         // Generic Dictionary 
         private const string InterfaceWithGenericDictReturnType = @"
@@ -173,14 +235,14 @@ namespace Test
         public ReadOnlyDictionary<int,int> RODict { get; set; }
     }
 }";
-        // Generic KeyValuePair
+        // NonGeneric KeyValuePair
         private const string InterfaceWithGenericKVPairReturnType = @"
 using System.Collections.Generic;
 namespace Test
 {
     public interface MyInterface
     {
-        KeyValuePair<int,int> KVPair(int length);
+        KeyValuePair KVPair(int length);
     }
 }";
         private const string InterfaceWithGenericKVPairInput = @"
@@ -189,7 +251,7 @@ namespace Test
 {
     public interface MyInterface
     {
-        int ReturnsInt(System.Collections.Generic.KeyValuePair<int,int> kvp);
+        int ReturnsInt(System.Collections.Generic.KeyValuePair kvp);
     }
 }";
         private const string ClassWithGenericKVPairReturnType = @"
@@ -198,7 +260,7 @@ namespace Test
 {
     public sealed class MyClass
     {
-        public KeyValuePair<int,int> ReturnsKVPair(int length);
+        public KeyValuePair ReturnsKVPair(int length);
     }
 }";
         private const string ClassWithGenericKVPairInput = @"
@@ -207,7 +269,7 @@ namespace Test
 {
     public sealed class MyClass
     {
-        public int ReturnsInt(KeyValuePair<int,int> ls) { return 0; }
+        public int ReturnsInt(KeyValuePair ls) { return 0; }
     }
 }";
         private const string IfaceWithGenKVPairProp = @"
@@ -216,7 +278,7 @@ namespace Test
 {
     public interface MyInterface
     {
-        public KeyValuePair<int,int> KVpair { get; set; }
+        public KeyValuePair KVpair { get; set; }
     }
 }";
         private const string ClassWithGenKVPairProp = @"
@@ -225,7 +287,7 @@ namespace Test
 {
     public sealed class MyClass
     {
-        public KeyValuePair<int,int> KVpair { get; set; }
+        public KeyValuePair KVpair { get; set; }
     }
 }";
         // Generic Enumerable 
@@ -1029,7 +1091,7 @@ namespace Test
 }";
         // constructor of same arity 
         private const string ConstructorsOfSameArity = @"
-namespace TestNamespace
+namespace Test
 {
     public sealed class SameArityConstructors
     {
@@ -1053,7 +1115,7 @@ namespace TestNamespace
         private const string ClassImplementsIAsyncOperationWithProgress = @"
 using Windows.Foundation;
 using System;
-namespace TestNamespace
+namespace Test
 {
     public sealed class OpWithProgress : IAsyncOperationWithProgress<int, bool>
     {
@@ -1085,7 +1147,7 @@ namespace TestNamespace
         private const string ClassImplementsIAsyncActionWithProgress = @"
 using Windows.Foundation;
 using System;
-namespace TestNamespace
+namespace Test
 {
     public class ActionWithProgress : IAsyncActionWithProgress<int>
     {
@@ -1117,7 +1179,7 @@ namespace TestNamespace
         private const string ClassImplementsIAsyncOperation = @"
 using Windows.Foundation;
 using System;
-namespace TestNamespace
+namespace Test
 {
     public sealed class Op : IAsyncOperation<int>
     {
@@ -1148,7 +1210,7 @@ namespace TestNamespace
         private const string ClassImplementsIAsyncAction = @"
 using Windows.Foundation;
 using System;
-namespace TestNamespace
+namespace Test
 {
     public sealed class AsyAction : IAsyncAction
     {
@@ -1187,35 +1249,35 @@ namespace TestNamespace
 }";
         private const string InterfaceImplementsIAsyncOperationWithProgress = @"
 using Windows.Foundation; using System;
-namespace TestNamespace 
+namespace Test 
 { 
     public interface OpWithProgress : IAsyncOperationWithProgress<int, bool> {} 
 }";
         private const string InterfaceImplementsIAsyncActionWithProgress = @"
 using Windows.Foundation; 
 using System;
-namespace TestNamespace 
+namespace Test 
 { 
     public class ActionWithProgress : IAsyncActionWithProgress<int> {} 
 }";
         private const string InterfaceImplementsIAsyncOperation = @"
 using Windows.Foundation; 
 using System;
-namespace TestNamespace 
+namespace Test 
 { 
     public interface IAsyncOperation : IAsyncOperation<int> {} 
 }";
         private const string InterfaceImplementsIAsyncAction = @"
 using Windows.Foundation;
 using System;
-namespace TestNamespace 
+namespace Test 
 { 
     public interface AsyAction : IAsyncAction {} 
 }";
         private const string InterfaceImplementsIAsyncOperationWithProgress2 = @"
 using Windows.Foundation;
 using System;
-namespace TestNamespace
+namespace Test
 {
     public interface OpWithProgress : IAsyncOperationWithProgress<int, bool>
     {
@@ -1236,7 +1298,7 @@ namespace TestNamespace
         private const string InterfaceImplementsIAsyncActionWithProgress2 = @"
 using Windows.Foundation;
 using System;
-namespace TestNamespace
+namespace Test
 {
     public class ActionWithProgress : IAsyncActionWithProgress<int>
     {
@@ -1268,7 +1330,7 @@ namespace TestNamespace
         private const string InterfaceImplementsIAsyncOperation2 = @"
 using Windows.Foundation;
 using System;
-namespace TestNamespace
+namespace Test
 {
     public sealed class Op : IAsyncOperation<int>
     {
@@ -1299,7 +1361,7 @@ namespace TestNamespace
         private const string InterfaceImplementsIAsyncAction2 = @"
 using Windows.Foundation;
 using System;
-namespace TestNamespace
+namespace Test
 {
     public sealed class AsyAction : IAsyncAction
     {

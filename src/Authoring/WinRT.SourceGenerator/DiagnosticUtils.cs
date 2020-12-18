@@ -5,47 +5,108 @@ using System.Collections.Generic;
 using System.Linq;
 using WinRT.SourceGenerator;
 
+using Microsoft.CodeAnalysis.CSharp;
+
 namespace Generator 
 {
-    public partial class WinRTRules
+    public partial class WinRTScanner
     {
-        public WinRTRules() { _flag = false; }
+        public WinRTScanner() { _flag = false; }
 
-        public WinRTRules(GeneratorExecutionContext context) 
+        public WinRTScanner(GeneratorExecutionContext context, string assemblyName) 
         { 
             _flag = false;
             _context = context;
+            _assemblyName = assemblyName;
         }
 
         private bool _flag;
 
         private GeneratorExecutionContext _context;
+        private string _assemblyName;
 
         private void Flag() { _flag |= true; }
         public bool Found() { return _flag; }
+
+        public void FindDiagnostics()
+        { 
+            TypeCollector holder = CollectDefinedTypes(_context);
+            HashSet<INamedTypeSymbol> userCreatedTypes = holder.GetTypes();
+            HashSet<INamedTypeSymbol> userCreatedStructs = holder.GetStructs();
+            HashSet<INamespaceSymbol> userCreatedNamespaces = holder.GetNamespaces();
+
+            HasInvalidNamespace(userCreatedNamespaces, _assemblyName);
+            HasSomePublicTypes(userCreatedTypes, userCreatedStructs);
+            
+            foreach (SyntaxTree tree in _context.Compilation.SyntaxTrees)
+            {
+                var model = _context.Compilation.GetSemanticModel(tree);
+                var nodes = tree.GetRoot().DescendantNodes();
+
+                var classes = nodes.OfType<ClassDeclarationSyntax>().Where(IsPublic);
+                foreach (ClassDeclarationSyntax @class in classes)
+                {
+                    var classSymbol = model.GetDeclaredSymbol(@class);
+                    UnsealedClass(classSymbol, @class);
+
+                    OverloadsOperator(@class);
+                    HasMultipleConstructorsOfSameArity(@class);
+
+                    var classId = @class.Identifier;
+                    TypeIsGeneric(classSymbol, @class);
+                    ImplementsInvalidInterface(classSymbol, @class);
+                    
+                    var props = @class.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
+                    CheckSignatureOfProperties(props, classId);
+                    
+                    var publicMethods = @class.ChildNodes().OfType<MethodDeclarationSyntax>().Where(IsPublic);
+                    CheckMethods(publicMethods, classId);
+                }
+
+                var interfaces = nodes.OfType<InterfaceDeclarationSyntax>().Where(IsPublic);
+                foreach (InterfaceDeclarationSyntax @interface in interfaces)
+                {
+                    var interfaceSym = model.GetDeclaredSymbol(@interface);
+                    
+                    TypeIsGeneric(interfaceSym, @interface);
+                    ImplementsInvalidInterface(interfaceSym, @interface);
+                    
+                    var props = @interface.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
+                    CheckSignatureOfProperties(props, @interface.Identifier);
+                    
+                    var methods = @interface.DescendantNodes().OfType<MethodDeclarationSyntax>();
+                    CheckMethods(methods, @interface.Identifier);
+                }
+
+                var structs = nodes.OfType<StructDeclarationSyntax>();
+                foreach (StructDeclarationSyntax @struct in structs)
+                {
+                    CheckStructField(@struct, userCreatedTypes, model.GetDeclaredSymbol(@struct)); 
+                }
+            } 
+        }
        
-        public bool IsPublic<T>(T p) where T : MemberDeclarationSyntax { return ModifiersContains(p.Modifiers, "public");  }
+        public bool IsPublic(MemberDeclarationSyntax member) { return ModifiersContains(member.Modifiers, "public");  }
 
         /// <summary>
         /// Returns true if the class represented by the symbol 
         /// implements any of the interfaces defined in ProhibitedAsyncInterfaces (e.g., IAsyncAction, ...) /// </summary>
         /// <param name="context"></param><param name="typeSymbol"></param><param name="classDeclaration"></param>
         /// <returns>True iff the given class implements any of the IAsync interfaces that are not valid in Windows Runtime</returns>
-        public void ImplementsInvalidInterface<T>(INamedTypeSymbol typeSymbol, T typeDeclaration)
-            where T : TypeDeclarationSyntax
+        public void ImplementsInvalidInterface(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax typeDeclaration)
         {
-            foreach (string prohibitedInterface in nonWinRuntimeInterfaces)
+            foreach (string prohibitedInterface in nonWindowsRuntimeInterfaces)
             {
                 if (ImplementsInterface(typeSymbol, prohibitedInterface))
                 {
-                    Report(DiagnosticRules.NonWinRTInterface, typeDeclaration.GetLocation(), typeDeclaration.Identifier, prohibitedInterface);
+                    Report(WinRTRules.NonWinRTInterface, typeDeclaration.GetLocation(), typeDeclaration.Identifier, prohibitedInterface);
                 }
             }
         }
 
         public void HasSomePublicTypes(HashSet<INamedTypeSymbol> publicTypes, HashSet<INamedTypeSymbol> publicStructs) 
         {
-            if (!publicTypes.Any() && !publicStructs.Any()) { Report(DiagnosticRules.NoPublicTypesRule, null); }
+            if (!publicTypes.Any() && !publicStructs.Any()) { Report(WinRTRules.NoPublicTypesRule, null); }
         }
 
         /// <summary>
@@ -63,7 +124,7 @@ namespace Generator
                 int arity = constructor.ParameterList.Parameters.Count;
                 if (aritiesSeenSoFar.Contains(arity))
                 {
-                    Report(DiagnosticRules.ClassConstructorRule, constructor.GetLocation(), classDeclaration.Identifier, arity);
+                    Report(WinRTRules.ClassConstructorRule, constructor.GetLocation(), classDeclaration.Identifier, arity);
                 }
                 else
                 {
@@ -80,10 +141,9 @@ namespace Generator
         public bool OverloadsOperator(ClassDeclarationSyntax classDeclaration)
         {
             var operatorDeclarations = classDeclaration.DescendantNodes().OfType<OperatorDeclarationSyntax>();
-            foreach (var op in operatorDeclarations) { Report(DiagnosticRules.OperatorOverloadedRule, op.GetLocation(), op.OperatorToken); } 
+            foreach (var op in operatorDeclarations) { Report(WinRTRules.OperatorOverloadedRule, op.GetLocation(), op.OperatorToken); } 
             return operatorDeclarations.Count() != 0;
         }
-
 
         /// <summary>
         /// The code generation process makes functions with output param `__retval`, 
@@ -94,12 +154,34 @@ namespace Generator
             var hasInvalidParams = method.ParameterList.Parameters.Where(param => SyntaxTokenIs(param.Identifier, GeneratedReturnValueName)).Any();
             if (hasInvalidParams) 
             { 
-                Report(DiagnosticRules.ParameterNamedValueRule, method.GetLocation(), method.Identifier); 
+                Report(WinRTRules.ParameterNamedValueRule, method.GetLocation(), method.Identifier); 
             }
         }
 
-        public void CheckMethods<T>(IEnumerable<MethodDeclarationSyntax> methodDeclarations, SyntaxToken typeId)
-            where T : TypeDeclarationSyntax
+        public void HasInvalidNamespace(HashSet<INamespaceSymbol> definedNamespaces, string assemblyName)
+        {
+            HashSet<string> simplifiedNames = new HashSet<string>();
+
+            foreach (var namespaceSymbol in definedNamespaces)
+            {
+                string upperNamed = namespaceSymbol.ToString().ToUpper();
+                if (simplifiedNames.Contains(upperNamed))
+                {
+                    Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceSymbol.Name);
+                }
+                else
+                {
+                    simplifiedNames.Add(upperNamed);
+                }
+
+                if (IsInvalidNamespace(namespaceSymbol, assemblyName))
+                {
+                    Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), assemblyName, namespaceSymbol.Name);
+                }
+            }
+        }
+
+        public void CheckMethods(IEnumerable<MethodDeclarationSyntax> methodDeclarations, SyntaxToken typeId)
         {
             Dictionary<string, bool> methodsHasAttributeMap = new Dictionary<string, bool>();
 
@@ -119,8 +201,7 @@ namespace Generator
             /* Finishes up the work started by `CheckOverloadAttributes` */
             foreach (var thing in overloadsWithoutAttributeMap)
             {
-                _context.ReportDiagnostic(thing.Value);
-                Flag();
+                ReportDiagnostic(thing.Value);
             }
         }
 
@@ -142,7 +223,7 @@ namespace Generator
             { 
                 if (structDeclaration.DescendantNodes().OfType<T>().Any())
                 {
-                    Report(DiagnosticRules.StructHasInvalidFieldRule2, structDeclaration.GetLocation(), structDeclaration.Identifier,  SimplifySyntaxTypeString(typeof(T).Name));
+                    Report(WinRTRules.StructHasInvalidFieldRule2, structDeclaration.GetLocation(), structDeclaration.Identifier,  SimplifySyntaxTypeString(typeof(T).Name));
                 };
             }
 
@@ -161,8 +242,7 @@ namespace Generator
             }
             if (!fields.Any())
             {
-                _context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.StructWithNoFieldsRule, structDeclaration.GetLocation(), sym));
-                Flag();
+                Report(WinRTRules.StructWithNoFieldsRule, structDeclaration.GetLocation(), sym);
             }
         }
 
@@ -170,7 +250,7 @@ namespace Generator
         {
             if (!sym.IsSealed)
             {
-                Report(DiagnosticRules.UnsealedClassRule, classDeclaration.GetLocation(), classDeclaration.Identifier);
+                Report(WinRTRules.UnsealedClassRule, classDeclaration.GetLocation(), classDeclaration.Identifier);
             }
         }
 
@@ -187,12 +267,12 @@ namespace Generator
         {
             if (!IsPublic(field))
             { 
-                Report(DiagnosticRules.StructHasPrivateFieldRule, field.GetLocation(), structId);
+                Report(WinRTRules.StructHasPrivateFieldRule, field.GetLocation(), structId);
             }
 
             if (ModifiersContains(field.Modifiers, "const"))
             {
-                Report(DiagnosticRules.StructHasConstFieldRule, field.GetLocation(), structId);
+                Report(WinRTRules.StructHasConstFieldRule, field.GetLocation(), structId);
             }
 
             foreach (var variable in field.DescendantNodes().OfType<VariableDeclarationSyntax>())
@@ -201,16 +281,16 @@ namespace Generator
 
                 if (SymbolSetHasString(typeNames, typeStr) || typeStr == "dynamic" || typeStr == "object")
                 { 
-                    Report(DiagnosticRules.StructHasInvalidFieldRule, variable.GetLocation(), structId, field.ToString(), typeStr);
+                    Report(WinRTRules.StructHasInvalidFieldRule, variable.GetLocation(), structId, field.ToString(), typeStr);
                 }
             }
         }
         
-        public void TypeIsGeneric<T>(INamedTypeSymbol sym, T classDeclaration) where T : TypeDeclarationSyntax
+        public void TypeIsGeneric(INamedTypeSymbol sym, TypeDeclarationSyntax classDeclaration)
         {
             if (sym.IsGenericType)
             { 
-                Report(DiagnosticRules.GenericTypeRule, classDeclaration.GetLocation(), classDeclaration.Identifier);
+                Report(WinRTRules.GenericTypeRule, classDeclaration.GetLocation(), classDeclaration.Identifier);
             }
         }
     }

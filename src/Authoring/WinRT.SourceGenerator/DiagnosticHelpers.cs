@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,8 +7,65 @@ using WinRT.SourceGenerator;
 
 namespace Generator 
 {
-    public partial class WinRTRules
+    public partial class WinRTScanner
     {
+        private class TypeCollector
+        {
+            private HashSet<INamedTypeSymbol> types;
+            private HashSet<INamedTypeSymbol> structs;
+            private HashSet<INamespaceSymbol> namespaces;
+
+            public TypeCollector()
+            {
+                types = new HashSet<INamedTypeSymbol>();
+                structs = new HashSet<INamedTypeSymbol>();
+                namespaces = new HashSet<INamespaceSymbol>();
+            }
+
+            public void AddType(INamedTypeSymbol newType) { types.Add(newType); }
+            public void AddStruct(INamedTypeSymbol newType) { structs.Add(newType); }
+            public void AddNamespace(INamespaceSymbol newType) { namespaces.Add(newType); }
+
+            public HashSet<INamedTypeSymbol> GetTypes() { return types; }
+            public HashSet<INamedTypeSymbol> GetStructs() { return structs; }
+            public HashSet<INamespaceSymbol> GetNamespaces() { return namespaces; }
+        }
+
+        private TypeCollector CollectDefinedTypes(GeneratorExecutionContext context)
+        {
+            TypeCollector collectedTypes = new TypeCollector();
+
+            foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
+            {
+                var model = context.Compilation.GetSemanticModel(tree);
+
+                var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().Where(IsPublic);
+                foreach (var @class in classes) 
+                {
+                    collectedTypes.AddType(model.GetDeclaredSymbol(@class));
+                }
+
+                var interfaces = tree.GetRoot().DescendantNodes().OfType<InterfaceDeclarationSyntax>().Where(IsPublic);
+                foreach (var @interface in interfaces)
+                {
+                    collectedTypes.AddType(model.GetDeclaredSymbol(@interface));
+                }
+
+                var structs = tree.GetRoot().DescendantNodes().OfType<StructDeclarationSyntax>().Where(IsPublic);
+                foreach (var @struct in structs)
+                {
+                    collectedTypes.AddStruct(model.GetDeclaredSymbol(@struct));
+                }
+
+                var namespaces = tree.GetRoot().DescendantNodes().OfType<NamespaceDeclarationSyntax>();
+                foreach (var @namespace in namespaces)
+                {
+                    collectedTypes.AddNamespace(model.GetDeclaredSymbol(@namespace));
+                }
+            }
+            return collectedTypes;
+        }
+
         /// <summary>
         /// Look at all the array types and if any are of the form [][]+ or [,+] then raise the corresponding diagnostic and return true</summary>
         /// <param name="arrTypes"></param><param name="context"></param><param name="typeIdentifier">The type the array lives in</param>
@@ -24,12 +82,12 @@ namespace Generator
                 // [][]+ ?
                 if (brackets.Count() > 1) 
                 {
-                    Report(DiagnosticRules.ArraySignature_JaggedArrayRule, loc, fieldId, typeIdentifier);
+                    Report(WinRTRules.ArraySignature_JaggedArrayRule, loc, fieldId, typeIdentifier);
                 }
                 // [,+] ? 
                 else if (brackets.Count() == 1 && brackets.First().ToString().Contains(","))
                 {
-                    Report(DiagnosticRules.ArraySignature_MultiDimensionalArrayRule, loc, fieldId, typeIdentifier);
+                    Report(WinRTRules.ArraySignature_MultiDimensionalArrayRule, loc, fieldId, typeIdentifier);
                 }
             }
         }
@@ -64,6 +122,12 @@ namespace Generator
         {
             Flag();
             _context.ReportDiagnostic(Diagnostic.Create(d, loc, args));
+        }
+
+        private void ReportDiagnostic(Diagnostic d)
+        {
+            Flag();
+            _context.ReportDiagnostic(d);
         }
 
         /// <summary>Check if any of the given symbols represents the given type</summary>
@@ -134,19 +198,19 @@ namespace Generator
                 bool isOutputParam = ParamMarkedOutput(param);
 
                 // Nothing can be marked `ref`
-                if (ParamMarkedRef(param)) { Report(DiagnosticRules.RefParameterFound, method.GetLocation(), param.Identifier); }
+                if (ParamMarkedRef(param)) { Report(WinRTRules.RefParameterFound, method.GetLocation(), param.Identifier); }
                 
                 if (ParamHasInOrOutAttribute(param))
                 {
                     // recommend using ReadOnlyArray or WriteOnlyArray
                     if (isArrayType) 
                     { 
-                        Report(DiagnosticRules.ArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier); 
+                        Report(WinRTRules.ArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier); 
                     }
                     // if not array type, stil can't use [In] or [Out]
                     else 
                     { 
-                        Report(DiagnosticRules.NonArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier); 
+                        Report(WinRTRules.NonArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier); 
                     }
                 }
 
@@ -155,60 +219,38 @@ namespace Generator
                     // can't be both ReadOnly and WriteOnly
                     if (hasReadOnlyArray && hasWriteOnlyArray)
                     {
-                        Report(DiagnosticRules.ArrayParamMarkedBoth, method.GetLocation(), method.Identifier, param.Identifier);
+                        Report(WinRTRules.ArrayParamMarkedBoth, method.GetLocation(), method.Identifier, param.Identifier);
                     }
                     // can't be both output (writeonly) and marked read only
                     else if (hasReadOnlyArray && isOutputParam)
                     {
-                        Report(DiagnosticRules.ArrayOutputParamMarkedRead, method.GetLocation(), method.Identifier, param.Identifier);
+                        Report(WinRTRules.ArrayOutputParamMarkedRead, method.GetLocation(), method.Identifier, param.Identifier);
                     }
                     // must have some indication of ReadOnly or WriteOnly
                     else if (!hasWriteOnlyArray && !hasReadOnlyArray && !isOutputParam) 
                     {
-                        Report(DiagnosticRules.ArrayParamNotMarked, method.GetLocation(), method.Identifier, param.Identifier);
+                        Report(WinRTRules.ArrayParamNotMarked, method.GetLocation(), method.Identifier, param.Identifier);
                     }
                 }
                 // Non-array types shouldn't have attributes meant for arrays
                 else if (hasWriteOnlyArray || hasReadOnlyArray)
                 {
-                    Report(DiagnosticRules.NonArrayMarked, method.GetLocation(), method.Identifier, param.Identifier);
+                    Report(WinRTRules.NonArrayMarked, method.GetLocation(), method.Identifier, param.Identifier);
                 }
             }
         }
 
         #endregion
 
-        /// <summary>Make a suggestion for types to use instead of the given type</summary>
-        /// <param name="type">A type that is not valid in Windows Runtime</param>
-        /// <returns>string of types that the given type implements and are valid Windows Runtime types</returns>
-        private string SuggestType(string type)
+        private bool IsInvalidNamespace(INamespaceSymbol @namespace, string assemblyName)
         {
-            switch (type)
+            var contain = @namespace;
+            while (!contain.ContainingNamespace.IsGlobalNamespace)
             {
-                case "Dictionary": return "IDictionary<TKey,TValue>, IReadOnlyDictionary<TKey,TValue>, IEnumerable<KeyValuePair<TKey,TValue>>";
-                case "ReadOnlyDictionary": return "IReadOnlyDictionary<TKey,TValue>, IEnumerable<KeyValuePair<TKey,TValue>>, IDictionary<TKey,TValue>";
-                case "List": return "IList<T>, IReadOnlyList<T>, IEnumerable<T>";
-                case "Enumerable": return "IEnumerable<T>";
-                case "KeyValuePair": return "IKeyValuePair<TKey,TValue>";
-                default: return "No suggestions for type";
+                contain = contain.ContainingNamespace;
             }
-        }
-     
-        /// <param name="syntaxType"></param>
-        /// <returns>the common term for the given syntax type</returns>
-        private string SimplifySyntaxTypeString(string syntaxType)
-        {
-            switch (syntaxType)
-            {
-                case "EventFieldDeclarationSyntax":  return "event";
-                case "ConstructorDeclarationSyntax": return "constructor";
-                case "DelegateDeclarationSyntax":    return "delegate";
-                case "IndexerDeclarationSyntax":     return "indexer";
-                case "MethodDeclarationSyntax":      return "method";
-                case "OperatorDeclarationSyntax":    return "operator";
-                case "PropertyDeclarationSyntax":    return "property";
-                default: return "unknown syntax type: " + syntaxType;
-            }
+
+            return (!contain.Name.Equals(assemblyName) && !@namespace.Name.Equals(assemblyName));
         }
 
         /// <summary>
@@ -246,14 +288,14 @@ namespace Generator
                 else if (hasDefaultOverloadAttribute && methodHasAttrAlready)
                 {
                     // raise the "can't have multiple default attributes" diagnostic  
-                    Report(DiagnosticRules.MethodOverload_MultipleDefaultAttribute, method.GetLocation(), methodArity, method.Identifier, classId);
+                    Report(WinRTRules.MethodOverload_MultipleDefaultAttribute, method.GetLocation(), methodArity, method.Identifier, classId);
                 }
                 else if (!hasDefaultOverloadAttribute && !methodHasAttrAlready)
                 {
                     // we could see this method later with the attribute, 
                     // so hold onto the diagnostic for it until we know it doesn't have the attribute
                     overloadsWithoutAttributeMap[methodNameWithArity] = Diagnostic.Create(
-                        DiagnosticRules.MethodOverload_NeedDefaultAttribute, 
+                        WinRTRules.MethodOverload_NeedDefaultAttribute, 
                         method.GetLocation(), 
                         methodArity, 
                         method.Identifier,
@@ -279,8 +321,7 @@ namespace Generator
             {
                 if (name.ToString().Equals(typeName))
                 {
-                    _context.ReportDiagnostic(diag);
-                    Flag();
+                    ReportDiagnostic(diag);
                 }
             }
         }
@@ -293,33 +334,66 @@ namespace Generator
             {
                 if (InvalidGenericTypes.Contains(generic.Identifier.ToString()))
                 {
-                    Report(DiagnosticRules.UnsupportedTypeRule, loc, memberId, generic.Identifier, SuggestType(generic.Identifier.ToString()));
+                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, generic.Identifier, SuggestType(generic.Identifier.ToString()));
                 }
             }
         }
 
         /// <summary></summary>
-        /// <typeparam name="T">Declaration syntax for either a method or property</typeparam>
         /// <param name="member"></param><param name="loc"></param><param name="memberId"></param><param name="parentTypeId"></param>
-        private void CheckSignature<T>(T member, Location loc, SyntaxToken memberId, SyntaxToken parentTypeId)
-            where T : MemberDeclarationSyntax
+        private void CheckSignature(MemberDeclarationSyntax member, Location loc, SyntaxToken memberId, SyntaxToken parentTypeId)
         {
-            var arrayDiagnostic = Diagnostic.Create(DiagnosticRules.ArraySignature_SystemArrayRule, loc, parentTypeId, memberId);
+            var arrayDiagnostic = Diagnostic.Create(WinRTRules.ArraySignature_SystemArrayRule, loc, parentTypeId, memberId);
+            var kvpDiagnostic = Diagnostic.Create(WinRTRules.UnsupportedTypeRule, loc, parentTypeId, memberId);
 
             IEnumerable<GenericNameSyntax> genericTypes = member.DescendantNodes().OfType<GenericNameSyntax>();
             SignatureHasInvalidGenericType(genericTypes, loc, memberId);
 
             IEnumerable<QualifiedNameSyntax> qualifiedTypes = member.DescendantNodes().OfType<QualifiedNameSyntax>();
             SignatureContainsTypeName(qualifiedTypes, "System.Array", arrayDiagnostic);
+            SignatureContainsTypeName(qualifiedTypes, "System.Collections.Generic.KeyValuePair", kvpDiagnostic);
 
             IEnumerable<IdentifierNameSyntax> types = member.DescendantNodes().OfType<IdentifierNameSyntax>();
             SignatureContainsTypeName(types, "Array", arrayDiagnostic);
+            SignatureContainsTypeName(types, "KeyValuePair", kvpDiagnostic);
 
             IEnumerable<ArrayTypeSyntax> arrays = member.DescendantNodes().OfType<ArrayTypeSyntax>();
             ArrayIsntOneDim(arrays, parentTypeId, memberId, loc);
         }
 
-        private static readonly string[] nonWinRuntimeInterfaces = {
+        /// <summary>Make a suggestion for types to use instead of the given type</summary>
+        /// <param name="type">A type that is not valid in Windows Runtime</param>
+        /// <returns>string of types that the given type implements and are valid Windows Runtime types</returns>
+        private string SuggestType(string type)
+        {
+            switch (type)
+            {
+                case "Dictionary": return "IDictionary<TKey,TValue>, IReadOnlyDictionary<TKey,TValue>, IEnumerable<KeyValuePair<TKey,TValue>>";
+                case "ReadOnlyDictionary": return "IReadOnlyDictionary<TKey,TValue>, IEnumerable<KeyValuePair<TKey,TValue>>, IDictionary<TKey,TValue>";
+                case "List": return "IList<T>, IReadOnlyList<T>, IEnumerable<T>";
+                case "Enumerable": return "IEnumerable<T>";
+                default: return "No suggestions for type";
+            }
+        }
+     
+        /// <param name="syntaxType"></param>
+        /// <returns>the common term for the given syntax type</returns>
+        private string SimplifySyntaxTypeString(string syntaxType)
+        {
+            switch (syntaxType)
+            {
+                case "EventFieldDeclarationSyntax":  return "event";
+                case "ConstructorDeclarationSyntax": return "constructor";
+                case "DelegateDeclarationSyntax":    return "delegate";
+                case "IndexerDeclarationSyntax":     return "indexer";
+                case "MethodDeclarationSyntax":      return "method";
+                case "OperatorDeclarationSyntax":    return "operator";
+                case "PropertyDeclarationSyntax":    return "property";
+                default: return "unknown syntax type: " + syntaxType;
+            }
+        }
+
+        private static readonly string[] nonWindowsRuntimeInterfaces = {
                 "System.Exception",
                 "IAsyncAction",
                 "IAsyncActionWithProgress`1",
@@ -328,10 +402,8 @@ namespace Generator
         };
 
         private readonly static string[] InvalidGenericTypes = { 
-            // "Array"  
             "Dictionary",
             "Enumerable",
-            "KeyValuePair",
             "List",
             "ReadOnlyDictionary",
         };
