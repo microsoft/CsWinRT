@@ -199,9 +199,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             return userCreatedTypes;
         }
 
-        private bool CatchWinRTDiagnostics(ref GeneratorExecutionContext context)
+        private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
         {
-            WinRTRules winrtRules = new WinRTRules();
+            WinRTRules winrtRules = new WinRTRules(context);
            
             HashSet<INamedTypeSymbol> userCreatedTypes = CollectDefinedTypes(context);
             
@@ -217,37 +217,37 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 foreach (ClassDeclarationSyntax classDeclaration in classes)
                 {
                     var sym = model.GetDeclaredSymbol(classDeclaration);
-                    winrtRules.UnsealedClass(ref context, sym, classDeclaration);
+                    winrtRules.UnsealedClass(sym, classDeclaration);
 
-                    winrtRules.OverloadsOperator(ref context, classDeclaration);
-                    winrtRules.HasMultipleConstructorsOfSameArity(ref context, classDeclaration);
+                    winrtRules.OverloadsOperator(classDeclaration);
+                    winrtRules.HasMultipleConstructorsOfSameArity(classDeclaration);
                     
-                    winrtRules.TypeIsGeneric(ref context, classDeclaration);
-                    winrtRules.ImplementsInvalidInterface(ref context, sym, classDeclaration);
+                    winrtRules.TypeIsGeneric(classDeclaration);
+                    winrtRules.ImplementsInvalidInterface(sym, classDeclaration);
                     
                     var props = classDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(winrtRules.IsPublic);
-                    winrtRules.CheckSignatureOfProperties(ref context, props, classDeclaration.Identifier);
+                    winrtRules.CheckSignatureOfProperties(props, classDeclaration.Identifier);
                     
                     var publicMethods = classDeclaration.ChildNodes().OfType<MethodDeclarationSyntax>().Where(winrtRules.IsPublic);
-                    winrtRules.HasInvalidMethods<ClassDeclarationSyntax>(ref context, publicMethods, classDeclaration.Identifier);
+                    winrtRules.HasInvalidMethods<ClassDeclarationSyntax>(publicMethods, classDeclaration.Identifier);
                 }
 
                 foreach (InterfaceDeclarationSyntax interfaceDeclaration in interfaces)
                 {
-                    winrtRules.TypeIsGeneric(ref context, interfaceDeclaration);
-                    winrtRules.ImplementsInvalidInterface(ref context, model.GetDeclaredSymbol(interfaceDeclaration), interfaceDeclaration);
+                    winrtRules.TypeIsGeneric(interfaceDeclaration);
+                    winrtRules.ImplementsInvalidInterface(model.GetDeclaredSymbol(interfaceDeclaration), interfaceDeclaration);
                     
                     var props = interfaceDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(winrtRules.IsPublic);
-                    winrtRules.CheckSignatureOfProperties(ref context, props, interfaceDeclaration.Identifier);
+                    winrtRules.CheckSignatureOfProperties(props, interfaceDeclaration.Identifier);
                     
                     var methods = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
-                    winrtRules.HasInvalidMethods<InterfaceDeclarationSyntax>(ref context, methods, interfaceDeclaration.Identifier);
+                    winrtRules.HasInvalidMethods<InterfaceDeclarationSyntax>(methods, interfaceDeclaration.Identifier);
                 }
 
                 /* Check all structs */
                 foreach (StructDeclarationSyntax structDeclaration in structs)
                 {
-                    winrtRules.CheckStructField(ref context, structDeclaration, userCreatedTypes, model.GetDeclaredSymbol(structDeclaration));
+                    winrtRules.CheckStructField(structDeclaration, userCreatedTypes, model.GetDeclaredSymbol(structDeclaration));
                     /*
                     // just make a check struct fields function
                     winrtRules.StructHasFieldOfType<ConstructorDeclarationSyntax>(ref context, structDeclaration);
@@ -284,7 +284,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             Logger.Initialize(context);
 
-            if (CatchWinRTDiagnostics(ref context))
+            if (CatchWinRTDiagnostics(context))
             {
                 Logger.Log("Exiting early -- found errors in authored runtime component.");
                 Logger.Close();

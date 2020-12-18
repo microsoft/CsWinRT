@@ -8,14 +8,12 @@ namespace Generator
 {
     public partial class WinRTRules
     {
-         
         /// <summary>
         /// Look at all the array types and if any are of the form [][]+ or [,+] then raise the corresponding diagnostic and return true</summary>
         /// <param name="arrTypes"></param><param name="context"></param><param name="typeIdentifier">The type the array lives in</param>
         /// <param name="fieldId">The code the array is a part of the signature for; e.g. property or method</param><param name="loc"></param>
         /// <returns>True iff any of the array types given are multidimensional or jagged</returns>
-        private void ArrayIsntOneDim(ref GeneratorExecutionContext context,
-            IEnumerable<ArrayTypeSyntax> arrTypes, 
+        private void ArrayIsntOneDim(IEnumerable<ArrayTypeSyntax> arrTypes, 
             SyntaxToken typeIdentifier, 
             SyntaxToken fieldId, 
             Location loc)
@@ -26,12 +24,12 @@ namespace Generator
                 // [][]+ ?
                 if (brackets.Count() > 1) 
                 {
-                    Report(ref context, DiagnosticRules.ArraySignature_JaggedArrayRule, loc, fieldId, typeIdentifier);
+                    Report(DiagnosticRules.ArraySignature_JaggedArrayRule, loc, fieldId, typeIdentifier);
                 }
                 // [,+] ? 
                 else if (brackets.Count() == 1 && brackets.First().ToString().Contains(","))
                 {
-                    Report(ref context, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule, loc, fieldId, typeIdentifier);
+                    Report(DiagnosticRules.ArraySignature_MultiDimensionalArrayRule, loc, fieldId, typeIdentifier);
                 }
             }
         }
@@ -60,10 +58,10 @@ namespace Generator
 
         private bool ModifiersContains(SyntaxTokenList modifiers, string str) { return modifiers.Any(modifier => modifier.ValueText == str); }
 
-        private void Report(ref GeneratorExecutionContext context, DiagnosticDescriptor d, Location loc, params object[] args)
+        private void Report(DiagnosticDescriptor d, Location loc, params object[] args)
         {
             Flag();
-            context.ReportDiagnostic(Diagnostic.Create(d, loc, args));
+            _context.ReportDiagnostic(Diagnostic.Create(d, loc, args));
         }
 
         private bool SymbolSetHasString(HashSet<INamedTypeSymbol> typeNames, string typeStr) { return typeNames.Where(sym => sym.ToString().Contains(typeStr)).Any(); }
@@ -121,7 +119,7 @@ namespace Generator
         ///  Does extra work, by catching `ref` params, done here since this code can be used by class or interface related methods</summary>
         /// <param name="method"></param><param name="classIdentifier"></param><param name="context"></param>
         /// <returns>true if array attributes are invalid (see summary)</returns>
-        private void CheckParamsForArrayAttributes(MethodDeclarationSyntax method, ref GeneratorExecutionContext context)
+        private void CheckParamsForArrayAttributes(MethodDeclarationSyntax method)
         {
             foreach (ParameterSyntax param in method.ParameterList.Parameters)
             {
@@ -133,7 +131,7 @@ namespace Generator
                 // Nothing can be marked `ref`
                 if (ParamMarkedRef(param))
                 {
-                    Report(ref context, DiagnosticRules.RefParameterFound, method.GetLocation(), param.Identifier);
+                    Report(DiagnosticRules.RefParameterFound, method.GetLocation(), param.Identifier);
                 }
                 
                 if (ParamHasInOrOutAttribute(param))
@@ -141,12 +139,12 @@ namespace Generator
                     // recommend using ReadOnlyArray or WriteOnlyArray
                     if (isArrayType)
                     {
-                        Report(ref context, DiagnosticRules.ArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier);
+                        Report(DiagnosticRules.ArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier);
                     }
                     // if not array type, stil can't use [In] or [Out]
                     else
                     {
-                        Report(ref context, DiagnosticRules.NonArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier);
+                        Report(DiagnosticRules.NonArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier);
                     }
                 }
 
@@ -155,23 +153,23 @@ namespace Generator
                     // can't be both ReadOnly and WriteOnly
                     if (hasReadOnlyArray && hasWriteOnlyArray)
                     {
-                        Report(ref context, DiagnosticRules.ArrayParamMarkedBoth, method.GetLocation(), method.Identifier, param.Identifier);
+                        Report(DiagnosticRules.ArrayParamMarkedBoth, method.GetLocation(), method.Identifier, param.Identifier);
                     }
                     // can't be both output (writeonly) and marked read only
                     else if (hasReadOnlyArray && isOutputParam)
                     {
-                        Report(ref context, DiagnosticRules.ArrayOutputParamMarkedRead, method.GetLocation(), method.Identifier, param.Identifier);
+                        Report(DiagnosticRules.ArrayOutputParamMarkedRead, method.GetLocation(), method.Identifier, param.Identifier);
                     }
                     // must have some indication of ReadOnly or WriteOnly
                     else if (!hasWriteOnlyArray && !hasReadOnlyArray && !isOutputParam) 
                     {
-                        Report(ref context, DiagnosticRules.ArrayParamNotMarked, method.GetLocation(), method.Identifier, param.Identifier);
+                        Report(DiagnosticRules.ArrayParamNotMarked, method.GetLocation(), method.Identifier, param.Identifier);
                     }
                 }
                 // Non-array types shouldn't have attributes meant for arrays
                 else if (hasWriteOnlyArray || hasReadOnlyArray)
                 {
-                    Report(ref context, DiagnosticRules.NonArrayMarked, method.GetLocation(), method.Identifier, param.Identifier);
+                    Report(DiagnosticRules.NonArrayMarked, method.GetLocation(), method.Identifier, param.Identifier);
                 }
             }
         }
@@ -222,14 +220,13 @@ namespace Generator
         ///     Used after this function executes, hence the reference parameter</param>
         /// <param name="classId">The class the method lives in -- used for creating the diagnostic</param>
         /// <returns>True iff multiple overloads of a method are found, where more than one has been designated as the default overload</returns>
-        private void CheckOverloadAttributes(ref GeneratorExecutionContext context,
-            MethodDeclarationSyntax method,
-            ref Dictionary<string, bool> methodHasAttributeMap,
-            ref Dictionary<string, Diagnostic> overloadsWithoutAttributeMap,
+        private void CheckOverloadAttributes(MethodDeclarationSyntax method,
+            Dictionary<string, bool> methodHasAttributeMap,
+            Dictionary<string, Diagnostic> overloadsWithoutAttributeMap,
             SyntaxToken classId)
         {
             int methodArity = method.ParameterList.Parameters.Count;
-            string methodNameWithArity = method.Identifier.Text + methodArity.ToString();
+            string methodNameWithArity = method.Identifier.Text + methodArity.ToString(); //
 
             // look at all the attributes on this method and see if any of them is the DefaultOverload attribute 
             bool hasDefaultOverloadAttribute = MethodHasDefaultOverloadAttribute(method);
@@ -247,12 +244,14 @@ namespace Generator
                 else if (hasDefaultOverloadAttribute && methodHasAttrAlready)
                 {
                     // raise the "can't have multiple default attributes" diagnostic  
-                    Report(ref context, DiagnosticRules.MethodOverload_MultipleDefaultAttribute, method.GetLocation(), methodArity, method.Identifier, classId);
+                    Report(DiagnosticRules.MethodOverload_MultipleDefaultAttribute, method.GetLocation(), methodArity, method.Identifier, classId);
                 }
                 else if (!hasDefaultOverloadAttribute && !methodHasAttrAlready)
                 {
-                    // we could see this method later with the attribute, so hold onto the diagnostic for it until we know it doesn't have the attribute
-                    overloadsWithoutAttributeMap[methodNameWithArity] = Diagnostic.Create(DiagnosticRules.MethodOverload_NeedDefaultAttribute, 
+                    // we could see this method later with the attribute, 
+                    // so hold onto the diagnostic for it until we know it doesn't have the attribute
+                    overloadsWithoutAttributeMap[methodNameWithArity] = Diagnostic.Create(
+                        DiagnosticRules.MethodOverload_NeedDefaultAttribute, 
                         method.GetLocation(), 
                         methodArity, 
                         method.Identifier,
@@ -272,44 +271,44 @@ namespace Generator
         /// empty example: this property doesnt have any qualified types in its signature</param>
         /// <param name="typeName">check to see if this type appears in the signature</param><param name="diag">diagnostic to report if we see the typeName</param>
         /// <returns>true if the given type is the same as the one in the list</returns>
-        private void SignatureContainsTypeName<T>(ref GeneratorExecutionContext context, IEnumerable<T> typesInSignature, string typeName, Diagnostic diag)
+        private void SignatureContainsTypeName<T>(IEnumerable<T> typesInSignature, string typeName, Diagnostic diag)
         {
             foreach (T name in typesInSignature)
             {
                 if (name.ToString().Equals(typeName))
                 {
-                    context.ReportDiagnostic(diag);
+                    _context.ReportDiagnostic(diag);
                     Flag();
                 }
             }
         }
-        private void SignatureHasInvalidGenericType(ref GeneratorExecutionContext context, IEnumerable<GenericNameSyntax> genericTypes, Location loc, SyntaxToken memberId)
+        private void SignatureHasInvalidGenericType(IEnumerable<GenericNameSyntax> genericTypes, Location loc, SyntaxToken memberId)
         {
             foreach (var generic in genericTypes)
             {
                 if (InvalidGenericTypes.Contains(generic.Identifier.ToString()))
                 {
-                    Report(ref context, DiagnosticRules.UnsupportedTypeRule, loc, memberId, generic.Identifier, SuggestType(generic.Identifier.ToString()));
+                    Report(DiagnosticRules.UnsupportedTypeRule, loc, memberId, generic.Identifier, SuggestType(generic.Identifier.ToString()));
                 }
             }
         }
-        private void CheckSignature<T>(ref GeneratorExecutionContext context, T member, Location loc, SyntaxToken memberId, SyntaxToken parentTypeId)
+        private void CheckSignature<T>(T member, Location loc, SyntaxToken memberId, SyntaxToken parentTypeId)
             where T : MemberDeclarationSyntax
         {
             var arrayDiagnostic = Diagnostic.Create(DiagnosticRules.ArraySignature_SystemArrayRule, loc, parentTypeId, memberId);
             // var model = context.Compilation.GetSemanticModel();
 
             IEnumerable<GenericNameSyntax> genericTypes = member.DescendantNodes().OfType<GenericNameSyntax>();
-            SignatureHasInvalidGenericType(ref context, genericTypes, loc, memberId);
+            SignatureHasInvalidGenericType(genericTypes, loc, memberId);
 
             IEnumerable<QualifiedNameSyntax> qualifiedTypes = member.DescendantNodes().OfType<QualifiedNameSyntax>();
-            SignatureContainsTypeName(ref context, qualifiedTypes, "System.Array", arrayDiagnostic);
+            SignatureContainsTypeName(qualifiedTypes, "System.Array", arrayDiagnostic);
 
             IEnumerable<IdentifierNameSyntax> types = member.DescendantNodes().OfType<IdentifierNameSyntax>();
-            SignatureContainsTypeName(ref context, types, "Array", arrayDiagnostic);
+            SignatureContainsTypeName(types, "Array", arrayDiagnostic);
 
             IEnumerable<ArrayTypeSyntax> arrays = member.DescendantNodes().OfType<ArrayTypeSyntax>();
-            ArrayIsntOneDim(ref context, arrays, parentTypeId, memberId, loc);
+            ArrayIsntOneDim(arrays, parentTypeId, memberId, loc);
         }
 
         private static readonly string[] nonWinRuntimeInterfaces = {
