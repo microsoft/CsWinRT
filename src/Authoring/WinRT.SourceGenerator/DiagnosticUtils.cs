@@ -67,12 +67,8 @@ namespace Generator
             return false;
         }
 
-        /// <summary>
-        /// Looks at all possible attributes on a given parameter declaration 
-        /// </summary>
-        /// <returns>
-        /// returns true iff any are (string) equal to the given attribute name 
-        /// </returns>
+        /// <summary>Looks at all possible attributes on a given parameter declaration </summary>
+        /// <returns>returns true iff any are (string) equal to the given attribute name</returns>
         private bool ParamHasAttribute(string attrName, ParameterSyntax param) { return MatchesAnyAttribute(attrName, param.AttributeLists); }
 
         private static readonly string[] InAndOutAttributeNames = { "In", "Out", "System.Runtime.InteropServices.In", "System.Runtime.InteropServices.Out" };
@@ -252,29 +248,7 @@ namespace Generator
             return operatorDeclarations.Count() != 0;
         }
 
-        /// <summary>Looks at all the properties of the given class and checks them for improper array types (System.Array instances, multidimensional, jagged)</summary>
-        /// <param name="context"></param><param name="classDeclaration"></param>
-        /// <returns>True iff any of the invalid array types are used in any of the propertyy signatures in the given class</returns>
-        public bool CheckPropertySignature(ref GeneratorExecutionContext context, IEnumerable<PropertyDeclarationSyntax> props, SyntaxToken typeId)
-        {
-            bool found = false;
-            foreach (var prop in props)
-            {
-                var loc = prop.GetLocation();
-                var propId = prop.Identifier;
-
-                var qualifiedTypes = prop.DescendantNodes().OfType<QualifiedNameSyntax>(); 
-                var d = Diagnostic.Create(DiagnosticRules.ArraySignature_SystemArrayRule, loc, typeId, propId);
-                found |= SignatureContainsTypeName(ref context, qualifiedTypes, "System.Array", d);
-                
-                var types = prop.DescendantNodes().OfType<IdentifierNameSyntax>(); 
-                var d2 = Diagnostic.Create(DiagnosticRules.ArraySignature_SystemArrayRule, loc, typeId, propId);
-                found |= SignatureContainsTypeName(ref context, types, "Array", d2);
-                
-                found |= ArrayIsntOneDim(prop.DescendantNodes().OfType<ArrayTypeSyntax>(), ref context, typeId, propId, loc);
-            }
-            return found;
-        }
+        
 
         /// <summary>
         /// Look at all the array types and if any are of the form [][]+ or [,+] then raise the corresponding diagnostic and return true</summary>
@@ -417,19 +391,104 @@ namespace Generator
             }
             return found;
         }
+
+        private readonly static string[] InvalidGenericTypes = { 
+            "Dictionary",
+            "KeyValuePair",
+            "Enumerable",
+            "ReadOnlyDictionary",
+        };
+
+        private readonly static string[] InvalidQualifiedTypes = { 
+            "System.Array",
+            "System.Collections.Generic.Dictionary",
+            "System.Collections.Generic.KeyValuePair",
+            "System.Linq.Enumerable",
+            "System.Collections.ObjectModel.ReadOnlyDictionary",
+        };
+
+        private bool SignatureHasInvalidGenericType(ref GeneratorExecutionContext context, IEnumerable<GenericNameSyntax> genericTypes, Location loc)
+        {
+            bool found = false;
+            foreach (var q in genericTypes)
+            {
+                if (InvalidGenericTypes.Contains(q.Identifier.ToString()))
+                {
+                    Report(ref context, DiagnosticRules.MethodHasUnsupportedTypeRule, loc, q.Identifier);
+                    found |= true;
+                }
+            }
+            return found;
+        }
+
+
+
+        /// <summary>Looks at all the properties of the given class and checks them for improper array types (System.Array instances, multidimensional, jagged)</summary>
+        /// <param name="context"></param><param name="classDeclaration"></param>
+        /// <returns>True iff any of the invalid array types are used in any of the propertyy signatures in the given class</returns>
+        public bool CheckPropertySignature(ref GeneratorExecutionContext context, IEnumerable<PropertyDeclarationSyntax> props, SyntaxToken typeId)
+        {
+            bool found = false;
+            foreach (var prop in props)
+            {
+                found |= CheckSignature(ref context, prop, prop.GetLocation(), prop.Identifier, typeId);
+                /*
+                var loc = prop.GetLocation();
+                var propId = prop.Identifier;
+
+                var qualifiedTypes = prop.DescendantNodes().OfType<QualifiedNameSyntax>(); 
+                var d = Diagnostic.Create(DiagnosticRules.ArraySignature_SystemArrayRule, loc, typeId, propId);
+                found |= SignatureContainsTypeName(ref context, qualifiedTypes, "System.Array", d);
+                
+                var types = prop.DescendantNodes().OfType<IdentifierNameSyntax>(); 
+                var d2 = Diagnostic.Create(DiagnosticRules.ArraySignature_SystemArrayRule, loc, typeId, propId);
+                found |= SignatureContainsTypeName(ref context, types, "Array", d2);
+               
+                 
+                var genericTypes = prop.DescendantNodes().OfType<GenericNameSyntax>(); 
+                found |= SignatureHasInvalidGenericType(ref context, genericTypes, loc);
+
+                found |= ArrayIsntOneDim(prop.DescendantNodes().OfType<ArrayTypeSyntax>(), ref context, typeId, propId, loc);
+                */
+            }
+            return found;
+        }
+        private bool CheckSignature<T>(ref GeneratorExecutionContext context, T method, Location loc, SyntaxToken methodId, SyntaxToken parentNodeId)
+            where T : MemberDeclarationSyntax
+        {
+            bool found = false;
+            IEnumerable<QualifiedNameSyntax> qualifiedTypes = method.DescendantNodes().OfType<QualifiedNameSyntax>();
+            IEnumerable<IdentifierNameSyntax> types = method.DescendantNodes().OfType<IdentifierNameSyntax>();
+            IEnumerable<GenericNameSyntax> genericTypes = method.DescendantNodes().OfType<GenericNameSyntax>();
+            IEnumerable<ArrayTypeSyntax> arrays = method.DescendantNodes().OfType<ArrayTypeSyntax>();
+            var arrayDiagnostic = Diagnostic.Create(DiagnosticRules.ArraySignature_SystemArrayRule, loc, parentNodeId, methodId);
+
+            found |= SignatureContainsTypeName(ref context, qualifiedTypes, "System.Array", arrayDiagnostic);  
+            found |= SignatureContainsTypeName(ref context, types, "Array", arrayDiagnostic);
+            found |= SignatureHasInvalidGenericType(ref context, genericTypes, loc);
+            found |= ArrayIsntOneDim(arrays, ref context, parentNodeId, methodId, loc);
+            return found;
+        }
+
         private bool CheckMethod(ref GeneratorExecutionContext context, MethodDeclarationSyntax method, SyntaxToken parentNodeId)
         {
             bool found = false;
-            Location loc = method.GetLocation();
-            SyntaxToken methodId = method.Identifier;
+            // Location loc = 
+            // SyntaxToken methodId = method.Identifier;
+            found |= CheckSignature(ref context, method, method.GetLocation(), method.Identifier, parentNodeId);
+
+            /*
             IEnumerable<QualifiedNameSyntax> qualifiedTypes = method.DescendantNodes().OfType<QualifiedNameSyntax>();
             IEnumerable<IdentifierNameSyntax> types = method.DescendantNodes().OfType<IdentifierNameSyntax>();
-            IEnumerable<ArrayTypeSyntax> arrays = method.DescendantNodes().OfType<ArrayTypeSyntax>();
+            IEnumerable<GenericNameSyntax> genericTypes = method.DescendantNodes().OfType<GenericNameSyntax>();
 
             var d = Diagnostic.Create(DiagnosticRules.ArraySignature_SystemArrayRule, loc, parentNodeId, methodId);
             found |= SignatureContainsTypeName(ref context, qualifiedTypes, "System.Array", d);  
             found |= SignatureContainsTypeName(ref context, types, "Array", d);
+            found |= SignatureHasInvalidGenericType(ref context, genericTypes, loc);
+            IEnumerable<ArrayTypeSyntax> arrays = method.DescendantNodes().OfType<ArrayTypeSyntax>();
             found |= ArrayIsntOneDim(arrays, ref context, parentNodeId, methodId, loc);
+            */
             found |= CheckParamsForArrayAttributes(method, ref context);
             return found;
         }
