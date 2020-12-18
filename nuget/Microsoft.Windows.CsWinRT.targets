@@ -16,6 +16,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <AllowUnsafeBlocks Condition="'$(CsWinRTComponent)' == 'true'">true</AllowUnsafeBlocks>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
     <CoreCompileDependsOn>CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn)</CoreCompileDependsOn>
+    <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess> 
   </PropertyGroup>
   
   <!-- Remove WinRT.Host.Shim.dll references -->
@@ -111,6 +112,9 @@ $(CsWinRTFilters)
     <CompilerVisibleProperty Include="CsWinRTEnableLogging" />
     <CompilerVisibleProperty Include="GeneratedFilesDir" />
     <CompilerVisibleProperty Include="CsWinRTExe" />
+    <CompilerVisibleProperty Include="CsWinRTKeepGeneratedSources" />
+    <CompilerVisibleProperty Include="CsWinRTWindowsMetadata" />
+    <CompilerVisibleProperty Include="CsWinRTGenerateProjection" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>

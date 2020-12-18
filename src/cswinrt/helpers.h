@@ -456,6 +456,7 @@ namespace cswinrt
         } mapped_types[] =
         {
             // Make sure to keep this table consistent with the registrations in WinRT.Runtime/Projections.cs
+            // and the reverse mapping in WinRT.SourceGenerator/WinRTTypeWriter.cs.
             // NOTE: Must keep namespaces sorted (outer) and abi type names sorted (inner)
             { "Microsoft.UI.Xaml",
                 {
