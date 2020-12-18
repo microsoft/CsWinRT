@@ -21,11 +21,9 @@ namespace Generator
 
         private GeneratorExecutionContext _context;
 
-    
-
         private void Flag() { _flag |= true; }
-
         public bool Found() { return _flag; }
+       
         public bool IsPublic<T>(T p) where T : MemberDeclarationSyntax { return ModifiersContains(p.Modifiers, "public");  }
 
         /// <summary>
@@ -43,6 +41,11 @@ namespace Generator
                     Report(DiagnosticRules.NonWinRTInterface, typeDeclaration.GetLocation(), typeDeclaration.Identifier, prohibitedInterface);
                 }
             }
+        }
+
+        public void HasSomePublicTypes(HashSet<INamedTypeSymbol> publicTypes, HashSet<INamedTypeSymbol> publicStructs) 
+        {
+            if (!publicTypes.Any() && !publicStructs.Any()) { Report(DiagnosticRules.NoPublicTypesRule, null); }
         }
 
         /// <summary>
@@ -70,7 +73,7 @@ namespace Generator
         }
 
         /// <summary>Checks to see if the class declares any operators (overloading them)</summary>
-        /// <param name="context"></param><param name="classDeclaration">
+        ///></param><param name="classDeclaration">
         /// Class to check for operator declarations 
         /// operator declarations are just like method declarations except they use the `operator` keyword</param>
         /// <returns>True iff an operator is overloaded by the given class</returns>
@@ -95,7 +98,7 @@ namespace Generator
             }
         }
 
-        public void HasInvalidMethods<T>(IEnumerable<MethodDeclarationSyntax> methodDeclarations, SyntaxToken typeId)
+        public void CheckMethods<T>(IEnumerable<MethodDeclarationSyntax> methodDeclarations, SyntaxToken typeId)
             where T : TypeDeclarationSyntax
         {
             Dictionary<string, bool> methodsHasAttributeMap = new Dictionary<string, bool>();
@@ -112,7 +115,6 @@ namespace Generator
                 HasConflictingParameterName(method);
                 CheckSignature(method, method.GetLocation(), method.Identifier, typeId);
                 CheckParamsForArrayAttributes(method);
-
             }
             /* Finishes up the work started by `CheckOverloadAttributes` */
             foreach (var thing in overloadsWithoutAttributeMap)
@@ -132,38 +134,25 @@ namespace Generator
                 CheckSignature(prop, prop.GetLocation(), prop.Identifier, typeId);
             }
         }
-       /// <summary>
-        /// returns true iff there is a field of the given type in the given struct 
-        /// e.g., if T is PropertyDeclarationSyntax, then if the struct has a property, we report a diagnostic and return true</summary>
-        /// <typeparam name="T">T can vary over MethodDeclartion, EventDeclaration, etc... </typeparam>
-        /// <param name="context"></param><param name="structDeclaration"></param><returns></returns>
-        public void StructHasFieldOfType<T>(StructDeclarationSyntax structDeclaration)
-        {
-            if (structDeclaration.DescendantNodes().OfType<T>().Any())
-            {
-                Report(DiagnosticRules.StructHasInvalidFieldRule2, structDeclaration.GetLocation(), structDeclaration.Identifier,  SimplifySyntaxTypeString(typeof(T).Name));
-            }
-        }
 
         public void CheckStructField(StructDeclarationSyntax structDeclaration, HashSet<INamedTypeSymbol> userCreatedTypes, INamedTypeSymbol sym)
         { 
-            /*
+            // Helper function, raises diagnostic if the struct has the given kind of field 
             void StructHasFieldOfType<T>() where T : MemberDeclarationSyntax
             { 
                 if (structDeclaration.DescendantNodes().OfType<T>().Any())
                 {
-                    Report(ref context, DiagnosticRules.StructHasInvalidFieldRule2, structDeclaration.GetLocation(), structDeclaration.Identifier,  SimplifySyntaxTypeString(typeof(T).Name));
+                    Report(DiagnosticRules.StructHasInvalidFieldRule2, structDeclaration.GetLocation(), structDeclaration.Identifier,  SimplifySyntaxTypeString(typeof(T).Name));
                 };
             }
-            */
 
-            StructHasFieldOfType<ConstructorDeclarationSyntax>(structDeclaration);
-            StructHasFieldOfType<DelegateDeclarationSyntax>(structDeclaration);
-            StructHasFieldOfType<EventFieldDeclarationSyntax>(structDeclaration);
-            StructHasFieldOfType<IndexerDeclarationSyntax>(structDeclaration);
-            StructHasFieldOfType<MethodDeclarationSyntax>(structDeclaration);
-            StructHasFieldOfType<OperatorDeclarationSyntax>(structDeclaration);
-            StructHasFieldOfType<PropertyDeclarationSyntax>(structDeclaration);
+            StructHasFieldOfType<ConstructorDeclarationSyntax>();
+            StructHasFieldOfType<DelegateDeclarationSyntax>();
+            StructHasFieldOfType<EventFieldDeclarationSyntax>();
+            StructHasFieldOfType<IndexerDeclarationSyntax>();
+            StructHasFieldOfType<MethodDeclarationSyntax>();
+            StructHasFieldOfType<OperatorDeclarationSyntax>();
+            StructHasFieldOfType<PropertyDeclarationSyntax>();
 
             var fields = structDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>();
             foreach (var field in fields) 
@@ -217,9 +206,9 @@ namespace Generator
             }
         }
         
-        public void TypeIsGeneric<T>(T classDeclaration) where T : TypeDeclarationSyntax
+        public void TypeIsGeneric<T>(INamedTypeSymbol sym, T classDeclaration) where T : TypeDeclarationSyntax
         {
-            if (classDeclaration.ChildNodes().OfType<TypeParameterListSyntax>().Any()) 
+            if (sym.IsGenericType)
             { 
                 Report(DiagnosticRules.GenericTypeRule, classDeclaration.GetLocation(), classDeclaration.Identifier);
             }

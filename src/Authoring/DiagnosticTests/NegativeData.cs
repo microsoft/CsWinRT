@@ -2,6 +2,66 @@ namespace DiagnosticTests
 {
     public partial class TestDiagnostics
     {
+
+        // namespace tests -- WIP
+        private const string NoPublicTypes = @"
+namespace Test
+{
+    internal sealed class RuntimeComponent
+    {
+        public RuntimeComponent() {}
+    }
+}";
+        private const string _NamespaceTest1 = @"
+namespace Test
+{
+    namespace OtherNamespace_Valid
+    {
+        public sealed class Class1
+        {
+            int x;
+            public Class1(int a) { x = a; }
+        }
+    }
+
+    // WME1068
+    public sealed class TestDiagnostics
+    {
+        bool b;
+        public TestDiagnostics(bool x) { b = x; }
+    }
+}
+}";
+        private const string _NamespaceTest2 = @"
+namespace OtherNamespace
+{
+
+    // WME1044 ?
+    public sealed class Class1
+    {
+        int x;
+
+        public Class1(int a)
+        {
+            x = a;
+        }
+    }
+}";
+        private const string _NamespaceTest3 = @"
+namespace Test
+{ 
+    // WME1067 ??
+    namespace InnerNamespace
+    {
+        public sealed class Class1
+        {
+            int x;
+            public Class1(int a) { x = a; }
+        }
+    }
+}";
+
+
         // Generic Dictionary 
         private const string InterfaceWithGenericDictReturnType = @"
 using System.Collections.Generic;
@@ -365,56 +425,6 @@ namespace Test
     public sealed class ClassWithExceptions : System.Exception 
     { 
         public ClassWithExceptions() {} 
-    }
-}";
-
-        // namespace tests -- WIP
-        private const string _NamespaceTest1 = @"
-namespace Test
-{
-    namespace OtherNamespace_Valid
-    {
-        public sealed class Class1
-        {
-            int x;
-            public Class1(int a) { x = a; }
-        }
-    }
-
-    // WME1068
-    public sealed class TestDiagnostics
-    {
-        bool b;
-        public TestDiagnostics(bool x) { b = x; }
-    }
-}
-}";
-        private const string _NamespaceTest2 = @"
-namespace OtherNamespace
-{
-
-    // WME1044 ?
-    public sealed class Class1
-    {
-        int x;
-
-        public Class1(int a)
-        {
-            x = a;
-        }
-    }
-}";
-        private const string _NamespaceTest3 = @"
-namespace Test
-{ 
-    // WME1067 ??
-    namespace InnerNamespace
-    {
-        public sealed class Class1
-        {
-            int x;
-            public Class1(int a) { x = a; }
-        }
     }
 }";
 

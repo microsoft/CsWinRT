@@ -21,7 +21,6 @@ namespace DiagnosticTests
            Then go to the ValidCases/InvalidCases property here and add an entry for it
         */
 
-
         /// <summary>
         /// CheckNoDiagnostic asserts that no diagnostics are raised on the 
         /// compilation produced from the cswinrt source generator based on the given source code /// </summary>
@@ -53,22 +52,21 @@ namespace DiagnosticTests
         {
             get 
             {
+                // namespace tests
+                yield return new TestCaseData(NoPublicTypes, DiagnosticRules.NoPublicTypesRule).SetName("Component has no public types");
 
+                // Unsealed classes, generic class/interfaces, invalid inheritance (System.Exception)
                 yield return new TestCaseData(UnsealedClass, DiagnosticRules.UnsealedClassRule).SetName("Unsealed class 1");
                 yield return new TestCaseData(UnsealedClass2, DiagnosticRules.UnsealedClassRule).SetName("Unsealed class 2");
                 yield return new TestCaseData(GenericClass, DiagnosticRules.GenericTypeRule).SetName("Class marked generic");
                 yield return new TestCaseData(GenericInterface, DiagnosticRules.GenericTypeRule).SetName("Interface marked generic");
                 yield return new TestCaseData(ClassInheritsException, DiagnosticRules.NonWinRTInterface).SetName("Class inherits System.Exception");
                 
-                yield return new TestCaseData(InterfaceWithOverloadNoAttribute, DiagnosticRules.MethodOverload_NeedDefaultAttribute).SetName("interface needs default overload attribute");
-                yield return new TestCaseData(InterfaceWithOverloadAttributeTwice, DiagnosticRules.MethodOverload_MultipleDefaultAttribute).SetName("interface has too many default overload attribute");
-
-                // Enumerable<T>
+                               // Enumerable<T>
                 yield return new TestCaseData(InterfaceWithGenericEnumerableReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic Enumerable return type");
                 yield return new TestCaseData(InterfaceWithGenericEnumerableInput, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic Enumerable input");
                 yield return new TestCaseData(ClassWithGenericEnumerableReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic Enumerable return type");
                 yield return new TestCaseData(ClassWithGenericEnumerableInput, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic Enumerable input");
-                
                 yield return new TestCaseData(IfaceWithGenEnumerableProp, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic Enumerable property");
                 yield return new TestCaseData(ClassWithGenEnumerableProp, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic Enumerable return property");
                  
@@ -77,7 +75,6 @@ namespace DiagnosticTests
                 yield return new TestCaseData(InterfaceWithGenericKVPairInput, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic KeyValuePair input");
                 yield return new TestCaseData(ClassWithGenericKVPairReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic KeyValuePair return type");
                 yield return new TestCaseData(ClassWithGenericKVPairInput, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic KeyValuePair input");
-                
                 yield return new TestCaseData(IfaceWithGenKVPairProp, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic KeyValuePair property");
                 yield return new TestCaseData(ClassWithGenKVPairProp, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic KeyValuePair return property");
 
@@ -86,7 +83,6 @@ namespace DiagnosticTests
                 yield return new TestCaseData(InterfaceWithGenericRODictInput, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic RODictionary input");
                 yield return new TestCaseData(ClassWithGenericRODictReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic RODictionary return type");
                 yield return new TestCaseData(ClassWithGenericRODictInput, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic RODictionary input");
-                
                 yield return new TestCaseData(IfaceWithGenRODictProp, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic RODictionary property");
                 yield return new TestCaseData(ClassWithGenRODictProp, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic RODictionary return property");
                 
@@ -95,7 +91,6 @@ namespace DiagnosticTests
                 yield return new TestCaseData(InterfaceWithGenericDictInput, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic Dictionary input");
                 yield return new TestCaseData(ClassWithGenericDictReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic Dictionary return type");
                 yield return new TestCaseData(ClassWithGenericDictInput, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic Dictionary input");
-                
                 yield return new TestCaseData(IfaceWithGenDictProp, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic Dictionary property");
                 yield return new TestCaseData(ClassWithGenDictProp, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic Dictionary return property");
                 
@@ -104,7 +99,6 @@ namespace DiagnosticTests
                 yield return new TestCaseData(InterfaceWithGenericListInput, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic List input");
                 yield return new TestCaseData(ClassWithGenericListReturnType, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic List return type");
                 yield return new TestCaseData(ClassWithGenericListInput, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic List input");
-                
                 yield return new TestCaseData(IfaceWithGenListProp, DiagnosticRules.UnsupportedTypeRule).SetName("interface with Generic List property");
                 yield return new TestCaseData(ClassWithGenListProp, DiagnosticRules.UnsupportedTypeRule).SetName("class with Generic List return property");
                 
@@ -165,7 +159,6 @@ namespace DiagnosticTests
                 yield return new TestCaseData(SubNamespaceInterface_D3Method6, DiagnosticRules.ArraySignature_MultiDimensionalArrayRule)
                     .SetName("MultiDim 3D Subnamespace Interface Method 6");
 
-
                 // jagged array tests 
                 yield return new TestCaseData(Jagged2D_Property2, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Property 2");
                 yield return new TestCaseData(Jagged3D_Property1, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Property 1");
@@ -207,6 +200,8 @@ namespace DiagnosticTests
                 yield return new TestCaseData(SubNamespace_Jagged3DInterface6, DiagnosticRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array SubNamespace Interface Method 6");
 
                 // overload attribute tests
+                yield return new TestCaseData(InterfaceWithOverloadNoAttribute, DiagnosticRules.MethodOverload_NeedDefaultAttribute).SetName("interface needs default overload attribute");
+                yield return new TestCaseData(InterfaceWithOverloadAttributeTwice, DiagnosticRules.MethodOverload_MultipleDefaultAttribute).SetName("interface has too many default overload attribute");
                 yield return new TestCaseData(TwoOverloads_NoAttribute_NamesHaveNumber, DiagnosticRules.MethodOverload_NeedDefaultAttribute)
                     .SetName("DefaultOverload - Need Attribute 1 - Name has number");
                 yield return new TestCaseData(TwoOverloads_NoAttribute, DiagnosticRules.MethodOverload_NeedDefaultAttribute)
@@ -247,11 +242,9 @@ namespace DiagnosticTests
                 yield return new TestCaseData(ThreeOverloads_TwoAttributes, DiagnosticRules.MethodOverload_MultipleDefaultAttribute)
                     .SetName("DefaultOverload - Multiple Attribute 7");
                
-                // .......................................................................................................................................
                 // multiple class constructors of same arity
                 yield return new TestCaseData(ConstructorsOfSameArity, DiagnosticRules.ClassConstructorRule).SetName("Multiple constructors of same arity");
                 // implementing async interface
-
                 yield return new TestCaseData(InterfaceImplementsIAsyncOperation, DiagnosticRules.NonWinRTInterface).SetName("Interface Implements IAsyncOperation");
                 yield return new TestCaseData(InterfaceImplementsIAsyncOperationWithProgress, DiagnosticRules.NonWinRTInterface).SetName("Interface Implements IAsyncOperationWithProgress");
                 yield return new TestCaseData(InterfaceImplementsIAsyncAction, DiagnosticRules.NonWinRTInterface).SetName("Interface Implements IAsyncAction");
@@ -407,6 +400,7 @@ namespace DiagnosticTests
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_8).SetName("Valid - ArrayParamAttrBinary_8");
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_9).SetName("Valid - ArrayParamAttrBinary_9");
                 // Struct field 
+                yield return new TestCaseData(Valid_StructWithByteField).SetName("Valid - struct with byte field");
                 yield return new TestCaseData(Valid_StructWithPrimitiveTypes).SetName("Valid - Struct with only fields of basic types");
                 yield return new TestCaseData(Valid_StructWithImportedStruct).SetName("Valid - Struct with struct field");
                 yield return new TestCaseData(Valid_StructWithImportedStructQualified).SetName("Valid - Struct with qualified struct field");

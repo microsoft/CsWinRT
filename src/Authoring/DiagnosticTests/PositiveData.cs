@@ -2,7 +2,6 @@ namespace DiagnosticTests
 {
     public partial class TestDiagnostics
     {
-        // WIP
         // Dict
         private const string Valid_ClassWithGenericDictReturnType_Private = @"
 using System.Collections.Generic;
@@ -187,7 +186,6 @@ namespace Test
        private List<int> IntList { get; set; }
     }
 }";
-       
         // Namespaces
         private const string Valid_NamespaceUse1 = @"
 namespace My.WindowsComponent
@@ -199,7 +197,6 @@ namespace My.WindowsComponent
         public sealed class Class2 { public int Y { get; } }
     }
 }";
-        
         //// DefaultOverload attribute
         private const string Valid_InterfaceWithOverloadAttribute = @"
 using Windows.Foundation.Metadata;
@@ -300,6 +297,11 @@ namespace Test
         private const string Valid_JaggedMix_PrivateClassPublicProperty = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
+
     internal sealed class Valid_JaggedArray_PrivateClassPublicProperty
     {
         private int[][] Arr { get; set; }
@@ -311,6 +313,11 @@ namespace Test
         private const string Valid_Jagged2D_PrivateClassPublicMethods = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
+
     internal sealed class Valid_JaggedArray_PrivateClassPublicMethods
     {
         public int[][] J2_ReturnOnly() 
@@ -330,6 +337,11 @@ namespace Test
         private const string Valid_Jagged3D_PrivateClassPublicMethods = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
+
     internal sealed class Valid_Jagged3D_PrivateClassPublicMethods 
     {
         public int[][][] J3_ReturnOnly() 
@@ -391,6 +403,11 @@ namespace Test
         private const string Valid_MultiDimArray_PrivateClassPublicProperty1 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
+
     internal class Valid_MultiDimArray_PrivateClassPublicProperty1
     {
         public int[,] Arr_2d { get; set; }
@@ -399,6 +416,11 @@ namespace Test
         private const string Valid_MultiDimArray_PrivateClassPublicProperty2 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
+
     internal class Valid_MultiDimArray_PrivateClassPublicProperty2
     {
         public int[,,] Arr_3d { get; set; }
@@ -407,6 +429,10 @@ namespace Test
         private const string Valid_MultiDimArray_PrivateClassPublicProperty3 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal class Valid_MultiDimArray_PrivateClassPublicProperty3
     {
         private int[,] PrivArr_2d { get; set; }
@@ -415,6 +441,10 @@ namespace Test
         private const string Valid_MultiDimArray_PrivateClassPublicProperty4 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal class Valid_MultiDimArray_PrivateClassPublicProperty4
     {
         private int[,,] PrivArr_3d { get; set; }
@@ -440,6 +470,10 @@ namespace Test
         private const string Valid_2D_PrivateClass_PublicMethod1 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_2D_PrivateClass_PublicMethod1
     {
         public int[,] D2_ReturnOnly() { return new int[4, 2]; }
@@ -448,6 +482,10 @@ namespace Test
         private const string Valid_2D_PrivateClass_PublicMethod2 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_2D_PrivateClass_PublicMethod2
     {
         public int[,] D2_ReturnAndInput1(int[,] arr) { return arr; }
@@ -456,6 +494,10 @@ namespace Test
         private const string Valid_2D_PrivateClass_PublicMethod3 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_2D_PrivateClass_PublicMethod3
     {
         public int[,] D2_ReturnAndInput2of2(bool a, int[,] arr) { return arr; }
@@ -464,6 +506,10 @@ namespace Test
         private const string Valid_2D_PrivateClass_PublicMethod4 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_2D_PrivateClass_PublicMethod4
     {
         public bool D2_NotReturnAndInput2of2(bool a, int[,] arr) { return a; }
@@ -472,6 +518,10 @@ namespace Test
         private const string Valid_2D_PrivateClass_PublicMethod5 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_2D_PrivateClass_PublicMethod5
     {
         public bool D2_NotReturnAndInput2of3(bool a, int[,] arr, bool b) { return a; }
@@ -480,6 +530,10 @@ namespace Test
         private const string Valid_2D_PrivateClass_PublicMethod6 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_2D_PrivateClass_PublicMethod6
     {
         public int[,] D2_ReturnAndInput2of3(bool a, int[,] arr, bool b) { return arr; }
@@ -489,6 +543,10 @@ namespace Test
         private const string Valid_3D_PrivateClass_PublicMethod1 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_3D_PrivateClass_PublicMethod1
     {
         public int[,,] D3_ReturnOnly() { return new int[2, 1, 3] { { { 1, 1, 1 } }, { { 2, 2, 2 } } }; }
@@ -497,6 +555,10 @@ namespace Test
         private const string Valid_3D_PrivateClass_PublicMethod2 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_3D_PrivateClass_PublicMethod2
     {
         public int[,,] D3_ReturnAndInput1(int[,,] arr) { return arr; }
@@ -505,6 +567,10 @@ namespace Test
         private const string Valid_3D_PrivateClass_PublicMethod3 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_3D_PrivateClass_PublicMethod3
     {
         public int[,,] D3_ReturnAndInput2of2(bool a, int[,,] arr) { return arr; }
@@ -513,6 +579,10 @@ namespace Test
         private const string Valid_3D_PrivateClass_PublicMethod4 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_3D_PrivateClass_PublicMethod4
     {
         public int[,,] D3_ReturnAndInput2of3(bool a, int[,,] arr, bool b) { return arr; }
@@ -521,6 +591,10 @@ namespace Test
         private const string Valid_3D_PrivateClass_PublicMethod5 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_3D_PrivateClass_PublicMethod5
     {
         public bool D3_NotReturnAndInput2of2(bool a, int[,,] arr) { return a; }
@@ -529,6 +603,10 @@ namespace Test
         private const string Valid_3D_PrivateClass_PublicMethod6 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_3D_PrivateClass_PublicMethod6
     {
         public bool D3_NotReturnAndInput2of3(bool a, int[,,] arr, bool b) { return a; }
@@ -587,6 +665,10 @@ namespace Test
         private const string Valid_SystemArray_Interface1 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal interface Valid_SystemArray_Interface1
     {
         System.Array Id(System.Array arr);
@@ -595,6 +677,10 @@ namespace Test
         private const string Valid_SystemArray_Interface2 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal interface Valid_SystemArray_Interface2
     {
         void Method2(System.Array arr);
@@ -603,6 +689,10 @@ namespace Test
         private const string Valid_SystemArray_Interface3 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal interface Valid_SystemArray_Interface3
     {
         System.Array Method3();
@@ -611,6 +701,10 @@ namespace Test
         private const string Valid_SystemArray_InternalClass1 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal class Valid_SystemArray_InternalClass1
     {
         public System.Array Arr_2d { get; set; }
@@ -619,6 +713,10 @@ namespace Test
         private const string Valid_SystemArray_InternalClass2 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal class Valid_SystemArray_InternalClass2
     {
 
@@ -628,6 +726,10 @@ namespace Test
         private const string Valid_SystemArray_InternalClass3 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal class Valid_SystemArray_InternalClass3
     {
         private System.Array PrivArr_2d { get; set; }
@@ -636,6 +738,10 @@ namespace Test
         private const string Valid_SystemArray_InternalClass4 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal class Valid_SystemArray_InternalClass4
     {
         private System.Array PrivArr_3d { get; set; }
@@ -693,6 +799,10 @@ namespace Test
         private const string Valid_SystemArray_InternalClassPublicMethods1 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_InternalClassPublicMethods1
     {
         public System.Array SysArr_ReturnOnly() { return Array.CreateInstance(typeof(int), new int[] { 4 }); }
@@ -701,6 +811,10 @@ namespace Test
         private const string Valid_SystemArray_InternalClassPublicMethods2 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_InternalClassPublicMethods2
     {
         public System.Array SysArr_ReturnAndInput1(System.Array arr) { return arr; }
@@ -709,6 +823,10 @@ namespace Test
         private const string Valid_SystemArray_InternalClassPublicMethods3 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_InternalClassPublicMethods3
     {
         public System.Array SysArr_ReturnAndInput2of2(bool a, System.Array arr) { return arr; }
@@ -717,6 +835,10 @@ namespace Test
         private const string Valid_SystemArray_InternalClassPublicMethods4 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_InternalClassPublicMethods4
     {
         public bool SysArr_NotReturnAndInput2of2(bool a, System.Array arr) { return a; }
@@ -725,6 +847,10 @@ namespace Test
         private const string Valid_SystemArray_InternalClassPublicMethods5 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_InternalClassPublicMethods5
     {
         public bool SysArr_NotReturnAndInput2of3(bool a, System.Array arr, bool b) { return a; }
@@ -733,6 +859,10 @@ namespace Test
         private const string Valid_SystemArray_InternalClassPublicMethods6 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_InternalClassPublicMethods6
     {
         public System.Array SysArr_ReturnAndInput2of3(bool a, System.Array arr, bool b) { return arr; }
@@ -741,6 +871,10 @@ namespace Test
         private const string Valid_SystemArray_PrivateClassPublicProperty1 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_PrivateClassPublicProperty1
     {
         public int[] Arr { get { return (int[])Array.CreateInstance(typeof(int), new int[] { 4 }, new int[] { 1 }); } }
@@ -749,6 +883,10 @@ namespace Test
         private const string Valid_SystemArray_PrivateClassPublicProperty2 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_PrivateClassPublicProperty2
     {
         public System.Array Arr2 { get { return Array.CreateInstance(typeof(int), new int[] { 4 }, new int[] { 1 }); } }
@@ -757,6 +895,10 @@ namespace Test
         private const string Valid_SystemArray_PrivateClassPublicProperty3 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_PrivateClassPublicProperty3
     {
         public int[] Arr3 { get { return (int[])Array.CreateInstance(typeof(int), new int[] { 4 }); } }
@@ -765,6 +907,10 @@ namespace Test
         private const string Valid_SystemArray_PrivateClassPublicProperty4 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_PrivateClassPublicProperty4
     {
         public System.Array Arr4 { get { return Array.CreateInstance(typeof(int), new int[] { 4 }); } }
@@ -773,6 +919,10 @@ namespace Test
         private const string Valid_SystemArray_PrivateClassPublicProperty5 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_PrivateClassPublicProperty5
     {
         private int[] PrivArr { get { return (int[])Array.CreateInstance(typeof(int), new int[] { 4 }, new int[] { 1 }); } }
@@ -781,6 +931,10 @@ namespace Test
         private const string Valid_SystemArray_PrivateClassPublicProperty6 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_PrivateClassPublicProperty6
     {
         private System.Array PrivArr2 { get { return Array.CreateInstance(typeof(int), new int[] { 4 }, new int[] { 1 }); } }
@@ -789,6 +943,10 @@ namespace Test
         private const string Valid_SystemArray_PrivateClassPublicProperty7 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_PrivateClassPublicProperty7
     {
         private int[] PrivArr3 { get { return (int[])Array.CreateInstance(typeof(int), new int[] { 4 }); } }
@@ -797,6 +955,10 @@ namespace Test
         private const string Valid_SystemArray_PrivateClassPublicProperty8 = @"
 namespace Test
 {
+    public sealed class Blank
+    {
+        public Blank() {}
+    }
     internal sealed class Valid_SystemArray_PrivateClassPublicProperty8
     {
         private System.Array PrivArr4 { get { return Array.CreateInstance(typeof(int), new int[] { 4 }); } }

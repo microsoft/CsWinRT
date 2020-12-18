@@ -58,18 +58,23 @@ namespace Generator
 
         private bool ModifiersContains(SyntaxTokenList modifiers, string str) { return modifiers.Any(modifier => modifier.ValueText == str); }
 
+        /// <summary>Raise the flag so we don't make a winmd, and add a diagnostic to the sourcegenerator</summary>
+        /// <param name="d"></param><param name="loc"></param><param name="args"></param>
         private void Report(DiagnosticDescriptor d, Location loc, params object[] args)
         {
             Flag();
             _context.ReportDiagnostic(Diagnostic.Create(d, loc, args));
         }
 
+        /// <summary>Check if any of the given symbols represents the given type</summary>
+        /// <param name="typeNames"></param><param name="typeStr"></param>
         private bool SymbolSetHasString(HashSet<INamedTypeSymbol> typeNames, string typeStr) { return typeNames.Where(sym => sym.ToString().Contains(typeStr)).Any(); }
 
+        /// <summary>Check to see if the piece of syntax is the same as the string</summary>
+        /// <param name="stx"></param><param name="str"></param>
         private bool SyntaxTokenIs(SyntaxToken stx, string str) { return stx.Value.Equals(str); }
 
-               /// <summary>
-        /// Attributes can come in one list or many, e.g. [A()][B()] vs. [A(),B()]
+        /// <summary>Attributes can come in one list or many, e.g. [A()][B()] vs. [A(),B()]
         /// look at all possible attributes and see if any match the given string</summary>
         /// <param name="attrName">attribute names need to be fully qualified, e.g. DefaultOverload is really Windows.Foundation.Metadata.DefaultOverload</param>
         /// <param name="ls">all the syntax nodes that correspond to an attribute list</param>
@@ -95,15 +100,15 @@ namespace Generator
         /// <returns>returns true iff any are (string) equal to the given attribute name</returns>
         private bool ParamHasAttribute(string attrName, ParameterSyntax param) { return MatchesAnyAttribute(attrName, param.AttributeLists); }
 
-        private bool ParamHasInOrOutAttribute(ParameterSyntax param)
-        {
-            return InAndOutAttributeNames.Where(str => ParamHasAttribute(str, param)).Any();
-        }
+        /// <summary>Check for qualified and unqualified [In] and [Out] attribute on the parameter</summary>
+        /// <param name="param"></param>
+        /// <returns>True if any attribute is the In or Out attribute</returns>
+        private bool ParamHasInOrOutAttribute(ParameterSyntax param) { return InAndOutAttributeNames.Where(str => ParamHasAttribute(str, param)).Any(); }
 
-        private bool MethodHasDefaultOverloadAttribute(MethodDeclarationSyntax method)
-        {
-            return OverloadAttributeNames.Where(str => MatchesAnyAttribute(str, method.AttributeLists)).Any();
-        }
+        /// <summary>Check for qualified and unqualified [DefaultOverload] attribute on the parameter<</summary>
+        /// <param name="method"></param>
+        /// <returns>True if any attribute is the DefaultOverload attribute</returns>
+        private bool MethodHasDefaultOverloadAttribute(MethodDeclarationSyntax method) { return OverloadAttributeNames.Where(str => MatchesAnyAttribute(str, method.AttributeLists)).Any(); }
 
         /// <summary>e.g. `int foo(out int i) { ... }` /// </summary>
         /// <param name="param"></param>True if the parameter has the `ref` modifier<returns></returns>
@@ -117,7 +122,7 @@ namespace Generator
         /// <summary>
         ///  Checks to see if an array parameter has been marked with both Write and Read attributes
         ///  Does extra work, by catching `ref` params, done here since this code can be used by class or interface related methods</summary>
-        /// <param name="method"></param><param name="classIdentifier"></param><param name="context"></param>
+        /// <param name="method">Method declared</param>
         /// <returns>true if array attributes are invalid (see summary)</returns>
         private void CheckParamsForArrayAttributes(MethodDeclarationSyntax method)
         {
@@ -129,22 +134,19 @@ namespace Generator
                 bool isOutputParam = ParamMarkedOutput(param);
 
                 // Nothing can be marked `ref`
-                if (ParamMarkedRef(param))
-                {
-                    Report(DiagnosticRules.RefParameterFound, method.GetLocation(), param.Identifier);
-                }
+                if (ParamMarkedRef(param)) { Report(DiagnosticRules.RefParameterFound, method.GetLocation(), param.Identifier); }
                 
                 if (ParamHasInOrOutAttribute(param))
                 {
                     // recommend using ReadOnlyArray or WriteOnlyArray
-                    if (isArrayType)
-                    {
-                        Report(DiagnosticRules.ArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier);
+                    if (isArrayType) 
+                    { 
+                        Report(DiagnosticRules.ArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier); 
                     }
                     // if not array type, stil can't use [In] or [Out]
-                    else
-                    {
-                        Report(DiagnosticRules.NonArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier);
+                    else 
+                    { 
+                        Report(DiagnosticRules.NonArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier); 
                     }
                 }
 
@@ -211,7 +213,7 @@ namespace Generator
 
         /// <summary>
         /// Keeps track of repeated declarations of a method (overloads) and raises diagnostics according to the rule that exactly one overload should be attributed the default</summary>
-        /// <param name="context"></param><param name="method">Look for overloads of this method, checking the attributes as well attributes for</param>
+        /// <param name="method">Look for overloads of this method, checking the attributes as well attributes for</param>
         /// <param name="methodHasAttributeMap">
         /// Keeps track of the method (via qualified name + arity) and whether it was declared with the DefaultOverload attribute
         /// this variable is ref because we are mutating this map with each method, so we only look at a method a second time if it has an overload but no attribute</param>
@@ -266,7 +268,7 @@ namespace Generator
         } 
 
         /// <summary>Checks each type in the given list of types and sees if any are equal to the given type name</summary>
-        /// <typeparam name="T"></typeparam><param name="context"></param>
+        /// <typeparam name="T">Syntax for either QualifiedName or IdentifierName</typeparam>
         /// <param name="typesInSignature">A list of the descendent nodes that are of the given type, possibly empty. 
         /// empty example: this property doesnt have any qualified types in its signature</param>
         /// <param name="typeName">check to see if this type appears in the signature</param><param name="diag">diagnostic to report if we see the typeName</param>
@@ -282,6 +284,9 @@ namespace Generator
                 }
             }
         }
+
+        /// <summary>Report a diagnostic if any of the generic types are invalid Windows Runtime types, e.g. Dictionary<int,int></summary>
+        /// <param name="genericTypes"></param><param name="loc"></param><param name="memberId"></param>
         private void SignatureHasInvalidGenericType(IEnumerable<GenericNameSyntax> genericTypes, Location loc, SyntaxToken memberId)
         {
             foreach (var generic in genericTypes)
@@ -292,11 +297,14 @@ namespace Generator
                 }
             }
         }
+
+        /// <summary></summary>
+        /// <typeparam name="T">Declaration syntax for either a method or property</typeparam>
+        /// <param name="member"></param><param name="loc"></param><param name="memberId"></param><param name="parentTypeId"></param>
         private void CheckSignature<T>(T member, Location loc, SyntaxToken memberId, SyntaxToken parentTypeId)
             where T : MemberDeclarationSyntax
         {
             var arrayDiagnostic = Diagnostic.Create(DiagnosticRules.ArraySignature_SystemArrayRule, loc, parentTypeId, memberId);
-            // var model = context.Compilation.GetSemanticModel();
 
             IEnumerable<GenericNameSyntax> genericTypes = member.DescendantNodes().OfType<GenericNameSyntax>();
             SignatureHasInvalidGenericType(genericTypes, loc, memberId);
@@ -331,6 +339,6 @@ namespace Generator
         private static readonly string[] InAndOutAttributeNames = { "In", "Out", "System.Runtime.InteropServices.In", "System.Runtime.InteropServices.Out" };
         private static readonly string[] OverloadAttributeNames = { "Windows.Foundation.Metadata.DefaultOverload", "DefaultOverload" };
     
-        private readonly string GeneratedReturnValueName = "__retval";
+        private static readonly string GeneratedReturnValueName = "__retval";
     }
 }

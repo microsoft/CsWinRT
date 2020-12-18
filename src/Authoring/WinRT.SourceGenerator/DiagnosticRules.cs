@@ -23,6 +23,12 @@ namespace WinRT.SourceGenerator
                 helpLinkUri: "https://docs.microsoft.com/en-us/previous-versions/hh977010(v=vs.110)");
         }
 
+
+        public static DiagnosticDescriptor NoPublicTypesRule = MakeRule(
+            "WME1042",
+            "No public types defined",
+            "Windows Runtime components must have at least one public type");
+
         public static DiagnosticDescriptor GenericTypeRule = MakeRule(
             "WME",
             "Class (or interface) is generic",
@@ -34,18 +40,11 @@ namespace WinRT.SourceGenerator
             "Class is unsealed",
             "Exporting unsealed types is not supported. Please mark type {0} as sealed.");
 
-        /* 
-        Method '{0}' has a parameter of type '{1}' in its signature. 
-        Although this generic type is not a valid Windows Runtime type, the type or its generic parameters implement interfaces that are valid Windows Runtime types. 
-        Consider changing the type '{1}' in the method signature to one of the following types instead: 
-        'System.Collections.Generic.IEnumerable<T>, System.Collections.Generic.IList<T>, System.Collections.Generic.IReadOnlyList<T>'.	
-        */
-
         public static DiagnosticDescriptor UnsupportedTypeRule = MakeRule(
             "WME",
             "Exposing unsupported type",
-            "The member '{0}' has the type '{1}' in its signature. The type '{1}' is not a valid Windows Runtime type."  
-            + "Yet, the type (or its generic parameters) implement interfaces that are valid Windows Runtime types." 
+            "The member '{0}' has the type '{1}' in its signature. The type '{1}' is not a valid Windows Runtime type\n"  
+            + "Yet, the type (or its generic parameters) implement interfaces that are valid Windows Runtime types\n" 
             + "Consider changing the type '{1} in the member signature to one of the following types from System.Collections.Generic:\n{2}");
         
         public static DiagnosticDescriptor StructWithNoFieldsRule = MakeRule(
