@@ -74,12 +74,22 @@ namespace WinRT
             return type.GetHelperType().GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).ReturnType;
         }
 
+        internal static Type GetMarshalerArrayType(this Type type)
+        {
+            return type.GetHelperType().GetMethod("CreateMarshalerArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.ReturnType;
+        }
+
         public static bool IsDelegate(this Type type)
         {
             return typeof(Delegate).IsAssignableFrom(type);
         }
 
         public static Type GetRuntimeClassCCWType(this Type type)
+        {
+            return type.IsClass ? type.GetAuthoringMetadataType() : null;
+        }
+
+        internal static Type GetAuthoringMetadataType(this Type type)
         {
             var ccwTypeName = $"ABI.Impl.{type.FullName}";
             return Type.GetType(ccwTypeName, false) ?? type.Assembly.GetType(ccwTypeName, false);

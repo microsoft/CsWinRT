@@ -764,6 +764,87 @@ namespace UnitTest
             Assert.True(hierarchyDAsHierarchyA == hierarchyD);
         }
 
+        [Fact]
+        public void TestVectorGetMany()
+        {
+            var bools = new List<bool>()
+            {
+                true,
+                false,
+                true,
+                true
+            };
+            var boolSubset = Tests.GetBooleanVectorSubset(bools, 1);
+            Assert.True(bools.GetRange(1, 3).SequenceEqual(boolSubset));
+
+            var blittableObjects = new List<Blittable>()
+            {
+                new Blittable(1, 2, 3, 4, 5, 6, 7, 8, 9, Guid.Empty),
+                new Blittable(3, 4, 5, 6, 7, 8, 9, 10, 11, typeof(ITests).GUID),
+                new Blittable(5, 6, 7, 8, 9, 10, 11, 12, 13, Guid.Empty),
+                new Blittable(7, 8, 9, 10, 11, 12, 13, 14, 15, Guid.Empty),
+                new Blittable(9, 10, 11, 12, 13, 14, 15, 16, 17, typeof(ITests).GUID)
+            };
+            var blittableObjectsSubset = Tests.GetBlittableVectorSubset(blittableObjects, 1);
+            Assert.True(blittableObjects.GetRange(1, 3).SequenceEqual(blittableObjectsSubset));
+
+            var nonBlittableObjects = new List<NonBlittable>()
+            {
+                new NonBlittable(true, 'a', "one", 1),
+                new NonBlittable(false, 'b', "two", 2),
+                new NonBlittable(true, 'c', "three", 3),
+                new NonBlittable(true, 'd', "four", 4),
+                new NonBlittable(true, 'e', "five", 5),
+                new NonBlittable(false, 'f',"six", 6)
+            };
+            var nonBlittableObjectSubset = Tests.GetNonBlittableVectorSubset(nonBlittableObjects, 1);
+            Assert.True(nonBlittableObjects.GetRange(1, 3).SequenceEqual(nonBlittableObjectSubset));
+
+            var strings = new List<string>()
+            {
+                "one",
+                "two",
+                "three",
+                "four",
+                "five",
+                "six"
+            };
+            var stringSubset = Tests.GetStringVectorSubset(strings, 1);
+            Assert.True(strings.GetRange(1, 3).SequenceEqual(stringSubset));
+
+            var classObjects = new List<Class>()
+            {
+                new Class(),
+                new Class(),
+                new Class(),
+                new Class()
+            };
+            var classSubset = Tests.GetClassVectorSubset(classObjects, 1);
+            Assert.True(classObjects.GetRange(1, 3).SequenceEqual(classSubset));
+
+            var objSubset = Tests.GetObjectVectorSubset(classObjects, 1);
+            Assert.True(classObjects.GetRange(1, 3).SequenceEqual(objSubset));
+
+            var interfaceSubset = Tests.GetInterfaceVectorSubset(classObjects, 1);
+            Assert.True(classObjects.GetRange(1, 3).SequenceEqual(interfaceSubset));
+
+            var composableObjects = new List<Composable>()
+            {
+                new Composable(),
+                new Composable(2),
+                new Composable(3),
+                new Composable(4)
+            };
+            var composableClassSubset = Tests.GetComposableClassVectorSubset(composableObjects, 1);
+            Assert.True(composableObjects.GetRange(1, 3).SequenceEqual(composableClassSubset));
+
+            objSubset = Tests.GetObjectVectorSubset(composableObjects, 1);
+            Assert.True(composableObjects.GetRange(1, 3).SequenceEqual(objSubset));
+
+            interfaceSubset = Tests.GetInterfaceVectorSubset(composableObjects, 1);
+            Assert.True(composableObjects.GetRange(1, 3).SequenceEqual(interfaceSubset));
+        }
+
         // Nota Bene: this test case must always remain the final one
         [Fact]
         public void Z_Check_Coverage()

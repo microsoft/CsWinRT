@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection.Metadata;
@@ -13,21 +14,35 @@ namespace Generator
     [Generator]
     public class SourceGenerator : ISourceGenerator
     {
+        private static readonly string ArrayAttributes = @"
+namespace System.Runtime.InteropServices.WindowsRuntime
+{
+    [global::System.AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+    internal sealed class ReadOnlyArrayAttribute : global::System.Attribute
+    {
+    }
+
+    [global::System.AttributeUsage(System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+    internal sealed class WriteOnlyArrayAttribute : global::System.Attribute
+    {
+    }
+}";
+
         private string _tempFolder;
 
-        private string GetAssemblyName(GeneratorExecutionContext context)
+        private static string GetAssemblyName(GeneratorExecutionContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.AssemblyName", out var assemblyName);
             return assemblyName;
         }
 
-        private string GetAssemblyVersion(GeneratorExecutionContext context)
+        private static string GetAssemblyVersion(GeneratorExecutionContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.AssemblyVersion", out var assemblyVersion);
             return assemblyVersion;
         }
 
-        public static string GetGeneratedFilesDir(GeneratorExecutionContext context)
+        internal static string GetGeneratedFilesDir(GeneratorExecutionContext context)
         {
             // TODO: determine correct location to write to.
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.GeneratedFilesDir", out var generatedFilesDir);
@@ -49,6 +64,18 @@ namespace Generator
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTExe", out var cswinrtExe);
             return cswinrtExe;
+        }
+
+        private static bool GetKeepGeneratedSources(GeneratorExecutionContext context)
+        {
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTKeepGeneratedSources", out var keepGeneratedSourcesStr);
+            return keepGeneratedSourcesStr != null && bool.TryParse(keepGeneratedSourcesStr, out var keepGeneratedSources) && keepGeneratedSources;
+        }
+
+        private static string GetCsWinRTWindowsMetadata(GeneratorExecutionContext context)
+        {
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTWindowsMetadata", out var cswinrtWindowsMetadata);
+            return cswinrtWindowsMetadata;
         }
 
         private string GetTempFolder(bool clearSourceFilesFromFolder = false)
@@ -79,10 +106,10 @@ namespace Generator
             string assemblyName = GetAssemblyName(context);
             string winmdFile = GetWinmdOutputFile(context);
             string outputDir = GetTempFolder(true);
-            // TODO: make it a property with a list of WinMDs
-            string additionalWinMds = "10.0.18362.0";
+            string windowsMetadata = GetCsWinRTWindowsMetadata(context);
+            // TODO: support additional WinMD files from other projections.
 
-            string arguments = string.Format("-component -input \"{0}\" -input {1} -include {2} -output \"{3}\" -verbose", winmdFile, additionalWinMds, assemblyName, outputDir);
+            string arguments = string.Format("-component -input \"{0}\" -input {1} -include {2} -output \"{3}\" -verbose", winmdFile, windowsMetadata, assemblyName, outputDir);
             Logger.Log("Running " + cswinrtExe + " " + arguments);
 
             var processInfo = new ProcessStartInfo
@@ -96,18 +123,31 @@ namespace Generator
                 CreateNoWindow = true
             };
 
-            using var cswinrtProcess = Process.Start(processInfo);
-            Logger.Log(cswinrtProcess.StandardOutput.ReadToEnd());
-            Logger.Log(cswinrtProcess.StandardError.ReadToEnd());
-            cswinrtProcess.WaitForExit();
-
-            foreach(var file in Directory.GetFiles(outputDir, "*.cs", SearchOption.TopDirectoryOnly))
+            try
             {
-                Logger.Log("Adding " + file);
-                context.AddSource(Path.GetFileNameWithoutExtension(file), SourceText.From(File.ReadAllText(file), Encoding.UTF8));
-            }
+                using var cswinrtProcess = Process.Start(processInfo);
+                Logger.Log(cswinrtProcess.StandardOutput.ReadToEnd());
+                Logger.Log(cswinrtProcess.StandardError.ReadToEnd());
+                cswinrtProcess.WaitForExit();
 
-            Directory.Delete(outputDir, true);
+                if (cswinrtProcess.ExitCode != 0)
+                {
+                    throw new Win32Exception(cswinrtProcess.ExitCode);
+                }
+
+                foreach (var file in Directory.GetFiles(outputDir, "*.cs", SearchOption.TopDirectoryOnly))
+                {
+                    Logger.Log("Adding " + file);
+                    context.AddSource(Path.GetFileNameWithoutExtension(file), SourceText.From(File.ReadAllText(file), Encoding.UTF8));
+                }
+            }
+            finally
+            {
+                if (!GetKeepGeneratedSources(context))
+                {
+                    Directory.Delete(outputDir, true);
+                }
+            }
         }
 
         private string GetWinmdOutputFile(GeneratorExecutionContext context)
@@ -144,6 +184,8 @@ namespace Generator
 
             try
             {
+                context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(ArrayAttributes, Encoding.UTF8));
+
                 string assembly = GetAssemblyName(context);
                 string version = GetAssemblyVersion(context);
                 MetadataBuilder metadataBuilder = new MetadataBuilder();
