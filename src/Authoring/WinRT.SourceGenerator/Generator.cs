@@ -259,7 +259,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                     winrtRules.CheckMethods<InterfaceDeclarationSyntax>(methods, interfaceDeclaration.Identifier);
                 }
 
-                var structs    = nodes.OfType<StructDeclarationSyntax>();
+                var structs = nodes.OfType<StructDeclarationSyntax>();
                 foreach (StructDeclarationSyntax structDeclaration in structs)
                 {
                     winrtRules.CheckStructField(structDeclaration, userCreatedTypes, model.GetDeclaredSymbol(structDeclaration)); 
