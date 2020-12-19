@@ -195,7 +195,8 @@ namespace Generator
             {
                 CheckOverloadAttributes(method, methodsHasAttributeMap, overloadsWithoutAttributeMap, typeId);
                 HasConflictingParameterName(method);
-                CheckSignature(method, method.GetLocation(), method.Identifier, typeId);
+                
+                CheckSignature(method, method.GetLocation(), method.Identifier, typeId, method.ParameterList);
                 CheckParamsForArrayAttributes(method);
             }
             /* Finishes up the work started by `CheckOverloadAttributes` */
@@ -212,7 +213,7 @@ namespace Generator
         {
             foreach (var prop in props)
             {
-                CheckSignature(prop, prop.GetLocation(), prop.Identifier, typeId);
+                CheckSignature(prop, prop.GetLocation(), prop.Identifier, typeId, null);
             }
         }
 

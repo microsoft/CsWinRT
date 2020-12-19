@@ -338,26 +338,50 @@ namespace Generator
                 }
             }
         }
+    
+        private IEnumerable<T> GetSignatureTypes<T>(MemberDeclarationSyntax member, ParameterListSyntax paramList)
+        {
+            // change to ChildNodes
+            IEnumerable<T> genericTypes = member.DescendantNodes().OfType<T>();
+            /*
+            if (paramList != null) 
+            {
+                foreach (var param in paramList.Parameters)
+                {
+                    var a = param.Type;
+                    genericTypes.Concat(param.ChildNodes().OfType<T>());
+                    var b = param.Identifier;
+                    var c = false;
+                }
+                // genericTypes.Concat(parameters.DescendantNodes().OfType<T>()); 
+            }
+            */
+            return genericTypes;
+        }
 
         /// <summary></summary>
         /// <param name="member"></param><param name="loc"></param><param name="memberId"></param><param name="parentTypeId"></param>
-        private void CheckSignature(MemberDeclarationSyntax member, Location loc, SyntaxToken memberId, SyntaxToken parentTypeId)
+        private void CheckSignature(MemberDeclarationSyntax member, Location loc, SyntaxToken memberId, SyntaxToken parentTypeId, ParameterListSyntax parameters)
         {
             var arrayDiagnostic = Diagnostic.Create(WinRTRules.ArraySignature_SystemArrayRule, loc, parentTypeId, memberId);
             var kvpDiagnostic = Diagnostic.Create(WinRTRules.UnsupportedTypeRule, loc, parentTypeId, memberId);
 
-            IEnumerable<GenericNameSyntax> genericTypes = member.DescendantNodes().OfType<GenericNameSyntax>();
+            IEnumerable<GenericNameSyntax> genericTypes = GetSignatureTypes<GenericNameSyntax>(member, parameters);
+            
             SignatureHasInvalidGenericType(genericTypes, loc, memberId);
 
-            IEnumerable<QualifiedNameSyntax> qualifiedTypes = member.DescendantNodes().OfType<QualifiedNameSyntax>();
+            IEnumerable<QualifiedNameSyntax> qualifiedTypes = GetSignatureTypes<QualifiedNameSyntax>(member, parameters);
+
             SignatureContainsTypeName(qualifiedTypes, "System.Array", arrayDiagnostic);
             SignatureContainsTypeName(qualifiedTypes, "System.Collections.Generic.KeyValuePair", kvpDiagnostic);
 
-            IEnumerable<IdentifierNameSyntax> types = member.DescendantNodes().OfType<IdentifierNameSyntax>();
+            IEnumerable<IdentifierNameSyntax> types = GetSignatureTypes<IdentifierNameSyntax>(member, parameters);
+            
             SignatureContainsTypeName(types, "Array", arrayDiagnostic);
             SignatureContainsTypeName(types, "KeyValuePair", kvpDiagnostic);
 
-            IEnumerable<ArrayTypeSyntax> arrays = member.DescendantNodes().OfType<ArrayTypeSyntax>();
+            IEnumerable<ArrayTypeSyntax> arrays = GetSignatureTypes<ArrayTypeSyntax>(member, parameters);
+            
             ArrayIsntOneDim(arrays, parentTypeId, memberId, loc);
         }
 

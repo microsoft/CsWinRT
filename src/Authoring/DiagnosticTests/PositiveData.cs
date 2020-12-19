@@ -2,6 +2,38 @@ namespace DiagnosticTests
 {
     public partial class UnitTesting
     {
+        // oops
+        private const string Valid_ListUsage = @"
+using namespace System.Collections.Generic;
+namespace Test 
+{
+    public sealed class A
+    {
+        public static IReadOnlyList<Uri> GetUris()
+        {
+            return new List<Uri>() {
+                new Uri(""http://github.com""),
+                new Uri(""http://microsoft.com"")
+                };
+        }
+    }
+}";
+
+ private const string Valid_ListUsage2 = @"
+namespace Test 
+{
+    public sealed class A
+    {
+        public static System.Collections.Generic.IReadOnlyList<Uri> GetUris()
+        {
+            return new System.Collections.Generic.List<Uri>() {
+                new Uri(""http://github.com""),
+                new Uri(""http://microsoft.com"")
+                };
+        }
+    }
+}";
+
 
         // Namespaces
         private const string Valid_NestedNamespace = @"

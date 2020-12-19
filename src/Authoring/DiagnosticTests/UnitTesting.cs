@@ -362,6 +362,8 @@ namespace DiagnosticTests
         {
             get
             {
+                yield return new TestCaseData(Valid_ListUsage).SetName("Valid - Internally uses List<>");
+                yield return new TestCaseData(Valid_ListUsage2).SetName("Valid - Internally uses List<> (qualified)");
                 yield return new TestCaseData(Valid_NestedNamespace).SetName("Valid - Nested namespaces are fine");
                 yield return new TestCaseData(Valid_NestedNamespace2).SetName("Valid - Twice nested namespaces are fine");
                 yield return new TestCaseData(Valid_NestedNamespace3).SetName("Valid - Namespaces: Test.Component with an inner component");
