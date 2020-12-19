@@ -4,7 +4,7 @@ namespace DiagnosticTests
     {
         // oops
         private const string Valid_ListUsage = @"
-using namespace System.Collections.Generic;
+using System.Collections.Generic;
 namespace Test 
 {
     public sealed class A

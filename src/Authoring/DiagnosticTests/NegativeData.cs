@@ -853,17 +853,6 @@ namespace Test
         private const string ArrayInstanceProperty1 = @"
 namespace Test
 {
-    public sealed class ArrayInstanceProperty1
-    {
-        public int[] Arr
-        {
-            get { return (int[])Array.CreateInstance(typeof(int), new int[] { 4 }, new int[] { 1 }); }
-        }
-    } 
-}";
-        private const string ArrayInstanceProperty2 = @"
-namespace Test
-{
 public sealed class ArrayInstanceProperty2
     {
         public System.Array Arr
@@ -872,19 +861,7 @@ public sealed class ArrayInstanceProperty2
         }
     } 
 }";
-        private const string ArrayInstanceProperty3 = @"
-namespace Test
-{
-    public sealed class ArrayInstanceProperty3
-    {
-        public int[] Arr
-        {
-            get { return (int[])Array.CreateInstance(typeof(int), new int[] { 4 }); }
-        }
-    } 
-
-}";
-        private const string ArrayInstanceProperty4 = @"
+        private const string ArrayInstanceProperty2 = @"
 namespace Test
 {
 public sealed class ArrayInstanceProperty4

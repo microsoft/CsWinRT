@@ -21,7 +21,6 @@ namespace Generator
                 structs = new HashSet<INamedTypeSymbol>();
                 namespaces = new HashSet<INamespaceSymbol>();
             }
-
             public void AddType(INamedTypeSymbol newType) { types.Add(newType); }
             public void AddStruct(INamedTypeSymbol newType) { structs.Add(newType); }
             public void AddNamespace(INamespaceSymbol newType) { namespaces.Add(newType); }
@@ -66,33 +65,7 @@ namespace Generator
             return collectedTypes;
         }
 
-        /// <summary>
-        /// Look at all the array types and if any are of the form [][]+ or [,+] then raise the corresponding diagnostic and return true</summary>
-        /// <param name="arrTypes"></param><param name="context"></param><param name="typeIdentifier">The type the array lives in</param>
-        /// <param name="fieldId">The code the array is a part of the signature for; e.g. property or method</param><param name="loc"></param>
-        /// <returns>True iff any of the array types given are multidimensional or jagged</returns>
-        private void ArrayIsntOneDim(IEnumerable<ArrayTypeSyntax> arrTypes, 
-            SyntaxToken typeIdentifier, 
-            SyntaxToken fieldId, 
-            Location loc)
-        {
-            foreach (var arrType in arrTypes)
-            {
-                var brackets = arrType.DescendantNodes().OfType<ArrayRankSpecifierSyntax>();
-                // [][]+ ?
-                if (brackets.Count() > 1) 
-                {
-                    Report(WinRTRules.ArraySignature_JaggedArrayRule, loc, fieldId, typeIdentifier);
-                }
-                // [,+] ? 
-                else if (brackets.Count() == 1 && brackets.First().ToString().Contains(","))
-                {
-                    Report(WinRTRules.ArraySignature_MultiDimensionalArrayRule, loc, fieldId, typeIdentifier);
-                }
-            }
-        }
-        
-        private static bool ImplementsInterface(INamedTypeSymbol typeSymbol, string typeToCheck)
+        private bool ImplementsInterface(INamedTypeSymbol typeSymbol, string typeToCheck)
         {
             if (typeSymbol == null)
             {
@@ -311,86 +284,6 @@ namespace Generator
         }
 
 
-        #region Signature
-
-        /// <summary>Checks each type in the given list of types and sees if any are equal to the given type name</summary>
-        /// <typeparam name="T">Syntax for either QualifiedName or IdentifierName</typeparam>
-        /// <param name="typesInSignature">A list of the descendent nodes that are of the given type, possibly empty. 
-        /// empty example: this property doesnt have any qualified types in its signature</param>
-        /// <param name="typeName">check to see if this type appears in the signature</param><param name="diag">diagnostic to report if we see the typeName</param>
-        /// <returns>true if the given type is the same as the one in the list</returns>
-        private void SignatureContainsTypeName<T>(IEnumerable<T> typesInSignature, string typeName, Diagnostic diag)
-        {
-            foreach (T name in typesInSignature)
-            {
-                if (name.ToString().Equals(typeName))
-                {
-                    ReportDiagnostic(diag);
-                }
-            }
-        }
-
-        /// <summary>Report a diagnostic if any of the generic types are invalid Windows Runtime types, e.g. Dictionary<int,int></summary>
-        /// <param name="genericTypes"></param><param name="loc"></param><param name="memberId"></param>
-        private void SignatureHasInvalidGenericType(IEnumerable<GenericNameSyntax> genericTypes, Location loc, SyntaxToken memberId)
-        {
-            foreach (var generic in genericTypes)
-            {
-                if (InvalidGenericTypes.Contains(generic.Identifier.ToString()))
-                {
-                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, generic.Identifier, SuggestType(generic.Identifier.ToString()));
-                }
-            }
-        }
-    
-        private IEnumerable<T> GetSignatureTypes<T>(MemberDeclarationSyntax member, ParameterListSyntax paramList)
-        {
-            // change to ChildNodes
-            IEnumerable<T> genericTypes = member.DescendantNodes().OfType<T>();
-            /*
-            if (paramList != null) 
-            {
-                foreach (var param in paramList.Parameters)
-                {
-                    var a = param.Type;
-                    genericTypes.Concat(param.ChildNodes().OfType<T>());
-                    var b = param.Identifier;
-                    var c = false;
-                }
-                // genericTypes.Concat(parameters.DescendantNodes().OfType<T>()); 
-            }
-            */
-            return genericTypes;
-        }
-
-        /// <summary>The core of this function is to get all the possible types used in this function's signature. 
-        /// We do this by looking for nodes of syntax type GenericName, QualifiedName, IdentifierName, and ArrayType 
-        /// We then check if invalid types appear in the nodes, e.g. returning System.Array or taking a KeyValuePair 
-        /// </summary>
-        /// <param name="member">Either a property or a method</param><param name="loc">Location of this node</param>
-        /// <param name="memberId">identifier of this method</param><param name="parentTypeId"></param>
-        private void CheckSignature(MemberDeclarationSyntax member, Location loc, SyntaxToken memberId, SyntaxToken parentTypeId, ParameterListSyntax parameters)
-        {
-            var arrayDiagnostic = Diagnostic.Create(WinRTRules.ArraySignature_SystemArrayRule, loc, parentTypeId, memberId);
-            var kvpDiagnostic = Diagnostic.Create(WinRTRules.UnsupportedTypeRule, loc, parentTypeId, memberId);
-
-            IEnumerable<GenericNameSyntax> genericTypes = GetSignatureTypes<GenericNameSyntax>(member, parameters);
-            IEnumerable<QualifiedNameSyntax> qualifiedTypes = GetSignatureTypes<QualifiedNameSyntax>(member, parameters);
-            IEnumerable<IdentifierNameSyntax> types = GetSignatureTypes<IdentifierNameSyntax>(member, parameters);
-            IEnumerable<ArrayTypeSyntax> arrays = GetSignatureTypes<ArrayTypeSyntax>(member, parameters);
-            
-            SignatureHasInvalidGenericType(genericTypes, loc, memberId);
-            SignatureContainsTypeName(qualifiedTypes, "System.Array", arrayDiagnostic);
-            SignatureContainsTypeName(qualifiedTypes, "System.Collections.Generic.KeyValuePair", kvpDiagnostic);
-            SignatureContainsTypeName(types, "Array", arrayDiagnostic);
-            SignatureContainsTypeName(types, "KeyValuePair", kvpDiagnostic);
-
-            
-            ArrayIsntOneDim(arrays, parentTypeId, memberId, loc);
-        }
-
-        #endregion
-
         #region StringHelpers
 
         /// <summary>Make a suggestion for types to use instead of the given type</summary>
@@ -400,10 +293,18 @@ namespace Generator
         {
             switch (type)
             {
-                case "Dictionary": return "IDictionary<TKey,TValue>, IReadOnlyDictionary<TKey,TValue>, IEnumerable<KeyValuePair<TKey,TValue>>";
-                case "ReadOnlyDictionary": return "IReadOnlyDictionary<TKey,TValue>, IEnumerable<KeyValuePair<TKey,TValue>>, IDictionary<TKey,TValue>";
-                case "List": return "IList<T>, IReadOnlyList<T>, IEnumerable<T>";
-                case "Enumerable": return "IEnumerable<T>";
+                case "System.Collections.Generic.Dictionary`2": 
+                    return "IDictionary<TKey,TValue>, IReadOnlyDictionary<TKey,TValue>, IEnumerable<KeyValuePair<TKey,TValue>>";
+                case "System.Collections.ObjectModel.ReadOnlyDictionary`2":
+                    return "IReadOnlyDictionary<TKey,TValue>, IEnumerable<KeyValuePair<TKey,TValue>>, IDictionary<TKey,TValue>";
+                case "System.Collections.Generic.List`1": 
+                    return "IList<T>, IReadOnlyList<T>, IEnumerable<T>";
+                case "System.Linq.Enumerable`1": 
+                    return "IEnumerable<T>";
+                case "System.Collections.Generic.KeyValuePair": 
+                    return "KeyValuePair<TKey,TValue>";
+                case "System.Array": 
+                    return "T[]";
                 default: return "No suggestions for type";
             }
         }
@@ -425,19 +326,29 @@ namespace Generator
             }
         }
 
-        private static readonly string[] nonWindowsRuntimeInterfaces = {
-                "System.Exception",
-                "IAsyncAction",
-                "IAsyncActionWithProgress`1",
-                "IAsyncOperation`1",
-                "IAsyncOperationWithProgress`2",
+        private static readonly string[] nonWindowsRuntimeInterfaces = 
+        {
+            "System.Exception",
+            "IAsyncAction",
+            "IAsyncActionWithProgress`1",
+            "IAsyncOperation`1",
+            "IAsyncOperationWithProgress`2",
         };
 
-        private readonly static string[] InvalidGenericTypes = { 
-            "Dictionary", // GetTypeFromMetadataName(System.Collections.Generic.Dictionary`2)
-            "Enumerable", // GetTypeFromMetadataName(System.Linq.Enumerable`1)
-            "List", // GetTypeFromMetadataName(System.Collections.Generic.List`1)
-            "ReadOnlyDictionary", // GetTypeFromMetadataName(System.Collections.ObjectModel.ReadOnlyDictionary`2)
+        private readonly static string[] InvalidTypes = 
+        { 
+            "System.Array",
+            "System.Collections.Generic.Dictionary`2",
+            "System.Collections.Generic.List`1", 
+            "System.Collections.Generic.KeyValuePair"
+        };
+
+        private readonly static string[] WIPInvalidTypes =
+        {
+            "System.Linq.Enumerable`1",
+            "Enumerable`1",
+            "System.Collections.ObjectModel.ReadOnlyDictionary`2",
+            "ReadOnlyDictionary`2"
         };
 
         private static readonly string[] InAndOutAttributeNames = { "In", "Out", "System.Runtime.InteropServices.In", "System.Runtime.InteropServices.Out" };

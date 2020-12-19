@@ -6,6 +6,8 @@ using System.Linq;
 using WinRT.SourceGenerator;
 
 using Microsoft.CodeAnalysis.CSharp;
+using System.Runtime.CompilerServices;
+using System.Collections.Immutable;
 
 namespace Generator 
 {
@@ -46,14 +48,22 @@ namespace Generator
                 var classes = nodes.OfType<ClassDeclarationSyntax>().Where(IsPublic);
                 foreach (ClassDeclarationSyntax @class in classes)
                 {
+                    var classId = @class.Identifier;
                     var classSymbol = model.GetDeclaredSymbol(@class);
-                    UnsealedClass(classSymbol, @class);
+                    var loc = @class.GetLocation();
+
+                    if (!classSymbol.IsSealed)
+                    {
+                        Report(WinRTRules.UnsealedClassRule, loc, classId);
+                    }
 
                     OverloadsOperator(@class);
                     HasMultipleConstructorsOfSameArity(@class);
 
-                    var classId = @class.Identifier;
-                    TypeIsGeneric(classSymbol, @class);
+                    if (classSymbol.IsGenericType)
+                    { 
+                        Report(WinRTRules.GenericTypeRule, @class.GetLocation(), classId);
+                    }
                     ImplementsInvalidInterface(classSymbol, @class);
                     
                     var props = @class.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
@@ -68,7 +78,10 @@ namespace Generator
                 {
                     var interfaceSym = model.GetDeclaredSymbol(@interface);
                     
-                    TypeIsGeneric(interfaceSym, @interface);
+                    if (interfaceSym.IsGenericType)
+                    {
+                        Report(WinRTRules.GenericTypeRule, @interface.GetLocation(), @interface.Identifier);
+                    }
                     ImplementsInvalidInterface(interfaceSym, @interface);
                     
                     var props = @interface.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
@@ -181,13 +194,59 @@ namespace Generator
             }
         }
 
+        private bool SymEq(ISymbol a, ISymbol b)
+        {
+            return SymbolEqualityComparer.Default.Equals(a, b);
+        }
+
+        private void ReportIfInvalidType(ITypeSymbol typeSymbol, Location loc, SyntaxToken memberId, SyntaxToken typeId) 
+        { 
+            // helper function, some of the invalid types are WIP and need this check since GetTypeByMetadataName doesn't work for them  
+            bool SameType(ITypeSymbol sym, string s)
+            {
+                string baseStr = sym.ContainingNamespace.IsGlobalNamespace ? "" : sym.ContainingNamespace.Name + ".";
+                var x = baseStr + sym.MetadataName;
+                return x == s;
+            }
+
+            if (typeSymbol.TypeKind == TypeKind.Array) 
+            { 
+                IsInvalidArrayType((IArrayTypeSymbol)typeSymbol, loc, memberId, typeId);
+                return;
+            }
+
+            foreach (var s in InvalidTypes)
+            { 
+                var invalidTypeSym = _context.Compilation.GetTypeByMetadataName(s);
+                if (SymEq(typeSymbol.OriginalDefinition, invalidTypeSym))
+                {
+                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, s, SuggestType(s));
+                    return;
+                }
+            }
+
+            foreach (var invalidType in WIPInvalidTypes) 
+            {
+                if (SameType(typeSymbol, invalidType))
+                { 
+                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, invalidType, SuggestType(invalidType));
+                    return;
+                }
+            }
+        }
+
+        private void CheckSignatureTypes(ITypeSymbol retType, ImmutableArray<IParameterSymbol> memberParams, Location loc, SyntaxToken memberId, SyntaxToken typeId)
+        { 
+            ReportIfInvalidType(retType, loc, memberId, typeId);
+            foreach (var arg in memberParams)
+            {
+                ReportIfInvalidType(arg.Type, loc, memberId, typeId);
+            }
+        }
+
         public void CheckMethods(IEnumerable<MethodDeclarationSyntax> methodDeclarations, SyntaxToken typeId)
         {
             Dictionary<string, bool> methodsHasAttributeMap = new Dictionary<string, bool>();
-
-            /* we can't throw the diagnostic as soon as we see a second overload without an attribute, 
-             *   as there could be a third overload with the default attribute
-             * So store a diagnostic in case we see all methods and none of this overload have the attribute */
             Dictionary<string, Diagnostic> overloadsWithoutAttributeMap = new Dictionary<string, Diagnostic>();
 
             // var methodDeclarations = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
@@ -197,14 +256,37 @@ namespace Generator
                 CheckOverloadAttributes(method, methodsHasAttributeMap, overloadsWithoutAttributeMap, typeId);
                 /* Has parameter named __retval */
                 HasConflictingParameterName(method);
+
+                var methodModel = _context.Compilation.GetSemanticModel(method.SyntaxTree);
+                var methodSym = methodModel.GetDeclaredSymbol(method);
+                var retType = methodSym.ReturnType;
+                var methodParams = methodSym.Parameters;
+
+                ReportIfInvalidType(retType, method.GetLocation(), method.Identifier, typeId);
+                foreach (var arg in methodParams)
+                {
+                    ReportIfInvalidType(arg.Type, method.GetLocation(), method.Identifier, typeId);
+                }
+                
                 /* Check signature for invalid types */
-                CheckSignature(method, method.GetLocation(), method.Identifier, typeId, method.ParameterList);
                 CheckParamsForArrayAttributes(method);
             }
             /* Finishes up the work started by `CheckOverloadAttributes` */
             foreach (var thing in overloadsWithoutAttributeMap)
             {
                 ReportDiagnostic(thing.Value);
+            }
+        }
+
+        private void IsInvalidArrayType(IArrayTypeSymbol arrTypeSym, Location loc, SyntaxToken memberId, SyntaxToken typeId)
+        { 
+            if (arrTypeSym.Rank > 1) 
+            { 
+                Report(WinRTRules.ArraySignature_MultiDimensionalArrayRule, loc, memberId, typeId); 
+            } 
+            if (arrTypeSym.ElementType.TypeKind == TypeKind.Array) 
+            { 
+                Report(WinRTRules.ArraySignature_JaggedArrayRule, loc, memberId, typeId); 
             }
         }
 
@@ -215,7 +297,14 @@ namespace Generator
         {
             foreach (var prop in props)
             {
-                CheckSignature(prop, prop.GetLocation(), prop.Identifier, typeId, null);
+                var methodSym = _context.Compilation.GetSemanticModel(prop.SyntaxTree).GetDeclaredSymbol(prop);
+                var loc = prop.GetLocation();
+
+                ReportIfInvalidType(methodSym.Type, loc, prop.Identifier, typeId);
+                foreach (var arg in methodSym.Parameters)
+                {
+                    ReportIfInvalidType(arg.Type, loc, prop.Identifier, typeId);
+                }
             }
         }
 
@@ -251,10 +340,7 @@ namespace Generator
 
         public void UnsealedClass(ISymbol sym, ClassDeclarationSyntax classDeclaration)
         {
-            if (!sym.IsSealed)
-            {
-                Report(WinRTRules.UnsealedClassRule, classDeclaration.GetLocation(), classDeclaration.Identifier);
-            }
+            
         }
 
         /// <summary>
@@ -286,14 +372,6 @@ namespace Generator
                 { 
                     Report(WinRTRules.StructHasInvalidFieldRule, variable.GetLocation(), structId, field.ToString(), typeStr);
                 }
-            }
-        }
-        
-        public void TypeIsGeneric(INamedTypeSymbol sym, TypeDeclarationSyntax classDeclaration)
-        {
-            if (sym.IsGenericType)
-            { 
-                Report(WinRTRules.GenericTypeRule, classDeclaration.GetLocation(), classDeclaration.Identifier);
             }
         }
     }

@@ -325,32 +325,30 @@ namespace DiagnosticTests
                 yield return new TestCaseData(StructWithConstructor, WinRTRules.StructHasInvalidFieldRule2).SetName("Struct with Constructor Field");
                 yield return new TestCaseData(StructWithPrimitiveTypesMissingPublicKeyword, WinRTRules.StructHasPrivateFieldRule).SetName("Struct with missing public field");
                 // system.array tests
-                yield return new TestCaseData(ArrayInstanceProperty1, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 1");
-                yield return new TestCaseData(ArrayInstanceProperty2, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 2");
-                yield return new TestCaseData(ArrayInstanceProperty3, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 3");
-                yield return new TestCaseData(ArrayInstanceProperty4, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 4");
-                yield return new TestCaseData(SystemArrayProperty5, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Property 5");
-                yield return new TestCaseData(ArrayInstanceInterface1, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 1");
-                yield return new TestCaseData(ArrayInstanceInterface2, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 2");
-                yield return new TestCaseData(ArrayInstanceInterface3, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 3");
-                yield return new TestCaseData(SystemArrayJustReturn, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Method - Return only");
-                yield return new TestCaseData(SystemArrayUnaryAndReturn, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Method - Unary and return");
-                yield return new TestCaseData(SystemArraySecondArgClass, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Method - Arg 2/2");
-                yield return new TestCaseData(SystemArraySecondArg2Class, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Method - Arg 2/3");
-                yield return new TestCaseData(SystemArraySecondArgAndReturnTypeClass, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Class 1");
-                yield return new TestCaseData(SystemArraySecondArgAndReturnTypeClass2, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Class 2");
-                yield return new TestCaseData(SystemArrayNilArgsButReturnTypeInterface, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 4");
-                yield return new TestCaseData(SystemArrayUnaryAndReturnTypeInterface, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 5");
-                yield return new TestCaseData(SystemArraySecondArgAndReturnTypeInterface, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 6");
-                yield return new TestCaseData(SystemArraySecondArgAndReturnTypeInterface2, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 7");
-                yield return new TestCaseData(SystemArraySecondArgInterface, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 8");
-                yield return new TestCaseData(SystemArraySecondArgInterface2, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Interface 9");
-                yield return new TestCaseData(SystemArraySubNamespace_ReturnOnly, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Subnamespace Interface 1/6");
-                yield return new TestCaseData(SystemArraySubNamespace_ReturnAndInput1, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Subnamespace Interface 2/6");
-                yield return new TestCaseData(SystemArraySubNamespace_ReturnAndInput2of2, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Subnamespace Interface 3/6");
-                yield return new TestCaseData(SystemArraySubNamespace_ReturnAndInput2of3, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Subnamespace Interface 4/6");
-                yield return new TestCaseData(SystemArraySubNamespace_NotReturnAndInput2of2, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Subnamespace Interface 5/6");
-                yield return new TestCaseData(SystemArraySubNamespace_NotReturnAndInput2of3, WinRTRules.ArraySignature_SystemArrayRule).SetName("System.Array Subnamespace Interface 6/6");
+                yield return new TestCaseData(ArrayInstanceProperty1, WinRTRules.UnsupportedTypeRule).SetName("Property returns System.Array 1");
+                yield return new TestCaseData(ArrayInstanceProperty2, WinRTRules.UnsupportedTypeRule).SetName("Property returns System.Array 2");
+                yield return new TestCaseData(SystemArrayProperty5, WinRTRules.UnsupportedTypeRule).SetName("System.Array Property 5");
+                yield return new TestCaseData(ArrayInstanceInterface1, WinRTRules.UnsupportedTypeRule).SetName("System.Array Interface 1");
+                yield return new TestCaseData(ArrayInstanceInterface2, WinRTRules.UnsupportedTypeRule).SetName("System.Array Interface 2");
+                yield return new TestCaseData(ArrayInstanceInterface3, WinRTRules.UnsupportedTypeRule).SetName("System.Array Interface 3");
+                yield return new TestCaseData(SystemArrayJustReturn, WinRTRules.UnsupportedTypeRule).SetName("System.Array Method - Return only");
+                yield return new TestCaseData(SystemArrayUnaryAndReturn, WinRTRules.UnsupportedTypeRule).SetName("System.Array Method - Unary and return");
+                yield return new TestCaseData(SystemArraySecondArgClass, WinRTRules.UnsupportedTypeRule).SetName("System.Array Method - Arg 2/2");
+                yield return new TestCaseData(SystemArraySecondArg2Class, WinRTRules.UnsupportedTypeRule).SetName("System.Array Method - Arg 2/3");
+                yield return new TestCaseData(SystemArraySecondArgAndReturnTypeClass, WinRTRules.UnsupportedTypeRule).SetName("System.Array Class 1");
+                yield return new TestCaseData(SystemArraySecondArgAndReturnTypeClass2, WinRTRules.UnsupportedTypeRule).SetName("System.Array Class 2");
+                yield return new TestCaseData(SystemArrayNilArgsButReturnTypeInterface, WinRTRules.UnsupportedTypeRule).SetName("System.Array Interface 4");
+                yield return new TestCaseData(SystemArrayUnaryAndReturnTypeInterface, WinRTRules.UnsupportedTypeRule).SetName("System.Array (Unary) Return Type");
+                yield return new TestCaseData(SystemArraySecondArgAndReturnTypeInterface, WinRTRules.UnsupportedTypeRule).SetName("System.Array (I) (Binary) 2nd Arg, Return Type");
+                yield return new TestCaseData(SystemArraySecondArgAndReturnTypeInterface2, WinRTRules.UnsupportedTypeRule).SetName("System.Array Interface 7");
+                yield return new TestCaseData(SystemArraySecondArgInterface, WinRTRules.UnsupportedTypeRule).SetName("System.Array Interface 8");
+                yield return new TestCaseData(SystemArraySecondArgInterface2, WinRTRules.UnsupportedTypeRule).SetName("System.Array Interface 9");
+                yield return new TestCaseData(SystemArraySubNamespace_ReturnOnly, WinRTRules.UnsupportedTypeRule).SetName("System.Array Subnamespace Interface 1/6");
+                yield return new TestCaseData(SystemArraySubNamespace_ReturnAndInput1, WinRTRules.UnsupportedTypeRule).SetName("System.Array Subnamespace Interface 2/6");
+                yield return new TestCaseData(SystemArraySubNamespace_ReturnAndInput2of2, WinRTRules.UnsupportedTypeRule).SetName("System.Array Subnamespace Interface 3/6");
+                yield return new TestCaseData(SystemArraySubNamespace_ReturnAndInput2of3, WinRTRules.UnsupportedTypeRule).SetName("System.Array Subnamespace Interface 4/6");
+                yield return new TestCaseData(SystemArraySubNamespace_NotReturnAndInput2of2, WinRTRules.UnsupportedTypeRule).SetName("System.Array Subnamespace Interface 5/6");
+                yield return new TestCaseData(SystemArraySubNamespace_NotReturnAndInput2of3, WinRTRules.UnsupportedTypeRule).SetName("System.Array Subnamespace Interface 6/6");
             }
         }
 
