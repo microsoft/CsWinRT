@@ -462,7 +462,7 @@ namespace AuthoringSample
             return _dictionary.ContainsKey(key);
         }
 
-        public void CopyTo([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray]KeyValuePair<string, BasicStruct>[] array, int arrayIndex)
+        public void CopyTo([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] KeyValuePair<string, BasicStruct>[] array, int arrayIndex)
         {
         }
 

@@ -194,10 +194,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             */
 
             Logger.Initialize(context);
-
-            // temporary
+            
             context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(ArrayAttributes, Encoding.UTF8));
-
+            
             if (CatchWinRTDiagnostics(context))
             {
                 Logger.Log("Exiting early -- found errors in authored runtime component.");
@@ -207,8 +206,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             try
             {
-                // context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(ArrayAttributes, Encoding.UTF8));
-
                 string assembly = GetAssemblyName(context);
                 string version = GetAssemblyVersion(context);
                 MetadataBuilder metadataBuilder = new MetadataBuilder();
