@@ -193,9 +193,11 @@ namespace Generator
             // var methodDeclarations = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
             foreach (MethodDeclarationSyntax method in methodDeclarations)
             {
+                /* Gather information on which methods have overloads, and if any method has the DefaultOverload attribute */
                 CheckOverloadAttributes(method, methodsHasAttributeMap, overloadsWithoutAttributeMap, typeId);
+                /* Has parameter named __retval */
                 HasConflictingParameterName(method);
-                
+                /* Check signature for invalid types */
                 CheckSignature(method, method.GetLocation(), method.Identifier, typeId, method.ParameterList);
                 CheckParamsForArrayAttributes(method);
             }

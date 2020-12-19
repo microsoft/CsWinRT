@@ -257,11 +257,11 @@ namespace Generator
         /// Keeps track of repeated declarations of a method (overloads) and raises diagnostics according to the rule that exactly one overload should be attributed the default</summary>
         /// <param name="method">Look for overloads of this method, checking the attributes as well attributes for</param>
         /// <param name="methodHasAttributeMap">
-        /// Keeps track of the method (via qualified name + arity) and whether it was declared with the DefaultOverload attribute
-        /// this variable is ref because we are mutating this map with each method, so we only look at a method a second time if it has an overload but no attribute</param>
+        /// The strings are unique names for each method -- made by its name and arity
+        /// Some methods may get the attribute, some may not, we keep track of this in the map.
         /// <param name="overloadsWithoutAttributeMap">
-        ///     Keeps track of the methods that are overloads but don't have the DefaultOverload attribute (yet)
-        ///     Used after this function executes, hence the reference parameter</param>
+        /// Once we have seen an overload and the method still has no attribute, we make a diagnostic for it
+        /// If we see the method again but this time with the attribute, we remove it (and its diagnostic) from the map
         /// <param name="classId">The class the method lives in -- used for creating the diagnostic</param>
         /// <returns>True iff multiple overloads of a method are found, where more than one has been designated as the default overload</returns>
         private void CheckOverloadAttributes(MethodDeclarationSyntax method,
@@ -283,11 +283,12 @@ namespace Generator
                 {
                     // we've seen it, but it didnt have the attribute, so mark that it has it now
                     methodHasAttributeMap[methodNameWithArity] = true;
+                    // We finally got an attribute, so dont raise a diagnostic for this method
                     overloadsWithoutAttributeMap.Remove(methodNameWithArity);
                 }
                 else if (hasDefaultOverloadAttribute && methodHasAttrAlready)
                 {
-                    // raise the "can't have multiple default attributes" diagnostic  
+                    // Special case in that multiple instances of the DefaultAttribute being used on the method 
                     Report(WinRTRules.MethodOverload_MultipleDefaultAttribute, method.GetLocation(), methodArity, method.Identifier, classId);
                 }
                 else if (!hasDefaultOverloadAttribute && !methodHasAttrAlready)
@@ -307,7 +308,10 @@ namespace Generator
                 // first time we're seeing the method, add a pair in the map for its name and whether it has the attribute 
                 methodHasAttributeMap[methodNameWithArity] = hasDefaultOverloadAttribute;
             }
-        } 
+        }
+
+
+        #region Signature
 
         /// <summary>Checks each type in the given list of types and sees if any are equal to the given type name</summary>
         /// <typeparam name="T">Syntax for either QualifiedName or IdentifierName</typeparam>
@@ -359,31 +363,35 @@ namespace Generator
             return genericTypes;
         }
 
-        /// <summary></summary>
-        /// <param name="member"></param><param name="loc"></param><param name="memberId"></param><param name="parentTypeId"></param>
+        /// <summary>The core of this function is to get all the possible types used in this function's signature. 
+        /// We do this by looking for nodes of syntax type GenericName, QualifiedName, IdentifierName, and ArrayType 
+        /// We then check if invalid types appear in the nodes, e.g. returning System.Array or taking a KeyValuePair 
+        /// </summary>
+        /// <param name="member">Either a property or a method</param><param name="loc">Location of this node</param>
+        /// <param name="memberId">identifier of this method</param><param name="parentTypeId"></param>
         private void CheckSignature(MemberDeclarationSyntax member, Location loc, SyntaxToken memberId, SyntaxToken parentTypeId, ParameterListSyntax parameters)
         {
             var arrayDiagnostic = Diagnostic.Create(WinRTRules.ArraySignature_SystemArrayRule, loc, parentTypeId, memberId);
             var kvpDiagnostic = Diagnostic.Create(WinRTRules.UnsupportedTypeRule, loc, parentTypeId, memberId);
 
             IEnumerable<GenericNameSyntax> genericTypes = GetSignatureTypes<GenericNameSyntax>(member, parameters);
+            IEnumerable<QualifiedNameSyntax> qualifiedTypes = GetSignatureTypes<QualifiedNameSyntax>(member, parameters);
+            IEnumerable<IdentifierNameSyntax> types = GetSignatureTypes<IdentifierNameSyntax>(member, parameters);
+            IEnumerable<ArrayTypeSyntax> arrays = GetSignatureTypes<ArrayTypeSyntax>(member, parameters);
             
             SignatureHasInvalidGenericType(genericTypes, loc, memberId);
-
-            IEnumerable<QualifiedNameSyntax> qualifiedTypes = GetSignatureTypes<QualifiedNameSyntax>(member, parameters);
-
             SignatureContainsTypeName(qualifiedTypes, "System.Array", arrayDiagnostic);
             SignatureContainsTypeName(qualifiedTypes, "System.Collections.Generic.KeyValuePair", kvpDiagnostic);
-
-            IEnumerable<IdentifierNameSyntax> types = GetSignatureTypes<IdentifierNameSyntax>(member, parameters);
-            
             SignatureContainsTypeName(types, "Array", arrayDiagnostic);
             SignatureContainsTypeName(types, "KeyValuePair", kvpDiagnostic);
 
-            IEnumerable<ArrayTypeSyntax> arrays = GetSignatureTypes<ArrayTypeSyntax>(member, parameters);
             
             ArrayIsntOneDim(arrays, parentTypeId, memberId, loc);
         }
+
+        #endregion
+
+        #region StringHelpers
 
         /// <summary>Make a suggestion for types to use instead of the given type</summary>
         /// <param name="type">A type that is not valid in Windows Runtime</param>
@@ -426,15 +434,17 @@ namespace Generator
         };
 
         private readonly static string[] InvalidGenericTypes = { 
-            "Dictionary",
-            "Enumerable",
-            "List",
-            "ReadOnlyDictionary",
+            "Dictionary", // GetTypeFromMetadataName(System.Collections.Generic.Dictionary`2)
+            "Enumerable", // GetTypeFromMetadataName(System.Linq.Enumerable`1)
+            "List", // GetTypeFromMetadataName(System.Collections.Generic.List`1)
+            "ReadOnlyDictionary", // GetTypeFromMetadataName(System.Collections.ObjectModel.ReadOnlyDictionary`2)
         };
 
         private static readonly string[] InAndOutAttributeNames = { "In", "Out", "System.Runtime.InteropServices.In", "System.Runtime.InteropServices.Out" };
         private static readonly string[] OverloadAttributeNames = { "Windows.Foundation.Metadata.DefaultOverload", "DefaultOverload" };
     
         private static readonly string GeneratedReturnValueName = "__retval";
+
+        #endregion
     }
 }
