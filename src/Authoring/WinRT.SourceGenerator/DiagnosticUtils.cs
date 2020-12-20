@@ -64,6 +64,8 @@ namespace Generator
                     { 
                         Report(WinRTRules.GenericTypeRule, @class.GetLocation(), classId);
                     }
+
+                    // check for things in non
                     ImplementsInvalidInterface(classSymbol, @class);
                     
                     var props = @class.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
@@ -99,7 +101,10 @@ namespace Generator
             } 
         }
        
-        public bool IsPublic(MemberDeclarationSyntax member) { return ModifiersContains(member.Modifiers, "public");  }
+        public bool IsPublic(MemberDeclarationSyntax member) 
+        { 
+            return ModifiersContains(member.Modifiers, "public");  
+        }
 
         /// <summary>
         /// Returns true if the class represented by the symbol 
@@ -117,8 +122,12 @@ namespace Generator
             }
         }
 
+        /// <summary>Raise a diagnostic if there are no public types in the namespace</summary>
+        /// <param name="publicTypes">collection of class and interface symbols </param>
+        /// <param name="publicStructs">collection of struct symbols</param>
         public void HasSomePublicTypes(HashSet<INamedTypeSymbol> publicTypes, HashSet<INamedTypeSymbol> publicStructs) 
         {
+            // types are interfaces, classes and structs
             if (!publicTypes.Any() && !publicStructs.Any()) { Report(WinRTRules.NoPublicTypesRule, null); }
         }
 
@@ -308,14 +317,14 @@ namespace Generator
             }
         }
 
-        public void CheckStructField(StructDeclarationSyntax structDeclaration, HashSet<INamedTypeSymbol> userCreatedTypes, INamedTypeSymbol sym)
+        public void CheckStructField(StructDeclarationSyntax @struct, HashSet<INamedTypeSymbol> userCreatedTypes, INamedTypeSymbol sym)
         { 
             // Helper function, raises diagnostic if the struct has the given kind of field 
             void StructHasFieldOfType<T>() where T : MemberDeclarationSyntax
             { 
-                if (structDeclaration.DescendantNodes().OfType<T>().Any())
+                if (@struct.DescendantNodes().OfType<T>().Any())
                 {
-                    Report(WinRTRules.StructHasInvalidFieldRule2, structDeclaration.GetLocation(), structDeclaration.Identifier,  SimplifySyntaxTypeString(typeof(T).Name));
+                    Report(WinRTRules.StructHasInvalidFieldRule2, @struct.GetLocation(), @struct.Identifier,  SimplifySyntaxTypeString(typeof(T).Name));
                 };
             }
 
@@ -327,20 +336,18 @@ namespace Generator
             StructHasFieldOfType<OperatorDeclarationSyntax>();
             StructHasFieldOfType<PropertyDeclarationSyntax>();
 
-            var fields = structDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>();
+            var fields = @struct.DescendantNodes().OfType<FieldDeclarationSyntax>();
             foreach (var field in fields) 
             {
-                CheckFieldValidity(field, structDeclaration.Identifier, userCreatedTypes); 
+                var structModel = _context.Compilation.GetSemanticModel(@struct.SyntaxTree);
+                var fieldSym = structModel.GetDeclaredSymbol(field);
+                var structSym = structModel.GetDeclaredSymbol(@struct);
+                CheckFieldValidity(field, @struct.Identifier, userCreatedTypes);
             }
             if (!fields.Any())
             {
-                Report(WinRTRules.StructWithNoFieldsRule, structDeclaration.GetLocation(), sym);
+                Report(WinRTRules.StructWithNoFieldsRule, @struct.GetLocation(), sym);
             }
-        }
-
-        public void UnsealedClass(ISymbol sym, ClassDeclarationSyntax classDeclaration)
-        {
-            
         }
 
         /// <summary>
@@ -367,6 +374,7 @@ namespace Generator
             foreach (var variable in field.DescendantNodes().OfType<VariableDeclarationSyntax>())
             {
                 var typeStr = variable.Type.ToString();
+                var typeV = variable.Type.Kind();
 
                 if (SymbolSetHasString(typeNames, typeStr) || typeStr == "dynamic" || typeStr == "object")
                 { 

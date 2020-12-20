@@ -163,6 +163,7 @@ namespace DiagnosticTests
                 yield return new TestCaseData(SubNamespaceInterface_D3Method6, WinRTRules.ArraySignature_MultiDimensionalArrayRule)
                     .SetName("MultiDim 3D Subnamespace Interface Method 6");
 
+                #region JaggedArray
                 // jagged array tests 
                 yield return new TestCaseData(Jagged2D_Property2, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Property 2");
                 yield return new TestCaseData(Jagged3D_Property1, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Property 1");
@@ -202,8 +203,9 @@ namespace DiagnosticTests
                 yield return new TestCaseData(SubNamespace_Jagged3DInterface4, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array SubNamespace Interface Method 4");
                 yield return new TestCaseData(SubNamespace_Jagged3DInterface5, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array SubNamespace Interface Method 5");
                 yield return new TestCaseData(SubNamespace_Jagged3DInterface6, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array SubNamespace Interface Method 6");
+                #endregion
 
-                // overload attribute tests
+                #region overload_attribute_tests
                 yield return new TestCaseData(InterfaceWithOverloadNoAttribute, WinRTRules.MethodOverload_NeedDefaultAttribute).SetName("interface needs default overload attribute");
                 yield return new TestCaseData(InterfaceWithOverloadAttributeTwice, WinRTRules.MethodOverload_MultipleDefaultAttribute).SetName("interface has too many default overload attribute");
                 yield return new TestCaseData(TwoOverloads_NoAttribute_NamesHaveNumber, WinRTRules.MethodOverload_NeedDefaultAttribute)
@@ -245,9 +247,13 @@ namespace DiagnosticTests
                     .SetName("DefaultOverload - Multiple Attribute 6");
                 yield return new TestCaseData(ThreeOverloads_TwoAttributes, WinRTRules.MethodOverload_MultipleDefaultAttribute)
                     .SetName("DefaultOverload - Multiple Attribute 7");
-               
+
+                #endregion
+
                 // multiple class constructors of same arity
                 yield return new TestCaseData(ConstructorsOfSameArity, WinRTRules.ClassConstructorRule).SetName("Multiple constructors of same arity");
+
+                #region InvalidInterfaceInheritance
                 // implementing async interface
                 yield return new TestCaseData(InterfaceImplementsIAsyncOperation, WinRTRules.NonWinRTInterface).SetName("Interface Implements IAsyncOperation");
                 yield return new TestCaseData(InterfaceImplementsIAsyncOperationWithProgress, WinRTRules.NonWinRTInterface).SetName("Interface Implements IAsyncOperationWithProgress");
@@ -263,7 +269,10 @@ namespace DiagnosticTests
                 yield return new TestCaseData(ClassImplementsIAsyncOperationWithProgress, WinRTRules.NonWinRTInterface).SetName("Implements IAsyncOperationWithProgress");
                 yield return new TestCaseData(ClassImplementsIAsyncAction, WinRTRules.NonWinRTInterface).SetName("Implements IAsyncAction");
                 yield return new TestCaseData(ClassImplementsIAsyncActionWithProgress, WinRTRules.NonWinRTInterface).SetName("Implements IAsyncActionWithProgress");
-                // readonly/writeonlyArray attribute
+
+                #endregion
+
+                # region ArrayAccessAttribute
                 yield return new TestCaseData(TestArrayParamAttrUnary_1, WinRTRules.ArrayParamMarkedBoth).SetName("TestArrayParamAttrUnary_1");
                 yield return new TestCaseData(TestArrayParamAttrUnary_2, WinRTRules.ArrayParamMarkedBoth).SetName("TestArrayParamAttrUnary_2");
                 yield return new TestCaseData(TestArrayParamAttrUnary_3, WinRTRules.ArrayOutputParamMarkedRead).SetName("TestArrayParamAttrUnary_3");
@@ -302,6 +311,8 @@ namespace DiagnosticTests
                 yield return new TestCaseData(TestArrayParamAttrBinary_22, WinRTRules.NonArrayMarkedInOrOut).SetName("TestArrayParamAttrBinary_22");
                 yield return new TestCaseData(TestArrayParamAttrBinary_23, WinRTRules.NonArrayMarkedInOrOut).SetName("TestArrayParamAttrBinary_23");
                 yield return new TestCaseData(TestArrayParamAttrBinary_24, WinRTRules.ArrayParamNotMarked).SetName("TestArrayParamAttrBinary_24");
+                #endregion
+
                 // name clash with params (__retval)
                 yield return new TestCaseData(DunderRetValParam, WinRTRules.ParameterNamedValueRule).SetName("Test Parameter Name Conflict (__retval)");
                 // operator overloading
@@ -309,7 +320,8 @@ namespace DiagnosticTests
                 // ref param
                 yield return new TestCaseData(RefParam_ClassMethod, WinRTRules.RefParameterFound).SetName("Test For Method With Ref Param - Class");
                 yield return new TestCaseData(RefParam_InterfaceMethod, WinRTRules.RefParameterFound).SetName("Test For Method With Ref Param - Interface");
-                // struct field tests
+
+                #region struct_field_tests
                 yield return new TestCaseData(EmptyStruct, WinRTRules.StructWithNoFieldsRule).SetName("Empty struct");
                 yield return new TestCaseData(StructWithInterfaceField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Interface field");
                 yield return new TestCaseData(StructWithClassField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Class Field");
@@ -324,6 +336,9 @@ namespace DiagnosticTests
                 yield return new TestCaseData(StructWithDynamicField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Dynamic Field");
                 yield return new TestCaseData(StructWithConstructor, WinRTRules.StructHasInvalidFieldRule2).SetName("Struct with Constructor Field");
                 yield return new TestCaseData(StructWithPrimitiveTypesMissingPublicKeyword, WinRTRules.StructHasPrivateFieldRule).SetName("Struct with missing public field");
+                #endregion
+
+                #region InvalidType
                 // system.array tests
                 yield return new TestCaseData(ArrayInstanceProperty1, WinRTRules.UnsupportedTypeRule).SetName("Property returns System.Array 1");
                 yield return new TestCaseData(ArrayInstanceProperty2, WinRTRules.UnsupportedTypeRule).SetName("Property returns System.Array 2");
@@ -349,6 +364,7 @@ namespace DiagnosticTests
                 yield return new TestCaseData(SystemArraySubNamespace_ReturnAndInput2of3, WinRTRules.UnsupportedTypeRule).SetName("System.Array Subnamespace Interface 4/6");
                 yield return new TestCaseData(SystemArraySubNamespace_NotReturnAndInput2of2, WinRTRules.UnsupportedTypeRule).SetName("System.Array Subnamespace Interface 5/6");
                 yield return new TestCaseData(SystemArraySubNamespace_NotReturnAndInput2of3, WinRTRules.UnsupportedTypeRule).SetName("System.Array Subnamespace Interface 6/6");
+                #endregion
             }
         }
 
@@ -360,6 +376,8 @@ namespace DiagnosticTests
         {
             get
             {
+                #region InvalidTypes_Signatures
+
                 yield return new TestCaseData(Valid_ListUsage).SetName("Valid - Internally uses List<>");
                 yield return new TestCaseData(Valid_ListUsage2).SetName("Valid - Internally uses List<> (qualified)");
                 yield return new TestCaseData(Valid_NestedNamespace).SetName("Valid - Nested namespaces are fine");
@@ -401,7 +419,9 @@ namespace DiagnosticTests
                 yield return new TestCaseData(Valid_ClassWithPrivateGenListProp).SetName("Valid - generic list as private prop to class");
                 yield return new TestCaseData(Valid_IfaceWithPrivateGenListProp).SetName("Valid - generic list as private prop to interface");
 
-                yield return new TestCaseData(Valid_InterfaceWithOverloadAttribute).SetName("Valid - interface with overloads and one marked as default");
+                #endregion
+
+                #region ArrayAccessAttribute 
                 // ReadOnlyArray / WriteOnlyArray Attribute
                 yield return new TestCaseData(Valid_ArrayParamAttrUnary_1).SetName("Valid - Unary - Array marked read only");
                 yield return new TestCaseData(Valid_ArrayParamAttrUnary_2).SetName("Valid - Unary - Array marked write only");
@@ -417,11 +437,18 @@ namespace DiagnosticTests
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_7).SetName("Valid - ArrayParamAttrBinary_7");
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_8).SetName("Valid - ArrayParamAttrBinary_8");
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_9).SetName("Valid - ArrayParamAttrBinary_9");
-                // Struct field 
+
+                #endregion
+
+                #region StructField
                 yield return new TestCaseData(Valid_StructWithByteField).SetName("Valid - struct with byte field");
                 yield return new TestCaseData(Valid_StructWithPrimitiveTypes).SetName("Valid - Struct with only fields of basic types");
                 yield return new TestCaseData(Valid_StructWithImportedStruct).SetName("Valid - Struct with struct field");
                 yield return new TestCaseData(Valid_StructWithImportedStructQualified).SetName("Valid - Struct with qualified struct field");
+                #endregion
+
+                #region InvalidArrayTypes_Signatures
+
                 // SystemArray  
                 yield return new TestCaseData(Valid_SystemArrayProperty).SetName("Valid - System.Array private property");
                 yield return new TestCaseData(Valid_SystemArray_Interface1).SetName("Valid - System.Array internal interface 1");
@@ -492,7 +519,13 @@ namespace DiagnosticTests
                 yield return new TestCaseData(Valid_Jagged3D_PublicClassPrivateMethods).SetName("Valid - Jagged Array public class / private method");
                 yield return new TestCaseData(Valid_Jagged2D_Property).SetName("Valid - Jagged 2D Array public property");
                 yield return new TestCaseData(Valid_Jagged3D_Property).SetName("Valid - Jagged 3D Array public property");
+
+                #endregion
+
+                #region   DefaultOverloadAttribute
+
                 // overload attributes
+                yield return new TestCaseData(Valid_InterfaceWithOverloadAttribute).SetName("Valid - interface with overloads and one marked as default");
                 yield return new TestCaseData(Valid_TwoOverloads_DiffParamCount).SetName("Valid - DefaultOverload attribute 1");
                 yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_OneInList).SetName("Valid - DefaultOverload attribute 2");
                 yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_OneIrrelevatAttribute).SetName("Valid - DefaultOverload attribute 3");
@@ -500,6 +533,8 @@ namespace DiagnosticTests
                 yield return new TestCaseData(Valid_ThreeOverloads_OneAttribute).SetName("Valid - DefaultOverload attribute 5");
                 yield return new TestCaseData(Valid_ThreeOverloads_OneAttribute_2).SetName("Valid - DefaultOverload attribute 6");
                 yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_3).SetName("Valid - DefaultOverload attribute 7");
+
+                #endregion
             }
         }
 
