@@ -93,15 +93,9 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor StructHasInvalidFieldRule = MakeRule(
             "WME1060",
             "Invalid field in struct",
-            "Structure {0} has field '{1}' of type {2}; {2} is not a valid Windows Runtime field type. Each field "
+            "Structure {0} has field of type {1}; {1} is not a valid Windows Runtime field type. Each field "
             + "in a Windows Runtime structure can only be UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum, or itself a structure.");
-
-        public static DiagnosticDescriptor StructHasInvalidFieldRule2 = MakeRule(
-            "WME1060",
-            "Invalid field in struct",
-            "Structure {0} has a field of type {1}; {1} is not a valid Windows Runtime field type. Each field "
-            + "in a Windows Runtime structure can only be UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum, or itself a structure.");
-
+ 
         public static DiagnosticDescriptor OperatorOverloadedRule = MakeRule(
             "WME1087",
             "Operator overload exposed",

@@ -4,6 +4,35 @@ namespace DiagnosticTests
     {
 
         // namespace tests -- WIP
+        private const string NamespaceDifferByDot = @"
+namespace Test.A
+{
+    private Test.B.Blank _blank;
+    public sealed class Dummy 
+    { 
+        public Dummy() {}
+    }
+}
+
+namespace Test.B
+{
+    public sealed class Blank { public Blank() {} }
+}";
+
+        private const string NamespaceDifferByDot2 = @"
+namespace Test.A
+{
+    private Test.Blank _blank;
+    public sealed class Dummy
+    {
+        public Dummy() {}
+    }
+}
+
+namespace Test
+{
+    public sealed class Blank { public Blank() {} }
+}";
         private const string NamespacesDifferByCase = @"
 namespace Test
 {

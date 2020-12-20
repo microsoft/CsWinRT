@@ -3,12 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
-using WinRT;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace AuthoringSample
 {
@@ -131,7 +130,7 @@ namespace AuthoringSample
             return basicClass;
         }
 
-        public BasicStruct[] ReturnArray([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] BasicStruct[] basicStructs)
+        public BasicStruct[] ReturnArray([ReadOnlyArray] BasicStruct[] basicStructs)
         {
             BasicStruct[] copy = new BasicStruct[basicStructs.Length];
             for(int idx = 0; idx < copy.Length; idx++)
@@ -141,7 +140,7 @@ namespace AuthoringSample
             return copy;
         }
 
-        public int GetSum([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr)
+        public int GetSum([ReadOnlyArray] int[] arr)
         {
             return arr.Sum();
         }
@@ -630,7 +629,7 @@ namespace AuthoringSample
             return _list.Contains(item);
         }
 
-        public void CopyTo([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray]DisposableClass[] array, int arrayIndex)
+        public void CopyTo([ReadOnlyArray]DisposableClass[] array, int arrayIndex)
         {
             _list.CopyTo(array, arrayIndex);
         }

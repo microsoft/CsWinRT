@@ -53,11 +53,14 @@ namespace DiagnosticTests
             get 
             {
                 // namespace tests
+                yield return new TestCaseData(NamespaceDifferByDot2, WinRTRules.DisjointNamespaceRule).SetName("Namespace Test.A and Test");
                 yield return new TestCaseData(NamespacesDifferByCase, WinRTRules.NamespacesDifferByCase).SetName("Namespace names only differ by case");
                 yield return new TestCaseData(DisjointNamespaces, WinRTRules.DisjointNamespaceRule).SetName("Namespace that shares no common prefix");
                 yield return new TestCaseData(DisjointNamespaces2, WinRTRules.DisjointNamespaceRule).SetName("Namespace that shares no common prefix 2");
                 yield return new TestCaseData(DisjointNamespaces3, WinRTRules.DisjointNamespaceRule).SetName("Namespace that shares no common prefix 3");
                 yield return new TestCaseData(NoPublicTypes, WinRTRules.NoPublicTypesRule).SetName("Component has no public types");
+                // the below test passes, you just have to change the assemblyName to Test.A instead of Test when making the WinRTScanner
+                // yield return new TestCaseData(NamespaceDifferByDot, WinRTRules.DisjointNamespaceRule).SetName("Namespace Test.A and Test.B");
 
                 // Unsealed classes, generic class/interfaces, invalid inheritance (System.Exception)
                 yield return new TestCaseData(UnsealedClass, WinRTRules.UnsealedClassRule).SetName("Unsealed class 1");
@@ -326,15 +329,15 @@ namespace DiagnosticTests
                 yield return new TestCaseData(StructWithInterfaceField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Interface field");
                 yield return new TestCaseData(StructWithClassField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Class Field");
                 yield return new TestCaseData(StructWithClassField2, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Class Field2");
-                yield return new TestCaseData(StructWithDelegateField, WinRTRules.StructHasInvalidFieldRule2).SetName("Struct with Delegate Field");
-                yield return new TestCaseData(StructWithIndexer, WinRTRules.StructHasInvalidFieldRule2).SetName("Struct with Indexer Field");
-                yield return new TestCaseData(StructWithMethods, WinRTRules.StructHasInvalidFieldRule2).SetName("Struct with Method Field");
+                yield return new TestCaseData(StructWithDelegateField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Delegate Field");
+                yield return new TestCaseData(StructWithIndexer, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Indexer Field");
+                yield return new TestCaseData(StructWithMethods, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Method Field");
                 yield return new TestCaseData(StructWithConst, WinRTRules.StructHasConstFieldRule).SetName("Struct with Const Field");
-                yield return new TestCaseData(StructWithProperty, WinRTRules.StructHasInvalidFieldRule2).SetName("Struct with Property Field");
+                yield return new TestCaseData(StructWithProperty, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Property Field");
                 yield return new TestCaseData(StructWithPrivateField, WinRTRules.StructHasPrivateFieldRule).SetName("Struct with Private Field");
                 yield return new TestCaseData(StructWithObjectField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Object Field");
                 yield return new TestCaseData(StructWithDynamicField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Dynamic Field");
-                yield return new TestCaseData(StructWithConstructor, WinRTRules.StructHasInvalidFieldRule2).SetName("Struct with Constructor Field");
+                yield return new TestCaseData(StructWithConstructor, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Constructor Field");
                 yield return new TestCaseData(StructWithPrimitiveTypesMissingPublicKeyword, WinRTRules.StructHasPrivateFieldRule).SetName("Struct with missing public field");
                 #endregion
 

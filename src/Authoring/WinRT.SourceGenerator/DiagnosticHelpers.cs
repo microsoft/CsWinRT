@@ -3,33 +3,260 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using WinRT.SourceGenerator;
 
 namespace Generator 
 {
-    public partial class WinRTScanner
-    {
-        private class TypeCollector
+    // Helper Class, makes for clean collection of types and namespaces, needed for checking
+    internal class TypeCollector 
+    { 
+        private HashSet<INamedTypeSymbol> types; 
+        private HashSet<INamedTypeSymbol> structs; 
+        private HashSet<INamespaceSymbol> namespaces;
+            
+        public TypeCollector()
         {
-            private HashSet<INamedTypeSymbol> types;
-            private HashSet<INamedTypeSymbol> structs;
-            private HashSet<INamespaceSymbol> namespaces;
-
-            public TypeCollector()
-            {
-                types = new HashSet<INamedTypeSymbol>();
-                structs = new HashSet<INamedTypeSymbol>();
-                namespaces = new HashSet<INamespaceSymbol>();
-            }
-            public void AddType(INamedTypeSymbol newType) { types.Add(newType); }
-            public void AddStruct(INamedTypeSymbol newType) { structs.Add(newType); }
-            public void AddNamespace(INamespaceSymbol newType) { namespaces.Add(newType); }
-
-            public HashSet<INamedTypeSymbol> GetTypes() { return types; }
-            public HashSet<INamedTypeSymbol> GetStructs() { return structs; }
-            public HashSet<INamespaceSymbol> GetNamespaces() { return namespaces; }
+            types = new HashSet<INamedTypeSymbol>();
+            structs = new HashSet<INamedTypeSymbol>();
+            namespaces = new HashSet<INamespaceSymbol>();
         }
 
+        public void AddType(INamedTypeSymbol newType) { types.Add(newType); }
+        public void AddStruct(INamedTypeSymbol newType) { structs.Add(newType); }
+        public void AddNamespace(INamespaceSymbol newType) { namespaces.Add(newType); }
+
+        public HashSet<INamedTypeSymbol> GetTypes() { return types; }
+        public HashSet<INamedTypeSymbol> GetStructs() { return structs; }
+        public HashSet<INamespaceSymbol> GetNamespaces() { return namespaces; }
+    }
+
+    public partial class WinRTScanner
+    {
+        /// <summary>Raise the flag so we don't make a winmd, and add a diagnostic to the sourcegenerator</summary>
+        /// <param name="d"></param><param name="loc"></param><param name="args"></param>
+        private void Report(DiagnosticDescriptor d, Location loc, params object[] args)
+        {
+            Flag();
+            _context.ReportDiagnostic(Diagnostic.Create(d, loc, args));
+        }
+
+        private void ReportDiagnostic(Diagnostic d)
+        {
+            Flag();
+            _context.ReportDiagnostic(d);
+        }
+
+        ///<summary>Array types can only be one dimensional and not System.Array, 
+        ///and there are some types not usable in the Windows Runtime, like KeyValuePair</summary> 
+        ///<param name="typeSymbol">The type to check</param><param name="loc">where the type is</param>
+        ///<param name="memberId">The method or property with this type in its signature</param>
+        /// <param name="typeId">the type this member (method/prop) lives in</param>
+        private void ReportIfInvalidType(ITypeSymbol typeSymbol, Location loc, SyntaxToken memberId, SyntaxToken typeId) 
+        { 
+            // helper function, some of the invalid types are WIP and need this check since GetTypeByMetadataName doesn't work for them  
+            bool SameType(ITypeSymbol sym, string s)
+            {
+                string baseStr = sym.ContainingNamespace.IsGlobalNamespace ? "" : sym.ContainingSymbol + ".";
+                var x = baseStr + sym.MetadataName;
+                return x == s;
+            }
+
+
+            if (typeSymbol.TypeKind == TypeKind.Array) 
+            { 
+                IsInvalidArrayType((IArrayTypeSymbol)typeSymbol, loc, memberId, typeId);
+                return;
+            }
+
+            foreach (var s in InvalidTypes)
+            { 
+                var invalidTypeSym = _context.Compilation.GetTypeByMetadataName(s);
+                if (SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition, invalidTypeSym))
+                {
+                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, s, SuggestType(s));
+                    return;
+                }
+            }
+
+            // GetTypeByMetadataName fails on System.Linq.Enumerable`1 and System.Collections.ObjectModel.ReadOnlyDictionary`2
+            // Would be fixed by issue #678 on the dotnet/roslyn-sdk rep
+            foreach (var invalidType in WIPInvalidTypes) 
+            {
+                if (SameType(typeSymbol, invalidType))
+                { 
+                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, invalidType, SuggestType(invalidType));
+                    return;
+                }
+            }
+        }
+ 
+        /// <summary>
+        /// See if this class/interfaces inherits the given type
+        /// </summary>
+        /// <param name="typeSymbol">type that might inherit</param>
+        /// <param name="typeToCheck">Inherited interface or class</param>
+        private bool ImplementsInterface(INamedTypeSymbol typeSymbol, string typeToCheck)
+        {
+            if (typeSymbol == null)
+            {
+                return false;
+            }
+
+            if (typeSymbol.BaseType != null)
+            {
+                return typeSymbol.BaseType.MetadataName == typeToCheck || typeSymbol.BaseType.ToString() == typeToCheck;
+            }
+
+            foreach (var implementedInterface in typeSymbol.AllInterfaces)
+            {
+                if (implementedInterface.MetadataName == typeToCheck)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        ///  Checks to see if an array parameter has been marked with both Write and Read attributes
+        ///  Does extra work, by catching `ref` params, done here since this code can be used by class or interface related methods</summary>
+        /// <param name="method">Method declared</param>
+        /// <returns>true if array attributes are invalid (see summary)</returns>
+        private void ParameterHasAttributeErrors(MethodDeclarationSyntax method)
+        {
+            // helper function, used to see if param has Ref or Out keyword
+            bool HasModifier(ParameterSyntax param, SyntaxKind kind) { return param.Modifiers.Where(m => m.IsKind(kind)).Any(); }
+
+            foreach (ParameterSyntax param in method.ParameterList.Parameters)
+            {
+                var isArrayType = param.Type.IsKind(SyntaxKind.ArrayType);
+                bool hasReadOnlyArray = ParamHasReadOnlyAttribute(param);
+                bool hasWriteOnlyArray = ParamHasWriteOnlyAttribute(param);
+                
+                // Nothing can be marked `ref`
+                if (HasModifier(param, SyntaxKind.RefKeyword))
+                { 
+                    Report(WinRTRules.RefParameterFound, method.GetLocation(), param.Identifier); 
+                }
+                
+                if (ParamHasInOrOutAttribute(param))
+                {
+                    // recommend using ReadOnlyArray or WriteOnlyArray
+                    if (isArrayType) 
+                    { 
+                        Report(WinRTRules.ArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier); 
+                    }
+                    // if not array type, stil can't use [In] or [Out]
+                    else 
+                    { 
+                        Report(WinRTRules.NonArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier); 
+                    }
+                }
+
+                if (isArrayType)
+                {
+                    bool isOutputParam = HasModifier(param, SyntaxKind.OutKeyword);
+                    // can't be both ReadOnly and WriteOnly
+                    if (hasReadOnlyArray && hasWriteOnlyArray)
+                    {
+                        Report(WinRTRules.ArrayParamMarkedBoth, method.GetLocation(), method.Identifier, param.Identifier);
+                    }
+                    // can't be both output (writeonly) and marked read only
+                    else if (hasReadOnlyArray && isOutputParam)
+                    {
+                        Report(WinRTRules.ArrayOutputParamMarkedRead, method.GetLocation(), method.Identifier, param.Identifier);
+                    }
+                    // must have some indication of ReadOnly or WriteOnly
+                    else if (!hasWriteOnlyArray && !hasReadOnlyArray && !isOutputParam) 
+                    {
+                        Report(WinRTRules.ArrayParamNotMarked, method.GetLocation(), method.Identifier, param.Identifier);
+                    }
+                }
+                // Non-array types shouldn't have attributes meant for arrays
+                else if (hasWriteOnlyArray || hasReadOnlyArray)
+                {
+                    Report(WinRTRules.NonArrayMarked, method.GetLocation(), method.Identifier, param.Identifier);
+                }
+            }
+        }
+
+        /// <summary>Make sure any namespace defined is the same as the winmd or a subnamespace of it
+        /// If component is A.B, e.g. A.B.winmd , then D.Class1 is invalid, as well as A.C.Class2
+        /// </summary>
+        /// <param name="namespace">the authored namesapce to check</param>
+        /// <param name="assemblyName">the name of the component/winmd</param>
+        /// <returns>True iff namespace is disjoint from the assembly name</returns>
+        private bool IsInvalidNamespace(INamespaceSymbol @namespace, string assemblyName)
+        {
+            var contain = @namespace;
+            while (!contain.ContainingNamespace.IsGlobalNamespace)
+            {
+                contain = contain.ContainingNamespace;
+            }
+
+            return (!contain.Name.Equals(assemblyName) && !@namespace.Name.Equals(assemblyName));
+        }
+
+        /// <summary>Arrays cannot be jagged (int[][]+) or multidimensional (int[,+])</summary>
+        /// <param name="arrTypeSym">array type</param><param name="loc">syntax info for diagnostic</param>
+        /// <param name="memberId">method/prop name</param><param name="typeId">class/interface name</param>
+        private void IsInvalidArrayType(IArrayTypeSymbol arrTypeSym, Location loc, SyntaxToken memberId, SyntaxToken typeId)
+        { 
+            if (arrTypeSym.Rank > 1) 
+            { 
+                Report(WinRTRules.ArraySignature_MultiDimensionalArrayRule, loc, memberId, typeId); 
+            } 
+            if (arrTypeSym.ElementType.TypeKind == TypeKind.Array) 
+            { 
+                Report(WinRTRules.ArraySignature_JaggedArrayRule, loc, memberId, typeId); 
+            }
+        }
+       
+        private bool IsPublic(MemberDeclarationSyntax member) { return member.Modifiers.Where(m => m.IsKind(SyntaxKind.PublicKeyword)).Any(); }
+        
+        /// <summary>Attributes can come in one list or many, e.g. [A()][B()] vs. [A(),B()]
+        /// look at all possible attributes and see if any match the given string</summary>
+        /// <param name="attrName">attribute names need to be fully qualified, e.g. DefaultOverload is really Windows.Foundation.Metadata.DefaultOverload</param>
+        /// <param name="ls">all the syntax nodes that correspond to an attribute list</param>
+        /// <returns>true iff the given attribute is in the list</returns>
+        private bool MatchesAnyAttribute(string attrName, SyntaxList<AttributeListSyntax> ls)
+        {
+            foreach (var attrList in ls)
+            {
+                foreach (var attr in attrList.Attributes)
+                {
+                    var attrModel = _context.Compilation.GetSemanticModel(attr.SyntaxTree);
+                    var A = attrModel.GetSymbolInfo(attr);
+                    var k = attr.Name.Kind(); 
+                    // no declard symbol for AttributeSyntax...
+                    if (attr.Name.ToString().Equals(attrName))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>Looks at all possible attributes on a given parameter declaration </summary>
+        /// <returns>returns true iff any are (string) equal to the given attribute name</returns>
+        private bool ParamHasAttribute(ParameterSyntax param, string attrName) { return MatchesAnyAttribute(attrName, param.AttributeLists); }
+
+        /// <summary>Check for qualified and unqualified [In] and [Out] attribute on the parameter</summary>
+        /// <param name="param"></param>
+        /// <returns>True if any attribute is the In or Out attribute</returns>
+        private bool ParamHasInOrOutAttribute(ParameterSyntax param) { return InAndOutAttributeNames.Where(str => ParamHasAttribute(param, str)).Any(); }
+        private bool ParamHasReadOnlyAttribute(ParameterSyntax param) { return ReadOnlyArrayAttributeNames.Where(str => ParamHasAttribute(param, str)).Any(); }
+        private bool ParamHasWriteOnlyAttribute(ParameterSyntax param) { return WriteOnlyArrayAttributeNames.Where(str => ParamHasAttribute(param, str)).Any(); }
+
+        /// <summary>Check for qualified and unqualified [DefaultOverload] attribute on the parameter<</summary>
+        /// <param name="method"></param>
+        /// <returns>True if any attribute is the DefaultOverload attribute</returns>
+        private bool HasDefaultOverloadAttribute(MethodDeclarationSyntax method) { return OverloadAttributeNames.Where(str => MatchesAnyAttribute(str, method.AttributeLists)).Any(); }
+
+        /// <summary>Gather the type symbols for all classes, interfaces and structs</summary>
+        /// <param name="context">Context used for syntax trees</param><returns>A TypeCollector populated with the type symbols</returns>
         private TypeCollector CollectDefinedTypes(GeneratorExecutionContext context)
         {
             TypeCollector collectedTypes = new TypeCollector();
@@ -64,227 +291,6 @@ namespace Generator
             }
             return collectedTypes;
         }
-
-        private bool ImplementsInterface(INamedTypeSymbol typeSymbol, string typeToCheck)
-        {
-            if (typeSymbol == null)
-            {
-                return false;
-            }
-
-            if (typeSymbol.BaseType != null)
-            {
-                return typeSymbol.BaseType.MetadataName == typeToCheck || typeSymbol.BaseType.ToString() == typeToCheck;
-            }
-
-            foreach (var implementedInterface in typeSymbol.AllInterfaces)
-            {
-                if (implementedInterface.MetadataName == typeToCheck)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private bool ModifiersContains(SyntaxTokenList modifiers, string str) { return modifiers.Any(modifier => modifier.ValueText == str); }
-
-        /// <summary>Raise the flag so we don't make a winmd, and add a diagnostic to the sourcegenerator</summary>
-        /// <param name="d"></param><param name="loc"></param><param name="args"></param>
-        private void Report(DiagnosticDescriptor d, Location loc, params object[] args)
-        {
-            Flag();
-            _context.ReportDiagnostic(Diagnostic.Create(d, loc, args));
-        }
-
-        private void ReportDiagnostic(Diagnostic d)
-        {
-            Flag();
-            _context.ReportDiagnostic(d);
-        }
-
-        /// <summary>Check if any of the given symbols represents the given type</summary>
-        /// <param name="typeNames"></param><param name="typeStr"></param>
-        private bool SymbolSetHasString(HashSet<INamedTypeSymbol> typeNames, string typeStr) { return typeNames.Where(sym => sym.ToString().Contains(typeStr)).Any(); }
-
-        /// <summary>Check to see if the piece of syntax is the same as the string</summary>
-        /// <param name="stx"></param><param name="str"></param>
-        private bool SyntaxTokenIs(SyntaxToken stx, string str) { return stx.Value.Equals(str); }
-
-        /// <summary>Attributes can come in one list or many, e.g. [A()][B()] vs. [A(),B()]
-        /// look at all possible attributes and see if any match the given string</summary>
-        /// <param name="attrName">attribute names need to be fully qualified, e.g. DefaultOverload is really Windows.Foundation.Metadata.DefaultOverload</param>
-        /// <param name="ls">all the syntax nodes that correspond to an attribute list</param>
-        /// <returns>true iff the given attribute is in the list</returns>
-        private bool MatchesAnyAttribute(string attrName, SyntaxList<AttributeListSyntax> ls)
-        {
-            foreach (var attrList in ls)
-            {
-                foreach (var attr in attrList.Attributes)
-                {
-                    if (attr.Name.ToString().Equals(attrName))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        #region ParameterHelpers
-
-        /// <summary>Looks at all possible attributes on a given parameter declaration </summary>
-        /// <returns>returns true iff any are (string) equal to the given attribute name</returns>
-        private bool ParamHasAttribute(string attrName, ParameterSyntax param) { return MatchesAnyAttribute(attrName, param.AttributeLists); }
-
-        /// <summary>Check for qualified and unqualified [In] and [Out] attribute on the parameter</summary>
-        /// <param name="param"></param>
-        /// <returns>True if any attribute is the In or Out attribute</returns>
-        private bool ParamHasInOrOutAttribute(ParameterSyntax param) { return InAndOutAttributeNames.Where(str => ParamHasAttribute(str, param)).Any(); }
-
-        /// <summary>Check for qualified and unqualified [DefaultOverload] attribute on the parameter<</summary>
-        /// <param name="method"></param>
-        /// <returns>True if any attribute is the DefaultOverload attribute</returns>
-        private bool MethodHasDefaultOverloadAttribute(MethodDeclarationSyntax method) { return OverloadAttributeNames.Where(str => MatchesAnyAttribute(str, method.AttributeLists)).Any(); }
-
-        /// <summary>e.g. `int foo(out int i) { ... }` /// </summary>
-        /// <param name="param"></param>True if the parameter has the `ref` modifier<returns></returns>
-        private bool ParamMarkedOutput(ParameterSyntax param) { return ModifiersContains(param.Modifiers, "out"); }
-
-        /// <summary>e.g. `int foo(ref int i) { ... }` </summary>
-        /// <param name="param">the parameter to look for the ref keyword on</param>
-        /// <returns>True if the parameter has the `ref` modifier</returns>
-        private bool ParamMarkedRef(ParameterSyntax param) { return ModifiersContains(param.Modifiers, "ref"); }
-        
-        /// <summary>
-        ///  Checks to see if an array parameter has been marked with both Write and Read attributes
-        ///  Does extra work, by catching `ref` params, done here since this code can be used by class or interface related methods</summary>
-        /// <param name="method">Method declared</param>
-        /// <returns>true if array attributes are invalid (see summary)</returns>
-        private void CheckParamsForArrayAttributes(MethodDeclarationSyntax method)
-        {
-            foreach (ParameterSyntax param in method.ParameterList.Parameters)
-            {
-                var isArrayType = param.ChildNodes().OfType<ArrayTypeSyntax>().Any();
-                bool hasReadOnlyArray = ParamHasAttribute("System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray", param);
-                bool hasWriteOnlyArray = ParamHasAttribute("System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray", param);
-                bool isOutputParam = ParamMarkedOutput(param);
-
-                // Nothing can be marked `ref`
-                if (ParamMarkedRef(param)) { Report(WinRTRules.RefParameterFound, method.GetLocation(), param.Identifier); }
-                
-                if (ParamHasInOrOutAttribute(param))
-                {
-                    // recommend using ReadOnlyArray or WriteOnlyArray
-                    if (isArrayType) 
-                    { 
-                        Report(WinRTRules.ArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier); 
-                    }
-                    // if not array type, stil can't use [In] or [Out]
-                    else 
-                    { 
-                        Report(WinRTRules.NonArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier); 
-                    }
-                }
-
-                if (isArrayType)
-                {
-                    // can't be both ReadOnly and WriteOnly
-                    if (hasReadOnlyArray && hasWriteOnlyArray)
-                    {
-                        Report(WinRTRules.ArrayParamMarkedBoth, method.GetLocation(), method.Identifier, param.Identifier);
-                    }
-                    // can't be both output (writeonly) and marked read only
-                    else if (hasReadOnlyArray && isOutputParam)
-                    {
-                        Report(WinRTRules.ArrayOutputParamMarkedRead, method.GetLocation(), method.Identifier, param.Identifier);
-                    }
-                    // must have some indication of ReadOnly or WriteOnly
-                    else if (!hasWriteOnlyArray && !hasReadOnlyArray && !isOutputParam) 
-                    {
-                        Report(WinRTRules.ArrayParamNotMarked, method.GetLocation(), method.Identifier, param.Identifier);
-                    }
-                }
-                // Non-array types shouldn't have attributes meant for arrays
-                else if (hasWriteOnlyArray || hasReadOnlyArray)
-                {
-                    Report(WinRTRules.NonArrayMarked, method.GetLocation(), method.Identifier, param.Identifier);
-                }
-            }
-        }
-
-        #endregion
-
-        private bool IsInvalidNamespace(INamespaceSymbol @namespace, string assemblyName)
-        {
-            var contain = @namespace;
-            while (!contain.ContainingNamespace.IsGlobalNamespace)
-            {
-                contain = contain.ContainingNamespace;
-            }
-
-            return (!contain.Name.Equals(assemblyName) && !@namespace.Name.Equals(assemblyName));
-        }
-
-        /// <summary>
-        /// Keeps track of repeated declarations of a method (overloads) and raises diagnostics according to the rule that exactly one overload should be attributed the default</summary>
-        /// <param name="method">Look for overloads of this method, checking the attributes as well attributes for</param>
-        /// <param name="methodHasAttributeMap">
-        /// The strings are unique names for each method -- made by its name and arity
-        /// Some methods may get the attribute, some may not, we keep track of this in the map.
-        /// <param name="overloadsWithoutAttributeMap">
-        /// Once we have seen an overload and the method still has no attribute, we make a diagnostic for it
-        /// If we see the method again but this time with the attribute, we remove it (and its diagnostic) from the map
-        /// <param name="classId">The class the method lives in -- used for creating the diagnostic</param>
-        /// <returns>True iff multiple overloads of a method are found, where more than one has been designated as the default overload</returns>
-        private void CheckOverloadAttributes(MethodDeclarationSyntax method,
-            Dictionary<string, bool> methodHasAttributeMap,
-            Dictionary<string, Diagnostic> overloadsWithoutAttributeMap,
-            SyntaxToken classId)
-        {
-            int methodArity = method.ParameterList.Parameters.Count;
-            string methodNameWithArity = method.Identifier.Text + methodArity.ToString(); //
-
-            // look at all the attributes on this method and see if any of them is the DefaultOverload attribute 
-            bool hasDefaultOverloadAttribute = MethodHasDefaultOverloadAttribute(method);
-            bool seenMethodBefore = methodHasAttributeMap.TryGetValue(methodNameWithArity, out bool methodHasAttrAlready);
-
-            // Do we have an overload ? 
-            if (seenMethodBefore)
-            {
-                if (hasDefaultOverloadAttribute && !methodHasAttrAlready)
-                {
-                    // we've seen it, but it didnt have the attribute, so mark that it has it now
-                    methodHasAttributeMap[methodNameWithArity] = true;
-                    // We finally got an attribute, so dont raise a diagnostic for this method
-                    overloadsWithoutAttributeMap.Remove(methodNameWithArity);
-                }
-                else if (hasDefaultOverloadAttribute && methodHasAttrAlready)
-                {
-                    // Special case in that multiple instances of the DefaultAttribute being used on the method 
-                    Report(WinRTRules.MethodOverload_MultipleDefaultAttribute, method.GetLocation(), methodArity, method.Identifier, classId);
-                }
-                else if (!hasDefaultOverloadAttribute && !methodHasAttrAlready)
-                {
-                    // we could see this method later with the attribute, 
-                    // so hold onto the diagnostic for it until we know it doesn't have the attribute
-                    overloadsWithoutAttributeMap[methodNameWithArity] = Diagnostic.Create(
-                        WinRTRules.MethodOverload_NeedDefaultAttribute, 
-                        method.GetLocation(), 
-                        methodArity, 
-                        method.Identifier,
-                        classId);
-                }
-            }
-            else
-            {
-                // first time we're seeing the method, add a pair in the map for its name and whether it has the attribute 
-                methodHasAttributeMap[methodNameWithArity] = hasDefaultOverloadAttribute;
-            }
-        }
-
-
-        #region StringHelpers
 
         /// <summary>Make a suggestion for types to use instead of the given type</summary>
         /// <param name="type">A type that is not valid in Windows Runtime</param>
@@ -352,10 +358,10 @@ namespace Generator
         };
 
         private static readonly string[] InAndOutAttributeNames = { "In", "Out", "System.Runtime.InteropServices.In", "System.Runtime.InteropServices.Out" };
-        private static readonly string[] OverloadAttributeNames = { "Windows.Foundation.Metadata.DefaultOverload", "DefaultOverload" };
+        private static readonly string[] OverloadAttributeNames = { "DefaultOverload", "Windows.Foundation.Metadata.DefaultOverload"  };
+        private static readonly string[] ReadOnlyArrayAttributeNames = { "System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray", "ReadOnlyArray" };
+        private static readonly string[] WriteOnlyArrayAttributeNames = { "System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray", "WriteOnlyArray" };
     
         private static readonly string GeneratedReturnValueName = "__retval";
-
-        #endregion
     }
 }
