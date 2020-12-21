@@ -195,7 +195,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             Logger.Initialize(context);
             
-            context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(ArrayAttributes, Encoding.UTF8));
             
             if (CatchWinRTDiagnostics(context))
             {
@@ -206,6 +205,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
             try
             {
+                context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(ArrayAttributes, Encoding.UTF8));
                 string assembly = GetAssemblyName(context);
                 string version = GetAssemblyVersion(context);
                 MetadataBuilder metadataBuilder = new MetadataBuilder();

@@ -3,7 +3,6 @@ namespace DiagnosticTests
     public partial class UnitTesting
     {
 
-        // namespace tests -- WIP
         private const string NamespaceDifferByDot = @"
 namespace Test.A
 {

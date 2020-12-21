@@ -2,7 +2,6 @@ namespace DiagnosticTests
 {
     public partial class UnitTesting
     {
-        // oops
         private const string Valid_ListUsage = @"
 using System.Collections.Generic;
 namespace Test 

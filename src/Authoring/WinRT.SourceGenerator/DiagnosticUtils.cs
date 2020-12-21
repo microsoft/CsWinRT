@@ -22,7 +22,6 @@ namespace Generator
         private GeneratorExecutionContext _context;
         private string _assemblyName;
 
-        private void Flag() { _flag |= true; }
         public bool Found() { return _flag; }
 
         /// <summary>

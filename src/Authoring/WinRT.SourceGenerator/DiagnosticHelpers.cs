@@ -33,6 +33,7 @@ namespace Generator
 
     public partial class WinRTScanner
     {
+        private void Flag() { _flag |= true; }
         /// <summary>Raise the flag so we don't make a winmd, and add a diagnostic to the sourcegenerator</summary>
         /// <param name="d"></param><param name="loc"></param><param name="args"></param>
         private void Report(DiagnosticDescriptor d, Location loc, params object[] args)
@@ -54,14 +55,6 @@ namespace Generator
         /// <param name="typeId">the type this member (method/prop) lives in</param>
         private void ReportIfInvalidType(ITypeSymbol typeSymbol, Location loc, SyntaxToken memberId, SyntaxToken typeId) 
         { 
-            // helper function, some of the invalid types are WIP and need this check since GetTypeByMetadataName doesn't work for them  
-            bool SameType(ITypeSymbol sym, string s)
-            {
-                string baseStr = sym.ContainingNamespace.IsGlobalNamespace ? "" : sym.ContainingSymbol + ".";
-                var x = baseStr + sym.MetadataName;
-                return x == s;
-            }
-
 
             if (typeSymbol.TypeKind == TypeKind.Array) 
             { 
@@ -79,8 +72,16 @@ namespace Generator
                 }
             }
 
-            // GetTypeByMetadataName fails on System.Linq.Enumerable`1 and System.Collections.ObjectModel.ReadOnlyDictionary`2
-            // Would be fixed by issue #678 on the dotnet/roslyn-sdk rep
+            // helper function, we can't get a type symbol for some of the invalid types 
+            bool SameType(ITypeSymbol sym, string s)
+            {
+                string baseStr = sym.ContainingNamespace.IsGlobalNamespace ? "" : sym.ContainingSymbol + ".";
+                var x = baseStr + sym.MetadataName;
+                return x == s;
+            }
+
+            // GetTypeByMetadataName fails on "System.Linq.Enumerable`1" & "System.Collections.ObjectModel.ReadOnlyDictionary`2"
+            // Would be fixed by issue #678 on the dotnet/roslyn-sdk repo
             foreach (var invalidType in WIPInvalidTypes) 
             {
                 if (SameType(typeSymbol, invalidType))
@@ -142,7 +143,7 @@ namespace Generator
                 
                 if (ParamHasInOrOutAttribute(param))
                 {
-                    // recommend using ReadOnlyArray or WriteOnlyArray
+                    // recommend using ReadOnlyArray or WriteOnlyArray instead of In/Out
                     if (isArrayType) 
                     { 
                         Report(WinRTRules.ArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier); 
@@ -195,7 +196,7 @@ namespace Generator
                 contain = contain.ContainingNamespace;
             }
 
-            return (!contain.Name.Equals(assemblyName) && !@namespace.Name.Equals(assemblyName));
+            return !contain.Name.Equals(assemblyName) && !@namespace.Name.Equals(assemblyName);
         }
 
         /// <summary>Arrays cannot be jagged (int[][]+) or multidimensional (int[,+])</summary>
@@ -215,7 +216,7 @@ namespace Generator
        
         private bool IsPublic(MemberDeclarationSyntax member) { return member.Modifiers.Where(m => m.IsKind(SyntaxKind.PublicKeyword)).Any(); }
         
-        /// <summary>Attributes can come in one list or many, e.g. [A()][B()] vs. [A(),B()]
+        /// <summary>Attributes can come in one list or many, e.g. [A(),B()] vs. [A()][B()]
         /// look at all possible attributes and see if any match the given string</summary>
         /// <param name="attrName">attribute names need to be fully qualified, e.g. DefaultOverload is really Windows.Foundation.Metadata.DefaultOverload</param>
         /// <param name="ls">all the syntax nodes that correspond to an attribute list</param>
@@ -226,10 +227,7 @@ namespace Generator
             {
                 foreach (var attr in attrList.Attributes)
                 {
-                    var attrModel = _context.Compilation.GetSemanticModel(attr.SyntaxTree);
-                    var A = attrModel.GetSymbolInfo(attr);
-                    var k = attr.Name.Kind(); 
-                    // no declard symbol for AttributeSyntax...
+                    // no declared symbol for AttributeSyntax...
                     if (attr.Name.ToString().Equals(attrName))
                     {
                         return true;
