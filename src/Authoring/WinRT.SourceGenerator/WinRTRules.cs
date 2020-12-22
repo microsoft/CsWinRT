@@ -101,12 +101,12 @@ namespace WinRT.SourceGenerator
             "Operator overload exposed",
             "{0} is an operator overload. Managed types cannot expose operator overloads in the Windows Runtime");
 
-        public static DiagnosticDescriptor MethodOverload_MultipleDefaultAttribute = MakeRule(
+        public static DiagnosticDescriptor MultipleDefaultOverloadAttribute = MakeRule(
             "WME1059",
             "Only one overload should be designated default", 
             "In class {2}: Multiple {0}-parameter overloads of '{1}' are decorated with Windows.Foundation.Metadata.DefaultOverloadAttribute. The attribute may only be applied to one overload of the method.");
 
-        public static DiagnosticDescriptor MethodOverload_NeedDefaultAttribute = MakeRule(
+        public static DiagnosticDescriptor NeedDefaultOverloadAttribute = MakeRule(
             "WME1085",
             "Multiple overloads seen, one needs a default", // todo better msg
             "In class {2}: The {0}-parameter overloads of {1} must have exactly one method specified as the default overload by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
@@ -116,7 +116,7 @@ namespace WinRT.SourceGenerator
             "Array signature found with jagged array, which is not a valid WinRT type",
             "Method {0} has a nested array of type {1} in its signature. Arrays in Windows Runtime method signature cannot be nested.");
 
-        public static DiagnosticDescriptor ArraySignature_MultiDimensionalArrayRule = MakeRule(
+        public static DiagnosticDescriptor MultiDimensionalArrayRule = MakeRule(
             "WME1035",
             "Array signature found with multi-dimensional array, which is not a valid WinRT type",
             "Method '{0}' has a multi-dimensional array of type '{1}' in its signature. Arrays in Windows Runtime method signatures must be one dimensional.");

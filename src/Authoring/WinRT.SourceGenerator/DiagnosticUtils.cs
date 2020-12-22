@@ -356,14 +356,14 @@ namespace Generator
                 else if (hasDefaultOverloadAttribute && methodHasAttrAlready)
                 {
                     // Special case in that multiple instances of the DefaultAttribute being used on the method 
-                    Report(WinRTRules.MethodOverload_MultipleDefaultAttribute, method.GetLocation(), methodArity, method.Identifier, classId);
+                    Report(WinRTRules.MultipleDefaultOverloadAttribute, method.GetLocation(), methodArity, method.Identifier, classId);
                 }
                 else if (!hasDefaultOverloadAttribute && !methodHasAttrAlready)
                 {
                     // we could see this method later with the attribute, 
                     // so hold onto the diagnostic for it until we know it doesn't have the attribute
                     overloadsWithoutAttributeMap[methodNameWithArity] = Diagnostic.Create(
-                        WinRTRules.MethodOverload_NeedDefaultAttribute, 
+                        WinRTRules.NeedDefaultOverloadAttribute, 
                         method.GetLocation(), 
                         methodArity, 
                         method.Identifier,

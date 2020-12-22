@@ -49,7 +49,7 @@ namespace Test
 }";
 
         private const string DisjointNamespaces = @"
-// Assuming the winmd is Test, the error gets thrown since namespace `A` has no common prefix with Test
+// ""Test.winmd"" - types in namespace A won't be accessible
 namespace Test 
 {
     public sealed class Blank { public Blank() { } }
@@ -63,9 +63,14 @@ namespace A
 
 
         private const string DisjointNamespaces2 = @"
+// ""Test.winmd""  uses the other namespace
 namespace Test 
 {
-    public sealed class Blank { public Blank() { } }
+    public sealed class Blank 
+    { 
+        public Blank() { } 
+        public void Foo(A.B.F arg) { return; }
+    }
 }
 
 namespace A
@@ -73,26 +78,8 @@ namespace A
     public sealed class Class4 { public Class4() { } }
     namespace B
     {
-        public sealed class F() { public F() {} }
+        public sealed class F { public F() {} }
     }
-}";
-
-
-
-        private const string DisjointNamespaces3 = @"
-// Assuming the winmd is RuntimeComponent, the error gets thrown since namespace `A` has no common prefix with RuntimeComponent
-namespace Test 
-{
-    public sealed class Blank { public Blank() { } }
-    namespace B 
-    {
-        public sealed class F() { public F() {} }
-    }
-}
-
-namespace A
-{
-    public sealed class Class4 { public Class4() { } }
 }";
 
         private const string NoPublicTypes = @"
@@ -103,55 +90,6 @@ namespace Test
         public RuntimeComponent() {}
     }
 }";
-        private const string _NamespaceTest1 = @"
-namespace Test
-{
-    namespace OtherNamespace_Valid
-    {
-        public sealed class Class1
-        {
-            int x;
-            public Class1(int a) { x = a; }
-        }
-    }
-
-    // WME1068
-    public sealed class TestDiagnostics
-    {
-        bool b;
-        public TestDiagnostics(bool x) { b = x; }
-    }
-}
-}";
-        private const string _NamespaceTest2 = @"
-namespace Test
-{
-
-    // WME1044 ?
-    public sealed class Class1
-    {
-        int x;
-
-        public Class1(int a)
-        {
-            x = a;
-        }
-    }
-}";
-        private const string _NamespaceTest3 = @"
-namespace Test
-{ 
-    // WME1067 ??
-    namespace InnerNamespace
-    {
-        public sealed class Class1
-        {
-            int x;
-            public Class1(int a) { x = a; }
-        }
-    }
-}";
-
         // Generic Dictionary 
         private const string InterfaceWithGenericDictReturnType = @"
 using System.Collections.Generic;
@@ -737,11 +675,10 @@ namespace Test
         private const string MultiDim_3D_Interface6 = @"
 namespace Test
 {
-public interface MultiDim_3D_Interface6
+    public interface MultiDim_3D_Interface6
     {
         public bool D3_NotReturnAndInput2of3(bool a, int[,,] arr, bool b); 
     }
-
 }";
         // subnamespace 2d iface
         private const string SubNamespaceInterface_D2Method1 = @"

@@ -206,7 +206,7 @@ namespace Generator
         { 
             if (arrTypeSym.Rank > 1) 
             { 
-                Report(WinRTRules.ArraySignature_MultiDimensionalArrayRule, loc, memberId, typeId); 
+                Report(WinRTRules.MultiDimensionalArrayRule, loc, memberId, typeId); 
             } 
             if (arrTypeSym.ElementType.TypeKind == TypeKind.Array) 
             { 

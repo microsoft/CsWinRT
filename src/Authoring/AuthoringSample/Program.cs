@@ -460,7 +460,7 @@ namespace AuthoringSample
             return _dictionary.ContainsKey(key);
         }
 
-        public void CopyTo([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] KeyValuePair<string, BasicStruct>[] array, int arrayIndex)
+        public void CopyTo([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] KeyValuePair<string, BasicStruct>[] array, int arrayIndex)
         {
         }
 
@@ -628,7 +628,7 @@ namespace AuthoringSample
             return _list.Contains(item);
         }
 
-        public void CopyTo([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] DisposableClass[] array, int arrayIndex)
+        public void CopyTo([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] DisposableClass[] array, int arrayIndex)
         {
             _list.CopyTo(array, arrayIndex);
         }

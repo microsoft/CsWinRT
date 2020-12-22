@@ -36,7 +36,6 @@ namespace Test
 
         // Namespaces
         private const string Valid_NestedNamespace = @"
-// Assuming the winmd is RuntimeComponent, the error gets thrown since namespace `A` has no common prefix with RuntimeComponent
 namespace Test 
 {
     public sealed class Blank { public Blank() { } }
@@ -46,7 +45,6 @@ namespace Test
     }
 }";
         private const string Valid_NestedNamespace2 = @"
-// Assuming the winmd is RuntimeComponent, the error gets thrown since namespace `A` has no common prefix with RuntimeComponent
 namespace Test 
 {
     public sealed class Blank { public Blank() { } }
@@ -1201,14 +1199,6 @@ namespace Test
         public void MarkedOutOnly_Valid(out int[] arr) { arr = new int[] { }; }
     }
 }";
-        private const string Valid_ArrayParamAttrUnary_5 = @"
-namespace Test 
-{
-    public sealed class OnlyParam
-    { 
-        public void ArrayNotMarked_Valid(out int[] arr) { arr = new int[] { };  }
-    }
-}";
         private const string Valid_ArrayParamAttrBinary_1 = @"
 namespace Test 
 {
@@ -1244,9 +1234,9 @@ namespace Test
         private const string Valid_ArrayParamAttrBinary_5 = @"
 namespace Test 
 {
-    public sealed class TwoParam
+    public sealed class TwoArray
     { 
-        public void ArrayNotMarked_Valid(int i, out int[] arr) { arr = new int[] { };  }
+        public void MarkedReadOnly_Valid([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
     }
 }";
         private const string Valid_ArrayParamAttrBinary_6 = @"
@@ -1254,7 +1244,7 @@ namespace Test
 {
     public sealed class TwoArray
     { 
-        public void MarkedReadOnly_Valid([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
+        public void MarkedWriteOnly_Valid([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] arr) { }
     }
 }";
         private const string Valid_ArrayParamAttrBinary_7 = @"
@@ -1262,18 +1252,10 @@ namespace Test
 {
     public sealed class TwoArray
     { 
-        public void MarkedWriteOnly_Valid([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] arr) { }
-    }
-}";
-        private const string Valid_ArrayParamAttrBinary_8 = @"
-namespace Test 
-{
-    public sealed class TwoArray
-    { 
         public void MarkedOutAndWriteOnly_Valid([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] out int[] arr) { arr = new int[] { }; }
     }
 }";
-        private const string Valid_ArrayParamAttrBinary_9 = @"
+        private const string Valid_ArrayParamAttrBinary_8 = @"
 namespace Test 
 {
     public sealed class TwoArray
