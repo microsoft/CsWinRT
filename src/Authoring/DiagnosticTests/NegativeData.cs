@@ -410,7 +410,7 @@ namespace Test
         int Foo(string s);
     }
 }";
- 
+
         private const string StructWithInterfaceField = @"
 namespace Test 
 {
@@ -830,7 +830,7 @@ namespace Test
         private const string ArrayInstanceProperty1 = @"
 namespace Test
 {
-public sealed class ArrayInstanceProperty2
+    public sealed class ArrayInstanceProperty2
     {
         public System.Array Arr
         {

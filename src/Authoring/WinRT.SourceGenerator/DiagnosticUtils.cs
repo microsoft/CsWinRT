@@ -10,7 +10,6 @@ namespace Generator
     public partial class WinRTComponentScanner
     {
         public WinRTComponentScanner() { _flag = false; }
-
         public WinRTComponentScanner(GeneratorExecutionContext context, string assemblyName) 
         { 
             _flag = false;

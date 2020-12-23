@@ -1,13 +1,18 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
+using WinRT.SourceGenerator;
 
 namespace Generator
 {
@@ -197,6 +202,13 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             
             
             if (CatchWinRTDiagnostics(context))
+            {
+                Logger.Log("Exiting early -- found errors in authored runtime component.");
+                Logger.Close();
+                return;
+            }
+
+            if (CatchWinRTDiagnostics(ref context))
             {
                 Logger.Log("Exiting early -- found errors in authored runtime component.");
                 Logger.Close();

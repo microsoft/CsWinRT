@@ -207,9 +207,6 @@ namespace Test.Component
         }
     }
 }";
-
- 
-
         private const string Valid_ListUsage = @"
 using System.Collections.Generic;
 namespace Test 
@@ -677,7 +674,6 @@ namespace Test
     {
         public Blank() {}
     }
-
     internal sealed class Valid_JaggedArray_PrivateClassPublicProperty
     {
         private int[][] Arr { get; set; }
@@ -693,7 +689,6 @@ namespace Test
     {
         public Blank() {}
     }
-
     internal sealed class Valid_JaggedArray_PrivateClassPublicMethods
     {
         public int[][] J2_ReturnOnly() 
@@ -717,7 +712,6 @@ namespace Test
     {
         public Blank() {}
     }
-
     internal sealed class Valid_Jagged3D_PrivateClassPublicMethods 
     {
         public int[][][] J3_ReturnOnly() 
@@ -783,7 +777,6 @@ namespace Test
     {
         public Blank() {}
     }
-
     internal class Valid_MultiDimArray_PrivateClassPublicProperty1
     {
         public int[,] Arr_2d { get; set; }
@@ -796,7 +789,6 @@ namespace Test
     {
         public Blank() {}
     }
-
     internal class Valid_MultiDimArray_PrivateClassPublicProperty2
     {
         public int[,,] Arr_3d { get; set; }
@@ -1258,8 +1250,7 @@ namespace Test
 }";
         private const string Valid_SystemArray_PrivateClassPublicProperty2 = @"
 namespace Test
-{
-    public sealed class Blank
+{    public sealed class Blank
     {
         public Blank() {}
     }
@@ -1270,8 +1261,7 @@ namespace Test
 }";
         private const string Valid_SystemArray_PrivateClassPublicProperty3 = @"
 namespace Test
-{
-    public sealed class Blank
+{    public sealed class Blank
     {
         public Blank() {}
     }
@@ -1294,11 +1284,12 @@ namespace Test
 }";
         private const string Valid_SystemArray_PrivateClassPublicProperty5 = @"
 namespace Test
-{
+{    
     public sealed class Blank
     {
         public Blank() {}
     }
+
     internal sealed class Valid_SystemArray_PrivateClassPublicProperty5
     {
         private int[] PrivArr { get { return (int[])Array.CreateInstance(typeof(int), new int[] { 4 }, new int[] { 1 }); } }
@@ -1541,3 +1532,4 @@ namespace Test
 }";
     }
 }
+
