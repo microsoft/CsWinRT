@@ -31,7 +31,7 @@ namespace Generator
         public HashSet<INamespaceSymbol> GetNamespaces() { return namespaces; }
     }
 
-    public partial class WinRTScanner
+    public partial class WinRTComponentScanner
     {
         private void Flag() { _flag |= true; }
         /// <summary>Raise the flag so we don't make a winmd, and add a diagnostic to the sourcegenerator</summary>
@@ -55,39 +55,76 @@ namespace Generator
         /// <param name="typeId">the type this member (method/prop) lives in</param>
         private void ReportIfInvalidType(ITypeSymbol typeSymbol, Location loc, SyntaxToken memberId, SyntaxToken typeId) 
         { 
-
+            // If it's of the form int[], it has to be one dimensional
             if (typeSymbol.TypeKind == TypeKind.Array) 
-            { 
-                IsInvalidArrayType((IArrayTypeSymbol)typeSymbol, loc, memberId, typeId);
-                return;
-            }
+            {
+                // Successful conversion given the success of the condition
+                IArrayTypeSymbol arrTypeSym = (IArrayTypeSymbol)typeSymbol;
 
-            foreach (var s in InvalidTypes)
-            { 
-                var invalidTypeSym = _context.Compilation.GetTypeByMetadataName(s);
-                if (SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition, invalidTypeSym))
-                {
-                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, s, SuggestType(s));
+                // [,,]?
+                if (arrTypeSym.Rank > 1) 
+                { 
+                    Report(WinRTRules.MultiDimensionalArrayRule, loc, memberId, typeId);
+                    return;
+                } 
+                // [][]?
+                if (arrTypeSym.ElementType.TypeKind == TypeKind.Array) 
+                { 
+                    Report(WinRTRules.JaggedArrayRule, loc, memberId, typeId);
                     return;
                 }
             }
 
-            // helper function, we can't get a type symbol for some of the invalid types 
-            bool SameType(ITypeSymbol sym, string s)
-            {
-                string baseStr = sym.ContainingNamespace.IsGlobalNamespace ? "" : sym.ContainingSymbol + ".";
-                var x = baseStr + sym.MetadataName;
-                return x == s;
+            // An array of types that don't exist in Windows Runtime, so can't be passed between functions in Windows Runtime
+            foreach (var typeName in NotValidTypes)
+            { 
+                var notValidTypeSym = _context.Compilation.GetTypeByMetadataName(typeName);
+                if (SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition, notValidTypeSym))
+                {
+                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, typeName, SuggestType(typeName));
+                    return;
+                }
             }
 
-            // GetTypeByMetadataName fails on "System.Linq.Enumerable`1" & "System.Collections.ObjectModel.ReadOnlyDictionary`2"
-            // Would be fixed by issue #678 on the dotnet/roslyn-sdk repo
-            foreach (var invalidType in WIPInvalidTypes) 
+            // construct the qualified name for this type 
+            string qualifiedName = "";
+            // grab the containing namespace, we use ContainingSymbol because  TODO
+            if (typeSymbol.ContainingNamespace != null && !typeSymbol.ContainingNamespace.IsGlobalNamespace)
             {
-                if (SameType(typeSymbol, invalidType))
+                //qualifiedName += typeSymbol.ContainingSymbol;
+                // for typeSymbol = System.Linq.Enumerable ; the ContainingSymbol is System.Linq, the ContainingNamespace is System
+                // for typeSymbol = System.Collections.ObjectModel.ReadOnlyDictionary<int,int> 
+                //   ContainingSymbol = ContainingNamespace = System.Collections.ObjectModel
+                qualifiedName += typeSymbol.ContainingSymbol + "."; // Namespace for Enumerable is just System, but we need Linq.Enumerable
+            }
+            // instead of TypeName<int>, TypeName`1
+            qualifiedName += typeSymbol.MetadataName;
+
+            // GetTypeByMetadataName fails on "System.Linq.Enumerable" & "System.Collections.ObjectModel.ReadOnlyDictionary`2"
+            // Would be fixed by issue #678 on the dotnet/roslyn-sdk repo
+            foreach (var notValidType in WIPNotValidTypes) 
+            {
+                if (qualifiedName == notValidType)
                 { 
-                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, invalidType, SuggestType(invalidType));
+                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, notValidType, SuggestType(notValidType));
                     return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the class represented by the symbol 
+        /// implements any of the interfaces defined in ProhibitedAsyncInterfaces (e.g., IAsyncAction, ...)</summary>
+        /// <param name="typeSymbol">The class/interface type symbol</param><param name="typeDeclaration">The containing class/interface declaration</param>
+        /// <returns>True iff the given class implements any of the IAsync interfaces that are not valid in Windows Runtime</returns>
+        private void ImplementsInvalidInterface(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax typeDeclaration)
+        {
+            foreach (string prohibitedInterface in nonWindowsRuntimeInterfaces)
+            {
+                // check here if typesymbol's basetype is invalid ? but interfaces are also base types?
+                if (ImplementsInterface(typeSymbol, prohibitedInterface))
+                {
+                    Report(WinRTRules.NonWinRTInterface, typeDeclaration.GetLocation(), typeDeclaration.Identifier, prohibitedInterface);
                 }
             }
         }
@@ -100,15 +137,11 @@ namespace Generator
         private bool ImplementsInterface(INamedTypeSymbol typeSymbol, string typeToCheck)
         {
             if (typeSymbol == null)
-            {
+            { 
                 return false;
             }
 
-            if (typeSymbol.BaseType != null)
-            {
-                return typeSymbol.BaseType.MetadataName == typeToCheck || typeSymbol.BaseType.ToString() == typeToCheck;
-            }
-
+            // for interface type symbols
             foreach (var implementedInterface in typeSymbol.AllInterfaces)
             {
                 if (implementedInterface.MetadataName == typeToCheck)
@@ -116,6 +149,29 @@ namespace Generator
                     return true;
                 }
             }
+            
+            // class type symbols might have a BaseType, like System.Exception
+            if (typeSymbol.BaseType != null)
+            {
+                foreach (var x in typeSymbol.BaseType.AllInterfaces)
+                {
+                    if (x.MetadataName == typeToCheck)
+                    {
+                        return true;
+                    }
+                }
+                var typeToCheckSymbol = _context.Compilation.GetTypeByMetadataName(typeToCheck);
+                if (SymbolEqualityComparer.Default.Equals(typeSymbol.BaseType, typeToCheckSymbol))
+                { 
+                    return true;
+                }
+                // Type<T_1,T_2,...,T_n> -> Type`n
+                if (typeSymbol.BaseType.MetadataName != null)
+                { 
+                    return typeSymbol.BaseType.MetadataName == typeToCheck;
+                }
+            }
+
             return false;
         }
 
@@ -137,9 +193,9 @@ namespace Generator
                 
                 // Nothing can be marked `ref`
                 if (HasModifier(param, SyntaxKind.RefKeyword))
-                { 
+                {
                     Report(WinRTRules.RefParameterFound, method.GetLocation(), param.Identifier); 
-                }
+                }    
                 
                 if (ParamHasInOrOutAttribute(param))
                 {
@@ -150,8 +206,8 @@ namespace Generator
                     }
                     // if not array type, stil can't use [In] or [Out]
                     else 
-                    { 
-                        Report(WinRTRules.NonArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier); 
+                    {
+                        Report(WinRTRules.NonArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier);
                     }
                 }
 
@@ -185,35 +241,21 @@ namespace Generator
         /// <summary>Make sure any namespace defined is the same as the winmd or a subnamespace of it
         /// If component is A.B, e.g. A.B.winmd , then D.Class1 is invalid, as well as A.C.Class2
         /// </summary>
-        /// <param name="namespace">the authored namesapce to check</param>
-        /// <param name="assemblyName">the name of the component/winmd</param>
+        /// <param name="namespace">the authored namesapce to check</param><param name="assemblyName">the name of the component/winmd</param>
         /// <returns>True iff namespace is disjoint from the assembly name</returns>
         private bool IsInvalidNamespace(INamespaceSymbol @namespace, string assemblyName)
         {
-            var contain = @namespace;
-            while (!contain.ContainingNamespace.IsGlobalNamespace)
+            // get the outermost containing namespace
+            var topLevel = @namespace;
+            while (!topLevel.ContainingNamespace.IsGlobalNamespace)
             {
-                contain = contain.ContainingNamespace;
+                topLevel = topLevel.ContainingNamespace;
             }
 
-            return !contain.Name.Equals(assemblyName) && !@namespace.Name.Equals(assemblyName);
+            // all types must be defined in a namespace that matches the one of the winmd being made, or a subnamespace of it
+            return assemblyName != @namespace.Name && assemblyName != topLevel.Name;
         }
 
-        /// <summary>Arrays cannot be jagged (int[][]+) or multidimensional (int[,+])</summary>
-        /// <param name="arrTypeSym">array type</param><param name="loc">syntax info for diagnostic</param>
-        /// <param name="memberId">method/prop name</param><param name="typeId">class/interface name</param>
-        private void IsInvalidArrayType(IArrayTypeSymbol arrTypeSym, Location loc, SyntaxToken memberId, SyntaxToken typeId)
-        { 
-            if (arrTypeSym.Rank > 1) 
-            { 
-                Report(WinRTRules.MultiDimensionalArrayRule, loc, memberId, typeId); 
-            } 
-            if (arrTypeSym.ElementType.TypeKind == TypeKind.Array) 
-            { 
-                Report(WinRTRules.ArraySignature_JaggedArrayRule, loc, memberId, typeId); 
-            }
-        }
-       
         private bool IsPublic(MemberDeclarationSyntax member) { return member.Modifiers.Where(m => m.IsKind(SyntaxKind.PublicKeyword)).Any(); }
         
         /// <summary>Attributes can come in one list or many, e.g. [A(),B()] vs. [A()][B()]
@@ -228,7 +270,7 @@ namespace Generator
                 foreach (var attr in attrList.Attributes)
                 {
                     // no declared symbol for AttributeSyntax...
-                    if (attr.Name.ToString().Equals(attrName))
+                    if (attr.Name.ToString() == attrName)
                     {
                         return true;
                     }
@@ -339,7 +381,7 @@ namespace Generator
             "IAsyncOperationWithProgress`2",
         };
 
-        private readonly static string[] InvalidTypes = 
+        private readonly static string[] NotValidTypes = 
         { 
             "System.Array",
             "System.Collections.Generic.Dictionary`2",
@@ -347,10 +389,10 @@ namespace Generator
             "System.Collections.Generic.KeyValuePair"
         };
 
-        private readonly static string[] WIPInvalidTypes =
+        private readonly static string[] WIPNotValidTypes =
         {
-            "System.Linq.Enumerable`1",
-            "Enumerable`1",
+            "System.Linq.Enumerable",
+            "Enumerable",
             "System.Collections.ObjectModel.ReadOnlyDictionary`2",
             "ReadOnlyDictionary`2"
         };

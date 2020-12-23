@@ -68,152 +68,151 @@ namespace DiagnosticTests
                 yield return new TestCaseData(GenericInterface, WinRTRules.GenericTypeRule).SetName("Interface marked generic");
                 yield return new TestCaseData(ClassInheritsException, WinRTRules.NonWinRTInterface).SetName("Class inherits System.Exception");
                 
-                // Enumerable<T>
-                yield return new TestCaseData(InterfaceWithGenericEnumerableReturnType, WinRTRules.UnsupportedTypeRule).SetName("Enumerable<> method return type, interface");
-                yield return new TestCaseData(InterfaceWithGenericEnumerableInput, WinRTRules.UnsupportedTypeRule).SetName("Enumerable<> method parameter, interface");
-                yield return new TestCaseData(ClassWithGenericEnumerableReturnType, WinRTRules.UnsupportedTypeRule).SetName("Enumerable<> method return type, class");
-                yield return new TestCaseData(ClassWithGenericEnumerableInput, WinRTRules.UnsupportedTypeRule).SetName("Enumerable<> method parameter, class");
-                yield return new TestCaseData(IfaceWithGenEnumerableProp, WinRTRules.UnsupportedTypeRule).SetName("Enumerable<> property, interface");
-                yield return new TestCaseData(ClassWithGenEnumerableProp, WinRTRules.UnsupportedTypeRule).SetName("Enumerable<> property, class");
+                // Enumerable
+                yield return new TestCaseData(InterfaceWithGenericEnumerableReturnType, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. Enumerable method return type, interface");
+                yield return new TestCaseData(InterfaceWithGenericEnumerableInput, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. Enumerable method parameter, interface");
+                yield return new TestCaseData(ClassWithGenericEnumerableReturnType, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. Enumerable method return type, class");
+                yield return new TestCaseData(ClassWithGenericEnumerableInput, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. Enumerable method parameter, class");
+                yield return new TestCaseData(IfaceWithGenEnumerableProp, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. Enumerable property, interface");
+                yield return new TestCaseData(ClassWithGenEnumerableProp, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. Enumerable property, class");
                  
                 // KeyValuePair
-                yield return new TestCaseData(ClassWithGenericKVPairReturnType, WinRTRules.UnsupportedTypeRule).SetName("KeyValuePair<> method return type, class");
-                yield return new TestCaseData(ClassWithGenericKVPairInput, WinRTRules.UnsupportedTypeRule).SetName("KeyValuePair<> method parameter, class");
-                yield return new TestCaseData(ClassWithGenKVPairProp, WinRTRules.UnsupportedTypeRule).SetName("KeyValuePair<> property, class ");
-                yield return new TestCaseData(IfaceWithGenKVPairProp, WinRTRules.UnsupportedTypeRule).SetName("KeyValuePair<> property, interface ");
-                yield return new TestCaseData(InterfaceWithGenericKVPairReturnType, WinRTRules.UnsupportedTypeRule).SetName("KeyValuePair<> method return type, interface ");
-                yield return new TestCaseData(InterfaceWithGenericKVPairInput, WinRTRules.UnsupportedTypeRule).SetName("KeyValuePair<> method parameter, interface ");
+                yield return new TestCaseData(ClassWithGenericKVPairReturnType, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. KeyValuePair<> method return type, class");
+                yield return new TestCaseData(ClassWithGenericKVPairInput, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. KeyValuePair<> method parameter, class");
+                yield return new TestCaseData(ClassWithGenKVPairProp, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. KeyValuePair<> property, class ");
+                yield return new TestCaseData(IfaceWithGenKVPairProp, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. KeyValuePair<> property, interface ");
+                yield return new TestCaseData(InterfaceWithGenericKVPairReturnType, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. KeyValuePair<> method return type, interface ");
+                yield return new TestCaseData(InterfaceWithGenericKVPairInput, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. KeyValuePair<> method parameter, interface ");
 
                 // readonlydict<T,S>
-                yield return new TestCaseData(ClassWithGenericRODictReturnType, WinRTRules.UnsupportedTypeRule).SetName("ReadOnlyDictionary<> method return type, class");
-                yield return new TestCaseData(InterfaceWithGenericRODictReturnType, WinRTRules.UnsupportedTypeRule).SetName("ReadOnlyDictionary<> method return type, interface");
-                yield return new TestCaseData(InterfaceWithGenericRODictInput, WinRTRules.UnsupportedTypeRule).SetName("ReadOnlyDictionary<> method parameter, interface");
-                yield return new TestCaseData(ClassWithGenericRODictInput, WinRTRules.UnsupportedTypeRule).SetName("ReadOnlyDictionary<> method parameter, class");
-                yield return new TestCaseData(IfaceWithGenRODictProp, WinRTRules.UnsupportedTypeRule).SetName("ReadOnlyDictionary<> method property, interface");
-                yield return new TestCaseData(ClassWithGenRODictProp, WinRTRules.UnsupportedTypeRule).SetName("ReadOnlyDictionary<>  method property, class");
+                yield return new TestCaseData(ClassWithGenericRODictReturnType, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. ReadOnlyDictionary<> method return type, class");
+                yield return new TestCaseData(InterfaceWithGenericRODictReturnType, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. ReadOnlyDictionary<> method return type, interface");
+                yield return new TestCaseData(InterfaceWithGenericRODictInput, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. ReadOnlyDictionary<> method parameter, interface");
+                yield return new TestCaseData(ClassWithGenericRODictInput, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. ReadOnlyDictionary<> method parameter, class");
+                yield return new TestCaseData(IfaceWithGenRODictProp, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. ReadOnlyDictionary<> method property, interface");
+                yield return new TestCaseData(ClassWithGenRODictProp, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. ReadOnlyDictionary<>  method property, class");
                 
                 // dict<T,S>
-                yield return new TestCaseData(IfaceWithGenDictProp, WinRTRules.UnsupportedTypeRule).SetName("Dictionary<> property, interface ");
-                yield return new TestCaseData(ClassWithGenDictProp, WinRTRules.UnsupportedTypeRule).SetName("Dictionary<> property, class ");
-                yield return new TestCaseData(ClassWithGenericDictInput, WinRTRules.UnsupportedTypeRule).SetName("Dictionary<> method parameter, class");
-                yield return new TestCaseData(InterfaceWithGenericDictInput, WinRTRules.UnsupportedTypeRule).SetName("Dictionary<> method parameter, interface ");
-                yield return new TestCaseData(ClassWithGenericDictReturnType, WinRTRules.UnsupportedTypeRule).SetName("Dictionary<> method return type, class ");
-                yield return new TestCaseData(InterfaceWithGenericDictReturnType, WinRTRules.UnsupportedTypeRule).SetName("Dictionary<> method return type, interface ");
+                yield return new TestCaseData(IfaceWithGenDictProp, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. Dictionary<> property, interface ");
+                yield return new TestCaseData(ClassWithGenDictProp, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. Dictionary<> property, class ");
+                yield return new TestCaseData(ClassWithGenericDictInput, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. Dictionary<> method parameter, class");
+                yield return new TestCaseData(InterfaceWithGenericDictInput, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. Dictionary<> method parameter, interface ");
+                yield return new TestCaseData(ClassWithGenericDictReturnType, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. Dictionary<> method return type, class ");
+                yield return new TestCaseData(InterfaceWithGenericDictReturnType, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. Dictionary<> method return type, interface ");
                 
                 // list<T> 
-                yield return new TestCaseData(InterfaceWithGenericListReturnType, WinRTRules.UnsupportedTypeRule).SetName("List<> method return type, interface");
-                yield return new TestCaseData(ClassWithGenericListReturnType, WinRTRules.UnsupportedTypeRule).SetName("List<> method return type, class");
-                yield return new TestCaseData(InterfaceWithGenericListInput, WinRTRules.UnsupportedTypeRule).SetName("List<> method parameter, interface");
-                yield return new TestCaseData(ClassWithGenericListInput, WinRTRules.UnsupportedTypeRule).SetName("List<> method parameter, class");
-                yield return new TestCaseData(IfaceWithGenListProp, WinRTRules.UnsupportedTypeRule).SetName("List<> property, interface");
-                yield return new TestCaseData(ClassWithGenListProp, WinRTRules.UnsupportedTypeRule).SetName("List<> property, class");
+                yield return new TestCaseData(InterfaceWithGenericListReturnType, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. List<> method return type, interface");
+                yield return new TestCaseData(ClassWithGenericListReturnType, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. List<> method return type, class");
+                yield return new TestCaseData(InterfaceWithGenericListInput, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. List<> method parameter, interface");
+                yield return new TestCaseData(ClassWithGenericListInput, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. List<> method parameter, class");
+                yield return new TestCaseData(IfaceWithGenListProp, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. List<> property, interface");
+                yield return new TestCaseData(ClassWithGenListProp, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. List<> property, class");
                 
                 // multi-dimensional array tests
-                yield return new TestCaseData(MultiDim_2DProp, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,] 2D Property");
-                yield return new TestCaseData(MultiDim_3DProp, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] 3D Property");
-                yield return new TestCaseData(MultiDim_3DProp_Whitespace, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] 3D Property With whitespace");
-                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod1, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,] return type, class method signature");
-                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod2, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,] return and first input, class method signature");
-                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod3, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,] return and second input, class method signature");
-                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod4, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,] second input, class method signature");
-                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod5, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,] second of three inputs, class method signature");
-                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod6, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,] return and second of three inputs, class method signature");
-                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod1, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] return type, class method signature");
-                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod2, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] return and first input, class method signature");
-                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod3, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] return and second input, class method signature");
-                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod4, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] second input, class method signature");
-                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod5, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] second of three inputs, class method signature");
-                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod6, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] return and second of three inputs, class method signature");
-                yield return new TestCaseData(MultiDim_2D_Interface1, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,] return type, interface method signature");
-                yield return new TestCaseData(MultiDim_2D_Interface2, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,] return and first input, interface method signature");
-                yield return new TestCaseData(MultiDim_2D_Interface3, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,] return and second input, interface method signature");
-                yield return new TestCaseData(MultiDim_2D_Interface4, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,] second input, interface method signature");
-                yield return new TestCaseData(MultiDim_2D_Interface5, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,] second of three inputs, interface method signature");
-                yield return new TestCaseData(MultiDim_2D_Interface6, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,] return and second of three inputs, interface method signature");
-                yield return new TestCaseData(MultiDim_3D_Interface1, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] return type, interface method signature");
-                yield return new TestCaseData(MultiDim_3D_Interface2, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] return and first input, interface method signature");
-                yield return new TestCaseData(MultiDim_3D_Interface3, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] return and second input, interface method signature");
-                yield return new TestCaseData(MultiDim_3D_Interface4, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] second input, interface method signature");
-                yield return new TestCaseData(MultiDim_3D_Interface5, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] second of three inputs, interface method signature");
-                yield return new TestCaseData(MultiDim_3D_Interface6, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,] return and second of three inputs, interface method signature");
-                yield return new TestCaseData(SubNamespaceInterface_D2Method1, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace: Array [,] return type, interface method signature");
-                yield return new TestCaseData(SubNamespaceInterface_D2Method2, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace: Array [,] return and first input, interface method signature");
-                yield return new TestCaseData(SubNamespaceInterface_D2Method3, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace: Array [,] return and second input, interface method signature");
-                yield return new TestCaseData(SubNamespaceInterface_D2Method4, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace: Array [,] second input, interface method signature");
-                yield return new TestCaseData(SubNamespaceInterface_D2Method5, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace: Array [,] second of three inputs, interface method signature");
-                yield return new TestCaseData(SubNamespaceInterface_D2Method6, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace: Array [,] return and second of three inputs, interface method signature");
-                yield return new TestCaseData(SubNamespaceInterface_D3Method1, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace: Array [,,] return type, interface method signature");
-                yield return new TestCaseData(SubNamespaceInterface_D3Method2, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace: Array [,,] return and first input, interface method signature");
-                yield return new TestCaseData(SubNamespaceInterface_D3Method3, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace: Array [,,] return and second input, interface method signature");
-                yield return new TestCaseData(SubNamespaceInterface_D3Method4, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace: Array [,,] second input, interface method signature");
-                yield return new TestCaseData(SubNamespaceInterface_D3Method5, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace: Array [,,] second of three inputs, interface method signature");
-                yield return new TestCaseData(SubNamespaceInterface_D3Method6, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace: Array [,,] return and second of three inputs, interface method signature");
+                yield return new TestCaseData(MultiDim_2DProp, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,]. 2D Property");
+                yield return new TestCaseData(MultiDim_3DProp, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. 3D Property");
+                yield return new TestCaseData(MultiDim_3DProp_Whitespace, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. 3D Property With whitespace");
+                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod1, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,]. return type, class method signature");
+                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod2, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,]. return and first input, class method signature");
+                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod3, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,]. return and second input, class method signature");
+                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod4, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,]. second input, class method signature");
+                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod5, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,]. second of three inputs, class method signature");
+                yield return new TestCaseData(MultiDim_2D_PublicClassPublicMethod6, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,]. return and second of three inputs, class method signature");
+                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod1, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. return type, class method signature");
+                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod2, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. return and first input, class method signature");
+                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod3, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. return and second input, class method signature");
+                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod4, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. second input, class method signature");
+                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod5, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. second of three inputs, class method signature");
+                yield return new TestCaseData(MultiDim_3D_PublicClassPublicMethod6, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. return and second of three inputs, class method signature");
+                yield return new TestCaseData(MultiDim_2D_Interface1, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,]. return type, interface method signature");
+                yield return new TestCaseData(MultiDim_2D_Interface2, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,]. return and first input, interface method signature");
+                yield return new TestCaseData(MultiDim_2D_Interface3, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,]. return and second input, interface method signature");
+                yield return new TestCaseData(MultiDim_2D_Interface4, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,]. second input, interface method signature");
+                yield return new TestCaseData(MultiDim_2D_Interface5, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,]. second of three inputs, interface method signature");
+                yield return new TestCaseData(MultiDim_2D_Interface6, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,]. return and second of three inputs, interface method signature");
+                yield return new TestCaseData(MultiDim_3D_Interface1, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. return type, interface method signature");
+                yield return new TestCaseData(MultiDim_3D_Interface2, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. return and first input, interface method signature");
+                yield return new TestCaseData(MultiDim_3D_Interface3, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. return and second input, interface method signature");
+                yield return new TestCaseData(MultiDim_3D_Interface4, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. second input, interface method signature");
+                yield return new TestCaseData(MultiDim_3D_Interface5, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. second of three inputs, interface method signature");
+                yield return new TestCaseData(MultiDim_3D_Interface6, WinRTRules.MultiDimensionalArrayRule).SetName("Array [,,]. return and second of three inputs, interface method signature");
+                yield return new TestCaseData(SubNamespaceInterface_D2Method1, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace. Array [,] return type, interface method signature");
+                yield return new TestCaseData(SubNamespaceInterface_D2Method2, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace. Array [,] return and first input, interface method signature");
+                yield return new TestCaseData(SubNamespaceInterface_D2Method3, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace. Array [,] return and second input, interface method signature");
+                yield return new TestCaseData(SubNamespaceInterface_D2Method4, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace. Array [,] second input, interface method signature");
+                yield return new TestCaseData(SubNamespaceInterface_D2Method5, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace. Array [,] second of three inputs, interface method signature");
+                yield return new TestCaseData(SubNamespaceInterface_D2Method6, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace. Array [,] return and second of three inputs, interface method signature");
+                yield return new TestCaseData(SubNamespaceInterface_D3Method1, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace. Array [,,] return type, interface method signature");
+                yield return new TestCaseData(SubNamespaceInterface_D3Method2, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace. Array [,,] return and first input, interface method signature");
+                yield return new TestCaseData(SubNamespaceInterface_D3Method3, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace. Array [,,] return and second input, interface method signature");
+                yield return new TestCaseData(SubNamespaceInterface_D3Method4, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace. Array [,,] second input, interface method signature");
+                yield return new TestCaseData(SubNamespaceInterface_D3Method5, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace. Array [,,] second of three inputs, interface method signature");
+                yield return new TestCaseData(SubNamespaceInterface_D3Method6, WinRTRules.MultiDimensionalArrayRule) .SetName("Subnamespace. Array [,,] return and second of three inputs, interface method signature");
 
                 #region JaggedArray
                 // jagged array tests 
-                yield return new TestCaseData(Jagged2D_Property2, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Jagged 2D Array Property 2");
-                yield return new TestCaseData(Jagged3D_Property1, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Jagged 3D Array Property 1");
-                yield return new TestCaseData(Jagged2D_ClassMethod1, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][] return type, class method signature");
-                yield return new TestCaseData(Jagged2D_ClassMethod2, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][] return and first input, class method signature");
-                yield return new TestCaseData(Jagged2D_ClassMethod3, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][] return and second input, class method signature");
-                yield return new TestCaseData(Jagged2D_ClassMethod4, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][] second input, class method signature");
-                yield return new TestCaseData(Jagged2D_ClassMethod5, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][] second of three inputs, class method signature");
-                yield return new TestCaseData(Jagged2D_ClassMethod6, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][] return and second of three inputs, class method signature");
-                yield return new TestCaseData(Jagged3D_ClassMethod1, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][][] return type, class method signature");
-                yield return new TestCaseData(Jagged3D_ClassMethod2, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][][] return and first input, class method signature");
-                yield return new TestCaseData(Jagged3D_ClassMethod3, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][][] return and second input, class method signature");
-                yield return new TestCaseData(Jagged3D_ClassMethod4, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][][] second input, class method signature");
-                yield return new TestCaseData(Jagged3D_ClassMethod5, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][][] second of three inputs, class method signature");
-                yield return new TestCaseData(Jagged3D_ClassMethod6, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][][] return and second of three inputs, class method signature");
-                yield return new TestCaseData(Jagged2D_InterfaceMethod1, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][] return type, interface method signature");
-                yield return new TestCaseData(Jagged2D_InterfaceMethod2, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][] return and first input, interface method signature");
-                yield return new TestCaseData(Jagged2D_InterfaceMethod3, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][] return and second input, interface method signature");
-                yield return new TestCaseData(Jagged2D_InterfaceMethod4, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][] second input, interface method signature");
-                yield return new TestCaseData(Jagged2D_InterfaceMethod5, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][] second of three inputs, interface method signature");
-                yield return new TestCaseData(Jagged2D_InterfaceMethod6, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][] return and second of three inputs, interface method signature");
-                yield return new TestCaseData(Jagged3D_InterfaceMethod1, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][][] return type, interface method signature");
-                yield return new TestCaseData(Jagged3D_InterfaceMethod2, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][][] return and first input, interface method signature");
-                yield return new TestCaseData(Jagged3D_InterfaceMethod3, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][][] return and second input, interface method signature");
-                yield return new TestCaseData(Jagged3D_InterfaceMethod4, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][][] second input, interface method signature");
-                yield return new TestCaseData(Jagged3D_InterfaceMethod5, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][][] second of three inputs, interface method signature");
-                yield return new TestCaseData(Jagged3D_InterfaceMethod6, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Array [][][] return and second of three inputs, interface method signature");
-                yield return new TestCaseData(SubNamespace_Jagged2DInterface1, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Subnamespace: Array [][] return type, interface method signature");
-                yield return new TestCaseData(SubNamespace_Jagged2DInterface2, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Subnamespace: Array [][] return and first input, interface method signature");
-                yield return new TestCaseData(SubNamespace_Jagged2DInterface3, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Subnamespace: Array [][] return and second input, interface method signature");
-                yield return new TestCaseData(SubNamespace_Jagged2DInterface4, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Subnamespace: Array [][] second input, interface method signature");
-                yield return new TestCaseData(SubNamespace_Jagged2DInterface5, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Subnamespace: Array [][] second of three inputs, interface method signature");
-                yield return new TestCaseData(SubNamespace_Jagged2DInterface6, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Subnamespace: Array [][] return and second of three inputs, interface method signature");
-                yield return new TestCaseData(SubNamespace_Jagged3DInterface1, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Subnamespace: Array [][][] return type, interface method signature");
-                yield return new TestCaseData(SubNamespace_Jagged3DInterface2, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Subnamespace: Array [][][] return and first input, interface method signature");
-                yield return new TestCaseData(SubNamespace_Jagged3DInterface3, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Subnamespace: Array [][][] return and second input, interface method signature");
-                yield return new TestCaseData(SubNamespace_Jagged3DInterface4, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Subnamespace: Array [][][] second input, interface method signature");
-                yield return new TestCaseData(SubNamespace_Jagged3DInterface5, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Subnamespace: Array [][][] second of three inputs, interface method signature");
-                yield return new TestCaseData(SubNamespace_Jagged3DInterface6, WinRTRules.ArraySignature_JaggedArrayRule).SetName("Subnamespace: Array [][][] return and second of three inputs, interface method signature");
+                yield return new TestCaseData(Jagged2D_Property2, WinRTRules.JaggedArrayRule).SetName("Array [][]. Property 2");
+                yield return new TestCaseData(Jagged3D_Property1, WinRTRules.JaggedArrayRule).SetName("Array [][][]. Property 1");
+                yield return new TestCaseData(Jagged2D_ClassMethod1, WinRTRules.JaggedArrayRule).SetName("Array [][]. return type, class method signature");
+                yield return new TestCaseData(Jagged2D_ClassMethod2, WinRTRules.JaggedArrayRule).SetName("Array [][]. return and first input, class method signature");
+                yield return new TestCaseData(Jagged2D_ClassMethod3, WinRTRules.JaggedArrayRule).SetName("Array [][]. return and second input, class method signature");
+                yield return new TestCaseData(Jagged2D_ClassMethod4, WinRTRules.JaggedArrayRule).SetName("Array [][]. second input, class method signature");
+                yield return new TestCaseData(Jagged2D_ClassMethod5, WinRTRules.JaggedArrayRule).SetName("Array [][]. second of three inputs, class method signature");
+                yield return new TestCaseData(Jagged2D_ClassMethod6, WinRTRules.JaggedArrayRule).SetName("Array [][]. return and second of three inputs, class method signature");
+                yield return new TestCaseData(Jagged3D_ClassMethod1, WinRTRules.JaggedArrayRule).SetName("Array [][][]. return type, class method signature");
+                yield return new TestCaseData(Jagged3D_ClassMethod2, WinRTRules.JaggedArrayRule).SetName("Array [][][]. return and first input, class method signature");
+                yield return new TestCaseData(Jagged3D_ClassMethod3, WinRTRules.JaggedArrayRule).SetName("Array [][][]. return and second input, class method signature");
+                yield return new TestCaseData(Jagged3D_ClassMethod4, WinRTRules.JaggedArrayRule).SetName("Array [][][]. second input, class method signature");
+                yield return new TestCaseData(Jagged3D_ClassMethod5, WinRTRules.JaggedArrayRule).SetName("Array [][][]. second of three inputs, class method signature");
+                yield return new TestCaseData(Jagged3D_ClassMethod6, WinRTRules.JaggedArrayRule).SetName("Array [][][]. return and second of three inputs, class method signature");
+                yield return new TestCaseData(Jagged2D_InterfaceMethod1, WinRTRules.JaggedArrayRule).SetName("Array [][]. return type, interface method signature");
+                yield return new TestCaseData(Jagged2D_InterfaceMethod2, WinRTRules.JaggedArrayRule).SetName("Array [][]. return and first input, interface method signature");
+                yield return new TestCaseData(Jagged2D_InterfaceMethod3, WinRTRules.JaggedArrayRule).SetName("Array [][]. return and second input, interface method signature");
+                yield return new TestCaseData(Jagged2D_InterfaceMethod4, WinRTRules.JaggedArrayRule).SetName("Array [][]. second input, interface method signature");
+                yield return new TestCaseData(Jagged2D_InterfaceMethod5, WinRTRules.JaggedArrayRule).SetName("Array [][]. second of three inputs, interface method signature");
+                yield return new TestCaseData(Jagged2D_InterfaceMethod6, WinRTRules.JaggedArrayRule).SetName("Array [][]. return and second of three inputs, interface method signature");
+                yield return new TestCaseData(Jagged3D_InterfaceMethod1, WinRTRules.JaggedArrayRule).SetName("Array [][][]. return type, interface method signature");
+                yield return new TestCaseData(Jagged3D_InterfaceMethod2, WinRTRules.JaggedArrayRule).SetName("Array [][][]. return and first input, interface method signature");
+                yield return new TestCaseData(Jagged3D_InterfaceMethod3, WinRTRules.JaggedArrayRule).SetName("Array [][][]. return and second input, interface method signature");
+                yield return new TestCaseData(Jagged3D_InterfaceMethod4, WinRTRules.JaggedArrayRule).SetName("Array [][][]. second input, interface method signature");
+                yield return new TestCaseData(Jagged3D_InterfaceMethod5, WinRTRules.JaggedArrayRule).SetName("Array [][][]. second of three inputs, interface method signature");
+                yield return new TestCaseData(Jagged3D_InterfaceMethod6, WinRTRules.JaggedArrayRule).SetName("Array [][][]. return and second of three inputs, interface method signature");
+                yield return new TestCaseData(SubNamespace_Jagged2DInterface1, WinRTRules.JaggedArrayRule).SetName("Subnamespace. Array [][]. return type, interface method signature");
+                yield return new TestCaseData(SubNamespace_Jagged2DInterface2, WinRTRules.JaggedArrayRule).SetName("Subnamespace. Array [][]. return and first input, interface method signature");
+                yield return new TestCaseData(SubNamespace_Jagged2DInterface3, WinRTRules.JaggedArrayRule).SetName("Subnamespace. Array [][]. return and second input, interface method signature");
+                yield return new TestCaseData(SubNamespace_Jagged2DInterface4, WinRTRules.JaggedArrayRule).SetName("Subnamespace. Array [][]. second input, interface method signature");
+                yield return new TestCaseData(SubNamespace_Jagged2DInterface5, WinRTRules.JaggedArrayRule).SetName("Subnamespace. Array [][]. second of three inputs, interface method signature");
+                yield return new TestCaseData(SubNamespace_Jagged2DInterface6, WinRTRules.JaggedArrayRule).SetName("Subnamespace. Array [][]. return and second of three inputs, interface method signature");
+                yield return new TestCaseData(SubNamespace_Jagged3DInterface1, WinRTRules.JaggedArrayRule).SetName("Subnamespace. Array [][][]. return type, interface method signature");
+                yield return new TestCaseData(SubNamespace_Jagged3DInterface2, WinRTRules.JaggedArrayRule).SetName("Subnamespace. Array [][][]. return and first input, interface method signature");
+                yield return new TestCaseData(SubNamespace_Jagged3DInterface3, WinRTRules.JaggedArrayRule).SetName("Subnamespace. Array [][][]. return and second input, interface method signature");
+                yield return new TestCaseData(SubNamespace_Jagged3DInterface4, WinRTRules.JaggedArrayRule).SetName("Subnamespace. Array [][][]. second input, interface method signature");
+                yield return new TestCaseData(SubNamespace_Jagged3DInterface5, WinRTRules.JaggedArrayRule).SetName("Subnamespace. Array [][][]. second of three inputs, interface method signature");
+                yield return new TestCaseData(SubNamespace_Jagged3DInterface6, WinRTRules.JaggedArrayRule).SetName("Subnamespace. Array [][][]. return and second of three inputs, interface method signature");
                 #endregion
 
                 #region overload_attribute_tests
-                yield return new TestCaseData(InterfaceWithOverloadNoAttribute, WinRTRules.NeedDefaultOverloadAttribute).SetName("Need DefaultOverload - Interface");
-                yield return new TestCaseData(InterfaceWithOverloadAttributeTwice, WinRTRules.MultipleDefaultOverloadAttribute).SetName("Interface has too many default overload attribute");
-                yield return new TestCaseData(TwoOverloads_NoAttribute_NamesHaveNumber, WinRTRules.NeedDefaultOverloadAttribute) .SetName("Need DefaultOverload Attribute - Name has number");
-                yield return new TestCaseData(TwoOverloads_NoAttribute, WinRTRules.NeedDefaultOverloadAttribute) .SetName("Need DefaultOverload Attribute"); 
-                yield return new TestCaseData(TwoOverloads_TwoAttribute_OneInList_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes, after attribute - unqualified");
-                yield return new TestCaseData(TwoOverloads_TwoAttribute_BothInList_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes - Unqualified");
-                yield return new TestCaseData(TwoOverloads_TwoAttribute_TwoLists_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes, two lists - unqualified");
-                yield return new TestCaseData(TwoOverloads_TwoAttribute_OneInSeparateList_OneNot_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes, one in separate list, one not - Unqualified");
-                yield return new TestCaseData(TwoOverloads_TwoAttribute_BothInSeparateList_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes, both in separate list - unqualified");
-                yield return new TestCaseData(TwoOverloads_TwoAttribute_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes - unqualified");
-                yield return new TestCaseData(ThreeOverloads_TwoAttributes_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes, three overlodas - unqualified");
+                yield return new TestCaseData(InterfaceWithOverloadNoAttribute, WinRTRules.NeedDefaultOverloadAttribute).SetName("DefaultOverload. Need attribute - Interface");
+                yield return new TestCaseData(InterfaceWithOverloadAttributeTwice, WinRTRules.MultipleDefaultOverloadAttribute).SetName("DefaultOverload. Interface has too many attributes");
+                yield return new TestCaseData(TwoOverloads_NoAttribute_NamesHaveNumber, WinRTRules.NeedDefaultOverloadAttribute) .SetName("DefaultOverload. Need attribute  - Name has number");
+                yield return new TestCaseData(TwoOverloads_NoAttribute, WinRTRules.NeedDefaultOverloadAttribute) .SetName("DefaultOverload. Need Attribute, unqualified"); 
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_OneInList_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes, after attribute - unqualified");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_BothInList_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes - Unqualified");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_TwoLists_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes, two lists - unqualified");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_OneInSeparateList_OneNot_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes, one in separate list, one not - Unqualified");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_BothInSeparateList_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes, both in separate list - unqualified");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes - unqualified");
+                yield return new TestCaseData(ThreeOverloads_TwoAttributes_Unqualified, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes, three overlodas - unqualified");
 
-                yield return new TestCaseData(TwoOverloads_NoAttribute_NamesHaveNumber, WinRTRules.NeedDefaultOverloadAttribute) .SetName("Need DefaultOverload Attribute - Name has number");
-                yield return new TestCaseData(TwoOverloads_NoAttribute, WinRTRules.NeedDefaultOverloadAttribute) .SetName("Need DefaultOverload Attribute");
-                yield return new TestCaseData(TwoOverloads_NoAttribute_OneIrrevAttr, WinRTRules.NeedDefaultOverloadAttribute) .SetName("Need DefaultOverload, uses irrelevant attribute");
-                yield return new TestCaseData(TwoOverloads_TwoAttribute_OneInList, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes, after attribute");
-                yield return new TestCaseData(TwoOverloads_TwoAttribute_BothInList, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes, same list");
-                yield return new TestCaseData(TwoOverloads_TwoAttribute_TwoLists, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes, two lists");
-                yield return new TestCaseData(TwoOverloads_TwoAttribute_OneInSeparateList_OneNot, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes, one in separate list, one not");
-                yield return new TestCaseData(TwoOverloads_TwoAttribute_BothInSeparateList, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes, both in separate list");
-                yield return new TestCaseData(TwoOverloads_TwoAttribute, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes");
-                yield return new TestCaseData(ThreeOverloads_TwoAttributes, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("Multiple DefaultOverload attributes, three overlodas");
+                yield return new TestCaseData(TwoOverloads_NoAttribute_NamesHaveNumber, WinRTRules.NeedDefaultOverloadAttribute) .SetName("DefaultOverload. Need Attribute - Name has number");
+                yield return new TestCaseData(TwoOverloads_NoAttribute_OneIrrevAttr, WinRTRules.NeedDefaultOverloadAttribute) .SetName("DefaultOverload. Need attribute uses irrelevant attribute");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_OneInList, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes, after attribute");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_BothInList, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes, same list");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_TwoLists, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes, two lists");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_OneInSeparateList_OneNot, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes, one in separate list, one not");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute_BothInSeparateList, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes, both in separate list");
+                yield return new TestCaseData(TwoOverloads_TwoAttribute, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes");
+                yield return new TestCaseData(ThreeOverloads_TwoAttributes, WinRTRules.MultipleDefaultOverloadAttribute) .SetName("DefaultOverload. Multiple attributes, three overlodas");
 
                 #endregion
 
@@ -222,6 +221,7 @@ namespace DiagnosticTests
 
                 #region InvalidInterfaceInheritance
                 // implementing async interface
+                yield return new TestCaseData(ClassImplementsAsyncAndException, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Class implements Exception and IAsyncActionWithProgress");
                 yield return new TestCaseData(ClassImplementsIAsyncActionWithProgress, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Class implements IAsyncActionWithProgress");
                 yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Interface Implements IAsyncActionWithProgress");
                 yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress2, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Interface Implements IAsyncActionWithProgress in full");
@@ -293,20 +293,20 @@ namespace DiagnosticTests
                 yield return new TestCaseData(RefParam_InterfaceMethod, WinRTRules.RefParameterFound).SetName("Misc. Interface Method With Ref Param");
 
                 #region struct_field_tests
-                yield return new TestCaseData(EmptyStruct, WinRTRules.StructWithNoFieldsRule).SetName("Empty struct");
-                yield return new TestCaseData(StructWithInterfaceField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Interface field");
-                yield return new TestCaseData(StructWithClassField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Class Field");
-                yield return new TestCaseData(StructWithClassField2, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Class Field2");
-                yield return new TestCaseData(StructWithDelegateField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Delegate Field");
-                yield return new TestCaseData(StructWithIndexer, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Indexer Field");
-                yield return new TestCaseData(StructWithMethods, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Method Field");
-                yield return new TestCaseData(StructWithConst, WinRTRules.StructHasConstFieldRule).SetName("Struct with Const Field");
-                yield return new TestCaseData(StructWithProperty, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Property Field");
-                yield return new TestCaseData(StructWithPrivateField, WinRTRules.StructHasPrivateFieldRule).SetName("Struct with Private Field");
-                yield return new TestCaseData(StructWithObjectField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Object Field");
-                yield return new TestCaseData(StructWithDynamicField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Dynamic Field");
-                yield return new TestCaseData(StructWithConstructor, WinRTRules.StructHasInvalidFieldRule).SetName("Struct with Constructor Field");
-                yield return new TestCaseData(StructWithPrimitiveTypesMissingPublicKeyword, WinRTRules.StructHasPrivateFieldRule).SetName("Struct with missing public field");
+                yield return new TestCaseData(EmptyStruct, WinRTRules.StructWithNoFieldsRule).SetName("Struct. Empty struct");
+                yield return new TestCaseData(StructWithInterfaceField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct. with Interface field");
+                yield return new TestCaseData(StructWithClassField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct. with Class Field");
+                yield return new TestCaseData(StructWithClassField2, WinRTRules.StructHasInvalidFieldRule).SetName("Struct. with Class Field2");
+                yield return new TestCaseData(StructWithDelegateField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct. with Delegate Field");
+                yield return new TestCaseData(StructWithIndexer, WinRTRules.StructHasInvalidFieldRule).SetName("Struct. with Indexer Field");
+                yield return new TestCaseData(StructWithMethods, WinRTRules.StructHasInvalidFieldRule).SetName("Struct. with Method Field");
+                yield return new TestCaseData(StructWithConst, WinRTRules.StructHasConstFieldRule).SetName("Struct. with Const Field");
+                yield return new TestCaseData(StructWithProperty, WinRTRules.StructHasInvalidFieldRule).SetName("Struct. with Property Field");
+                yield return new TestCaseData(StructWithPrivateField, WinRTRules.StructHasPrivateFieldRule).SetName("Struct. with Private Field");
+                yield return new TestCaseData(StructWithObjectField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct. with Object Field");
+                yield return new TestCaseData(StructWithDynamicField, WinRTRules.StructHasInvalidFieldRule).SetName("Struct. with Dynamic Field");
+                yield return new TestCaseData(StructWithConstructor, WinRTRules.StructHasInvalidFieldRule).SetName("Struct. with Constructor Field");
+                yield return new TestCaseData(StructWithPrimitiveTypesMissingPublicKeyword, WinRTRules.StructHasPrivateFieldRule).SetName("Struct. with missing public field");
                 #endregion
 
                 #region InvalidType
@@ -345,61 +345,59 @@ namespace DiagnosticTests
         {
             get
             {
-                yield return new TestCaseData(Valid_NestedNamespace).SetName("Valid Nested namespaces are fine");
-                yield return new TestCaseData(Valid_NestedNamespace2).SetName("Valid Twice nested namespaces are fine");
-                yield return new TestCaseData(Valid_NestedNamespace3).SetName("Valid Test[dot]Component with an inner component");
-                yield return new TestCaseData(Valid_NestedNamespace4).SetName("Valid Test with an inner component");
-                yield return new TestCaseData(Valid_NamespacesDiffer).SetName("Valid Similar namespace but different name (not just case)");
-                yield return new TestCaseData(Valid_NamespaceAndPrefixedNamespace).SetName("Valid Two top-level namespaces, one prefixed with the other");
+                yield return new TestCaseData(Valid_NestedNamespace).SetName("Valid. Nested namespaces are fine");
+                yield return new TestCaseData(Valid_NestedNamespace2).SetName("Valid. Twice nested namespaces are fine");
+                yield return new TestCaseData(Valid_NestedNamespace3).SetName("Valid. namespace Test.Component with an inner namespace InnerComponent");
+                yield return new TestCaseData(Valid_NamespacesDiffer).SetName("Valid. Similar namespace but different name (not just case)");
+                yield return new TestCaseData(Valid_NamespaceAndPrefixedNamespace).SetName("Valid. Two top-level namespaces, one prefixed with the other");
                 
-
                 #region InvalidTypes_Signatures
-                yield return new TestCaseData(Valid_ListUsage).SetName("Valid Internally uses List<>");
-                yield return new TestCaseData(Valid_ListUsage2).SetName("Valid Internally uses List<> (qualified)"); 
-                yield return new TestCaseData(Valid_ClassWithGenericDictReturnType_Private).SetName("Valid Dictionary<> Private Method - ReturnType");
-                yield return new TestCaseData(Valid_ClassWithGenericDictInput_Private).SetName("Valid Dictionary<> Private Method - parameter");
-                yield return new TestCaseData(Valid_ClassWithPrivateGenDictProp).SetName("Valid Dictionary<> Private Property Class");
-                yield return new TestCaseData(Valid_IfaceWithPrivateGenDictProp).SetName("Valid Dictionary<> Private Property Interface");
+                yield return new TestCaseData(Valid_ListUsage).SetName("Valid. Internally uses List<>");
+                yield return new TestCaseData(Valid_ListUsage2).SetName("Valid. Internally uses List<> (qualified)"); 
+                yield return new TestCaseData(Valid_ClassWithGenericDictReturnType_Private).SetName("Valid. Dictionary<> Private Method - ReturnType");
+                yield return new TestCaseData(Valid_ClassWithGenericDictInput_Private).SetName("Valid. Dictionary<> Private Method - parameter");
+                yield return new TestCaseData(Valid_ClassWithPrivateGenDictProp).SetName("Valid. Dictionary<> Private Property Class");
+                yield return new TestCaseData(Valid_IfaceWithPrivateGenDictProp).SetName("Valid. Dictionary<> Private Property Interface");
 
-                yield return new TestCaseData(Valid_ClassWithGenericRODictInput_Private).SetName("Valid ReadOnlyDictionary<> Private Method ReturnType");
-                yield return new TestCaseData(Valid_ClassWithGenericRODictReturnType_Private).SetName("Valid ReadOnlyDictionary<> Private Method parameter");
-                yield return new TestCaseData(Valid_ClassWithPrivateGenRODictProp).SetName("Valid ReadOnlyDictionary<> Private Property Class");
-                yield return new TestCaseData(Valid_IfaceWithPrivateGenRODictProp).SetName("Valid ReadOnlyDictionary<> Private Property Interface");
+                yield return new TestCaseData(Valid_ClassWithGenericRODictInput_Private).SetName("Valid. ReadOnlyDictionary<> Private Method ReturnType");
+                yield return new TestCaseData(Valid_ClassWithGenericRODictReturnType_Private).SetName("Valid. ReadOnlyDictionary<> Private Method parameter");
+                yield return new TestCaseData(Valid_ClassWithPrivateGenRODictProp).SetName("Valid. ReadOnlyDictionary<> Private Property Class");
+                yield return new TestCaseData(Valid_IfaceWithPrivateGenRODictProp).SetName("Valid. ReadOnlyDictionary<> Private Property Interface");
 
-                yield return new TestCaseData(Valid_InterfaceWithGenericKVPairReturnType).SetName("Valid KeyValuePair<> as return type of signature in interface");
-                yield return new TestCaseData(Valid_InterfaceWithGenericKVPairInput).SetName("Valid KeyValuePair<> interface with Generic KeyValuePair parameter");
-                yield return new TestCaseData(Valid_ClassWithGenericKVPairReturnType).SetName("Valid KeyValuePair<> class with Generic KeyValuePair return type");
-                yield return new TestCaseData(Valid_ClassWithGenericKVPairInput).SetName("Valid KeyValuePair<> class with Generic KeyValuePair parameter");
-                yield return new TestCaseData(Valid_IfaceWithGenKVPairProp).SetName("Valid KeyValuePair<> interface with Generic KeyValuePair property");
-                yield return new TestCaseData(Valid_ClassWithGenKVPairProp).SetName("Valid KeyValuePair<> class with Generic KeyValuePair return property");
+                yield return new TestCaseData(Valid_InterfaceWithGenericKVPairReturnType).SetName("Valid. KeyValuePair<> as return type of signature in interface");
+                yield return new TestCaseData(Valid_InterfaceWithGenericKVPairInput).SetName("Valid. KeyValuePair<> interface with Generic KeyValuePair parameter");
+                yield return new TestCaseData(Valid_ClassWithGenericKVPairReturnType).SetName("Valid. KeyValuePair<> class with Generic KeyValuePair return type");
+                yield return new TestCaseData(Valid_ClassWithGenericKVPairInput).SetName("Valid. KeyValuePair<> class with Generic KeyValuePair parameter");
+                yield return new TestCaseData(Valid_IfaceWithGenKVPairProp).SetName("Valid. KeyValuePair<> interface with Generic KeyValuePair property");
+                yield return new TestCaseData(Valid_ClassWithGenKVPairProp).SetName("Valid. KeyValuePair<> class with Generic KeyValuePair return property");
 
-                yield return new TestCaseData(Valid_ClassWithGenericKVPairInput_Private).SetName("Valid KeyValuePair<> as parameter to private method");
-                yield return new TestCaseData(Valid_ClassWithGenericKVPairReturnType_Private).SetName("Valid KeyValuePair<> as return type of private method");
-                yield return new TestCaseData(Valid_ClassWithPrivateGenKVPairProp).SetName("Valid KeyValuePair<> as private prop to class");
-                yield return new TestCaseData(Valid_IfaceWithPrivateGenKVPairProp).SetName("Valid KeyValuePair<> as private prop to interface");
+                yield return new TestCaseData(Valid_ClassWithGenericKVPairInput_Private).SetName("Valid. KeyValuePair<> as parameter to private method");
+                yield return new TestCaseData(Valid_ClassWithGenericKVPairReturnType_Private).SetName("Valid. KeyValuePair<> as return type of private method");
+                yield return new TestCaseData(Valid_ClassWithPrivateGenKVPairProp).SetName("Valid. KeyValuePair<> as private prop to class");
+                yield return new TestCaseData(Valid_IfaceWithPrivateGenKVPairProp).SetName("Valid. KeyValuePair<> as private prop to interface");
 
-                yield return new TestCaseData(Valid_ClassWithGenericEnumerableInput_Private).SetName("Valid Enumerable<> as parameter to private method");
-                yield return new TestCaseData(Valid_ClassWithGenericEnumerableReturnType_Private).SetName("Valid Enumerable<> as return type of private method");
-                yield return new TestCaseData(Valid_ClassWithPrivateGenEnumerableProp).SetName("Valid Enumerable<> as private prop to class");
-                yield return new TestCaseData(Valid_IfaceWithPrivateGenEnumerableProp).SetName("Valid Enumerable<> as private prop to interface");
+                yield return new TestCaseData(Valid_ClassWithGenericEnumerableInput_Private).SetName("Valid. Enumerable as parameter to private method");
+                yield return new TestCaseData(Valid_ClassWithGenericEnumerableReturnType_Private).SetName("Valid. Enumerable as return type of private method");
+                yield return new TestCaseData(Valid_ClassWithPrivateGenEnumerableProp).SetName("Valid. Enumerable as private prop to class");
+                yield return new TestCaseData(Valid_IfaceWithPrivateGenEnumerableProp).SetName("Valid. Enumerable as private prop to interface");
 
-                yield return new TestCaseData(Valid_ClassWithGenericListInput_Private).SetName("Valid List<> as parameter to private method");
-                yield return new TestCaseData(Valid_ClassWithGenericListReturnType_Private).SetName("Valid List<> as return type of private method");
-                yield return new TestCaseData(Valid_ClassWithPrivateGenListProp).SetName("Valid List<> as private prop to class");
-                yield return new TestCaseData(Valid_IfaceWithPrivateGenListProp).SetName("Valid List<> as private prop to interface");
+                yield return new TestCaseData(Valid_ClassWithGenericListInput_Private).SetName("Valid. List<> as parameter to private method");
+                yield return new TestCaseData(Valid_ClassWithGenericListReturnType_Private).SetName("Valid. List<> as return type of private method");
+                yield return new TestCaseData(Valid_ClassWithPrivateGenListProp).SetName("Valid. List<> as private prop to class");
+                yield return new TestCaseData(Valid_IfaceWithPrivateGenListProp).SetName("Valid. List<> as private prop to interface");
 
                 #endregion
 
                 #region ArrayAccessAttribute 
                 // ReadOnlyArray / WriteOnlyArray Attribute
-                yield return new TestCaseData(Valid_ArrayParamAttrUnary_1).SetName("Valid ArrayAttribute, Array marked read only");
-                yield return new TestCaseData(Valid_ArrayParamAttrUnary_2).SetName("Valid ArrayAttribute, Array marked write only");
-                yield return new TestCaseData(Valid_ArrayParamAttrUnary_3).SetName("Valid ArrayAttribute, Array marked out and write only");
-                yield return new TestCaseData(Valid_ArrayParamAttrUnary_4).SetName("Valid ArrayAttribute, Array marked out");
-                yield return new TestCaseData(Valid_ArrayParamAttrBinary_1).SetName("Valid ArrayAttribute, Array marked read only, second parameter");
-                yield return new TestCaseData(Valid_ArrayParamAttrBinary_2).SetName("Valid ArrayAttribute, Array marked write only, second parameter");
-                yield return new TestCaseData(Valid_ArrayParamAttrBinary_3).SetName("Valid ArrayAttribute, Array marked write only and out, second parameter");
-                yield return new TestCaseData(Valid_ArrayParamAttrBinary_4).SetName("Valid ArrayAttribute, Array marked out, second parameter");
+                yield return new TestCaseData(Valid_ArrayParamAttrUnary_1).SetName("Valid. ArrayAttribute, Array marked read only");
+                yield return new TestCaseData(Valid_ArrayParamAttrUnary_2).SetName("Valid. ArrayAttribute, Array marked write only");
+                yield return new TestCaseData(Valid_ArrayParamAttrUnary_3).SetName("Valid. ArrayAttribute, Array marked out and write only");
+                yield return new TestCaseData(Valid_ArrayParamAttrUnary_4).SetName("Valid. ArrayAttribute, Array marked out");
+                yield return new TestCaseData(Valid_ArrayParamAttrBinary_1).SetName("Valid. ArrayAttribute, Array marked read only, second parameter");
+                yield return new TestCaseData(Valid_ArrayParamAttrBinary_2).SetName("Valid. ArrayAttribute, Array marked write only, second parameter");
+                yield return new TestCaseData(Valid_ArrayParamAttrBinary_3).SetName("Valid. ArrayAttribute, Array marked write only and out, second parameter");
+                yield return new TestCaseData(Valid_ArrayParamAttrBinary_4).SetName("Valid. ArrayAttribute, Array marked out, second parameter");
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_5).SetName("Valid. ArrayAttribute, Two arrays, both marked read");
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_6).SetName("Valid. ArrayAttribute, Two arrays, one marked read, one marked write");
                 yield return new TestCaseData(Valid_ArrayParamAttrBinary_7).SetName("Valid. ArrayAttribute, Two arrays, one marked read, one marked write and out");
@@ -417,89 +415,89 @@ namespace DiagnosticTests
                 #region InvalidArrayTypes_Signatures
 
                 // SystemArray  
-                yield return new TestCaseData(Valid_SystemArrayProperty).SetName("Valid SystemArray private property");
-                yield return new TestCaseData(Valid_SystemArray_Interface1).SetName("Valid System Array internal interface 1");
-                yield return new TestCaseData(Valid_SystemArray_Interface2).SetName("Valid System Array internal interface 2");
-                yield return new TestCaseData(Valid_SystemArray_Interface3).SetName("Valid System Array internal interface 3");
-                yield return new TestCaseData(Valid_SystemArray_InternalClass1).SetName("Valid System Array internal class 1");
-                yield return new TestCaseData(Valid_SystemArray_InternalClass2).SetName("Valid System Array internal class 2");
-                yield return new TestCaseData(Valid_SystemArray_InternalClass3).SetName("Valid System Array internal class 3");
-                yield return new TestCaseData(Valid_SystemArray_InternalClass4).SetName("Valid System Array internal class 4");
-                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty1).SetName("Valid System Array public class / private property 1");
-                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty2).SetName("Valid System Array public class / private property 2");
-                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty3).SetName("Valid System Array public class / private property 3");
-                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty4).SetName("Valid System Array public class / private property 4");
-                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty5).SetName("Valid System Array public class / private property 5");
-                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty6).SetName("Valid System Array public class / private property 6");
-                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods1).SetName("Valid System Array internal class / public method 1");
-                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods2).SetName("Valid System Array internal class / public method 2");
-                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods3).SetName("Valid System Array internal class / public method 3");
-                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods4).SetName("Valid System Array internal class / public method 4");
-                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods5).SetName("Valid System Array internal class / public method 5");
-                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods6).SetName("Valid System Array internal class / public method 6");
-                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty1).SetName("Valid System Array internal class / public property 1");
-                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty2).SetName("Valid System Array internal class / public property 2");
-                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty3).SetName("Valid System Array internal class / public property 3");
-                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty4).SetName("Valid System Array internal class / public property 4");
-                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty5).SetName("Valid System Array internal class / public property 5");
-                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty6).SetName("Valid System Array internal class / public property 6");
-                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty7).SetName("Valid System Array internal class / public property 7");
-                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty8).SetName("Valid System Array internal class / public property 8");
-                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod1).SetName("Valid System Array public class / private method 1");
-                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod2).SetName("Valid System Array public class / private method 2");
-                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod3).SetName("Valid System Array public class / private method 3");
-                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod4).SetName("Valid System Array public class / private method 4");
-                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod5).SetName("Valid System Array public class / private method 5");
-                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod6).SetName("Valid System Array public class / private method 6");
+                yield return new TestCaseData(Valid_SystemArrayProperty).SetName("Valid. SystemArray private property");
+                yield return new TestCaseData(Valid_SystemArray_Interface1).SetName("Valid. System Array internal interface 1");
+                yield return new TestCaseData(Valid_SystemArray_Interface2).SetName("Valid. System Array internal interface 2");
+                yield return new TestCaseData(Valid_SystemArray_Interface3).SetName("Valid. System Array internal interface 3");
+                yield return new TestCaseData(Valid_SystemArray_InternalClass1).SetName("Valid. System Array internal class 1");
+                yield return new TestCaseData(Valid_SystemArray_InternalClass2).SetName("Valid. System Array internal class 2");
+                yield return new TestCaseData(Valid_SystemArray_InternalClass3).SetName("Valid. System Array internal class 3");
+                yield return new TestCaseData(Valid_SystemArray_InternalClass4).SetName("Valid. System Array internal class 4");
+                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty1).SetName("Valid. System Array public class / private property 1");
+                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty2).SetName("Valid. System Array public class / private property 2");
+                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty3).SetName("Valid. System Array public class / private property 3");
+                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty4).SetName("Valid. System Array public class / private property 4");
+                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty5).SetName("Valid. System Array public class / private property 5");
+                yield return new TestCaseData(Valid_SystemArray_PublicClassPrivateProperty6).SetName("Valid. System Array public class / private property 6");
+                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods1).SetName("Valid. System Array internal class / public method 1");
+                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods2).SetName("Valid. System Array internal class / public method 2");
+                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods3).SetName("Valid. System Array internal class / public method 3");
+                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods4).SetName("Valid. System Array internal class / public method 4");
+                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods5).SetName("Valid. System Array internal class / public method 5");
+                yield return new TestCaseData(Valid_SystemArray_InternalClassPublicMethods6).SetName("Valid. System Array internal class / public method 6");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty1).SetName("Valid. System Array internal class / public property 1");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty2).SetName("Valid. System Array internal class / public property 2");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty3).SetName("Valid. System Array internal class / public property 3");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty4).SetName("Valid. System Array internal class / public property 4");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty5).SetName("Valid. System Array internal class / public property 5");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty6).SetName("Valid. System Array internal class / public property 6");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty7).SetName("Valid. System Array internal class / public property 7");
+                yield return new TestCaseData(Valid_SystemArray_PrivateClassPublicProperty8).SetName("Valid. System Array internal class / public property 8");
+                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod1).SetName("Valid. System Array public class / private method 1");
+                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod2).SetName("Valid. System Array public class / private method 2");
+                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod3).SetName("Valid. System Array public class / private method 3");
+                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod4).SetName("Valid. System Array public class / private method 4");
+                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod5).SetName("Valid. System Array public class / private method 5");
+                yield return new TestCaseData(Valid_SystemArrayPublicClassPrivateMethod6).SetName("Valid. System Array public class / private method 6");
                 // multi dim array tests 
-                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod1).SetName("Valid array [,] public class / private method 1");
-                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod2).SetName("Valid array [,] public class / private method 2");
-                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod3).SetName("Valid array [,] public class / private method 3");
-                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod4).SetName("Valid array [,] public class / private method 4");
-                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod5).SetName("Valid array [,,] public class / private method 5");
-                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod6).SetName("Valid array [,,] public class / private method 6");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod1).SetName("Valid. array [,] public class / private method 1");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod2).SetName("Valid. array [,] public class / private method 2");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod3).SetName("Valid. array [,] public class / private method 3");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod4).SetName("Valid. array [,] public class / private method 4");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod5).SetName("Valid. array [,,] public class / private method 5");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateMethod6).SetName("Valid. array [,,] public class / private method 6");
                 
-                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod1).SetName("Valid MultiDim 3D private class / public method 1");
-                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod2).SetName("Valid MultiDim 3D private class / public method 2");
-                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod3).SetName("Valid MultiDim 3D private class / public method 3");
-                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod4).SetName("Valid MultiDim 3D private class / public method 4");
-                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod5).SetName("Valid MultiDim 3D private class / public method 5");
-                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod6).SetName("Valid MultiDim 3D private class / public method 6");
+                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod1).SetName("Valid. MultiDim 3D private class / public method 1");
+                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod2).SetName("Valid. MultiDim 3D private class / public method 2");
+                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod3).SetName("Valid. MultiDim 3D private class / public method 3");
+                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod4).SetName("Valid. MultiDim 3D private class / public method 4");
+                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod5).SetName("Valid. MultiDim 3D private class / public method 5");
+                yield return new TestCaseData(Valid_3D_PrivateClass_PublicMethod6).SetName("Valid. MultiDim 3D private class / public method 6");
                 
-                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod1).SetName("Valid MultiDim 2D private class / public method 1");
-                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod2).SetName("Valid MultiDim 2D private class / public method 2");
-                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod3).SetName("Valid MultiDim 2D private class / public method 3");
-                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod4).SetName("Valid MultiDim 2D private class / public method 4");
-                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod5).SetName("Valid MultiDim 2D private class / public method 5");
-                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod6).SetName("Valid  MultiDim 2D private class / public method 6");
+                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod1).SetName("Valid. MultiDim 2D private class / public method 1");
+                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod2).SetName("Valid. MultiDim 2D private class / public method 2");
+                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod3).SetName("Valid. MultiDim 2D private class / public method 3");
+                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod4).SetName("Valid. MultiDim 2D private class / public method 4");
+                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod5).SetName("Valid. MultiDim 2D private class / public method 5");
+                yield return new TestCaseData(Valid_2D_PrivateClass_PublicMethod6).SetName("Valid.  MultiDim 2D private class / public method 6");
                 
-                yield return new TestCaseData(Valid_MultiDimArray_PrivateClassPublicProperty1).SetName("Valid MultiDim 2D private class / public property 1");
-                yield return new TestCaseData(Valid_MultiDimArray_PrivateClassPublicProperty2).SetName("Valid MultiDim 2D private class / public property 2");
-                yield return new TestCaseData(Valid_MultiDimArray_PrivateClassPublicProperty3).SetName("Valid MultiDim 2D private class / public property 3");
-                yield return new TestCaseData(Valid_MultiDimArray_PrivateClassPublicProperty4).SetName("Valid MultiDim 2D private class / public property 4");
-                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateProperty1).SetName("Valid MultiDim 2D public class / private property 1");
-                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateProperty2).SetName("Valid MultiDim 2D public class / private property 2");
+                yield return new TestCaseData(Valid_MultiDimArray_PrivateClassPublicProperty1).SetName("Valid. MultiDim 2D private class / public property 1");
+                yield return new TestCaseData(Valid_MultiDimArray_PrivateClassPublicProperty2).SetName("Valid. MultiDim 2D private class / public property 2");
+                yield return new TestCaseData(Valid_MultiDimArray_PrivateClassPublicProperty3).SetName("Valid. MultiDim 2D private class / public property 3");
+                yield return new TestCaseData(Valid_MultiDimArray_PrivateClassPublicProperty4).SetName("Valid. MultiDim 2D private class / public property 4");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateProperty1).SetName("Valid. MultiDim 2D public class / private property 1");
+                yield return new TestCaseData(Valid_MultiDimArray_PublicClassPrivateProperty2).SetName("Valid. MultiDim 2D public class / private property 2");
                 // jagged array tests
-                yield return new TestCaseData(Valid_JaggedMix_PrivateClassPublicProperty).SetName("Valid Jagged Array private class / private property");
-                yield return new TestCaseData(Valid_Jagged2D_PrivateClassPublicMethods).SetName("Valid Jagged Array private class / public method");
-                yield return new TestCaseData(Valid_Jagged3D_PrivateClassPublicMethods).SetName("Valid Jagged Array private class / public method");
-                yield return new TestCaseData(Valid_Jagged3D_PublicClassPrivateMethods).SetName("Valid Jagged Array public class / private method");
-                yield return new TestCaseData(Valid_Jagged2D_Property).SetName("Valid Jagged 2D Array public property");
-                yield return new TestCaseData(Valid_Jagged3D_Property).SetName("Valid Jagged 3D Array public property");
+                yield return new TestCaseData(Valid_JaggedMix_PrivateClassPublicProperty).SetName("Valid. Jagged Array private class / private property");
+                yield return new TestCaseData(Valid_Jagged2D_PrivateClassPublicMethods).SetName("Valid. Jagged Array private class / public method");
+                yield return new TestCaseData(Valid_Jagged3D_PrivateClassPublicMethods).SetName("Valid. Jagged Array private class / public method");
+                yield return new TestCaseData(Valid_Jagged3D_PublicClassPrivateMethods).SetName("Valid. Jagged Array public class / private method");
+                yield return new TestCaseData(Valid_Jagged2D_Property).SetName("Valid. Jagged 2D Array public property");
+                yield return new TestCaseData(Valid_Jagged3D_Property).SetName("Valid. Jagged 3D Array public property");
 
                 #endregion
 
                 #region   DefaultOverloadAttribute
 
                 // overload attributes
-                yield return new TestCaseData(Valid_InterfaceWithOverloadAttribute).SetName("Valid interface with overloads and one marked as default");
-                yield return new TestCaseData(Valid_TwoOverloads_DiffParamCount).SetName("Valid DefaultOverload attribute 1");
-                yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_OneInList).SetName("Valid DefaultOverload attribute 2");
-                yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_OneIrrelevatAttribute).SetName("Valid DefaultOverload attribute 3");
-                yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_TwoLists).SetName("Valid DefaultOverload attribute 4");
-                yield return new TestCaseData(Valid_ThreeOverloads_OneAttribute).SetName("Valid DefaultOverload attribute 5");
-                yield return new TestCaseData(Valid_ThreeOverloads_OneAttribute_2).SetName("Valid DefaultOverload attribute 6");
-                yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_3).SetName("Valid DefaultOverload attribute 7");
+                yield return new TestCaseData(Valid_InterfaceWithOverloadAttribute).SetName("Valid. interface with overloads and one marked as default");
+                yield return new TestCaseData(Valid_TwoOverloads_DiffParamCount).SetName("Valid. DefaultOverload attribute 1");
+                yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_OneInList).SetName("Valid. DefaultOverload attribute 2");
+                yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_OneIrrelevatAttribute).SetName("Valid. DefaultOverload attribute 3");
+                yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_TwoLists).SetName("Valid. DefaultOverload attribute 4");
+                yield return new TestCaseData(Valid_ThreeOverloads_OneAttribute).SetName("Valid. DefaultOverload attribute 5");
+                yield return new TestCaseData(Valid_ThreeOverloads_OneAttribute_2).SetName("Valid. DefaultOverload attribute 6");
+                yield return new TestCaseData(Valid_TwoOverloads_OneAttribute_3).SetName("Valid. DefaultOverload attribute 7");
 
                 #endregion
             }

@@ -33,7 +33,6 @@ namespace Test
     }
 }";
 
-
         // Namespaces
         private const string Valid_NestedNamespace = @"
 namespace Test 
@@ -69,16 +68,6 @@ namespace Test.Component
     }
 }";
 
-        private const string Valid_NestedNamespace4 = @"
-namespace Test.Component
-{
-    public sealed Class1 { public int X { get; set; }  }
-
-    namespace InnerComponent
-    {
-        public sealed class Class2 { public int Y { get; } }
-    }
-}";
         private const string Valid_NamespacesDiffer = @"
 namespace Test 
 {
@@ -277,7 +266,7 @@ namespace Test
 {
     public sealed class MyClass
     {
-        private Enumerable<int> ReturnsIntList(int length) { return new Enumerable<int>(); }
+        private Enumerable ReturnsIntList(int length) { return new Enumerable(); }
     }
 }";
         private const string Valid_ClassWithGenericEnumerableInput_Private = @"
@@ -286,7 +275,7 @@ namespace Test
 {
     public sealed class MyClass
     {
-        private int ReturnsIntList(Enumerable<int> ls) { return 0; }
+        private int ReturnsIntList(Enumerable ls) { return 0; }
     }
 }";
         private const string Valid_ClassWithPrivateGenEnumerableProp = @"
@@ -295,7 +284,7 @@ namespace Test
 {
     public sealed class MyClass
     {
-        private Enumerable<int> IntList { get; set; }
+        private Enumerable IntList { get; set; }
     }
 }";
         private const string Valid_IfaceWithPrivateGenEnumerableProp = @"
@@ -304,7 +293,7 @@ namespace Test
 {
     public interface MyInterface
     {
-       private Enumerable<int> Enumer { get; set; }
+       private Enumerable Enumer { get; set; }
     }
 }";
         // List

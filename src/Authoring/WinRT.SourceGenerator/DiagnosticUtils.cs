@@ -7,11 +7,11 @@ using WinRT.SourceGenerator;
 
 namespace Generator 
 {
-    public partial class WinRTScanner
+    public partial class WinRTComponentScanner
     {
-        public WinRTScanner() { _flag = false; }
+        public WinRTComponentScanner() { _flag = false; }
 
-        public WinRTScanner(GeneratorExecutionContext context, string assemblyName) 
+        public WinRTComponentScanner(GeneratorExecutionContext context, string assemblyName) 
         { 
             _flag = false;
             _context = context;
@@ -99,21 +99,7 @@ namespace Generator
             } 
         }
 
-        /// <summary>
-        /// Returns true if the class represented by the symbol 
-        /// implements any of the interfaces defined in ProhibitedAsyncInterfaces (e.g., IAsyncAction, ...)</summary>
-        /// <param name="typeSymbol">The class/interface type symbol</param><param name="typeDeclaration">The containing class/interface declaration</param>
-        /// <returns>True iff the given class implements any of the IAsync interfaces that are not valid in Windows Runtime</returns>
-        private void ImplementsInvalidInterface(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax typeDeclaration)
-        {
-            foreach (string prohibitedInterface in nonWindowsRuntimeInterfaces)
-            {
-                if (ImplementsInterface(typeSymbol, prohibitedInterface))
-                {
-                    Report(WinRTRules.NonWinRTInterface, typeDeclaration.GetLocation(), typeDeclaration.Identifier, prohibitedInterface);
-                }
-            }
-        }
+        
 
         /// <summary>Checks to see if the class declares any operators (overloading them)</summary>
         ///<param name="classDeclaration">Class to check</param>

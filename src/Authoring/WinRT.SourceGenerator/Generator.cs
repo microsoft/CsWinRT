@@ -179,7 +179,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             // shouldn't need workaround once we can pass AnalyzerConfigOptionsProvider in DiagnosticTests.Helpers.cs
             string assemblyName = GetAssemblyName(context) ?? "Test";
 
-            WinRTScanner winrtScanner = new WinRTScanner(context, assemblyName);
+            WinRTComponentScanner winrtScanner = new WinRTComponentScanner(context, assemblyName);
             winrtScanner.FindDiagnostics();
             return winrtScanner.Found();
         }

@@ -111,7 +111,7 @@ namespace WinRT.SourceGenerator
             "Multiple overloads seen, one needs a default", // todo better msg
             "In class {2}: The {0}-parameter overloads of {1} must have exactly one method specified as the default overload by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
 
-        public static DiagnosticDescriptor ArraySignature_JaggedArrayRule = MakeRule(
+        public static DiagnosticDescriptor JaggedArrayRule = MakeRule(
             "WME1036",
             "Array signature found with jagged array, which is not a valid WinRT type",
             "Method {0} has a nested array of type {1} in its signature. Arrays in Windows Runtime method signature cannot be nested.");

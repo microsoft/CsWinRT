@@ -263,7 +263,7 @@ namespace Test
 {
     public interface MyInterface
     {
-        Enumerable<int> MakeIntList(int length);
+        Enumerable MakeIntList(int length);
     }
 }";
         private const string InterfaceWithGenericEnumerableInput = @"
@@ -272,7 +272,7 @@ namespace Test
 {
     public interface MyInterface
     {
-        int ReturnsInt(Enumerable<int> ls);
+        int ReturnsInt(Enumerable ls);
     }
 }";
         private const string ClassWithGenericEnumerableReturnType = @"
@@ -281,7 +281,7 @@ namespace Test
 {
     public sealed class MyClass
     {
-        public Enumerable<int> ReturnsEnumerable(int length) { return new Enumerable<int>(); }
+        public Enumerable ReturnsEnumerable(int length) { return new Enumerable(); }
     }
 }";
         private const string ClassWithGenericEnumerableInput = @"
@@ -290,7 +290,7 @@ namespace Test
 {
     public sealed class MyClass
     {
-        public int ReturnsInt(Enumerable<int> ls) { return 0; }
+        public int ReturnsInt(Enumerable ls) { return 0; }
     }
 }";
         private const string IfaceWithGenEnumerableProp = @"
@@ -299,7 +299,7 @@ namespace Test
 {
     public interface MyInterface
     {
-        public System.Linq.Enumerable<int> Enumer { get; set; }
+        public System.Linq.Enumerable Enumer { get; set; }
     }
 }";
         private const string ClassWithGenEnumerableProp = @"
@@ -308,17 +308,7 @@ namespace Test
 {
     public sealed class MyClass
     {
-        public Enumerable<int> Enumer { get; set; }
-    }
-}";
-        private const string ClassWithGenEnumerableProp_Nested = @"
-using System.Collections.Generic;
-using System.Linq;
-namespace Test
-{
-    public sealed class MyClass
-    {
-        public Enumerable<KeyValuePair<int,int>> Enumer { get; set; }
+        public Enumerable Enumer { get; set; }
     }
 }";
         // Generic List 
@@ -1054,6 +1044,39 @@ namespace Test
     }
 }";
         // async interfaces  
+        private const string ClassImplementsAsyncAndException = @"
+using Windows.Foundation;
+namespace Test
+{
+    public sealed class OpWithProgress : System.Exception, IAsyncOperationWithProgress<int, bool>
+    {
+        AsyncOperationProgressHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        AsyncOperationWithProgressCompletedHandler<int, bool> IAsyncOperationWithProgress<int, bool>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
+
+        uint IAsyncInfo.Id => throw new NotImplementedException();
+
+        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
+
+        void IAsyncInfo.Cancel()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IAsyncInfo.Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        int IAsyncOperationWithProgress<int, bool>.GetResults()
+        {
+            throw new NotImplementedException();
+        }
+    } 
+}";
+
+        
         private const string ClassImplementsIAsyncOperationWithProgress = @"
 using Windows.Foundation;
 using System;

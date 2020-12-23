@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace AuthoringSample
 {
@@ -327,6 +328,7 @@ namespace AuthoringSample
 
             return -1;
         }
+
 
         public void SetTypeToTestClass()
         {
