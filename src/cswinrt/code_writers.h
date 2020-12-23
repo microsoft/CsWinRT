@@ -1157,7 +1157,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
 
     static std::string get_default_interface_name(writer& w, TypeDef const& type, bool abiNamespace = true)
     {
-        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), abiNamespace ? typedef_name_type::ABI : typedef_name_type::Projected, false));
+        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), abiNamespace ? typedef_name_type::ABI : typedef_name_type::CCW, false));
     }
 
     void write_factory_constructors(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
@@ -1272,6 +1272,7 @@ using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref c
 try
 {
 _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+if(baseInspectable == null) _inner = _inner.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 _defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
@@ -1294,6 +1295,7 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                     method.Name(),
                     bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
                     [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
+                    default_interface_name,
                     default_interface_name,
                     default_interface_name,
                     default_interface_name,
@@ -4388,6 +4390,14 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         }
     }
 
+    void write_authoring_metadata_type(writer& w, TypeDef const& type)
+    {
+        w.write("%%internal class % {}\n",
+            bind<write_winrt_attribute>(type),
+            bind<write_custom_attributes>(type),
+            bind<write_type_name>(type, typedef_name_type::CCW, false));
+    }
+
     void write_contract(writer& w, TypeDef const& type)
     {
         auto type_name = write_type_name_temp(w, type);
@@ -4721,11 +4731,11 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
     {
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
         auto wrapped_type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
-        auto default_interface_abi_name = get_default_interface_name(w, type, true);
+        auto default_interface_name = get_default_interface_name(w, type, false);
         auto base_semantics = get_type_semantics(type.Extends());
 
-        w.write(R"(
-%%internal %class %%
+        w.write(R"(%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
+%internal %class %%
 {
 public %(% comp)
 {
@@ -4749,6 +4759,7 @@ private readonly % _comp;
 }
 )",
 bind<write_winrt_attribute>(type),
+default_interface_name,
 bind<write_custom_attributes>(type),
 bind<write_class_modifiers>(type),
 type_name,
@@ -5134,7 +5145,11 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<obje
 
     void write_delegate(writer& w, TypeDef const& type)
     {
-        if (settings.component) return;
+        if (settings.component)
+        {
+            write_authoring_metadata_type(w, type);
+            return;
+        }
 
         method_signature signature{ get_delegate_invoke(type) };
         w.write(R"(%%public delegate % %(%);
@@ -5441,7 +5456,11 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 
     void write_enum(writer& w, TypeDef const& type)
     {
-        if (settings.component) return;
+        if (settings.component)
+        {
+            write_authoring_metadata_type(w, type);
+            return;
+        }
 
         if (is_flags_enum(type))
         {
@@ -5470,7 +5489,11 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 
     void write_struct(writer& w, TypeDef const& type)
     {
-        if (settings.component) return;
+        if (settings.component)
+        {
+            write_authoring_metadata_type(w, type);
+            return;
+        }
 
         auto name = w.write_temp("%", bind<write_type_name>(type, typedef_name_type::Projected, false));
 
