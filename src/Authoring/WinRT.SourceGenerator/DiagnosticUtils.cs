@@ -51,20 +51,13 @@ namespace Generator
                     foreach (var @interface in classSymbol.AllInterfaces)
                     {
                         var ifaceName = @interface.OriginalDefinition.ContainingNamespace + "." + @interface.OriginalDefinition.MetadataName;
-                        if (ifaceName == "System.Collections.IList`1")
-                        {
-                            publicMethods = publicMethods.Where(m => !IListMethods.Contains(m.Identifier.Text));
-                            props = props.Where(m => !IListProperties.Contains(m.Identifier.Text));
+                        if (MappedCSharpTypeMethods.TryGetValue(ifaceName, out var iMethods))
+                        { 
+                            publicMethods = publicMethods.Where(m => !iMethods.Contains(m.Identifier.Text));
                         }
-                        if (ifaceName == "System.Collections.Generic.IDictionary`2")
-                        {
-                            publicMethods = publicMethods.Where(m => !IDictionaryMethods.Contains(m.Identifier.Text));
-                            props = props.Where(m => !IDictionaryProperties.Contains(m.Identifier.Text));
-                        }
-                        if (ifaceName == "System.Collections.Generic.IReadOnlyDictionary`2")
-                        {
-                            publicMethods = publicMethods.Where(m => !IReadOnlyDictionaryMethods.Contains(m.Identifier.Text));
-                            props = props.Where(m => !IReadOnlyDictionaryProperties.Contains(m.Identifier.Text));
+                        if (MappedCSharpTypeProperties.TryGetValue(ifaceName, out var iProps))
+                        { 
+                            props = props.Where(m => !iProps.Contains(m.Identifier.Text));
                         }
                     }
 
@@ -93,7 +86,22 @@ namespace Generator
                 foreach (InterfaceDeclarationSyntax @interface in interfaces)
                 {
                     var interfaceSym = model.GetDeclaredSymbol(@interface);
-                    
+                    var methods = @interface.DescendantNodes().OfType<MethodDeclarationSyntax>();
+                    var props = @interface.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
+                
+                    foreach (var iface in interfaceSym.AllInterfaces)
+                    {
+                        var ifaceName = iface.OriginalDefinition.ContainingNamespace + "." + iface.OriginalDefinition.MetadataName;
+                        if (MappedCSharpTypeMethods.TryGetValue(ifaceName, out var iMethods))
+                        { 
+                            methods = methods.Where(m => !iMethods.Contains(m.Identifier.Text));
+                        }
+                        if (MappedCSharpTypeProperties.TryGetValue(ifaceName, out var iProps))
+                        { 
+                            props = props.Where(m => !iProps.Contains(m.Identifier.Text));
+                        }
+                    }                   
+
                     if (interfaceSym.IsGenericType)
                     {
                         Report(WinRTRules.GenericTypeRule, @interface.GetLocation(), @interface.Identifier);
@@ -101,10 +109,8 @@ namespace Generator
 
                     ImplementsInvalidInterface(interfaceSym, @interface);
                     
-                    var props = @interface.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
                     CheckPropertySignature(props, @interface.Identifier);
                     
-                    var methods = @interface.DescendantNodes().OfType<MethodDeclarationSyntax>();
                     CheckMethods(methods, @interface.Identifier);
                 }
 

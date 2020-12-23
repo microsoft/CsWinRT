@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -41,7 +42,6 @@ namespace Generator
             Flag();
             _context.ReportDiagnostic(Diagnostic.Create(d, loc, args));
         }
-
         private void ReportDiagnostic(Diagnostic d)
         {
             Flag();
@@ -368,12 +368,95 @@ namespace Generator
             SpecialType.System_Enum,
         };
 
-        private IList<string> IListMethods = new List<string> {"Add", "Clear", "Contains", "IndexOf", "Insert", "Remove", "RemoveAt", "CopyTo" };
-        private IList<string> IListProperties = new List<string> { "IsFixedSize", "IsReadOnly", "Item" };
-        private IList<string> IDictionaryMethods = new List<string> { "Add", "Clear", "Contains", "CopyTo", "ContainsKey", "Remove", "TryGetValue" };
-        private IList<string> IDictionaryProperties = new List<string> { "Keys", "Values", "Count" };
-        private IList<string> IReadOnlyDictionaryMethods = new List<string> { "ContainsKey", "TryGetValue" };
-        private IList<string> IReadOnlyDictionaryProperties = new List<string> { "Keys", "Values", "Count" };
+        private static readonly Dictionary<string, List<string>> MappedCSharpTypeMethods = new Dictionary<string, List<string>>()
+        {
+            { "System.DateTimeOffset", new List<string> { "Add", "AddDays", "AddHours", "AddMilliseconds", "AddMinutes", "AddMonths", "AddSeconds", "AddTicks", "AddYears", "Compare", "CompareTo",
+                "Equals", "EqualsExact", "FromFileTime", "FromUnixTimeMilliseconds", "FromUnixTimeSeconds", "GetHashCode", "Parse", "ParseExact", "Subtract", "ToFileTime", "ToLocalTime",
+                "ToOffset", "ToString", "ToUniversalTime", "ToUnixTimeMilliseconds", "ToUnixTimeSeconds", "TryFormat", "TryParse", "TryParseExact" }  },
+            { "System.Exception", new List<string> { "GetBaseException", "GetObjectData", "GetType", "ToString" } },
+            { "System.IDisposable", new List<string> { "Dispose" } },
+            { "System.IServiceProvider", new List<string> { "GetService" } },
+            { "System.Nullable`1", new List<string> { "Equals", "GetHashCode", "GetValueOrDefault", "ToString" } },
+            { "System.TimeSpan", new List<string> { "Add", "Compare", "CompareTo", "Divide", "Duration", "Equals", "FromDays", "FromHours", "FromMilliseconds", "FromMinutes",
+                "FromSeconds", "FromTicks", "GetHashCode", "Multiply", "Negate", "Parse", "ParseExact", "Subtract", "ToString", "TryFormat", "TryParse", "TryParseExact" } },
+            { "System.Uri", new List<string> { "Canonicalize", "CheckHostName", "CheckSchemeName", "CheckSecurity", "Compare", "Equals", "Escape",
+                "EscapeDataString", "EscapeString", "EscapeUriString", "FromHex", "GetComponents", "GetHashCode", "GetLeftPart", "GetObjectData",
+                "HexEscape", "HexUnescape", "IsBadFileSystemCharacter", "IsBaseOf", "IsExcludedCharacter", "IsHexDigit", "IsHexEncoding", "IsReservedCharacter",
+                "IsWellFormedOriginalString", "IsWellFormedUriString", "MakeRelative", "MakeRealtiveUri", "Parse", "ToString", "TryCreate", "Unescape", "UnescapeDataString" } },
+            { "System.ComponentModel.INotifyDataErrorInfo", new List<string> { "GetErrors" } },
+            { "System.Windows.Input.ICommand", new List<string> { "CanExecute", "Execute" } },
+            { "System.Collections.IEnumerable", new List<string> { "GetEnumerator" } },
+            { "System.Collections.IList", new List<string> { "Add", "Clear", "Contains", "IndexOf", "Insert", "Remove" , "RemoveAt" } },
+            { "System.Numerics.Matrix3x2", new List<string> { "Add", "CreateRotation", "CreateScale", "CreateSkew", "CreateTranslation", "Equals", "GetDeterminant",
+                "GetHashCode", "Invert", "Lerp", "Multiply", "Negate", "Subtract", "ToString" } },
+            { "System.Numerics.Matrix4x4", new List<string> { "Add", "CreateBillboard", "CreateConstrainedBillboard", "CreateFromAxisAngle", "CreateFromQuaternion",
+                "CreateFromYawPitchRoll", "CreateLookAt", "CreateOrthographic", "CreateOrthographicOffCenter", "CreatePerspective", "CreatePerspectiveFieldOfView",
+                "CreatePerspectiveOffCenter", "CreateReflection", "CreateRotationX", "CreateRotationY", "CreateRotationZ", "CreateScale", "CreateShadow", "CreateTranslation",
+                "CreateWorld", "Decompose", "Equals", "GetDeterminant", "GetHashCode", "Invert", "Lerp", "Multiply", "Negate", "Subtract", "ToString", "Transform", "Transpose"} },
+            { "System.Numerics.Plane", new List<string> { "CreateFromVertices", "Dot", "DotCoordinate", "DotNormal", "Equals", "GetHashCode", "Normalize", "ToString", "Transform" } },
+            { "System.Numerics.Quaternion", new List<string> { "Add", "Concatenate", "Conjugate", "CreateFromAxisAngle", "CreateFromRotationMatrix", "CreateFromYawPitchRoll",
+                "Divide", "Dot", "Equals", "GetHashCode", "Inverse", "Length", "LengthSquared", "Lerp", "Multiply", "Negate", "Normalize", "Slerp", "Subtract", "ToString" } },
+            { "System.Numerics.Vector2", new List<string> { "Abs", "Add", "Clamp", "CopyTo", "Distance", "DistanceSquared", "Divide", "Dot", "Equals", "GetHashCode", "Length",
+                "LengthSquared", "Lerp", "Max", "Min", "Multiply", "Negate", "Normalize", "Reflect", "SquareRoot", "Subtract", "ToString", "Transform", "TransformNormal" } },
+            { "System.Numerics.Vector3", new List<string> { "Abs", "Add", "Clamp", "CopyTo", "Cross", "Distance", "DistanceSquared", "Divide", "Dot", "Equals", "GetHashCode", "Length",
+                "LengthSquared", "Lerp", "Max", "Min", "Multiply", "Negate", "Normalize", "Reflect", "SquareRoot", "Subtract", "ToString", "Transform", "TransformNormal" } },
+            { "System.Numerics.Vector4", new List<string> { "Abs", "Add", "Clamp", "CopyTo", "Distance", "DistanceSquared", "Divide", "Dot", "Equals", "GetHashCode", "Length",
+                "LengthSquared", "Lerp", "Max", "Min", "Multiply", "Negate", "Normalize", "SquareRoot", "Subtract", "ToString", "Transform" } },
+            { "System.Type", new List<string> { "Equals", "FindInterfaces", "FindMembers", "GetArrayRank", "GetAttributeFlagsImpl", "GetConstructor", "GetConstructorImpl", "GetConstructors",
+                "GetDefaultMembers", "GetElementType", "GetEnumName", "GetEnumNames", "GetEnumUnderlyingType", "GetEnumValues", "GetEvent", "GetEvents", "GetField", "GetFields",
+                "GetGenericArguments", "GetGenericParameterConstraints", "GetGenericTypeDefinition", "GetHashCode", "GetInterface", "GetInterfaceMap", "GetInterfaces",
+                "GetMember", "GetMembers", "GetMethod", "GetMethodImpl", "GetMethods", "GetNestedType", "GetNestedTypes", "GetProperties", "GetProperty", "GetPropertyImpl",
+                "GetType", "GetTypeArray", "GetTypeCode", "GetTypeCodeImpl", "GetTypeFromCLSID", "GetTypeFromHandle", "GetTypeFromProgID", "GetTypeHandle", "HasElementTypeImpl",
+                "InvokeMember", "IsArrayImpl", "IsAssignableFrom", "IsAssignableTo", "IsByRefImpl", "IsCOMObjectImpl", "IsContextfulImpl", "IsEnumDefined",
+                "IsEquivalentTo", "IsInstanceOfType", "IsMarshalByRefImpl", "IsPointerImpl", "IsPrimitiveImpl", "IsSubclassOf", "IsValueTypeImpl", "MakeArrayType", "MakeByRefType",
+                "MakeGenericMethodParameter", "MakeGenericSignatureType", "MakeGenericType", "MakePointerType", "ReflectionOnlyGetType", "ToString" } },
+            { "System.Collections.Generic.IEnumerable`1", new List<string> { "GetEnumerator" } },
+            { "System.Collections.Generic.KeyValuePair`2", new List<string> { "Deconstruct", "ToString" } },
+            { "System.Collections.Generic.IReadOnlyDictionary`2", new List<string> { "ContainsKey", "TryGetValue" } },
+            { "System.Collections.Generic.IDictionary`2", new List<string> { "Add", "Clear", "Contains", "CopyTo", "ContainsKey", "Remove", "TryGetValue" } },
+            { "System.Collections.Generic.IList`1", new List<string> {"Add", "Clear", "Contains", "IndexOf", "Insert", "Remove", "RemoveAt", "CopyTo" } },
+            { "System.Collections.IList`1", new List<string> {"Add", "Clear", "Contains", "IndexOf", "Insert", "Remove", "RemoveAt", "CopyTo" } }
+        };
+
+        private static readonly Dictionary<string, List<string>> MappedCSharpTypeProperties = new Dictionary<string, List<string>>()
+        {
+            { "System.DateTimeOffset", new List<string> { "Date", "DateTime", "Day", "DayOfWeek", "DayOfYear", "Hour", 
+                "LocalDateTime", "Millisecond", "Minute", "Month", "Now", "Offset", "Second", "Ticks", "TimeOfDay", "UtcDateTime", "UtcNow", "UtcTicks", "Year" }  },
+            { "System.Exception", new List<string> { "Data", "HelpLink", "HResult", "InnerException", "Message", "Source", "StackTrace", "TargetSite" } },
+            { "System.Nullable`1", new List<string> { "HasValue", "Value" } },
+            { "System.TimeSpan", new List<string> { "Days", "Hours", "Milliseconds", "Minutes", "Seconds", "Ticks", "TotalDays", "TotalHours", 
+                "TotalMilliseconds", "TotalMinutes", "TotalSeconds" } },
+            { "System.Uri", new List<string> { "AbsolutePath", "AbsoluteUri", "Authority", "DnsSafeHost", "Fragment", "Host", "HostNameType", "IdnHost",
+                "IsAbsoluteUri", "IsDefaultPort", "IsFile", "IsLoopback" , "IsUnc", "LocalPath", "OriginalString", "PathAndQuery", "Port", "Query",
+                "Scheme", "Segments", "UserEscaped", "UserInfo" } },
+            { "System.ComponentModel.DataErrorsChangedEventArgs", new List<string> { "PropertyName" } },
+            { "System.ComponentModel.INotifyDataErrorInfo", new List<string> { "HasErrors" } },
+            { "System.ComponentModel.PropertyChangedEventArgs", new List<string> { "PropertyName" } },
+            { "System.Collections.IList", new List<string> { "IsFixedSize", "IsReadOnly" } },
+            { "System.Collections.Specialized.NotifyCollectionChangedEventArgs", new List<string> { "Action" ,"NewItems", "NewStartingIndex", "OldTimes", "OldStartingIndex" } },
+            { "System.AttributeUsageAttribute", new List<string> { "AllowMultiple", "Inherited", "ValidOn" } },
+            { "System.Numerics.Matrix3x2", new List<string> { "Identity", "IsIdentity", "Translation" } },
+            { "System.Numerics.Matrix4x4", new List<string> { "Identity", "IsIdentity", "Translation" } },
+            { "System.Numerics.Plane", new List<string> { "D", "Normal" } },
+            { "System.Numerics.Quaternion", new List<string> { "Identity" ,"IsIdentity" } },
+            { "System.Numerics.Vector2", new List<string> { "One", "UnitX", "UnitY", "Zero" } },
+            { "System.Numerics.Vector3", new List<string> { "One", "UnitX", "UnitY", "UnitZ", "Zero" } },
+            { "System.Numerics.Vector4", new List<string> { "One", "UnitW", "UnitX", "UnitY", "UnitZ", "Zero" } },
+            { "System.Type", new List<string> { "Assembly", "AssemblyQualifiedName", "Attributes", "BaseType", "ContainsGenericParamters", "DeclaringMethod", "DeclaringType", "DefaultBinder",
+                "FullName", "GenericParameterAttributes", "GenericParameterPosition", "GenericTypeArguments", "GUID", "HasElementType", "IsAbstract",
+                "IsAnsiClass", "IsArray", "IsAutoClass", "IsAutoLayout", "IsByRef", "IsByRefLike", "IsClass", "IsCOMObject",
+                "IsConstructedGenericType", "IsContextful", "IsEnum", "IsExplicitLayout", "IsGenericMethodParameter", "IsGenericParameter", "IsGenericType", "IsGenericTypeDefinition",
+                "IsGenericTypeParameter", "IsImport", "IsInterface", "IsLayoutSequential", "IsMarshalByRef", "IsNested", "IsNestedAssembly", "IsNestedFamANDAssem", "IsNestedFamily",
+                "IsNestedFamORAssem", "IsNestedPrivate", "IsNestedPublic", "IsNotPublic", "IsPointer", "IsPrimitive", "IsPublic", "IsSealed", "IsSecurityCritical", "IsSecuritySafeCritical",
+                "IsSecurityTransparent", "IsSerializable", "IsSignatureType", "IsSpecialName", "IsSZArray", "IsTypeDefinition", "IsUnicodeClass", "IsValueType", "IsVariableBoundArray",
+                "IsVisible", "MemberType", "Module", "Namespace", "ReflectedType", "StructLayoutAttribute", "TypeHandle", "TypeInitializer", "UnderlyingSystemType"} },
+            { "System.Collections.Generic.IEnumerator`1", new List<string> { "Current" } },
+            { "System.Collections.Generic.KeyValuePair`2", new List<string> { "Key", "Value" } },
+            { "System.Collections.Generic.IReadOnlyDictionary`2", new List<string> { "Keys", "Values", "Count" } },
+            { "System.Collections.Generic.IDictionary`2", new List<string> { "Keys", "Values", "Count" } },
+            { "System.Collections.Generic.IList`1", new List<string> { "IsFixedSize", "IsReadOnly", "Item" } },
+            { "System.Collections.IList`1", new List<string> { "IsFixedSize", "IsReadOnly", "Item" } }
+        };
 
         private static readonly string[] nonWindowsRuntimeInterfaces = 
         {
