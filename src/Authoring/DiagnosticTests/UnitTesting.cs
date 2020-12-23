@@ -31,7 +31,15 @@ namespace DiagnosticTests
             Compilation compilation = CreateCompilation(source);
             RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator());
             var WinRTDiagnostics = diagnosticsFound.Where(diag => diag.Id.StartsWith("WME"));
-            Assert.That(!WinRTDiagnostics.Any());
+            string builder = "";
+            foreach (var d in WinRTDiagnostics)
+            {
+                builder += d.Descriptor.Description + "\n";
+            }
+            if (WinRTDiagnostics.Count() != 0)
+            {
+                throw new System.Exception("Expected no diagnostics. But found:" + builder);
+            }
         }
 
         /// <summary>
@@ -44,7 +52,22 @@ namespace DiagnosticTests
             Compilation compilation = CreateCompilation(testCode);
             RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator());
             HashSet<DiagnosticDescriptor> diagDescsFound = MakeDiagnosticSet(diagnosticsFound);
-            Assert.That(diagDescsFound.Contains(rule));
+            string builder = "";
+            if (!diagDescsFound.Contains(rule))
+            {
+                foreach (var d in diagDescsFound)
+                {
+                    builder += d.Description + "\n";
+                }
+                if (diagDescsFound.Count != 0)
+                {
+                    throw new System.Exception("Didn't find the expected diagnostic, found:\n" + builder);
+                }
+                else
+                { 
+                    throw new System.Exception("No diagnostics found.");
+                }
+            }
         }
 
         #region InvalidTests
@@ -53,11 +76,13 @@ namespace DiagnosticTests
             get 
             {
                 // namespace tests
-                yield return new TestCaseData(NamespacesDifferByCase, WinRTRules.NamespacesDifferByCase).SetName("Namespace names only differ by case");
-                yield return new TestCaseData(DisjointNamespaces, WinRTRules.DisjointNamespaceRule).SetName("Namespace isn't accessible without Test prefix, doesn't use type");
-                yield return new TestCaseData(DisjointNamespaces2, WinRTRules.DisjointNamespaceRule).SetName("Namespace using type from inaccessible namespace");
+                yield return new TestCaseData(SameNameNamespacesDisjoint, WinRTRules.DisjointNamespaceRule).SetName("Namespace. isn't accessible without Test prefix, doesn't use type");
+                yield return new TestCaseData(NamespacesDifferByCase, WinRTRules.NamespacesDifferByCase).SetName("Namespace. names only differ by case");
+                yield return new TestCaseData(DisjointNamespaces, WinRTRules.DisjointNamespaceRule).SetName("Namespace. isn't accessible without Test prefix, doesn't use type");
+                yield return new TestCaseData(DisjointNamespaces2, WinRTRules.DisjointNamespaceRule).SetName("Namespace. using type from inaccessible namespace");
                 yield return new TestCaseData(NoPublicTypes, WinRTRules.NoPublicTypesRule).SetName("Component has no public types");
-                // the below tests passes, you just have to change the assemblyName to Test.A instead of Test when making the WinRTScanner
+                // the below tests are positive tests when the winmd is named "Test.winmd", and negative when it is "Test.A.winmd" 
+                // they are examples of what it means for namespace to be "prefixed with the winmd file name"
                 // yield return new TestCaseData(NamespaceDifferByDot, WinRTRules.DisjointNamespaceRule).SetName("Namespace Test.A and Test.B");
                 // yield return new TestCaseData(NamespaceDifferByDot2, WinRTRules.DisjointNamespaceRule).SetName("Namespace Test.A and Test");
 
@@ -66,7 +91,6 @@ namespace DiagnosticTests
                 yield return new TestCaseData(UnsealedClass2, WinRTRules.UnsealedClassRule).SetName("Unsealed class private field");
                 yield return new TestCaseData(GenericClass, WinRTRules.GenericTypeRule).SetName("Class marked generic");
                 yield return new TestCaseData(GenericInterface, WinRTRules.GenericTypeRule).SetName("Interface marked generic");
-                yield return new TestCaseData(ClassInheritsException, WinRTRules.NonWinRTInterface).SetName("Class inherits System.Exception");
                 
                 // Enumerable
                 yield return new TestCaseData(InterfaceWithGenericEnumerableReturnType, WinRTRules.UnsupportedTypeRule).SetName("NotValidType. Enumerable method return type, interface");
@@ -220,23 +244,24 @@ namespace DiagnosticTests
                 yield return new TestCaseData(ConstructorsOfSameArity, WinRTRules.ClassConstructorRule).SetName("Misc. Multiple constructors of same arity");
 
                 #region InvalidInterfaceInheritance
+                yield return new TestCaseData(ClassInheritsException, WinRTRules.NonWinRTInterface).SetName("Inheritance. Class base type System.Exception");
                 // implementing async interface
-                yield return new TestCaseData(ClassImplementsAsyncAndException, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Class implements Exception and IAsyncActionWithProgress");
-                yield return new TestCaseData(ClassImplementsIAsyncActionWithProgress, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Class implements IAsyncActionWithProgress");
-                yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Interface Implements IAsyncActionWithProgress");
-                yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress2, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Interface Implements IAsyncActionWithProgress in full");
+                yield return new TestCaseData(ClassImplementsAsyncAndException, WinRTRules.NonWinRTInterface).SetName("Inheritance. Class implements Exception and IAsyncActionWithProgress");
+                yield return new TestCaseData(ClassImplementsIAsyncActionWithProgress, WinRTRules.NonWinRTInterface).SetName("Inheritance. Class implements IAsyncActionWithProgress");
+                yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress, WinRTRules.NonWinRTInterface).SetName("Inheritance. Interface Implements IAsyncActionWithProgress");
+                yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress2, WinRTRules.NonWinRTInterface).SetName("Inheritance. Interface Implements IAsyncActionWithProgress in full");
 
-                yield return new TestCaseData(ClassImplementsIAsyncAction, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Class implements IAsyncAction");
-                yield return new TestCaseData(InterfaceImplementsIAsyncAction, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Interface Implements IAsyncAction");
-                yield return new TestCaseData(InterfaceImplementsIAsyncAction2, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Interface Implements IAsyncAction in full");
+                yield return new TestCaseData(ClassImplementsIAsyncAction, WinRTRules.NonWinRTInterface).SetName("Inheritance. Class implements IAsyncAction");
+                yield return new TestCaseData(InterfaceImplementsIAsyncAction, WinRTRules.NonWinRTInterface).SetName("Inheritance. Interface Implements IAsyncAction");
+                yield return new TestCaseData(InterfaceImplementsIAsyncAction2, WinRTRules.NonWinRTInterface).SetName("Inheritance. Interface Implements IAsyncAction in full");
 
-                yield return new TestCaseData(ClassImplementsIAsyncOperation, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Class implements IAsyncOperation");
-                yield return new TestCaseData(InterfaceImplementsIAsyncOperation, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Interface implements IAsyncOperation");
-                yield return new TestCaseData(InterfaceImplementsIAsyncOperation2, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Interface Implements IAsyncOperation in full");
+                yield return new TestCaseData(ClassImplementsIAsyncOperation, WinRTRules.NonWinRTInterface).SetName("Inheritance. Class implements IAsyncOperation");
+                yield return new TestCaseData(InterfaceImplementsIAsyncOperation, WinRTRules.NonWinRTInterface).SetName("Inheritance. Interface implements IAsyncOperation");
+                yield return new TestCaseData(InterfaceImplementsIAsyncOperation2, WinRTRules.NonWinRTInterface).SetName("Inheritance. Interface Implements IAsyncOperation in full");
                 
-                yield return new TestCaseData(ClassImplementsIAsyncOperationWithProgress, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Class implements IAsyncOperationWithProgress");
-                yield return new TestCaseData(InterfaceImplementsIAsyncOperationWithProgress, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Interface Implements IAsyncOperationWithProgress");
-                yield return new TestCaseData(InterfaceImplementsIAsyncOperationWithProgress2, WinRTRules.NonWinRTInterface).SetName("InvalidInterface. Interface Implements IAsyncOperationWithProgress in full");
+                yield return new TestCaseData(ClassImplementsIAsyncOperationWithProgress, WinRTRules.NonWinRTInterface).SetName("Inheritance. Class implements IAsyncOperationWithProgress");
+                yield return new TestCaseData(InterfaceImplementsIAsyncOperationWithProgress, WinRTRules.NonWinRTInterface).SetName("Inheritance. Interface Implements IAsyncOperationWithProgress");
+                yield return new TestCaseData(InterfaceImplementsIAsyncOperationWithProgress2, WinRTRules.NonWinRTInterface).SetName("Inheritance. Interface Implements IAsyncOperationWithProgress in full");
 
                 #endregion
 
@@ -345,9 +370,14 @@ namespace DiagnosticTests
         {
             get
             {
+                yield return new TestCaseData(Valid_CustomDictionary).SetName("Valid. CustomProjection. IDictionary<string,BasicStruct>");
+                yield return new TestCaseData(Valid_CustomList).SetName("Valid. CustomProjection. IList<DisposableClass>");
+                yield return new TestCaseData(Valid_TwoNamespacesSameName).SetName("Valid. Namespaces with same name");
                 yield return new TestCaseData(Valid_NestedNamespace).SetName("Valid. Nested namespaces are fine");
                 yield return new TestCaseData(Valid_NestedNamespace2).SetName("Valid. Twice nested namespaces are fine");
-                yield return new TestCaseData(Valid_NestedNamespace3).SetName("Valid. namespace Test.Component with an inner namespace InnerComponent");
+                yield return new TestCaseData(Valid_NestedNamespace3).SetName("Valid. Namespace. Test[dot]Component with an inner namespace InnerComponent");
+                yield return new TestCaseData(Valid_NestedNamespace4).SetName("Valid. Namespace. Test and Test[dot]Component namespaces, latter with an inner namespace");
+                yield return new TestCaseData(Valid_NestedNamespace5).SetName("Valid. Namespace. ABCType in ABwinmd");
                 yield return new TestCaseData(Valid_NamespacesDiffer).SetName("Valid. Similar namespace but different name (not just case)");
                 yield return new TestCaseData(Valid_NamespaceAndPrefixedNamespace).SetName("Valid. Two top-level namespaces, one prefixed with the other");
                 

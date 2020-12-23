@@ -2,6 +2,28 @@ namespace DiagnosticTests
 {
     public partial class UnitTesting
     {
+        private const string SameNameNamespacesDisjoint = @"
+namespace Test
+{
+    public sealed class Coords
+    {
+        public Coords() {}
+    }
+}
+
+namespace A
+{
+    public sealed class Dummy 
+    { 
+        public Dummy() {}
+    }
+}
+
+namespace A
+{
+    public sealed class Blank { public Blank() {} }
+}";
+
 
         private const string NamespaceDifferByDot = @"
 namespace Test.A

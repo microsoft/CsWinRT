@@ -16,11 +16,13 @@ namespace Generator
             _flag = false;
             _context = context;
             _assemblyName = assemblyName;
+            _typeHolder = CollectDefinedTypes(context);
         }
 
         private bool _flag;
         private GeneratorExecutionContext _context;
         private string _assemblyName;
+        private TypeCollector _typeHolder;
 
         public bool Found() { return _flag; }
 
@@ -29,13 +31,8 @@ namespace Generator
         /// Perform code analysis to find scenarios that are erroneous in Windows Runtime</summary>
         public void FindDiagnostics()
         { 
-            TypeCollector holder = CollectDefinedTypes(_context);
-            HashSet<INamedTypeSymbol> userCreatedTypes = holder.GetTypes();
-            HashSet<INamedTypeSymbol> userCreatedStructs = holder.GetStructs();
-            HashSet<INamespaceSymbol> userCreatedNamespaces = holder.GetNamespaces();
-
-            HasInvalidNamespace(userCreatedNamespaces, _assemblyName);
-            HasSomePublicTypes(userCreatedTypes, userCreatedStructs);
+            HasInvalidNamespace();
+            HasSomePublicTypes();
             
             foreach (SyntaxTree tree in _context.Compilation.SyntaxTrees)
             {
@@ -47,11 +44,33 @@ namespace Generator
                 {
                     var classId = @class.Identifier;
                     var classSymbol = model.GetDeclaredSymbol(@class);
-                    var loc = @class.GetLocation();
+                    var publicMethods = @class.ChildNodes().OfType<MethodDeclarationSyntax>().Where(IsPublic);
+                    var props = @class.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
+                    var classImplementsInterfaces = classSymbol.AllInterfaces;
+
+                    foreach (var @interface in classSymbol.AllInterfaces)
+                    {
+                        var ifaceName = @interface.OriginalDefinition.ContainingNamespace + "." + @interface.OriginalDefinition.MetadataName;
+                        if (ifaceName == "System.Collections.IList`1")
+                        {
+                            publicMethods = publicMethods.Where(m => !IListMethods.Contains(m.Identifier.Text));
+                            props = props.Where(m => !IListProperties.Contains(m.Identifier.Text));
+                        }
+                        if (ifaceName == "System.Collections.Generic.IDictionary`2")
+                        {
+                            publicMethods = publicMethods.Where(m => !IDictionaryMethods.Contains(m.Identifier.Text));
+                            props = props.Where(m => !IDictionaryProperties.Contains(m.Identifier.Text));
+                        }
+                        if (ifaceName == "System.Collections.Generic.IReadOnlyDictionary`2")
+                        {
+                            publicMethods = publicMethods.Where(m => !IReadOnlyDictionaryMethods.Contains(m.Identifier.Text));
+                            props = props.Where(m => !IReadOnlyDictionaryProperties.Contains(m.Identifier.Text));
+                        }
+                    }
 
                     if (!classSymbol.IsSealed)
                     {
-                        Report(WinRTRules.UnsealedClassRule, loc, classId);
+                        Report(WinRTRules.UnsealedClassRule, @class.GetLocation(), classId);
                     }
 
                     OverloadsOperator(@class);
@@ -65,10 +84,8 @@ namespace Generator
                     // check for things in nonWindowsRuntimeInterfaces
                     ImplementsInvalidInterface(classSymbol, @class);
                     
-                    var props = @class.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
                     CheckPropertySignature(props, classId);
                     
-                    var publicMethods = @class.ChildNodes().OfType<MethodDeclarationSyntax>().Where(IsPublic);
                     CheckMethods(publicMethods, classId);
                 }
 
@@ -94,12 +111,10 @@ namespace Generator
                 var structs = nodes.OfType<StructDeclarationSyntax>();
                 foreach (StructDeclarationSyntax @struct in structs)
                 {
-                    CheckStructFields(@struct, userCreatedTypes); 
+                    CheckStructFields(@struct); 
                 }
             } 
         }
-
-        
 
         /// <summary>Checks to see if the class declares any operators (overloading them)</summary>
         ///<param name="classDeclaration">Class to check</param>
@@ -114,12 +129,13 @@ namespace Generator
         }
 
         /// <summary>Raise a diagnostic if there are no public types in the namespace</summary>
-        /// <param name="publicTypes">collection of class and interface symbols </param>
-        /// <param name="publicStructs">collection of struct symbols</param>
-        private void HasSomePublicTypes(HashSet<INamedTypeSymbol> publicTypes, HashSet<INamedTypeSymbol> publicStructs) 
+        private void HasSomePublicTypes() 
         {
             // types are interfaces, classes and structs
-            if (!publicTypes.Any() && !publicStructs.Any()) { Report(WinRTRules.NoPublicTypesRule, null); }
+            if (!_typeHolder.GetTypes().Any() && !_typeHolder.GetStructs().Any()) 
+            { 
+                Report(WinRTRules.NoPublicTypesRule, null); 
+            }
         }
 
         /// <summary>
@@ -162,32 +178,6 @@ namespace Generator
         }
 
         /// <summary>
-        /// Namespaces can't only differ by cases, also check if the name is invalid for the winmd being made</summary>
-        /// <param name="definedNamespaces"></param><param name="assemblyName">"Test" for unit tests, otherwise stored in AnalyzerconfigPropertyProvider</param>
-        private void HasInvalidNamespace(HashSet<INamespaceSymbol> definedNamespaces, string assemblyName)
-        {
-            HashSet<string> simplifiedNames = new HashSet<string>();
-
-            foreach (var namespaceSymbol in definedNamespaces)
-            {
-                string upperNamed = namespaceSymbol.ToString().ToUpper();
-                if (simplifiedNames.Contains(upperNamed))
-                {
-                    Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceSymbol.Name);
-                }
-                else
-                {
-                    simplifiedNames.Add(upperNamed);
-                }
-
-                if (IsInvalidNamespace(namespaceSymbol, assemblyName))
-                {
-                    Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), assemblyName, namespaceSymbol.Name);
-                }
-            }
-        }
-
-        /// <summary>
         /// Look for overloads/defaultoverload attribute, conflicting parameter names, 
         /// parameter attribute errors, invalid types</summary>
         /// <param name="methodDeclarations">Collection of methods</param><param name="typeId">Containing class or interface</param>
@@ -206,7 +196,7 @@ namespace Generator
                 /* Check signature for invalid types */
                 ParameterHasAttributeErrors(method);
 
-                var methodSym = _context.Compilation.GetSemanticModel(method.SyntaxTree).GetDeclaredSymbol(method);
+                var methodSym = GetModel(method.SyntaxTree).GetDeclaredSymbol(method);
 
                 ReportIfInvalidType(methodSym.ReturnType, method.GetLocation(), method.Identifier, typeId);
                 foreach (var arg in methodSym.Parameters)
@@ -228,7 +218,7 @@ namespace Generator
         {
             foreach (var prop in props)
             {
-                var propSym = _context.Compilation.GetSemanticModel(prop.SyntaxTree).GetDeclaredSymbol(prop);
+                var propSym = GetModel(prop.SyntaxTree).GetDeclaredSymbol(prop);
                 var loc = prop.GetLocation();
 
                 ReportIfInvalidType(propSym.Type, loc, prop.Identifier, typeId);
@@ -240,127 +230,165 @@ namespace Generator
         }
 
         /// <summary>All struct fields must be public, of basic types, and not const</summary>
-        /// <param name="struct">struct declaration</param><param name="userCreatedTypes">Classes/interfaces the author defined</param>
-        private void CheckStructFields(StructDeclarationSyntax @struct, HashSet<INamedTypeSymbol> userCreatedTypes)
-        { 
-            // Helper function, raises diagnostic if the struct has the given kind of field 
-            void StructHasFieldOfType<T>() where T : MemberDeclarationSyntax
+        /// <param name="struct">struct declaration</param>
+        private void CheckStructFields(StructDeclarationSyntax @struct)
+        {
+            // delegates not allowed 
+            if (@struct.DescendantNodes().OfType<DelegateDeclarationSyntax>().Any())
             { 
-                if (@struct.DescendantNodes().OfType<T>().Any())
-                {
-                    Report(WinRTRules.StructHasInvalidFieldRule, @struct.GetLocation(), @struct.Identifier,  SimplifySyntaxTypeString(typeof(T).Name));
-                };
+                Report(WinRTRules.StructHasInvalidFieldRule, @struct.GetLocation(), @struct.Identifier,  SimplifySyntaxTypeString(typeof(DelegateDeclarationSyntax).Name));
+            }
+            // methods not allowed
+            if (@struct.DescendantNodes().OfType<MethodDeclarationSyntax>().Any())
+            { 
+                Report(WinRTRules.StructHasInvalidFieldRule, @struct.GetLocation(), @struct.Identifier,  SimplifySyntaxTypeString(typeof(MethodDeclarationSyntax).Name));
             }
 
-            StructHasFieldOfType<ConstructorDeclarationSyntax>();
-            StructHasFieldOfType<DelegateDeclarationSyntax>();
-            StructHasFieldOfType<EventFieldDeclarationSyntax>();
-            StructHasFieldOfType<IndexerDeclarationSyntax>();
-            StructHasFieldOfType<MethodDeclarationSyntax>();
-            StructHasFieldOfType<OperatorDeclarationSyntax>();
-            StructHasFieldOfType<PropertyDeclarationSyntax>();
+            var structSym = GetModel(@struct.SyntaxTree).GetDeclaredSymbol(@struct);
+
+            // constructors not allowed 
+            if (structSym.Constructors.Length > 1)
+            { 
+                Report(WinRTRules.StructHasInvalidFieldRule, @struct.GetLocation(), @struct.Identifier,  SimplifySyntaxTypeString(typeof(ConstructorDeclarationSyntax).Name));
+            }
 
             var fields = @struct.DescendantNodes().OfType<FieldDeclarationSyntax>();
             foreach (var field in fields) 
             {
-                CheckFieldValidity(field, @struct.Identifier, userCreatedTypes);
+                // all fields must be public
+                if (!IsPublic(field))
+                { 
+                    Report(WinRTRules.StructHasPrivateFieldRule, field.GetLocation(), @struct.Identifier);
+                }
+
+                // const fields not allowed
+                if (field.Modifiers.Where(m => m.IsKind(SyntaxKind.ConstKeyword)).Any())
+                {
+                    Report(WinRTRules.StructHasConstFieldRule, field.GetLocation(), @struct.Identifier);
+                }
+                // see what type the field is, it must be an allowed type or another struct
+                foreach (var variable in field.Declaration.Variables)
+                {
+                    IFieldSymbol varFieldSym = (IFieldSymbol)GetModel(variable.SyntaxTree).GetDeclaredSymbol(variable);
+
+                    if (AllowedStructFieldTypes.Contains(varFieldSym.Type.SpecialType) || varFieldSym.Type.TypeKind == TypeKind.Struct)
+                    {
+                        break;
+                    }
+                    else
+                    { 
+                        Report(WinRTRules.StructHasInvalidFieldRule, variable.GetLocation(), @struct.Identifier, varFieldSym.Name);
+                    }
+                }
             }
-            // Public types must have some member
+            // Structs must have some public fields
             if (!fields.Any())
             {
                 Report(WinRTRules.StructWithNoFieldsRule, @struct.GetLocation(), @struct.Identifier);
             }
         }
 
-        /// <summary>Struct fields must be public, cannot be const, or `object`, `dynamic`, or any defined class/interface type</summary> 
-        /// <param name="field">The field to inspect</param><param name="structId">The name of the struct the field belongs to</param>
-        /// <param name="typeNames">A list of qualified class and interface names, which are invalid types to use in a struct for WinRT Component</param>
-        private void CheckFieldValidity(
-            FieldDeclarationSyntax field, 
-            SyntaxToken structId, 
-            HashSet<INamedTypeSymbol> typeNames)
+        private SemanticModel GetModel(SyntaxTree t) { return _context.Compilation.GetSemanticModel(t); }
+
+        /// <summary>Namespaces can't only differ by cases, also check if the name is invalid for the winmd being made</summary>
+        private void HasInvalidNamespace()
         {
+            // instead of this, see if != but are equal when ignoring case 
+            HashSet<string> simplifiedNames = new HashSet<string>();
 
-            if (!IsPublic(field))
-            { 
-                Report(WinRTRules.StructHasPrivateFieldRule, field.GetLocation(), structId);
+            foreach (var namespaceSymbol in _typeHolder.GetNamespaces())
+            {
+                string upperNamed = namespaceSymbol.Name.ToUpper();
+                if (simplifiedNames.Contains(upperNamed))
+                {
+                    Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceSymbol.Name);
+                }
+                else
+                {
+                    simplifiedNames.Add(upperNamed);
+                }
+
+                if (IsInvalidNamespace(namespaceSymbol, _assemblyName))
+                {
+                    Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), _assemblyName, namespaceSymbol.Name);
+                }
+            }
+        }
+
+        /// <summary>Make sure any namespace defined is the same as the winmd or a subnamespace of it
+        /// If component is A.B, e.g. A.B.winmd , then D.Class1 is invalid, as well as A.C.Class2
+        /// </summary>
+        /// <param name="namespace">the authored namesapce to check</param><param name="assemblyName">the name of the component/winmd</param>
+        /// <returns>True iff namespace is disjoint from the assembly name</returns>
+        private bool IsInvalidNamespace(INamespaceSymbol @namespace, string assemblyName)
+        {
+            // get the outermost containing namespace
+            var topLevel = @namespace;
+            while (!topLevel.ContainingNamespace.IsGlobalNamespace)
+            {
+                topLevel = topLevel.ContainingNamespace;
             }
 
-            if (field.Modifiers.Where(m => m.IsKind(SyntaxKind.ConstKeyword)).Any())
-            {
-                Report(WinRTRules.StructHasConstFieldRule, field.GetLocation(), structId);
-            }
+            return assemblyName != @namespace.Name && assemblyName != topLevel.Name;
+        }
 
-            // helper function to see if a string is in the list of typenames
-            bool SymbolSetHasString(string typeStr) { return typeNames.Where(sym => sym.ToString().Contains(typeStr)).Any(); }
-
-            foreach (var variable in field.DescendantNodes().OfType<VariableDeclarationSyntax>())
+        ///<summary>Array types can only be one dimensional and not System.Array, 
+        ///and there are some types not usable in the Windows Runtime, like KeyValuePair</summary> 
+        ///<param name="typeSymbol">The type to check</param><param name="loc">where the type is</param>
+        ///<param name="memberId">The method or property with this type in its signature</param>
+        /// <param name="typeId">the type this member (method/prop) lives in</param>
+        private void ReportIfInvalidType(ITypeSymbol typeSymbol, Location loc, SyntaxToken memberId, SyntaxToken typeId) 
+        {
+            // If it's of the form int[], it has to be one dimensional
+            if (typeSymbol.TypeKind == TypeKind.Array) 
             {
-                // No type info for dynamic, cant get type symbol for variable declaration
-                var typeStr = variable.Type.ToString();
-                // can't know if it's predefined type syntax to see if it's ObjectKeyword
-                if (SymbolSetHasString(typeStr) || typeStr == "dynamic" || typeStr == "object")
+                IArrayTypeSymbol arrTypeSym = (IArrayTypeSymbol)typeSymbol;
+
+                // [,,]?
+                if (arrTypeSym.Rank > 1) 
                 { 
-                    Report(WinRTRules.StructHasInvalidFieldRule, variable.GetLocation(), structId, typeStr);
+                    Report(WinRTRules.MultiDimensionalArrayRule, loc, memberId, typeId);
+                    return;
+                } 
+                // [][]?
+                if (arrTypeSym.ElementType.TypeKind == TypeKind.Array) 
+                { 
+                    Report(WinRTRules.JaggedArrayRule, loc, memberId, typeId);
+                    return;
+                }
+            }
+
+            // NotValidTypes is an array of types that don't exist in Windows Runtime, so can't be passed between functions in Windows Runtime
+            foreach (var typeName in NotValidTypes)
+            { 
+                var notValidTypeSym = _context.Compilation.GetTypeByMetadataName(typeName);
+                if (SymEq(typeSymbol.OriginalDefinition, notValidTypeSym))
+                {
+                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, typeName, SuggestType(typeName));
+                    return;
+                }
+            }
+
+            // construct the qualified name for this type 
+            string qualifiedName = "";
+            if (typeSymbol.ContainingNamespace != null && !typeSymbol.ContainingNamespace.IsGlobalNamespace)
+            {
+                // ContainingNamespace for Enumerable is just System, but we need System.Linq which is the ContainingSymbol
+                qualifiedName += typeSymbol.ContainingSymbol + "."; 
+            }
+            // instead of TypeName<int>, TypeName`1
+            qualifiedName += typeSymbol.MetadataName;
+
+            // GetTypeByMetadataName fails on "System.Linq.Enumerable" & "System.Collections.ObjectModel.ReadOnlyDictionary`2"
+            // Would be fixed by issue #678 on the dotnet/roslyn-sdk repo
+            foreach (var notValidType in WIPNotValidTypes) 
+            {
+                if (qualifiedName == notValidType)
+                { 
+                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, notValidType, SuggestType(notValidType));
+                    return;
                 }
             }
         }
-
-        /// <summary>
-        /// Keeps track of repeated declarations of a method (overloads) and raises diagnostics according to the rule that exactly one overload should be attributed the default</summary>
-        /// <param name="method">Look for overloads of this method, checking the attributes as well attributes for</param>
-        /// <param name="methodHasAttributeMap">
-        /// The strings are unique names for each method -- made by its name and arity
-        /// Some methods may get the attribute, some may not, we keep track of this in the map.
-        /// <param name="overloadsWithoutAttributeMap">
-        /// Once we have seen an overload and the method still has no attribute, we make a diagnostic for it
-        /// If we see the method again but this time with the attribute, we remove it (and its diagnostic) from the map
-        /// <param name="classId">The class the method lives in -- used for creating the diagnostic</param>
-        /// <returns>True iff multiple overloads of a method are found, where more than one has been designated as the default overload</returns>
-        private void CheckOverloadAttributes(MethodDeclarationSyntax method,
-            Dictionary<string, bool> methodHasAttributeMap,
-            Dictionary<string, Diagnostic> overloadsWithoutAttributeMap,
-            SyntaxToken classId)
-        {
-            int methodArity = method.ParameterList.Parameters.Count;
-            string methodNameWithArity = method.Identifier.Text + methodArity;
-
-            // look at all the attributes on this method and see if any of them is the DefaultOverload attribute 
-            bool hasDefaultOverloadAttribute = HasDefaultOverloadAttribute(method);
-            bool seenMethodBefore = methodHasAttributeMap.TryGetValue(methodNameWithArity, out bool methodHasAttrAlready);
-
-            // Do we have an overload ? 
-            if (seenMethodBefore)
-            {
-                if (hasDefaultOverloadAttribute && !methodHasAttrAlready)
-                {
-                    // we've seen it, but it didnt have the attribute, so mark that it has it now
-                    methodHasAttributeMap[methodNameWithArity] = true;
-                    // We finally got an attribute, so dont raise a diagnostic for this method
-                    overloadsWithoutAttributeMap.Remove(methodNameWithArity);
-                }
-                else if (hasDefaultOverloadAttribute && methodHasAttrAlready)
-                {
-                    // Special case in that multiple instances of the DefaultAttribute being used on the method 
-                    Report(WinRTRules.MultipleDefaultOverloadAttribute, method.GetLocation(), methodArity, method.Identifier, classId);
-                }
-                else if (!hasDefaultOverloadAttribute && !methodHasAttrAlready)
-                {
-                    // we could see this method later with the attribute, 
-                    // so hold onto the diagnostic for it until we know it doesn't have the attribute
-                    overloadsWithoutAttributeMap[methodNameWithArity] = Diagnostic.Create(
-                        WinRTRules.NeedDefaultOverloadAttribute, 
-                        method.GetLocation(), 
-                        methodArity, 
-                        method.Identifier,
-                        classId);
-                }
-            }
-            else
-            {
-                // first time we're seeing the method, add a pair in the map for its name and whether it has the attribute 
-                methodHasAttributeMap[methodNameWithArity] = hasDefaultOverloadAttribute;
-            }
-        }
-    }
+     }
 }

@@ -48,69 +48,7 @@ namespace Generator
             _context.ReportDiagnostic(d);
         }
 
-        ///<summary>Array types can only be one dimensional and not System.Array, 
-        ///and there are some types not usable in the Windows Runtime, like KeyValuePair</summary> 
-        ///<param name="typeSymbol">The type to check</param><param name="loc">where the type is</param>
-        ///<param name="memberId">The method or property with this type in its signature</param>
-        /// <param name="typeId">the type this member (method/prop) lives in</param>
-        private void ReportIfInvalidType(ITypeSymbol typeSymbol, Location loc, SyntaxToken memberId, SyntaxToken typeId) 
-        { 
-            // If it's of the form int[], it has to be one dimensional
-            if (typeSymbol.TypeKind == TypeKind.Array) 
-            {
-                // Successful conversion given the success of the condition
-                IArrayTypeSymbol arrTypeSym = (IArrayTypeSymbol)typeSymbol;
-
-                // [,,]?
-                if (arrTypeSym.Rank > 1) 
-                { 
-                    Report(WinRTRules.MultiDimensionalArrayRule, loc, memberId, typeId);
-                    return;
-                } 
-                // [][]?
-                if (arrTypeSym.ElementType.TypeKind == TypeKind.Array) 
-                { 
-                    Report(WinRTRules.JaggedArrayRule, loc, memberId, typeId);
-                    return;
-                }
-            }
-
-            // An array of types that don't exist in Windows Runtime, so can't be passed between functions in Windows Runtime
-            foreach (var typeName in NotValidTypes)
-            { 
-                var notValidTypeSym = _context.Compilation.GetTypeByMetadataName(typeName);
-                if (SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition, notValidTypeSym))
-                {
-                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, typeName, SuggestType(typeName));
-                    return;
-                }
-            }
-
-            // construct the qualified name for this type 
-            string qualifiedName = "";
-            // grab the containing namespace, we use ContainingSymbol because  TODO
-            if (typeSymbol.ContainingNamespace != null && !typeSymbol.ContainingNamespace.IsGlobalNamespace)
-            {
-                //qualifiedName += typeSymbol.ContainingSymbol;
-                // for typeSymbol = System.Linq.Enumerable ; the ContainingSymbol is System.Linq, the ContainingNamespace is System
-                // for typeSymbol = System.Collections.ObjectModel.ReadOnlyDictionary<int,int> 
-                //   ContainingSymbol = ContainingNamespace = System.Collections.ObjectModel
-                qualifiedName += typeSymbol.ContainingSymbol + "."; // Namespace for Enumerable is just System, but we need Linq.Enumerable
-            }
-            // instead of TypeName<int>, TypeName`1
-            qualifiedName += typeSymbol.MetadataName;
-
-            // GetTypeByMetadataName fails on "System.Linq.Enumerable" & "System.Collections.ObjectModel.ReadOnlyDictionary`2"
-            // Would be fixed by issue #678 on the dotnet/roslyn-sdk repo
-            foreach (var notValidType in WIPNotValidTypes) 
-            {
-                if (qualifiedName == notValidType)
-                { 
-                    Report(WinRTRules.UnsupportedTypeRule, loc, memberId, notValidType, SuggestType(notValidType));
-                    return;
-                }
-            }
-        }
+        private bool SymEq(ISymbol sym1, ISymbol sym2) { return SymbolEqualityComparer.Default.Equals(sym1, sym2); }
 
         /// <summary>
         /// Returns true if the class represented by the symbol 
@@ -161,7 +99,7 @@ namespace Generator
                     }
                 }
                 var typeToCheckSymbol = _context.Compilation.GetTypeByMetadataName(typeToCheck);
-                if (SymbolEqualityComparer.Default.Equals(typeSymbol.BaseType, typeToCheckSymbol))
+                if (SymEq(typeSymbol.BaseType, typeToCheckSymbol))
                 { 
                     return true;
                 }
@@ -172,6 +110,31 @@ namespace Generator
                 }
             }
 
+            return false;
+        }
+
+        private bool IsPublic(MemberDeclarationSyntax member) { return member.Modifiers.Where(m => m.IsKind(SyntaxKind.PublicKeyword)).Any(); }
+
+        #region Attributes        
+
+        /// <summary>Attributes can come in one list or many, e.g. [A(),B()] vs. [A()][B()]
+        /// look at all possible attributes and see if any match the given string</summary>
+        /// <param name="attrName">attribute names need to be fully qualified, e.g. DefaultOverload is really Windows.Foundation.Metadata.DefaultOverload</param>
+        /// <param name="ls">all the syntax nodes that correspond to an attribute list</param>
+        /// <returns>true iff the given attribute is in the list</returns>
+        private bool MatchesAnyAttribute(string attrName, SyntaxList<AttributeListSyntax> ls)
+        {
+            foreach (var attrList in ls)
+            {
+                foreach (var attr in attrList.Attributes)
+                {
+                    // no declared symbol for AttributeSyntax...
+                    if (attr.Name.ToString() == attrName)
+                    {
+                        return true;
+                    }
+                }
+            }
             return false;
         }
 
@@ -238,47 +201,6 @@ namespace Generator
             }
         }
 
-        /// <summary>Make sure any namespace defined is the same as the winmd or a subnamespace of it
-        /// If component is A.B, e.g. A.B.winmd , then D.Class1 is invalid, as well as A.C.Class2
-        /// </summary>
-        /// <param name="namespace">the authored namesapce to check</param><param name="assemblyName">the name of the component/winmd</param>
-        /// <returns>True iff namespace is disjoint from the assembly name</returns>
-        private bool IsInvalidNamespace(INamespaceSymbol @namespace, string assemblyName)
-        {
-            // get the outermost containing namespace
-            var topLevel = @namespace;
-            while (!topLevel.ContainingNamespace.IsGlobalNamespace)
-            {
-                topLevel = topLevel.ContainingNamespace;
-            }
-
-            // all types must be defined in a namespace that matches the one of the winmd being made, or a subnamespace of it
-            return assemblyName != @namespace.Name && assemblyName != topLevel.Name;
-        }
-
-        private bool IsPublic(MemberDeclarationSyntax member) { return member.Modifiers.Where(m => m.IsKind(SyntaxKind.PublicKeyword)).Any(); }
-        
-        /// <summary>Attributes can come in one list or many, e.g. [A(),B()] vs. [A()][B()]
-        /// look at all possible attributes and see if any match the given string</summary>
-        /// <param name="attrName">attribute names need to be fully qualified, e.g. DefaultOverload is really Windows.Foundation.Metadata.DefaultOverload</param>
-        /// <param name="ls">all the syntax nodes that correspond to an attribute list</param>
-        /// <returns>true iff the given attribute is in the list</returns>
-        private bool MatchesAnyAttribute(string attrName, SyntaxList<AttributeListSyntax> ls)
-        {
-            foreach (var attrList in ls)
-            {
-                foreach (var attr in attrList.Attributes)
-                {
-                    // no declared symbol for AttributeSyntax...
-                    if (attr.Name.ToString() == attrName)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
         /// <summary>Looks at all possible attributes on a given parameter declaration </summary>
         /// <returns>returns true iff any are (string) equal to the given attribute name</returns>
         private bool ParamHasAttribute(ParameterSyntax param, string attrName) { return MatchesAnyAttribute(attrName, param.AttributeLists); }
@@ -294,6 +216,65 @@ namespace Generator
         /// <param name="method"></param>
         /// <returns>True if any attribute is the DefaultOverload attribute</returns>
         private bool HasDefaultOverloadAttribute(MethodDeclarationSyntax method) { return OverloadAttributeNames.Where(str => MatchesAnyAttribute(str, method.AttributeLists)).Any(); }
+
+        /// <summary>
+        /// Keeps track of repeated declarations of a method (overloads) and raises diagnostics according to the rule that exactly one overload should be attributed the default</summary>
+        /// <param name="method">Look for overloads of this method, checking the attributes as well attributes for</param>
+        /// <param name="methodHasAttributeMap">
+        /// The strings are unique names for each method -- made by its name and arity
+        /// Some methods may get the attribute, some may not, we keep track of this in the map.
+        /// <param name="overloadsWithoutAttributeMap">
+        /// Once we have seen an overload and the method still has no attribute, we make a diagnostic for it
+        /// If we see the method again but this time with the attribute, we remove it (and its diagnostic) from the map
+        /// <param name="classId">The class the method lives in -- used for creating the diagnostic</param>
+        /// <returns>True iff multiple overloads of a method are found, where more than one has been designated as the default overload</returns>
+        private void CheckOverloadAttributes(MethodDeclarationSyntax method,
+            Dictionary<string, bool> methodHasAttributeMap,
+            Dictionary<string, Diagnostic> overloadsWithoutAttributeMap,
+            SyntaxToken classId)
+        {
+            int methodArity = method.ParameterList.Parameters.Count;
+            string methodNameWithArity = method.Identifier.Text + methodArity;
+
+            // look at all the attributes on this method and see if any of them is the DefaultOverload attribute 
+            bool hasDefaultOverloadAttribute = HasDefaultOverloadAttribute(method);
+            bool seenMethodBefore = methodHasAttributeMap.TryGetValue(methodNameWithArity, out bool methodHasAttrAlready);
+
+            // Do we have an overload ? 
+            if (seenMethodBefore)
+            {
+                if (hasDefaultOverloadAttribute && !methodHasAttrAlready)
+                {
+                    // we've seen it, but it didnt have the attribute, so mark that it has it now
+                    methodHasAttributeMap[methodNameWithArity] = true;
+                    // We finally got an attribute, so dont raise a diagnostic for this method
+                    overloadsWithoutAttributeMap.Remove(methodNameWithArity);
+                }
+                else if (hasDefaultOverloadAttribute && methodHasAttrAlready)
+                {
+                    // Special case in that multiple instances of the DefaultAttribute being used on the method 
+                    Report(WinRTRules.MultipleDefaultOverloadAttribute, method.GetLocation(), methodArity, method.Identifier, classId);
+                }
+                else if (!hasDefaultOverloadAttribute && !methodHasAttrAlready)
+                {
+                    // we could see this method later with the attribute, 
+                    // so hold onto the diagnostic for it until we know it doesn't have the attribute
+                    overloadsWithoutAttributeMap[methodNameWithArity] = Diagnostic.Create(
+                        WinRTRules.NeedDefaultOverloadAttribute, 
+                        method.GetLocation(), 
+                        methodArity, 
+                        method.Identifier,
+                        classId);
+                }
+            }
+            else
+            {
+                // first time we're seeing the method, add a pair in the map for its name and whether it has the attribute 
+                methodHasAttributeMap[methodNameWithArity] = hasDefaultOverloadAttribute;
+            }
+        }
+
+        #endregion 
 
         /// <summary>Gather the type symbols for all classes, interfaces and structs</summary>
         /// <param name="context">Context used for syntax trees</param><returns>A TypeCollector populated with the type symbols</returns>
@@ -371,6 +352,28 @@ namespace Generator
                 default: return "unknown syntax type: " + syntaxType;
             }
         }
+
+        private SpecialType[] AllowedStructFieldTypes = new SpecialType[] 
+        {
+            SpecialType.System_Boolean, 
+            SpecialType.System_String,
+            SpecialType.System_Single,
+            SpecialType.System_Double,
+            SpecialType.System_UInt16,
+            SpecialType.System_UInt32,
+            SpecialType.System_UInt64,
+            SpecialType.System_Int16,
+            SpecialType.System_Int32,
+            SpecialType.System_Int64,
+            SpecialType.System_Enum,
+        };
+
+        private IList<string> IListMethods = new List<string> {"Add", "Clear", "Contains", "IndexOf", "Insert", "Remove", "RemoveAt", "CopyTo" };
+        private IList<string> IListProperties = new List<string> { "IsFixedSize", "IsReadOnly", "Item" };
+        private IList<string> IDictionaryMethods = new List<string> { "Add", "Clear", "Contains", "CopyTo", "ContainsKey", "Remove", "TryGetValue" };
+        private IList<string> IDictionaryProperties = new List<string> { "Keys", "Values", "Count" };
+        private IList<string> IReadOnlyDictionaryMethods = new List<string> { "ContainsKey", "TryGetValue" };
+        private IList<string> IReadOnlyDictionaryProperties = new List<string> { "Keys", "Values", "Count" };
 
         private static readonly string[] nonWindowsRuntimeInterfaces = 
         {

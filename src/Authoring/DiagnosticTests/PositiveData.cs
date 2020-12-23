@@ -2,6 +2,214 @@ namespace DiagnosticTests
 {
     public partial class UnitTesting
     {
+        private const string Valid_CustomList = @"
+using System;
+using System.Collections;
+namespace Test
+{
+    public sealed class DisposableClass : IDisposable
+    {
+        public bool IsDisposed { get; set; }
+
+        public DisposableClass()
+        {
+            IsDisposed = false;
+        }
+
+        public void Dispose()
+        {
+            IsDisposed = true;
+        }
+    }
+
+    public sealed class CustomVector : IList<DisposableClass>
+    {
+        private IList<DisposableClass> _list;
+
+        public CustomVector()
+        {
+            _list = new List<DisposableClass>();
+        }
+
+        public CustomVector(IList<DisposableClass> list)
+        {
+            _list = list;
+        }
+
+        public DisposableClass this[int index] { get => _list[index]; set => _list[index] = value; }
+
+        public int Count => _list.Count();
+
+        public bool IsReadOnly => false;
+
+        public void Add(DisposableClass item)
+        {
+            _list.Add(item);
+        }
+
+        public void Clear()
+        {
+            _list.Clear();
+        }
+
+        public bool Contains(DisposableClass item)
+        {
+            return _list.Contains(item);
+        }
+
+        public void CopyTo(DisposableClass[] array, int arrayIndex)
+        {
+            _list.CopyTo(array, arrayIndex);
+        }
+
+        public IEnumerator<DisposableClass> GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
+        public int IndexOf(DisposableClass item)
+        {
+            return _list.IndexOf(item);
+        }
+
+        public void Insert(int index, DisposableClass item)
+        {
+            _list.Insert(index, item);
+        }
+
+        public bool Remove(DisposableClass item)
+        {
+            return _list.Remove(item);
+        }
+
+        public void RemoveAt(int index)
+        {
+            _list.RemoveAt(index);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+    }
+}
+";
+        private const string Valid_CustomDictionary = @"
+using System.Collections;
+using System.Collections.Generic;
+namespace Test
+{
+    public struct BasicStruct
+    {
+        public int X, Y;
+        public string Value;
+    }
+
+    public sealed class CustomDictionary : IDictionary<string, BasicStruct>
+    {
+        private readonly Dictionary<string, BasicStruct> _dictionary;
+
+        public CustomDictionary()
+        {
+            _dictionary = new Dictionary<string, BasicStruct>();
+        }
+
+        public BasicStruct this[string key] { 
+            get => _dictionary[key];
+            set => _dictionary[key] = value;
+        }
+
+        public ICollection<string> Keys => _dictionary.Keys;
+
+        public ICollection<BasicStruct> Values => _dictionary.Values;
+
+        public int Count => _dictionary.Count;
+
+        public bool IsReadOnly => false;
+
+        public void Add(string key, BasicStruct value)
+        {
+            _dictionary.Add(key, value);
+        }
+
+        public void Add(KeyValuePair<string, BasicStruct> item)
+        {
+            _dictionary.Add(item.Key, item.Value);
+        }
+
+        public void Clear()
+        {
+            _dictionary.Clear();
+        }
+
+        public bool Contains(KeyValuePair<string, BasicStruct> item)
+        {
+            return _dictionary.ContainsKey(item.Key);
+        }
+
+        public bool ContainsKey(string key)
+        {
+            return _dictionary.ContainsKey(key);
+        }
+        
+        public void CopyTo(KeyValuePair<string, BasicStruct>[] array, int arrayIndex)
+        {
+        }
+
+        public IEnumerator<KeyValuePair<string, BasicStruct>> GetEnumerator()
+        {
+            return _dictionary.GetEnumerator();
+        }
+
+        public bool Remove(string key)
+        {
+            return _dictionary.Remove(key);
+        }
+
+        public bool Remove(KeyValuePair<string, BasicStruct> item)
+        {
+            return _dictionary.Remove(item.Key);
+        }
+
+        public bool TryGetValue(string key, [MaybeNullWhen(false)] out BasicStruct value)
+        {
+            return _dictionary.TryGetValue(key, out value);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _dictionary.GetEnumerator();
+        }
+    }
+}";
+        private const string Valid_TwoNamespacesSameName = @"
+namespace Test.Component
+{
+    public sealed class A
+    {
+        public static IReadOnlyList<Uri> GetUris()
+        {
+            return new List<Uri>() {
+                new Uri(""http://github.com""),
+                new Uri(""http://microsoft.com"")
+                };
+        }
+    }
+}
+
+namespace Test.Component
+{
+    public sealed class B
+    {
+        public static IReadOnlyList<int> GetNums()
+        {
+            return new List<int>() { 311, 313 };
+        }
+    }
+}";
+
+ 
+
         private const string Valid_ListUsage = @"
 using System.Collections.Generic;
 namespace Test 
@@ -67,7 +275,40 @@ namespace Test.Component
         public sealed class Class2 { public int Y { get; } }
     }
 }";
+        private const string Valid_NestedNamespace4 = @"
+namespace Test
+{
+    public sealed class Blank { public Blank() {} }
+}
 
+namespace Test.Component
+{
+    public sealed Class1 { public int X { get; set; }  }
+
+    namespace InnerComponent
+    {
+        public sealed class Class2 { public int Y { get; } }
+    }
+}";
+        private const string Valid_NestedNamespace5 = @"
+namespace Test.Component
+{
+    namespace SubNamespace
+    {
+        public sealed class InnerClass { public InnerClass() {} }
+    }
+    public sealed class Blank { public Blank() {} }
+}
+
+namespace Test.Component
+{
+    public sealed Class1 { public int X { get; set; }  }
+
+    namespace InnerComponent
+    {
+        public sealed class Class2 { public int Y { get; } }
+    }
+}";
         private const string Valid_NamespacesDiffer = @"
 namespace Test 
 {
