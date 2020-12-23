@@ -1,7 +1,8 @@
 # Authoring Components
 
 ## Overview
-C#/WinRT provides support for authoring Windows Runtime components. You can write a library in C#, and use C#/WinRT's source generator to get a winmd that any WinRT compatible language can use. For example, a library written in C# can be used by a C++ program, via C#/WinRT and C++/WinRT, with just a few tweaks to the C++ project.
+**Authoring Support is still in preview**
+C#/WinRT is working to provide support for authoring Windows Runtime components. You can write a library in C#, and use C#/WinRT's source generator to get a winmd that any WinRT compatible language can use. For example, a library written in C# can be used by a C++ program, via C#/WinRT and C++/WinRT, with just a few tweaks to the C++ project.
 
 
 ## References
@@ -62,7 +63,7 @@ For now, users need a special target of their own so MSBuild can place the hosti
 
 You'll need to author some files to assist the hosting process by the native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. 
 
-If your app is packaged with MSIX, then you don't need to the manifest file, otherwise you need to include your activatable class registrations in the manifest file.
+If your app is packaged with MSIX, then you don't need to include the manifest file, otherwise you need to include your activatable class registrations in the manifest file.
 
 To do this, **in Visual Studio**, right click on the project node on the "Solution Explorer" window, click "Add", then "New Item". Search for the "Text File" template and name your file "YourNativeApp.exe.manifest".
 Repeat this for the "WinRT.Host.runtimeconfig.json" file. 
