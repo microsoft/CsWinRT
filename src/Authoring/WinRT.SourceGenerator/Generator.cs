@@ -183,7 +183,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             // "Test" is a workaround, GetAssemblyName returns null when used by unit tests 
             // shouldn't need workaround once we can pass AnalyzerConfigOptionsProvider in DiagnosticTests.Helpers.cs
             string assemblyName = GetAssemblyName(context) ?? "Test";
-
             WinRTComponentScanner winrtScanner = new WinRTComponentScanner(context, assemblyName);
             winrtScanner.FindDiagnostics();
             return winrtScanner.Found();
@@ -202,13 +201,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             
             
             if (CatchWinRTDiagnostics(context))
-            {
-                Logger.Log("Exiting early -- found errors in authored runtime component.");
-                Logger.Close();
-                return;
-            }
-
-            if (CatchWinRTDiagnostics(ref context))
             {
                 Logger.Log("Exiting early -- found errors in authored runtime component.");
                 Logger.Close();

@@ -462,7 +462,7 @@ namespace AuthoringSample
             return _dictionary.ContainsKey(key);
         }
 
-        public void CopyTo([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] KeyValuePair<string, BasicStruct>[] array, int arrayIndex)
+        public void CopyTo(KeyValuePair<string, BasicStruct>[] array, int arrayIndex)
         {
         }
 
@@ -471,7 +471,6 @@ namespace AuthoringSample
             return _dictionary.GetEnumerator();
         }
 
-        [DefaultOverload]
         public bool Remove(string key)
         {
             return _dictionary.Remove(key);
@@ -630,7 +629,7 @@ namespace AuthoringSample
             return _list.Contains(item);
         }
 
-        public void CopyTo([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] DisposableClass[] array, int arrayIndex)
+        public void CopyTo(DisposableClass[] array, int arrayIndex)
         {
             _list.CopyTo(array, arrayIndex);
         }
