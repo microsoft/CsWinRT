@@ -15,11 +15,11 @@ namespace DiagnosticTests
         /// <param name="source">string of source code</param>
         /// <returns></returns>
         private Compilation CreateCompilation(string source)
-          => CSharpCompilation.Create(
-              assemblyName: "compilation",
-              syntaxTrees: new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Preview)) },
-               references: new[] { MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location) },
-               options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+            => CSharpCompilation.Create(
+                assemblyName: "compilation",
+                syntaxTrees: new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Preview)) },
+                references: new[] { MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location) },
+                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
         /// <summary>
         /// CreateDriver makes a CSharpGeneratorDriver
