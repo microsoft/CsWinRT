@@ -16,9 +16,7 @@ namespace WinRT.SourceGenerator
                 title: title,
                 messageFormat: messageFormat,
                 category: "Usage",
-                /* Warnings dont fail command line build; winmd generation is prevented regardless of severity.
-                * Make this error when making final touches on this deliverable. */
-                defaultSeverity: DiagnosticSeverity.Warning,
+                defaultSeverity: DiagnosticSeverity.Error,
                 isEnabledByDefault: true,
                 helpLinkUri: "https://docs.microsoft.com/en-us/previous-versions/hh977010(v=vs.110)");
         }

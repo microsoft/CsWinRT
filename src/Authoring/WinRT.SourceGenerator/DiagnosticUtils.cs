@@ -45,20 +45,9 @@ namespace Generator
                     var classSymbol = model.GetDeclaredSymbol(@class);
                     var publicMethods = @class.ChildNodes().OfType<MethodDeclarationSyntax>().Where(IsPublic);
                     var props = @class.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
-                    var classImplementsInterfaces = classSymbol.AllInterfaces;
 
-                    foreach (var @interface in classSymbol.AllInterfaces)
-                    {
-                        var ifaceName = @interface.OriginalDefinition.ContainingNamespace + "." + @interface.OriginalDefinition.MetadataName;
-                        if (MappedCSharpTypeMethods.TryGetValue(ifaceName, out var iMethods))
-                        { 
-                            publicMethods = publicMethods.Where(m => !iMethods.Contains(m.Identifier.Text));
-                        }
-                        if (MappedCSharpTypeProperties.TryGetValue(ifaceName, out var iProps))
-                        { 
-                            props = props.Where(m => !iProps.Contains(m.Identifier.Text));
-                        }
-                    }
+                    // filter out methods and properties that will be replaced with our custom type mappings
+                    IgnoreCustomTypeMappings(classSymbol, ref publicMethods, ref props);
 
                     if (!classSymbol.IsSealed)
                     {
@@ -87,19 +76,9 @@ namespace Generator
                     var interfaceSym = model.GetDeclaredSymbol(@interface);
                     var methods = @interface.DescendantNodes().OfType<MethodDeclarationSyntax>();
                     var props = @interface.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
-                
-                    foreach (var iface in interfaceSym.AllInterfaces)
-                    {
-                        var ifaceName = iface.OriginalDefinition.ContainingNamespace + "." + iface.OriginalDefinition.MetadataName;
-                        if (MappedCSharpTypeMethods.TryGetValue(ifaceName, out var iMethods))
-                        { 
-                            methods = methods.Where(m => !iMethods.Contains(m.Identifier.Text));
-                        }
-                        if (MappedCSharpTypeProperties.TryGetValue(ifaceName, out var iProps))
-                        { 
-                            props = props.Where(m => !iProps.Contains(m.Identifier.Text));
-                        }
-                    }                   
+
+                    // filter out methods and properties that will be replaced with our custom type mappings
+                    IgnoreCustomTypeMappings(interfaceSym, ref methods, ref props); 
 
                     if (interfaceSym.IsGenericType)
                     {
@@ -119,6 +98,23 @@ namespace Generator
                     CheckStructFields(@struct); 
                 }
             } 
+        }
+
+        private void IgnoreCustomTypeMappings(INamedTypeSymbol typeSymbol, ref IEnumerable<MethodDeclarationSyntax> methods, ref IEnumerable<PropertyDeclarationSyntax> properties)
+        {
+            string QualifiedName(INamedTypeSymbol sym) 
+            { 
+                return sym.OriginalDefinition.ContainingNamespace + "." + sym.OriginalDefinition.MetadataName; 
+            }
+
+            foreach (var @interface in typeSymbol.AllInterfaces.
+                        Where(symbol => MappedCSharpTypes.Contains(QualifiedName(symbol)) ||
+                                        ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
+            {
+                var mems = @interface.GetMembers();
+                methods = methods.Where(m => !mems.Where(mem => mem.Name == m.Identifier.Text).Any());
+                properties = properties.Where(p => !mems.Where(mem => mem.Name.Substring(4) == p.Identifier.Text).Any()); 
+            }
         }
 
         /// <summary>Checks to see if the class declares any operators (overloading them)</summary>
@@ -276,7 +272,7 @@ namespace Generator
                 {
                     IFieldSymbol varFieldSym = (IFieldSymbol)GetModel(variable.SyntaxTree).GetDeclaredSymbol(variable);
 
-                    if (AllowedStructFieldTypes.Contains(varFieldSym.Type.SpecialType) || varFieldSym.Type.TypeKind == TypeKind.Struct)
+                    if (ValidStructFieldTypes.Contains(varFieldSym.Type.SpecialType) || varFieldSym.Type.TypeKind == TypeKind.Struct)
                     {
                         break;
                     }
