@@ -8,7 +8,7 @@ using System.Linq;
 namespace DiagnosticTests
 {
     [TestFixture]
-    public partial class UnitTesting
+    public sealed partial class UnitTesting
     {
         /* UnitTests require the "IsCsWinRTComponent" check in Generator.cs to be commented out, 
             until we can pass AnalyzerConfigOptions in our TestHelpers.cs file
@@ -266,47 +266,47 @@ namespace DiagnosticTests
                 #endregion
 
                 #region InOutAttribute
-                yield return new TestCaseData(TestArrayParamAttrUnary_4, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. Array parameter marked [In]");
-                yield return new TestCaseData(TestArrayParamAttrUnary_5, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. Array parameter marked [Out]");
-                yield return new TestCaseData(TestArrayParamAttrUnary_8, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. Non-array parameter marked [In] - unqualified");
-                yield return new TestCaseData(TestArrayParamAttrUnary_9, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. Non-array parameter marked [Out]");
-                yield return new TestCaseData(TestArrayParamAttrUnary_11, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. Non-array parameter marked [In]");
-                yield return new TestCaseData(TestArrayParamAttrUnary_12, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrUnary_12");
-                yield return new TestCaseData(TestArrayParamAttrUnary_13, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrUnary_13");
-                yield return new TestCaseData(TestArrayParamAttrUnary_14, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrUnary_14");
-                yield return new TestCaseData(TestArrayParamAttrBinary_4, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrBinary_4");
-                yield return new TestCaseData(TestArrayParamAttrBinary_5, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrBinary_5");
-                yield return new TestCaseData(TestArrayParamAttrBinary_8, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrBinary_8");
-                yield return new TestCaseData(TestArrayParamAttrBinary_9, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrBinary_9");
-                yield return new TestCaseData(TestArrayParamAttrBinary_14, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrBinary_14");
-                yield return new TestCaseData(TestArrayParamAttrBinary_15, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. Array marked [In] - second parameter");
-                yield return new TestCaseData(TestArrayParamAttrBinary_16, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. Array marked [Out] - second parameter");
-                yield return new TestCaseData(TestArrayParamAttrBinary_21, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. Non array marked [In], with marked array");
-                yield return new TestCaseData(TestArrayParamAttrBinary_22, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. Non array marked [Out], with marked array, reverse");
-                yield return new TestCaseData(TestArrayParamAttrBinary_23, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. Non array marked [Out], with marked array");
+                yield return new TestCaseData(ArrayParamAttrUnary_4, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. Array parameter marked [In]");
+                yield return new TestCaseData(ArrayParamAttrUnary_5, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. Array parameter marked [Out]");
+                yield return new TestCaseData(ArrayParamAttrUnary_8, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. Non-array parameter marked [In] - unqualified");
+                yield return new TestCaseData(ArrayParamAttrUnary_9, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. Non-array parameter marked [Out]");
+                yield return new TestCaseData(ArrayParamAttrUnary_11, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. Non-array parameter marked [In]");
+                yield return new TestCaseData(ArrayParamAttrUnary_12, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrUnary_12");
+                yield return new TestCaseData(ArrayParamAttrUnary_13, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrUnary_13");
+                yield return new TestCaseData(ArrayParamAttrUnary_14, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrUnary_14");
+                yield return new TestCaseData(ArrayParamAttrBinary_4, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrBinary_4");
+                yield return new TestCaseData(ArrayParamAttrBinary_5, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrBinary_5");
+                yield return new TestCaseData(ArrayParamAttrBinary_8, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrBinary_8");
+                yield return new TestCaseData(ArrayParamAttrBinary_9, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrBinary_9");
+                yield return new TestCaseData(ArrayParamAttrBinary_14, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. TestArrayParamAttrBinary_14");
+                yield return new TestCaseData(ArrayParamAttrBinary_15, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. Array marked [In] - second parameter");
+                yield return new TestCaseData(ArrayParamAttrBinary_16, WinRTRules.ArrayMarkedInOrOut).SetName("InOutAttribute. Array marked [Out] - second parameter");
+                yield return new TestCaseData(ArrayParamAttrBinary_21, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. Non array marked [In], with marked array");
+                yield return new TestCaseData(ArrayParamAttrBinary_22, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. Non array marked [Out], with marked array, reverse");
+                yield return new TestCaseData(ArrayParamAttrBinary_23, WinRTRules.NonArrayMarkedInOrOut).SetName("InOutAttribute. Non array marked [Out], with marked array");
                 #endregion
 
                 #region ArrayAccessAttribute
-                yield return new TestCaseData(TestArrayParamAttrUnary_1, WinRTRules.ArrayParamMarkedBoth).SetName("ArrayAttribute. Both marked, separate lists");
-                yield return new TestCaseData(TestArrayParamAttrUnary_2, WinRTRules.ArrayParamMarkedBoth).SetName("ArrayAttribute. Both marked, same list");
-                yield return new TestCaseData(TestArrayParamAttrUnary_3, WinRTRules.ArrayOutputParamMarkedRead).SetName("ArrayAttribute. ReadOnlyArray attribute on array out parameter");
-                yield return new TestCaseData(TestArrayParamAttrUnary_6, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non-array parameter marked ReadOnlyArray");
-                yield return new TestCaseData(TestArrayParamAttrUnary_7, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non-array parameter marked WriteOnlyArray");
-                yield return new TestCaseData(TestArrayParamAttrUnary_10, WinRTRules.ArrayParamNotMarked).SetName("ArrayAttribute. Array parameter not marked ReadOnlyArray or WriteOnlyArray");
-                yield return new TestCaseData(TestArrayParamAttrBinary_1, WinRTRules.ArrayParamMarkedBoth).SetName("ArrayAttribute. Both marked, second parameter, same list");
-                yield return new TestCaseData(TestArrayParamAttrBinary_2, WinRTRules.ArrayParamMarkedBoth).SetName("ArrayAttribute. Both marked, second parameter, separate list");
-                yield return new TestCaseData(TestArrayParamAttrBinary_3, WinRTRules.ArrayOutputParamMarkedRead).SetName("ArrayAttribute. Array `out` var marked ReadOnly");
-                yield return new TestCaseData(TestArrayParamAttrBinary_6, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non-array parameter marked ReadOnly, second argument");
-                yield return new TestCaseData(TestArrayParamAttrBinary_7, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non-array parameter marked WriteOnly, second argument");
-                yield return new TestCaseData(TestArrayParamAttrBinary_10, WinRTRules.ArrayParamNotMarked).SetName("ArrayAttribute. Array not marked, second argument");
-                yield return new TestCaseData(TestArrayParamAttrBinary_11, WinRTRules.ArrayParamMarkedBoth).SetName("ArrayAttribute. Marked both, second array");
-                yield return new TestCaseData(TestArrayParamAttrBinary_12, WinRTRules.ArrayParamMarkedBoth).SetName("ArrayAttribute. Marked both, first array");
-                yield return new TestCaseData(TestArrayParamAttrBinary_13, WinRTRules.ArrayOutputParamMarkedRead).SetName("ArrayAttribute. Marked out and read only, second argument");
-                yield return new TestCaseData(TestArrayParamAttrBinary_17, WinRTRules.ArrayParamNotMarked).SetName("ArrayAttribute. Array not marked - second argument");
-                yield return new TestCaseData(TestArrayParamAttrBinary_18, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non array marked ReadOnlyArray");
-                yield return new TestCaseData(TestArrayParamAttrBinary_19, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non array marked WriteOnlyArray");
-                yield return new TestCaseData(TestArrayParamAttrBinary_20, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non array marked [In], with marked array, reverse");
-                yield return new TestCaseData(TestArrayParamAttrBinary_24, WinRTRules.ArrayParamNotMarked).SetName("ArrayAttribute. Array missing attribute");
+                yield return new TestCaseData(ArrayParamAttrUnary_1, WinRTRules.ArrayParamMarkedBoth).SetName("ArrayAttribute. Both marked, separate lists");
+                yield return new TestCaseData(ArrayParamAttrUnary_2, WinRTRules.ArrayParamMarkedBoth).SetName("ArrayAttribute. Both marked, same list");
+                yield return new TestCaseData(ArrayParamAttrUnary_3, WinRTRules.ArrayOutputParamMarkedRead).SetName("ArrayAttribute. ReadOnlyArray attribute on array out parameter");
+                yield return new TestCaseData(ArrayParamAttrUnary_6, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non-array parameter marked ReadOnlyArray");
+                yield return new TestCaseData(ArrayParamAttrUnary_7, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non-array parameter marked WriteOnlyArray");
+                yield return new TestCaseData(ArrayParamAttrUnary_10, WinRTRules.ArrayParamNotMarked).SetName("ArrayAttribute. Array parameter not marked ReadOnlyArray or WriteOnlyArray");
+                yield return new TestCaseData(ArrayParamAttrBinary_1, WinRTRules.ArrayParamMarkedBoth).SetName("ArrayAttribute. Both marked, second parameter, same list");
+                yield return new TestCaseData(ArrayParamAttrBinary_2, WinRTRules.ArrayParamMarkedBoth).SetName("ArrayAttribute. Both marked, second parameter, separate list");
+                yield return new TestCaseData(ArrayParamAttrBinary_3, WinRTRules.ArrayOutputParamMarkedRead).SetName("ArrayAttribute. Array `out` var marked ReadOnly");
+                yield return new TestCaseData(ArrayParamAttrBinary_6, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non-array parameter marked ReadOnly, second argument");
+                yield return new TestCaseData(ArrayParamAttrBinary_7, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non-array parameter marked WriteOnly, second argument");
+                yield return new TestCaseData(ArrayParamAttrBinary_10, WinRTRules.ArrayParamNotMarked).SetName("ArrayAttribute. Array not marked, second argument");
+                yield return new TestCaseData(ArrayParamAttrBinary_11, WinRTRules.ArrayParamMarkedBoth).SetName("ArrayAttribute. Marked both, second array");
+                yield return new TestCaseData(ArrayParamAttrBinary_12, WinRTRules.ArrayParamMarkedBoth).SetName("ArrayAttribute. Marked both, first array");
+                yield return new TestCaseData(ArrayParamAttrBinary_13, WinRTRules.ArrayOutputParamMarkedRead).SetName("ArrayAttribute. Marked out and read only, second argument");
+                yield return new TestCaseData(ArrayParamAttrBinary_17, WinRTRules.ArrayParamNotMarked).SetName("ArrayAttribute. Array not marked - second argument");
+                yield return new TestCaseData(ArrayParamAttrBinary_18, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non array marked ReadOnlyArray");
+                yield return new TestCaseData(ArrayParamAttrBinary_19, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non array marked WriteOnlyArray");
+                yield return new TestCaseData(ArrayParamAttrBinary_20, WinRTRules.NonArrayMarked).SetName("ArrayAttribute. Non array marked [In], with marked array, reverse");
+                yield return new TestCaseData(ArrayParamAttrBinary_24, WinRTRules.ArrayParamNotMarked).SetName("ArrayAttribute. Array missing attribute");
                 #endregion
 
                 // name clash with params (__retval)

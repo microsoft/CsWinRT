@@ -1,18 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
-using WinRT.SourceGenerator;
 
 namespace Generator
 {
@@ -180,9 +175,9 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
         {
-            // "Test" is a workaround, GetAssemblyName returns null when used by unit tests 
+            // "DiagnosticTests" is a workaround, GetAssemblyName returns null when used by unit tests 
             // shouldn't need workaround once we can pass AnalyzerConfigOptionsProvider in DiagnosticTests.Helpers.cs
-            string assemblyName = GetAssemblyName(context) ?? "Test";
+            string assemblyName = GetAssemblyName(context) ?? "DiagnosticTests";
             WinRTComponentScanner winrtScanner = new WinRTComponentScanner(context, assemblyName);
             winrtScanner.FindDiagnostics();
             return winrtScanner.Found();

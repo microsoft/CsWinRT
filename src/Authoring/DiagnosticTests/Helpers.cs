@@ -1,7 +1,5 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.VisualBasic;
-using NUnit.Framework;
 using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +7,7 @@ using System.Reflection;
 
 namespace DiagnosticTests
 {
-    public partial class UnitTesting
+    public sealed partial class UnitTesting
     {
         /// <summary>
         /// CreateCompilation creates a CSharpCompilation 

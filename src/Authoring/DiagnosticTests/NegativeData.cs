@@ -1,9 +1,9 @@
 namespace DiagnosticTests
 {
-    public partial class UnitTesting
+    public sealed partial class UnitTesting
     {
         private const string SameNameNamespacesDisjoint = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Coords
     {
@@ -26,36 +26,36 @@ namespace A
 
 
         private const string NamespaceDifferByDot = @"
-namespace Test.A
+namespace DiagnosticTests.A
 {
-    private Test.B.Blank _blank;
+    private DiagnosticTests.B.Blank _blank;
     public sealed class Dummy 
     { 
         public Dummy() {}
     }
 }
 
-namespace Test.B
+namespace DiagnosticTests.B
 {
     public sealed class Blank { public Blank() {} }
 }";
 
         private const string NamespaceDifferByDot2 = @"
-namespace Test.A
+namespace DiagnosticTests.A
 {
-    private Test.Blank _blank;
+    private DiagnosticTests.Blank _blank;
     public sealed class Dummy
     {
         public Dummy() {}
     }
 }
 
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Blank { public Blank() {} }
 }";
         private const string NamespacesDifferByCase = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Blank { public Blank() { } }
 
@@ -72,7 +72,7 @@ namespace Test
 
         private const string DisjointNamespaces = @"
 // ""Test.winmd"" - types in namespace A won't be accessible
-namespace Test 
+namespace DiagnosticTests 
 {
     public sealed class Blank { public Blank() { } }
 }
@@ -86,7 +86,7 @@ namespace A
 
         private const string DisjointNamespaces2 = @"
 // ""Test.winmd""  uses the other namespace
-namespace Test 
+namespace DiagnosticTests 
 {
     public sealed class Blank 
     { 
@@ -105,7 +105,7 @@ namespace A
 }";
 
         private const string NoPublicTypes = @"
-namespace Test
+namespace DiagnosticTests
 {
     internal sealed class RuntimeComponent
     {
@@ -115,7 +115,7 @@ namespace Test
         // Generic Dictionary 
         private const string InterfaceWithGenericDictReturnType = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -125,7 +125,7 @@ namespace Test
         private const string InterfaceWithGenericDictInput = @"
 
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -134,7 +134,7 @@ namespace Test
 }";
         private const string ClassWithGenericDictReturnType = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -143,7 +143,7 @@ namespace Test
 }";
         private const string ClassWithGenericDictInput = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -152,7 +152,7 @@ namespace Test
 }";
         private const string IfaceWithGenDictProp = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -161,7 +161,7 @@ namespace Test
 }";
         private const string ClassWithGenDictProp = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -171,7 +171,7 @@ namespace Test
         // Generic ReadOnlyDictionary
         private const string InterfaceWithGenericRODictReturnType = @"
 using System.Collections.ObjectModel;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -180,7 +180,7 @@ namespace Test
 }";
         private const string InterfaceWithGenericRODictInput = @"
 using System.Collections.ObjectModel;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -189,7 +189,7 @@ namespace Test
 }";
         private const string ClassWithGenericRODictReturnType = @"
 using System.Collections.ObjectModel;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -198,7 +198,7 @@ namespace Test
 }";
         private const string ClassWithGenericRODictInput = @"
 using System.Collections.ObjectModel;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -207,7 +207,7 @@ namespace Test
 }";
         private const string IfaceWithGenRODictProp = @"
 using System.Collections.ObjectModel;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -216,7 +216,7 @@ namespace Test
 }";
         private const string ClassWithGenRODictProp = @"
 using System.Collections.ObjectModel;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -226,7 +226,7 @@ namespace Test
         // NonGeneric KeyValuePair
         private const string InterfaceWithGenericKVPairReturnType = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -235,7 +235,7 @@ namespace Test
 }";
         private const string InterfaceWithGenericKVPairInput = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -244,7 +244,7 @@ namespace Test
 }";
         private const string ClassWithGenericKVPairReturnType = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -253,7 +253,7 @@ namespace Test
 }";
         private const string ClassWithGenericKVPairInput = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -262,7 +262,7 @@ namespace Test
 }";
         private const string IfaceWithGenKVPairProp = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -271,7 +271,7 @@ namespace Test
 }";
         private const string ClassWithGenKVPairProp = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -281,7 +281,7 @@ namespace Test
         // Generic Enumerable 
         private const string InterfaceWithGenericEnumerableReturnType = @"
 using System.Linq;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -290,7 +290,7 @@ namespace Test
 }";
         private const string InterfaceWithGenericEnumerableInput = @"
 using System.Linq;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -299,7 +299,7 @@ namespace Test
 }";
         private const string ClassWithGenericEnumerableReturnType = @"
 using System.Linq;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -308,7 +308,7 @@ namespace Test
 }";
         private const string ClassWithGenericEnumerableInput = @"
 using System.Linq;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -317,7 +317,7 @@ namespace Test
 }";
         private const string IfaceWithGenEnumerableProp = @"
 using System.Linq;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -326,7 +326,7 @@ namespace Test
 }";
         private const string ClassWithGenEnumerableProp = @"
 using System.Linq;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -336,7 +336,7 @@ namespace Test
         // Generic List 
         private const string InterfaceWithGenericListReturnType = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -345,7 +345,7 @@ namespace Test
 }";
         private const string InterfaceWithGenericListInput = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -354,7 +354,7 @@ namespace Test
 }";
         private const string ClassWithGenericListReturnType = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -363,7 +363,7 @@ namespace Test
 }";
         private const string ClassWithGenericListInput = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -372,7 +372,7 @@ namespace Test
 }";
         private const string IfaceWithGenListProp = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -381,7 +381,7 @@ namespace Test
 }";
         private const string ClassWithGenListProp = @"
 using System.Collections.Generic;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MyClass
     {
@@ -390,7 +390,7 @@ namespace Test
 }";
         
         private const string InterfaceWithOverloadNoAttribute = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -400,7 +400,7 @@ namespace Test
 }";
         private const string InterfaceWithOverloadAttributeTwice = @"
 using Windows.Foundation.Metadata;
-namespace Test
+namespace DiagnosticTests
 {
     public interface MyInterface
     {
@@ -412,7 +412,7 @@ namespace Test
 }";
 
         private const string StructWithInterfaceField = @"
-namespace Test 
+namespace DiagnosticTests 
 {
         public interface Foo 
         {
@@ -426,7 +426,7 @@ namespace Test
 }";
 
         private const string UnsealedClass = @"
-namespace Test 
+namespace DiagnosticTests 
 { 
     public class UnsealedClass 
     { 
@@ -434,7 +434,7 @@ namespace Test
     } 
 }";
         private const string UnsealedClass2 = @"
-namespace Test 
+namespace DiagnosticTests 
 { 
     public class UnsealedClass 
     { 
@@ -443,7 +443,7 @@ namespace Test
 }"; 
 
         private const string GenericClass = @"
-namespace Test 
+namespace DiagnosticTests 
 { 
     public sealed class GenericClass<T> 
     { 
@@ -451,7 +451,7 @@ namespace Test
     } 
 }";
         private const string GenericInterface = @"
-namespace Test 
+namespace DiagnosticTests 
 { 
     public interface GenIface<T> 
     { 
@@ -460,7 +460,7 @@ namespace Test
 }";
  
         private const string ClassInheritsException = @"
-namespace Test 
+namespace DiagnosticTests 
 { 
     public sealed class ClassWithExceptions : System.Exception 
     { 
@@ -470,7 +470,7 @@ namespace Test
 
         // multidim array
         private const string MultiDim_2DProp = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_2DProp
     {
@@ -479,7 +479,7 @@ namespace Test
     }
 }";
         private const string MultiDim_3DProp = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_3DProp
     {
@@ -488,7 +488,7 @@ namespace Test
     }
 }";
         private const string MultiDim_3DProp_Whitespace = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_3DProp
     {
@@ -498,7 +498,7 @@ namespace Test
 }";
         // 2d class 
         private const string MultiDim_2D_PublicClassPublicMethod1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_2D_PublicClassPublicMethod1
     {
@@ -506,7 +506,7 @@ namespace Test
     }
 }";
         private const string MultiDim_2D_PublicClassPublicMethod2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_2D_PublicClassPublicMethod2
     {
@@ -514,7 +514,7 @@ namespace Test
     }
 }";
         private const string MultiDim_2D_PublicClassPublicMethod3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_2D_PublicClassPublicMethod3
     {
@@ -522,7 +522,7 @@ namespace Test
     }
 }";
         private const string MultiDim_2D_PublicClassPublicMethod4 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_2D_PublicClassPublicMethod4
     {
@@ -530,7 +530,7 @@ namespace Test
     }
 }";
         private const string MultiDim_2D_PublicClassPublicMethod5 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_2D_PublicClassPublicMethod5
     {
@@ -538,7 +538,7 @@ namespace Test
     }
 }";
         private const string MultiDim_2D_PublicClassPublicMethod6 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_2D_PublicClassPublicMethod6
     {
@@ -547,7 +547,7 @@ namespace Test
 }";
         // 3d class  
         private const string MultiDim_3D_PublicClassPublicMethod1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_3D_PublicClassPublicMethod1
     {
@@ -555,7 +555,7 @@ namespace Test
     }
 }";
         private const string MultiDim_3D_PublicClassPublicMethod2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_3D_PublicClassPublicMethod2
     {
@@ -563,7 +563,7 @@ namespace Test
     }
 }";
         private const string MultiDim_3D_PublicClassPublicMethod3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_3D_PublicClassPublicMethod3
     {
@@ -571,7 +571,7 @@ namespace Test
     }
 }";
         private const string MultiDim_3D_PublicClassPublicMethod4 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_3D_PublicClassPublicMethod4
     {
@@ -579,7 +579,7 @@ namespace Test
     }
 }";
         private const string MultiDim_3D_PublicClassPublicMethod5 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_3D_PublicClassPublicMethod5
     {
@@ -587,7 +587,7 @@ namespace Test
     }
 }";
         private const string MultiDim_3D_PublicClassPublicMethod6 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class MultiDim_3D_PublicClassPublicMethod6
     {
@@ -596,7 +596,7 @@ namespace Test
 }";
         // 2d iface 
         private const string MultiDim_2D_Interface1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface MultiDim_2D_Interface1
     {
@@ -604,7 +604,7 @@ namespace Test
     }
 }";
         private const string MultiDim_2D_Interface2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface MultiDim_2D_Interface2
     {
@@ -612,7 +612,7 @@ namespace Test
     }
 }";
         private const string MultiDim_2D_Interface3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface MultiDim_2D_Interface3
     {
@@ -620,7 +620,7 @@ namespace Test
     }
 }";
         private const string MultiDim_2D_Interface4 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface MultiDim_2D_Interface4
     {
@@ -628,7 +628,7 @@ namespace Test
     }
 }";
         private const string MultiDim_2D_Interface5 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface MultiDim_2D_Interface5
     {
@@ -636,7 +636,7 @@ namespace Test
     }
 }";
         private const string MultiDim_2D_Interface6 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface MultiDim_2D_Interface6
     {
@@ -645,7 +645,7 @@ namespace Test
 }";
         // 3d iface 
         private const string MultiDim_3D_Interface1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface MultiDim_3D_Interface1
     {
@@ -653,7 +653,7 @@ namespace Test
     }
 }";
         private const string MultiDim_3D_Interface2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface MultiDim_3D_Interface2
     {
@@ -661,7 +661,7 @@ namespace Test
     }
 }";
         private const string MultiDim_3D_Interface3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface MultiDim_3D_Interface3
     {
@@ -669,7 +669,7 @@ namespace Test
     }
 }";
         private const string MultiDim_3D_Interface4 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface MultiDim_3D_Interface4
     {
@@ -677,7 +677,7 @@ namespace Test
     }
 }";
         private const string MultiDim_3D_Interface5 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface MultiDim_3D_Interface5
     {
@@ -685,7 +685,7 @@ namespace Test
     }
 }";
         private const string MultiDim_3D_Interface6 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface MultiDim_3D_Interface6
     {
@@ -694,7 +694,7 @@ namespace Test
 }";
         // subnamespace 2d iface
         private const string SubNamespaceInterface_D2Method1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -705,7 +705,7 @@ namespace Test
     }
 }";
         private const string SubNamespaceInterface_D2Method2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     { 
@@ -716,7 +716,7 @@ namespace Test
     }
 }";
         private const string SubNamespaceInterface_D2Method3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     { 
@@ -727,7 +727,7 @@ namespace Test
     }
 }";
         private const string SubNamespaceInterface_D2Method4 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     { 
@@ -738,7 +738,7 @@ namespace Test
     }
 }";
         private const string SubNamespaceInterface_D2Method5 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     { 
@@ -749,7 +749,7 @@ namespace Test
     }
 }";
         private const string SubNamespaceInterface_D2Method6 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace 
     { 
@@ -761,7 +761,7 @@ namespace Test
 }";
         // subnamespace 3d iface 
         private const string SubNamespaceInterface_D3Method1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace 
     { 
@@ -772,7 +772,7 @@ namespace Test
     }
 }";
         private const string SubNamespaceInterface_D3Method2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace 
     { 
@@ -783,7 +783,7 @@ namespace Test
     }
 }";
         private const string SubNamespaceInterface_D3Method3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace 
     { 
@@ -794,7 +794,7 @@ namespace Test
     }
 }";
         private const string SubNamespaceInterface_D3Method4 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace 
     { 
@@ -805,7 +805,7 @@ namespace Test
     }
 }";
         private const string SubNamespaceInterface_D3Method5 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace 
     { 
@@ -816,7 +816,7 @@ namespace Test
     }
 }";
         private const string SubNamespaceInterface_D3Method6 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace 
     { 
@@ -828,7 +828,7 @@ namespace Test
 }";
         // system array
         private const string ArrayInstanceProperty1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class ArrayInstanceProperty2
     {
@@ -839,7 +839,7 @@ namespace Test
     } 
 }";
         private const string ArrayInstanceProperty2 = @"
-namespace Test
+namespace DiagnosticTests
 {
 public sealed class ArrayInstanceProperty4
     {
@@ -850,7 +850,7 @@ public sealed class ArrayInstanceProperty4
     }
 }";
         private const string ArrayInstanceInterface1 = @"
-namespace Test
+namespace DiagnosticTests
 {
  public interface ArrayInstanceInterface1
     {
@@ -858,7 +858,7 @@ namespace Test
     }
 }";
         private const string ArrayInstanceInterface2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface ArrayInstanceInterface2
     {
@@ -866,7 +866,7 @@ namespace Test
     }
 }";
         private const string ArrayInstanceInterface3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface ArrayInstanceInterface3
     {
@@ -874,7 +874,7 @@ namespace Test
     }
 }";
         private const string SystemArrayProperty5 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class SystemArrayProperty
     {
@@ -882,7 +882,7 @@ namespace Test
     }
 }";
         private const string SystemArrayJustReturn = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class JustReturn 
     {
@@ -890,7 +890,7 @@ namespace Test
     }
 }";
         private const string SystemArrayUnaryAndReturn = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class UnaryAndReturn
     {
@@ -898,7 +898,7 @@ namespace Test
     }
 }";
         private const string SystemArraySecondArgClass = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class SecondArgClass
     {
@@ -906,7 +906,7 @@ namespace Test
     }
 }";
         private const string SystemArraySecondArg2Class = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class SecondArg2Class
     {
@@ -914,7 +914,7 @@ namespace Test
     }
 }";
         private const string SystemArraySecondArgAndReturnTypeClass = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class SecondArgAndReturnType
     { 
@@ -922,7 +922,7 @@ namespace Test
     }
 }";
         private const string SystemArraySecondArgAndReturnTypeClass2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class SecondArgAndReturnTypeClass2
     {
@@ -930,7 +930,7 @@ namespace Test
     }
 }";
         private const string SystemArrayNilArgsButReturnTypeInterface = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface NilArgsButReturnTypeInterface
     {
@@ -938,7 +938,7 @@ namespace Test
     }
 }";
         private const string SystemArrayUnaryAndReturnTypeInterface = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface UnaryAndReturnTypeInterface
     {
@@ -946,7 +946,7 @@ namespace Test
     }
 }";
         private const string SystemArraySecondArgAndReturnTypeInterface = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface SecondArgAndReturnTypeInterface
     {
@@ -954,7 +954,7 @@ namespace Test
     }
 }";
         private const string SystemArraySecondArgAndReturnTypeInterface2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface SecondArgAndReturnTypeInterface2
     {
@@ -962,7 +962,7 @@ namespace Test
     }
 }";
         private const string SystemArraySecondArgInterface = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface SecondArgInterface
     {
@@ -970,7 +970,7 @@ namespace Test
     }
 }";
         private const string SystemArraySecondArgInterface2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface SecondArgInterface2
     {
@@ -978,7 +978,7 @@ namespace Test
     }
 }";
         private const string SystemArraySubNamespace_ReturnOnly = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -989,7 +989,7 @@ namespace Test
     }
 }";
         private const string SystemArraySubNamespace_ReturnAndInput1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -1000,7 +1000,7 @@ namespace Test
     }
 }";
         private const string SystemArraySubNamespace_ReturnAndInput2of2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -1011,7 +1011,7 @@ namespace Test
     }
 }";
         private const string SystemArraySubNamespace_ReturnAndInput2of3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -1022,7 +1022,7 @@ namespace Test
     }
 }";
         private const string SystemArraySubNamespace_NotReturnAndInput2of2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -1033,7 +1033,7 @@ namespace Test
     }
 }";
         private const string SystemArraySubNamespace_NotReturnAndInput2of3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -1045,7 +1045,7 @@ namespace Test
 }";
         // constructor of same arity 
         private const string ConstructorsOfSameArity = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class SameArityConstructors
     {
@@ -1068,7 +1068,7 @@ namespace Test
         // async interfaces  
         private const string ClassImplementsAsyncAndException = @"
 using Windows.Foundation;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class OpWithProgress : System.Exception, IAsyncOperationWithProgress<int, bool>
     {
@@ -1102,7 +1102,7 @@ namespace Test
         private const string ClassImplementsIAsyncOperationWithProgress = @"
 using Windows.Foundation;
 using System;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class OpWithProgress : IAsyncOperationWithProgress<int, bool>
     {
@@ -1134,7 +1134,7 @@ namespace Test
         private const string ClassImplementsIAsyncActionWithProgress = @"
 using Windows.Foundation;
 using System;
-namespace Test
+namespace DiagnosticTests
 {
     public class ActionWithProgress : IAsyncActionWithProgress<int>
     {
@@ -1166,7 +1166,7 @@ namespace Test
         private const string ClassImplementsIAsyncOperation = @"
 using Windows.Foundation;
 using System;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Op : IAsyncOperation<int>
     {
@@ -1197,7 +1197,7 @@ namespace Test
         private const string ClassImplementsIAsyncAction = @"
 using Windows.Foundation;
 using System;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class AsyAction : IAsyncAction
     {
@@ -1236,35 +1236,35 @@ namespace Test
 }";
         private const string InterfaceImplementsIAsyncOperationWithProgress = @"
 using Windows.Foundation; using System;
-namespace Test 
+namespace DiagnosticTests 
 { 
     public interface OpWithProgress : IAsyncOperationWithProgress<int, bool> {} 
 }";
         private const string InterfaceImplementsIAsyncActionWithProgress = @"
 using Windows.Foundation; 
 using System;
-namespace Test 
+namespace DiagnosticTests 
 { 
     public class ActionWithProgress : IAsyncActionWithProgress<int> {} 
 }";
         private const string InterfaceImplementsIAsyncOperation = @"
 using Windows.Foundation; 
 using System;
-namespace Test 
+namespace DiagnosticTests 
 { 
     public interface IAsyncOperation : IAsyncOperation<int> {} 
 }";
         private const string InterfaceImplementsIAsyncAction = @"
 using Windows.Foundation;
 using System;
-namespace Test 
+namespace DiagnosticTests 
 { 
     public interface AsyAction : IAsyncAction {} 
 }";
         private const string InterfaceImplementsIAsyncOperationWithProgress2 = @"
 using Windows.Foundation;
 using System;
-namespace Test
+namespace DiagnosticTests
 {
     public interface OpWithProgress : IAsyncOperationWithProgress<int, bool>
     {
@@ -1285,7 +1285,7 @@ namespace Test
         private const string InterfaceImplementsIAsyncActionWithProgress2 = @"
 using Windows.Foundation;
 using System;
-namespace Test
+namespace DiagnosticTests
 {
     public class ActionWithProgress : IAsyncActionWithProgress<int>
     {
@@ -1317,7 +1317,7 @@ namespace Test
         private const string InterfaceImplementsIAsyncOperation2 = @"
 using Windows.Foundation;
 using System;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Op : IAsyncOperation<int>
     {
@@ -1348,7 +1348,7 @@ namespace Test
         private const string InterfaceImplementsIAsyncAction2 = @"
 using Windows.Foundation;
 using System;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class AsyAction : IAsyncAction
     {
@@ -1387,8 +1387,8 @@ namespace Test
 }";
 
         // readonlyarray / writeonlyarray attribute
-        private const string TestArrayParamAttrUnary_1 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_1 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
@@ -1399,192 +1399,192 @@ namespace Test
         }
     }
 }";
-        private const string TestArrayParamAttrUnary_2 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_2 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
         public void BothAttributes_Together([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray, System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrUnary_3 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_3 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
         public void MarkedOutAndReadOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] out int[] arr) { arr = new int[] { }; }
     }
 }";
-        private const string TestArrayParamAttrUnary_4 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_4 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
         public void ArrayMarkedIn([In] int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrUnary_5 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_5 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
         public void ArrayMarkedOut([Out] int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrUnary_6 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_6 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
         public void NonArrayMarkedReadOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int arr) { }
     }
 }";
-        private const string TestArrayParamAttrUnary_7 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_7 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
         public void NonArrayMarkedWriteOnly([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int arr) { }
     }
 }";
-        private const string TestArrayParamAttrUnary_8 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_8 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
         public void ParamMarkedIn([In] int arr) { }
     }
 }";
-        private const string TestArrayParamAttrUnary_9 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_9 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
         public void ParamMarkedOut([Out] int arr) { }
     }
 }";
-        private const string TestArrayParamAttrUnary_10 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_10 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
         public void ArrayNotMarked(int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrUnary_11 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_11 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
         public void ParamMarkedIn([System.Runtime.InteropServices.In] int arr) { }
     }
 }";
-        private const string TestArrayParamAttrUnary_12 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_12 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
         public void ParamMarkedOut([System.Runtime.InteropServices.Out] int arr) { }
     }
 }";
-        private const string TestArrayParamAttrUnary_13 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_13 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
         public void ArrayMarkedIn([System.Runtime.InteropServices.In] int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrUnary_14 = @"
-namespace Test
+        private const string ArrayParamAttrUnary_14 = @"
+namespace DiagnosticTests
 {
     public sealed class OnlyParam
     {
         public void ArrayMarkedOut([System.Runtime.InteropServices.Out] int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_1 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_1 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoParam
     {
         public void BothAttributes_Separate(int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray][System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_2 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_2 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoParam
     {
         public void BothAttributes_Together(int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray, System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_3 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_3 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoParam
     {
         public void MarkedOutAndReadOnly(int i, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] out int[] arr) { arr = new int[] { }; }
     }
 }";
-        private const string TestArrayParamAttrBinary_4 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_4 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoParam
     {
         public void ArrayMarkedIn(int i, [In] int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_5 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_5 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoParam
     {
         public void ArrayMarkedOut(int i, [Out] int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_6 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_6 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoParam
     {
         public void NonArrayMarkedReadOnly(int i, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_7 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_7 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoParam
     {
         public void NonArrayMarkedWriteOnly(int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_8 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_8 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoParam
     {
         public void ParamMarkedIn(int i, [In] int arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_9 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_9 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoParam
     {
         public void ParamMarkedOut(int i, [Out] int arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_10 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_10 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoParam
     {
         public void ArrayNotMarked(int i, int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_11 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_11 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoArray
     {
@@ -1597,8 +1597,8 @@ namespace Test
         }
     }
 }";
-        private const string TestArrayParamAttrBinary_12 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_12 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoArray
     {
@@ -1611,8 +1611,8 @@ namespace Test
         }
     }
 }";
-        private const string TestArrayParamAttrBinary_13 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_13 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoArray
     {
@@ -1622,87 +1622,87 @@ namespace Test
         }
     }
 }";
-        private const string TestArrayParamAttrBinary_14 = @"
-namespace Test{
+        private const string ArrayParamAttrBinary_14 = @"
+namespace DiagnosticTests{
     public sealed class TwoParam
     {
         public void ArrayMarkedIn(int i, [In] int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_15 = @"
-namespace Test 
+        private const string ArrayParamAttrBinary_15 = @"
+namespace DiagnosticTests 
 {
     public sealed class TwoArray
     {
         public void ArrayMarkedIn2([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [In] int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_16 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_16 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoArray
     {
         public void ArrayMarkedOut([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [Out] int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_17 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_17 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoArray
     {
         public void ArrayNotMarked(int i, int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_18 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_18 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoArray
     {
         public void NonArrayMarkedReadOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int i) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_19 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_19 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoArray
     {
         public void NonArrayMarkedWriteOnly([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int i) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_20 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_20 = @"
+namespace DiagnosticTests
 { 
     public sealed class TwoArray
     {
         public void NonArrayMarkedWriteOnly2([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int i, [System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_21 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_21 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoArray
     {
         public void ParamMarkedIn([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [In] int arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_22 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_22 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoArray
     {
         public void ParamMarkedOut([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs, [Out] int arr) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_23 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_23 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoArray
     {
         public void ParamMarkedOut2([Out] int arr, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] int[] xs) { }
     }
 }";
-        private const string TestArrayParamAttrBinary_24 = @"
-namespace Test
+        private const string ArrayParamAttrBinary_24 = @"
+namespace DiagnosticTests
 {
     public sealed class TwoArray
     {
@@ -1711,7 +1711,7 @@ namespace Test
 }";
         // ref param 
         private const string RefParam_InterfaceMethod = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface IHaveAMethodWithRefParam
     {
@@ -1719,7 +1719,7 @@ namespace Test
     }
 }";
         private const string RefParam_ClassMethod = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class ClassWithMethodUsingRefParam
     {
@@ -1728,7 +1728,7 @@ namespace Test
 }";
         // operator overload 
         private const string OperatorOverload_Class = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class ClassThatOverloadsOperator
     {
@@ -1741,7 +1741,7 @@ namespace Test
 
         // param name conflict 
         private const string DunderRetValParam = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class ParameterNamedDunderRetVal
     {
@@ -1753,7 +1753,7 @@ namespace Test
 }";
         // struct fields 
         private const string StructWithConstructor = @"
-namespace Test
+namespace DiagnosticTests
 {
     public struct StructWithConstructor_Invalid
     {
@@ -1765,7 +1765,7 @@ namespace Test
     }
 } ";
         private const string StructWithClassField = @"
-namespace Test 
+namespace DiagnosticTests 
 {
     public sealed class SillyClass
     {
@@ -1783,7 +1783,7 @@ namespace Test
     }
 }";
         private const string StructWithClassField2 = @"
-namespace Test 
+namespace DiagnosticTests 
 {
     public sealed class SillyClass
     {
@@ -1800,11 +1800,11 @@ namespace Prod
 {
     public struct StructWithClass_Invalid
     {
-        public Test.SillyClass classField;
+        public DiagnosticTests.SillyClass classField;
     }
 }";
         private const string StructWithDelegateField = @"
-namespace Test 
+namespace DiagnosticTests 
 {
     public struct StructWithDelegate_Invalid
     {
@@ -1812,7 +1812,7 @@ namespace Test
     }
 }";
         private const string StructWithPrimitiveTypesMissingPublicKeyword = @"
-namespace Test
+namespace DiagnosticTests
 {
     public struct StructWithAllValidFields
     {
@@ -1831,12 +1831,12 @@ namespace Test
     }
 }";
         private const string EmptyStruct = @"
-namespace Test 
+namespace DiagnosticTests 
 { 
     public struct Mt {} 
 }";
         private const string StructWithIndexer = @"
-namespace Test
+namespace DiagnosticTests
 {
     public struct StructWithIndexer_Invalid
     {
@@ -1845,7 +1845,7 @@ namespace Test
     }
 }";
         private const string StructWithMethods = @"
-namespace Test
+namespace DiagnosticTests
 {
     public struct StructWithMethods_Invalid
     {
@@ -1856,7 +1856,7 @@ namespace Test
     }
 }";
         private const string StructWithConst = @"
-namespace Test
+namespace DiagnosticTests
 {
     public struct StructWithConst_Invalid 
     {
@@ -1864,7 +1864,7 @@ namespace Test
     }
 }";
         private const string StructWithProperty = @"
-namespace Test
+namespace DiagnosticTests
 {
     public enum BasicEnum
     { 
@@ -1881,7 +1881,7 @@ namespace Test
     }
 }";
         private const string StructWithPrivateField = @"
-namespace Test
+namespace DiagnosticTests
 {
     public struct StructWithPrivateField_Invalid
     {
@@ -1889,7 +1889,7 @@ namespace Test
     }
 }";
         private const string StructWithObjectField = @"
-namespace Test
+namespace DiagnosticTests
 {
     public struct StructWithObjectField_Invalid
     {
@@ -1897,7 +1897,7 @@ namespace Test
     }
 }";
         private const string StructWithDynamicField = @"
-namespace Test
+namespace DiagnosticTests
 {
     public struct StructWithDynamicField_Invalid 
     {
@@ -1905,7 +1905,7 @@ namespace Test
     }
 }";
         private const string TwoOverloads_NoAttribute_NamesHaveNumber = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_NoAttribute_WithNum
     {
@@ -1917,7 +1917,7 @@ namespace Test
         // DefaultOverload attribute tests
         private const string TwoOverloads_TwoAttribute_OneInList_Unqualified = @"
 using Windows.Foundation.Metadata;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_TwoAttribute_OneInList
     {
@@ -1932,7 +1932,7 @@ namespace Test
 }";
         private const string TwoOverloads_TwoAttribute_BothInList_Unqualified = @"
 using Windows.Foundation.Metadata;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_TwoAttribute_BothInList
     {
@@ -1948,7 +1948,7 @@ namespace Test
 }";
         private const string TwoOverloads_TwoAttribute_TwoLists_Unqualified = @"
 using Windows.Foundation.Metadata;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_TwoAttribute_TwoLists
     {
@@ -1963,7 +1963,7 @@ namespace Test
 }";
         private const string TwoOverloads_TwoAttribute_OneInSeparateList_OneNot_Unqualified = @"
 using Windows.Foundation.Metadata;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_TwoAttribute_OneInSeparateList_OneNot
     {
@@ -1978,7 +1978,7 @@ namespace Test
 }";
         private const string TwoOverloads_TwoAttribute_BothInSeparateList_Unqualified = @"
 using Windows.Foundation.Metadata;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_TwoAttribute_BothInSeparateList
     {
@@ -1993,7 +1993,7 @@ namespace Test
 }";
         private const string TwoOverloads_TwoAttribute_Unqualified = @"
 using Windows.Foundation.Metadata;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_TwoAttribute
     {
@@ -2006,7 +2006,7 @@ namespace Test
 }";
         private const string ThreeOverloads_TwoAttributes_Unqualified= @"
 using Windows.Foundation.Metadata;
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class ThreeOverloads_TwoAttributes
     {
@@ -2020,7 +2020,7 @@ namespace Test
     }
 }";
         private const string TwoOverloads_NoAttribute = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_NoAttribute
     {
@@ -2030,7 +2030,7 @@ namespace Test
     }
 }";
         private const string TwoOverloads_TwoAttribute_OneInList = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_TwoAttribute_OneInList
     {
@@ -2043,7 +2043,7 @@ namespace Test
     }
 }";
         private const string TwoOverloads_NoAttribute_OneIrrevAttr = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_NoAttribute_OneIrrevAttr
     {
@@ -2054,7 +2054,7 @@ namespace Test
     }
 }";
         private const string TwoOverloads_TwoAttribute_BothInList = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_TwoAttribute_BothInList
     {
@@ -2068,7 +2068,7 @@ namespace Test
     }
 }";
         private const string TwoOverloads_TwoAttribute_TwoLists = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_TwoAttribute_TwoLists
     {
@@ -2081,7 +2081,7 @@ namespace Test
     }
 }";
         private const string TwoOverloads_TwoAttribute_OneInSeparateList_OneNot = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_TwoAttribute_OneInSeparateList_OneNot
     {
@@ -2095,7 +2095,7 @@ namespace Test
     }
 }";
         private const string TwoOverloads_TwoAttribute_BothInSeparateList = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_TwoAttribute_BothInSeparateList
     {
@@ -2109,7 +2109,7 @@ namespace Test
     }
 }";
         private const string TwoOverloads_TwoAttribute = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class TwoOverloads_TwoAttribute
     {
@@ -2121,7 +2121,7 @@ namespace Test
     }
 }";
         private const string ThreeOverloads_TwoAttributes = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class ThreeOverloads_TwoAttributes
     {
@@ -2136,7 +2136,7 @@ namespace Test
 }";
         // jagged 2d/3d prop
         private const string Jagged2D_Property2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged2D_Property2
     {
@@ -2144,7 +2144,7 @@ namespace Test
     }
 }";
         private const string Jagged3D_Property1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged3D_Property1
     {
@@ -2153,7 +2153,7 @@ namespace Test
 }";
         // jagged 2d class method 
         private const string Jagged2D_ClassMethod1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged2D_ClassMethod1
     {
@@ -2167,7 +2167,7 @@ namespace Test
     }
 }";
         private const string Jagged2D_ClassMethod2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged2D_ClassMethod2
     {
@@ -2175,7 +2175,7 @@ namespace Test
     }
 }";
         private const string Jagged2D_ClassMethod3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged2D_ClassMethod3
     {
@@ -2183,7 +2183,7 @@ namespace Test
     }
 }";
         private const string Jagged2D_ClassMethod4 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged2D_ClassMethod4
     {
@@ -2191,7 +2191,7 @@ namespace Test
     }
 }";
         private const string Jagged2D_ClassMethod5 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged2D_ClassMethod5
     {
@@ -2199,7 +2199,7 @@ namespace Test
     }
 }";
         private const string Jagged2D_ClassMethod6 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged2D_ClassMethod6
     {
@@ -2208,7 +2208,7 @@ namespace Test
 }";
         // jagged 3d class method
         private const string Jagged3D_ClassMethod1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged3D_ClassMethod1
     {
@@ -2226,7 +2226,7 @@ namespace Test
     }
 }";
         private const string Jagged3D_ClassMethod2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged3D_ClassMethod1
     {
@@ -2234,7 +2234,7 @@ namespace Test
     }
 }";
         private const string Jagged3D_ClassMethod3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged3D_ClassMethod3
     {
@@ -2242,7 +2242,7 @@ namespace Test
     }
 }";
         private const string Jagged3D_ClassMethod4 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged3D_ClassMethod4
     {
@@ -2250,7 +2250,7 @@ namespace Test
     }
 }";
         private const string Jagged3D_ClassMethod5 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged3D_ClassMethod5
     {
@@ -2258,7 +2258,7 @@ namespace Test
     }
 }";
         private const string Jagged3D_ClassMethod6 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public sealed class Jagged3D_ClassMethod6
     {
@@ -2267,7 +2267,7 @@ namespace Test
 }";
         // jagged 2d interface method
         private const string Jagged2D_InterfaceMethod1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface Jagged2D_InterfaceMethod1
     {
@@ -2275,7 +2275,7 @@ namespace Test
     }
 }";
         private const string Jagged2D_InterfaceMethod2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface Jagged2D_InterfaceMethod2
     {
@@ -2283,7 +2283,7 @@ namespace Test
     }
 }";
         private const string Jagged2D_InterfaceMethod3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface Jagged2D_InterfaceMethod3
     {
@@ -2291,7 +2291,7 @@ namespace Test
     }
 }";
         private const string Jagged2D_InterfaceMethod4 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface Jagged2D_InterfaceMethod4
     {
@@ -2299,7 +2299,7 @@ namespace Test
     }
 }";
         private const string Jagged2D_InterfaceMethod5 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface Jagged2D_InterfaceMethod5
     {
@@ -2307,7 +2307,7 @@ namespace Test
     }
 }";
         private const string Jagged2D_InterfaceMethod6 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface Jagged2D_InterfaceMethod6
     {
@@ -2316,7 +2316,7 @@ namespace Test
 }";
         // jagged 2d interface method
         private const string Jagged3D_InterfaceMethod1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface Jagged3D_InterfaceMethod1
     {
@@ -2324,7 +2324,7 @@ namespace Test
     }
 }";
         private const string Jagged3D_InterfaceMethod2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface Jagged3D_InterfaceMethod2
     {
@@ -2332,7 +2332,7 @@ namespace Test
     }
 }";
         private const string Jagged3D_InterfaceMethod3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface Jagged3D_InterfaceMethod3
     {
@@ -2340,7 +2340,7 @@ namespace Test
     }
 }";
         private const string Jagged3D_InterfaceMethod4 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface Jagged3D_InterfaceMethod4
     {
@@ -2348,7 +2348,7 @@ namespace Test
     }
 }";
         private const string Jagged3D_InterfaceMethod5 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface Jagged3D_InterfaceMethod5
     {
@@ -2356,7 +2356,7 @@ namespace Test
     }
 }";
         private const string Jagged3D_InterfaceMethod6 = @"
-namespace Test
+namespace DiagnosticTests
 {
     public interface Jagged3D_InterfaceMethod6
     {
@@ -2365,7 +2365,7 @@ namespace Test
 }";
         // subnamespace jagged 2d iface
         private const string SubNamespace_Jagged2DInterface1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -2376,7 +2376,7 @@ namespace Test
     }
 }";
         private const string SubNamespace_Jagged2DInterface2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -2387,7 +2387,7 @@ namespace Test
     }
 }";
         private const string SubNamespace_Jagged2DInterface3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -2398,7 +2398,7 @@ namespace Test
     }
 }";
         private const string SubNamespace_Jagged2DInterface4 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -2409,7 +2409,7 @@ namespace Test
     }
 }";
         private const string SubNamespace_Jagged2DInterface5 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -2420,7 +2420,7 @@ namespace Test
     }
 }";
         private const string SubNamespace_Jagged2DInterface6 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -2432,7 +2432,7 @@ namespace Test
 }";
         // subnamespace jagged 3d iface
         private const string SubNamespace_Jagged3DInterface1 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -2443,7 +2443,7 @@ namespace Test
     }
 }";
         private const string SubNamespace_Jagged3DInterface2 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -2454,7 +2454,7 @@ namespace Test
     }
 }";
         private const string SubNamespace_Jagged3DInterface3 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -2465,7 +2465,7 @@ namespace Test
     }
 }";
         private const string SubNamespace_Jagged3DInterface4 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -2476,7 +2476,7 @@ namespace Test
     }
 }";
         private const string SubNamespace_Jagged3DInterface5 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
@@ -2487,7 +2487,7 @@ namespace Test
     }
 }";
         private const string SubNamespace_Jagged3DInterface6 = @"
-namespace Test
+namespace DiagnosticTests
 {
     namespace SubNamespace
     {
