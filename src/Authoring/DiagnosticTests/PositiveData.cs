@@ -2,6 +2,41 @@ namespace DiagnosticTests
 {
     public sealed partial class UnitTesting
     {
+        private const string Valid_RollYourOwnAsyncAction = @"
+using System;
+using Windows.Foundation;
+namespace DiagnosticTests
+{
+
+    public interface IAsyncAction
+    {
+        void GetResults();
+        AsyncActionCompletedHandler Completed { get; set; }
+        void Cancel();
+        void Close();
+        Exception ErrorCode { get; }
+        uint Id { get; }
+        AsyncStatus Status { get; }
+    }
+
+    public sealed class ClassAsyncAction : IAsyncAction
+    {
+        public void GetResults() { throw new NotImplementedException(); }
+
+        public AsyncActionCompletedHandler Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public void Cancel() { throw new NotImplementedException(); }
+
+        public void Close() { throw new NotImplementedException(); }
+
+        public Exception ErrorCode => throw new NotImplementedException();
+
+        public uint Id => throw new NotImplementedException();
+
+        public AsyncStatus Status => throw new NotImplementedException();
+    }
+}";
+
         private const string Valid_CustomList = @"
 using System;
 using System.Collections.Generic;

@@ -10,20 +10,41 @@ namespace DiagnosticTests
     [TestFixture]
     public sealed partial class UnitTesting
     {
-        /* UnitTests require the "IsCsWinRTComponent" check in Generator.cs to be commented out, 
-            until we can pass AnalyzerConfigOptions in our TestHelpers.cs file
-           ---
-           Add unit tests by creating a source code like this:
-           private const string MyNewTest = @"namespace Test { ... }";
-           
-           And have a DiagnosticDescriptor for the one to check for, they live in WinRT.SourceGenerator.DiagnosticRules
-           
-           Then go to the ValidCases/InvalidCases property here and add an entry for it
+        /* A unit test for CsWinRT Diagnostics is a string of source code stored in either `NegativeData.cs` or `PositiveData.cs`
+         * In either file, the test should be added as
+          
+          private const string <TestName> = @"
+          // using statements
+          namespace DiagnosticTests
+          { 
+           ...
+          }";
+        
+         * If the scenario the test covers is positive (should generate winmd) then label the string variable "Valid_<TestName>" instead of "<TestName>"
+         * The assumption when viewing tests is that it is negative unless the name is prefixed with 'Valid"
+        
+         * For negative scenarios, there should be a DiagnosticDescriptor that matches the scenario
+         * The CsWinRT DiagnosticDescriptors live in `WinRTRules.cs`, check there and if there's none add a new one. 
+
+         * To include the unit test in a run, it needs to be in the corresponding section of this file `UnitTesting.cs`
+
+         * The string given to `.SetName()` should try to describe the scenario succinctly. 
+         * The first few words should classify the scenario and should be separated by periods.
+         * This makes it easy to group together tests of similar scenarios
+         * This is because the Visual Studio TestExplorer for NUnit tests uses this property to display the test
+         *    and tries to be helpful by branching sections of tests based on "." in the name
+         
+         * For example, using List<T> is not allowed, so all tests for it get prefixed "InvalidType." 
+
+         Note 1: The namespace must be DiagnosticTests, as we have rules about namespaces and the winmd filename
+         Note 2: UnitTests require the "IsCsWinRTComponent" check in Generator.cs to be commented out, 
+           if all tests are failing except the valid ones, make sure that this check is disabled 
+           [this is a workaround until we can pass AnalyzerConfigOptions in `Helpers.cs` file]
         */
 
         /// <summary>
-        /// CheckNoDiagnostic asserts that no diagnostics are raised on the 
-        /// compilation produced from the cswinrt source generator based on the given source code /// </summary>
+        /// CheckNoDiagnostic asserts that no diagnostics are raised on the compilation produced 
+        /// from the cswinrt source generator based on the given source code</summary>
         /// <param name="source"></param>
         [Test, TestCaseSource(nameof(ValidCases))] 
         public void CheckNoDiagnostic(string source)
@@ -83,8 +104,8 @@ namespace DiagnosticTests
                 yield return new TestCaseData(NoPublicTypes, WinRTRules.NoPublicTypesRule).SetName("Component has no public types");
                 // the below tests are positive tests when the winmd is named "Test.winmd", and negative when it is "Test.A.winmd" 
                 // they are examples of what it means for namespace to be "prefixed with the winmd file name"
-                // yield return new TestCaseData(NamespaceDifferByDot, WinRTRules.DisjointNamespaceRule).SetName("Namespace Test.A and Test.B");
-                // yield return new TestCaseData(NamespaceDifferByDot2, WinRTRules.DisjointNamespaceRule).SetName("Namespace Test.A and Test");
+                yield return new TestCaseData(NamespaceDifferByDot, WinRTRules.DisjointNamespaceRule).SetName("Namespace Test.A and Test.B");
+                yield return new TestCaseData(NamespaceDifferByDot2, WinRTRules.DisjointNamespaceRule).SetName("Namespace Test.A and Test");
 
                 // Unsealed classes, generic class/interfaces, invalid inheritance (System.Exception)
                 yield return new TestCaseData(UnsealedClass, WinRTRules.UnsealedClassRule).SetName("Unsealed class public field");
@@ -371,6 +392,7 @@ namespace DiagnosticTests
         {
             get
             {
+                yield return new TestCaseData(Valid_RollYourOwnAsyncAction).SetName("Valid. AsyncInterfaces. Implementing your own IAsyncAction");
                 yield return new TestCaseData(Valid_CustomDictionary).SetName("Valid. CustomProjection. IDictionary<string,BasicStruct>");
                 yield return new TestCaseData(Valid_CustomList).SetName("Valid. CustomProjection. IList<DisposableClass>");
                 yield return new TestCaseData(Valid_TwoNamespacesSameName).SetName("Valid. Namespaces with same name");
