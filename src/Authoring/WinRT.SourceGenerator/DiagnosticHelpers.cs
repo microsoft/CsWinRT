@@ -47,6 +47,13 @@ namespace Generator
             Flag();
             _context.ReportDiagnostic(d);
         }
+        private SemanticModel GetModel(SyntaxTree t) { return _context.Compilation.GetSemanticModel(t); }
+        
+        private INamedTypeSymbol GetTypeByMetadataName(string fullyQualifiedMetadataName)
+        {
+            return _context.Compilation.GetTypeByMetadataName(fullyQualifiedMetadataName);
+        }
+        
         private bool SymEq(ISymbol sym1, ISymbol sym2) { return SymbolEqualityComparer.Default.Equals(sym1, sym2); }
 
         /// <summary>
@@ -56,6 +63,30 @@ namespace Generator
         /// <returns>True iff the given class implements any of the IAsync interfaces that are not valid in Windows Runtime</returns>
         private void ImplementsInvalidInterface(INamedTypeSymbol typeSymbol, TypeDeclarationSyntax typeDeclaration)
         {
+            bool AsyncActionCase(INamedTypeSymbol sym)
+            {
+                // using Windows.Foundation.IAsyncAction  ?
+                bool isWindowsFoundation = sym.ContainingNamespace.IsGlobalNamespace || sym.ContainingNamespace.Name == "Windows.Foundation";
+                bool isAsyncAction = sym.MetadataName == "IAsyncAction";
+                return isWindowsFoundation && isAsyncAction;
+            } 
+
+            if (typeSymbol.BaseType != null && typeSymbol.BaseType.ContainingNamespace != null)
+            { 
+                if (AsyncActionCase(typeSymbol.BaseType))
+                { 
+                    Report(WinRTRules.NonWinRTInterface, typeDeclaration.GetLocation(), typeDeclaration.Identifier, "IAsyncAction");
+                }
+            }
+
+            foreach (var implementedInterface in typeSymbol.AllInterfaces)
+            {
+                if (AsyncActionCase(implementedInterface))
+                { 
+                    Report(WinRTRules.NonWinRTInterface, typeDeclaration.GetLocation(), typeDeclaration.Identifier, "IAsyncAction");
+                }
+            }
+
             foreach (string prohibitedInterface in nonWindowsRuntimeInterfaces)
             {
                 // check here if typesymbol's basetype is invalid ? but interfaces are also base types?
@@ -97,7 +128,7 @@ namespace Generator
                         return true;
                     }
                 }
-                var typeToCheckSymbol = _context.Compilation.GetTypeByMetadataName(typeToCheck);
+                var typeToCheckSymbol = GetTypeByMetadataName(typeToCheck);
                 if (SymEq(typeSymbol.BaseType, typeToCheckSymbol))
                 { 
                     return true;
@@ -370,7 +401,6 @@ namespace Generator
         private static readonly HashSet<string> nonWindowsRuntimeInterfaces = new HashSet<string>()
         {
             "System.Exception",
-            "IAsyncAction",
             "IAsyncActionWithProgress`1",
             "IAsyncOperation`1",
             "IAsyncOperationWithProgress`2",

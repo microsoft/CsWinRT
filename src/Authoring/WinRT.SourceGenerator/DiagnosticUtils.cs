@@ -10,18 +10,17 @@ namespace Generator
 {
     public partial class WinRTComponentScanner
     {
-        public WinRTComponentScanner() { _flag = false; }
         public WinRTComponentScanner(GeneratorExecutionContext context, string assemblyName) 
         { 
-            _flag = false;
-            _context = context;
             _assemblyName = assemblyName;
+            _context = context;
+            _flag = false;
             _typeHolder = CollectDefinedTypes(context);
         }
 
-        private bool _flag;
-        private GeneratorExecutionContext _context;
         private string _assemblyName;
+        private GeneratorExecutionContext _context;
+        private bool _flag;
         private TypeCollector _typeHolder;
 
         public bool Found() { return _flag; }
@@ -297,8 +296,6 @@ namespace Generator
             }
         }
 
-        private SemanticModel GetModel(SyntaxTree t) { return _context.Compilation.GetSemanticModel(t); }
-
         /// <summary>Namespaces can't only differ by cases, also check if the name is invalid for the winmd being made</summary>
         private void HasInvalidNamespace()
         {
@@ -370,7 +367,7 @@ namespace Generator
             // NotValidTypes is an array of types that don't exist in Windows Runtime, so can't be passed between functions in Windows Runtime
             foreach (var typeName in NotValidTypes)
             { 
-                var notValidTypeSym = _context.Compilation.GetTypeByMetadataName(typeName);
+                var notValidTypeSym = GetTypeByMetadataName(typeName);
                 if (SymEq(typeSymbol.OriginalDefinition, notValidTypeSym))
                 {
                     Report(WinRTRules.UnsupportedTypeRule, loc, memberId, typeName, SuggestType(typeName));
