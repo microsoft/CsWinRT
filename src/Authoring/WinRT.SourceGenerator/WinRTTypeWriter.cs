@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
@@ -317,7 +318,11 @@ namespace Generator
             "System.Collections.Generic.IReadOnlyCollection`1",
             "System.Collections.IEnumerable",
             "System.Collections.IEnumerator",
-            "System.Collections.IList"
+            "System.Collections.IList",
+            "System.IEquatable`1",
+            "System.Runtime.InteropServices.ICustomQueryInterface",
+            "System.Runtime.InteropServices.IDynamicInterfaceCastable",
+            "WinRT.IWinRTObject"
         };
 
         public SemanticModel Model;
@@ -475,6 +480,13 @@ namespace Generator
                 metadataBuilder.GetOrAddString(name));
             typeReferenceMapping[fullname] = typeRef;
             return typeRef;
+        }
+
+        public bool IsWinRTType(ISymbol type)
+        {
+            bool isProjectedType = type.GetAttributes().
+                Any(attribute => attribute.AttributeClass.Name == "WindowsRuntimeTypeAttribute");
+            return isProjectedType;
         }
 
         public string GetAssemblyForWinRTType(ISymbol type)
@@ -974,7 +986,7 @@ namespace Generator
 
         private void ProcessCustomMappedInterfaces(INamedTypeSymbol classSymbol)
         {
-            foreach (var implementedInterface in classSymbol.AllInterfaces.
+            foreach (var implementedInterface in GetInterfaces(classSymbol, true).
                 Where(symbol => MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
                                 ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
             {
@@ -1212,6 +1224,31 @@ namespace Generator
             }
         }
 
+        private IEnumerable<INamedTypeSymbol> GetInterfaces(INamedTypeSymbol symbol, bool includeInterfacesWithoutMappings = false)
+        {
+            HashSet<INamedTypeSymbol> interfaces = new HashSet<INamedTypeSymbol>();
+            foreach(var @interface in symbol.Interfaces)
+            {
+                interfaces.Add(@interface);
+                interfaces.UnionWith(@interface.AllInterfaces);
+            }
+
+            var baseType = symbol.BaseType;
+            while(baseType != null && !IsWinRTType(baseType))
+            {
+                interfaces.UnionWith(baseType.Interfaces);
+                foreach (var @interface in baseType.Interfaces)
+                {
+                    interfaces.UnionWith(@interface.AllInterfaces);
+                }
+
+                baseType = baseType.BaseType;
+            }
+
+            return interfaces.Where(symbol => includeInterfacesWithoutMappings || !ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol)))
+                             .OrderBy(implementedInterface => implementedInterface.ToString());
+        }
+
         private void ProcessTypeDeclaration(BaseTypeDeclarationSyntax node, Action visitTypeDeclaration)
         {
             if (!IsPublicNode(node))
@@ -1293,9 +1330,7 @@ namespace Generator
 
             if (node.BaseList != null && (node is InterfaceDeclarationSyntax || node is ClassDeclarationSyntax))
             {
-                foreach (var implementedInterface in symbol.AllInterfaces
-                    .Where(symbol => !ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol)))
-                    .OrderBy(implementedInterface => implementedInterface.ToString()))
+                foreach (var implementedInterface in GetInterfaces(symbol))
                 {
                     var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
                         typeDefinitionHandle,
@@ -2112,7 +2147,7 @@ namespace Generator
             typeDeclaration.Handle = typeDefinitionHandle;
             typeDefinitionMapping[type.ToString()] = typeDeclaration;
 
-            foreach (var implementedInterface in type.AllInterfaces.OrderBy(implementedInterface => implementedInterface.ToString()))
+            foreach (var implementedInterface in GetInterfaces(type))
             {
                 var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
                     typeDefinitionHandle,
@@ -2464,7 +2499,7 @@ namespace Generator
             {
                 INamedTypeSymbol classSymbol = classTypeDeclaration.Node as INamedTypeSymbol;
 
-                foreach (var implementedInterface in classSymbol.AllInterfaces)
+                foreach (var implementedInterface in GetInterfaces(classSymbol))
                 {
                     var implementedInterfaceQualifiedName = QualifiedName(implementedInterface);
                     if (ImplementedInterfacesWithoutMapping.Contains(implementedInterfaceQualifiedName))

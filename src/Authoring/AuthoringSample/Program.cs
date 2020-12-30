@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
 using System.Runtime.InteropServices.WindowsRuntime;
+using WinRT;
+using Microsoft.UI.Xaml.Controls;
 
 namespace AuthoringSample
 {
@@ -691,6 +693,35 @@ namespace AuthoringSample
         IEnumerator IEnumerable.GetEnumerator()
         {
             return _customVector.GetEnumerator();
+        }
+    }
+
+    public sealed class ButtonUtils
+    {
+        public ButtonUtils()
+        {
+        }
+
+        public Button GetButton()
+        {
+            return new Button();
+        }
+
+        public CustomButton GetCustomButton()
+        {
+            return new CustomButton();
+        }
+    }
+
+    public sealed class CustomButton : Button
+    {
+        public CustomButton()
+        {
+        }
+
+        public int GetVariant()
+        {
+            return 3;
         }
     }
 }
