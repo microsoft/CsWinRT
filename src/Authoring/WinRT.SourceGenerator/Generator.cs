@@ -1,18 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
-using WinRT.SourceGenerator;
 
 namespace Generator
 {
@@ -178,103 +173,29 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             peBlob.WriteContentTo(fs);
         }
 
-        private HashSet<INamedTypeSymbol> CollectDefinedTypes(GeneratorExecutionContext context)
+        private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
         {
-            WinRTRules winrtRules = new WinRTRules();
-            HashSet<INamedTypeSymbol> userCreatedTypes = new HashSet<INamedTypeSymbol>();
-            foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
-            {
-                var model = context.Compilation.GetSemanticModel(tree);
-                var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().Where(winrtRules.IsPublic);
-                var interfaces = tree.GetRoot().DescendantNodes().OfType<InterfaceDeclarationSyntax>().Where(winrtRules.IsPublic);
-                foreach (var @class in classes) 
-                {
-                    userCreatedTypes.Add(model.GetDeclaredSymbol(@class));
-                }
-                foreach (var @interface in interfaces)
-                {
-                    userCreatedTypes.Add(model.GetDeclaredSymbol(@interface));
-                }
-            }
-            return userCreatedTypes;
-        }
-
-        private bool CatchWinRTDiagnostics(ref GeneratorExecutionContext context)
-        {
-            bool found = false;
-            WinRTRules winrtRules = new WinRTRules();
-           
-            HashSet<INamedTypeSymbol> userCreatedTypes = CollectDefinedTypes(context);
-            
-            foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
-            {
-                var model = context.Compilation.GetSemanticModel(tree);
-                var nodes = tree.GetRoot().DescendantNodes();
-
-                var classes = nodes.OfType<ClassDeclarationSyntax>().Where(winrtRules.IsPublic);
-                var interfaces = nodes.OfType<InterfaceDeclarationSyntax>().Where(winrtRules.IsPublic);
-                var structs = nodes.OfType<StructDeclarationSyntax>();
-                
-                foreach (ClassDeclarationSyntax classDeclaration in classes)
-                {
-                    found |= winrtRules.OverloadsOperator(ref context, classDeclaration);
-                    found |= winrtRules.HasMultipleConstructorsOfSameArity(ref context, classDeclaration);
-                    found |= winrtRules.ImplementsAsyncInterface(ref context, model.GetDeclaredSymbol(classDeclaration), classDeclaration);
-                    
-                    var props = classDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(winrtRules.IsPublic);
-                    found |= winrtRules.CheckPropertySignature(ref context, props, classDeclaration.Identifier);
-                    
-                    var publicMethods = classDeclaration.ChildNodes().OfType<MethodDeclarationSyntax>().Where(winrtRules.IsPublic);
-                    found |= winrtRules.HasInvalidMethods<ClassDeclarationSyntax>(ref context, publicMethods,classDeclaration.Identifier);
-                }
-
-                foreach (InterfaceDeclarationSyntax interfaceDeclaration in interfaces)
-                {
-                    found |= winrtRules.ImplementsAsyncInterface(ref context, model.GetDeclaredSymbol(interfaceDeclaration), interfaceDeclaration);
-                    
-                    var props = interfaceDeclaration.DescendantNodes().OfType<PropertyDeclarationSyntax>();
-                    found |= winrtRules.CheckPropertySignature(ref context, props, interfaceDeclaration.Identifier);
-                    
-                    var methods = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
-                    found |= winrtRules.HasInvalidMethods<InterfaceDeclarationSyntax>(ref context, methods, interfaceDeclaration.Identifier);
-                }
-
-                /* Check all structs */
-                foreach (StructDeclarationSyntax structDeclaration in structs)
-                {
-                    found |= winrtRules.StructHasFieldOfType<ConstructorDeclarationSyntax>(ref context, structDeclaration);
-                    found |= winrtRules.StructHasFieldOfType<DelegateDeclarationSyntax>(ref context, structDeclaration);
-                    found |= winrtRules.StructHasFieldOfType<EventFieldDeclarationSyntax>(ref context, structDeclaration);
-                    found |= winrtRules.StructHasFieldOfType<IndexerDeclarationSyntax>(ref context, structDeclaration);
-                    found |= winrtRules.StructHasFieldOfType<MethodDeclarationSyntax>(ref context, structDeclaration);
-                    found |= winrtRules.StructHasFieldOfType<OperatorDeclarationSyntax>(ref context, structDeclaration);
-                    found |= winrtRules.StructHasFieldOfType<PropertyDeclarationSyntax>(ref context, structDeclaration);
-
-                    var fields = structDeclaration.DescendantNodes().OfType<FieldDeclarationSyntax>();
-                    foreach (var field in fields) 
-                    { 
-                        found |= winrtRules.CheckFieldValidity(ref context, field, structDeclaration.Identifier, userCreatedTypes); 
-                    }
-                    if (!fields.Any())
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(DiagnosticRules.StructWithNoFieldsRule, structDeclaration.GetLocation(), model.GetDeclaredSymbol(structDeclaration)));
-                        found |= true;
-                    }
-                }
-            }
-            return found;
+            // "DiagnosticTests" is a workaround, GetAssemblyName returns null when used by unit tests 
+            // shouldn't need workaround once we can pass AnalyzerConfigOptionsProvider in DiagnosticTests.Helpers.cs
+            string assemblyName = GetAssemblyName(context) ?? "DiagnosticTests";
+            WinRTComponentScanner winrtScanner = new WinRTComponentScanner(context, assemblyName);
+            winrtScanner.FindDiagnostics();
+            return winrtScanner.Found();
         }
 
         public void Execute(GeneratorExecutionContext context)
         {
+            /*
             if (!IsCsWinRTComponent(context))
             {
                 return;
             }
+            */
 
             Logger.Initialize(context);
-
-            if (CatchWinRTDiagnostics(ref context))
+            
+            
+            if (CatchWinRTDiagnostics(context))
             {
                 Logger.Log("Exiting early -- found errors in authored runtime component.");
                 Logger.Close();
@@ -284,7 +205,6 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             try
             {
                 context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(ArrayAttributes, Encoding.UTF8));
-
                 string assembly = GetAssemblyName(context);
                 string version = GetAssemblyVersion(context);
                 MetadataBuilder metadataBuilder = new MetadataBuilder();

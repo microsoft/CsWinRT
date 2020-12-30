@@ -1,7 +1,5 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.VisualBasic;
-using NUnit.Framework;
 using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,19 +7,19 @@ using System.Reflection;
 
 namespace DiagnosticTests
 {
-    public partial class TestDiagnostics
+    public sealed partial class UnitTesting
     {
         /// <summary>
         /// CreateCompilation creates a CSharpCompilation 
         /// </summary>
         /// <param name="source">string of source code</param>
         /// <returns></returns>
-         private Compilation CreateCompilation(string source)
-           => CSharpCompilation.Create(
-               assemblyName: "compilation",
-               syntaxTrees: new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Preview)) },
-               references: new[] { MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location) },
-               options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        private Compilation CreateCompilation(string source)
+            => CSharpCompilation.Create(
+                assemblyName: "compilation",
+                syntaxTrees: new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Preview)) },
+                references: new[] { MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location) },
+                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
         /// <summary>
         /// CreateDriver makes a CSharpGeneratorDriver
