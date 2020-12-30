@@ -173,6 +173,16 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             peBlob.WriteContentTo(fs);
         }
 
+        private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
+        {
+            // "DiagnosticTests" is a workaround, GetAssemblyName returns null when used by unit tests 
+            // shouldn't need workaround once we can pass AnalyzerConfigOptionsProvider in DiagnosticTests.Helpers.cs
+            string assemblyName = GetAssemblyName(context) ?? "DiagnosticTests";
+            WinRTComponentScanner winrtScanner = new WinRTComponentScanner(context, assemblyName);
+            winrtScanner.FindDiagnostics();
+            return winrtScanner.Found();
+        }
+
         public void Execute(GeneratorExecutionContext context)
         {
             if (!IsCsWinRTComponent(context))
@@ -181,11 +191,18 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
 
             Logger.Initialize(context);
+            
+            
+            if (CatchWinRTDiagnostics(context))
+            {
+                Logger.Log("Exiting early -- found errors in authored runtime component.");
+                Logger.Close();
+                return;
+            }
 
             try
             {
                 context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(ArrayAttributes, Encoding.UTF8));
-
                 string assembly = GetAssemblyName(context);
                 string version = GetAssemblyVersion(context);
                 MetadataBuilder metadataBuilder = new MetadataBuilder();
