@@ -65,7 +65,7 @@ namespace Generator
         {
             bool AsyncActionCase(INamedTypeSymbol sym)
             {
-                // using Windows.Foundation.IAsyncAction  ?
+                // are we using Windows.Foundation.IAsyncAction ?
                 bool isWindowsFoundation = sym.ContainingNamespace.IsGlobalNamespace || sym.ContainingNamespace.Name == "Windows.Foundation";
                 bool isAsyncAction = sym.MetadataName == "IAsyncAction";
                 return isWindowsFoundation && isAsyncAction;
@@ -89,7 +89,6 @@ namespace Generator
 
             foreach (string prohibitedInterface in nonWindowsRuntimeInterfaces)
             {
-                // check here if typesymbol's basetype is invalid ? but interfaces are also base types?
                 if (ImplementsInterface(typeSymbol, prohibitedInterface))
                 {
                     Report(WinRTRules.NonWinRTInterface, typeDeclaration.GetLocation(), typeDeclaration.Identifier, prohibitedInterface);
@@ -314,7 +313,7 @@ namespace Generator
 
             foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
             {
-                var model = context.Compilation.GetSemanticModel(tree);
+                var model = GetModel(tree);
 
                 var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().Where(IsPublic);
                 foreach (var @class in classes) 

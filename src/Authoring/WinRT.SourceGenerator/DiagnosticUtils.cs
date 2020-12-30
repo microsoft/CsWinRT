@@ -299,7 +299,6 @@ namespace Generator
         /// <summary>Namespaces can't only differ by cases, also check if the name is invalid for the winmd being made</summary>
         private void HasInvalidNamespace()
         {
-            // instead of this, see if != but are equal when ignoring case 
             HashSet<string> simplifiedNames = new HashSet<string>();
 
             foreach (var namespaceSymbol in _typeHolder.GetNamespaces())
