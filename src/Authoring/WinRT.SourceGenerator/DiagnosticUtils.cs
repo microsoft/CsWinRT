@@ -100,11 +100,22 @@ namespace Generator
             } 
         }
 
-        private void IgnoreCustomTypeMappings(INamedTypeSymbol typeSymbol, ref IEnumerable<MethodDeclarationSyntax> methods, ref IEnumerable<PropertyDeclarationSyntax> properties)
+        private void IgnoreCustomTypeMappings(INamedTypeSymbol typeSymbol, 
+            ref IEnumerable<MethodDeclarationSyntax> methods, 
+            ref IEnumerable<PropertyDeclarationSyntax> properties)
         {
             string QualifiedName(INamedTypeSymbol sym) 
             { 
                 return sym.OriginalDefinition.ContainingNamespace + "." + sym.OriginalDefinition.MetadataName; 
+            }
+
+            bool SameProp(string a, string b)
+            {
+                if (a.StartsWith("get_") || a.StartsWith("put_"))
+                {
+                    return a.Substring(4) == b;
+                }
+                return false;
             }
 
             foreach (var @interface in typeSymbol.AllInterfaces.
@@ -113,7 +124,7 @@ namespace Generator
             {
                 var mems = @interface.GetMembers();
                 methods = methods.Where(m => !mems.Where(mem => mem.Name == m.Identifier.Text).Any());
-                properties = properties.Where(p => !mems.Where(mem => mem.Name.Substring(4) == p.Identifier.Text).Any()); 
+                properties = properties.Where(p => !mems.Where(mem => SameProp(mem.Name, p.Identifier.Text)).Any()); 
             }
         }
 
