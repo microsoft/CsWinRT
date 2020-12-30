@@ -1163,6 +1163,37 @@ namespace DiagnosticTests
         }
     }
 }";
+        private const string ClassImplementsIAsyncActionWithProgress_Qualified = @"
+using System;
+namespace DiagnosticTests
+{
+    public class ActionWithProgress : Windows.Foundation.IAsyncActionWithProgress<int>
+    {
+        AsyncActionProgressHandler<int> IAsyncActionWithProgress<int>.Progress { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        AsyncActionWithProgressCompletedHandler<int> IAsyncActionWithProgress<int>.Completed { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        Exception IAsyncInfo.ErrorCode => throw new NotImplementedException();
+
+        uint IAsyncInfo.Id => throw new NotImplementedException();
+
+        AsyncStatus IAsyncInfo.Status => throw new NotImplementedException();
+
+        void IAsyncInfo.Cancel()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IAsyncInfo.Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IAsyncActionWithProgress<int>.GetResults()
+        {
+            throw new NotImplementedException();
+        }
+    }
+}";
         private const string ClassImplementsIAsyncOperation = @"
 using Windows.Foundation;
 using System;

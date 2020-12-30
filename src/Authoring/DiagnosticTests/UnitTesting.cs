@@ -248,6 +248,7 @@ namespace DiagnosticTests
                 // implementing async interface
                 yield return new TestCaseData(ClassImplementsAsyncAndException, WinRTRules.NonWinRTInterface).SetName("Inheritance. Class implements Exception and IAsyncActionWithProgress");
                 yield return new TestCaseData(ClassImplementsIAsyncActionWithProgress, WinRTRules.NonWinRTInterface).SetName("Inheritance. Class implements IAsyncActionWithProgress");
+                yield return new TestCaseData(ClassImplementsIAsyncActionWithProgress_Qualified, WinRTRules.NonWinRTInterface).SetName("Inheritance. Qualified, class implements IAsyncActionWithProgress");
                 yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress, WinRTRules.NonWinRTInterface).SetName("Inheritance. Interface Implements IAsyncActionWithProgress");
                 yield return new TestCaseData(InterfaceImplementsIAsyncActionWithProgress2, WinRTRules.NonWinRTInterface).SetName("Inheritance. Interface Implements IAsyncActionWithProgress in full");
 

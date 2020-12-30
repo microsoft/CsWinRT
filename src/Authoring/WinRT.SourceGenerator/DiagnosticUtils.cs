@@ -110,21 +110,19 @@ namespace Generator
                 return sym.OriginalDefinition.ContainingNamespace + "." + sym.OriginalDefinition.MetadataName; 
             }
 
+            HashSet<ISymbol> classMethods = new HashSet<ISymbol>();
+
             foreach (var @interface in typeSymbol.AllInterfaces.
                         Where(symbol => WinRTTypeWriter.MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
                                         WinRTTypeWriter.ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
             {
-                var InterfaceMembers = @interface.GetMembers();
-
-                bool ValidMember(MemberDeclarationSyntax member)
+                foreach (var interfaceMember in @interface.GetMembers())
                 { 
-                    var memberSym = GetModel(member.SyntaxTree).GetDeclaredSymbol(member);
-                    return !InterfaceMembers.Where(m => SymEq(typeSymbol.FindImplementationForInterfaceMember(m), memberSym)).Any();
+                    classMethods.Add(typeSymbol.FindImplementationForInterfaceMember(interfaceMember));
                 }
-
-                methods = methods.Where(ValidMember);
-                properties = properties.Where(ValidMember); 
             }
+            methods = methods.Where(m => !classMethods.Contains(GetModel(m.SyntaxTree).GetDeclaredSymbol(m)));
+            properties = properties.Where(p => !classMethods.Contains(GetModel(p.SyntaxTree).GetDeclaredSymbol(p)));
         }
 
         /// <summary>Checks to see if the class declares any operators (overloading them)</summary>
