@@ -185,12 +185,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         public void Execute(GeneratorExecutionContext context)
         {
-            /*
             if (!IsCsWinRTComponent(context))
             {
                 return;
             }
-            */
 
             Logger.Initialize(context);
             
