@@ -119,8 +119,8 @@ namespace Generator
             }
 
             foreach (var @interface in typeSymbol.AllInterfaces.
-                        Where(symbol => MappedCSharpTypes.Contains(QualifiedName(symbol)) ||
-                                        ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
+                        Where(symbol => WinRTTypeWriter.MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
+                                        WinRTTypeWriter.ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
             {
                 var mems = @interface.GetMembers();
                 methods = methods.Where(m => !mems.Where(mem => mem.Name == m.Identifier.Text).Any());

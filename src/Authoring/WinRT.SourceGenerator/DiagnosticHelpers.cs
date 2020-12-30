@@ -47,7 +47,7 @@ namespace Generator
             Flag();
             _context.ReportDiagnostic(d);
         }
-        private bool SymEq(ISymbol sym1, ISymbol sym2) { return sym1.Equals(sym2); /*SymbolEqualityComparer.Default.Equals(sym1, sym2);*/ }
+        private bool SymEq(ISymbol sym1, ISymbol sym2) { return SymbolEqualityComparer.Default.Equals(sym1, sym2); }
 
         /// <summary>
         /// Returns true if the class represented by the symbol 
@@ -365,57 +365,6 @@ namespace Generator
             SpecialType.System_Int32,
             SpecialType.System_Int64,
             SpecialType.System_Enum,
-        };
-
-        private static readonly HashSet<string> MappedCSharpTypes = new HashSet<string>()
-        {
-             "System.DateTimeOffset",
-             "System.Exception",
-             "System.FlagsAttribute",
-             "System.IDisposable",
-             "System.IServiceProvider",
-             "System.Nullable`1",
-             "System.TimeSpan",
-             "System.Uri",
-             "System.ComponentModel.DataErrorsChangedEventArgs",
-             "System.ComponentModel.INotifyDataErrorInfo",
-             "System.ComponentModel.INotifyPropertyChanged",
-             "System.ComponentModel.PropertyChangedEventArgs",
-             "System.ComponentModel.PropertyChangedEventHandler",
-             "System.Windows.Input.ICommand",
-             "System.Collections.IEnumerable",
-             "System.Collections.IList",
-             "System.Collections.Specialized.INotifyCollectionChanged",
-             "System.Collections.Specialized.NotifyCollectionChangedAction",
-             "System.Collections.Specialized.NotifyCollectionChangedEventArgs",
-             "System.Collections.Specialized.NotifyCollectionChangedEventHandler",
-             "WinRT.EventRegistrationToken",
-             "System.AttributeTargets",
-             "System.AttributeUsageAttribute",
-             "System.Numerics.Matrix3x2",
-             "System.Numerics.Matrix4x4",
-             "System.Numerics.Plane",
-             "System.Numerics.Quaternion",
-             "System.Numerics.Vector2",
-             "System.Numerics.Vector3",
-             "System.Numerics.Vector4",
-             "System.Type",
-             "System.Collections.Generic.IEnumerable`1",
-             "System.Collections.Generic.IEnumerator`1",
-             "System.Collections.Generic.KeyValuePair`2",
-             "System.Collections.Generic.IReadOnlyDictionary`2",
-             "System.Collections.Generic.IDictionary`2",
-             "System.Collections.Generic.IReadOnlyList`1",
-             "System.Collections.Generic.IList`1"
-        };
-
-        private static readonly HashSet<string> ImplementedInterfacesWithoutMapping = new HashSet<string>()
-        {
-            "System.Collections.Generic.ICollection`1",
-            "System.Collections.Generic.IReadOnlyCollection`1",
-            "System.Collections.IEnumerable",
-            "System.Collections.IEnumerator",
-            "System.Collections.IList"
         };
 
         private static readonly HashSet<string> nonWindowsRuntimeInterfaces = new HashSet<string>()
