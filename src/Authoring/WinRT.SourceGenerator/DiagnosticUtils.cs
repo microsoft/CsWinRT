@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using WinRT.SourceGenerator;
 
@@ -109,22 +110,20 @@ namespace Generator
                 return sym.OriginalDefinition.ContainingNamespace + "." + sym.OriginalDefinition.MetadataName; 
             }
 
-            bool SameProp(string a, string b)
-            {
-                if (a.StartsWith("get_") || a.StartsWith("put_"))
-                {
-                    return a.Substring(4) == b;
-                }
-                return false;
-            }
-
             foreach (var @interface in typeSymbol.AllInterfaces.
                         Where(symbol => WinRTTypeWriter.MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
                                         WinRTTypeWriter.ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
             {
-                var mems = @interface.GetMembers();
-                methods = methods.Where(m => !mems.Where(mem => mem.Name == m.Identifier.Text).Any());
-                properties = properties.Where(p => !mems.Where(mem => SameProp(mem.Name, p.Identifier.Text)).Any()); 
+                var InterfaceMembers = @interface.GetMembers();
+
+                bool ValidMember(MemberDeclarationSyntax member)
+                { 
+                    var memberSym = GetModel(member.SyntaxTree).GetDeclaredSymbol(member);
+                    return !InterfaceMembers.Where(m => SymEq(typeSymbol.FindImplementationForInterfaceMember(m), memberSym)).Any();
+                }
+
+                methods = methods.Where(ValidMember);
+                properties = properties.Where(ValidMember); 
             }
         }
 
