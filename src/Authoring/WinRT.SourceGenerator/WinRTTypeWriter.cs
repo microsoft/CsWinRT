@@ -232,7 +232,7 @@ namespace Generator
 
     class WinRTTypeWriter : CSharpSyntaxWalker
     {
-        private struct MappedType
+        internal struct MappedType
         {
             private readonly string @namespace;
             private readonly string name;
@@ -269,7 +269,7 @@ namespace Generator
         }
 
         // This should be in sync with the reverse mapping from WinRT.Runtime/Projections.cs and cswinrt/helpers.h.
-        private static readonly Dictionary<string, MappedType> MappedCSharpTypes = new Dictionary<string, MappedType>()
+        internal static readonly Dictionary<string, MappedType> MappedCSharpTypes = new Dictionary<string, MappedType>()
         {
             { "System.DateTimeOffset", new MappedType("Windows.Foundation", "DateTime", "Windows.Foundation.FoundationContract", true) },
             { "System.Exception", new MappedType("Windows.Foundation", "HResult", "Windows.Foundation.FoundationContract", true) },
@@ -311,7 +311,7 @@ namespace Generator
             { "System.Collections.Generic.IList`1", new MappedType("Windows.Foundation.Collections", "IVector`1", "Windows.Foundation.FoundationContract") },
         };
 
-        private static readonly List<string> ImplementedInterfacesWithoutMapping = new List<string>()
+        internal static readonly List<string> ImplementedInterfacesWithoutMapping = new List<string>()
         {
             "System.Collections.Generic.ICollection`1",
             "System.Collections.Generic.IReadOnlyCollection`1",
@@ -963,7 +963,7 @@ namespace Generator
 
         // Based on whether System.Type is used in an attribute declaration or elsewhere, we need to choose the correct custom mapping
         // as attributes don't use the TypeName mapping.
-        private static (string, string, string, bool, bool) GetSystemTypeCustomMapping(ISymbol containingSymbol)
+        internal static (string, string, string, bool, bool) GetSystemTypeCustomMapping(ISymbol containingSymbol)
         {
             bool isDefinedInAttribute =
                 containingSymbol != null && (containingSymbol as INamedTypeSymbol).BaseType?.ToString() == "System.Attribute";

@@ -3,12 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
-using WinRT;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace AuthoringSample
 {
@@ -181,7 +180,7 @@ namespace AuthoringSample
         public BasicStruct BasicStruct;
     }
 
-    public class CustomWWW : IWwwFormUrlDecoderEntry
+    public sealed class CustomWWW : IWwwFormUrlDecoderEntry
     {
         public string Name => "CustomWWW";
 
@@ -329,6 +328,7 @@ namespace AuthoringSample
 
             return -1;
         }
+
 
         public void SetTypeToTestClass()
         {
