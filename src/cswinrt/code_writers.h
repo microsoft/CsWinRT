@@ -5966,6 +5966,11 @@ IntPtr instance = _factory.ActivateInstance();
 return ObjectReference<IInspectable.Vftbl>.Attach(ref instance).As<I>();
 }
 
+public void RunClassConstructor()
+{
+RuntimeHelpers.RunClassConstructor(typeof(%).TypeHandle);
+}
+
 %
 }
 )",
@@ -5977,6 +5982,7 @@ type_name,
 factory_type_name,
 factory_type_name,
 factory_type_name,
+type_name,
 bind<write_factory_class_members>(type)
 );
     }

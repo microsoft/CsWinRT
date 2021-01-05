@@ -670,7 +670,6 @@ namespace AuthoringSample
         }
     }
 
-<<<<<<< HEAD
     public static class StaticClass
     {
         public static int GetNumber()

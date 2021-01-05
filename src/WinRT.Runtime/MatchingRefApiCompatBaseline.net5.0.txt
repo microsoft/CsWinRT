@@ -1,3 +1,4 @@
 Compat issues with assembly WinRT.Runtime:
 TypesMustExist : Type 'System.Numerics.VectorExtensions' does not exist in the reference but it does exist in the implementation.
-Total Issues: 1
+TypesMustExist : Type 'WinRT.Interop.IManagedActivationFactory' does not exist in the reference but it does exist in the implementation.
+Total Issues: 2
