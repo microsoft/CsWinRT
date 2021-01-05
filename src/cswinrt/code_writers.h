@@ -4784,6 +4784,7 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
         auto wrapped_type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
         auto default_interface_name = get_default_interface_name(w, type, false);
         auto base_semantics = get_type_semantics(type.Extends());
+        auto from_abi_new = !std::holds_alternative<object_type>(base_semantics) ? "new " : "";
 
         w.write(R"(%[global::WinRT.ProjectedRuntimeClass(typeof(%))]
 %internal %class %%
@@ -4800,7 +4801,7 @@ public static implicit operator %(% comp)
 {
 return new %(comp);
 }
-public static % FromAbi(IntPtr thisPtr)
+public static %% FromAbi(IntPtr thisPtr)
 {
 if (thisPtr == IntPtr.Zero) return null;
 return MarshalInspectable<%>.FromAbi(thisPtr);
@@ -4822,6 +4823,7 @@ type_name,
 type_name,
 wrapped_type_name,
 type_name,
+from_abi_new,
 wrapped_type_name,
 wrapped_type_name,
 bind<write_class_members>(type, true),
