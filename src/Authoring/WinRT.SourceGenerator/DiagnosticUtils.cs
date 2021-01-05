@@ -64,9 +64,10 @@ namespace Generator
 
                     // check for things in nonWindowsRuntimeInterfaces
                     ImplementsInvalidInterface(classSymbol, @class);
-                    
-                    CheckPropertySignature(props, classId);
-                    
+                   
+                    CheckProperties(props, classId);
+                   
+                    // check types -- todo: check for !valid types
                     CheckMethods(publicMethods, classId);
                 }
 
@@ -87,7 +88,7 @@ namespace Generator
 
                     ImplementsInvalidInterface(interfaceSym, @interface);
                     
-                    CheckPropertySignature(props, @interface.Identifier);
+                    CheckProperties(props, @interface.Identifier);
                     
                     CheckMethods(methods, @interface.Identifier);
                 }
@@ -222,12 +223,17 @@ namespace Generator
         /// <summary>Looks at all the properties of the given class and checks them for improper array types (System.Array instances, multidimensional, jagged)</summary>
         ///<param name="props">collection of properties</param><param name="typeId">containing class/interface</param>
         /// <returns>True iff any of the invalid array types are used in any of the propertyy signatures in the given class</returns>
-        private void CheckPropertySignature(IEnumerable<PropertyDeclarationSyntax> props, SyntaxToken typeId)
+        private void CheckProperties(IEnumerable<PropertyDeclarationSyntax> props, SyntaxToken typeId)
         {
             foreach (var prop in props)
             {
                 var propSym = GetModel(prop.SyntaxTree).GetDeclaredSymbol(prop);
                 var loc = prop.GetLocation();
+
+                if (propSym.GetMethod.DeclaredAccessibility.Equals(Accessibility.Private))
+                {
+                    Report(WinRTRules.PrivateGetterRule, loc, prop.Identifier);
+                }
 
                 ReportIfInvalidType(propSym.Type, loc, prop.Identifier, typeId);
                 foreach (var arg in propSym.Parameters)

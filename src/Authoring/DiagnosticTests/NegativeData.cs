@@ -2,6 +2,16 @@ namespace DiagnosticTests
 {
     public sealed partial class UnitTesting
     {
+        private const string PrivateGetter = @"
+namespace DiagnosticTests
+{
+    public sealed class PrivateGetter
+    {
+        public int MyInt { private get; set; }
+    }
+}";
+
+
         private const string SameNameNamespacesDisjoint = @"
 namespace DiagnosticTests
 {

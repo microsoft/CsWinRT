@@ -2,6 +2,16 @@ namespace DiagnosticTests
 {
     public sealed partial class UnitTesting
     {
+
+        private const string Valid_PrivateSetter = @"
+namespace DiagnosticTests
+{
+    public sealed class PrivateSetter
+    {
+        public int MyInt { get; private set; }
+    }
+}";
+
         private const string Valid_RollYourOwnAsyncAction = @"
 using System;
 using Windows.Foundation;

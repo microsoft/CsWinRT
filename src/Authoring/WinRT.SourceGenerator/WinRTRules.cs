@@ -21,6 +21,11 @@ namespace WinRT.SourceGenerator
                 helpLinkUri: "https://docs.microsoft.com/en-us/previous-versions/hh977010(v=vs.110)");
         }
 
+        public static DiagnosticDescriptor PrivateGetterRule = MakeRule(
+            "WME", 
+            "Property must have public getter",
+            "Property '{0}' does not have a public getter method. Windows Metadata does not support setter-only properties.");
+        
         public static DiagnosticDescriptor DisjointNamespaceRule = MakeRule(
             "WME1044",
             "Namespace is disjoint from main (winmd) namespace",
