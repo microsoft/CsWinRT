@@ -221,10 +221,19 @@ namespace cswinrt
             auto sys_type = std::get<ElemSig::SystemType>(std::get<ElemSig>(fixed_args[0].value).value);
             exclusive_to_type = type.get_cache().find_required(sys_type.name);
 
-            for_typedef(w, get_type_semantics(get_default_interface(exclusive_to_type)), [&](auto&& interface_type)
+            try
+            {
+                if (auto default_interface = get_default_interface(exclusive_to_type))
                 {
-                    use_exclusive_to_type = (type == interface_type);
-                });
+                    for_typedef(w, get_type_semantics(default_interface), [&](auto&& interface_type)
+                        {
+                            use_exclusive_to_type = (type == interface_type);
+                        });
+                }
+            }
+            catch (const std::invalid_argument&)
+            {
+            }
 
             if (!use_exclusive_to_type)
             {
@@ -4262,7 +4271,14 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
                 [&](ElemSig::SystemType system_type)
                 {
                     auto arg_type = type.get_cache().find_required(system_type.name);
-                    w.write("typeof(%)", bind<write_projection_ccw_type>(arg_type));
+                    if (is_static(arg_type))
+                    {
+                        w.write("typeof(%)", bind<write_projection_type>(arg_type));
+                    }
+                    else
+                    {
+                        w.write("typeof(%)", bind<write_projection_ccw_type>(arg_type));
+                    }
                 },
                 [&](ElemSig::EnumValue enum_value)
                 {
@@ -4759,6 +4775,11 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
 
     void write_wrapper_class(writer& w, TypeDef const& type)
     {
+        if (is_static(type))
+        {
+            return;
+        }
+
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
         auto wrapped_type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
         auto default_interface_name = get_default_interface_name(w, type, false);
@@ -5917,10 +5938,12 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
     void write_factory_class(writer& w, TypeDef const& type)
     {
         auto factory_type_name = write_type_name_temp(w, type, "%ServerActivationFactory", typedef_name_type::CCW);
+        auto base_class = (is_static(type) || !has_default_constructor(type)) ?
+            "ComponentActivationFactory" :  write_type_name_temp(w, type, "ActivatableComponentActivationFactory<%>", typedef_name_type::Projected);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
 
         w.write(R"(
-internal class % : ComponentActivationFactory<%>%
+internal class % : %%, global::WinRT.Interop.IManagedActivationFactory
 {
 
 public static IntPtr Make()
@@ -5936,15 +5959,21 @@ IntPtr instance = _factory.ActivateInstance();
 return ObjectReference<IInspectable.Vftbl>.Attach(ref instance).As<I>();
 }
 
+public void RunClassConstructor()
+{
+RuntimeHelpers.RunClassConstructor(typeof(%).TypeHandle);
+}
+
 %
 }
 )",
 factory_type_name,
-type_name,
+base_class,
 bind<write_factory_class_inheritance>(type),
 factory_type_name,
 factory_type_name,
 factory_type_name,
+type_name,
 bind<write_factory_class_members>(type)
 );
     }

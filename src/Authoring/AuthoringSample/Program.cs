@@ -10,6 +10,7 @@ using Windows.Foundation.Metadata;
 using System.Runtime.InteropServices.WindowsRuntime;
 using WinRT;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
 
 namespace AuthoringSample
 {
@@ -135,7 +136,7 @@ namespace AuthoringSample
         public BasicStruct[] ReturnArray([System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] BasicStruct[] basicStructs)
         {
             BasicStruct[] copy = new BasicStruct[basicStructs.Length];
-            for(int idx = 0; idx < copy.Length; idx++)
+            for (int idx = 0; idx < copy.Length; idx++)
             {
                 copy[idx] = basicStructs[idx];
             }
@@ -149,7 +150,7 @@ namespace AuthoringSample
 
         public void PopulateArray([System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray] int[] arr)
         {
-            for(int idx = 0; idx < arr.Length; idx++)
+            for (int idx = 0; idx < arr.Length; idx++)
             {
                 arr[idx] = idx + 1;
             }
@@ -314,16 +315,16 @@ namespace AuthoringSample
         public int GetObjectListSum()
         {
             int sum = 0;
-            foreach(var obj in ObjectList)
+            foreach (var obj in ObjectList)
             {
-                sum += (int) (obj as int?);
+                sum += (int)(obj as int?);
             }
             return sum;
         }
 
         public int GetSum(CustomDictionary dictionary, string element)
         {
-            if(dictionary.Count != 0 && dictionary.ContainsKey(element))
+            if (dictionary.Count != 0 && dictionary.ContainsKey(element))
             {
                 return dictionary[element].X + dictionary[element].Y;
             }
@@ -498,32 +499,6 @@ namespace AuthoringSample
     {
         private readonly CustomDictionary _dictionary;
 
-        // Remove constructor once factory only activation works.
-        public CustomReadOnlyDictionary()
-        {
-            _dictionary = null;
-            _dictionary = new CustomDictionary();
-
-            BasicStruct basicStruct = new BasicStruct
-            {
-                X = 1,
-                Y = 2
-            };
-            BasicStruct basicStruct2 = new BasicStruct
-            {
-                X = 2,
-                Y = 2
-            };
-            BasicStruct basicStruct3 = new BasicStruct
-            {
-                X = 3,
-                Y = 3
-            };
-            _dictionary.Add("first", basicStruct);
-            _dictionary.Add("second", basicStruct2);
-            _dictionary.Add("third", basicStruct3);
-        }
-
         public CustomReadOnlyDictionary(CustomDictionary dictionary)
         {
             _dictionary = dictionary;
@@ -696,32 +671,121 @@ namespace AuthoringSample
         }
     }
 
-    public sealed class ButtonUtils
+    public static class StaticClass
     {
-        public ButtonUtils()
-        {
+        public static int GetNumber()
+    {
+            return 4;
         }
 
-        public Button GetButton()
+        public static int GetNumber(int number)
         {
-            return new Button();
+            return number;
+        }
         }
 
-        public CustomButton GetCustomButton()
+    public static class ButtonUtils
+    {
+        public static Button GetButton()
+        {
+            Button button = new Button
+        {
+                Content = "Button"
+            };
+            return button;
+        }
+
+        public static CustomButton GetCustomButton()
         {
             return new CustomButton();
+        }
+
+        public static CustomButton GetCustomButton(string text)
+        {
+            return new CustomButton(text);
         }
     }
 
     public sealed class CustomButton : Button
     {
+        public string Text { get; private set; }
+        public bool OverrideEntered { get; set; }
+
         public CustomButton()
+            :this("CustomButton")
         {
         }
 
-        public int GetVariant()
+        public CustomButton(string text)
         {
-            return 3;
+            Text = text;
+            Content = text;
+            OverrideEntered = true;
+        }
+
+        protected override void OnPointerEntered(global::Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            if(!OverrideEntered)
+            {
+                base.OnPointerEntered(e);
+                return;
+            }
+
+            Text = Content?.ToString();
+            Content = "Entered";
+        }
+
+        protected override void OnPointerExited(global::Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            if (!OverrideEntered)
+            {
+                base.OnPointerExited(e);
+                return;
+            }
+
+            Content = Text;
+        }
+
+        protected override Size MeasureOverride(Size availableSize)
+        {
+            var size = new Size(160, 30);
+            base.MeasureOverride(size);
+            return size;
+        }
+
+        public string GetText()
+        {
+            return Text;
+        }
+    }
+
+    // Also tests scenario of class with no default interface members.
+    public sealed class CustomStackPanel : StackPanel
+    {
+        protected override Size MeasureOverride(Size availableSize)
+        {
+            foreach(var child in Children)
+            {
+                child.Measure(new Size(160, 50));
+            }
+
+            return new Size(330, 500);
+        }
+
+        protected override Size ArrangeOverride(Size finalSize)
+        {
+            int x = 0, y = 0;
+            foreach (var child in Children)
+            {
+                child.Arrange(new Rect(x, y, child.DesiredSize.Width, child.DesiredSize.Height));
+                x = (x + 165) % 330;
+                if (x == 0)
+                {
+                    y += 50;
+                }
+            }
+
+            return new Size(330, 500);
         }
     }
 }

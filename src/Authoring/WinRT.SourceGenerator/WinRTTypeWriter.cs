@@ -843,7 +843,7 @@ namespace Generator
                 property.Name,
                 new Symbol(property.Type),
                 property,
-                property.SetMethod != null,
+                property.SetMethod != null && property.SetMethod.DeclaredAccessibility == Accessibility.Public,
                 isInterfaceParent
             );
         }
@@ -858,78 +858,7 @@ namespace Generator
 
             base.VisitPropertyDeclaration(node);
 
-            var propertySignature = new BlobBuilder();
-            new BlobEncoder(propertySignature)
-                .PropertySignature(true)
-                .Parameters(
-                    0,
-                    returnType => EncodeReturnType(new Symbol(symbol.Type), returnType),
-                    parameters => { }
-                );
-
-            var propertyDefinitonHandle = metadataBuilder.AddProperty(
-                PropertyAttributes.None,
-                metadataBuilder.GetOrAddString(node.Identifier.ValueText),
-                metadataBuilder.GetOrAddBlob(propertySignature));
-            currentTypeDeclaration.AddProperty(symbol, propertyDefinitonHandle);
-
-            var isGetPublic = true;
-            var isSetPublic = true;
-
-            /*
-            TODO: support for private set with default interface support
-
-            if (node.AccessorList != null)
-            {
-                foreach (var accessor in node.AccessorList.Accessors)
-                {
-                    if(accessor.Keyword.Kind() == SyntaxKind.GetKeyword)
-                    {
-                        isGetPublic = !IsPrivateNode(accessor);
-                    }
-                    else if(accessor.Keyword.Kind() == SyntaxKind.SetKeyword)
-                    {
-                        isSetPublic = !IsPrivateNode(accessor);
-                    }
-                }
-            }
-            */
-
-            if (symbol.SetMethod != null && isSetPublic)
-            {
-                string setMethodName = "put_" + symbol.Name;
-                var setMethod = AddMethodDefinition(
-                    setMethodName,
-                    new Parameter[] { new Parameter(symbol.Type, "value", ParameterAttributes.In) },
-                    null,
-                    false,
-                    node.Parent is InterfaceDeclarationSyntax,
-                    true);
-                currentTypeDeclaration.AddMethod(symbol, setMethodName, setMethod);
-
-                metadataBuilder.AddMethodSemantics(
-                    propertyDefinitonHandle,
-                    MethodSemanticsAttributes.Setter,
-                    setMethod);
-            }
-
-            if (!symbol.IsWriteOnly && isGetPublic)
-            {
-                string getMethodName = "get_" + symbol.Name;
-                var getMethod = AddMethodDefinition(
-                    getMethodName,
-                    new Parameter[0],
-                    new Symbol(symbol.Type),
-                    false,
-                    node.Parent is InterfaceDeclarationSyntax,
-                    true);
-                currentTypeDeclaration.AddMethod(symbol, getMethodName, getMethod);
-
-                metadataBuilder.AddMethodSemantics(
-                    propertyDefinitonHandle,
-                    MethodSemanticsAttributes.Getter,
-                    getMethod);
-            }
+            AddPropertyDeclaration(symbol, node.Parent is InterfaceDeclarationSyntax);
         }
 
         private TypeDefinitionHandle AddTypeDefinition(
@@ -1273,10 +1202,16 @@ namespace Generator
                 TypeAttributes.AnsiClass;
 
             if (IsSealedNode(node) ||
+                IsStaticNode(node) ||
                 (node is EnumDeclarationSyntax ||
                     node is StructDeclarationSyntax))
             {
                 typeAttributes |= TypeAttributes.Sealed;
+            }
+
+            if (node is ClassDeclarationSyntax && IsStaticNode(node))
+            {
+                typeAttributes |= TypeAttributes.Abstract;
             }
 
             EntityHandle baseType = default;
@@ -1360,7 +1295,7 @@ namespace Generator
                 base.VisitClassDeclaration(node);
 
                 // implicit constructor if none defined
-                if (!hasConstructor)
+                if (!hasConstructor && !IsStaticNode(node))
                 {
                     string constructorMethodName = ".ctor";
                     var methodDefinitionHandle = AddMethodDefinition(
@@ -2407,7 +2342,7 @@ namespace Generator
                 TypeAttributes.Interface |
                 TypeAttributes.Abstract;
 
-            if (hasTypes)
+            if (hasTypes || (interfaceType == SynthesizedInterfaceType.Default && classSymbol.Interfaces.Length == 0))
             {
                 Logger.Log("writing generated interface " + interfaceType);
                 var interfaceName = GetSynthesizedInterfaceName(classDeclaration.Node.Name, interfaceType);

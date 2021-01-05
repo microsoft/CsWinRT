@@ -8,36 +8,41 @@ using namespace winrt;
 using namespace Microsoft::UI::Xaml;
 using namespace AuthoringSample;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
-
 namespace winrt::AuthoringWinUITest::implementation
 {
+    std::wstring GetLastCustomButtonString(Microsoft::UI::Xaml::Controls::UIElementCollection buttons)
+    {
+        std::wstring str = L"";
+        for (auto button : buttons)
+        {
+            if (auto customButton = button.try_as<CustomButton>())
+            {
+                str = customButton.GetText().c_str();
+            }
+        }
+
+        if (str != L"Custom row 5")
+        {
+            throw winrt::hresult_error();
+        }
+
+        return str;
+    }
+
     MainWindow::MainWindow()
     {
         InitializeComponent();
-    }
 
-    int32_t MainWindow::MyProperty()
-    {
-        throw hresult_not_implemented();
-    }
-
-    void MainWindow::MyProperty(int32_t /* value */)
-    {
-        throw hresult_not_implemented();
+        myStackPanel().Children().Append(ButtonUtils::GetButton());
+        myStackPanel().Children().Append(ButtonUtils::GetCustomButton());
+        myStackPanel().Children().Append(ButtonUtils::GetCustomButton(L"Custom row 4"));
+        myStackPanel().Children().Append(CustomButton());
+        myStackPanel().Children().Append(CustomButton(L"Custom row 5"));
+        myStackPanel().Children().Append(CustomButton(GetLastCustomButtonString(myStackPanel().Children())));
     }
 
     void MainWindow::myButton_Click(IInspectable const&, RoutedEventArgs const&)
     {
         myButton().Content(box_value(L"Clicked"));
-
-        ButtonUtils buttonUtils;
-        auto defaultButton = buttonUtils.GetButton();
-        auto customButton = buttonUtils.GetCustomButton();
-//        EXPECT_EQ(customButton.GetVariant(), 3);
-
-        CustomButton button;
-//        EXPECT_EQ(button.GetVariant(), 3);
     }
 }

@@ -29,7 +29,11 @@
     <activatableClass
         name="AuthoringSample.DisposableClass"
         threadingModel="both"
-        xmlns="urn:schemas-microsoft-com:winrt.v1" />    
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringSample.StaticClass"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass
         name="AuthoringSample.TestClass"
         threadingModel="both"
