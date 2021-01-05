@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.UI.Xaml.Controls;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -7,10 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
-using System.Runtime.InteropServices.WindowsRuntime;
-using WinRT;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml;
 
 namespace AuthoringSample
 {
@@ -278,10 +275,10 @@ namespace AuthoringSample
         {
             DisposableObject = new NonProjectedDisposableClass();
         }
-        
+
         public IList<IDisposable> GetDisposableObjects()
         {
-            return new List<IDisposable>() { 
+            return new List<IDisposable>() {
                 new DisposableClass(),
                 new NonProjectedDisposableClass(),
                 new DisposableClass()
@@ -300,7 +297,8 @@ namespace AuthoringSample
         {
             int val = IntAsyncOperation.GetResults();
 
-            var task = Task<int>.Run(() => {
+            var task = Task<int>.Run(() =>
+            {
                 Thread.Sleep(100);
                 return val;
             });
@@ -427,7 +425,8 @@ namespace AuthoringSample
             _dictionary = new Dictionary<string, BasicStruct>();
         }
 
-        public BasicStruct this[string key] { 
+        public BasicStruct this[string key]
+        {
             get => _dictionary[key];
             set => _dictionary[key] = value;
         }
@@ -674,7 +673,7 @@ namespace AuthoringSample
     public static class StaticClass
     {
         public static int GetNumber()
-    {
+        {
             return 4;
         }
 
@@ -682,14 +681,14 @@ namespace AuthoringSample
         {
             return number;
         }
-        }
+    }
 
     public static class ButtonUtils
     {
         public static Button GetButton()
         {
             Button button = new Button
-        {
+            {
                 Content = "Button"
             };
             return button;
@@ -712,7 +711,7 @@ namespace AuthoringSample
         public bool OverrideEntered { get; set; }
 
         public CustomButton()
-            :this("CustomButton")
+            : this("CustomButton")
         {
         }
 
@@ -725,7 +724,7 @@ namespace AuthoringSample
 
         protected override void OnPointerEntered(global::Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
-            if(!OverrideEntered)
+            if (!OverrideEntered)
             {
                 base.OnPointerEntered(e);
                 return;
@@ -764,7 +763,7 @@ namespace AuthoringSample
     {
         protected override Size MeasureOverride(Size availableSize)
         {
-            foreach(var child in Children)
+            foreach (var child in Children)
             {
                 child.Measure(new Size(160, 50));
             }
