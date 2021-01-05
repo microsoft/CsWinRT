@@ -37,6 +37,11 @@ namespace WinUIDesktopSample
             var factoryType = Type.GetType("Microsoft.UI.Xaml.Controls.Page+_IPageFactory,WinUI");
             propInfo = factoryType.GetProperty("ThisPtr", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             factory = Activator.CreateInstance(factoryType);
+#if DEBUG
+            Build.Text = "DEBUG";
+#else
+            Build.Text = "RELEASE";
+#endif
         }
 
         public unsafe static IntPtr CreatePage(IntPtr outer, out IntPtr inner)
@@ -52,7 +57,7 @@ namespace WinUIDesktopSample
         private WeakReference derivedRef;
         private WeakReference gridRef;
         private WeakReference derivedGridRef;
-        //private List<object> pressure = new List<object>();
+        private List<object> pressure = new List<object>();
 
         static WeakReference CreateObject(bool withCapture)
         {
@@ -107,13 +112,12 @@ namespace WinUIDesktopSample
 
         private void Check_Click(object sender, RoutedEventArgs e)
         {
-            //pressure.Add(new byte[10_000_000]);
+            pressure.Add(new byte[10_000_000]);
             for (int i = 0; i < 10; i++)
             {
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
-            return;
             var baseStatus = baseRef.IsAlive ? "ARRPage leaked" : "ARRPage collected";
             var derivedStatus = derivedRef.IsAlive ? "Derived leaked" : "Derived collected";
             var gridStatus = gridRef.IsAlive ? "Grid leaked" : "Grid collected";

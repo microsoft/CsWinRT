@@ -7,6 +7,7 @@
         mc:Ignorable="d"
         Height="450" Width="800">
     <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <TextBlock x:Name="Build" Text="" />
         <Button x:Name="WithoutCapture" Click="WithoutCapture_Click">Grid and handler without capture</Button>
         <Button x:Name="WithCapture" Click="WithCapture_Click">Grid and handler with capture</Button>
         <Button x:Name="Alloc" Click="Alloc_Click">1. Allocate various aggregates</Button>
