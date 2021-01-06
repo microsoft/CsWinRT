@@ -8,20 +8,22 @@ WinRT APIs are defined in `*.winmd` format, and C#/WinRT includes tooling that g
 
 ## C#/WinRT Architecture
 
-### Component Authors
+The C#/WinRT runtime assembly, `WinRT.Runtime.dll`, is required by all C#/WinRT assemblies.  It provides an abstraction layer over the .NET runtime, supporting .NET 5. The runtime assembly implements several features for all projected C#/WinRT types, including WinRT activation, marshaling logic, and [COM wrapper](https://docs.microsoft.com/dotnet/standard/native-interop/com-wrappers) lifetime management.
 
-Component Authors need to build a C#/WinRT projection for .NET5+ targets.
+### Create and distribute an interop assembly
+
+Component authors need to build a C#/WinRT projection assembly for .NET5+ consumers. In the diagram below, the **cswinrt.exe** tool processes Windows Metadata (`*.winmd`) files in the "Contoso" namespace to create projection source files. These source files are then compiled into an interop projection assembly named `Contoso.projection.dll`. The projection assembly must be distributed along with the implementation assemblies (`Contoso.*.dll`) as a NuGet package.
 
 <img alt="Creating projection"
-    src="Diagram_CreateProjection.jpg"
+    src="docs/images/Diagram_CreateProjection.jpg"
     width="70%" height="50%">
 
-### Application Developers
+### Reference an interop assembly
 
-.NET5+ apps reference the NuGet package, which pulls in the projection assembly instead of a winmd.
+Application developers on .NET5+ can reference C#/WinRT interop assemblies by adding a reference to the interop NuGet package. This replaces any `*.winmd` references. The .NET5+ application includes `WinRT.Runtime.dll` which handles WinRT type activation logic.
 
 <img alt = "Adding projection"
-    src="Diagram_AddProjection.jpg"
+    src="docs/images/Diagram_AddProjection.jpg"
     width="70%" height="50%">
 
 ## Motivation
@@ -40,6 +42,7 @@ C#/WinRT currently requires the following packages, or newer, to build:
 
 - [Visual Studio 16.8](https://visualstudio.microsoft.com/downloads/) 
 - [.NET 5.0 SDK](https://dotnet.microsoft.com/download/dotnet/5.0) 
+- [.NET Core 2.1 SDK](https://dotnet.microsoft.com/download/dotnet-core/2.1)
 - [nuget.exe 5.8.0-preview.3](https://www.nuget.org/downloads)
 - WinUI 3 3.0.0-preview1.200515.3
 
@@ -57,7 +60,7 @@ The `build.cmd` script takes care of all related configuration steps and is the 
 
 ## Developer Guidance
 
-Please read the [usage](USAGE.md) and [repository structure](STRUCTURE.md) docs for a detailed breakdown. For recommendations on migrating from System.Runtime.InteropServices, see the [COM Interop](docs/interop.md) guide. For additional documentation visit <http://aka.ms/cswinrt>.
+Please read the [usage](docs/usage.md) and [repository structure](docs/structure.md) docs for a detailed breakdown. For recommendations on migrating from System.Runtime.InteropServices, see the [COM Interop](docs/interop.md) guide. For additional documentation visit <http://aka.ms/cswinrt>.
 
 ## Related Projects
 
