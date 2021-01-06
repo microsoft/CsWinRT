@@ -2,6 +2,15 @@ namespace DiagnosticTests
 {
     public sealed partial class UnitTesting
     {
+        private const string PropertyNoGetter = @"
+namespace DiagnosticTests
+{
+    public sealed class PrivateSetter
+    {
+        public int MyInt { set { } }
+    }
+}";
+
         private const string PrivateGetter = @"
 namespace DiagnosticTests
 {

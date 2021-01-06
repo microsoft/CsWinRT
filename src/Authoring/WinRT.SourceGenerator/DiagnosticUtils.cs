@@ -230,7 +230,7 @@ namespace Generator
                 var propSym = GetModel(prop.SyntaxTree).GetDeclaredSymbol(prop);
                 var loc = prop.GetLocation();
 
-                if (!propSym.GetMethod.DeclaredAccessibility.Equals(Accessibility.Public))
+                if (propSym.GetMethod == null || !propSym.GetMethod.DeclaredAccessibility.Equals(Accessibility.Public))
                 {
                     Report(WinRTRules.PrivateGetterRule, loc, prop.Identifier);
                 }

@@ -1,8 +1,9 @@
+using NUnit.Framework;
+
 namespace DiagnosticTests
 {
     public sealed partial class UnitTesting
     {
-
         private const string Valid_PrivateSetter = @"
 namespace DiagnosticTests
 {

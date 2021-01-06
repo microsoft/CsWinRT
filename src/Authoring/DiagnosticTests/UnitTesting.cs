@@ -98,6 +98,7 @@ namespace DiagnosticTests
             {
                 // private getter
                 yield return new TestCaseData(PrivateGetter, WinRTRules.PrivateGetterRule).SetName("Property. PrivateGetter");
+                yield return new TestCaseData(PropertyNoGetter).SetName("Property. No Get, public Setter");
                 // namespace tests
                 yield return new TestCaseData(SameNameNamespacesDisjoint, WinRTRules.DisjointNamespaceRule).SetName("Namespace. isn't accessible without Test prefix, doesn't use type");
                 yield return new TestCaseData(NamespacesDifferByCase, WinRTRules.NamespacesDifferByCase).SetName("Namespace. names only differ by case");
