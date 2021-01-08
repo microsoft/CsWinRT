@@ -4,6 +4,7 @@
     <PrepareForRunDependsOn>CopyTestAssets;$(PrepareForRunDependsOn)</PrepareForRunDependsOn>
   </PropertyGroup>
 
+  <!-- temporary until nuget support -->
   <Target Name="CopyTestAssets">
     <Copy SourceFiles="$(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll"
           DestinationFiles="$(OutDir)WinRT.Host.dll" 
