@@ -5,7 +5,7 @@
     xmlns:local="using:AuthoringWinUITest"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:custom="using:AuthoringSample"
+    xmlns:custom="using:AuthoringTest"
     mc:Ignorable="d">
 
     <custom:CustomStackPanel x:Name="myStackPanel" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">

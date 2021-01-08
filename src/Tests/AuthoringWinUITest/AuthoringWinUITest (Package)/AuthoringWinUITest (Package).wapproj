@@ -63,8 +63,8 @@
       <Link>WinRT.Host.dll</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\AuthoringSample\bin\$(_WinMDPlatform)\$(Configuration)\net5.0\AuthoringSample.dll">
-      <Link>AuthoringSample.dll</Link>
+    <Content Include="..\..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net5.0\AuthoringTest.dll">
+      <Link>AuthoringTest.dll</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
