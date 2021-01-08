@@ -5945,8 +5945,13 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
 
         w.write(R"(
-internal class % : %%, global::WinRT.Interop.IManagedActivationFactory
+internal class % : %%
 {
+
+static %()
+{
+RuntimeHelpers.RunClassConstructor(typeof(%).TypeHandle);
+}
 
 public static IntPtr Make()
 {
@@ -5961,11 +5966,6 @@ IntPtr instance = _factory.ActivateInstance();
 return ObjectReference<IInspectable.Vftbl>.Attach(ref instance).As<I>();
 }
 
-public void RunClassConstructor()
-{
-RuntimeHelpers.RunClassConstructor(typeof(%).TypeHandle);
-}
-
 %
 }
 )",
@@ -5973,9 +5973,10 @@ factory_type_name,
 base_class,
 bind<write_factory_class_inheritance>(type),
 factory_type_name,
-factory_type_name,
-factory_type_name,
 type_name,
+factory_type_name,
+factory_type_name,
+factory_type_name,
 bind<write_factory_class_members>(type)
 );
     }
