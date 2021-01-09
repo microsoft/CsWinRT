@@ -23,8 +23,8 @@
     <file src="Microsoft.Windows.CsWinRT.props" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.Prerelease*.targets" target="build"/>
-    <file src="Microsoft.Windows.CsWinRT.Authoring.props" target="build"/>
-    <file src="Microsoft.Windows.CsWinRT.Authoring.props" target="buildTransitive"/>
+    <file src="Microsoft.Windows.CsWinRT.Authoring.targets" target="build"/>
+    <file src="Microsoft.Windows.CsWinRT.Authoring.targets" target="buildTransitive"/>
     <file src="readme.txt"/>
     <file src="$net5_runtime$" target="lib\net5.0\"/>
     <file src="$source_generator$" target="analyzers\dotnet\cs\"/>
@@ -32,10 +32,10 @@
     https://stackoverflow.com/questions/49162127/how-to-include-native-assets-in-nuget-on-multiple-platforms-only-64-bit 
     https://stackoverflow.com/questions/48122173/warning-when-using-nuget-package-that-contains-native-dll  
     -->
-    <file src="$winrt_host_x64$" target ="native\x64"/>
-    <file src="$winrt_host_x86$" target ="native\x86"/>
-    <file src="$winrt_host_arm$" target ="native\arm"/>
-    <file src="$winrt_host_arm64$" target ="native\arm64"/>
+    <file src="$winrt_host_x64$" target ="runtimes\win-x64\native"/>
+    <file src="$winrt_host_x86$" target ="runtimes\win-x86\native"/>
+    <file src="$winrt_host_arm$" target ="runtimes\arm\native"/>
+    <file src="$winrt_host_arm64$" target ="runtimes\arm64\native"/>
     <file src="$winrt_shim$" target ="lib\net5.0\"/>
   </files>
 </package>
