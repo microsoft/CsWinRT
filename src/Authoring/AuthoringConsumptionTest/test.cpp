@@ -8,6 +8,8 @@ TEST(AuthoringTest, Statics)
 {
     EXPECT_EQ(TestClass::GetDefaultFactor(), 1);
     EXPECT_EQ(TestClass::GetDefaultNumber(), 2);
+    EXPECT_EQ(StaticClass::GetNumber(), 4);
+    EXPECT_EQ(StaticClass::GetNumber(2), 2);
 }
 
 TEST(AuthoringTest, FunctionCalls)

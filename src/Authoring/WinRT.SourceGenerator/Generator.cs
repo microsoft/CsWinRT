@@ -78,6 +78,12 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             return cswinrtWindowsMetadata;
         }
 
+        private static string GetCsWinRTDependentMetadata(GeneratorExecutionContext context)
+        {
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTAuthoringInputs", out var winmds);
+            return winmds;
+        }
+
         private string GetTempFolder(bool clearSourceFilesFromFolder = false)
         {
             if(_tempFolder == null || !File.Exists(_tempFolder))
@@ -107,9 +113,15 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             string winmdFile = GetWinmdOutputFile(context);
             string outputDir = GetTempFolder(true);
             string windowsMetadata = GetCsWinRTWindowsMetadata(context);
-            // TODO: support additional WinMD files from other projections.
+            string winmds = GetCsWinRTDependentMetadata(context);
 
-            string arguments = string.Format("-component -input \"{0}\" -input {1} -include {2} -output \"{3}\" -verbose", winmdFile, windowsMetadata, assemblyName, outputDir);
+            string arguments = string.Format(
+                "-component -input \"{0}\" -input {1} -include {2} -output \"{3}\" -input {4} -verbose",
+                winmdFile,
+                windowsMetadata,
+                assemblyName,
+                outputDir,
+                winmds);
             Logger.Log("Running " + cswinrtExe + " " + arguments);
 
             var processInfo = new ProcessStartInfo

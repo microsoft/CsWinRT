@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
@@ -317,7 +318,11 @@ namespace Generator
             "System.Collections.Generic.IReadOnlyCollection`1",
             "System.Collections.IEnumerable",
             "System.Collections.IEnumerator",
-            "System.Collections.IList"
+            "System.Collections.IList",
+            "System.IEquatable`1",
+            "System.Runtime.InteropServices.ICustomQueryInterface",
+            "System.Runtime.InteropServices.IDynamicInterfaceCastable",
+            "WinRT.IWinRTObject"
         };
 
         public SemanticModel Model;
@@ -475,6 +480,13 @@ namespace Generator
                 metadataBuilder.GetOrAddString(name));
             typeReferenceMapping[fullname] = typeRef;
             return typeRef;
+        }
+
+        public bool IsWinRTType(ISymbol type)
+        {
+            bool isProjectedType = type.GetAttributes().
+                Any(attribute => attribute.AttributeClass.Name == "WindowsRuntimeTypeAttribute");
+            return isProjectedType;
         }
 
         public string GetAssemblyForWinRTType(ISymbol type)
@@ -831,7 +843,7 @@ namespace Generator
                 property.Name,
                 new Symbol(property.Type),
                 property,
-                property.SetMethod != null,
+                property.SetMethod != null && property.SetMethod.DeclaredAccessibility == Accessibility.Public,
                 isInterfaceParent
             );
         }
@@ -846,78 +858,7 @@ namespace Generator
 
             base.VisitPropertyDeclaration(node);
 
-            var propertySignature = new BlobBuilder();
-            new BlobEncoder(propertySignature)
-                .PropertySignature(true)
-                .Parameters(
-                    0,
-                    returnType => EncodeReturnType(new Symbol(symbol.Type), returnType),
-                    parameters => { }
-                );
-
-            var propertyDefinitonHandle = metadataBuilder.AddProperty(
-                PropertyAttributes.None,
-                metadataBuilder.GetOrAddString(node.Identifier.ValueText),
-                metadataBuilder.GetOrAddBlob(propertySignature));
-            currentTypeDeclaration.AddProperty(symbol, propertyDefinitonHandle);
-
-            var isGetPublic = true;
-            var isSetPublic = true;
-
-            /*
-            TODO: support for private set with default interface support
-
-            if (node.AccessorList != null)
-            {
-                foreach (var accessor in node.AccessorList.Accessors)
-                {
-                    if(accessor.Keyword.Kind() == SyntaxKind.GetKeyword)
-                    {
-                        isGetPublic = !IsPrivateNode(accessor);
-                    }
-                    else if(accessor.Keyword.Kind() == SyntaxKind.SetKeyword)
-                    {
-                        isSetPublic = !IsPrivateNode(accessor);
-                    }
-                }
-            }
-            */
-
-            if (symbol.SetMethod != null && isSetPublic)
-            {
-                string setMethodName = "put_" + symbol.Name;
-                var setMethod = AddMethodDefinition(
-                    setMethodName,
-                    new Parameter[] { new Parameter(symbol.Type, "value", ParameterAttributes.In) },
-                    null,
-                    false,
-                    node.Parent is InterfaceDeclarationSyntax,
-                    true);
-                currentTypeDeclaration.AddMethod(symbol, setMethodName, setMethod);
-
-                metadataBuilder.AddMethodSemantics(
-                    propertyDefinitonHandle,
-                    MethodSemanticsAttributes.Setter,
-                    setMethod);
-            }
-
-            if (!symbol.IsWriteOnly && isGetPublic)
-            {
-                string getMethodName = "get_" + symbol.Name;
-                var getMethod = AddMethodDefinition(
-                    getMethodName,
-                    new Parameter[0],
-                    new Symbol(symbol.Type),
-                    false,
-                    node.Parent is InterfaceDeclarationSyntax,
-                    true);
-                currentTypeDeclaration.AddMethod(symbol, getMethodName, getMethod);
-
-                metadataBuilder.AddMethodSemantics(
-                    propertyDefinitonHandle,
-                    MethodSemanticsAttributes.Getter,
-                    getMethod);
-            }
+            AddPropertyDeclaration(symbol, node.Parent is InterfaceDeclarationSyntax);
         }
 
         private TypeDefinitionHandle AddTypeDefinition(
@@ -974,7 +915,7 @@ namespace Generator
 
         private void ProcessCustomMappedInterfaces(INamedTypeSymbol classSymbol)
         {
-            foreach (var implementedInterface in classSymbol.AllInterfaces.
+            foreach (var implementedInterface in GetInterfaces(classSymbol, true).
                 Where(symbol => MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
                                 ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
             {
@@ -1212,6 +1153,31 @@ namespace Generator
             }
         }
 
+        private IEnumerable<INamedTypeSymbol> GetInterfaces(INamedTypeSymbol symbol, bool includeInterfacesWithoutMappings = false)
+        {
+            HashSet<INamedTypeSymbol> interfaces = new HashSet<INamedTypeSymbol>();
+            foreach(var @interface in symbol.Interfaces)
+            {
+                interfaces.Add(@interface);
+                interfaces.UnionWith(@interface.AllInterfaces);
+            }
+
+            var baseType = symbol.BaseType;
+            while(baseType != null && !IsWinRTType(baseType))
+            {
+                interfaces.UnionWith(baseType.Interfaces);
+                foreach (var @interface in baseType.Interfaces)
+                {
+                    interfaces.UnionWith(@interface.AllInterfaces);
+                }
+
+                baseType = baseType.BaseType;
+            }
+
+            return interfaces.Where(symbol => includeInterfacesWithoutMappings || !ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol)))
+                             .OrderBy(implementedInterface => implementedInterface.ToString());
+        }
+
         private void ProcessTypeDeclaration(BaseTypeDeclarationSyntax node, Action visitTypeDeclaration)
         {
             if (!IsPublicNode(node))
@@ -1236,10 +1202,16 @@ namespace Generator
                 TypeAttributes.AnsiClass;
 
             if (IsSealedNode(node) ||
+                IsStaticNode(node) ||
                 (node is EnumDeclarationSyntax ||
                     node is StructDeclarationSyntax))
             {
                 typeAttributes |= TypeAttributes.Sealed;
+            }
+
+            if (node is ClassDeclarationSyntax && IsStaticNode(node))
+            {
+                typeAttributes |= TypeAttributes.Abstract;
             }
 
             EntityHandle baseType = default;
@@ -1293,9 +1265,7 @@ namespace Generator
 
             if (node.BaseList != null && (node is InterfaceDeclarationSyntax || node is ClassDeclarationSyntax))
             {
-                foreach (var implementedInterface in symbol.AllInterfaces
-                    .Where(symbol => !ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol)))
-                    .OrderBy(implementedInterface => implementedInterface.ToString()))
+                foreach (var implementedInterface in GetInterfaces(symbol))
                 {
                     var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
                         typeDefinitionHandle,
@@ -1325,7 +1295,7 @@ namespace Generator
                 base.VisitClassDeclaration(node);
 
                 // implicit constructor if none defined
-                if (!hasConstructor)
+                if (!hasConstructor && !IsStaticNode(node))
                 {
                     string constructorMethodName = ".ctor";
                     var methodDefinitionHandle = AddMethodDefinition(
@@ -2112,7 +2082,7 @@ namespace Generator
             typeDeclaration.Handle = typeDefinitionHandle;
             typeDefinitionMapping[type.ToString()] = typeDeclaration;
 
-            foreach (var implementedInterface in type.AllInterfaces.OrderBy(implementedInterface => implementedInterface.ToString()))
+            foreach (var implementedInterface in GetInterfaces(type))
             {
                 var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
                     typeDefinitionHandle,
@@ -2372,7 +2342,7 @@ namespace Generator
                 TypeAttributes.Interface |
                 TypeAttributes.Abstract;
 
-            if (hasTypes)
+            if (hasTypes || (interfaceType == SynthesizedInterfaceType.Default && classSymbol.Interfaces.Length == 0))
             {
                 Logger.Log("writing generated interface " + interfaceType);
                 var interfaceName = GetSynthesizedInterfaceName(classDeclaration.Node.Name, interfaceType);
@@ -2464,7 +2434,7 @@ namespace Generator
             {
                 INamedTypeSymbol classSymbol = classTypeDeclaration.Node as INamedTypeSymbol;
 
-                foreach (var implementedInterface in classSymbol.AllInterfaces)
+                foreach (var implementedInterface in GetInterfaces(classSymbol))
                 {
                     var implementedInterfaceQualifiedName = QualifiedName(implementedInterface);
                     if (ImplementedInterfacesWithoutMapping.Contains(implementedInterfaceQualifiedName))

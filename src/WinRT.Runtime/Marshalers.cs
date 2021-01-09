@@ -1021,7 +1021,7 @@ namespace WinRT
                         new[] { Expression.Convert(parms[0], publicType) }), parms).Compile();
                 return createMarshaler(o);
             }
-            using (var ccw = ComWrappersSupport.CreateCCWForObject(ComWrappersSupport.GetRuntimeClassCCWTypeIfAny(o)))
+            using (var ccw = ComWrappersSupport.CreateCCWForObject(o))
             {
                 return ccw.As<IInspectable.Vftbl>();
             }
@@ -1109,7 +1109,7 @@ namespace WinRT
             {
                 return objRef.As<global::WinRT.Interop.IDelegateVftbl>(delegateIID);
             }
-            using (var ccw = ComWrappersSupport.CreateCCWForObject(ComWrappersSupport.GetRuntimeClassCCWTypeIfAny(o)))
+            using (var ccw = ComWrappersSupport.CreateCCWForObject(o))
             {
                 return ccw.As<global::WinRT.Interop.IDelegateVftbl>(delegateIID);
             }
