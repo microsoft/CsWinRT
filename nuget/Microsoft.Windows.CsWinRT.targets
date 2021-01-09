@@ -17,7 +17,36 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
     <CoreCompileDependsOn>CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn)</CoreCompileDependsOn>
     <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess> 
+    <!-- Make sure WinRT.Runtime.dll and Microsoft.Windows.SDK.NET.dll get binplaced with authored component's dll -->
+    <CopyLocalLockFileAssemblies Condition="'$(CsWinRTComponent)' == 'true'">true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
+
+  <!-- Package up the necessary dlls with an authored component, so any consuming app can copy/binplace from the authored nupkg -->
+  <Target Name="CsWinRTIncludeHostDlls" Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="GenerateNuspec" Outputs="@(_PackageFiles)">
+    <ItemGroup>
+
+      <!-- dlls: Host.Shim, Runtime, NET.SDK  -->
+      <_PackageFiles Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll;@(ReferenceCopyLocalPaths)">
+        <PackagePath>lib</PackagePath>
+      </_PackageFiles>
+
+      <!-- WinRT.Host.dll is architecture specific -->
+      <_PackageFiles Condition="Exists('$(CsWinRTPath)native\x64\WinRT.Host.dll')" Include="$(CsWinRTPath)native\x64\WinRT.Host.dll">
+        <PackagePath>runtimes\win-x64\native</PackagePath>
+      </_PackageFiles>
+      <_PackageFiles Condition="Exists('$(CsWinRTPath)native\x86\WinRT.Host.dll')" Include="$(CsWinRTPath)native\x86\WinRT.Host.dll">
+        <PackagePath>runtimes\win-x86\native</PackagePath>
+      </_PackageFiles>
+
+      <!-- Have to put Authoring.targets in both to remain compatible with packages.config -->
+      <_PackageFiles Include="$(CsWinRTPath)buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets">
+        <PackagePath>buildTransitive\CsWinRT.$(AssemblyName).targets</PackagePath>
+      </_PackageFiles>
+      <_PackageFiles Include="$(CsWinRTPath)build\Microsoft.Windows.CsWinRT.Authoring.targets">
+        <PackagePath>build\CsWinRT.$(AssemblyName).targets</PackagePath>
+      </_PackageFiles>
+    </ItemGroup>
+  </Target>
   
   <!-- Remove WinRT.Host.Shim.dll references -->
   <Target Name="CsWinRTRemoveShimDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
