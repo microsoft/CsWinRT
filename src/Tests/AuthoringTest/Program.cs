@@ -192,6 +192,11 @@ namespace AuthoringTest
     {
         double GetDouble();
         double GetDouble(bool ignoreFactor);
+
+        string GetNumStr(int num);
+
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        string GetNumStr(double num);
     }
 
     public interface IAnotherInterface
@@ -217,6 +222,8 @@ namespace AuthoringTest
         public IList<object> ObjectList { get; set; }
         public IAsyncOperation<Int32> IntAsyncOperation { get; set; }
         public Type Type { get; set; }
+        [Windows.Foundation.Metadata.Deprecated("test", DeprecationType.Deprecate, 3)]
+        public int Deprecated { get; }
 
         public TestClass()
         {
@@ -330,7 +337,6 @@ namespace AuthoringTest
             return -1;
         }
 
-
         public void SetTypeToTestClass()
         {
             Type = typeof(TestClass);
@@ -363,6 +369,28 @@ namespace AuthoringTest
         public double GetDouble(bool ignoreFactor)
         {
             return ignoreFactor ? 2.0 : GetNumber();
+        }
+
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        public int Get(int num)
+        {
+            return num;
+        }
+
+        public string Get(string str)
+        {
+            return str;
+        }
+
+        public string GetNumStr(int num)
+        {
+            return num.ToString();
+        }
+
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        public string GetNumStr(double num)
+        {
+            return num.ToString();
         }
 
         // Implementing another interface

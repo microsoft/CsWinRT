@@ -129,6 +129,7 @@ namespace Generator
         public TypeDefinitionHandle Handle;
         public string DefaultInterface;
         public string StaticInterface;
+        public bool IsSynthesizedInterface;
 
         public Dictionary<ISymbol, List<MethodDefinitionHandle>> MethodDefinitions = new Dictionary<ISymbol, List<MethodDefinitionHandle>>();
         public Dictionary<ISymbol, List<EntityHandle>> MethodReferences = new Dictionary<ISymbol, List<EntityHandle>>();
@@ -139,11 +140,19 @@ namespace Generator
         public Dictionary<string, List<ISymbol>> MethodsByName = new Dictionary<string, List<ISymbol>>();
         public Dictionary<ISymbol, string> OverloadedMethods = new Dictionary<ISymbol, string>();
         public List<ISymbol> CustomMappedSymbols = new List<ISymbol>();
+        public List<ISymbol> SymbolsWithAttributes = new List<ISymbol>();
+
+        public TypeDeclaration()
+            :this(null)
+        {
+            IsSynthesizedInterface = true;
+        }
 
         public TypeDeclaration(ISymbol node)
         {
             Node = node;
             Handle = default;
+            IsSynthesizedInterface = false;
         }
 
         public override string ToString()
@@ -333,7 +342,6 @@ namespace Generator
         private readonly Stack<string> namespaces = new Stack<string>();
         private readonly Dictionary<string, TypeReferenceHandle> typeReferenceMapping;
         private readonly Dictionary<string, EntityHandle> assemblyReferenceMapping;
-        private readonly List<ISymbol> nodesWithAttributes;
         private readonly MetadataBuilder metadataBuilder;
         private bool hasConstructor, hasDefaultConstructor;
 
@@ -351,7 +359,6 @@ namespace Generator
             typeReferenceMapping = new Dictionary<string, TypeReferenceHandle>();
             assemblyReferenceMapping = new Dictionary<string, EntityHandle>();
             typeDefinitionMapping = new Dictionary<string, TypeDeclaration>();
-            nodesWithAttributes = new List<ISymbol>();
 
             CreteAssembly();
         }
@@ -1746,7 +1753,7 @@ namespace Generator
             }
 
             var parentSymbol = Model.GetDeclaredSymbol(node.Parent);
-            nodesWithAttributes.Add(parentSymbol);
+            currentTypeDeclaration.SymbolsWithAttributes.Add(parentSymbol);
         }
 
         public override void VisitEnumDeclaration(EnumDeclarationSyntax node)
@@ -2285,12 +2292,20 @@ namespace Generator
             // TODO: address overridable and composable interfaces.
         }
 
+        void AddAttributeIfAny(ISymbol symbol, TypeDeclaration classDeclaration)
+        {
+            if (classDeclaration.SymbolsWithAttributes.Contains(symbol))
+            {
+                currentTypeDeclaration.SymbolsWithAttributes.Add(symbol);
+            }
+        }
+
         void AddSynthesizedInterface(
             TypeDeclaration classDeclaration,
             SynthesizedInterfaceType interfaceType,
             HashSet<ISymbol> classMembersFromInterfaces)
         {
-            var typeDeclaration = new TypeDeclaration(null);
+            var typeDeclaration = new TypeDeclaration();
             currentTypeDeclaration = typeDeclaration;
 
             bool hasTypes = false;
@@ -2307,6 +2322,7 @@ namespace Generator
                 {
                     hasTypes = true;
                     AddFactoryMethod(classSymbol, constructorMethod);
+                    AddAttributeIfAny(classMember.Key, classDeclaration);
                 }
                 else if ((interfaceType == SynthesizedInterfaceType.Default && !classMember.Key.IsStatic &&
                          !classMembersFromInterfaces.Contains(classMember.Key)) ||
@@ -2330,6 +2346,7 @@ namespace Generator
                         continue;
                     }
 
+                    AddAttributeIfAny(classMember.Key, classDeclaration);
                     hasTypes = true;
                 }
             }
@@ -2422,6 +2439,48 @@ namespace Generator
             else
             {
                 AddExternalType(type);
+            }
+        }
+
+        void AddCustomAttributes(List<ISymbol> symbolsWithAttributes, string interfaceName = null)
+        {
+            foreach (var node in symbolsWithAttributes)
+            {
+                EntityHandle parentHandle;
+                if (node is INamedTypeSymbol namedType)
+                {
+                    // Attributes on classes don't propagate to synthesized interfaces.
+                    if (interfaceName != null)
+                    {
+                        continue;
+                    }
+
+                    parentHandle = typeDefinitionMapping[namedType.ToString()].Handle;
+                }
+                else
+                {
+                    var typeName = interfaceName ?? node.ContainingType.ToString();
+
+                    if (node is IMethodSymbol method)
+                    {
+                        parentHandle = typeDefinitionMapping[typeName].MethodDefinitions[method][0];
+                    }
+                    else if (node is IPropertySymbol property)
+                    {
+                        parentHandle = typeDefinitionMapping[typeName].PropertyDefinitions[property];
+                    }
+                    else if (node is IEventSymbol @event)
+                    {
+                        parentHandle = typeDefinitionMapping[typeName].EventDefinitions[@event];
+                    }
+                    else
+                    {
+                        Logger.Log("node not recognized " + node.Kind + " name: " + node.Name);
+                        continue;
+                    }
+                }
+
+                AddCustomAttributes(node.GetAttributes(), parentHandle);
             }
         }
 
@@ -2546,31 +2605,27 @@ namespace Generator
                 }
             }
 
-            foreach (var node in nodesWithAttributes)
+            var typeDeclarationsWithAttributes = typeDefinitionMapping.Values
+                .Where(declaration => !declaration.IsSynthesizedInterface && declaration.SymbolsWithAttributes.Any())
+                .ToList();
+            foreach (var typeDeclaration in typeDeclarationsWithAttributes)
             {
-                EntityHandle parentHandle = default;
-                if (node is INamedTypeSymbol namedType)
-                {
-                    parentHandle = typeDefinitionMapping[namedType.ToString()].Handle;
-                }
-                else if (node is IMethodSymbol method)
-                {
-                    parentHandle = typeDefinitionMapping[method.ContainingType.ToString()].MethodDefinitions[method][0];
-                }
-                else if (node is IPropertySymbol property)
-                {
-                    parentHandle = typeDefinitionMapping[property.ContainingType.ToString()].PropertyDefinitions[property];
-                }
-                else if (node is IEventSymbol @event)
-                {
-                    parentHandle = typeDefinitionMapping[@event.ContainingType.ToString()].EventDefinitions[@event];
-                }
-                else
-                {
-                    Logger.Log("node not recognized " + node.Kind + " name: " + node.Name);
-                }
+                AddCustomAttributes(typeDeclaration.SymbolsWithAttributes);
 
-                AddCustomAttributes(node.GetAttributes(), parentHandle);
+                if (typeDeclaration.Node is INamedTypeSymbol symbol && symbol.TypeKind == TypeKind.Class)
+                {
+                    if(!string.IsNullOrEmpty(typeDeclaration.DefaultInterface))
+                    {
+                        Logger.Log("adding attributes for default interface " + typeDeclaration.DefaultInterface);
+                        AddCustomAttributes(typeDefinitionMapping[typeDeclaration.DefaultInterface].SymbolsWithAttributes, typeDeclaration.DefaultInterface);
+                    }
+
+                    if (!string.IsNullOrEmpty(typeDeclaration.StaticInterface))
+                    {
+                        Logger.Log("adding attributes for static interface " + typeDeclaration.StaticInterface);
+                        AddCustomAttributes(typeDefinitionMapping[typeDeclaration.StaticInterface].SymbolsWithAttributes, typeDeclaration.StaticInterface);
+                    }
+                }
             }
         }
 

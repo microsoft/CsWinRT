@@ -391,3 +391,16 @@ TEST(AuthoringTest, DISABLED_CustomVectorImplementations)
     vector.Clear();
     EXPECT_EQ(vector.Size(), 0);
 }
+
+TEST(AuthoringTest, Overloads)
+{
+    TestClass testClass;
+    EXPECT_EQ(testClass.Get(2), 2);
+    EXPECT_EQ(testClass.Get(L"CsWinRT"), L"CsWinRT");
+    EXPECT_EQ(testClass.GetNumStr(4.1), L"4.1");
+    EXPECT_EQ(testClass.GetNumStr(4), L"4");
+
+    IDouble doubleInterface = testClass;
+    EXPECT_EQ(doubleInterface.GetNumStr(2.2), L"2.2");
+    EXPECT_EQ(doubleInterface.GetNumStr(8), L"8");
+}
