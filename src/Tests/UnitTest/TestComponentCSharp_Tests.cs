@@ -2311,7 +2311,6 @@ namespace UnitTest
         }
 
         // Manual for now - verify that all APIs targeting 19041 generate a warning
-        [Fact]
         public void TestSupportedOSPlatformWarnings()
         {
             // Types

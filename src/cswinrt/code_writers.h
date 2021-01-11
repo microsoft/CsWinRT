@@ -1073,7 +1073,7 @@ remove => %.% -= value;
             call(arg_value.value,
                 [&](ElemSig::SystemType system_type)
                 {
-                    auto arg_type = type.get_cache().find_required(system_type.name);
+                    auto arg_type = attribute.get_cache().find_required(system_type.name);
                     if (is_static(arg_type))
                     {
                         w.write("typeof(%)", bind<write_projection_type>(arg_type));
