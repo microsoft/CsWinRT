@@ -13,8 +13,19 @@
     <!-- <CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources> -->
   </PropertyGroup>
 
-  <ItemGroup>    
-    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
+  <ItemGroup>
+    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.ApplicationModel.Resources.winmd" />
+    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.Foundation.winmd" />
+    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.Graphics.winmd" />
+    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.System.winmd" />
+    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.UI.Text.winmd" />
+    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.UI.winmd" />
+    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.Web.WebView2.Core.winmd" />
+  </ItemGroup>
+  
+    <ItemGroup>    
+    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />    
+    <ProjectReference Include="..\..\Projections\WinUI\WinUI.csproj" />
     <ProjectReference Include="..\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />

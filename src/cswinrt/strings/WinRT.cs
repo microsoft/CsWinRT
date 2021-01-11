@@ -317,9 +317,17 @@ namespace WinRT
         public static ObjectReference<I> ActivateInstance<I>() => _factory.Value._ActivateInstance<I>();
     }
 
-    internal class ComponentActivationFactory<T> : global::WinRT.Interop.IActivationFactory where T : class, new()
+    internal class ComponentActivationFactory : global::WinRT.Interop.IActivationFactory
     {
         public IntPtr ActivateInstance()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    internal class ActivatableComponentActivationFactory<T> : ComponentActivationFactory, global::WinRT.Interop.IActivationFactory where T : class, new()
+    {
+        public new IntPtr ActivateInstance()
         {
             T comp = new T();
             return MarshalInspectable<T>.FromManaged(comp);

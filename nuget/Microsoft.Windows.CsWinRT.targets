@@ -148,8 +148,16 @@ $(CsWinRTFilters)
     <CompilerVisibleProperty Include="CsWinRTKeepGeneratedSources" />
     <CompilerVisibleProperty Include="CsWinRTWindowsMetadata" />
     <CompilerVisibleProperty Include="CsWinRTGenerateProjection" />
+    <CompilerVisibleProperty Include="CsWinRTAuthoringInputs" />
   </ItemGroup>
 
+  <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
+  <Target Name="CsWinRTSetAuthoringWinMDs" BeforeTargets="GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore" DependsOnTargets="CsWinRTRemoveWinMDReferences" Condition="$(CsWinRTEnabled)">
+    <PropertyGroup>
+      <CsWinRTAuthoringInputs>$(CsWinRTAuthoringInputs) @(CsWinRTInputs->'"%(FullPath)"', ' ') @(CsWinRTAuthoringWinMDs->'"%(FullPath)"', ' ')</CsWinRTAuthoringInputs>
+    </PropertyGroup>
+  </Target>
+  
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
 
 </Project>

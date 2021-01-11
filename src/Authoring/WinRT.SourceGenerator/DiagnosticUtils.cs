@@ -49,7 +49,7 @@ namespace Generator
                     // filter out methods and properties that will be replaced with our custom type mappings
                     IgnoreCustomTypeMappings(classSymbol, ref publicMethods, ref props);
 
-                    if (!classSymbol.IsSealed)
+                    if (!classSymbol.IsSealed && !classSymbol.IsStatic)
                     {
                         Report(WinRTRules.UnsealedClassRule, @class.GetLocation(), classId);
                     }
