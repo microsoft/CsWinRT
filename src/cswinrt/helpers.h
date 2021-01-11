@@ -68,6 +68,21 @@ namespace cswinrt
         return method.Flags().RTSpecialName() && method.Name() == ".ctor";
     }
 
+    bool has_default_constructor(TypeDef const& type)
+    {
+        XLANG_ASSERT(get_category(type) == category::class_type);
+
+        for (auto&& method : type.MethodList())
+        {
+            if (is_constructor(method) && size(method.ParamList()) == 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     bool is_special(MethodDef const& method)
     {
         return method.SpecialName() || method.Flags().RTSpecialName();

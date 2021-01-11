@@ -93,7 +93,8 @@ namespace WinRT
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(object obj)
         {
             var entries = new List<ComInterfaceEntry>();
-            var interfaces = obj.GetType().GetInterfaces();
+            var objType = obj.GetType().GetRuntimeClassCCWType() ?? obj.GetType();
+            var interfaces = objType.GetInterfaces();
             foreach (var iface in interfaces)
             {
                 if (Projections.IsTypeWindowsRuntimeType(iface))
@@ -130,7 +131,6 @@ namespace WinRT
                 });
             }
 
-            var objType = obj.GetType();
             if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
                 var ifaceAbiType = objType.FindHelperType();
