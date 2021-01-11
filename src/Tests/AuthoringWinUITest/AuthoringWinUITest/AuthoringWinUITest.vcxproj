@@ -139,8 +139,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="AuthoringSample">
-      <HintPath>..\..\AuthoringSample\bin\$(_WinMDPlatform)\$(Configuration)\net5.0\AuthoringSample.winmd</HintPath>
+    <Reference Include="AuthoringTest">
+      <HintPath>..\..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net5.0\AuthoringTest.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
       <Implementation>WinRT.Host.dll</Implementation>
     </Reference>
@@ -158,14 +158,14 @@
       <Project>{25244ced-966e-45f2-9711-1f51e951ff89}</Project>
       <SetTargetFramework>TargetFramework=net5.0</SetTargetFramework>
     </ProjectReference>
-    <ProjectReference Include="..\..\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
+    <ProjectReference Include="..\..\..\Authoring\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
       <Project>{0bb8f82d-874e-45aa-bca3-20ce0562164a}</Project>
       <SetTargetFramework>TargetFramework=net5.0</SetTargetFramework>
     </ProjectReference>
-    <ProjectReference Include="..\..\WinRT.Host\WinRT.Host.vcxproj">
+    <ProjectReference Include="..\..\..\Authoring\WinRT.Host\WinRT.Host.vcxproj">
       <Project>{7e33bcb7-19c5-4061-981d-ba695322708a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\AuthoringSample\AuthoringSample.csproj">
+    <ProjectReference Include="..\..\AuthoringTest\AuthoringTest.csproj">
       <Project>{41e2a272-150f-42f5-ad40-047aad9088a0}</Project>
     </ProjectReference>
   </ItemGroup>

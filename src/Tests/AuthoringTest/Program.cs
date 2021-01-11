@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
 
-namespace AuthoringSample
+namespace AuthoringTest
 {
     public enum BasicEnum
     {

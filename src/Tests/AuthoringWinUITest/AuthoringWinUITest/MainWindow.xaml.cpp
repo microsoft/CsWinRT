@@ -6,7 +6,7 @@
 
 using namespace winrt;
 using namespace Microsoft::UI::Xaml;
-using namespace AuthoringSample;
+using namespace AuthoringTest;
 
 namespace winrt::AuthoringWinUITest::implementation
 {
