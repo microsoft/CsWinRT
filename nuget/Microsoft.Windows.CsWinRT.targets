@@ -47,7 +47,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <PackagePath>buildTransitive\CsWinRT.$(AssemblyName).targets</PackagePath>
       </_PackageFiles>
       <_PackageFiles Include="$(CsWinRTPath)build\Microsoft.Windows.CsWinRT.Authoring.targets">
-        <PackagePath>build\CsWinRT.$(AssemblyName).targets</PackagePath>
+        <PackagePath>build\native\CsWinRT.$(AssemblyName).targets</PackagePath>
       </_PackageFiles>
     </ItemGroup>
   </Target>
