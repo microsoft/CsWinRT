@@ -7,12 +7,14 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-#if !NETSTANDARD2_0
-using System.Runtime.Loader;
-#endif
 using System.Text;
 using Windows.Foundation;
 using WinRT;
+
+#if !NETSTANDARD2_0
+using System.Runtime.Loader;
+[assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows")]
+#endif
 
 namespace WinRT.Host
 {

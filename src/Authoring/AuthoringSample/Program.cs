@@ -9,6 +9,8 @@ using Windows.Foundation;
 using Windows.Foundation.Metadata;
 using System.Runtime.InteropServices.WindowsRuntime;
 
+#pragma warning disable CA1416
+
 namespace AuthoringSample
 {
     public enum BasicEnum

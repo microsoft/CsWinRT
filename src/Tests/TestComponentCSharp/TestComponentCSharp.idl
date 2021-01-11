@@ -368,4 +368,74 @@ namespace TestComponentCSharp
         CustomBindableVectorTest();
     }
 
+    // SupportedOSPlatform warning tests
+    [contract(Windows.Foundation.UniversalApiContract, 10)]
+    [attributeusage(target_all)]
+    [attributename("warning")]
+    attribute WarningAttribute
+    {
+    };
+
+    [contract(Windows.Foundation.UniversalApiContract, 8)]
+    enum WarningEnum
+    {
+        Value,
+        [contract(Windows.Foundation.UniversalApiContract, 10)]
+        WarningValue
+    };
+
+    [contract(Windows.Foundation.UniversalApiContract, 10)]
+    struct WarningStruct
+    {
+        Int32 i32;
+    };
+
+    [contract(Windows.Foundation.UniversalApiContract, 8)]
+    static runtimeclass WarningStatic
+    {
+        static void Method();
+        static Int32 Property;
+        static event Windows.Foundation.EventHandler<Int32> Event;
+        [contract(Windows.Foundation.UniversalApiContract, 10)]
+        {
+            static void WarningMethod();
+            static Int32 WarningProperty;
+            static event Windows.Foundation.EventHandler<Int32> WarningEvent;
+        }
+    }
+
+    [contract(Windows.Foundation.UniversalApiContract, 8)]
+    interface IWarning1
+    {
+        Int32 WarningInterfacePropertySetter{ get; };
+    }
+
+    [contract(Windows.Foundation.UniversalApiContract, 10)]
+    interface IWarning2 requires IWarning1
+    {
+        void WarningInterfaceMethod();
+        Int32 WarningInterfaceProperty;
+        Int32 WarningInterfacePropertySetter{ set; };
+        event Windows.Foundation.EventHandler<Int32> WarningInterfaceEvent;
+    }
+
+    [default_interface]
+    [contract(Windows.Foundation.UniversalApiContract, 8)]
+    unsealed runtimeclass WarningClass : IWarning1, IWarning2
+    {
+        Int32 WarningPropertySetter{ get; };
+
+        [contract(Windows.Foundation.UniversalApiContract, 10)]
+        {
+            WarningClass();
+            WarningClass(WarningEnum arg);
+            void WarningMethod();
+            Int32 WarningProperty;
+            Int32 WarningPropertySetter{ set; };
+            event Windows.Foundation.EventHandler<Int32> WarningEvent;
+            overridable void WarningOverridableMethod();
+            overridable Int32 WarningOverridableProperty;
+            //overridable event Windows.Foundation.EventHandler<Int32> WarningOverridableEvent;
+        }
+    }
 }
