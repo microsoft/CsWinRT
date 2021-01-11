@@ -5137,7 +5137,7 @@ _lazyInterfaces = new Dictionary<Type, object>()
         auto base_semantics = get_type_semantics(type.Extends());
         auto derived_new = std::holds_alternative<object_type>(base_semantics) ? "" : "new ";
 
-        w.write(R"(%%
+        w.write(R"(%
 [global::WinRT.ProjectedRuntimeClass(nameof(_default))]
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %public %class %%, IWinRTObject, IEquatable<%>
