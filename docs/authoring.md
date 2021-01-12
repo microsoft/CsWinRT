@@ -7,7 +7,7 @@ C#/WinRT is working to provide support for authoring Windows Runtime components.
 
 ## References
 Here are some resources that demonstrate authoring C#/WinRT components and the details discussed in this document.
-1. https://github.com/microsoft/CsWinRT/tree/master/src/Authoring/AuthoringConsumptionTest
+1. https://github.com/microsoft/CsWinRT/tree/master/src/Tests/AuthoringTest
 2. https://github.com/AdamBraden/MyRandom
 
 
