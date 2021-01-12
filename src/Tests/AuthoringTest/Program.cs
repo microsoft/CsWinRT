@@ -11,7 +11,7 @@ using Windows.Foundation.Metadata;
 
 #pragma warning disable CA1416
 
-namespace AuthoringSample
+namespace AuthoringTest
 {
     public enum BasicEnum
     {
