@@ -143,12 +143,12 @@ $(CsWinRTFilters)
           Outputs="@(_PackageFiles)">
     <ItemGroup>
       <_PackageFiles Include="$(CsWinRTGeneratedFilesDir)$(AssemblyName).winmd"
-                     PackagePath="lib\$(TargetFramework);lib\native"/>
+                     PackagePath="metadata\"/>
       
       <!-- The authored component gets the WinRT.Runtime and NET.SDK dlls from ReferenceCopyLocalPaths 
-            when CopyLocalLockFileAssemblies is enabled                  TargetPath has the assembly (PackageId.dll) -->
+            (because CopyLocalLockFileAssemblies == true); $(TargetPath) has the assembly (e.g. PackageId.dll) -->
       <_PackageFiles Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll;@(ReferenceCopyLocalPaths);$(TargetPath)"
-                     PackagePath="lib\$(TargetFramework);lib\native"/>
+                     PackagePath="lib\native"/>
 
       <!-- Custom targets that copy dlls for consumers of the authored component.
            `buildTransitive\` is for PackageReference, `build\` is for packages.config -->
@@ -174,5 +174,6 @@ $(CsWinRTFilters)
                      PackagePath="runtimes\arm64\native"/>
    </ItemGroup>
   </Target>
+
 
 </Project>
