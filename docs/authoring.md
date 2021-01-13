@@ -45,9 +45,10 @@ For native (C++) apps, there are DLLs needed to host your authored component. Wh
 added to your nupkg, before the ```GenerateNuspec``` MSBuild step.  
 
 You will need to create a targets file for your component, if you are not already, that imports a CsWinRT targets file. The imported targets file configures the native app to use the hosting dlls at runtime.
-This means for your component ```MyAuthoredComponent```, you will need to a targets file that has an import statment for ```MyAuthoredComponent.CsWinRT.targets```. 
+This means for your component ```MyAuthoredComponent```, you will need a targets file that has an import statment for ```MyAuthoredComponent.CsWinRT.targets```. 
+The targets file you need **must** be named ```MyAuthoredComponent.targets```, otherwise NuGet will ignore it.
 
-For example, 
+For example, the simplest definition of ```MyAuthoredComponent.targets``` would be:
 ``` targets
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
