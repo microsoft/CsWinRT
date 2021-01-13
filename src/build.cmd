@@ -64,7 +64,6 @@ if "%cswinrt_configuration%"=="" (
 
 if "%cswinrt_version_number%"=="" set cswinrt_version_number=0.0.0.0
 if "%cswinrt_version_string%"=="" set cswinrt_version_string=0.0.0-private.0
-:: if "%cswinrt_version_string%"=="" set cswinrt_version_string=3.8.2.0
 if "%cswinrt_assembly_version%"=="" set cswinrt_assembly_version=0.0.0.0
 
 if "%cswinrt_baseline_breaking_compat_errors%"=="" set cswinrt_baseline_breaking_compat_errors=false
