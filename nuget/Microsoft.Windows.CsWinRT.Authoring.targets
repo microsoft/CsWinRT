@@ -1,21 +1,40 @@
 <Project ToolsVersion="15.0" xmln="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="CsWinRTCopyAuthoringDlls" DependsOnTargets="ResolveReferences" Outputs="@(Reference)">
-    <ItemGroup>
-    <!-- WinRT.Runtime.dll -->
-    <Reference Include="$(MSBuildThisFileDirectory)..\lib\WinRT.Runtime.dll" />
-    <ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)..\lib\WinRT.Runtime.dll" />
-    
-    <!-- WinRT.Host.Shim.dll -->
-    <Reference Include="$(MSBuildThisFileDirectory)..\lib\WinRT.Host.Shim.dll" />
-    <ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)..\lib\WinRT.Host.Shim.dll" />
-    
-    <!-- Microsoft.Windows.SDK.NET.dll -->
-    <Reference Include="$(MSBuildThisFileDirectory)..\lib\Microsoft.Windows.SDK.NET.dll" />
-    <ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)..\lib\Microsoft.Windows.SDK.NET.dll" />
-    
-    <!-- WinRT.Host.dll - arch specific! -->
-    <Reference Include="$(MSBuildThisFileDirectory)..\runtimes\win-$(Platform)\native\WinRT.Host.dll" />
-    <ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)..\runtimes\win-$(Platform)\native\WinRT.Host.dll" />
+  <!-- Ensure we run before references get resolved -->
+  <PropertyGroup>
+    <ResolveReferencesDependsOn>$(ResolveReferencesDependsOn);CsWinRTCopyAuthoringDlls</ResolveReferencesDependsOn>
+  </PropertyGroup>
+
+  <Target Name="CsWinRTCopyAuthoringDlls" Outputs="@(ReferenceCopyLocalPaths)">
+    <PropertyGroup>
+      <HostingSupport-NativeDir>$(MSBuildThisFileDirectory)..\lib\native</HostingSupport-NativeDir>
+      <HostingSupport-ManagedDir>$(MSBuildThisFileDirectory)..\lib\$(TargetFramework)</HostingSupport-ManagedDir>
+      <HostingSupport-RuntimesDir>$(MSBuildThisFileDirectory)..\runtimes</HostingSupport-RuntimesDir>
+      <HostingSupport-IsNet5    Condition="'$(TargetFramework)' == 'net5*'">true</HostingSupport-IsNet5>
+      <HostingSupport-IsNative  Condition="'$(TargetFramework)' == 'native' OR '$(TargetFramework)' == ''">true</HostingSupport-IsNative>
+      <HostingSupport-IsArmArch Condition="'$(Platform)' == 'arm' OR '$(Platform)' == 'arm64'">true</HostingSupport-IsArmArch>
+    </PropertyGroup> 
+
+    <ItemGroup Label="For native consumers, copy authored WinMD/hosting Dlls needed" 
+               Condition="$(HostingSupport-IsNative) == 'true'">
+      <ReferenceCopyLocalPaths Include="$(HostingSupport-NativeDir)\*" />
     </ItemGroup>
-  </Target>
+
+    <ItemGroup Label="For net5 consumers, copy authored WinMD/hosting Dlls needed" 
+               Condition="$(HostingSupport-IsNet5) == 'true'">
+      <ReferenceCopyLocalPaths Include="$(HostingSupport-ManagedDir)\*" />
+    </ItemGroup>
+
+    <ItemGroup Label="Copy the WinRT.Host dll for the appropriate architecture">
+      <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\win-$(Platform)\native\WinRT.Host.dll"
+                               Condition="'$(Platform)' == 'x64' OR '$(Platform)' == 'x86'" />
+
+      <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\win-x86\native\WinRT.Host.dll" 
+                               Condition="'$(Platform)' == 'Win32'"/> 
+
+      <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\$(Platform)\native\WinRT.Host.dll"
+                               Condition="$(HostingSupport-IsArmArch) == 'true'" /> 
+    </ItemGroup> 
+   
+   </Target>
+
 </Project>
