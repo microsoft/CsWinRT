@@ -2,7 +2,7 @@
 
 using namespace winrt;
 using namespace Windows::Foundation;
-using namespace AuthoringSample;
+using namespace AuthoringTest;
 
 TEST(AuthoringTest, Statics)
 {
@@ -266,7 +266,7 @@ TEST(AuthoringTest, CustomTypes)
     testClass.SetTypeToTestClass();
     auto type = testClass.Type();
     EXPECT_EQ(type.Kind, Windows::UI::Xaml::Interop::TypeKind::Metadata);
-    EXPECT_EQ(type.Name, L"AuthoringSample.TestClass");
+    EXPECT_EQ(type.Name, L"AuthoringTest.TestClass");
 }
 
 TEST(AuthoringTest, CustomDictionaryImplementations)
@@ -323,7 +323,7 @@ TEST(AuthoringTest, CustomDictionaryImplementations)
     EXPECT_EQ(readOnlyDictionary.TryLookup(L"second").value(), basicStruct2);
     EXPECT_FALSE(readOnlyDictionary.TryLookup(L"fourth").has_value());
 
-    Windows::Foundation::Collections::IMapView<hstring, AuthoringSample::BasicStruct> mapSplit1, mapSplit2;
+    Windows::Foundation::Collections::IMapView<hstring, AuthoringTest::BasicStruct> mapSplit1, mapSplit2;
     readOnlyDictionary.Split(mapSplit1, mapSplit2);
     EXPECT_NE(mapSplit1, nullptr);
     EXPECT_NE(mapSplit2, nullptr);
@@ -332,7 +332,7 @@ TEST(AuthoringTest, CustomDictionaryImplementations)
     EXPECT_TRUE(mapSplit2.HasKey(L"third"));
     */
 
-    Windows::Foundation::Collections::IMap<hstring, AuthoringSample::BasicStruct> map = dictionary;
+    Windows::Foundation::Collections::IMap<hstring, AuthoringTest::BasicStruct> map = dictionary;
     map.Clear();
     EXPECT_EQ(map.Size(), 0);
 }
