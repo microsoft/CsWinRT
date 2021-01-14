@@ -73,24 +73,6 @@ namespace WinRT
             }
         }
 
-        public static IObjectReference GetWeakObjectReferenceForInterface(IntPtr externalComObject)
-        {
-            using var unknownRef = WeakObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
-
-            if (unknownRef.TryAs<IUnknownVftbl>(typeof(ABI.WinRT.Interop.IAgileObject.Vftbl).GUID, out var agileRef) >= 0)
-            {
-                agileRef.Dispose();
-                return unknownRef.As<IUnknownVftbl>();
-            }
-            else
-            {
-                return new WeakObjectReferenceWithContext<IUnknownVftbl>(
-                    unknownRef.Count,
-                    unknownRef.ThisPtr,
-                    Context.GetContextCallback());
-            }
-        }
-
         public static void RegisterProjectionAssembly(Assembly assembly) => TypeNameSupport.RegisterProjectionAssembly(assembly);
 
         internal static object GetRuntimeClassCCWTypeIfAny(object obj)
@@ -111,7 +93,8 @@ namespace WinRT
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(object obj)
         {
             var entries = new List<ComInterfaceEntry>();
-            var interfaces = obj.GetType().GetInterfaces();
+            var objType = obj.GetType().GetRuntimeClassCCWType() ?? obj.GetType();
+            var interfaces = objType.GetInterfaces();
             foreach (var iface in interfaces)
             {
                 if (Projections.IsTypeWindowsRuntimeType(iface))
@@ -148,7 +131,6 @@ namespace WinRT
                 });
             }
 
-            var objType = obj.GetType();
             if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
                 var ifaceAbiType = objType.FindHelperType();

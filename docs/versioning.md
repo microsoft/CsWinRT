@@ -82,17 +82,35 @@ For CsWinRT NuGet prereleases between any .NET servicing or feature releases, *\
 
 ## Scenarios
 
-1. **[Direct Reference]**: An app developer builds on a lower .NET SDK version than its dependency. For example, an app developer builds with .NET5 RTM (5.0.100) and references a library built with a later .NET SDK version (e.g., .NET 5.0.200). In this scenario, .NET 5.0.200 included an `AssemblyVersion` update.
+1. **[Direct Reference]**: An app developer builds on a lower .NET SDK version than its dependency. For example, an app developer builds with the .NET 5.0.100 SDK and references a library built with the .NET 5.0.200 SDK. In this scenario, the .NET 5.0.200 SDK included an `AssemblyVersion` update to either *WinRT.Runtime.dll* or *Microsoft.Windows.SDK.NET.dll*. The following sub-scenarios apply:
 
-    * The library does not expose Windows SDK types. The app developer will get a runtime error involving a *System.IO.FileLoadException* when calling any of the library APIs, so they will need to upgrade their .NET SDK version.
+    a.  The library does not expose Windows SDK types.
+    
+    - If there is an `AssemblyVersion` update to *Microsoft.Windows.SDK.NET.dll*, the app developer will get the following warning/errors: 
+    
+        - Build warning upon referencing the library -  *Warning MSB3277: Found conflicts between different versions of "Microsoft.Windows.SDK.NET" that could not be resolved.*
 
-    * The library exposes Windows SDK types. For example, the WinUI library decides to upgrade and build with .NET 5.0.200, as this .NET SDK version contains a fix for one of their scenarios. Before this, WinUI was building their library with an earlier .NET SDK version (e.g., 5.0.100). An app developer using WinUI notices the update and updates their WinUI package version. Since WinUI moved to building against .NET 5.0.200, the app developer needs to update their .NET SDK version even if they were not using any of those scenarios that required the Windows SDK projection fixes. The app developer will either get a warning or build error, specified below.
+        - Runtime error upon calling any of the library APIs that use Windows SDK types - *System.IO.FileLoadException: Could not load file or assembly Microsoft.Windows.SDK.NET*
+        
+    - If **only** *WinRT.Runtime.dll* has an `AssemblyVersion` update, the app developer is unaffected.
+    
+        An exception is if the library uses any new APIs (for example, [VectorExtensions methods](https://github.com/microsoft/CsWinRT/pull/575) were added in the .NET 5.0.101 SDK). In the case where any new APIs are used in the library, we would have the following
+        
+        - Build warning upon referencing the library - *Warning MSB3277: Found conflicts between different versions of "WinRT.Runtime" that could not be resolved.*
+        
+        - Runtime error when the application uses any of the new APIs - *System.IO.FileLoadException: Could not load file or assembly WinRT.Runtime*.
 
-        * If the application does not consume the exposed Windows SDK types, this results in the following build warning:
+    b. The library exposes Windows SDK types. 
+    
+    For example, the WinUI library decides to upgrade and build with .NET 5.0.200, as this .NET SDK version contains a fix for one of their scenarios. Before this, WinUI was building their library with an earlier .NET SDK version (e.g., 5.0.100). An app developer using WinUI notices the update and updates their WinUI package version. Since WinUI moved to building against .NET 5.0.200, the app developer needs to update their .NET SDK version even if they were not using any of those scenarios that required the Windows SDK projection fixes. The app developer will either get a warning or build error, specified below.
+    
+    - If the application does not consume the exposed Windows SDK types, this results in one of the following build warnings depending on which `AssemblyVersion` is incremented:
 
-            *Warning MSB3277 Found conflicts between different versions of "Microsoft.Windows.SDK.NET" that could not be resolved.*
+        - *Warning MSB3277: Found conflicts between different versions of "Microsoft.Windows.SDK.NET" that could not be resolved.*
 
-        * If the application does consume the exposed Windows SDK types, this results in a [CS1705 compiler build error](https://docs.microsoft.com/dotnet/csharp/language-reference/compiler-messages/cs1705#:~:text=Compiler%20Error%20CS1705.%20You%20are%20accessing%20a%20type,use%20of%20two%20versions%20of%20the%20same%20assembly.).
+        - *Warning MSB3277 Found conflicts between different versions of "WinRT.Runtime" that could not be resolved.*
+
+    - If the application does consume the exposed Windows SDK types, this results in a [CS1705 compiler build error](https://docs.microsoft.com/dotnet/csharp/language-reference/compiler-messages/cs1705#:~:text=Compiler%20Error%20CS1705.%20You%20are%20accessing%20a%20type,use%20of%20two%20versions%20of%20the%20same%20assembly.): *Assembly 'AssemblyName1' uses 'TypeName' which has a higher version than referenced assembly 'AssemblyName2'.*
 
 2. **[Diamond Dependency]**: An application is built using multiple components, for example WinUI and a library named *SimpleMath*. The WinUI library is built with .NET 5.0.100 while the *SimpleMath* library is built with .NET 5.0.200. In this scenario, there is an `AssemblyVersion` update in .NET 5.0.200. The application developer must upgrade to the latest version of the .NET SDK for any of its dependencies, in this case .NET 5.0.200. The warnings and errors encountered are manifested in the same manner as in Scenario #1.
 

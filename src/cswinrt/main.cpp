@@ -142,7 +142,7 @@ Where <spec> is one or more of:
                                 continue;
                             }
 
-                            if (attribute_name.second == "ActivatableAttribute")
+                            if (attribute_name.second == "ActivatableAttribute" || attribute_name.second == "StaticAttribute")
                             {
                                 componentActivatableClasses.insert(type);
                             }

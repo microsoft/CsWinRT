@@ -1,0 +1,17 @@
+﻿<Window
+    x:Class="AuthoringWinUITest.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AuthoringWinUITest"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:custom="using:AuthoringTest"
+    mc:Ignorable="d">
+
+    <custom:CustomStackPanel x:Name="myStackPanel" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Button>Built-in</Button>
+        <custom:CustomButton x:Name="myButton" Click="myButton_Click" OverrideEntered="False">Custom</custom:CustomButton>
+        <custom:CustomButton>Built-in row 2</custom:CustomButton>
+        <custom:CustomButton>Custom row 2</custom:CustomButton>
+    </custom:CustomStackPanel>
+</Window>
