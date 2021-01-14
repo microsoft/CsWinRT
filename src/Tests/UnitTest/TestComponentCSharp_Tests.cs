@@ -36,8 +36,7 @@ using WeakRefNS = WinRT;
 
 #if NET5_0
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
-//[assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows")]
-[assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows")]
+[assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.18362.0")]
 #endif
 
 namespace UnitTest
