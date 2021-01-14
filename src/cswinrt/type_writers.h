@@ -21,6 +21,9 @@ namespace cswinrt
         bool _in_abi_namespace = false;
         bool _in_abi_impl_namespace = false;
 
+        bool _check_platform = false;
+        std::string _platform;
+
         writer(std::string_view current_namespace) :
             _current_namespace(current_namespace)
         {
@@ -62,6 +65,10 @@ namespace %%
 
         void write_begin_abi()
         {
+            if (!settings.netstandard_compat)
+            {
+                write("\n#pragma warning disable CA1416");
+            }
             write("\nnamespace ABI.%\n{\n", _current_namespace);
             _in_abi_namespace = true;
         }
@@ -69,6 +76,10 @@ namespace %%
         void write_end_abi()
         {
             write("}\n");
+            if (!settings.netstandard_compat)
+            {
+                write("#pragma warning restore CA1416\n");
+            }
             _in_abi_namespace = false;
         }
 
@@ -226,6 +237,21 @@ namespace %%
             ~write_generic_type_name_guard()
             {
                 std::swap(_current, _writer.write_generic_type_name_custom);
+            }
+        };
+
+        struct write_platform_guard
+        {
+            writer& _writer;
+            write_platform_guard(writer& w) : _writer(w)
+            {
+                _writer._check_platform = true;
+                _writer._platform = {};
+            }
+            ~write_platform_guard()
+            {
+                _writer._check_platform = false;
+                _writer._platform = {};
             }
         };
     };

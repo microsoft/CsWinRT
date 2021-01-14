@@ -68,6 +68,7 @@
   <ItemGroup>
     <None Include="Directory.Build.targets" />
     <None Include="packages.config" />
+    <None Include="PreviousPlatforms.linq" />
     <None Include="strings\additions\Windows.Foundation\AsyncInfo.cs" />
     <None Include="strings\additions\Windows.Foundation\AsyncInfoIdGenerator.cs" />
     <None Include="strings\additions\Windows.Foundation\ExceptionDispatchHelper.cs" />

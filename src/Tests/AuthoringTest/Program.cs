@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
 
+#pragma warning disable CA1416
+
 namespace AuthoringTest
 {
     public enum BasicEnum
