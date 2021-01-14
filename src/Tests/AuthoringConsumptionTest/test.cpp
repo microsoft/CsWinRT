@@ -404,3 +404,42 @@ TEST(AuthoringTest, Overloads)
     EXPECT_EQ(doubleInterface.GetNumStr(2.2), L"2.2");
     EXPECT_EQ(doubleInterface.GetNumStr(8), L"8");
 }
+
+TEST(AuthoringTest, XamlMappings)
+{
+    CustomVector2 vector;
+    EXPECT_EQ(vector.Size(), 0);
+    vector.Append(DisposableClass());
+    vector.Append(DisposableClass());
+    vector.Append(TestClass());
+    EXPECT_EQ(vector.Size(), 3);
+
+    auto first = vector.First();
+    EXPECT_TRUE(first.HasCurrent());
+    EXPECT_FALSE(first.Current().as<DisposableClass>().IsDisposed());
+    first.Current().as<DisposableClass>().Close();
+    EXPECT_TRUE(first.Current().as<DisposableClass>().IsDisposed());
+    EXPECT_FALSE(vector.GetAt(1).as<DisposableClass>().IsDisposed());
+    for (auto obj : vector.GetView())
+    {
+    }
+
+    vector.RemoveAt(0);
+    EXPECT_EQ(vector.Size(), 2);
+    vector.Clear();
+    EXPECT_EQ(vector.Size(), 0);
+
+    CustomXamlServiceProvider serviceProvider;
+    EXPECT_EQ(serviceProvider.GetService(winrt::xaml_typename<CustomVector2>()).as<IStringable>().ToString(), L"CustomVector2");
+
+    bool eventTriggered = false;
+    CustomCommand command;
+    EXPECT_FALSE(command.CanExecute(nullptr));
+    auto token = command.CanExecuteChanged(auto_revoke, [&eventTriggered](IInspectable sender, IInspectable args)
+    {
+        eventTriggered = true;
+    });
+    command.SetCanExecute(true);
+    EXPECT_TRUE(eventTriggered);
+    EXPECT_TRUE(command.CanExecute(nullptr));
+}
