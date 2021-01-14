@@ -1,0 +1,46 @@
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" >
+
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+
+    <PropertyGroup>
+        <CppWinRTMergeProjectWinMDInputsDependsOn>
+            CppWinRTMergeProjectWinMDInputsOverride;$(CppWinRTMergeProjectWinMDInputsDependsOn)
+        </CppWinRTMergeProjectWinMDInputsDependsOn>
+    </PropertyGroup>
+
+    <!-- Override C++/WinRT mdmerge target to disable validation and prevent contract typedef not found errors -->
+    <!-- Consider making mdmerge validation an option for C++/WinRT -->
+    <Target Name="CppWinRTMergeProjectWinMDInputsOverride"
+            DependsOnTargets="Midl;GetCppWinRTMdMergeInputs"
+            Inputs="$(MSBuildAllProjects);@(CppWinRTMdMergeInputs)"
+            Outputs="@(_MdMergedOutput);$(IntDir)mdmerge.rsp">
+        <PropertyGroup>
+            <!--Note: CppWinRTNamespaceMergeDepth supersedes CppWinRTMergeDepth-->
+            <_MdMergeDepth Condition="'$(CppWinRTNamespaceMergeDepth)' != ''">-n:$(CppWinRTNamespaceMergeDepth)</_MdMergeDepth>
+            <_MdMergeDepth Condition="'$(_MdMergeDepth)' == ''">$(CppWinRTMergeDepth)</_MdMergeDepth>
+            <_MdMergeDepth Condition="'$(_MdMergeDepth)' == '' And '$(CppWinRTRootNamespaceAutoMerge)' == 'true'">-n:$(RootNamespace.Split('.').length)</_MdMergeDepth>
+            <_MdMergeDepth Condition="'$(_MdMergeDepth)' == '' And ('@(Page)' != '' Or '@(ApplicationDefinition)' != '')">-n:1</_MdMergeDepth>
+            <_MdMergeCommand>$(MdMergePath)mdmerge %40"$(IntDir)mdmerge.rsp"</_MdMergeCommand>
+        </PropertyGroup>
+        <PropertyGroup>
+            <!-- mdmerge.exe wants the folders to not have a trailing \ -->
+            <_MdMergeParameters>@(CppWinRTMdMergeMetadataDirectories->'-metadata_dir &quot;%(RelativeDir).&quot;', '&#x0d;&#x0a;')</_MdMergeParameters>
+            <_MdMergeParameters>$(_MdMergeParameters) @(CppWinRTMdMergeInputs->'-i &quot;%(Identity)&quot;', '&#x0d;&#x0a;')</_MdMergeParameters>
+            <_MdMergeParameters>$(_MdMergeParameters) -o &quot;$(CppWinRTMergedDir.TrimEnd('\'))&quot; -partial $(_MdMergeDepth)</_MdMergeParameters>
+        </PropertyGroup>
+        <!-- Always write the mdmerge.rsp file when the target runs, because the file is used as the output of this target. -->
+        <WriteLinesToFile
+            File="$(IntDir)mdmerge.rsp" Lines="$(_MdMergeParameters)"
+            ContinueOnError="true" Overwrite="true" />
+        <MakeDir Directories="$(CppWinRTUnmergedDir);$(CppWinRTMergedDir)" />
+        <Message Text="$(_MdMergeCommand)" Importance="$(CppWinRTVerbosity)" Condition="'@(CppWinRTMdMergeInputs)' != ''" />
+        <!-- Only run mdmerge.exe when we actually have inputs -->
+        <Exec Command="$(_MdMergeCommand)" Condition="'@(CppWinRTMdMergeInputs)' != ''" />
+        <ItemGroup>
+            <_MdMergedOutput Remove="@(_MdMergedOutput)"/>
+            <_MdMergedOutput Include="$(CppWinRTMergedDir)*.winmd"/>
+        </ItemGroup>
+        <Message Text="CppWinRTMdMerge output: @(MdMergeOutput)" Importance="$(CppWinRTVerbosity)"/>
+    </Target>
+
+</Project>

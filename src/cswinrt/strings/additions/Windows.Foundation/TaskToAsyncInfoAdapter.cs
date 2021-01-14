@@ -13,10 +13,14 @@ namespace System.Threading.Tasks
     using System.Runtime.InteropServices;
     using System.Threading;
     using global::Windows.Foundation;
+
     /// <summary>
     /// Implements a wrapper that allows to expose managed <code>System.Threading.Tasks.Task</code> objects as
     /// through the WinRT <code>Windows.Foundation.IAsyncInfo</code> interface.
     /// </summary>
+#if !NETSTANDARD2_0
+    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+#endif
     internal class TaskToAsyncInfoAdapter<TCompletedHandler, TProgressHandler, TResult, TProgressInfo>
                                                                                 : IAsyncInfo, IProgress<TProgressInfo>
                                                                                 where TCompletedHandler : class

@@ -8,12 +8,16 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     using System.Threading;
     using System.Threading.Tasks;
     using global::Windows.Foundation;
+
     /// <summary><p>Provides factory methods to construct WinRT-compatible representations of asynchronous operations.</p>
     /// <p>The factory methods take as inputs functions (delegates) that provide managed Task objects;
     /// Different factory methods return different sub-interfaces of <code>Windows.Foundation.IAyncInfo</code>.
     /// When an asynchronous operation created by this factory is actually started (by calling <code>Start()</code>),
     /// the specified <code>Task</code>-provider delegate will be invoked to create the <code>Task</code> that will
     /// be wrapped by the to-WinRT adapter.</p> </summary>
+#if !NETSTANDARD2_0
+    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+#endif
     public static class AsyncInfo
     {
         #region Factory methods for creating "normal" IAsyncInfo instances backed by a Task created by a pastProvider delegate

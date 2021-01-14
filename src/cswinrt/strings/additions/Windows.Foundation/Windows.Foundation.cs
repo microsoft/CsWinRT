@@ -8,6 +8,9 @@ namespace System
     using global::System.Threading.Tasks;
     using global::Windows.Foundation;
 
+#if NET5_0
+    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+#endif
     public static class WindowsRuntimeSystemExtensions
     {
         public static Task AsTask(this IAsyncAction source, CancellationToken cancellationToken)
@@ -189,7 +192,6 @@ namespace System
             return AsTask(source, CancellationToken.None, null);
         }
 
-
         public static Task<TResult> AsTask<TResult, TProgress>(this IAsyncOperationWithProgress<TResult, TProgress> source, CancellationToken cancellationToken)
         {
             return AsTask(source, cancellationToken, null);
@@ -230,6 +232,9 @@ namespace System
     /// using <code>VoidValueTypeParameter</code> offers better performance.</summary>
     internal class VoidReferenceTypeParameter { }
 
+#if NET5_0
+    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+#endif
     sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletionSource<TResult>
     {
         private readonly CancellationToken _ct;
