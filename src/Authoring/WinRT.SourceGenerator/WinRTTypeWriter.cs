@@ -140,7 +140,8 @@ namespace Generator
         public Dictionary<string, List<ISymbol>> MethodsByName = new Dictionary<string, List<ISymbol>>();
         public Dictionary<ISymbol, string> OverloadedMethods = new Dictionary<ISymbol, string>();
         public List<ISymbol> CustomMappedSymbols = new List<ISymbol>();
-        public List<ISymbol> SymbolsWithAttributes = new List<ISymbol>();
+        public HashSet<ISymbol> SymbolsWithAttributes = new HashSet<ISymbol>();
+        public Dictionary<ISymbol, ISymbol> ClassInterfaceMemberMapping = new Dictionary<ISymbol, ISymbol>();
 
         public TypeDeclaration()
             :this(null)
@@ -1851,7 +1852,7 @@ namespace Generator
                 metadataBuilder.GetOrAddBlob(attributeSignature));
         }
 
-        private void AddCustomAttributes(IList<AttributeData> attributes, EntityHandle parentHandle)
+        private void AddCustomAttributes(IEnumerable<AttributeData> attributes, EntityHandle parentHandle)
         {
             foreach (var attribute in attributes)
             {
@@ -2393,7 +2394,21 @@ namespace Generator
             {
                 foreach (var interfaceMember in @interface.GetMembers())
                 {
-                    classMembersFromInterfaces.Add(classSymbol.FindImplementationForInterfaceMember(interfaceMember));
+                    var classMember = classSymbol.FindImplementationForInterfaceMember(interfaceMember);
+                    if (classMember == null || !classDeclaration.MethodDefinitions.ContainsKey(classMember))
+                    {
+                        continue;
+                    }
+
+                    classMembersFromInterfaces.Add(classMember);
+                    classDeclaration.ClassInterfaceMemberMapping[classMember] = interfaceMember;
+
+                    // Mark class members whose interface declaration has attributes 
+                    // so that we can propagate them later.
+                    if (interfaceMember.GetAttributes().Any())
+                    {
+                        classDeclaration.SymbolsWithAttributes.Add(classMember);
+                    }
                 }
             }
 
@@ -2565,9 +2580,9 @@ namespace Generator
             }
         }
 
-        void AddCustomAttributes(List<ISymbol> symbolsWithAttributes, string interfaceName = null)
+        void AddCustomAttributes(TypeDeclaration typeDeclaration, string interfaceName = null)
         {
-            foreach (var node in symbolsWithAttributes)
+            foreach (var node in typeDeclaration.SymbolsWithAttributes)
             {
                 EntityHandle parentHandle;
                 if (node is INamedTypeSymbol namedType)
@@ -2603,7 +2618,13 @@ namespace Generator
                     }
                 }
 
-                AddCustomAttributes(node.GetAttributes(), parentHandle);
+                // Add attributes from both the class member declaration and its interface member declaration.
+                HashSet<AttributeData> attributes = new HashSet<AttributeData>(node.GetAttributes(), new AttributeDataComparer());
+                if(typeDeclaration.ClassInterfaceMemberMapping.ContainsKey(node))
+                {
+                    attributes.UnionWith(typeDeclaration.ClassInterfaceMemberMapping[node].GetAttributes());
+                }
+                AddCustomAttributes(attributes, parentHandle);
             }
         }
 
@@ -2728,20 +2749,20 @@ namespace Generator
                 .ToList();
             foreach (var typeDeclaration in typeDeclarationsWithAttributes)
             {
-                AddCustomAttributes(typeDeclaration.SymbolsWithAttributes);
+                AddCustomAttributes(typeDeclaration);
 
                 if (typeDeclaration.Node is INamedTypeSymbol symbol && symbol.TypeKind == TypeKind.Class)
                 {
                     if(!string.IsNullOrEmpty(typeDeclaration.DefaultInterface))
                     {
                         Logger.Log("adding attributes for default interface " + typeDeclaration.DefaultInterface);
-                        AddCustomAttributes(typeDefinitionMapping[typeDeclaration.DefaultInterface].SymbolsWithAttributes, typeDeclaration.DefaultInterface);
+                        AddCustomAttributes(typeDefinitionMapping[typeDeclaration.DefaultInterface], typeDeclaration.DefaultInterface);
                     }
 
                     if (!string.IsNullOrEmpty(typeDeclaration.StaticInterface))
                     {
                         Logger.Log("adding attributes for static interface " + typeDeclaration.StaticInterface);
-                        AddCustomAttributes(typeDefinitionMapping[typeDeclaration.StaticInterface].SymbolsWithAttributes, typeDeclaration.StaticInterface);
+                        AddCustomAttributes(typeDefinitionMapping[typeDeclaration.StaticInterface], typeDeclaration.StaticInterface);
                     }
                 }
             }

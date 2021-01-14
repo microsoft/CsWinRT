@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using WinRT.SourceGenerator;
@@ -167,6 +168,12 @@ namespace Generator
             return false;
         }
 
+        private bool MatchesAnyAttribute(string attrName, ImmutableArray<AttributeData> attributes)
+        {
+            string attrClassName = attrName + "Attribute";
+            return attributes.Any((attr) => attr.AttributeClass.Name == attrClassName);
+        }
+
         /// <summary>
         ///  Checks to see if an array parameter has been marked with both Write and Read attributes
         ///  Does extra work, by catching `ref` params, done here since this code can be used by class or interface related methods</summary>
@@ -241,10 +248,40 @@ namespace Generator
         private bool ParamHasReadOnlyAttribute(ParameterSyntax param) { return ReadOnlyArrayAttributeNames.Where(str => ParamHasAttribute(param, str)).Any(); }
         private bool ParamHasWriteOnlyAttribute(ParameterSyntax param) { return WriteOnlyArrayAttributeNames.Where(str => ParamHasAttribute(param, str)).Any(); }
 
+        private ISymbol GetInterfaceMemberFromClassMember(ISymbol classMember)
+        {
+            var parent = classMember.ContainingType;
+            foreach (var @interface in parent.AllInterfaces)
+            {
+                foreach (var interfaceMember in @interface.GetMembers())
+                {
+                    if (SymbolEqualityComparer.Default.Equals(parent.FindImplementationForInterfaceMember(interfaceMember), classMember))
+                    {
+                        return interfaceMember;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>Check for qualified and unqualified [DefaultOverload] attribute on the parameter<</summary>
         /// <param name="method"></param>
         /// <returns>True if any attribute is the DefaultOverload attribute</returns>
-        private bool HasDefaultOverloadAttribute(MethodDeclarationSyntax method) { return OverloadAttributeNames.Where(str => MatchesAnyAttribute(str, method.AttributeLists)).Any(); }
+        private bool HasDefaultOverloadAttribute(MethodDeclarationSyntax method) 
+        {
+            if(OverloadAttributeNames.Where(str => MatchesAnyAttribute(str, method.AttributeLists)).Any())
+            {
+                return true;
+            }
+
+            var interfaceMember = GetInterfaceMemberFromClassMember(GetModel(method.SyntaxTree).GetDeclaredSymbol(method));
+            if (interfaceMember == null)
+            {
+                return false;
+            }
+            return OverloadAttributeNames.Where(str => MatchesAnyAttribute(str, interfaceMember.GetAttributes())).Any();
+        }
 
         /// <summary>
         /// Keeps track of repeated declarations of a method (overloads) and raises diagnostics according to the rule that exactly one overload should be attributed the default</summary>

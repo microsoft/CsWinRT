@@ -391,7 +391,6 @@ namespace AuthoringTest
             return num.ToString();
         }
 
-        [Windows.Foundation.Metadata.DefaultOverload()]
         public string GetNumStr(double num)
         {
             return num.ToString();
