@@ -12,13 +12,14 @@ namespace System.IO
     using global::Windows.Storage.Streams;
     using System.Runtime.InteropServices;
 
-#if !NETSTANDARD2_0
     /// <summary>
-    /// Contains Net5 extension methods that provide convenience helpers for WinRT IO.
+    /// Contains extension methods that provide convenience helpers for WinRT IO.
     /// </summary>
-    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
-    public static class WindowsRuntimeStorageExtensionsNet5
+    public static class WindowsRuntimeStorageExtensions
     {
+        // Net5-specific extension methods
+#if !NETSTANDARD2_0
+        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFile windowsRuntimeFile)
         {
             if (windowsRuntimeFile == null)
@@ -27,6 +28,7 @@ namespace System.IO
             return OpenStreamForReadAsyncCore(windowsRuntimeFile);
         }
 
+        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         private static async Task<Stream> OpenStreamForReadAsyncCore(this IStorageFile windowsRuntimeFile)
         {
             Debug.Assert(windowsRuntimeFile != null);
@@ -46,6 +48,7 @@ namespace System.IO
             }
         }
 
+        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForWriteAsync(this IStorageFile windowsRuntimeFile)
         {
             if (windowsRuntimeFile == null)
@@ -54,6 +57,7 @@ namespace System.IO
             return OpenStreamForWriteAsyncCore(windowsRuntimeFile, 0);
         }
 
+        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         private static async Task<Stream> OpenStreamForWriteAsyncCore(this IStorageFile windowsRuntimeFile, long offset)
         {
             Debug.Assert(windowsRuntimeFile != null);
@@ -75,6 +79,7 @@ namespace System.IO
             }
         }
 
+        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForReadAsync(this IStorageFolder rootDirectory, string relativePath)
         {
             if (rootDirectory == null)
@@ -89,6 +94,7 @@ namespace System.IO
             return OpenStreamForReadAsyncCore(rootDirectory, relativePath);
         }
 
+        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         private static async Task<Stream> OpenStreamForReadAsyncCore(this IStorageFolder rootDirectory, string relativePath)
         {
             Debug.Assert(rootDirectory != null);
@@ -110,6 +116,7 @@ namespace System.IO
             }
         }
 
+        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         public static Task<Stream> OpenStreamForWriteAsync(this IStorageFolder rootDirectory, string relativePath,
                                                            CreationCollisionOption creationCollisionOption)
         {
@@ -125,6 +132,7 @@ namespace System.IO
             return OpenStreamForWriteAsyncCore(rootDirectory, relativePath, creationCollisionOption);
         }
 
+        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
         private static async Task<Stream> OpenStreamForWriteAsyncCore(this IStorageFolder rootDirectory, string relativePath,
                                                                       CreationCollisionOption creationCollisionOption)
         {
@@ -172,14 +180,8 @@ namespace System.IO
                 return null;
             }
         }
-    }
 #endif
 
-    /// <summary>
-    /// Contains extension methods that provide convenience helpers for WinRT IO.
-    /// </summary>
-    public static class WindowsRuntimeStorageExtensions
-    {
         public static SafeFileHandle CreateSafeFileHandle(
             this IStorageFile windowsRuntimeFile,
             FileAccess access = FileAccess.ReadWrite,

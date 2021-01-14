@@ -36,7 +36,8 @@ using WeakRefNS = WinRT;
 
 #if NET5_0
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
-[assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.18362.0")]
+//[assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows")]
+[assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows")]
 #endif
 
 namespace UnitTest
@@ -2306,12 +2307,13 @@ namespace UnitTest
             {
                 WarningOverridableMethod(); // warning CA1416
                 WarningOverridableProperty = 0; // warning CA1416
+                // see https://github.com/microsoft/cppwinrt/issues/782
                 //WarningOverridableEvent += (object s, Int32 v) => { }; // warning CA1416
             }
         }
 
         // Manual for now - verify that all APIs targeting 19041 generate a warning
-        public void TestSupportedOSPlatformWarnings()
+        private void TestSupportedOSPlatformWarnings()
         {
             // Types
             var a = new WarningAttribute();    // warning CA1416
