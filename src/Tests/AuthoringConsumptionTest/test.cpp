@@ -308,9 +308,7 @@ TEST(AuthoringTest, CustomDictionaryImplementations)
 
     EXPECT_EQ(dictionary.GetView().TryLookup(L"second").value(), basicStruct2);
     EXPECT_FALSE(dictionary.GetView().TryLookup(L"fourth").has_value());
-
-    // TODO: Broken due to ALC type mismatch.
-/*  
+  
     TestClass testClass;
     EXPECT_EQ(testClass.GetSum(dictionary, L"second"), 4);
 
@@ -330,15 +328,13 @@ TEST(AuthoringTest, CustomDictionaryImplementations)
     EXPECT_TRUE(mapSplit1.HasKey(L"first"));
     EXPECT_FALSE(mapSplit1.HasKey(L"third"));
     EXPECT_TRUE(mapSplit2.HasKey(L"third"));
-    */
 
     Windows::Foundation::Collections::IMap<hstring, AuthoringTest::BasicStruct> map = dictionary;
     map.Clear();
     EXPECT_EQ(map.Size(), 0);
 }
 
-// TODO: Broken due to ALC type mismatch.
-TEST(AuthoringTest, DISABLED_CustomVectorImplementations)
+TEST(AuthoringTest, CustomVectorImplementations)
 {
     TestClass testClass;
     testClass.SetProjectedDisposableObject();
