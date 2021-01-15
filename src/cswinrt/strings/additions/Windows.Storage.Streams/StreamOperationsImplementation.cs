@@ -13,6 +13,7 @@ namespace Windows.Storage.Streams
     using global::System.Threading;
     using global::System.Runtime.InteropServices.WindowsRuntime;
     using Windows.Foundation;
+
     /// <summary>Depending on the concrete type of the stream managed by a <c>NetFxToWinRtStreamAdapter</c>,
     /// we want the <c>ReadAsync</c> / <c>WriteAsync</c> / <c>FlushAsync</c> / etc. operation to be implemented
     /// differently. This is for best performance as we can take advantage of the specifics of particular stream
@@ -20,6 +21,9 @@ namespace Windows.Storage.Streams
     /// Moreover, knowledge about the actual runtime type of the <c>IBuffer</c> can also help choosing the optimal
     /// implementation. This type provides static methods that encapsulate the performance logic and can be used
     /// by <c>NetFxToWinRtStreamAdapter</c>.</summary>
+#if !NETSTANDARD2_0
+    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+#endif
     internal static class StreamOperationsImplementation
     {
         #region ReadAsync implementations

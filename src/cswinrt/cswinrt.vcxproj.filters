@@ -13,7 +13,6 @@
     <ClInclude Include="text_writer.h" />
     <ClInclude Include="cmd_reader.h" />
     <ClInclude Include="task_group.h" />
-    <ClInclude Include="$(IntDir)strings.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="version.rc" />
@@ -170,5 +169,6 @@
       <Filter>strings\additions\Microsoft.UI.Xaml</Filter>
     </None>
     <None Include="Directory.Build.targets" />
+    <None Include="PreviousPlatforms.linq" />
   </ItemGroup>
 </Project>

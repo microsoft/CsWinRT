@@ -10,6 +10,10 @@ namespace System.Threading.Tasks
     using System.Threading;
     using System.Threading.Tasks;
     using global::Windows.Foundation;
+
+#if !NETSTANDARD2_0
+    [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+#endif
     internal class TaskToAsyncActionWithProgressAdapter<TProgress>
                             : TaskToAsyncInfoAdapter<AsyncActionWithProgressCompletedHandler<TProgress>,
                                                      AsyncActionProgressHandler<TProgress>,

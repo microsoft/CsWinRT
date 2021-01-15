@@ -224,6 +224,9 @@ namespace System.IO
 
         #region IInputStream public interface
 
+#if !NETSTANDARD2_0
+        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+#endif
         public IAsyncOperationWithProgress<IBuffer, uint> ReadAsync(IBuffer buffer, uint count, InputStreamOptions options)
         {
             if (buffer == null)
@@ -286,6 +289,9 @@ namespace System.IO
 
         #region IOutputStream public interface
 
+#if !NETSTANDARD2_0
+        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+#endif
         public IAsyncOperationWithProgress<uint, uint> WriteAsync(IBuffer buffer)
         {
             if (buffer == null)
@@ -305,7 +311,9 @@ namespace System.IO
             return StreamOperationsImplementation.WriteAsync_AbstractStream(str, buffer);
         }
 
-
+#if !NETSTANDARD2_0
+        [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
+#endif
         public IAsyncOperation<bool> FlushAsync()
         {
             Stream str = EnsureNotDisposed();

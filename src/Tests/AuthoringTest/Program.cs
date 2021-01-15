@@ -1,13 +1,19 @@
-﻿using Microsoft.UI.Xaml.Controls;
+﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
+
+#pragma warning disable CA1416
 
 namespace AuthoringTest
 {
@@ -192,6 +198,11 @@ namespace AuthoringTest
     {
         double GetDouble();
         double GetDouble(bool ignoreFactor);
+
+        string GetNumStr(int num);
+
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        string GetNumStr(double num);
     }
 
     public interface IAnotherInterface
@@ -217,6 +228,8 @@ namespace AuthoringTest
         public IList<object> ObjectList { get; set; }
         public IAsyncOperation<Int32> IntAsyncOperation { get; set; }
         public Type Type { get; set; }
+        [Windows.Foundation.Metadata.Deprecated("test", DeprecationType.Deprecate, 3)]
+        public int Deprecated { get; }
 
         public TestClass()
         {
@@ -330,7 +343,6 @@ namespace AuthoringTest
             return -1;
         }
 
-
         public void SetTypeToTestClass()
         {
             Type = typeof(TestClass);
@@ -363,6 +375,27 @@ namespace AuthoringTest
         public double GetDouble(bool ignoreFactor)
         {
             return ignoreFactor ? 2.0 : GetNumber();
+        }
+
+        [Windows.Foundation.Metadata.DefaultOverload()]
+        public int Get(int num)
+        {
+            return num;
+        }
+
+        public string Get(string str)
+        {
+            return str;
+        }
+
+        public string GetNumStr(int num)
+        {
+            return num.ToString();
+        }
+
+        public string GetNumStr(double num)
+        {
+            return num.ToString();
         }
 
         // Implementing another interface
@@ -670,6 +703,78 @@ namespace AuthoringTest
         }
     }
 
+    public sealed class CustomVector2 : IList
+    {
+        private IList _list;
+
+        public CustomVector2()
+        {
+            _list = new ArrayList();
+        }
+
+        public CustomVector2(IList list)
+        {
+            _list = list;
+        }
+
+        public object this[int index] { get => _list[index]; set => _list[index] = value; }
+
+        public bool IsFixedSize => _list.IsFixedSize;
+
+        public bool IsReadOnly => _list.IsReadOnly;
+
+        public int Count => _list.Count;
+
+        public bool IsSynchronized => _list.IsSynchronized;
+
+        public object SyncRoot => _list.SyncRoot;
+
+        public int Add(object value)
+        {
+            return _list.Add(value);
+        }
+
+        public void Clear()
+        {
+            _list.Clear();
+        }
+
+        public bool Contains(object value)
+        {
+            return _list.Contains(value);
+        }
+
+        public void CopyTo(Array array, int index)
+        {
+            _list.CopyTo(array, index);
+        }
+
+        public IEnumerator GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
+        public int IndexOf(object value)
+        {
+            return _list.IndexOf(value);
+        }
+
+        public void Insert(int index, object value)
+        {
+            _list.Insert(index, value);
+        }
+
+        public void Remove(object value)
+        {
+            _list.Remove(value);
+        }
+
+        public void RemoveAt(int index)
+        {
+            _list.RemoveAt(index);
+        }
+    }
+
     public static class StaticClass
     {
         public static int GetNumber()
@@ -785,6 +890,72 @@ namespace AuthoringTest
             }
 
             return new Size(330, 500);
+        }
+    }
+
+    public sealed class CustomXamlServiceProvider : IXamlServiceProvider
+    {
+        public object GetService(Type type)
+        {
+            return type.Name;
+        }
+    }
+
+    public sealed class CustomNotifyPropertyChanged : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+    }
+
+    public sealed class CustomCommand : ICommand
+    {
+        public event EventHandler CanExecuteChanged;
+        private bool _canExecute = false;
+
+        public void SetCanExecute(bool canExecute)
+        {
+            _canExecute = canExecute;
+            CanExecuteChanged?.Invoke(this, new EventArgs());
+        }
+
+        public bool CanExecute(object parameter)
+        {
+            return _canExecute;
+        }
+
+        public void Execute(object parameter)
+        {
+        }
+    }
+
+    public sealed class CustomNotifyCollectionChanged : INotifyCollectionChanged
+    {
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+    }
+
+    public sealed class CustomNotifyDataErrorInfo : INotifyDataErrorInfo
+    {
+        public bool HasErrors => false;
+
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
+
+        public IEnumerable GetErrors(string propertyName)
+        {
+            return null;
+        }
+    }
+
+    public sealed class CustomEnumerable : IEnumerable
+    {
+        private IEnumerable _enumerable;
+
+        public CustomEnumerable(IEnumerable enumerable)
+        {
+            _enumerable = enumerable;
+        }
+
+        public IEnumerator GetEnumerator()
+        {
+            return _enumerable.GetEnumerator();
         }
     }
 }

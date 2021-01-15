@@ -70,6 +70,8 @@
     </ClInclude>
     <ClInclude Include="NonAgileClass.h" />
     <ClInclude Include="ComImports.h" />
+    <ClInclude Include="WarningClass.h" />
+    <ClInclude Include="WarningStatic.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
@@ -82,12 +84,15 @@
     <ClCompile Include="NonAgileClass.cpp" />
     <ClCompile Include="ComImports.cpp" />
     <ClCompile Include="ManualProjectionTestClasses.cpp" />
+    <ClCompile Include="WarningClass.cpp" />
+    <ClCompile Include="WarningStatic.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Directory.Build.props" />
+    <None Include="Directory.Build.targets" />
     <None Include="packages.config" />
     <None Include="TestComponentCSharp.def" />
   </ItemGroup>
