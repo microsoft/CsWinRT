@@ -139,6 +139,16 @@ $(CsWinRTFilters)
   
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
 
+  <!-- Copy Authored winmd to output folder -->
+  <Target Name="CsWinRTPlaceWinMDInOutputFolder"
+          Condition="'$(CsWinRTComponent)' == 'true'" 
+          BeforeTargets="AfterBuild">
+    <Copy SourceFiles="Generated Files\$(AssemblyName).winmd"
+          DestinationFolder="$(TargetDir)"
+          UseHardlinksIfPossible="false"
+          SkipUnchangedFiles="true" />
+  </Target>
+
   <!-- When an authored component packs (nuget), add the necessary hosting assets to the package -->
   <Target Name="CsWinRTIncludeHostDlls"  
           Condition="'$(CsWinRTComponent)' == 'true'" 
