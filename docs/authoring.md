@@ -68,16 +68,17 @@ Do this by adding the following to ``MyAuthoredComponent.csproj```
 
 ``` nuspec
 <files>
-  <file src="$(TargetDir)Coords.dll"                    target="lib\native\Coords.dll" />
-  <file src="$(TargetDir)Microsoft.Windows.SDK.NET.dll" target="lib\native\Microsoft.Windows.SDK.NET.dll" />
-  <file src="Generated Files\Coords.winmd" target="winmd\Coords.winmd" />
+  <file src="$(TargetDir)MyAuthoredComponent.dll"                    target="lib\native\MyAuthoredComponent.dll" />
+  <file src="$(TargetDir)MyAuthoredComponent.winmd"                  target="winmd\MyAuthoredComponent.winmd" />
+  
+  <file src="$(TargetDir)Microsoft.Windows.SDK.NET.dll"              target="lib\native\Microsoft.Windows.SDK.NET.dll" />
    
   <!-- Note: you must rename the CsWinRt.Authoring.Targets as follows -->
   <file src="C:\Path\To\CsWinRT\NugetDir\buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets"   
-        target="buildTransitive\Coords.CsWinRT.targets" />
+        target="buildTransitive\MyAuthoredComponent.CsWinRT.targets" />
    
   <file src="C:\Path\To\CsWinRT\NugetDir\build\Microsoft.Windows.CsWinRT.Authoring.targets"       
-        target="build\Coords.CsWinRT.targets" />
+        target="build\MyAuthoredComponent.CsWinRT.targets" />
    
   <!-- Include the managed DLLs -->
   <file src="C:\Path\To\CsWinRT\NugetDir\lib\net5.0\WinRT.Host.Shim.dll"                                  
