@@ -22,7 +22,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </PropertyGroup>
 
   <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
-  <Target Name="CsWinRTRemoveHostingDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
+  <Target Name="CsWinRTRemoveHostingDllReferences" 
+          AfterTargets="ResolvePackageAssets" 
+          BeforeTargets="ResolveLockFileAnalyzers" 
+          Outputs="@(Reference)">
     <PropertyGroup>
       <CsWinRTPkg-Net5Dir>$(CsWinRTPath)lib\net5.0</CsWinRTPkg-Net5Dir>
       <CsWinRTPkg-NativeDir>$(CsWinRTPath)runtimes\**\native</CsWinRTPkg-NativeDir>
@@ -143,7 +146,7 @@ $(CsWinRTFilters)
           Outputs="@(_PackageFiles)">
     <ItemGroup>
       <_PackageFiles Include="$(CsWinRTGeneratedFilesDir)$(AssemblyName).winmd"
-                     PackagePath="metadata\"/>
+                     PackagePath="winmd\"/>
       
       <!-- The authored component gets the WinRT.Runtime and NET.SDK dlls from ReferenceCopyLocalPaths 
             (because CopyLocalLockFileAssemblies == true); $(TargetPath) has the assembly (e.g. PackageId.dll) -->
@@ -165,13 +168,13 @@ $(CsWinRTFilters)
                      Include="$(CsWinRTPath)runtimes\win-x86\native\WinRT.Host.dll"
                      PackagePath="runtimes\win-x86\native"/>
       <!-- arm --> 
-      <_PackageFiles Condition="Exists('$(CsWinRTPath)runtimes\arm\native\WinRT.Host.dll')" 
-                     Include="$(CsWinRTPath)runtimes\arm\native\WinRT.Host.dll"
-                     PackagePath="runtimes\arm\native"/>
+      <_PackageFiles Condition="Exists('$(CsWinRTPath)runtimes\win-arm\native\WinRT.Host.dll')" 
+                     Include="$(CsWinRTPath)runtimes\win-arm\native\WinRT.Host.dll"
+                     PackagePath="runtimes\win-arm\native"/>
       <!-- arm64 --> 
-      <_PackageFiles Condition="Exists('$(CsWinRTPath)runtimes\arm64\native\WinRT.Host.dll')" 
-                     Include="$(CsWinRTPath)runtimes\arm64\native\WinRT.Host.dll"
-                     PackagePath="runtimes\arm64\native"/>
+      <_PackageFiles Condition="Exists('$(CsWinRTPath)runtimes\win-arm64\native\WinRT.Host.dll')" 
+                     Include="$(CsWinRTPath)runtimes\win-arm64\native\WinRT.Host.dll"
+                     PackagePath="runtimes\win-arm64\native"/>
    </ItemGroup>
   </Target>
 
