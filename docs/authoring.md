@@ -41,8 +41,7 @@ And don't forget to include a `PackageReference` to `Microsoft.Windows.CsWinRT`!
 ## Using your authored component
 To use the component in a C# app, the authored component just needs to be added as a project/package reference.
 
-For native (C++) apps, there are DLLs needed to host your authored component. When you package your runtime component, they are automatically
-added to your nupkg, before the ```GenerateNuspec``` MSBuild step.  
+For native (C++) apps, there are DLLs needed to host your authored component. When you use the automatic nuget packaging on-build support (in Visual Studio) to make a nupkg for your runtime component, the DLLs/WinMD are automatically added to your nupkg, before the ```GenerateNuspec``` MSBuild step.
 
 You will need to create a targets file for your component, if you are not already, that imports a CsWinRT targets file. The imported targets file configures the native app to use the hosting dlls at runtime.
 This means for your component ```MyAuthoredComponent```, you will need a targets file that has an import statment for ```MyAuthoredComponent.CsWinRT.targets```. 
@@ -65,23 +64,35 @@ Do this by adding the following to ``MyAuthoredComponent.csproj```
 </ItemGroup>
 ```
 
-**If you are going to write your own nuspec** then the CsWinRT target that adds the hosting dlls to your package will not run, and you should make sure your nuspec contains the following ```file``` entries for ```MyAuthoredComponent``` (note: your TargetFramework may vary).
+**If you are going to write your own nuspec, i.e. not rely on automatic packaging** then the CsWinRT target that adds the hosting dlls to your package will not run, and you should make sure your nuspec contains the following ```file``` entries for ```MyAuthoredComponent``` (note: your TargetFramework may vary). If adding a file entry for ```Coords.targets``` does not work, then update the project file per the above example. 
 
 ``` nuspec
-  <files>
-    <file src="build\MyAuthoredComponent.CsWinRT.targets"             target="build\MyAuthoredComponent.CsWinRT.targets" />
-    <file src="build\MyAuthoredComponent.targets"                     target="build\MyAuthoredComponent.targets" />
-    <file src="buildTransitive\MyAuthoredComponent.CsWinRT.targets"   target="buildTransitive\MyAuthoredComponent.CsWinRT.targets" />
-    <file src="buildTransitive\MyAuthoredComponent.targets"           target="buildTransitive\MyAuthoredComponent.targets" />
-    <file src="lib\native\MyAuthoredComponent.dll"                    target="lib\native\MyAuthoredComponent.dll" />
-    <file src="lib\native\Microsoft.Windows.SDK.NET.dll"              target="lib\native\Microsoft.Windows.SDK.NET.dll" />
-    <file src="lib\native\WinRT.Host.Shim.dll"                        target="lib\native\WinRT.Host.Shim.dll" />
-    <file src="lib\native\WinRT.Runtime.dll"                          target="lib\native\WinRT.Runtime.dll" />
-    <file src="lib\net5.0-windows10.0.19041\MyAuthoredComponent.dll"  target="lib\net5.0-windows10.0.19041\MyAuthoredComponent.dll" />
-    <file src="metadata\MyAuthoredComponent.winmd"                    target="metadata\MyAuthoredComponent.winmd" />
-    <file src="runtimes\win-x64\native\WinRT.Host.dll"                target="runtimes\win-x64\native\WinRT.Host.dll" />
-    <file src="runtimes\win-x86\native\WinRT.Host.dll"                target="runtimes\win-x86\native\WinRT.Host.dll" />
-  </files>
+<files>
+  <file src="$(TargetDir)Coords.dll"                    target="lib\native\Coords.dll" />
+  <file src="$(TargetDir)Microsoft.Windows.SDK.NET.dll" target="lib\native\Microsoft.Windows.SDK.NET.dll" />
+  <file src="Generated Files\Coords.winmd" target="winmd\Coords.winmd" />
+   
+  <!-- Note: you must rename the CsWinRt.Authoring.Targets as follows -->
+  <file src="C:\Path\To\CsWinRT\NugetDir\buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets"   
+        target="buildTransitive\Coords.CsWinRT.targets" />
+   
+  <file src="C:\Path\To\CsWinRT\NugetDir\build\Microsoft.Windows.CsWinRT.Authoring.targets"       
+        target="build\Coords.CsWinRT.targets" />
+   
+  <!-- Include the managed DLLs -->
+  <file src="C:\Path\To\CsWinRT\NugetDir\lib\net5.0\WinRT.Host.Shim.dll"                                  
+        target="lib\native\WinRT.Host.Shim.dll" />
+    
+  <file src="C:\Path\To\CsWinRT\NugetDir\lib\net5.0\WinRT.Runtime.dll"                                  
+        target="lib\native\WinRT.Runtime.dll" />
+    
+  <!-- Include the native DLLs -->
+  <file src="C:\Path\To\CsWinRT\NugetDir\runtimes\win-x64\native\WinRT.Host.dll"                                  
+        target="runtimes\win-x64\native\WinRT.Host.dll" />
+    
+  <file src="C:\Path\To\CsWinRT\NugetDir\runtimes\win-x86\native\WinRT.Host.dll"                                  
+        target="runtimes\win-x86\native\WinRT.Host.dll" />
+</files>
 ```
 
 ### For native app (C++) consumption
