@@ -155,7 +155,7 @@ $(CsWinRTFilters)
           BeforeTargets="GenerateNuspec" 
           Outputs="@(_PackageFiles)">
     <ItemGroup>
-      <_PackageFiles Include="$(CsWinRTGeneratedFilesDir)$(AssemblyName).winmd"
+      <_PackageFiles Include="$(TargetDir)$(AssemblyName).winmd"
                      PackagePath="winmd\"/>
       
       <!-- The authored component gets the WinRT.Runtime and NET.SDK dlls from ReferenceCopyLocalPaths 
