@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,6 +31,19 @@ namespace Generator
                 data[8] = (byte)((data[8] & 0x3f) | 0x80);
             }
             return new Guid(data.Take(16).ToArray());
+        }
+    }
+
+    class AttributeDataComparer : IEqualityComparer<AttributeData>
+    {
+        public bool Equals(AttributeData x, AttributeData y)
+        {
+            return x.ToString() == y.ToString();
+        }
+
+        public int GetHashCode(AttributeData obj)
+        {
+            return obj.ToString().GetHashCode();
         }
     }
 }
