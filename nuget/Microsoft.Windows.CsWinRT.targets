@@ -143,14 +143,7 @@ $(CsWinRTFilters)
   <Target Name="CsWinRTPlaceWinMDInOutputFolder"
           Condition="'$(CsWinRTComponent)' == 'true'" 
           BeforeTargets="AfterBuild">
-    <ItemGroup>
-      <CsWinRTGeneratedWinMD Include="$(GeneratedFilesDir)\net5**\$(AssemblyName).winmd"
-                             Condition="Exists('$(GeneratedFilesDir)\net5**\$(AssemblyName).winmd')" />
-
-      <CsWinRTGeneratedWinMD Include="$(GeneratedFilesDir)\$(AssemblyName).winmd"
-                             Condition="Exists('$(GeneratedFilesDir)\$(AssemblyName).winmd')" />
-    </ItemGroup>
-    <Copy SourceFiles="@(CsWinRTGeneratedWinMD)" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(GeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>
 
   <!-- When an authored component packs (nuget), add the necessary hosting assets to the package -->
