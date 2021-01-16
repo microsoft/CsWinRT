@@ -1,5 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Markup;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -956,6 +957,25 @@ namespace AuthoringTest
         public IEnumerator GetEnumerator()
         {
             return _enumerable.GetEnumerator();
+        }
+    }
+
+    public sealed class CustomXamlMetadataProvider : IXamlMetadataProvider
+    {
+        // Tests DefaultOverload attribute specified in projected interface.
+        public IXamlType GetXamlType(Type type)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IXamlType GetXamlType(string fullName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public XmlnsDefinition[] GetXmlnsDefinitions()
+        {
+            throw new NotImplementedException();
         }
     }
 }
