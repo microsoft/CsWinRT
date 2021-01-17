@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -27,7 +28,20 @@ namespace WinRT
             }
         }
 
-        protected  unsafe IUnknownVftbl VftblIUnknown
+#if DEBUG
+        private unsafe uint RefCount 
+        {
+            get
+            {
+                VftblIUnknown.AddRef(ThisPtr);
+                return VftblIUnknown.Release(ThisPtr);
+            }
+        }
+
+        private bool BreakOnDispose { get; set; }
+#endif
+
+        protected unsafe IUnknownVftbl VftblIUnknown
         {
             get
             {
@@ -92,7 +106,7 @@ namespace WinRT
             int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
             if (hr >= 0)
             {
-                objRef = ObjectReference<T>.Attach(ref thatPtr); 
+                objRef = ObjectReference<T>.Attach(ref thatPtr);
             }
             return hr;
         }
@@ -142,7 +156,22 @@ namespace WinRT
                 {
                     return;
                 }
+#if DEBUG
+                if (BreakOnDispose)
+                {
+                    Debugger.Break();
+                }
+#endif
+
                 Release();
+                disposed = true;
+            }
+        }
+
+        public void Detach()
+        {
+            lock (_disposedLock)
+            {
                 disposed = true;
             }
         }
@@ -269,7 +298,7 @@ namespace WinRT
         private readonly IntPtr _contextCallbackPtr;
 
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr)
-            :base(thisPtr)
+            : base(thisPtr)
         {
             _contextCallbackPtr = contextCallbackPtr;
         }

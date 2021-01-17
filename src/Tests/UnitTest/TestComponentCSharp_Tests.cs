@@ -75,11 +75,11 @@ namespace UnitTest
             Assert.True(buffLen4.Length == 4);
             Assert.Throws<ArgumentException>(() => buffLen4.GetByte(5)); // shouldn't have a 5th element
             Assert.True(buffLen4.GetByte(0) == 0x02); // make sure we got the 2nd element of the array
-            
+
             arrayLen3.CopyTo(buffLen4); // Array to Buffer copying
             Assert.True(buffLen4.Length == 4);
             Assert.True(buffLen4.GetByte(0) == 0x01); // make sure we updated the first few 
-            Assert.True(buffLen4.GetByte(1) == 0x02); 
+            Assert.True(buffLen4.GetByte(1) == 0x02);
             Assert.True(buffLen4.GetByte(2) == 0x03);
             Assert.True(buffLen4.GetByte(3) == 0x14); // and kept the last one 
 
@@ -141,14 +141,14 @@ namespace UnitTest
         public void TestBufferAsStreamUsingAsBuffer()
         {
             var arr = new byte[] { 0x01, 0x02 };
-            Stream stream = arr.AsBuffer().AsStream();            
+            Stream stream = arr.AsBuffer().AsStream();
             Assert.True(stream != null);
             Assert.True(stream.Length == 2);
         }
 
         [Fact]
         public void TestBufferAsStreamWithEmptyBuffer1()
-        { 
+        {
             var buffer = new Windows.Storage.Streams.Buffer(0);
             Stream stream = buffer.AsStream();
             Assert.True(stream != null);
@@ -270,7 +270,7 @@ namespace UnitTest
 
         [Fact]
         public void TestEmptyBufferCopyTo()
-        { 
+        {
             var buffer = new Windows.Storage.Streams.Buffer(0);
             byte[] array = { };
             buffer.CopyTo(array);
@@ -405,7 +405,7 @@ namespace UnitTest
         {
             var arr1 = new byte[] { 0x01, 0x02 };
             var buff = arr1.AsBuffer();
-            var arr2 = buff.ToArray(0,2);
+            var arr2 = buff.ToArray(0, 2);
             Assert.True(arr1[0] == arr2[0]);
             Assert.True(arr1[1] == arr2[1]);
         }
@@ -454,7 +454,7 @@ namespace UnitTest
         [Fact]
         public void TestWriteBuffer()
         {
-            Assert.True(InvokeWriteBufferAsync().Wait(1000)); 
+            Assert.True(InvokeWriteBufferAsync().Wait(1000));
         }
 
         [Fact]
@@ -768,10 +768,10 @@ namespace UnitTest
             var cls1 = new Class();
 
             var cls2 = new Class(42);
-            Assert.Equal(42, cls2.IntProperty); 
+            Assert.Equal(42, cls2.IntProperty);
 
             var cls3 = new Class(42, "foo");
-            Assert.Equal(42, cls3.IntProperty); 
+            Assert.Equal(42, cls3.IntProperty);
             Assert.Equal("foo", cls3.StringProperty);
         }
 
@@ -1765,7 +1765,7 @@ namespace UnitTest
                 M11 = 11, M12 = 12, M13 = 13, M14 = 14,
                 M21 = 21, M22 = 22, M23 = 23, M24 = 24,
                 M31 = 31, M32 = 32, M33 = 33, M34 = 34,
-                OffsetX = 41, OffsetY = 42, OffsetZ = 43,M44 = 44 };
+                OffsetX = 41, OffsetY = 42, OffsetZ = 43, M44 = 44 };
 
             TestObject.Matrix3DProperty = matrix3D;
             Assert.Equal(matrix3D.M11, TestObject.Matrix3DProperty.M11);
@@ -2201,8 +2201,8 @@ namespace UnitTest
 
             static void TestObject() => MakeObject();
 
-            static (IInitializeWithWindow, IWindowNative) MakeImports() 
-            { 
+            static (IInitializeWithWindow, IWindowNative) MakeImports()
+            {
                 var obj = MakeObject();
                 var initializeWithWindow = obj.As<IInitializeWithWindow>();
                 var windowNative = obj.As<IWindowNative>();
@@ -2212,7 +2212,7 @@ namespace UnitTest
             static void TestImports()
             {
                 var (initializeWithWindow, windowNative) = MakeImports();
-                
+
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
 
@@ -2253,7 +2253,7 @@ namespace UnitTest
             Assert.NotNull(cryptoKey);
         }
 
-        [Fact(Skip="Operation not supported")]
+        [Fact(Skip = "Operation not supported")]
         public void TestIBindableIterator()
         {
             CustomBindableIteratorTest bindableIterator = new CustomBindableIteratorTest();
@@ -2297,6 +2297,54 @@ namespace UnitTest
         }
 
 #if NET5_0
+        [Fact]
+        public void TestReferenceTrackingGarbageCollection()
+        {
+            static WeakReference CreateObject<T>(Action<T> customize = null) where T : new()
+            {
+                var obj = new T();
+                if (customize != null)
+                { 
+                    customize(obj);
+                }
+                return new WeakReference(obj);
+            };
+
+            static bool IsCollectible(WeakReference weakReference)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                return !weakReference.IsAlive;
+            };
+
+            // Test collection of non-composable with no delegate
+            var nonComposableNoDelegate = CreateObject<Class>();
+            Assert.True(IsCollectible(nonComposableNoDelegate));
+
+            // Test collection of composable without self-referential delegate
+            var composableNoDelegate = CreateObject<Composable>();
+            Assert.True(IsCollectible(composableNoDelegate));
+
+            // Test collection of non-composable with self-referential delegate
+            var nonComposableWithDelegate = CreateObject<Class>((obj) => { 
+                obj.StringPropertyChanged += (Class sender, string value) => Assert.Equal(sender, obj);
+            });
+            // TODO: implement IReferenceTracker to prevent delegate creating cycle
+            Assert.True(!IsCollectible(nonComposableWithDelegate));
+
+            // Test collection of composable with self-referential delegate
+            var composableWithDelegate = CreateObject<Composable>((obj) => {
+                obj.StringPropertyChanged += (Composable sender, string value) => Assert.Equal(sender, obj);
+            });
+            // TODO: implement IReferenceTracker to prevent delegate creating cycle
+            Assert.True(!IsCollectible(composableWithDelegate));
+        }
+#endif
+    }
+
+#if NET5_0
+    public class TestSupportedOSPlatformWarnings
+    {
         [TestComponentCSharp.Warning]  // NO warning CA1416
         class WarningManaged { };
 
@@ -2312,7 +2360,8 @@ namespace UnitTest
         }
 
         // Manual for now - verify that all APIs targeting 19041 generate a warning
-        private void TestSupportedOSPlatformWarnings()
+        // Consider invoking roslyn and scraping/analyzing output as an automated test
+        private void Test()
         {
             // Types
             var a = new WarningAttribute();    // warning CA1416
@@ -2343,6 +2392,6 @@ namespace UnitTest
             WarningStatic.WarningProperty = 0; // warning CA1416
             WarningStatic.WarningEvent += (object s, Int32 v) => { }; // warning CA1416
         }
-#endif
     }
+#endif
 }

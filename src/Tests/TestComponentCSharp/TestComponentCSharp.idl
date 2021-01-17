@@ -368,6 +368,13 @@ namespace TestComponentCSharp
         CustomBindableVectorTest();
     }
 
+    [default_interface]
+    unsealed runtimeclass Composable
+    {
+        Composable();
+        event Windows.Foundation.TypedEventHandler<Composable, String> StringPropertyChanged;
+    }
+
     // SupportedOSPlatform warning tests
     [contract(Windows.Foundation.UniversalApiContract, 10)]
     [attributeusage(target_all)]
