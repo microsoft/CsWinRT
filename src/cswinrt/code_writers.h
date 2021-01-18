@@ -1303,7 +1303,7 @@ remove => %.% -= value;
                 }
             }
             // Skip metadata attributes
-            if (attribute_namespace == "Windows.Foundation.Metadata") continue;
+            if (attribute_namespace == "Windows.Foundation.Metadata" && attribute_name != "DefaultOverload" && attribute_name != "Overload") continue;
             attributes[attribute_full] = std::move(params);
         }
         if (auto&& usage = attributes.find("AttributeUsage"); usage != attributes.end())
@@ -2330,7 +2330,8 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<IWin
 
             method_signature signature{ method };
             w.write(R"(
-% %(%);)",
+%% %(%);)",
+                bind<write_custom_attributes>(method.CustomAttribute(), false),
                 bind<write_projection_return_type>(signature),
                 method.Name(),
                 bind_list<write_projection_parameter>(", ", signature.params())
