@@ -17,7 +17,7 @@ namespace WinRT
     {
         // Instance field and property for Singleton pattern: ComWrappers `set` method should be idempotent 
         private static DefaultComWrappers _instance;
-        internal static DefaultComWrappers Instance
+        private static DefaultComWrappers DefaultComWrappersInstance
         {
             get 
             {
@@ -44,7 +44,7 @@ namespace WinRT
                     {
                         if (_comWrappers is null)
                         {
-                            _comWrappers = Instance;
+                            _comWrappers = DefaultComWrappersInstance;
                             ComWrappers.RegisterForTrackerSupport(_comWrappers);
                         }
                     }
@@ -55,11 +55,11 @@ namespace WinRT
             {
                 lock (_comWrappersLock)
                 {
-                    if (value == null && _comWrappers == Instance)
+                    if (value == null && _comWrappers == DefaultComWrappersInstance)
                     {
                         return;
                     }
-                    _comWrappers = value ?? Instance; 
+                    _comWrappers = value ?? DefaultComWrappersInstance; 
                     ComWrappers.RegisterForTrackerSupport(_comWrappers);
                 }
             }
