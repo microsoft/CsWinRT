@@ -1303,7 +1303,7 @@ remove => %.% -= value;
                 }
             }
             // Skip metadata attributes
-            if (attribute_namespace == "Windows.Foundation.Metadata") continue;
+            if (attribute_namespace == "Windows.Foundation.Metadata" && attribute_name != "DefaultOverload" && attribute_name != "Overload") continue;
             attributes[attribute_full] = std::move(params);
         }
         if (auto&& usage = attributes.find("AttributeUsage"); usage != attributes.end())
@@ -2011,16 +2011,16 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
             visibility, self, target);
     }
 
-    void write_notify_data_error_info_members(writer& w)
+    void write_notify_data_error_info_members(writer& w, std::string_view target)
     {
         w.write(R"(
-public global::System.Collections.IEnumerable GetErrors(string propertyName) => AsInternal(new InterfaceTag<global::System.ComponentModel.INotifyDataErrorInfo>()).GetErrors(propertyName);
+public global::System.Collections.IEnumerable GetErrors(string propertyName) => %.GetErrors(propertyName);
 
 global::System.Collections.IEnumerable global::System.ComponentModel.INotifyDataErrorInfo.GetErrors(string propertyName) => GetErrors(propertyName);
 public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged
 {
-add => AsInternal(new InterfaceTag<global::System.ComponentModel.INotifyDataErrorInfo>()).ErrorsChanged += value;
-remove => AsInternal(new InterfaceTag<global::System.ComponentModel.INotifyDataErrorInfo>()).ErrorsChanged -= value;
+add => %.ErrorsChanged += value;
+remove => %.ErrorsChanged -= value;
 }
 
 event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> global::System.ComponentModel.INotifyDataErrorInfo.ErrorsChanged
@@ -2028,9 +2028,9 @@ event global::System.EventHandler<global::System.ComponentModel.DataErrorsChange
 add => this.ErrorsChanged += value;
 remove => this.ErrorsChanged -= value;
 }
-public bool HasErrors => AsInternal(new InterfaceTag<global::System.ComponentModel.INotifyDataErrorInfo>()).HasErrors;
+public bool HasErrors => %.HasErrors;
 bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors {get => HasErrors; }
-)");
+)", target, target, target, target);
     }
 
     void write_custom_mapped_type_members(writer& w, std::string_view target, mapped_type const& mapping)
@@ -2073,7 +2073,7 @@ bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors {get => HasErr
         }
         else if (mapping.mapped_namespace == "System.ComponentModel" && mapping.mapped_name == "INotifyDataErrorInfo")
         {
-            write_notify_data_error_info_members(w);
+            write_notify_data_error_info_members(w, target);
         }
     }
 
@@ -2350,7 +2350,8 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<IWin
 
             method_signature signature{ method };
             w.write(R"(
-% %(%);)",
+%% %(%);)",
+                bind<write_custom_attributes>(method.CustomAttribute(), false),
                 bind<write_projection_return_type>(signature),
                 method.Name(),
                 bind_list<write_projection_parameter>(", ", signature.params())

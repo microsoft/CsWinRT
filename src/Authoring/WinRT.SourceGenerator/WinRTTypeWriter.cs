@@ -129,6 +129,7 @@ namespace Generator
         public TypeDefinitionHandle Handle;
         public string DefaultInterface;
         public string StaticInterface;
+        public bool IsSynthesizedInterface;
 
         public Dictionary<ISymbol, List<MethodDefinitionHandle>> MethodDefinitions = new Dictionary<ISymbol, List<MethodDefinitionHandle>>();
         public Dictionary<ISymbol, List<EntityHandle>> MethodReferences = new Dictionary<ISymbol, List<EntityHandle>>();
@@ -139,11 +140,20 @@ namespace Generator
         public Dictionary<string, List<ISymbol>> MethodsByName = new Dictionary<string, List<ISymbol>>();
         public Dictionary<ISymbol, string> OverloadedMethods = new Dictionary<ISymbol, string>();
         public List<ISymbol> CustomMappedSymbols = new List<ISymbol>();
+        public HashSet<ISymbol> SymbolsWithAttributes = new HashSet<ISymbol>();
+        public Dictionary<ISymbol, ISymbol> ClassInterfaceMemberMapping = new Dictionary<ISymbol, ISymbol>();
+
+        public TypeDeclaration()
+            :this(null)
+        {
+            IsSynthesizedInterface = true;
+        }
 
         public TypeDeclaration(ISymbol node)
         {
             Node = node;
             Handle = default;
+            IsSynthesizedInterface = false;
         }
 
         public override string ToString()
@@ -274,24 +284,25 @@ namespace Generator
         {
             { "System.DateTimeOffset", new MappedType("Windows.Foundation", "DateTime", "Windows.Foundation.FoundationContract", true) },
             { "System.Exception", new MappedType("Windows.Foundation", "HResult", "Windows.Foundation.FoundationContract", true) },
+            { "System.EventHandler`1", new MappedType("Windows.Foundation", "EventHandler`1", "Windows.Foundation.FoundationContract", true) },
             { "System.FlagsAttribute", new MappedType("System", "FlagsAttribute", "mscorlib" ) },
             { "System.IDisposable", new MappedType("Windows.Foundation", "IClosable", "Windows.Foundation.FoundationContract") },
-            { "System.IServiceProvider", new MappedType("Microsoft.UI.Xaml", "IXamlServiceProvider", "") },
+            { "System.IServiceProvider", new MappedType("Microsoft.UI.Xaml", "IXamlServiceProvider", "Microsoft.UI") },
             { "System.Nullable`1", new MappedType("Windows.Foundation", "IReference`1", "Windows.Foundation.FoundationContract" ) },
             { "System.TimeSpan", new MappedType("Windows.Foundation", "TimeSpan", "Windows.Foundation.FoundationContract", true) },
             { "System.Uri", new MappedType("Windows.Foundation", "Uri", "Windows.Foundation.FoundationContract") },
-            { "System.ComponentModel.DataErrorsChangedEventArgs", new MappedType("Microsoft.UI.Xaml.Data", "DataErrorsChangedEventArgs", "") },
-            { "System.ComponentModel.INotifyDataErrorInfo", new MappedType("Microsoft.UI.Xaml.Data", "INotifyDataErrorInfo", "") },
-            { "System.ComponentModel.INotifyPropertyChanged", new MappedType("Microsoft.UI.Xaml.Data", "INotifyPropertyChanged", "") },
-            { "System.ComponentModel.PropertyChangedEventArgs", new MappedType("Microsoft.UI.Xaml.Data", "PropertyChangedEventArgs", "") },
-            { "System.ComponentModel.PropertyChangedEventHandler", new MappedType("Microsoft.UI.Xaml.Data", "PropertyChangedEventHandler", "") },
-            { "System.Windows.Input.ICommand", new MappedType("Microsoft.UI.Xaml.Input", "ICommand", "") },
-            { "System.Collections.IEnumerable", new MappedType("Microsoft.UI.Xaml.Interop", "IBindableIterable", "") },
-            { "System.Collections.IList", new MappedType("Microsoft.UI.Xaml.Interop", "IBindableVector", "") },
-            { "System.Collections.Specialized.INotifyCollectionChanged", new MappedType("Microsoft.UI.Xaml.Interop", "INotifyCollectionChanged", "") },
-            { "System.Collections.Specialized.NotifyCollectionChangedAction", new MappedType("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedAction", "") },
-            { "System.Collections.Specialized.NotifyCollectionChangedEventArgs", new MappedType("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "") },
-            { "System.Collections.Specialized.NotifyCollectionChangedEventHandler", new MappedType("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler", "") },
+            { "System.ComponentModel.DataErrorsChangedEventArgs", new MappedType("Microsoft.UI.Xaml.Data", "DataErrorsChangedEventArgs", "Microsoft.UI") },
+            { "System.ComponentModel.INotifyDataErrorInfo", new MappedType("Microsoft.UI.Xaml.Data", "INotifyDataErrorInfo", "Microsoft.UI") },
+            { "System.ComponentModel.INotifyPropertyChanged", new MappedType("Microsoft.UI.Xaml.Data", "INotifyPropertyChanged", "Microsoft.UI") },
+            { "System.ComponentModel.PropertyChangedEventArgs", new MappedType("Microsoft.UI.Xaml.Data", "PropertyChangedEventArgs", "Microsoft.UI") },
+            { "System.ComponentModel.PropertyChangedEventHandler", new MappedType("Microsoft.UI.Xaml.Data", "PropertyChangedEventHandler", "Microsoft.UI") },
+            { "System.Windows.Input.ICommand", new MappedType("Microsoft.UI.Xaml.Input", "ICommand", "Microsoft.UI") },
+            { "System.Collections.IEnumerable", new MappedType("Microsoft.UI.Xaml.Interop", "IBindableIterable", "Microsoft.UI") },
+            { "System.Collections.IList", new MappedType("Microsoft.UI.Xaml.Interop", "IBindableVector", "Microsoft.UI") },
+            { "System.Collections.Specialized.INotifyCollectionChanged", new MappedType("Microsoft.UI.Xaml.Interop", "INotifyCollectionChanged", "Microsoft.UI") },
+            { "System.Collections.Specialized.NotifyCollectionChangedAction", new MappedType("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedAction", "Microsoft.UI") },
+            { "System.Collections.Specialized.NotifyCollectionChangedEventArgs", new MappedType("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "Microsoft.UI") },
+            { "System.Collections.Specialized.NotifyCollectionChangedEventHandler", new MappedType("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler", "Microsoft.UI") },
             { "WinRT.EventRegistrationToken", new MappedType("Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract", true) },
             { "System.AttributeTargets", new MappedType("Windows.Foundation.Metadata", "AttributeTargets", "Windows.Foundation.FoundationContract", true) },
             { "System.AttributeUsageAttribute", new MappedType("Windows.Foundation.Metadata", "AttributeUsageAttribute", "Windows.Foundation.FoundationContract") },
@@ -316,9 +327,8 @@ namespace Generator
         {
             "System.Collections.Generic.ICollection`1",
             "System.Collections.Generic.IReadOnlyCollection`1",
-            "System.Collections.IEnumerable",
+            "System.Collections.ICollection",
             "System.Collections.IEnumerator",
-            "System.Collections.IList",
             "System.IEquatable`1",
             "System.Runtime.InteropServices.ICustomQueryInterface",
             "System.Runtime.InteropServices.IDynamicInterfaceCastable",
@@ -333,7 +343,6 @@ namespace Generator
         private readonly Stack<string> namespaces = new Stack<string>();
         private readonly Dictionary<string, TypeReferenceHandle> typeReferenceMapping;
         private readonly Dictionary<string, EntityHandle> assemblyReferenceMapping;
-        private readonly List<ISymbol> nodesWithAttributes;
         private readonly MetadataBuilder metadataBuilder;
         private bool hasConstructor, hasDefaultConstructor;
 
@@ -351,7 +360,6 @@ namespace Generator
             typeReferenceMapping = new Dictionary<string, TypeReferenceHandle>();
             assemblyReferenceMapping = new Dictionary<string, EntityHandle>();
             typeDefinitionMapping = new Dictionary<string, TypeDeclaration>();
-            nodesWithAttributes = new List<ISymbol>();
 
             CreteAssembly();
         }
@@ -915,6 +923,9 @@ namespace Generator
 
         private void ProcessCustomMappedInterfaces(INamedTypeSymbol classSymbol)
         {
+            Logger.Log("writing custom mapped interfaces for " + QualifiedName(classSymbol));
+            // Mark custom mapped interface members for removal later.
+            // Note we want to also mark members from interfaces without mappings.
             foreach (var implementedInterface in GetInterfaces(classSymbol, true).
                 Where(symbol => MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
                                 ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
@@ -926,12 +937,31 @@ namespace Generator
                     var classMember = classSymbol.FindImplementationForInterfaceMember(interfaceMember);
                     currentTypeDeclaration.CustomMappedSymbols.Add(classMember);
                 }
-
-                if (MappedCSharpTypes.ContainsKey(interfaceName))
-                {
-                    WriteCustomMappedTypeMembers(implementedInterface, true);
-                }
             }
+
+            foreach (var implementedInterface in GetInterfaces(classSymbol)
+                        .Where(symbol => MappedCSharpTypes.ContainsKey(QualifiedName(symbol))))
+            {
+                WriteCustomMappedTypeMembers(implementedInterface, true);
+            }
+        }
+
+        INamedTypeSymbol GetTypeByMetadataName(string metadataName)
+        {
+            var namedType = Model.Compilation.GetTypeByMetadataName(metadataName);
+            if(namedType != null)
+            {
+                return namedType;
+            }
+
+            // Model.Compilation.GetTypeByMetadataName doesn't return a type if there is multiple references with the same type.
+            // So as a fallback, go through all the references and check each one filtering to public ones.
+            var types = Model.Compilation.References
+                 .Select(Model.Compilation.GetAssemblyOrModuleSymbol)
+                 .OfType<IAssemblySymbol>()
+                 .Select(assemblySymbol => assemblySymbol.GetTypeByMetadataName(metadataName))
+                 .Where(type => type != null && type.DeclaredAccessibility == Accessibility.Public);
+            return types.FirstOrDefault();
         }
 
         private void WriteCustomMappedTypeMembers(INamedTypeSymbol symbol, bool isDefinition)
@@ -965,14 +995,26 @@ namespace Generator
                 }
             }
 
-            Symbol GetType(string type, bool isGeneric = false, int genericIndex = -1, bool isArray = false)
+            void AddEvent(string name, Symbol eventType)
+            {
+                if (isDefinition)
+                {
+                    AddEventDeclaration(name, eventType.Type, symbol, false);
+                }
+                else
+                {
+                    AddEventReference(name, eventType.Type, symbol);
+                }
+            }
+
+            Symbol GetType(string type, bool isGeneric = false, int genericIndex = -1, bool isArray = false, ITypeSymbol[] genericTypes = null)
             {
                 if (string.IsNullOrEmpty(type) && isGeneric)
                 {
                     return isDefinition ? new Symbol(symbol.TypeArguments[genericIndex], isArray) : new Symbol(genericIndex, isArray);
                 }
 
-                var namedTypeSymbol = Model.Compilation.GetTypeByMetadataName(type);
+                var namedTypeSymbol = GetTypeByMetadataName(type);
                 if (!isGeneric)
                 {
                     return new Symbol(namedTypeSymbol, isArray);
@@ -980,8 +1022,8 @@ namespace Generator
 
                 if (isDefinition)
                 {
-                    var typeArguments = (genericIndex == -1) ?
-                        symbol.TypeArguments.ToArray() : new ITypeSymbol[] { symbol.TypeArguments[genericIndex] };
+                    var typeArguments = genericTypes ?? ((genericIndex == -1) ?
+                        symbol.TypeArguments.ToArray() : new ITypeSymbol[] { symbol.TypeArguments[genericIndex] });
                     return new Symbol(namedTypeSymbol.Construct(typeArguments), isArray);
                 }
                 else
@@ -1151,6 +1193,100 @@ namespace Generator
                 );
                 AddProperty("Size", GetType("System.UInt32"), false);
             }
+            else if (mappedTypeName == "IXamlServiceProvider")
+            {
+                AddMethod(
+                    "GetService",
+                    new[] { new Parameter(GetType("System.Type"), "type", ParameterAttributes.In) },
+                    GetType("System.Object")
+                );
+            }
+            else if (mappedTypeName == "INotifyDataErrorInfo")
+            {
+                AddProperty("HasErrors", GetType("System.Boolean"), false);
+                AddEvent(
+                    "ErrorsChanged",
+                    GetType("System.EventHandler`1", true, -1, false, new[] { GetType("System.ComponentModel.DataErrorsChangedEventArgs").Type }));
+                AddMethod(
+                    "GetErrors",
+                    new[] { new Parameter(GetType("System.String"), "propertyName", ParameterAttributes.In) },
+                    GetType("System.Collections.Generic.IEnumerable`1", true, -1, false, new[] { GetType("System.Object").Type })
+                );
+            }
+            else if (mappedTypeName == "INotifyPropertyChanged")
+            {
+                AddEvent("PropertyChanged", GetType("System.ComponentModel.PropertyChangedEventHandler"));
+            }
+            else if (mappedTypeName == "ICommand")
+            {
+                AddEvent(
+                    "CanExecuteChanged",
+                    GetType("System.EventHandler`1", true, -1, false, new[] { GetType("System.Object").Type }));
+                AddMethod(
+                    "CanExecute",
+                    new[] { new Parameter(GetType("System.Object"), "parameter", ParameterAttributes.In) },
+                    GetType("System.Boolean")
+                );
+                AddMethod(
+                    "Execute",
+                    new[] { new Parameter(GetType("System.Object"), "parameter", ParameterAttributes.In) },
+                    null
+                );
+            }
+            else if (mappedTypeName == "IBindableIterable")
+            {
+                AddMethod("First", null, GetType("Microsoft.UI.Xaml.Interop.IBindableIterator"));
+            }
+            else if (mappedTypeName == "IBindableVector")
+            {
+                AddMethod(
+                    "Append",
+                    new[] { new Parameter(GetType("System.Object"), "value", ParameterAttributes.In) },
+                    null
+                );
+                AddMethod("Clear", null, null);
+                AddMethod(
+                    "GetAt",
+                    new[] { new Parameter(GetType("System.UInt32"), "index", ParameterAttributes.In) },
+                    GetType("System.Object")
+                );
+                AddMethod("GetView", null, GetType("Microsoft.UI.Xaml.Interop.IBindableVectorView"));
+                AddMethod(
+                    "IndexOf",
+                    new[] {
+                        new Parameter(GetType("System.Object"), "value", ParameterAttributes.In),
+                        new Parameter(GetType("System.UInt32"), "index", ParameterAttributes.Out)
+                    },
+                    GetType("System.Boolean")
+                );
+                AddMethod(
+                    "InsertAt",
+                    new[] {
+                        new Parameter(GetType("System.UInt32"), "index", ParameterAttributes.In),
+                        new Parameter(GetType("System.Object"), "value", ParameterAttributes.In),
+                    },
+                    null
+                );
+                AddMethod(
+                    "RemoveAt",
+                    new[] { new Parameter(GetType("System.UInt32"), "index", ParameterAttributes.In) },
+                    null
+                );
+                AddMethod("RemoveAtEnd", null, null);
+                AddMethod(
+                    "SetAt",
+                    new[] {
+                        new Parameter(GetType("System.UInt32"), "index", ParameterAttributes.In),
+                        new Parameter(GetType("System.Object"), "value", ParameterAttributes.In),
+                    },
+                    null
+                );
+                AddProperty("Size", GetType("System.UInt32"), false);
+            }
+            else if (mappedTypeName == "INotifyCollectionChanged")
+            {
+                AddEvent("CollectionChanged", GetType("System.Collections.Specialized.NotifyCollectionChangedEventHandler"));
+            }
         }
 
         private IEnumerable<INamedTypeSymbol> GetInterfaces(INamedTypeSymbol symbol, bool includeInterfacesWithoutMappings = false)
@@ -1174,8 +1310,18 @@ namespace Generator
                 baseType = baseType.BaseType;
             }
 
-            return interfaces.Where(symbol => includeInterfacesWithoutMappings || !ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol)))
-                             .OrderBy(implementedInterface => implementedInterface.ToString());
+            // If the generic enumerable is implemented, don't implement the non generic one to prevent issues
+            // with the interface members being implemented multiple times.
+            if(!includeInterfacesWithoutMappings && 
+                interfaces.Any(@interface => QualifiedName(@interface) == "System.Collections.Generic.IEnumerable`1"))
+            {
+                interfaces.Remove(GetTypeByMetadataName("System.Collections.IEnumerable"));
+            }
+
+            return interfaces.Where(@interface => 
+                    includeInterfacesWithoutMappings || 
+                    !ImplementedInterfacesWithoutMapping.Contains(QualifiedName(@interface)))
+                .OrderBy(implementedInterface => implementedInterface.ToString());
         }
 
         private void ProcessTypeDeclaration(BaseTypeDeclarationSyntax node, Action visitTypeDeclaration)
@@ -1265,12 +1411,21 @@ namespace Generator
 
             if (node.BaseList != null && (node is InterfaceDeclarationSyntax || node is ClassDeclarationSyntax))
             {
+                // Interface implementations need to be added in order of class and then typespec.  Given entries are added
+                // per class, that is already in order, but we need to sort by typespec.
+                List<KeyValuePair<INamedTypeSymbol, EntityHandle>> implementedInterfaces = new List<KeyValuePair<INamedTypeSymbol, EntityHandle>>();
                 foreach (var implementedInterface in GetInterfaces(symbol))
+                {
+                    implementedInterfaces.Add(new KeyValuePair<INamedTypeSymbol, EntityHandle>(implementedInterface, GetTypeSpecification(implementedInterface)));
+                }
+                implementedInterfaces.Sort((x, y) => CodedIndex.TypeDefOrRefOrSpec(x.Value).CompareTo(CodedIndex.TypeDefOrRefOrSpec(y.Value)));
+
+                foreach (var implementedInterface in implementedInterfaces)
                 {
                     var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
                         typeDefinitionHandle,
-                        GetTypeSpecification(implementedInterface));
-                    currentTypeDeclaration.AddInterfaceImpl(implementedInterface, interfaceImplHandle);
+                        implementedInterface.Value);
+                    currentTypeDeclaration.AddInterfaceImpl(implementedInterface.Key, interfaceImplHandle);
                 }
             }
 
@@ -1697,7 +1852,7 @@ namespace Generator
                 metadataBuilder.GetOrAddBlob(attributeSignature));
         }
 
-        private void AddCustomAttributes(IList<AttributeData> attributes, EntityHandle parentHandle)
+        private void AddCustomAttributes(IEnumerable<AttributeData> attributes, EntityHandle parentHandle)
         {
             foreach (var attribute in attributes)
             {
@@ -1746,7 +1901,7 @@ namespace Generator
             }
 
             var parentSymbol = Model.GetDeclaredSymbol(node.Parent);
-            nodesWithAttributes.Add(parentSymbol);
+            currentTypeDeclaration.SymbolsWithAttributes.Add(parentSymbol);
         }
 
         public override void VisitEnumDeclaration(EnumDeclarationSyntax node)
@@ -1869,22 +2024,22 @@ namespace Generator
             AddGuidAttribute(typeDefinitionHandle, symbol.ToString());
         }
 
-        public void AddEventDeclaration(IEventSymbol @event, bool isInterfaceParent)
+        public void AddEventDeclaration(string eventName, ITypeSymbol eventType, ISymbol symbol, bool isInterfaceParent)
         {
-            Logger.Log("defining event " + @event.Name);
+            Logger.Log("defining event " + eventName + " with type " + eventType.ToString());
 
-            var delegateSymbolType = @event.Type;
-            EntityHandle typeReferenceHandle = GetTypeReference(delegateSymbolType);
+            var delegateSymbolType = eventType as INamedTypeSymbol;
+            EntityHandle typeReferenceHandle = GetTypeSpecification(delegateSymbolType);
             EntityHandle eventRegistrationTokenTypeHandle = GetTypeReference("Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract");
             Symbol eventRegistrationToken = new Symbol(eventRegistrationTokenTypeHandle);
 
             var eventDefinitionHandle = metadataBuilder.AddEvent(
                 EventAttributes.None,
-                metadataBuilder.GetOrAddString(@event.Name),
+                metadataBuilder.GetOrAddString(eventName),
                 typeReferenceHandle);
-            currentTypeDeclaration.AddEvent(@event, eventDefinitionHandle);
+            currentTypeDeclaration.AddEvent(symbol, eventDefinitionHandle);
 
-            string addMethodName = "add_" + @event.Name;
+            string addMethodName = "add_" + eventName;
             var addMethod = AddMethodDefinition(
                 addMethodName,
                 new Parameter[] { new Parameter(delegateSymbolType, "handler", ParameterAttributes.In) },
@@ -1892,14 +2047,14 @@ namespace Generator
                 false,
                 isInterfaceParent,
                 true);
-            currentTypeDeclaration.AddMethod(@event, addMethodName, addMethod);
+            currentTypeDeclaration.AddMethod(symbol, addMethodName, addMethod);
 
             metadataBuilder.AddMethodSemantics(
                 eventDefinitionHandle,
                 MethodSemanticsAttributes.Adder,
                 addMethod);
 
-            string removeMethodName = "remove_" + @event.Name;
+            string removeMethodName = "remove_" + eventName;
             var removeMethod = AddMethodDefinition(
                 removeMethodName,
                 new Parameter[] { new Parameter(eventRegistrationToken, "token", ParameterAttributes.In) },
@@ -1907,12 +2062,17 @@ namespace Generator
                 false,
                 isInterfaceParent,
                 true);
-            currentTypeDeclaration.AddMethod(@event, removeMethodName, removeMethod);
+            currentTypeDeclaration.AddMethod(symbol, removeMethodName, removeMethod);
 
             metadataBuilder.AddMethodSemantics(
                 eventDefinitionHandle,
                 MethodSemanticsAttributes.Remover,
                 removeMethod);
+        }
+
+        public void AddEventDeclaration(IEventSymbol @event, bool isInterfaceParent)
+        {
+            AddEventDeclaration(@event.Name, @event.Type, @event, isInterfaceParent);
         }
 
         public override void VisitEventFieldDeclaration(EventFieldDeclarationSyntax node)
@@ -1924,49 +2084,16 @@ namespace Generator
 
             base.VisitEventFieldDeclaration(node);
 
-            var delegateSymbolType = Model.GetTypeInfo(node.Declaration.Type).Type;
-            EntityHandle typeReferenceHandle = GetTypeReference(delegateSymbolType);
-            EntityHandle eventRegistrationTokenTypeHandle = GetTypeReference("Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract");
-            Symbol eventRegistrationToken = new Symbol(eventRegistrationTokenTypeHandle);
-
             foreach (var declaration in node.Declaration.Variables)
             {
-                var eventSymbol = Model.GetDeclaredSymbol(declaration);
-                var eventDefinitionHandle = metadataBuilder.AddEvent(
-                    EventAttributes.None,
-                    metadataBuilder.GetOrAddString(declaration.Identifier.ValueText),
-                    typeReferenceHandle);
-                currentTypeDeclaration.AddEvent(eventSymbol, eventDefinitionHandle);
+                var eventSymbol = Model.GetDeclaredSymbol(declaration) as IEventSymbol;
+                if (currentTypeDeclaration.CustomMappedSymbols.Contains(eventSymbol))
+                {
+                    Logger.Log("event skipped");
+                    continue;
+                }
 
-                string addMethodName = "add_" + declaration.Identifier.ValueText;
-                var addMethod = AddMethodDefinition(
-                    addMethodName,
-                    new Parameter[] { new Parameter(delegateSymbolType, "handler", ParameterAttributes.In) },
-                    eventRegistrationToken,
-                    false,
-                    node.Parent is InterfaceDeclarationSyntax,
-                    true);
-                currentTypeDeclaration.AddMethod(eventSymbol, addMethodName, addMethod);
-
-                metadataBuilder.AddMethodSemantics(
-                    eventDefinitionHandle,
-                    MethodSemanticsAttributes.Adder,
-                    addMethod);
-
-                string removeMethodName = "remove_" + declaration.Identifier.ValueText;
-                var removeMethod = AddMethodDefinition(
-                    removeMethodName,
-                    new Parameter[] { new Parameter(eventRegistrationToken, "token", ParameterAttributes.In) },
-                    null,
-                    false,
-                    node.Parent is InterfaceDeclarationSyntax,
-                    true);
-                currentTypeDeclaration.AddMethod(eventSymbol, removeMethodName, removeMethod);
-
-                metadataBuilder.AddMethodSemantics(
-                    eventDefinitionHandle,
-                    MethodSemanticsAttributes.Remover,
-                    removeMethod);
+                AddEventDeclaration(eventSymbol, node.Parent is InterfaceDeclarationSyntax);
             }
         }
 
@@ -2175,29 +2302,33 @@ namespace Generator
                 property.SetMethod != null);
         }
 
-        public void AddEventReference(IEventSymbol @event)
+        public void AddEventReference(string eventName, ITypeSymbol eventType, INamedTypeSymbol parent)
         {
-            Logger.Log("adding event reference:  " + @event.Name);
+            Logger.Log("adding event reference:  " + eventName);
 
-            var delegateSymbolType = @event.Type;
             EntityHandle eventRegistrationTokenTypeHandle = GetTypeReference("Windows.Foundation", "EventRegistrationToken", "Windows.Foundation.FoundationContract");
             Symbol eventRegistrationToken = new Symbol(eventRegistrationTokenTypeHandle);
 
             var addMethodReference = AddMethodReference(
-                "add_" + @event.Name,
-                new Parameter[] { new Parameter(delegateSymbolType, "handler", ParameterAttributes.In) },
+                "add_" + eventName,
+                new Parameter[] { new Parameter(eventType, "handler", ParameterAttributes.In) },
                 eventRegistrationToken,
-                @event.ContainingType,
+                parent,
                 false);
-            currentTypeDeclaration.AddMethodReference(delegateSymbolType, addMethodReference);
+            currentTypeDeclaration.AddMethodReference(eventType, addMethodReference);
 
             var removeMethodReference = AddMethodReference(
-                "remove_" + @event.Name,
+                "remove_" + eventName,
                 new Parameter[] { new Parameter(eventRegistrationToken, "token", ParameterAttributes.In) },
                 null,
-                @event.ContainingType,
+                parent,
                 false);
-            currentTypeDeclaration.AddMethodReference(delegateSymbolType, removeMethodReference);
+            currentTypeDeclaration.AddMethodReference(eventType, removeMethodReference);
+        }
+
+        public void AddEventReference(IEventSymbol @event)
+        {
+            AddEventReference(@event.Name, @event.Type, @event.ContainingType);
         }
 
         void AddProjectedType(INamedTypeSymbol type, string projectedTypeOverride = null)
@@ -2263,7 +2394,21 @@ namespace Generator
             {
                 foreach (var interfaceMember in @interface.GetMembers())
                 {
-                    classMembersFromInterfaces.Add(classSymbol.FindImplementationForInterfaceMember(interfaceMember));
+                    var classMember = classSymbol.FindImplementationForInterfaceMember(interfaceMember);
+                    if (classMember == null || !classDeclaration.MethodDefinitions.ContainsKey(classMember))
+                    {
+                        continue;
+                    }
+
+                    classMembersFromInterfaces.Add(classMember);
+                    classDeclaration.ClassInterfaceMemberMapping[classMember] = interfaceMember;
+
+                    // Mark class members whose interface declaration has attributes 
+                    // so that we can propagate them later.
+                    if (interfaceMember.GetAttributes().Any())
+                    {
+                        classDeclaration.SymbolsWithAttributes.Add(classMember);
+                    }
                 }
             }
 
@@ -2285,12 +2430,20 @@ namespace Generator
             // TODO: address overridable and composable interfaces.
         }
 
+        void AddAttributeIfAny(ISymbol symbol, TypeDeclaration classDeclaration)
+        {
+            if (classDeclaration.SymbolsWithAttributes.Contains(symbol))
+            {
+                currentTypeDeclaration.SymbolsWithAttributes.Add(symbol);
+            }
+        }
+
         void AddSynthesizedInterface(
             TypeDeclaration classDeclaration,
             SynthesizedInterfaceType interfaceType,
             HashSet<ISymbol> classMembersFromInterfaces)
         {
-            var typeDeclaration = new TypeDeclaration(null);
+            var typeDeclaration = new TypeDeclaration();
             currentTypeDeclaration = typeDeclaration;
 
             bool hasTypes = false;
@@ -2307,6 +2460,7 @@ namespace Generator
                 {
                     hasTypes = true;
                     AddFactoryMethod(classSymbol, constructorMethod);
+                    AddAttributeIfAny(classMember.Key, classDeclaration);
                 }
                 else if ((interfaceType == SynthesizedInterfaceType.Default && !classMember.Key.IsStatic &&
                          !classMembersFromInterfaces.Contains(classMember.Key)) ||
@@ -2330,6 +2484,7 @@ namespace Generator
                         continue;
                     }
 
+                    AddAttributeIfAny(classMember.Key, classDeclaration);
                     hasTypes = true;
                 }
             }
@@ -2425,6 +2580,54 @@ namespace Generator
             }
         }
 
+        void AddCustomAttributes(TypeDeclaration typeDeclaration, string interfaceName = null)
+        {
+            foreach (var node in typeDeclaration.SymbolsWithAttributes)
+            {
+                EntityHandle parentHandle;
+                if (node is INamedTypeSymbol namedType)
+                {
+                    // Attributes on classes don't propagate to synthesized interfaces.
+                    if (interfaceName != null)
+                    {
+                        continue;
+                    }
+
+                    parentHandle = typeDefinitionMapping[namedType.ToString()].Handle;
+                }
+                else
+                {
+                    var typeName = interfaceName ?? node.ContainingType.ToString();
+
+                    if (node is IMethodSymbol method)
+                    {
+                        parentHandle = typeDefinitionMapping[typeName].MethodDefinitions[method][0];
+                    }
+                    else if (node is IPropertySymbol property)
+                    {
+                        parentHandle = typeDefinitionMapping[typeName].PropertyDefinitions[property];
+                    }
+                    else if (node is IEventSymbol @event)
+                    {
+                        parentHandle = typeDefinitionMapping[typeName].EventDefinitions[@event];
+                    }
+                    else
+                    {
+                        Logger.Log("node not recognized " + node.Kind + " name: " + node.Name);
+                        continue;
+                    }
+                }
+
+                // Add attributes from both the class member declaration and its interface member declaration.
+                HashSet<AttributeData> attributes = new HashSet<AttributeData>(node.GetAttributes(), new AttributeDataComparer());
+                if(typeDeclaration.ClassInterfaceMemberMapping.ContainsKey(node))
+                {
+                    attributes.UnionWith(typeDeclaration.ClassInterfaceMemberMapping[node].GetAttributes());
+                }
+                AddCustomAttributes(attributes, parentHandle);
+            }
+        }
+
         public void FinalizeGeneration()
         {
             var classTypeDeclarations = typeDefinitionMapping.Values
@@ -2437,11 +2640,6 @@ namespace Generator
                 foreach (var implementedInterface in GetInterfaces(classSymbol))
                 {
                     var implementedInterfaceQualifiedName = QualifiedName(implementedInterface);
-                    if (ImplementedInterfacesWithoutMapping.Contains(implementedInterfaceQualifiedName))
-                    {
-                        continue;
-                    }
-
                     if (!typeDefinitionMapping.ContainsKey(implementedInterfaceQualifiedName))
                     {
                         AddType(implementedInterface);
@@ -2546,31 +2744,27 @@ namespace Generator
                 }
             }
 
-            foreach (var node in nodesWithAttributes)
+            var typeDeclarationsWithAttributes = typeDefinitionMapping.Values
+                .Where(declaration => !declaration.IsSynthesizedInterface && declaration.SymbolsWithAttributes.Any())
+                .ToList();
+            foreach (var typeDeclaration in typeDeclarationsWithAttributes)
             {
-                EntityHandle parentHandle = default;
-                if (node is INamedTypeSymbol namedType)
-                {
-                    parentHandle = typeDefinitionMapping[namedType.ToString()].Handle;
-                }
-                else if (node is IMethodSymbol method)
-                {
-                    parentHandle = typeDefinitionMapping[method.ContainingType.ToString()].MethodDefinitions[method][0];
-                }
-                else if (node is IPropertySymbol property)
-                {
-                    parentHandle = typeDefinitionMapping[property.ContainingType.ToString()].PropertyDefinitions[property];
-                }
-                else if (node is IEventSymbol @event)
-                {
-                    parentHandle = typeDefinitionMapping[@event.ContainingType.ToString()].EventDefinitions[@event];
-                }
-                else
-                {
-                    Logger.Log("node not recognized " + node.Kind + " name: " + node.Name);
-                }
+                AddCustomAttributes(typeDeclaration);
 
-                AddCustomAttributes(node.GetAttributes(), parentHandle);
+                if (typeDeclaration.Node is INamedTypeSymbol symbol && symbol.TypeKind == TypeKind.Class)
+                {
+                    if(!string.IsNullOrEmpty(typeDeclaration.DefaultInterface))
+                    {
+                        Logger.Log("adding attributes for default interface " + typeDeclaration.DefaultInterface);
+                        AddCustomAttributes(typeDefinitionMapping[typeDeclaration.DefaultInterface], typeDeclaration.DefaultInterface);
+                    }
+
+                    if (!string.IsNullOrEmpty(typeDeclaration.StaticInterface))
+                    {
+                        Logger.Log("adding attributes for static interface " + typeDeclaration.StaticInterface);
+                        AddCustomAttributes(typeDefinitionMapping[typeDeclaration.StaticInterface], typeDeclaration.StaticInterface);
+                    }
+                }
             }
         }
 

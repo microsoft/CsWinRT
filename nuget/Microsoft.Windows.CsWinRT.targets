@@ -17,14 +17,26 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
     <CoreCompileDependsOn>CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn)</CoreCompileDependsOn>
     <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess> 
+    <!-- Make sure WinRT.Runtime.dll and Microsoft.Windows.SDK.NET.dll get binplaced with authored component's dll -->
+    <CopyLocalLockFileAssemblies Condition="'$(CsWinRTComponent)' == 'true'">true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
-  
-  <!-- Remove WinRT.Host.Shim.dll references -->
-  <Target Name="CsWinRTRemoveShimDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
+
+  <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
+  <Target Name="CsWinRTRemoveHostingDllReferences" 
+          AfterTargets="ResolvePackageAssets" 
+          BeforeTargets="ResolveLockFileAnalyzers" 
+          Outputs="@(Reference)">
+    <PropertyGroup>
+      <CsWinRTPkg-Net5Dir>$(CsWinRTPath)lib\net5.0</CsWinRTPkg-Net5Dir>
+      <CsWinRTPkg-NativeDir>$(CsWinRTPath)runtimes\**\native</CsWinRTPkg-NativeDir>
+    </PropertyGroup>
     <ItemGroup>
-     <Reference                      Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
-     <RuntimeCopyLocalItems          Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
-     <ResolvedCompileFileDefinitions Remove="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll"/>
+     <ReferenceCopyLocalPaths        Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
+     <RuntimeCopyLocalItems          Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
+     <RuntimeTargetsCopyLocalItems   Remove="$(CsWinRTPkg-NativeDir)\WinRT.Host.dll"/>
+     <Reference                      Remove="$(CsWinRTPkg-Net5Dir)\WinRT.Host.Shim.dll"/>
+     <ResolvedCompileFileDefinitions Remove="$(CsWinRTPkg-Net5Dir)\WinRT.Host.Shim.dll"/>
+     <RuntimeCopyLocalItems          Remove="$(CsWinRTPkg-Net5Dir)\WinRT.Host.Shim.dll"/>
     </ItemGroup>
   </Target>
 
@@ -126,5 +138,52 @@ $(CsWinRTFilters)
   </Target>
   
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
+
+  <!-- Copy Authored winmd to output folder -->
+  <Target Name="CsWinRTPlaceWinMDInOutputFolder"
+          Condition="'$(CsWinRTComponent)' == 'true'" 
+          BeforeTargets="AfterBuild">
+    <Copy SourceFiles="$(GeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- When an authored component packs (nuget), add the necessary hosting assets to the package -->
+  <Target Name="CsWinRTIncludeHostDlls"  
+          Condition="'$(CsWinRTComponent)' == 'true'" 
+          BeforeTargets="GenerateNuspec" 
+          Outputs="@(_PackageFiles)">
+    <ItemGroup>
+      <_PackageFiles Include="$(TargetDir)$(AssemblyName).winmd"
+                     PackagePath="winmd\"/>
+      
+      <!-- The authored component gets the WinRT.Runtime and NET.SDK dlls from ReferenceCopyLocalPaths 
+            (because CopyLocalLockFileAssemblies == true); $(TargetPath) has the assembly (e.g. PackageId.dll) -->
+      <_PackageFiles Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll;@(ReferenceCopyLocalPaths);$(TargetPath)"
+                     PackagePath="lib\native"/>
+
+      <!-- Custom targets that copy dlls for consumers of the authored component.
+           `buildTransitive\` is for PackageReference, `build\` is for packages.config -->
+      <_PackageFiles Include="$(CsWinRTPath)buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets"
+                     PackagePath="buildTransitive\$(AssemblyName).CsWinRT.targets;build\$(AssemblyName).CsWinRT.targets"/>
+
+      <!-- WinRT.Host.dll is architecture specific -->
+      <!-- x64 --> 
+      <_PackageFiles Condition="Exists('$(CsWinRTPath)runtimes\win-x64\native\WinRT.Host.dll')" 
+                     Include="$(CsWinRTPath)runtimes\win-x64\native\WinRT.Host.dll"
+                     PackagePath="runtimes\win-x64\native"/>
+      <!-- x86 --> 
+      <_PackageFiles Condition="Exists('$(CsWinRTPath)runtimes\win-x86\native\WinRT.Host.dll')" 
+                     Include="$(CsWinRTPath)runtimes\win-x86\native\WinRT.Host.dll"
+                     PackagePath="runtimes\win-x86\native"/>
+      <!-- arm --> 
+      <_PackageFiles Condition="Exists('$(CsWinRTPath)runtimes\win-arm\native\WinRT.Host.dll')" 
+                     Include="$(CsWinRTPath)runtimes\win-arm\native\WinRT.Host.dll"
+                     PackagePath="runtimes\win-arm\native"/>
+      <!-- arm64 --> 
+      <_PackageFiles Condition="Exists('$(CsWinRTPath)runtimes\win-arm64\native\WinRT.Host.dll')" 
+                     Include="$(CsWinRTPath)runtimes\win-arm64\native\WinRT.Host.dll"
+                     PackagePath="runtimes\win-arm64\native"/>
+   </ItemGroup>
+  </Target>
+
 
 </Project>

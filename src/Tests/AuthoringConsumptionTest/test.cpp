@@ -308,9 +308,7 @@ TEST(AuthoringTest, CustomDictionaryImplementations)
 
     EXPECT_EQ(dictionary.GetView().TryLookup(L"second").value(), basicStruct2);
     EXPECT_FALSE(dictionary.GetView().TryLookup(L"fourth").has_value());
-
-    // TODO: Broken due to ALC type mismatch.
-/*  
+  
     TestClass testClass;
     EXPECT_EQ(testClass.GetSum(dictionary, L"second"), 4);
 
@@ -330,15 +328,13 @@ TEST(AuthoringTest, CustomDictionaryImplementations)
     EXPECT_TRUE(mapSplit1.HasKey(L"first"));
     EXPECT_FALSE(mapSplit1.HasKey(L"third"));
     EXPECT_TRUE(mapSplit2.HasKey(L"third"));
-    */
 
     Windows::Foundation::Collections::IMap<hstring, AuthoringTest::BasicStruct> map = dictionary;
     map.Clear();
     EXPECT_EQ(map.Size(), 0);
 }
 
-// TODO: Broken due to ALC type mismatch.
-TEST(AuthoringTest, DISABLED_CustomVectorImplementations)
+TEST(AuthoringTest, CustomVectorImplementations)
 {
     TestClass testClass;
     testClass.SetProjectedDisposableObject();
@@ -390,4 +386,56 @@ TEST(AuthoringTest, DISABLED_CustomVectorImplementations)
 
     vector.Clear();
     EXPECT_EQ(vector.Size(), 0);
+}
+
+TEST(AuthoringTest, Overloads)
+{
+    TestClass testClass;
+    EXPECT_EQ(testClass.Get(2), 2);
+    EXPECT_EQ(testClass.Get(L"CsWinRT"), L"CsWinRT");
+    EXPECT_EQ(testClass.GetNumStr(4.1), L"4.1");
+    EXPECT_EQ(testClass.GetNumStr(4), L"4");
+
+    IDouble doubleInterface = testClass;
+    EXPECT_EQ(doubleInterface.GetNumStr(2.2), L"2.2");
+    EXPECT_EQ(doubleInterface.GetNumStr(8), L"8");
+}
+
+TEST(AuthoringTest, XamlMappings)
+{
+    CustomVector2 vector;
+    EXPECT_EQ(vector.Size(), 0);
+    vector.Append(DisposableClass());
+    vector.Append(DisposableClass());
+    vector.Append(TestClass());
+    EXPECT_EQ(vector.Size(), 3);
+
+    auto first = vector.First();
+    EXPECT_TRUE(first.HasCurrent());
+    EXPECT_FALSE(first.Current().as<DisposableClass>().IsDisposed());
+    first.Current().as<DisposableClass>().Close();
+    EXPECT_TRUE(first.Current().as<DisposableClass>().IsDisposed());
+    EXPECT_FALSE(vector.GetAt(1).as<DisposableClass>().IsDisposed());
+    for (auto obj : vector.GetView())
+    {
+    }
+
+    vector.RemoveAt(0);
+    EXPECT_EQ(vector.Size(), 2);
+    vector.Clear();
+    EXPECT_EQ(vector.Size(), 0);
+
+    CustomXamlServiceProvider serviceProvider;
+    EXPECT_EQ(serviceProvider.GetService(winrt::xaml_typename<CustomVector2>()).as<IStringable>().ToString(), L"CustomVector2");
+
+    bool eventTriggered = false;
+    CustomCommand command;
+    EXPECT_FALSE(command.CanExecute(nullptr));
+    auto token = command.CanExecuteChanged(auto_revoke, [&eventTriggered](IInspectable sender, IInspectable args)
+    {
+        eventTriggered = true;
+    });
+    command.SetCanExecute(true);
+    EXPECT_TRUE(eventTriggered);
+    EXPECT_TRUE(command.CanExecute(nullptr));
 }
