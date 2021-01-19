@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -29,7 +28,7 @@ namespace WinRT
         }
 
 #if DEBUG
-        private unsafe uint RefCount 
+        private unsafe uint RefCount
         {
             get
             {
@@ -157,9 +156,9 @@ namespace WinRT
                     return;
                 }
 #if DEBUG
-                if (BreakOnDispose)
+                if (BreakOnDispose && System.Diagnostics.Debugger.IsAttached)
                 {
-                    Debugger.Break();
+                    System.Diagnostics.Debugger.Break();
                 }
 #endif
 
@@ -310,6 +309,7 @@ namespace WinRT
 
             var contextCallback = new ABI.WinRT.Interop.IContextCallback(ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.Attach(ref contextCallbackPtr));
 
+            // Note: method index of 5 is ignored.  See https://devblogs.microsoft.com/oldnewthing/20191128-00/?p=103157
             contextCallback.ContextCallback(_ =>
             {
                 base.Release();

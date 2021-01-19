@@ -349,16 +349,18 @@ namespace WinRT
                 }
             }
 
+#if DEBUG
             if (isAggregation)
             {
                 Marshal.AddRef(newInstance);
                 var outerRC = Marshal.Release(newInstance);
-                if (outerRC != 0)
+                if ((outerRC != 0) && System.Diagnostics.Debugger.IsAttached)
                 {
                     // In aggregation scenarios, at this point outer's refcount must be 0
                     System.Diagnostics.Debugger.Break();
                 }
             }
+#endif
         }
 
         public static void Cleanup(ref ClassNative classNative)
