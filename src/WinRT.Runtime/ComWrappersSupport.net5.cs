@@ -15,6 +15,20 @@ namespace WinRT
 {
     public static partial class ComWrappersSupport
     {
+        // Instance field and property for Singleton pattern: ComWrappers `set` method should be idempotent 
+        private static DefaultComWrappers _instance;
+        internal static DefaultComWrappers Instance
+        {
+            get 
+            {
+                if (_instance == null)
+                {
+                    _instance = new DefaultComWrappers();
+                }
+                return _instance;
+            }
+        }
+
         internal static readonly ConditionalWeakTable<object, InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<object, InspectableInfo>();
         internal static readonly ThreadLocal<Type> CreateRCWType = new ThreadLocal<Type>();
 
@@ -30,7 +44,7 @@ namespace WinRT
                     {
                         if (_comWrappers is null)
                         {
-                            _comWrappers = DefaultComWrappers.Instance;
+                            _comWrappers = Instance;
                             ComWrappers.RegisterForTrackerSupport(_comWrappers);
                         }
                     }
@@ -41,11 +55,11 @@ namespace WinRT
             {
                 lock (_comWrappersLock)
                 {
-                    if (value == null && _comWrappers == DefaultComWrappers.Instance)
+                    if (value == null && _comWrappers == Instance)
                     {
                         return;
                     }
-                    _comWrappers = value ?? DefaultComWrappers.Instance; 
+                    _comWrappers = value ?? Instance; 
                     ComWrappers.RegisterForTrackerSupport(_comWrappers);
                 }
             }
@@ -169,23 +183,6 @@ namespace WinRT
 
     public class DefaultComWrappers : ComWrappers
     {
-        // Instance field and property for Singleton pattern: ComWrappers setter method should be idempotent 
-        private static DefaultComWrappers _instance;
-        public static DefaultComWrappers Instance
-        {
-            get 
-            {
-                if (_instance == null)
-                {
-                    _instance = new DefaultComWrappers();
-                }
-                return _instance;
-            }
-        }
-
-        // Private constructor to enforce singleton pattern
-        private DefaultComWrappers() { }
-        
         private static ConditionalWeakTable<object, VtableEntriesCleanupScout> ComInterfaceEntryCleanupTable = new ConditionalWeakTable<object, VtableEntriesCleanupScout>();
         public static unsafe IUnknownVftbl IUnknownVftbl => Unsafe.AsRef<IUnknownVftbl>(IUnknownVftblPtr.ToPointer());
 
