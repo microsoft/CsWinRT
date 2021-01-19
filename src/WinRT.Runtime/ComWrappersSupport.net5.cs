@@ -117,7 +117,7 @@ namespace WinRT
             var rcw = ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);
 
             // Resurrect IWinRTObject's disposed IObjectReferences, if necessary
-            var target = rcw is System.Delegate del ? del.Target : rcw;
+            var target = rcw is Delegate del ? del.Target : rcw;
             if (target is IWinRTObject winrtObj)
             {
                 winrtObj.Resurrect();
