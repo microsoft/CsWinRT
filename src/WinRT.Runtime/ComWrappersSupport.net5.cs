@@ -129,7 +129,18 @@ namespace WinRT
 
         public static void RegisterObjectForInterface(object obj, IntPtr thisPtr) => TryRegisterObjectForInterface(obj, thisPtr);
 
-        public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr) => ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);
+        public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr)
+        {
+            var rcw = ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, CreateObjectFlags.TrackerObject, obj);
+
+            // Resurrect IWinRTObject's disposed IObjectReferences, if necessary
+            var target = rcw is Delegate del ? del.Target : rcw;
+            if (target is IWinRTObject winrtObj)
+            {
+                winrtObj.Resurrect();
+            }
+            return rcw;
+        }
 
         public static IObjectReference CreateCCWForObject(object obj)
         {
