@@ -30,7 +30,7 @@ namespace WinRT
                     {
                         if (_comWrappers is null)
                         {
-                            _comWrappers = new DefaultComWrappers();
+                            _comWrappers = DefaultComWrappers.Instance;
                             ComWrappers.RegisterForTrackerSupport(_comWrappers);
                         }
                     }
@@ -41,7 +41,11 @@ namespace WinRT
             {
                 lock (_comWrappersLock)
                 {
-                    _comWrappers = value;
+                    if (value == null && _comWrappers == DefaultComWrappers.Instance)
+                    {
+                        return;
+                    }
+                    _comWrappers = value ?? DefaultComWrappers.Instance; 
                     ComWrappers.RegisterForTrackerSupport(_comWrappers);
                 }
             }
@@ -141,7 +145,7 @@ namespace WinRT
         /// </remarks>
         public static void InitializeComWrappers(ComWrappers wrappers = null)
         {
-            ComWrappers = wrappers ?? new DefaultComWrappers();
+            ComWrappers = wrappers;
         }
 
         internal static Func<IInspectable, object> GetTypedRcwFactory(string runtimeClassName) => TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className));
@@ -165,6 +169,23 @@ namespace WinRT
 
     public class DefaultComWrappers : ComWrappers
     {
+        // Instance field and property for Singleton pattern: ComWrappers setter method should be idempotent 
+        private static DefaultComWrappers _instance;
+        public static DefaultComWrappers Instance
+        {
+            get 
+            {
+                if (_instance == null)
+                {
+                    _instance = new DefaultComWrappers();
+                }
+                return _instance;
+            }
+        }
+
+        // Private constructor to enforce singleton pattern
+        private DefaultComWrappers() { }
+        
         private static ConditionalWeakTable<object, VtableEntriesCleanupScout> ComInterfaceEntryCleanupTable = new ConditionalWeakTable<object, VtableEntriesCleanupScout>();
         public static unsafe IUnknownVftbl IUnknownVftbl => Unsafe.AsRef<IUnknownVftbl>(IUnknownVftblPtr.ToPointer());
 
