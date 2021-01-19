@@ -21,10 +21,16 @@ namespace WinRT.SourceGenerator
                 helpLinkUri: "https://docs.microsoft.com/en-us/previous-versions/hh977010(v=vs.110)");
         }
 
+        public static DiagnosticDescriptor ImplementerUseSameVariableName = MakeRule(
+            "WME1113", 
+            "Class implementaiton method should use same paramter as interface method",
+            "Class '{0}' implements method '{1}' with parameter '{2}', but '{1}' was declared in interface '{3}' with parameter '{4}'." 
+            + "Parameter names must match exactly in the Windows Runtime.");
+        
         public static DiagnosticDescriptor PrivateGetterRule = MakeRule(
             "WME", 
             "Property must have public getter",
-            "Property '{0}' does not have a public getter method. Windows Metadata does not support setter-only properties.");
+            "Property '{0}' does not have a public getter method. Windows Runtime does not support setter-only properties.");
         
         public static DiagnosticDescriptor DisjointNamespaceRule = MakeRule(
             "WME1044",
@@ -36,7 +42,7 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor NamespacesDifferByCase = MakeRule(
             "WME1067",
             "Namespace names cannot differ only by case",
-            "Multiple namespaces found with the name '{0}', namespace names cannot differ only by case.");
+            "Multiple namespaces found with the name '{0}'; namespace names cannot differ only by case in the Windows Runtime.");
 
         public static DiagnosticDescriptor NoPublicTypesRule = MakeRule(
             "WME1042",
@@ -52,7 +58,7 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor UnsealedClassRule = MakeRule(
             "WME",
             "Class is unsealed",
-            "Exporting unsealed types is not supported. Please mark type {0} as sealed.");
+            "Exporting unsealed types is not supported in Windows Runtime. Please mark type {0} as sealed.");
 
         public static DiagnosticDescriptor UnsupportedTypeRule = MakeRule(
             "WME",
@@ -69,19 +75,19 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor NonWinRTInterface = MakeRule(
             "WME1084",
             "Invalid Interface Inherited",
-            "Runtime component class {0} cannot implement interface {1}, as the interface is not a valid Windows Runtime interface");
+            "Windows Runtime component class {0} cannot implement interface {1}, as the interface is not a valid Windows Runtime interface");
 
         public static DiagnosticDescriptor ClassConstructorRule = MakeRule(
             "WME1099",
             "Class Constructor Rule",
-            "Runtime component class {0} cannot have multiple constructors of the same arity {1}");
+            "Classes cannot have multiple constructors of the same arity in the Windows Runtime, class {0} has multiple {1}-arity constructors");
 
         public static DiagnosticDescriptor ParameterNamedValueRule = MakeRule(
             "WME1092",
             "Parameter Named Value Rule",
-            "The method {0} has a parameter named {1} which is the same as the default return value name. "
-            + "Consider using another name for the parameter or use the System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute "
-            + "to explicitly specify the name of the return value.");
+            "The method {0} is used in the Windows Runtime and has a parameter named {1}." +
+            "This is the same as the return value name used in the C#/WinRT interop. "
+            + "Consider using another name for the parameter or the System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute");
 
         public static DiagnosticDescriptor StructHasPrivateFieldRule = MakeRule(
             "WME1060(b)",
@@ -107,12 +113,14 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor MultipleDefaultOverloadAttribute = MakeRule(
             "WME1059",
             "Only one overload should be designated default", 
-            "In class {2}: Multiple {0}-parameter overloads of '{1}' are decorated with Windows.Foundation.Metadata.DefaultOverloadAttribute. The attribute may only be applied to one overload of the method.");
+            "In class {2}: Multiple {0}-parameter overloads of '{1}' are decorated with Windows.Foundation.Metadata.DefaultOverloadAttribute. "
+            + "The attribute may only be applied to one overload of the method.");
 
         public static DiagnosticDescriptor NeedDefaultOverloadAttribute = MakeRule(
             "WME1085",
             "Multiple overloads seen, one needs a default", // todo better msg
-            "In class {2}: The {0}-parameter overloads of {1} must have exactly one method specified as the default overload by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
+            "In class {2}: The {0}-parameter overloads of {1} must have exactly one method specified as the default " 
+            + "overload by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
 
         public static DiagnosticDescriptor JaggedArrayRule = MakeRule(
             "WME1036",
@@ -121,13 +129,14 @@ namespace WinRT.SourceGenerator
 
         public static DiagnosticDescriptor MultiDimensionalArrayRule = MakeRule(
             "WME1035",
-            "Array signature found with multi-dimensional array, which is not a valid WinRT type",
+            "Array signature found with multi-dimensional array, which is not a valid Windows Runtime type",
             "Method '{0}' has a multi-dimensional array of type '{1}' in its signature. Arrays in Windows Runtime method signatures must be one dimensional.");
 
         public static DiagnosticDescriptor ArraySignature_SystemArrayRule = MakeRule(
             "WME1034",
             "Array signature found with System.Array instance, which is not a valid WinRT type",
-            "In type {0}: the method {1} has signature that contains a System.Array instance; SystemArray is not a valid Windows Runtime type. Try using a different type like IList");
+            "In type {0}: the method {1} has signature that contains a System.Array instance; SystemArray is not "
+            + "a valid Windows Runtime type. Try using a different type like IList");
 
         public static DiagnosticDescriptor RefParameterFound = MakeRule(
            "WME",
@@ -176,7 +185,7 @@ namespace WinRT.SourceGenerator
             "WME1104",
             "Non-array parameter marked with ReadOnlyArray or WriteOnlyArray",
             "Method '{0}' has parameter '{1}' which is not an array, and which has either a "
-            + "ReadOnlyArray attribute or a WriteOnlyArray attribute . Windows Runtime does "
+            + "ReadOnlyArray attribute or a WriteOnlyArray attribute. Windows Runtime does "
             + "not support marking non-array parameters with ReadOnlyArray or WriteOnlyArray.");
     }
 }
