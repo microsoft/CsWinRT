@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using WinRT.Interop;
 using static System.Runtime.InteropServices.ComWrappers;
@@ -44,8 +41,9 @@ namespace WinRT
                     {
                         if (_comWrappers is null)
                         {
-                            _comWrappers = DefaultComWrappersInstance;
-                            ComWrappers.RegisterForTrackerSupport(_comWrappers);
+                            var comWrappersToSet = DefaultComWrappersInstance;
+                            ComWrappers.RegisterForTrackerSupport(comWrappersToSet);
+                            _comWrappers = comWrappersToSet;
                         }
                     }
                 }
@@ -59,8 +57,9 @@ namespace WinRT
                     {
                         return;
                     }
-                    _comWrappers = value ?? DefaultComWrappersInstance; 
-                    ComWrappers.RegisterForTrackerSupport(_comWrappers);
+                    var comWrappersToSet = value ?? DefaultComWrappersInstance; 
+                    ComWrappers.RegisterForTrackerSupport(comWrappersToSet);
+                    _comWrappers = comWrappersToSet; 
                 }
             }
         }
