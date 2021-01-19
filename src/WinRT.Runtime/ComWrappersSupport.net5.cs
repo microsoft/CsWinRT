@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using WinRT.Interop;
 using static System.Runtime.InteropServices.ComWrappers;
@@ -15,6 +12,20 @@ namespace WinRT
 {
     public static partial class ComWrappersSupport
     {
+        // Instance field and property for Singleton pattern: ComWrappers `set` method should be idempotent 
+        private static DefaultComWrappers _instance;
+        private static DefaultComWrappers DefaultComWrappersInstance
+        {
+            get 
+            {
+                if (_instance == null)
+                {
+                    _instance = new DefaultComWrappers();
+                }
+                return _instance;
+            }
+        }
+
         internal static readonly ConditionalWeakTable<object, InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<object, InspectableInfo>();
         internal static readonly ThreadLocal<Type> CreateRCWType = new ThreadLocal<Type>();
 
@@ -30,8 +41,9 @@ namespace WinRT
                     {
                         if (_comWrappers is null)
                         {
-                            _comWrappers = new DefaultComWrappers();
-                            ComWrappers.RegisterForTrackerSupport(_comWrappers);
+                            var comWrappersToSet = DefaultComWrappersInstance;
+                            ComWrappers.RegisterForTrackerSupport(comWrappersToSet);
+                            _comWrappers = comWrappersToSet;
                         }
                     }
                 }
@@ -41,8 +53,13 @@ namespace WinRT
             {
                 lock (_comWrappersLock)
                 {
-                    _comWrappers = value;
-                    ComWrappers.RegisterForTrackerSupport(_comWrappers);
+                    if (value == null && _comWrappers == DefaultComWrappersInstance)
+                    {
+                        return;
+                    }
+                    var comWrappersToSet = value ?? DefaultComWrappersInstance; 
+                    ComWrappers.RegisterForTrackerSupport(comWrappersToSet);
+                    _comWrappers = comWrappersToSet; 
                 }
             }
         }
@@ -152,7 +169,7 @@ namespace WinRT
         /// </remarks>
         public static void InitializeComWrappers(ComWrappers wrappers = null)
         {
-            ComWrappers = wrappers ?? new DefaultComWrappers();
+            ComWrappers = wrappers;
         }
 
         internal static Func<IInspectable, object> GetTypedRcwFactory(string runtimeClassName) => TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className));
