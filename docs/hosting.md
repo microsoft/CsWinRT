@@ -1,7 +1,7 @@
 # Managed Component Hosting
 
 ## Overview
-This document describes the behavior and implementation of winrt.host.dll, a native DLL which provides hosting for managed C#/WinRT runtime components.  Winrt.host.dll may be explicitly registered with an ActivatableClass manifest entry, or it may be renamed to support manifest-free activation.  The details of how winrt.host.dll resolves and forwards activation requests are described below.
+This document describes the behavior and implementation of WinRT.Host.dll, a native DLL which provides hosting for managed C#/WinRT runtime components.  WinRT.Host.dll may be explicitly registered with an ActivatableClass manifest entry, or it may be renamed to support manifest-free activation.  The details of how WinRT.Host.dll resolves and forwards activation requests are described below.
 
 ## Conventions
 To mininmize the need for explicit mapping data, a set of file naming conventions flows across the activation path, from class to host to target:
@@ -29,8 +29,8 @@ The target assembly may be discovered by:
       1. Acme.Controls.dll
       1. Acme.Server.dll
       1. Acme.dll
-1. __Host Name__ (if renamed from winrt.host.dll) 
-   1. Gets the host's file name via GetModuleFileName, short-circuits for "winrt.host.dll"
+1. __Host Name__ (if renamed from WinRT.Host.dll) 
+   1. Gets the host's file name via GetModuleFileName, short-circuits for "WinRT.Host.dll"
    1. Probes successive dot-separated substrings of the host file name, with a ".Server" suffix.  The host name itself is skipped in the search.
    1. If the host name is "Acme.Controls.Widget.Host.dll", the following files are probed:
       1. Acme.Controls.Widget.Host.Server.dll
@@ -43,7 +43,7 @@ The target assembly may be discovered by:
       1. Acme.dll
 
 ## Host
-From the activating client's perspective, winrt.host.dll is the implementation of the runtime class.  Using the HostFxr library to host the CLR, it provides an adapter from native client code to the managed target assembly that actually implements the class.  The host may be renamed from winrt.host.dll, to provide host-based probing to find the target assembly.
+From the activating client's perspective, WinRT.Host.dll is the implementation of the runtime class.  Using the HostFxr library to host the CLR, it provides an adapter from native client code to the managed target assembly that actually implements the class.  The host may be renamed from WinRT.Host.dll, to provide host-based probing to find the target assembly.
  
 ### Exports
 Per WinRT activation contract, the host exports:
@@ -54,7 +54,7 @@ To support forwarding scenarios, the host also exports:
 * DllGetActivationFactoryFromAssembly
 
 __DllCanUnloadNow__ may either:
-   1. Unconditionally return false (this is the behavior of the .NET winrthost.dll implementation)
+   1. Unconditionally return false (this is the behavior of the .NET WinRT.Host.dll implementation)
    1. Track all loaded target assemblies, forward the call to them, and return false if any target does 
 
 Given that the host would likely use Reg-Free Activation, which does not support COM memory management, it makes little sense to adopt 2. 
@@ -85,18 +85,18 @@ __DllGetActivationFactoryFromAssembly__:
 
 ### Reg-Free Activation with Generic Host
 
-Class | Host | Target
-- | - | -
-"Acme.Controls.Widget" | WinRT.Host.dll | Acme.Controls.Widget.dll
+| Class | Host | Target |
+| - | - | - |
+| "Acme.Controls.Widget" | WinRT.Host.dll | Acme.Controls.Widget.dll |
 
 1. Client registers class with generic host, via fusion or appx manifest:
    1. Fusion
-		<file name="winrt.host.dll">
+		<file name="WinRT.Host.dll">
 		  <activatableClass name="Acme.Controls.Widget" threadingModel="both" />
 		</file>
    1. Appx
 		<InProcessServer> 
-		  <Path>winrt.host.dll</Path> 
+		  <Path>WinRT.Host.dll</Path> 
 		  <ActivatableClass ActivatableClassId="Acme.Controls.Widget" ThreadingModel="both" /> </InProcessServer>
 1. Client activates class:
 		RoGetActivationFactory("Acme.Controls.Widget")
@@ -107,9 +107,9 @@ Class | Host | Target
 ### Reg-Free Activation with Renamed Host
 This example demonstrates how a target DLL that has already taken the "good name" can be supported, by using an appropriately renamed host.
 
-Class | Host | Target
-- | - | -
-"Acme.Controls.Widget" | Acme.Controls.Widget.Host.dll | Acme.Controls.Widget.dll
+| Class | Host | Target |
+| - | - | - |
+| "Acme.Controls.Widget" | Acme.Controls.Widget.Host.dll | Acme.Controls.Widget.dll |
 
 1. Client registers class with renamed host, via fusion or appx manifest:
    1. Fusion
@@ -135,9 +135,9 @@ Class | Host | Target
 ### Reg-Free Activation with Target Assembly Mapping
 This example demonstrates how an activatableClass entry can be added to the host runtimeconfig.json to provide an explicit mapping from class ID to target assembly.  This is useful when both the host dll and the target assembly have fixed names.
 
-Class | Host | Target
-- | - | -
-"Acme.Controls.Widget" | WinRT.Host.dll | Widget.dll
+| Class | Host | Target |
+| - | - | - |
+| "Acme.Controls.Widget" | WinRT.Host.dll | Widget.dll |
 
 This scenario follows a procedure similar to __Reg-Free Activation with Generic Host__ above.  In addition, the host dll's runtimeconfig.json contains an activatableClass section, similar to the following:
 ```json
@@ -152,9 +152,9 @@ This scenario follows a procedure similar to __Reg-Free Activation with Generic 
 ### Manifest-Free Activation
 This example demonstrates support for client code using manifest-free activation, which constrains the host name to match the class name.
 
-Class | Host | Target
-- | - | -
-"Acme.Controls.Widget" | Acme.Controls.Widget.dll | Acme.Controls.Widget.Server.dll
+| Class | Host | Target |
+| - | - | - |
+| "Acme.Controls.Widget" | Acme.Controls.Widget.dll | Acme.Controls.Widget.Server.dll |
 
 1. Client discovers host based on runtime class name:
 		Acme.Controls.Widget.dll
