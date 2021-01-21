@@ -68,8 +68,8 @@ __DllGetActivationFactory__:
 
 __DllGetActivationFactoryFromAssembly__:
    1. Provides an 'overload' of DllGetActivationFactory that accepts an explicit target assembly
-   2. Uses the HostFxr library to load the CLR and a managed winrt.host.shim assembly:
-      1. The behavior mirrors details in the .Net WinRT-activation spec
+   2. Uses the HostFxr library to load the CLR and a managed WinRT.Host.Shim assembly:
+      1. The behavior mirrors details in the .NET WinRT-activation spec
       1. A .runtimeconfig.json can be used to explicitly select a runtime version to address conflicts
    1. Binds to the shim's static factory method, WinRT.Module.GetActivationFactory
    1. Calls GetActivationFactory, passing the target assembly path and runtime class name
