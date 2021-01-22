@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
+        <Platforms>x64</Platforms>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
+        <CsWinRTComponent>true</CsWinRTComponent>
+        <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
+        <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
+    </PropertyGroup>
+
+    <!--<ItemGroup>
+    <Compile Remove="FolderEnumeration.cs" />
+</ItemGroup>-->
+    
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Windows.CsWinRT" Version="1.1.1" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <_PackageFiles Include="AuthoringDemo.targets" PackagePath="build;buildTransitive" />
+    </ItemGroup>
+
+</Project>
+
