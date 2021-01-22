@@ -1487,9 +1487,9 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
         return w.write_temp("_%.Instance", cache_type_name);
     }
 
-    static std::string get_default_interface_name(writer& w, TypeDef const& type, bool abiNamespace = true)
+    static std::string get_default_interface_name(writer& w, TypeDef const& type, bool abiNamespace = true, bool forceCCW = false)
     {
-        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), abiNamespace ? typedef_name_type::ABI : typedef_name_type::CCW, false));
+        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), abiNamespace ? typedef_name_type::ABI : forceCCW ? typedef_name_type::CCW : typedef_name_type::Projected, false));
     }
 
     void write_factory_constructors(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
@@ -2125,7 +2125,7 @@ bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors {get => HasErr
                 auto interface_abi_name = write_type_name_temp(w, interface_type, "%", typedef_name_type::ABI);
 
                 auto is_default_interface = has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute");
-                auto target = wrapper_type ? "_comp" :  (is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())"));
+                auto target = wrapper_type ? write_type_name_temp(w, interface_type, "((%) _comp)") :  (is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())"));
                 if (!is_default_interface && !wrapper_type)
                 {
                     if (settings.netstandard_compat)
@@ -4914,7 +4914,7 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
 
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
         auto wrapped_type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
-        auto default_interface_name = get_default_interface_name(w, type, false);
+        auto default_interface_name = get_default_interface_name(w, type, false, true);
         auto base_semantics = get_type_semantics(type.Extends());
         auto from_abi_new = !std::holds_alternative<object_type>(base_semantics) ? "new " : "";
 

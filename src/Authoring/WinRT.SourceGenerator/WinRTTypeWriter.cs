@@ -736,7 +736,8 @@ namespace Generator
         {
             Logger.Log("method: " + node.Identifier.ValueText);
             var methodSymbol = Model.GetDeclaredSymbol(node);
-            if (!IsPublicNode(node) || currentTypeDeclaration.CustomMappedSymbols.Contains(methodSymbol))
+            if ((!IsPublicNode(node) && node.ExplicitInterfaceSpecifier == null) || 
+                currentTypeDeclaration.CustomMappedSymbols.Contains(methodSymbol))
             {
                 Logger.Log("method skipped");
                 return;
@@ -750,7 +751,9 @@ namespace Generator
                 parameters,
                 new Symbol(methodSymbol.ReturnType),
                 IsStaticNode(node),
-                node.Parent is InterfaceDeclarationSyntax);
+                node.Parent is InterfaceDeclarationSyntax,
+                false,
+                node.ExplicitInterfaceSpecifier == null);
             currentTypeDeclaration.AddMethod(methodSymbol, methodSymbol.Name, methodDefinitionHandle);
         }
 
