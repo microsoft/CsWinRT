@@ -1,5 +1,5 @@
 ﻿#include "pch.h"
-#include "iostream";
+#include "iostream"
 
 using namespace winrt;
 using namespace Windows::Foundation;

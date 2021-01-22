@@ -130,6 +130,11 @@
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
+      <RestoreSources>
+        ../AuthoringDemo/bin/x64/Debug
+      </RestoreSources>
+    </PropertyGroup>
+    <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <PropertyGroup>
