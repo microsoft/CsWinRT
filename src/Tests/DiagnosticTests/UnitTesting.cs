@@ -47,7 +47,7 @@ namespace DiagnosticTests
         /// from the cswinrt source generator based on the given source code</summary>
         /// <param name="source"></param>
         [Test, TestCaseSource(nameof(ValidCases))] 
-        private void CheckNoDiagnostic(string source)
+        public void CheckNoDiagnostic(string source)
         { 
             Compilation compilation = CreateCompilation(source);
             RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator());
@@ -69,7 +69,7 @@ namespace DiagnosticTests
         /// it checks that a diagnostic with the same description was raised by the source generator 
         /// </summary> 
         [Test, TestCaseSource(nameof(InvalidCases))]
-        private void CodeHasDiagnostic(string testCode, DiagnosticDescriptor rule)
+        public void CodeHasDiagnostic(string testCode, DiagnosticDescriptor rule)
         { 
             Compilation compilation = CreateCompilation(testCode);
             RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator());
@@ -99,7 +99,7 @@ namespace DiagnosticTests
             {
                 // private getter
                 yield return new TestCaseData(PrivateGetter, WinRTRules.PrivateGetterRule).SetName("Property. PrivateGetter");
-                yield return new TestCaseData(PropertyNoGetter).SetName("Property. No Get, public Setter");
+                yield return new TestCaseData(PropertyNoGetter, WinRTRules.PrivateGetterRule).SetName("Property. No Get, public Setter");
                 // namespace tests
                 yield return new TestCaseData(SameNameNamespacesDisjoint, WinRTRules.DisjointNamespaceRule).SetName("Namespace. isn't accessible without Test prefix, doesn't use type");
                 yield return new TestCaseData(NamespacesDifferByCase, WinRTRules.NamespacesDifferByCase).SetName("Namespace. names only differ by case");
