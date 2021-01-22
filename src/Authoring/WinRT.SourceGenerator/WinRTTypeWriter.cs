@@ -2633,6 +2633,7 @@ namespace Generator
 
         public void FinalizeGeneration()
         {
+            Logger.Log("finalizing");
             var classTypeDeclarations = typeDefinitionMapping.Values
                 .Where(declaration => declaration.Node is INamedTypeSymbol symbol && symbol.TypeKind == TypeKind.Class)
                 .ToList();
@@ -2640,6 +2641,7 @@ namespace Generator
             {
                 INamedTypeSymbol classSymbol = classTypeDeclaration.Node as INamedTypeSymbol;
 
+                Logger.Log("finalizing class " + QualifiedName(classSymbol));
                 foreach (var implementedInterface in GetInterfaces(classSymbol))
                 {
                     var implementedInterfaceQualifiedName = QualifiedName(implementedInterface);
@@ -2648,9 +2650,11 @@ namespace Generator
                         AddType(implementedInterface);
                     }
 
+                    Logger.Log("finalizing interface " + implementedInterfaceQualifiedName);
                     var interfaceTypeDeclaration = typeDefinitionMapping[implementedInterfaceQualifiedName];
                     if (MappedCSharpTypes.ContainsKey(implementedInterfaceQualifiedName))
                     {
+                        Logger.Log("adding MethodImpls for custom mapped interface");
                         foreach (var interfaceMember in interfaceTypeDeclaration.MethodReferences)
                         {
                             var interfaceMemberMethodDefinitions = interfaceMember.Value;
@@ -2666,6 +2670,7 @@ namespace Generator
                     }
                     else
                     {
+                        Logger.Log("adding MethodImpls for interface");
                         foreach (var interfaceMember in interfaceTypeDeclaration.MethodReferences)
                         {
                             var classMember = classSymbol.FindImplementationForInterfaceMember(interfaceMember.Key);
@@ -2693,6 +2698,7 @@ namespace Generator
 
                 if (classTypeDeclaration.DefaultInterface != null)
                 {
+                    Logger.Log("finalizing default interface " + classTypeDeclaration.DefaultInterface);
                     var defaultInterfaceTypeDeclaration = typeDefinitionMapping[classTypeDeclaration.DefaultInterface];
                     foreach (var interfaceMember in defaultInterfaceTypeDeclaration.MethodReferences)
                     {
@@ -2719,6 +2725,7 @@ namespace Generator
 
                 if (classTypeDeclaration.StaticInterface != null)
                 {
+                    Logger.Log("finalizing static interface " + classTypeDeclaration.StaticInterface);
                     var staticInterfaceTypeDeclaration = typeDefinitionMapping[classTypeDeclaration.StaticInterface];
                     foreach (var interfaceMember in staticInterfaceTypeDeclaration.MethodReferences)
                     {
@@ -2735,6 +2742,7 @@ namespace Generator
                 }
             }
 
+            Logger.Log("adding default version attributes");
             var interfaceDeclarations = typeDefinitionMapping.Values
                 .Where(declaration => declaration.Node is INamedTypeSymbol symbol && symbol.TypeKind == TypeKind.Interface)
                 .ToList();
@@ -2747,6 +2755,7 @@ namespace Generator
                 }
             }
 
+            Logger.Log("adding custom attributes");
             var typeDeclarationsWithAttributes = typeDefinitionMapping.Values
                 .Where(declaration => !declaration.IsSynthesizedInterface && declaration.SymbolsWithAttributes.Any())
                 .ToList();
