@@ -19,6 +19,7 @@
   <Target Name="CsWinRTAddAuthoredWinMDReference" 
           Condition="'$(HostingSupport-IsNative)' == 'true'"
           Outputs="@(Reference)">
+    <!-- Add the WinMD file as a reference of the native app -->
     <ItemGroup> 
       <Reference Include="$(HostingSupport-MetadataDir)\*" />
     </ItemGroup>

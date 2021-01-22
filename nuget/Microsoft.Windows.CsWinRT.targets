@@ -163,7 +163,7 @@ $(CsWinRTFilters)
       <!-- Custom targets that copy dlls for consumers of the authored component.
            `buildTransitive\` is for PackageReference, `build\` is for packages.config -->
       <_PackageFiles Include="$(CsWinRTPath)buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets"
-                     PackagePath="buildTransitive\$(AssemblyName).CsWinRT.targets;build\$(AssemblyName).CsWinRT.targets"/>
+                     PackagePath="buildTransitive\$(AssemblyName).targets;build\$(AssemblyName).targets"/>
 
       <!-- WinRT.Host.dll is architecture specific -->
       <!-- x64 --> 
