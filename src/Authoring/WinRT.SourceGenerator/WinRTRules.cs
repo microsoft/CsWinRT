@@ -18,7 +18,7 @@ namespace WinRT.SourceGenerator
                 category: "Usage",
                 defaultSeverity: DiagnosticSeverity.Error,
                 isEnabledByDefault: true,
-                helpLinkUri: "https://docs.microsoft.com/en-us/previous-versions/hh977010(v=vs.110)");
+                helpLinkUri: "https://github.com/microsoft/CsWinRT/tree/master/src/Authoring/WinRT.SourceGenerator/AnalyzerReleases.Unshipped.md");
         }
 
         public static DiagnosticDescriptor PrivateGetterRule = MakeRule(
