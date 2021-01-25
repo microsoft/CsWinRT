@@ -825,6 +825,52 @@ namespace cswinrt
         );
     }
 
+    auto method_signature_equal(MethodDef const& first, MethodDef const& second)
+    {
+        method_signature signature_first{ first };
+        method_signature signature_second{ second };
+
+        if (size(signature_first.params()) != size(signature_second.params()))
+        {
+            return false;
+        }
+
+        writer first_method_return_type, second_method_return_type;
+        write_projection_return_type(first_method_return_type, signature_first);
+        write_projection_return_type(second_method_return_type, signature_second);
+        if (first_method_return_type.flush_to_string() != second_method_return_type.flush_to_string())
+        {
+            return false;
+        }
+
+        writer first_method_parameters, second_method_parameters;
+        bind_list<write_projection_parameter>(", ", signature_first.params())(first_method_parameters);
+        bind_list<write_projection_parameter>(", ", signature_second.params())(second_method_parameters);
+
+        return first_method_parameters.flush_to_string() == second_method_parameters.flush_to_string();
+    }
+
+    auto is_implemented_as_private_method(TypeDef const& class_type, MethodDef const& interface_method)
+    {
+        writer writer;
+        auto interface_method_name = writer.write_temp(
+            "%.%.%",
+            interface_method.Parent().TypeNamespace(),
+            interface_method.Parent().TypeName(),
+            interface_method.Name());
+        for (auto&& class_method : class_type.MethodList())
+        {
+            if (class_method.Flags().Access() == MemberAccess::Private &&
+                class_method.Name() == interface_method_name &&
+                method_signature_equal(class_method, interface_method))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     void write_class_method(writer& w, MethodDef const& method, TypeDef const& class_type, 
         bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute)
     {
@@ -871,7 +917,11 @@ namespace cswinrt
             }
         }
 
-        write_method(w, signature, method.Name(), return_type, interface_member, access_spec, method_spec, platform_attribute);
+        bool is_private = is_implemented_as_private_method(class_type, method);
+        if (!is_private)
+        {
+            write_method(w, signature, method.Name(), return_type, interface_member, access_spec, method_spec, platform_attribute);
+        }
 
         if (is_overridable || !is_exclusive_to(method.Parent()))
         {
@@ -882,7 +932,17 @@ namespace cswinrt
                 bind<write_type_name>(method.Parent(), typedef_name_type::CCW, false),
                 method.Name(),
                 bind_list<write_projection_parameter>(", ", signature.params()),
-                method.Name(),
+                bind([&](writer& w)
+                {
+                    if (is_private)
+                    {
+                        w.write("%.%", interface_member, method.Name());
+                    }
+                    else
+                    {
+                        w.write(method.Name());
+                    }
+                }),
                 bind_list<write_parameter_name_with_modifier>(", ", signature.params())
             );
         }

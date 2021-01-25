@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.Foundation;
+using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
 
 #pragma warning disable CA1416
@@ -974,6 +975,128 @@ namespace AuthoringTest
         }
 
         public XmlnsDefinition[] GetXmlnsDefinitions()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public sealed class SingleInterfaceClass : IDouble
+    {
+        public double GetDouble()
+        {
+            return 4;
+        }
+
+        public double GetDouble(bool ignoreFactor)
+        {
+            return 4;
+        }
+
+        public string GetNumStr(int num)
+        {
+            return num.ToString();
+        }
+
+        public string GetNumStr(double num)
+        {
+            return num.ToString();
+        }
+    }
+
+    public interface IDouble2
+    {
+        double GetDouble();
+        string GetNumStr(int num);
+    }
+
+    public sealed class ExplicltlyImplementedClass : IDouble, IDouble2
+    {
+        double IDouble.GetDouble()
+        {
+            return 4;
+        }
+
+        double IDouble.GetDouble(bool ignoreFactor)
+        {
+            return 4;
+        }
+
+        double IDouble2.GetDouble()
+        {
+            return 8;
+        }
+
+        string IDouble.GetNumStr(int num)
+        {
+            return num.ToString();
+        }
+
+        public string GetNumStr(int num)
+        {
+            return (num * 2).ToString();
+        }
+        string IDouble.GetNumStr(double num)
+        {
+            return num.ToString();
+        }
+    }
+
+    public sealed class ObservableVector : IObservableVector<IDouble>
+    {
+        public IDouble this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public int Count => throw new NotImplementedException();
+
+        public bool IsReadOnly => throw new NotImplementedException();
+
+        public event VectorChangedEventHandler<IDouble> VectorChanged;
+
+        public void Add(IDouble item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Clear()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Contains(IDouble item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CopyTo(IDouble[] array, int arrayIndex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerator<IDouble> GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int IndexOf(IDouble item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Insert(int index, IDouble item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Remove(IDouble item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveAt(int index)
+        {
+            throw new NotImplementedException();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
         {
             throw new NotImplementedException();
         }

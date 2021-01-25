@@ -1006,7 +1006,7 @@ namespace Generator
                 }
                 else
                 {
-                    AddEventReference(name, eventType.Type, symbol);
+                    AddEventReference(name, eventType.Type, symbol, symbol);
                 }
             }
 
@@ -2305,7 +2305,7 @@ namespace Generator
                 property.SetMethod != null);
         }
 
-        public void AddEventReference(string eventName, ITypeSymbol eventType, INamedTypeSymbol parent)
+        public void AddEventReference(string eventName, ITypeSymbol eventType, ISymbol symbol, INamedTypeSymbol parent)
         {
             Logger.Log("adding event reference:  " + eventName);
 
@@ -2318,7 +2318,7 @@ namespace Generator
                 eventRegistrationToken,
                 parent,
                 false);
-            currentTypeDeclaration.AddMethodReference(eventType, addMethodReference);
+            currentTypeDeclaration.AddMethodReference(symbol, addMethodReference);
 
             var removeMethodReference = AddMethodReference(
                 "remove_" + eventName,
@@ -2326,12 +2326,12 @@ namespace Generator
                 null,
                 parent,
                 false);
-            currentTypeDeclaration.AddMethodReference(eventType, removeMethodReference);
+            currentTypeDeclaration.AddMethodReference(symbol, removeMethodReference);
         }
 
         public void AddEventReference(IEventSymbol @event)
         {
-            AddEventReference(@event.Name, @event.Type, @event.ContainingType);
+            AddEventReference(@event.Name, @event.Type, @event, @event.ContainingType);
         }
 
         void AddProjectedType(INamedTypeSymbol type, string projectedTypeOverride = null)

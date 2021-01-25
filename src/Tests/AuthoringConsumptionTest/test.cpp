@@ -26,6 +26,10 @@ TEST(AuthoringTest, FunctionCalls)
     testClass.Factor(2);
     EXPECT_EQ(testClass.Factor(), 2);
     EXPECT_EQ(testClass.GetFactor(), 2);
+
+    SingleInterfaceClass singleInterfaceClass;
+    EXPECT_EQ(singleInterfaceClass.GetDouble(), 4);
+    EXPECT_EQ(singleInterfaceClass.GetNumStr(4.4), L"4.4");
 }
 
 TEST(AuthoringTest, Factory)
@@ -438,4 +442,15 @@ TEST(AuthoringTest, XamlMappings)
     command.SetCanExecute(true);
     EXPECT_TRUE(eventTriggered);
     EXPECT_TRUE(command.CanExecute(nullptr));
+}
+
+TEST(AuthoringTest, ExplicitInterfaces)
+{
+    ExplicltlyImplementedClass explicltlyImplementedClass;
+    IDouble doubleInterface = explicltlyImplementedClass;
+    EXPECT_EQ(doubleInterface.GetDouble(), 4);
+    EXPECT_EQ(doubleInterface.GetNumStr(4), L"4");
+    IDouble2 double2Interface = explicltlyImplementedClass;
+    EXPECT_EQ(double2Interface.GetDouble(), 8);
+    EXPECT_EQ(double2Interface.GetNumStr(4), L"8");
 }
