@@ -201,7 +201,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             {
                 return;
             }
-
+            
             Logger.Initialize(context);
             
             

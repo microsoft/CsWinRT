@@ -56,9 +56,9 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor UnsupportedTypeRule = MakeRule(
             "CsWinRT1006",
             "Exposing unsupported type",
-            "The member '{0}' has the type '{1}' in its signature. The type '{1}' is not a valid Windows Runtime type\n"  
-            + "Yet, the type (or its generic parameters) implement interfaces that are valid Windows Runtime types\n" 
-            + "Consider changing the type '{1} in the member signature to one of the following types from System.Collections.Generic:\n{2}");
+            "The member '{0}' has the type '{1}' in its signature. The type '{1}' is not a valid Windows Runtime type. "  
+            + "Yet, the type (or its generic parameters) implement interfaces that are valid Windows Runtime types. " 
+            + "Consider changing the type '{1} in the member signature to one of the following types from System.Collections.Generic: {2}.");
         
         public static DiagnosticDescriptor StructWithNoFieldsRule = MakeRule(
             "CsWinRT1007",

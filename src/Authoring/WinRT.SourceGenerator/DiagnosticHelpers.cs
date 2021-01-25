@@ -193,7 +193,7 @@ namespace Generator
                 // Nothing can be marked `ref`
                 if (HasModifier(param, SyntaxKind.RefKeyword))
                 {
-                    Report(WinRTRules.RefParameterFound, method.GetLocation(), param.Identifier); 
+                    Report(WinRTRules.RefParameterFound, method.GetLocation(), method.Identifier, param.Identifier); 
                 }    
                 
                 if (ParamHasInOrOutAttribute(param))
