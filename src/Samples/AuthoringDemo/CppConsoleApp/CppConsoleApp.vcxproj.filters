@@ -33,9 +33,6 @@
     <None Include="WinRT.Host.runtimeconfig.json" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Manifest Include="CppConsoleApp.exe.manifest" />
   </ItemGroup>
 </Project>

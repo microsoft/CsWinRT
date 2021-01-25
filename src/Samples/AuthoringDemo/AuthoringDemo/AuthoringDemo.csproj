@@ -7,15 +7,11 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
         <CsWinRTComponent>true</CsWinRTComponent>
+        <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
         <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
         <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
     </PropertyGroup>
-
-    <!--<ItemGroup>
-    <Compile Remove="FolderEnumeration.cs" />
-</ItemGroup>-->
     
     <ItemGroup>
         <PackageReference Include="Microsoft.Windows.CsWinRT" Version="1.1.1" />
@@ -23,6 +19,7 @@
 
     <PropertyGroup>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <!--<PackageOutputPath>../packages</PackageOutputPath>-->
     </PropertyGroup>
     
     <ItemGroup>

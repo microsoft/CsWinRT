@@ -3,6 +3,7 @@
 
 using namespace winrt;
 using namespace Windows::Foundation;
+using namespace std;
 
 int main()
 {
@@ -10,10 +11,10 @@ int main()
 
     AuthoringDemo::Example ex;
     ex.SampleProperty(42);
-    std::wcout << ex.SampleProperty() << std::endl;
-    std::wcout << ex.SayHello().c_str() << std::endl;
+    wcout << ex.SampleProperty() << endl;
+    wcout << ex.SayHello().c_str() << endl;
 
     AuthoringDemo::FolderEnumeration folderEnumerator;
     folderEnumerator.GetFilesAndFoldersAsync().get();
-    std::wcout << folderEnumerator.AllFiles().c_str() << std::endl;
+    wcout << folderEnumerator.AllFiles().c_str() << endl;
 }

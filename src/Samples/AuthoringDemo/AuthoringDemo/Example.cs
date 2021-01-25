@@ -1,4 +1,5 @@
-﻿namespace AuthoringDemo
+﻿// Example.cs
+namespace AuthoringDemo
 {
     public sealed class Example
     {

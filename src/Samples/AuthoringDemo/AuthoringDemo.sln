@@ -10,6 +10,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CppConsoleApp", "CppConsole
 		{7E449DC2-5334-464D-B478-1715B96C8050} = {7E449DC2-5334-464D-B478-1715B96C8050}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1452D9DE-635B-46F9-9C0E-B2FEB4F0A9EB}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		nuget.config = nuget.config
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
