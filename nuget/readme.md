@@ -36,7 +36,7 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTFilters | "" | **Specifies the -includes and -excludes to include in projection output |
 | CsWinRTParams | "" | ***Custom cswinrt.exe command-line parameters, replacing default settings below |
 | CsWinRTComponent | true \| *false | Specifies whether to generate a component (producing) projection from project sources |
-| CsWinRTEnableLogging | true \| *false | Generates a log.txt file for generating the metadata file and sources for a C#/WinRT authoring component |
+| CsWinRTEnableLogging | true \| *false | Generates a log.txt file to help with diagnosing issues with generating the metadata file and sources for a C#/WinRT authoring component |
 | CsWinRTWindowsMetadata | \<path\> \| "local" \| "sdk" \| *$(WindowsSDKVersion) | Specifies the source for Windows metadata |
 | CsWinRTGenerateProjection | *true \| false | Indicates whether to generate and compile projection sources (true), or only to compile them (false) |
 | CsWinRTGeneratedFilesDir | *"$(IntermediateOutputPath)\Generated Files" | Specifies the location for generated project source files |
