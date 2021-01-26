@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-      <HostingSupport-NativeDir>$(MSBuildThisFileDirectory)..\native</HostingSupport-NativeDir>
+      <HostingSupport-NativeDir>$(MSBuildThisFileDirectory)..\lib\native</HostingSupport-NativeDir>
       <HostingSupport-MetadataDir>$(MSBuildThisFileDirectory)..\winmd</HostingSupport-MetadataDir>
       <HostingSupport-RuntimesDir>$(MSBuildThisFileDirectory)..\runtimes</HostingSupport-RuntimesDir>
       <HostingSupport-IsNative  Condition="'$(TargetFramework)' == 'native' OR '$(TargetFramework)' == ''">true</HostingSupport-IsNative>
