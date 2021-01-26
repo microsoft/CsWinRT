@@ -47,10 +47,10 @@ For native (C++) apps, there are DLLs needed to host your authored component. Wh
 
 ``` nuspec
 <files>
-  <file src="$(TargetDir)MyAuthoredComponent.dll"        target="native\MyAuthoredComponent.dll" />
+  <file src="$(TargetDir)MyAuthoredComponent.dll"        target="lib\native\MyAuthoredComponent.dll" />
   <file src="$(TargetDir)MyAuthoredComponent.winmd"      target="winmd\MyAuthoredComponent.winmd" />
   
-  <file src="$(TargetDir)Microsoft.Windows.SDK.NET.dll"  target="native\Microsoft.Windows.SDK.NET.dll" />
+  <file src="$(TargetDir)Microsoft.Windows.SDK.NET.dll"  target="lib\native\Microsoft.Windows.SDK.NET.dll" />
    
   <!-- Note: you must rename the CsWinRt.Authoring.Targets as follows -->
   <file src="C:\Path\To\CsWinRT\NugetDir\buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets"   
@@ -61,10 +61,10 @@ For native (C++) apps, there are DLLs needed to host your authored component. Wh
    
   <!-- Include the managed DLLs -->
   <file src="C:\Path\To\CsWinRT\NugetDir\lib\net5.0\WinRT.Host.Shim.dll"                                  
-        target="native\WinRT.Host.Shim.dll" />
+        target="lib\native\WinRT.Host.Shim.dll" />
     
   <file src="C:\Path\To\CsWinRT\NugetDir\lib\net5.0\WinRT.Runtime.dll"                                  
-        target="native\WinRT.Runtime.dll" />
+        target="lib\native\WinRT.Runtime.dll" />
     
   <!-- Include the native DLLs -->
   <file src="C:\Path\To\CsWinRT\NugetDir\runtimes\win-x64\native\WinRT.Host.dll"                                  
