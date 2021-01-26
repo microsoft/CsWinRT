@@ -78,8 +78,8 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor ParameterNamedValueRule = MakeRule(
             "CsWinRT1010",
             "Parameter Named Value Rule",
-            "The method {0} is used in the Windows Runtime and has a parameter named {1}." +
-            "The parameter name {1} is the same as the return value name used in the generated C#/WinRT interop; use a different parameter name.");
+            "The parameter name {1} in method {0} is the same as the return value parameter name "
+            + "used in the generated C#/WinRT interop; use a different parameter name.");
 
         public static DiagnosticDescriptor StructHasPrivateFieldRule = MakeRule(
             "CsWinRT1011",
