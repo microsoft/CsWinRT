@@ -43,42 +43,21 @@ To use the component in a C# app, the authored component just needs to be added 
 
 For native (C++) apps, there are DLLs needed to host your authored component. When you use the automatic nuget packaging on-build support (in Visual Studio) to make a nupkg for your runtime component, the DLLs/WinMD are automatically added to your nupkg, before the ```GenerateNuspec``` MSBuild step.
 
-You will need to create a targets file for your component, if you are not already, that imports a CsWinRT targets file. The imported targets file configures the native app to use the hosting dlls at runtime.
-This means for your component ```MyAuthoredComponent```, you will need a targets file that has an import statment for ```MyAuthoredComponent.CsWinRT.targets```. 
-The targets file you need **must** be named ```MyAuthoredComponent.targets```, otherwise NuGet will ignore it.
-
-For example, the simplest definition of ```MyAuthoredComponent.targets``` would be:
-``` targets
-<?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<Import Project="$(MSBuildThisDirectory)MyAuthoredComponent.CsWinRT.targets"	/>
-</Project>
-```
-
-The ```MyAuthoredComponent.CsWinRT.targets``` is added to the package by CsWinRT, you'll just need to add your ```MyAuthoredComponent.targets``` file to the package as well.
-Do this by adding the following to ``MyAuthoredComponent.csproj```
-
-``` csproj
-<ItemGroup>
-  <_PackageFiles Include="MyAuthoredComponent.targets" PackagePath="build;buildTransitive"/>
-</ItemGroup>
-```
-
 **If you are going to write your own nuspec, i.e. not rely on automatic packaging** then the CsWinRT target that adds the hosting dlls to your package will not run, and you should make sure your nuspec contains the following ```file``` entries for ```MyAuthoredComponent``` (note: your TargetFramework may vary). If adding a file entry for ```Coords.targets``` does not work, then update the project file per the above example. 
 
 ``` nuspec
 <files>
-  <file src="$(TargetDir)MyAuthoredComponent.dll"                    target="lib\native\MyAuthoredComponent.dll" />
-  <file src="$(TargetDir)MyAuthoredComponent.winmd"                  target="winmd\MyAuthoredComponent.winmd" />
+  <file src="$(TargetDir)MyAuthoredComponent.dll"        target="lib\native\MyAuthoredComponent.dll" />
+  <file src="$(TargetDir)MyAuthoredComponent.winmd"      target="winmd\MyAuthoredComponent.winmd" />
   
-  <file src="$(TargetDir)Microsoft.Windows.SDK.NET.dll"              target="lib\native\Microsoft.Windows.SDK.NET.dll" />
+  <file src="$(TargetDir)Microsoft.Windows.SDK.NET.dll"  target="lib\native\Microsoft.Windows.SDK.NET.dll" />
    
   <!-- Note: you must rename the CsWinRt.Authoring.Targets as follows -->
   <file src="C:\Path\To\CsWinRT\NugetDir\buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets"   
-        target="buildTransitive\MyAuthoredComponent.CsWinRT.targets" />
+        target="buildTransitive\MyAuthoredComponent.targets" />
    
   <file src="C:\Path\To\CsWinRT\NugetDir\build\Microsoft.Windows.CsWinRT.Authoring.targets"       
-        target="build\MyAuthoredComponent.CsWinRT.targets" />
+        target="build\MyAuthoredComponent.targets" />
    
   <!-- Include the managed DLLs -->
   <file src="C:\Path\To\CsWinRT\NugetDir\lib\net5.0\WinRT.Host.Shim.dll"                                  

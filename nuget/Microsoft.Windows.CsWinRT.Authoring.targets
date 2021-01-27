@@ -16,18 +16,16 @@
   </PropertyGroup> 
 
   <!-- Happens before building, so C++/WinRT can make the corresponding header files -->
-  <Target Name="CsWinRTAddAuthoredWinMDReference" 
-          Condition="'$(HostingSupport-IsNative)' == 'true'"
-          Outputs="@(Reference)">
-    <ItemGroup> 
+  <Target Name="CsWinRTAddAuthoredWinMDReference" Condition="'$(HostingSupport-IsNative)' == 'true'" Outputs="@(Reference)">
+    
+    <ItemGroup Label="Add the WinMD file as a reference of the native app"> 
       <Reference Include="$(HostingSupport-MetadataDir)\*" />
     </ItemGroup>
+
   </Target>
 
   <!-- Happens when resolving references, so the app can be hosted -->
-  <Target Name="CsWinRTCopyAuthoringDlls" 
-          Condition="'$(HostingSupport-IsNative)' == 'true'"
-          Outputs="@(ReferenceCopyLocalPaths)">
+  <Target Name="CsWinRTCopyAuthoringDlls" Condition="'$(HostingSupport-IsNative)' == 'true'" Outputs="@(ReferenceCopyLocalPaths)">
     
     <ItemGroup Label="Copy Dlls needed for hosting/using authored components">
       <ReferenceCopyLocalPaths Include="$(HostingSupport-NativeDir)\*" />
@@ -40,6 +38,7 @@
       <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\win-x86\native\WinRT.Host.dll" 
                                Condition="'$(Platform)' == 'Win32'"/> 
     </ItemGroup> 
+
   </Target>
 
 </Project>
