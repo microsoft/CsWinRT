@@ -32,7 +32,7 @@ The library you are authoring should specify the following properties in its pro
   <CsWinRTComponent>true</CsWinRTComponent>
   <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
   <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files')</GeneratedFilesDir>
+  <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
 </PropertyGroup>
 ```
 And don't forget to include a `PackageReference` to `Microsoft.Windows.CsWinRT`!
