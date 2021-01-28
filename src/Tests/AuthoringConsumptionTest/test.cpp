@@ -30,6 +30,8 @@ TEST(AuthoringTest, FunctionCalls)
     SingleInterfaceClass singleInterfaceClass;
     EXPECT_EQ(singleInterfaceClass.GetDouble(), 4);
     EXPECT_EQ(singleInterfaceClass.GetNumStr(4.4), L"4.4");
+    singleInterfaceClass.Number(2);
+    EXPECT_EQ(singleInterfaceClass.Number(), 2);
 }
 
 TEST(AuthoringTest, Factory)
@@ -161,6 +163,12 @@ TEST(AuthoringTest, Events)
     EXPECT_EQ(anotherInterface.FireComplexDelegate(8.8, 9), true);
     EXPECT_EQ(doubleResult, 8.8);
     EXPECT_EQ(result, 9);
+
+    SingleInterfaceClass singleInterfaceClass;
+    auto token3 = singleInterfaceClass.DoubleDelegateEvent(auto_revoke, [&](double value)
+    {
+    });
+    token3.revoke();
 }
 
 TEST(AuthoringTest, CCWCaching)
@@ -190,7 +198,7 @@ TEST(AuthoringTest, Arrays)
 
     com_array<int> arr(6);
     basicClass.PopulateArray(arr);
-    for (int idx = 0; idx < arr.size(); idx++)
+    for (auto idx = 0u; idx < arr.size(); idx++)
     {
         EXPECT_EQ(arr[idx], idx + 1);
     }
@@ -198,7 +206,7 @@ TEST(AuthoringTest, Arrays)
     com_array<int> arr2;
     basicClass.GetArrayOfLength(10, arr2);
     EXPECT_EQ(arr2.size(), 10);
-    for (int idx = 0; idx < arr2.size(); idx++)
+    for (auto idx = 0u; idx < arr2.size(); idx++)
     {
         EXPECT_EQ(arr2[idx], idx + 1);
     }
@@ -450,7 +458,27 @@ TEST(AuthoringTest, ExplicitInterfaces)
     IDouble doubleInterface = explicltlyImplementedClass;
     EXPECT_EQ(doubleInterface.GetDouble(), 4);
     EXPECT_EQ(doubleInterface.GetNumStr(4), L"4");
+    doubleInterface.Number(2);
+    EXPECT_EQ(doubleInterface.Number(), 2);
+
     IDouble2 double2Interface = explicltlyImplementedClass;
     EXPECT_EQ(double2Interface.GetDouble(), 8);
     EXPECT_EQ(double2Interface.GetNumStr(4), L"8");
+    EXPECT_EQ(double2Interface.Number(), 4);
+    double2Interface.Number(2);
+    EXPECT_EQ(double2Interface.Number(), 8);
+
+    bool eventTriggered = false, event2Triggered = false;
+    auto token = doubleInterface.DoubleDelegateEvent(auto_revoke, [&eventTriggered](double value)
+    {
+        eventTriggered = (value == 4);
+    });
+    auto token2 = double2Interface.DoubleDelegateEvent(auto_revoke, [&event2Triggered](double value)
+    {
+        event2Triggered = (value == 8);
+    });
+    explicltlyImplementedClass.TriggerEvent(4);
+    EXPECT_TRUE(eventTriggered);
+    EXPECT_TRUE(event2Triggered);
+    token.revoke();
 }

@@ -44,6 +44,7 @@ namespace AuthoringTest
 
     public delegate void BasicDelegate(uint value);
     public delegate bool ComplexDelegate(double value, int value2);
+    public delegate void DoubleDelegate(double value);
 
     public sealed class BasicClass
     {
@@ -205,6 +206,9 @@ namespace AuthoringTest
 
         [Windows.Foundation.Metadata.DefaultOverload()]
         string GetNumStr(double num);
+        double Number { get; set; }
+
+        event DoubleDelegate DoubleDelegateEvent;
     }
 
     public interface IAnotherInterface
@@ -221,6 +225,7 @@ namespace AuthoringTest
     {
         public event BasicDelegate BasicDelegateEvent, BasicDelegateEvent2;
         public event ComplexDelegate ComplexDelegateEvent;
+        public event DoubleDelegate DoubleDelegateEvent;
 
         public int Factor { get; set; }
         private int Factor2 { get; set; }
@@ -232,6 +237,7 @@ namespace AuthoringTest
         public Type Type { get; set; }
         [Windows.Foundation.Metadata.Deprecated("test", DeprecationType.Deprecate, 3)]
         public int Deprecated { get; }
+        public double Number { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public TestClass()
         {
@@ -982,6 +988,24 @@ namespace AuthoringTest
 
     public sealed class SingleInterfaceClass : IDouble
     {
+        private double _number;
+        private DoubleDelegate _doubleDelegate;
+
+        public double Number { get => _number; set => _number = value; }
+
+        public event DoubleDelegate DoubleDelegateEvent
+        {
+            add
+            {
+                _doubleDelegate += value;
+            }
+
+            remove
+            {
+                _doubleDelegate -= value;
+            }
+        }
+
         public double GetDouble()
         {
             return 4;
@@ -1007,10 +1031,51 @@ namespace AuthoringTest
     {
         double GetDouble();
         string GetNumStr(int num);
+        double Number { get; set; }
+        event DoubleDelegate DoubleDelegateEvent;
     }
 
     public sealed class ExplicltlyImplementedClass : IDouble, IDouble2
     {
+        private double _number;
+        private DoubleDelegate _doubleDelegate;
+        private DoubleDelegate _doubleDelegate2;
+
+        double IDouble2.Number { get => _number * 2; set => _number = value * 2; }
+        double IDouble.Number { get => _number; set => _number = value; }
+
+        event DoubleDelegate IDouble.DoubleDelegateEvent
+        {
+            add
+            {
+                _doubleDelegate += value;
+            }
+
+            remove
+            {
+                _doubleDelegate -= value;
+            }
+        }
+
+        event DoubleDelegate IDouble2.DoubleDelegateEvent
+        {
+            add
+            {
+                _doubleDelegate2 += value;
+            }
+
+            remove
+            {
+                _doubleDelegate2 -= value;
+            }
+        }
+
+        public void TriggerEvent(double value)
+        {
+            _doubleDelegate?.Invoke(value);
+            _doubleDelegate2?.Invoke(value * 2);
+        }
+
         double IDouble.GetDouble()
         {
             return 4;
