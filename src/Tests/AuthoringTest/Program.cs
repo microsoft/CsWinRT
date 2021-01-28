@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.Foundation;
+using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
 
 #pragma warning disable CA1416
@@ -43,6 +44,7 @@ namespace AuthoringTest
 
     public delegate void BasicDelegate(uint value);
     public delegate bool ComplexDelegate(double value, int value2);
+    public delegate void DoubleDelegate(double value);
 
     public sealed class BasicClass
     {
@@ -204,6 +206,9 @@ namespace AuthoringTest
 
         [Windows.Foundation.Metadata.DefaultOverload()]
         string GetNumStr(double num);
+        double Number { get; set; }
+
+        event DoubleDelegate DoubleDelegateEvent;
     }
 
     public interface IAnotherInterface
@@ -220,6 +225,7 @@ namespace AuthoringTest
     {
         public event BasicDelegate BasicDelegateEvent, BasicDelegateEvent2;
         public event ComplexDelegate ComplexDelegateEvent;
+        public event DoubleDelegate DoubleDelegateEvent;
 
         public int Factor { get; set; }
         private int Factor2 { get; set; }
@@ -231,6 +237,7 @@ namespace AuthoringTest
         public Type Type { get; set; }
         [Windows.Foundation.Metadata.Deprecated("test", DeprecationType.Deprecate, 3)]
         public int Deprecated { get; }
+        public double Number { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public TestClass()
         {
@@ -974,6 +981,187 @@ namespace AuthoringTest
         }
 
         public XmlnsDefinition[] GetXmlnsDefinitions()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public sealed class SingleInterfaceClass : IDouble
+    {
+        private double _number;
+        private DoubleDelegate _doubleDelegate;
+
+        public double Number { get => _number; set => _number = value; }
+
+        public event DoubleDelegate DoubleDelegateEvent
+        {
+            add
+            {
+                _doubleDelegate += value;
+            }
+
+            remove
+            {
+                _doubleDelegate -= value;
+            }
+        }
+
+        public double GetDouble()
+        {
+            return 4;
+        }
+
+        public double GetDouble(bool ignoreFactor)
+        {
+            return 4;
+        }
+
+        public string GetNumStr(int num)
+        {
+            return num.ToString();
+        }
+
+        public string GetNumStr(double num)
+        {
+            return num.ToString();
+        }
+    }
+
+    public interface IDouble2
+    {
+        double GetDouble();
+        string GetNumStr(int num);
+        double Number { get; set; }
+        event DoubleDelegate DoubleDelegateEvent;
+    }
+
+    public sealed class ExplicltlyImplementedClass : IDouble, IDouble2
+    {
+        private double _number;
+        private DoubleDelegate _doubleDelegate;
+        private DoubleDelegate _doubleDelegate2;
+
+        double IDouble2.Number { get => _number * 2; set => _number = value * 2; }
+        double IDouble.Number { get => _number; set => _number = value; }
+
+        event DoubleDelegate IDouble.DoubleDelegateEvent
+        {
+            add
+            {
+                _doubleDelegate += value;
+            }
+
+            remove
+            {
+                _doubleDelegate -= value;
+            }
+        }
+
+        event DoubleDelegate IDouble2.DoubleDelegateEvent
+        {
+            add
+            {
+                _doubleDelegate2 += value;
+            }
+
+            remove
+            {
+                _doubleDelegate2 -= value;
+            }
+        }
+
+        public void TriggerEvent(double value)
+        {
+            _doubleDelegate?.Invoke(value);
+            _doubleDelegate2?.Invoke(value * 2);
+        }
+
+        double IDouble.GetDouble()
+        {
+            return 4;
+        }
+
+        double IDouble.GetDouble(bool ignoreFactor)
+        {
+            return 4;
+        }
+
+        double IDouble2.GetDouble()
+        {
+            return 8;
+        }
+
+        string IDouble.GetNumStr(int num)
+        {
+            return num.ToString();
+        }
+
+        public string GetNumStr(int num)
+        {
+            return (num * 2).ToString();
+        }
+        string IDouble.GetNumStr(double num)
+        {
+            return num.ToString();
+        }
+    }
+
+    public sealed class ObservableVector : IObservableVector<IDouble>
+    {
+        public IDouble this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public int Count => throw new NotImplementedException();
+
+        public bool IsReadOnly => throw new NotImplementedException();
+
+        public event VectorChangedEventHandler<IDouble> VectorChanged;
+
+        public void Add(IDouble item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Clear()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Contains(IDouble item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CopyTo(IDouble[] array, int arrayIndex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerator<IDouble> GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int IndexOf(IDouble item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Insert(int index, IDouble item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Remove(IDouble item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveAt(int index)
+        {
+            throw new NotImplementedException();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
         {
             throw new NotImplementedException();
         }

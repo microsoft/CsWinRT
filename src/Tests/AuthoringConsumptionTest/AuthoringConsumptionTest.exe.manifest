@@ -43,6 +43,14 @@
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass
+        name="AuthoringTest.ExplicltlyImplementedClass"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringTest.SingleInterfaceClass"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
         name="AuthoringTest.StaticClass"
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
