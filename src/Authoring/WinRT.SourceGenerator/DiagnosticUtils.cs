@@ -329,7 +329,7 @@ namespace Generator
         /// <summary>Make sure any namespace defined is the same as the winmd or a subnamespace of it
         /// If component is A.B, e.g. A.B.winmd , then D.Class1 is invalid, as well as A.C.Class2
         /// </summary>
-        /// <param name="namespace">the authored namesspce to check</param><param name="assemblyName">the name of the component/winmd</param>
+        /// <param name="namespace">the authored namespace to check</param><param name="assemblyName">the name of the component/winmd</param>
         /// <returns>True iff namespace is disjoint from the assembly name</returns>
         private bool IsInvalidNamespace(INamespaceSymbol @namespace, string assemblyName)
         {
