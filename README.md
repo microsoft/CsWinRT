@@ -34,9 +34,13 @@ Application developers on .NET5+ can reference C#/WinRT interop assemblies by ad
 
 However, C#/WinRT is a general effort and is intended to support other scenarios and versions of the .NET runtime, compatible down to .NET Standard 2.0.
 
-## Installing and running C#/WinRT
+## Usage and Developer Guidance
 
 Download the C#/WinRT NuGet package here: https://www.nuget.org/packages/Microsoft.Windows.CsWinRT/
+
+Please read the [usage](docs/usage.md) and [repository structure](docs/structure.md) docs for a detailed breakdown. For recommendations on migrating from System.Runtime.InteropServices, see the [COM Interop](docs/interop.md) guide. For additional documentation and walkthroughs, visit <http://aka.ms/cswinrt>.
+
+## Building and running C#/WinRT
 
 C#/WinRT currently requires the following packages, or newer, to build:
 
@@ -56,11 +60,7 @@ The `build.cmd` script takes care of all related configuration steps and is the 
 
 ## What's New
 
-[CsWinRT v1.0](https://github.com/microsoft/CsWinRT/releases/tag/1.0.1.201020.1) is our latest public release, and is compatible with the .NET 5 RTM SDK. We may have preview releases to address specific bug fixes before v1.1. Details on breaking changes and known issues can be found on the [release notes page](https://github.com/microsoft/CsWinRT/releases).
-
-## Developer Guidance
-
-Please read the [usage](docs/usage.md) and [repository structure](docs/structure.md) docs for a detailed breakdown. For recommendations on migrating from System.Runtime.InteropServices, see the [COM Interop](docs/interop.md) guide. For additional documentation visit <http://aka.ms/cswinrt>.
+See the [releases page](https://github.com/microsoft/CsWinRT/releases) for the most recent C#/WinRT NuGet releases and updates to the .NET 5 SDK. Details on breaking changes and known issues can be found on the release notes page.
 
 ## Related Projects
 
