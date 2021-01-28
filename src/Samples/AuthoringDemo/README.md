@@ -6,4 +6,4 @@ This sample demonstrates how to author a simple C#/WinRT component, create a NuG
 
 - **CppConsoleApp** is a **Windows Console Application (C++/WinRT)** project that demonstrates consuming the **AuthoringDemo** component with a NuGet package reference.
 
-Before building the solution, right click on **AuthoringDemo** solution node and select **Restore NuGet packages**.
+Before building the solution, right click on **AuthoringDemo** solution node and select **Restore NuGet packages**. Set **CppConsoleApp** as the startup project.
