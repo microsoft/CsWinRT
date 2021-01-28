@@ -825,6 +825,52 @@ namespace cswinrt
         );
     }
 
+    auto method_signature_equal(MethodDef const& first, MethodDef const& second)
+    {
+        method_signature signature_first{ first };
+        method_signature signature_second{ second };
+
+        if (size(signature_first.params()) != size(signature_second.params()))
+        {
+            return false;
+        }
+
+        writer first_method_return_type, second_method_return_type;
+        write_projection_return_type(first_method_return_type, signature_first);
+        write_projection_return_type(second_method_return_type, signature_second);
+        if (first_method_return_type.flush_to_string() != second_method_return_type.flush_to_string())
+        {
+            return false;
+        }
+
+        writer first_method_parameters, second_method_parameters;
+        bind_list<write_projection_parameter>(", ", signature_first.params())(first_method_parameters);
+        bind_list<write_projection_parameter>(", ", signature_second.params())(second_method_parameters);
+
+        return first_method_parameters.flush_to_string() == second_method_parameters.flush_to_string();
+    }
+
+    auto is_implemented_as_private_method(TypeDef const& class_type, MethodDef const& interface_method)
+    {
+        writer writer;
+        auto interface_method_name = writer.write_temp(
+            "%.%.%",
+            interface_method.Parent().TypeNamespace(),
+            interface_method.Parent().TypeName(),
+            interface_method.Name());
+        for (auto&& class_method : class_type.MethodList())
+        {
+            if (class_method.Flags().Access() == MemberAccess::Private &&
+                class_method.Name() == interface_method_name &&
+                method_signature_equal(class_method, interface_method))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     void write_class_method(writer& w, MethodDef const& method, TypeDef const& class_type, 
         bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute)
     {
@@ -871,7 +917,11 @@ namespace cswinrt
             }
         }
 
-        write_method(w, signature, method.Name(), return_type, interface_member, access_spec, method_spec, platform_attribute);
+        bool is_private = is_implemented_as_private_method(class_type, method);
+        if (!is_private)
+        {
+            write_method(w, signature, method.Name(), return_type, interface_member, access_spec, method_spec, platform_attribute);
+        }
 
         if (is_overridable || !is_exclusive_to(method.Parent()))
         {
@@ -882,7 +932,17 @@ namespace cswinrt
                 bind<write_type_name>(method.Parent(), typedef_name_type::CCW, false),
                 method.Name(),
                 bind_list<write_projection_parameter>(", ", signature.params()),
-                method.Name(),
+                bind([&](writer& w)
+                {
+                    if (is_private)
+                    {
+                        w.write("%.%", interface_member, method.Name());
+                    }
+                    else
+                    {
+                        w.write(method.Name());
+                    }
+                }),
                 bind_list<write_parameter_name_with_modifier>(", ", signature.params())
             );
         }
@@ -1039,7 +1099,7 @@ remove => %.% -= value;
         write_event(w, write_explicit_name(w, iface, evt.Name()), evt, write_as_cast(w, iface, as_abi));
     }
 
-    void write_class_event(writer& w, Event const& event, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute = ""sv)
+    void write_class_event(writer& w, Event const& event, TypeDef const& class_type, bool is_overridable, bool is_protected, std::string_view interface_member, std::string_view platform_attribute = ""sv)
     {
         auto visibility = "public ";
 
@@ -1052,11 +1112,24 @@ remove => %.% -= value;
         {
             visibility = "protected virtual ";
         }
-        write_event(w, event.Name(), event, interface_member, visibility, ""sv, platform_attribute);
+
+        auto [add, _] = get_event_methods(event);
+        bool is_private = is_implemented_as_private_method(class_type, add);
+        if (!is_private)
+        {
+            write_event(w, event.Name(), event, interface_member, visibility, ""sv, platform_attribute);
+        }
 
         if (is_overridable || !is_exclusive_to(event.Parent()))
         {
-            write_event(w, w.write_temp("%.%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false), event.Name()), event, "this", ""sv, ""sv, platform_attribute);
+            write_event(
+                w, 
+                w.write_temp("%.%", bind<write_type_name>(event.Parent(), typedef_name_type::CCW, false), event.Name()),
+                event,
+                is_private ? interface_member : "this",
+                ""sv,
+                ""sv,
+                platform_attribute);
         }
     }
 
@@ -1487,9 +1560,9 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
         return w.write_temp("_%.Instance", cache_type_name);
     }
 
-    static std::string get_default_interface_name(writer& w, TypeDef const& type, bool abiNamespace = true)
+    static std::string get_default_interface_name(writer& w, TypeDef const& type, bool abiNamespace = true, bool forceCCW = false)
     {
-        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), abiNamespace ? typedef_name_type::ABI : typedef_name_type::CCW, false));
+        return w.write_temp("%", bind<write_type_name>(get_type_semantics(get_default_interface(type)), abiNamespace ? typedef_name_type::ABI : forceCCW ? typedef_name_type::CCW : typedef_name_type::Projected, false));
     }
 
     void write_factory_constructors(writer& w, TypeDef const& factory_type, TypeDef const& class_type)
@@ -2114,7 +2187,7 @@ bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors {get => HasErr
 
     void write_class_members(writer& w, TypeDef const& type, bool wrapper_type)
     {
-        std::map<std::string_view, std::tuple<std::string, std::string, std::string, std::string, std::string, bool, bool>> properties;
+        std::map<std::string, std::tuple<std::string, std::string, std::string, std::string, std::string, bool, bool, bool>> properties;
         for (auto&& ii : type.InterfaceImpl())
         {
             auto semantics = get_type_semantics(ii.Interface());
@@ -2125,7 +2198,7 @@ bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors {get => HasErr
                 auto interface_abi_name = write_type_name_temp(w, interface_type, "%", typedef_name_type::ABI);
 
                 auto is_default_interface = has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute");
-                auto target = wrapper_type ? "_comp" :  (is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())"));
+                auto target = wrapper_type ? write_type_name_temp(w, interface_type, "((%) _comp)") :  (is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())"));
                 if (!is_default_interface && !wrapper_type)
                 {
                     if (settings.netstandard_compat)
@@ -2161,7 +2234,7 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
 
                 auto platform_attribute = write_platform_attribute_temp(w, interface_type);
                 w.write_each<write_class_method>(interface_type.MethodList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute);
-                w.write_each<write_class_event>(interface_type.EventList(), is_overridable_interface, is_protected_interface, target, platform_attribute);
+                w.write_each<write_class_event>(interface_type.EventList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute);
 
                 // Merge property getters/setters, since such may be defined across interfaces
                 for (auto&& prop : interface_type.PropertyList())
@@ -2169,18 +2242,21 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
                     MethodDef getter, setter;
                     std::tie(getter, setter) = get_property_methods(prop);
                     auto prop_type = write_prop_type(w, prop);
-                    auto [prop_targets, inserted]  = properties.try_emplace(prop.Name(),
+                    auto is_private = getter && is_implemented_as_private_method(type, getter);  // for explicitly implemented interfaces, assume there is always a get.
+                    auto property_name = is_private ? w.write_temp("%.%", interface_name, prop.Name()) : std::string(prop.Name());
+                    auto [prop_targets, inserted]  = properties.try_emplace(property_name,
                         prop_type,
                         getter ? target : "",
                         getter ? platform_attribute : "",
                         setter ? target : "",
                         setter ? platform_attribute : "",
                         is_overridable_interface,
-                        !is_protected_interface && !is_overridable_interface // By default, an overridable member is protected.
+                        !is_protected_interface && !is_overridable_interface, // By default, an overridable member is protected.
+                        is_private
                     );
                     if (!inserted)
                     {
-                        auto& [property_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public] = prop_targets->second;
+                        auto& [property_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, _] = prop_targets->second;
                         XLANG_ASSERT(property_type == prop_type);
                         if (getter)
                         {
@@ -2205,7 +2281,7 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
                         w.write("\n%% %.% {%%}",
                             platform_attribute,
                             prop_type,
-                            bind<write_type_name>(interface_type, typedef_name_type::Projected, false),
+                            bind<write_type_name>(interface_type, typedef_name_type::CCW, false),
                             prop.Name(),
                             bind([&](writer& w)
                             {
@@ -2219,14 +2295,28 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
                                 }
                                 if (getter || base_getter)
                                 {
-                                    w.write("%get => %; ", base_getter_platform_attribute, prop.Name());
+                                    if (is_private)
+                                    {
+                                        w.write("%get => %.%; ", base_getter_platform_attribute, target, prop.Name());
+                                    }
+                                    else
+                                    {
+                                        w.write("%get => %; ", base_getter_platform_attribute, prop.Name());
+                                    }
                                 }
                             }),
                             bind([&](writer& w)
                             {
                                 if (setter)
                                 {
-                                    w.write("set => % = value; ", prop.Name());
+                                    if (is_private)
+                                    {
+                                        w.write("set => %.% = value; ", target, prop.Name());
+                                    }
+                                    else
+                                    {
+                                        w.write("set => % = value; ", prop.Name());
+                                    }
                                 }
                             }));
                     }
@@ -2241,7 +2331,8 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
         // Write properties with merged accessors
         for (auto& [prop_name, prop_data] : properties)
         {
-            auto& [prop_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public] = prop_data;
+            auto& [prop_type, getter_target, getter_platform, setter_target, setter_platform, is_overridable, is_public, is_private] = prop_data;
+            if (is_private) continue;
             std::string_view access_spec = is_public ? "public "sv : "protected "sv;
             std::string_view method_spec = is_overridable ? "virtual "sv : ""sv;
             write_property(w, prop_name, prop_name, prop_type, getter_target, setter_target, access_spec, method_spec, getter_platform, setter_platform);
@@ -4914,7 +5005,7 @@ return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHand
 
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
         auto wrapped_type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
-        auto default_interface_name = get_default_interface_name(w, type, false);
+        auto default_interface_name = get_default_interface_name(w, type, false, true);
         auto base_semantics = get_type_semantics(type.Extends());
         auto from_abi_new = !std::holds_alternative<object_type>(base_semantics) ? "new " : "";
 
