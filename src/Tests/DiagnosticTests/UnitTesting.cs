@@ -51,15 +51,16 @@ namespace DiagnosticTests
         { 
             Compilation compilation = CreateCompilation(source);
             RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator());
-            var WinRTDiagnostics = diagnosticsFound.Where(diag => diag.Id.StartsWith("WME"));
-            string builder = "";
-            foreach (var d in WinRTDiagnostics)
-            {
-                builder += d.Descriptor.Description + "\n";
-            }
+            
+            var WinRTDiagnostics = diagnosticsFound.Where(diag => diag.Id.StartsWith("CsWinRT"));
             if (WinRTDiagnostics.Count() != 0)
             {
-                throw new System.Exception("Expected no diagnostics. But found:" + builder);
+                string foundDiagnostics = "";
+                foreach (var d in WinRTDiagnostics)
+                {
+                    foundDiagnostics += d.Descriptor.Description + "\n";
+                }
+                throw new System.Exception("Expected no diagnostics. But found:" + foundDiagnostics);
             }
         }
 
@@ -73,16 +74,16 @@ namespace DiagnosticTests
             Compilation compilation = CreateCompilation(testCode);
             RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator());
             HashSet<DiagnosticDescriptor> diagDescsFound = MakeDiagnosticSet(diagnosticsFound);
-            string builder = "";
             if (!diagDescsFound.Contains(rule))
             {
-                foreach (var d in diagDescsFound)
-                {
-                    builder += d.Description + "\n";
-                }
                 if (diagDescsFound.Count != 0)
                 {
-                    throw new System.Exception("Didn't find the expected diagnostic, found:\n" + builder);
+                    string foundDiagnostics = "";
+                    foreach (var d in diagDescsFound)
+                    {
+                        foundDiagnostics += d.Description + "\n";
+                    }
+                    throw new System.Exception("Didn't find the expected diagnostic, found:\n" + foundDiagnostics);
                 }
                 else
                 { 
@@ -98,7 +99,7 @@ namespace DiagnosticTests
             {
                 // private getter
                 yield return new TestCaseData(PrivateGetter, WinRTRules.PrivateGetterRule).SetName("Property. PrivateGetter");
-                yield return new TestCaseData(PropertyNoGetter).SetName("Property. No Get, public Setter");
+                yield return new TestCaseData(PropertyNoGetter, WinRTRules.PrivateGetterRule).SetName("Property. No Get, public Setter");
                 // namespace tests
                 yield return new TestCaseData(SameNameNamespacesDisjoint, WinRTRules.DisjointNamespaceRule).SetName("Namespace. isn't accessible without Test prefix, doesn't use type");
                 yield return new TestCaseData(NamespacesDifferByCase, WinRTRules.NamespacesDifferByCase).SetName("Namespace. names only differ by case");
