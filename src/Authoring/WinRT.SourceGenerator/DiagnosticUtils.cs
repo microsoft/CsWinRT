@@ -333,14 +333,22 @@ namespace Generator
         /// <returns>True iff namespace is disjoint from the assembly name</returns>
         private bool IsInvalidNamespace(INamespaceSymbol @namespace, string assemblyName)
         {
-            // get the outermost containing namespace
+            if (@namespace.ToString() == assemblyName)
+            {
+                return false;
+            }
+
             var topLevel = @namespace;
             while (!topLevel.ContainingNamespace.IsGlobalNamespace)
             {
+                if (topLevel.ToString() == assemblyName)
+                {
+                    return false;
+                }
                 topLevel = topLevel.ContainingNamespace;
             }
-            
-            return assemblyName != @namespace.ToString() && assemblyName != topLevel.Name;
+
+            return topLevel.ToString() != assemblyName;
         }
 
         ///<summary>Array types can only be one dimensional and not System.Array, 
