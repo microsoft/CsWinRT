@@ -19,13 +19,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess> 
     <!-- Make sure WinRT.Runtime.dll and Microsoft.Windows.SDK.NET.dll get binplaced with authored component's dll -->
     <CopyLocalLockFileAssemblies Condition="'$(CsWinRTComponent)' == 'true'">true</CopyLocalLockFileAssemblies>
+    <AssignTargetPathsDependsOn>CsWinRTCopyHostDllsForProjectReference;$(AssignTargetPathsDependsOn)</AssignTargetPathsDependsOn>
   </PropertyGroup>
 
   <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
-  <Target Name="CsWinRTRemoveHostingDllReferences" 
-          AfterTargets="ResolvePackageAssets" 
-          BeforeTargets="ResolveLockFileAnalyzers" 
-          Outputs="@(Reference)">
+  <Target Name="CsWinRTRemoveHostingDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
     <PropertyGroup>
       <CsWinRTPkg-Net5Dir>$(CsWinRTPath)lib\net5.0</CsWinRTPkg-Net5Dir>
       <CsWinRTPkg-NativeDir>$(CsWinRTPath)runtimes\**\native</CsWinRTPkg-NativeDir>
@@ -144,23 +142,58 @@ $(CsWinRTFilters)
     <Copy SourceFiles="$(GeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>
 
+  <Target Name="CsWinRTAddWinMDReferenceInProjectReference" 
+          Condition="'$(CsWinRTComponent)' == 'true'" 
+          BeforeTargets="GetTargetPath" 
+          DependsOnTargets="GetTargetPathWithTargetPlatformMoniker"
+          Outputs="@(TargetPathWithTargetPlatformMoniker)">
+    <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)\*.winmd" BuildReference="true"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CsWinRTAddWinMDReferenceInProjectReference2" 
+          Condition="'$(CsWinRTComponent)' == 'true'" 
+          BeforeTargets="AfterBuild" 
+          Outputs="@(TargetPathWithTargetPlatformMoniker)">
+    <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)\*.winmd" BuildReference="true"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CsWinRTCopyHostDllsForProjectReference"  Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="GetCopyToOutputDirectoryItems" Outputs="@(Content)">
+    <PropertyGroup>
+      <CsWinRTHostTargetPlatform Condition="'$(Platform)' == 'Win32'">win-x86</CsWinRTHostTargetPlatform>
+      <CsWinRTHostTargetPlatform Condition="'$(Platform)' != 'Win32'">win-$(Platform)</CsWinRTHostTargetPlatform>
+    </PropertyGroup>
+    <ItemGroup> 
+      <Content Include="@(CsWinRTAuthoringDependencyDlls)" CopyToOutputDirectory="PreserveNewest" />
+      <!-- raise an error if we don't have the right host dll -->
+      <Error Condition="!Exists('$(CsWinRTPath)runtimes\$(CsWinRTHostTargetPlatform)\native\WinRT.Host.dll')"
+             Text="Could not find a WinRT.Host.dll for the specified platform: $(Platform)" />
+      <Content Include="$(CsWinRTPath)runtimes\$(CsWinRTHostTargetPlatform)\native\WinRT.Host.dll"
+               CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CsWinRTPopulateNeededDllItemList" BeforeTargets="CsWinRTCopyHostDllsForProjectReference" Outputs="@(CsWinRTAuthoringDependencyDlls)">
+    <ItemGroup>
+      <CsWinRTAuthoringDependencyDlls Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
+      <CsWinRTAuthoringDependencyDlls Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)%(Extension)' == 'WinRT.Runtime.dll'" />
+      <CsWinRTAuthoringDependencyDlls Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)%(Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
+    </ItemGroup> 
+  </Target>
+
   <!-- When an authored component makes a nupkg, add the necessary hosting assets to the package -->
   <Target Name="CsWinRTIncludeHostDlls"  Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="AfterBuild" Outputs="@(Content)">
     <ItemGroup>
-      <Content Include="$(TargetDir)$(AssemblyName).winmd"
-               Pack="true"
-               PackagePath="winmd" />
-      
-      <!-- The authored component gets the WinRT.Runtime and NET.SDK dlls from ReferenceCopyLocalPaths 
-            (because CopyLocalLockFileAssemblies == true) and $(TargetPath) has the assembly (e.g. PackageId.dll) -->
-      <Content Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll;@(ReferenceCopyLocalPaths);$(TargetPath)"
-               Pack="true"
-               PackagePath="lib\native" />
+      <Content Include="@(CsWinRTAuthoringDependencyDlls)" Pack="true" PackagePath="lib\$(TargetFramework)" />
+      <Content Include="$(TargetDir)$(AssemblyName).winmd" Pack="true" PackagePath="lib\$(TargetFramework)\winmd" />
 
       <!-- Custom targets that copy dlls for consumers of the authored component.
            `buildTransitive\` is for PackageReference, `build\` is for packages.config -->
-      <Content Include="$(CsWinRTPath)buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets"
-               Pack="true"
+      <Content Include="$(CsWinRTPath)buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets" 
+               Pack="true" 
                PackagePath="buildTransitive\$(AssemblyName).targets;build\$(AssemblyName).targets"/>
 
       <!-- WinRT.Host.dll is architecture specific -->
