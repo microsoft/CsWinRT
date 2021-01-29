@@ -329,18 +329,26 @@ namespace Generator
         /// <summary>Make sure any namespace defined is the same as the winmd or a subnamespace of it
         /// If component is A.B, e.g. A.B.winmd , then D.Class1 is invalid, as well as A.C.Class2
         /// </summary>
-        /// <param name="namespace">the authored namesapce to check</param><param name="assemblyName">the name of the component/winmd</param>
+        /// <param name="namespace">the authored namespace to check</param><param name="assemblyName">the name of the component/winmd</param>
         /// <returns>True iff namespace is disjoint from the assembly name</returns>
         private bool IsInvalidNamespace(INamespaceSymbol @namespace, string assemblyName)
         {
-            // get the outermost containing namespace
+            if (@namespace.ToString() == assemblyName)
+            {
+                return false;
+            }
+
             var topLevel = @namespace;
             while (!topLevel.ContainingNamespace.IsGlobalNamespace)
             {
+                if (topLevel.ToString() == assemblyName)
+                {
+                    return false;
+                }
                 topLevel = topLevel.ContainingNamespace;
             }
 
-            return assemblyName != @namespace.Name && assemblyName != topLevel.Name;
+            return topLevel.ToString() != assemblyName;
         }
 
         ///<summary>Array types can only be one dimensional and not System.Array, 
