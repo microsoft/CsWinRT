@@ -31,4 +31,8 @@
 
   <Import Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(SimulateCsWinRTNugetReference)' == 'true'" Project="..\nuget\Microsoft.Windows.CsWinRT.targets" />
 
+  <Target Name="CsWinRTCheckDependencies" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(SolutionDir)TestWinRT')" Text="This solution requires the TestWinRT repo, which is missing. Please run build.cmd from a Visual Studio command prompt." />
+  </Target>
+
 </Project>
