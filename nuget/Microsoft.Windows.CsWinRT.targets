@@ -141,7 +141,7 @@ $(CsWinRTFilters)
 
   <!-- Copy Authored winmd to output folder -->
   <Target Name="CsWinRTPlaceWinMDInOutputFolder" Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="AfterBuild">
-    <Copy SourceFiles="$(GeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(CsWinRTGeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>
 
   <!-- When an authored component makes a nupkg, add the necessary hosting assets to the package -->
