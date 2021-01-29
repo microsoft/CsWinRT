@@ -1550,9 +1550,9 @@ namespace Generator
             }
         }
 
-        private void EncodeCustomElementType(IFieldSymbol field, CustomAttributeElementTypeEncoder typeEncoder)
+        private void EncodeCustomElementType(ITypeSymbol type, CustomAttributeElementTypeEncoder typeEncoder)
         {
-            switch (field.Type.SpecialType)
+            switch (type.SpecialType)
             {
                 case SpecialType.System_Boolean:
                     typeEncoder.Boolean();
@@ -1591,38 +1591,49 @@ namespace Generator
                     typeEncoder.String();
                     break;
                 case SpecialType.System_Enum:
-                    typeEncoder.Enum(field.Type.ToString());
+                    typeEncoder.Enum(type.ToString());
                     break;
                 case SpecialType.System_SByte:
                     typeEncoder.SByte();
                     break;
                 default:
-                    Logger.Log("TODO special type: " + field.Type.SpecialType);
+                    Logger.Log("TODO special type: " + type.SpecialType);
                     break;
             }
         }
 
-        private void EncodeNamedArgumentType(INamedTypeSymbol attributeType, string field, NamedArgumentTypeEncoder encoder)
+        private void EncodeNamedArgumentType(ITypeSymbol type, NamedArgumentTypeEncoder encoder)
         {
             Logger.Log("encoding named type");
-            var fieldMembers = attributeType.GetMembers(field);
-            Logger.Log("# fields: " + fieldMembers.Count());
-            var fieldSymbol = fieldMembers.First() as IFieldSymbol;
-            Logger.Log("found field: " + fieldSymbol);
-
-            if (fieldSymbol.Type.SpecialType == SpecialType.System_Object)
+            if (type.SpecialType == SpecialType.System_Object)
             {
                 encoder.Object();
             }
-            else if (fieldSymbol.Type.SpecialType == SpecialType.System_Array)
+            else if (type.SpecialType == SpecialType.System_Array)
             {
                 // TODO array type encoder
                 encoder.SZArray();
             }
             else
             {
-                EncodeCustomElementType(fieldSymbol, encoder.ScalarType());
+                EncodeCustomElementType(type, encoder.ScalarType());
             }
+        }
+
+        private ISymbol GetMember(INamedTypeSymbol type, string member)
+        {
+            var foundMembers = type.GetMembers(member);
+            var baseType = type.BaseType;
+            while(foundMembers.Count() == 0 && baseType != null)
+            {
+                foundMembers = baseType.GetMembers(member);
+                baseType = baseType.BaseType;
+            }
+
+            Logger.Log("# members found: " + foundMembers.Count());
+            var foundMember = foundMembers.First();
+            Logger.Log("found member: " + foundMember);
+            return foundMember;
         }
 
         private void EncodeNamedArguments(
@@ -1636,9 +1647,25 @@ namespace Generator
                 Logger.Log("named argument: " + argument.Key);
                 Logger.Log("value " + argument.Value);
 
+                ITypeSymbol argumentType = null;
+                var attributeClassMember = GetMember(attributeType, argument.Key);
+                if(attributeClassMember is IFieldSymbol field)
+                {
+                    argumentType = field.Type;
+                }
+                else if(attributeClassMember is IPropertySymbol property)
+                {
+                    argumentType = property.Type;
+                }
+                else
+                {
+                    Logger.Log("unexpected member: " + attributeClassMember.Name + " " + attributeClassMember.GetType());
+                    throw new InvalidOperationException();
+                }
+
                 encoder.AddArgument(
-                    true,
-                    type => EncodeNamedArgumentType(attributeType, argument.Key, type),
+                    attributeClassMember is IFieldSymbol,
+                    type => EncodeNamedArgumentType(argumentType, type),
                     name => name.Name(argument.Key),
                     literal => EncodeTypedConstant(argument.Value, literal)
                 );
@@ -1837,8 +1864,9 @@ namespace Generator
             Logger.Log("attribute type found " + attributeType);
             if (!typeDefinitionMapping.ContainsKey(attributeTypeName))
             {
+                // Even if the attribute is an external non WinRT type, treat it as a projected type.
                 Logger.Log("adding attribute type");
-                AddType(attributeType);
+                AddType(attributeType, true);
             }
 
             Logger.Log("# constructor found: " + attributeType.Constructors.Length);
@@ -1883,7 +1911,8 @@ namespace Generator
 
                 if (!typeDefinitionMapping.ContainsKey(attributeType.ToString()))
                 {
-                    AddType(attributeType);
+                    // Even if the attribute is an external non WinRT type, treat it as a projected type.
+                    AddType(attributeType, true);
                 }
 
                 var constructorReference = typeDefinitionMapping[attributeType.ToString()].MethodReferences[attribute.AttributeConstructor];
@@ -2585,7 +2614,7 @@ namespace Generator
             return (int)version;
         }
 
-        void AddType(INamedTypeSymbol type)
+        void AddType(INamedTypeSymbol type, bool treatAsProjectedType = false)
         {
             Logger.Log("add type: " + type.ToString());
             bool isProjectedType = type.GetAttributes().
@@ -2607,6 +2636,11 @@ namespace Generator
                 {
                     AddMappedType(type);
                 }
+            }
+            else if(treatAsProjectedType)
+            {
+                // Prioritize any mapped types before treating an attribute as a projected type.
+                AddProjectedType(type);
             }
             else
             {

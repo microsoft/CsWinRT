@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -991,6 +992,7 @@ namespace AuthoringTest
         private double _number;
         private DoubleDelegate _doubleDelegate;
 
+        [Required(ErrorMessage = "Number is required")]
         public double Number { get => _number; set => _number = value; }
 
         public event DoubleDelegate DoubleDelegateEvent
