@@ -2637,7 +2637,7 @@ namespace Generator
                     AddMappedType(type);
                 }
             }
-            else if(treatAsProjectedType)
+            else if (treatAsProjectedType)
             {
                 // Prioritize any mapped types before treating an attribute as a projected type.
                 AddProjectedType(type);
