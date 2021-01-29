@@ -1,6 +1,6 @@
 # Usage
 
-The [C#/WinRT NuGet package](https://www.nuget.org/packages/Microsoft.Windows.CsWinRT/) provides tooling for the following scenarios. 
+The [C#/WinRT NuGet package](https://www.nuget.org/packages/Microsoft.Windows.CsWinRT/) provides tooling for the following scenarios. For more information on using the NuGet package, refer to the [NuGet documentation](../nuget/readme.md).
 
 ## Generate and distribute an interop assembly
 
@@ -20,7 +20,7 @@ To further customize C#/WinRT behavior, refer to the [CsWinRT NuGet documentatio
 
 ### Application Project
 
-An application project adds NuGet references to both the component interop assembly produced above and to CsWinRT to include the `WinRT.Runtime.dll` assembly. If the interop assembly is distributed as a NuGet package itself, this package will require a dependency on C#/WinRT for .NET 5 targets. If a third party WinRT component is distributed without an official interop assembly, an application project may add a reference to C#/WinRT to generate its own private component interop assembly.  There are versioning concerns related to this scenario, so the preferred solution is for the third party to publish an interop assembly directly.
+An interop assembly is typically distributed as a NuGet package for application projects to reference. This package will require a dependency on C#/WinRT to include `WinRT.Runtime.dll` for .NET 5 targets. If the interop assembly is not distributed as a NuGet package, an application project adds references to both the component interop assembly produced above and to C#/WinRT to include the `WinRT.Runtime.dll` assembly. If a third party WinRT component is distributed without an official interop assembly, an application project may add a reference to C#/WinRT to generate its own private component interop assembly.  There are versioning concerns related to this scenario, so the preferred solution is for the third party to publish an interop assembly directly.
 
 ## Author a C#/WinRT Component
 
