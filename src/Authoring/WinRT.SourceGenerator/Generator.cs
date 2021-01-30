@@ -44,8 +44,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         internal static string GetGeneratedFilesDir(GeneratorExecutionContext context)
         {
-            // TODO: determine correct location to write to.
-            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.GeneratedFilesDir", out var generatedFilesDir);
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGeneratedFilesDir", out var generatedFilesDir);
             Directory.CreateDirectory(generatedFilesDir);
             return generatedFilesDir;
         }
