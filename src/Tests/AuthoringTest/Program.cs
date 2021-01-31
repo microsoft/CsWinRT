@@ -270,6 +270,17 @@ namespace AuthoringTest
             return 2;
         }
 
+        public static int DefaultNumber { get; set; }
+
+        internal static int DefaultNumber2 { get; set; }
+
+        public static event BasicDelegate StaticDelegateEvent;
+
+        public static void FireStaticDelegate(uint value)
+        {
+            StaticDelegateEvent?.Invoke(value);
+        }
+
         // Default interface
 
         public void FireBasicDelegate(uint value)
@@ -795,6 +806,17 @@ namespace AuthoringTest
         {
             return number;
         }
+
+        public static int Number { get; set; }
+
+        internal static int Number2 { get; set; }
+
+        public static event DoubleDelegate DelegateEvent;
+
+        public static void FireDelegate(double value)
+        {
+            DelegateEvent?.Invoke(value);
+        }
     }
 
     public static class ButtonUtils
@@ -1168,4 +1190,18 @@ namespace AuthoringTest
             throw new NotImplementedException();
         }
     }
+
+/*    public sealed partial class PartialClass
+    {
+        public void function1()
+        {
+        }
+    }
+
+    public partial class PartialClass
+    {
+        public void function2()
+        {
+        }
+    }*/
 }

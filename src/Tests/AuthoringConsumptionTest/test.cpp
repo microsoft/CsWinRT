@@ -10,6 +10,32 @@ TEST(AuthoringTest, Statics)
     EXPECT_EQ(TestClass::GetDefaultNumber(), 2);
     EXPECT_EQ(StaticClass::GetNumber(), 4);
     EXPECT_EQ(StaticClass::GetNumber(2), 2);
+    EXPECT_EQ(TestClass::DefaultNumber(), 0);
+    TestClass::DefaultNumber(4);
+    EXPECT_EQ(TestClass::DefaultNumber(), 4);
+
+    int result = 0;
+    auto token = TestClass::StaticDelegateEvent(auto_revoke, [&result](uint32_t value)
+    {
+        result = value;
+    });
+    TestClass::FireStaticDelegate(1);
+    EXPECT_EQ(result, 1);
+    token.revoke();
+    TestClass::FireStaticDelegate(2);
+    EXPECT_EQ(result, 1);
+
+    EXPECT_EQ(StaticClass::Number(), 0);
+    StaticClass::Number(2);
+    EXPECT_EQ(StaticClass::Number(), 2);
+
+    double result2 = 0;
+    auto token2 = StaticClass::DelegateEvent(auto_revoke, [&result2](double value)
+    {
+        result2 = value;
+    });
+    StaticClass::FireDelegate(4.5);
+    EXPECT_EQ(result2, 4.5);
 }
 
 TEST(AuthoringTest, FunctionCalls)

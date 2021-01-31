@@ -1727,18 +1727,18 @@ MarshalInspectable<object>.DisposeAbi(ptr);
         write_method(w, signature, method.Name(), return_type, method_target, "public "sv, factory_class ? ""sv : "static "sv, platform_attribute);
     }
 
-    void write_static_property(writer& w, Property const& prop, std::string_view prop_target, std::string_view platform_attribute = ""sv)
+    void write_static_property(writer& w, Property const& prop, std::string_view prop_target, bool factory_class = false, std::string_view platform_attribute = ""sv)
     {
         auto [getter, setter] = get_property_methods(prop);
         auto getter_target = getter ? prop_target : "";
         auto setter_target = setter ? prop_target : "";
         write_property(w, prop.Name(), prop.Name(), write_prop_type(w, prop),
-            getter_target, setter_target, "public "sv, "static "sv, platform_attribute, platform_attribute);
+            getter_target, setter_target, "public "sv, factory_class ? ""sv : "static "sv, platform_attribute, platform_attribute);
     }
 
-    void write_static_event(writer& w, Event const& event, std::string_view event_target, std::string_view platform_attribute = ""sv)
+    void write_static_event(writer& w, Event const& event, std::string_view event_target, bool factory_class = false, std::string_view platform_attribute = ""sv)
     {
-        write_event(w, event.Name(), event, event_target, "public "sv, "static "sv, platform_attribute);
+        write_event(w, event.Name(), event, event_target, "public "sv, factory_class ? ""sv : "static "sv, platform_attribute);
     }
 
     void write_static_members(writer& w, TypeDef const& static_type, TypeDef const& class_type)
@@ -1746,8 +1746,8 @@ MarshalInspectable<object>.DisposeAbi(ptr);
         auto cache_object = write_static_cache_object(w, static_type.TypeName(), class_type);
         auto platform_attribute = write_platform_attribute_temp(w, static_type);
         w.write_each<write_static_method>(static_type.MethodList(), cache_object, false, platform_attribute);
-        w.write_each<write_static_property>(static_type.PropertyList(), cache_object, platform_attribute);
-        w.write_each<write_static_event>(static_type.EventList(), cache_object, platform_attribute);
+        w.write_each<write_static_property>(static_type.PropertyList(), cache_object, false, platform_attribute);
+        w.write_each<write_static_event>(static_type.EventList(), cache_object, false, platform_attribute);
     }
 
     void write_attributed_types(writer& w, TypeDef const& type)
@@ -6158,6 +6158,8 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
                 else if (factory.statics)
                 {
                     w.write_each<write_static_method>(factory.type.MethodList(), projected_type_name, true, ""sv);
+                    w.write_each<write_static_property>(factory.type.PropertyList(), projected_type_name, true, ""sv);
+                    w.write_each<write_static_event>(factory.type.EventList(), projected_type_name, true, ""sv);
                 }
             }
         }
