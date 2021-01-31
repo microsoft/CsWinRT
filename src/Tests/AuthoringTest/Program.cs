@@ -1191,7 +1191,7 @@ namespace AuthoringTest
         }
     }
 
-    public interface IInterfaceInheritance : IDouble
+    public interface IInterfaceInheritance : IDouble, IWwwFormUrlDecoderEntry
     {
         void SetNumber(double number);
     }
@@ -1200,6 +1200,10 @@ namespace AuthoringTest
     {
         private double _number;
         public double Number { get => _number; set => _number = value; }
+
+        public string Name => "IInterfaceInheritance";
+
+        public string Value => "InterfaceInheritance";
 
         public event DoubleDelegate DoubleDelegateEvent;
 

@@ -99,6 +99,8 @@ TEST(AuthoringTest, InterfaceInheritance)
     EXPECT_EQ(interfaceInheritance.GetNumStr(2.5), hstring(L"2.5"));
     interfaceInheritance.SetNumber(4);
     EXPECT_EQ(interfaceInheritance.Number(), 4);
+    EXPECT_EQ(interfaceInheritance.Name(), hstring(L"IInterfaceInheritance"));
+    EXPECT_EQ(interfaceInheritance.Value(), hstring(L"InterfaceInheritance"));
 
     IDouble doubleInterface = interfaceInheritance;
     EXPECT_EQ(doubleInterface.GetDouble(false), 2.5);
@@ -106,6 +108,10 @@ TEST(AuthoringTest, InterfaceInheritance)
     IInterfaceInheritance interfaceInheritanceInterface = interfaceInheritance;
     interfaceInheritanceInterface.SetNumber(2);
     EXPECT_EQ(interfaceInheritanceInterface.Number(), 2);
+
+    IWwwFormUrlDecoderEntry www = interfaceInheritance;
+    EXPECT_EQ(www.Name(), hstring(L"IInterfaceInheritance"));
+    EXPECT_EQ(www.Value(), hstring(L"InterfaceInheritance"));
 }
 
 TEST(AuthoringTest, ReturnTypes)
