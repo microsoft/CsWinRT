@@ -92,6 +92,22 @@ TEST(AuthoringTest, ImplementExternalInterface)
     EXPECT_EQ(www.Value(), hstring(L"CsWinRT"));
 }
 
+TEST(AuthoringTest, InterfaceInheritance)
+{
+    InterfaceInheritance interfaceInheritance;
+    EXPECT_EQ(interfaceInheritance.GetDouble(), 2);
+    EXPECT_EQ(interfaceInheritance.GetNumStr(2.5), hstring(L"2.5"));
+    interfaceInheritance.SetNumber(4);
+    EXPECT_EQ(interfaceInheritance.Number(), 4);
+
+    IDouble doubleInterface = interfaceInheritance;
+    EXPECT_EQ(doubleInterface.GetDouble(false), 2.5);
+
+    IInterfaceInheritance interfaceInheritanceInterface = interfaceInheritance;
+    interfaceInheritanceInterface.SetNumber(2);
+    EXPECT_EQ(interfaceInheritanceInterface.Number(), 2);
+}
+
 TEST(AuthoringTest, ReturnTypes)
 {
     BasicClass basicClass;

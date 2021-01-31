@@ -816,7 +816,7 @@ namespace cswinrt
 % %.%(%) => %.%(%);
 )",
             return_type,
-            bind<write_type_name>(method_interface, typedef_name_type::Projected, false),
+            bind<write_type_name>(method_interface, typedef_name_type::CCW, false),
             method.Name(),
             bind_list<write_projection_parameter>(", ", signature.params()),
             method_target,
@@ -1046,7 +1046,7 @@ namespace cswinrt
 
     std::string write_explicit_name(writer& w, TypeDef const& iface, std::string_view name)
     {
-        return w.write_temp("%.%", write_type_name_temp(w, iface), name);
+        return w.write_temp("%.%", write_type_name_temp(w, iface, "%", typedef_name_type::CCW), name);
     }
 
     std::string write_prop_type(writer& w, Property const& prop)

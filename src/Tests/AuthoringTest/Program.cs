@@ -1191,17 +1191,166 @@ namespace AuthoringTest
         }
     }
 
-/*    public sealed partial class PartialClass
+    public interface IInterfaceInheritance : IDouble
     {
-        public void function1()
+        void SetNumber(double number);
+    }
+
+    public sealed class InterfaceInheritance : IInterfaceInheritance
+    {
+        private double _number;
+        public double Number { get => _number; set => _number = value; }
+
+        public event DoubleDelegate DoubleDelegateEvent;
+
+        public double GetDouble()
         {
+            return 2;
+        }
+
+        public double GetDouble(bool ignoreFactor)
+        {
+            return 2.5;
+        }
+
+        public string GetNumStr(int num)
+        {
+            return num.ToString();
+        }
+
+        public string GetNumStr(double num)
+        {
+            return num.ToString();
+        }
+
+        public void SetNumber(double number)
+        {
+            Number = number;
         }
     }
 
-    public partial class PartialClass
-    {
-        public void function2()
+    // Windows.Foundation.Collections.IObservableVector<DisposableClass>
+    /*    public sealed class MultipleInterfaceMappingClass : IList<DisposableClass>, IList
         {
+            DisposableClass IList<DisposableClass>.this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            object IList.this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+            int ICollection<DisposableClass>.Count => throw new NotImplementedException();
+
+            int ICollection.Count => throw new NotImplementedException();
+
+            bool ICollection<DisposableClass>.IsReadOnly => throw new NotImplementedException();
+
+            bool IList.IsReadOnly => throw new NotImplementedException();
+
+            bool IList.IsFixedSize => throw new NotImplementedException();
+
+            bool ICollection.IsSynchronized => throw new NotImplementedException();
+
+            object ICollection.SyncRoot => throw new NotImplementedException();
+
+            void ICollection<DisposableClass>.Add(DisposableClass item)
+            {
+                throw new NotImplementedException();
+            }
+
+            int IList.Add(object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            void ICollection<DisposableClass>.Clear()
+            {
+                throw new NotImplementedException();
+            }
+
+            void IList.Clear()
+            {
+                throw new NotImplementedException();
+            }
+
+            bool ICollection<DisposableClass>.Contains(DisposableClass item)
+            {
+                throw new NotImplementedException();
+            }
+
+            bool IList.Contains(object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            void ICollection<DisposableClass>.CopyTo(DisposableClass[] array, int arrayIndex)
+            {
+                throw new NotImplementedException();
+            }
+
+            void ICollection.CopyTo(Array array, int index)
+            {
+                throw new NotImplementedException();
+            }
+
+            IEnumerator<DisposableClass> IEnumerable<DisposableClass>.GetEnumerator()
+            {
+                throw new NotImplementedException();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                throw new NotImplementedException();
+            }
+
+            int IList<DisposableClass>.IndexOf(DisposableClass item)
+            {
+                throw new NotImplementedException();
+            }
+
+            int IList.IndexOf(object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            void IList<DisposableClass>.Insert(int index, DisposableClass item)
+            {
+                throw new NotImplementedException();
+            }
+
+            void IList.Insert(int index, object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            bool ICollection<DisposableClass>.Remove(DisposableClass item)
+            {
+                throw new NotImplementedException();
+            }
+
+            void IList.Remove(object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            void IList<DisposableClass>.RemoveAt(int index)
+            {
+                throw new NotImplementedException();
+            }
+
+            void IList.RemoveAt(int index)
+            {
+                throw new NotImplementedException();
+            }
+        }*/
+
+    /*    public sealed partial class PartialClass
+        {
+            public void function1()
+            {
+            }
         }
-    }*/
+
+        public partial class PartialClass
+        {
+            public void function2()
+            {
+            }
+        }*/
 }

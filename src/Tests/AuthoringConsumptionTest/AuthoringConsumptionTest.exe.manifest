@@ -47,6 +47,10 @@
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass
+        name="AuthoringTest.InterfaceInheritance"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
         name="AuthoringTest.SingleInterfaceClass"
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
