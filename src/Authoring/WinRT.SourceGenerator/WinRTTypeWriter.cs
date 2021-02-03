@@ -935,6 +935,8 @@ namespace Generator
         private void ProcessCustomMappedInterfaces(INamedTypeSymbol classSymbol)
         {
             Logger.Log("writing custom mapped interfaces for " + QualifiedName(classSymbol));
+            Dictionary<INamedTypeSymbol, bool> IsPublicImplementation = new Dictionary<INamedTypeSymbol, bool>();
+
             // Mark custom mapped interface members for removal later.
             // Note we want to also mark members from interfaces without mappings.
             foreach (var implementedInterface in GetInterfaces(classSymbol, true).
@@ -942,18 +944,21 @@ namespace Generator
                                 ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
             {
                 string interfaceName = QualifiedName(implementedInterface);
+                bool isPubliclyImplemented = false;
                 Logger.Log("custom mapped interface: " + interfaceName);
                 foreach (var interfaceMember in implementedInterface.GetMembers())
                 {
                     var classMember = classSymbol.FindImplementationForInterfaceMember(interfaceMember);
                     currentTypeDeclaration.CustomMappedSymbols.Add(classMember);
+                    isPubliclyImplemented |= (classMember.DeclaredAccessibility == Accessibility.Public);
                 }
+                IsPublicImplementation[implementedInterface] = isPubliclyImplemented;
             }
 
             foreach (var implementedInterface in GetInterfaces(classSymbol)
                         .Where(symbol => MappedCSharpTypes.ContainsKey(QualifiedName(symbol))))
             {
-                WriteCustomMappedTypeMembers(implementedInterface, true);
+                WriteCustomMappedTypeMembers(implementedInterface, true, IsPublicImplementation[implementedInterface]);
             }
         }
 
@@ -975,17 +980,24 @@ namespace Generator
             return types.FirstOrDefault();
         }
 
-        private void WriteCustomMappedTypeMembers(INamedTypeSymbol symbol, bool isDefinition)
+        private void WriteCustomMappedTypeMembers(INamedTypeSymbol symbol, bool isDefinition, bool isPublic = true)
         {
-            var (_, mappedTypeName, _, _, _) = MappedCSharpTypes[QualifiedName(symbol)].GetMapping(currentTypeDeclaration.Node);
-            Logger.Log("writing custom mapped type members for " + mappedTypeName);
+            var (@namespace, mappedTypeName, _, _, _) = MappedCSharpTypes[QualifiedName(symbol)].GetMapping(currentTypeDeclaration.Node);
+            string qualifiedName = QualifiedName(@namespace, mappedTypeName);
+            if(qualifiedName.Contains("`"))
+            {
+                qualifiedName = string.Format("{0}<{1}>", qualifiedName, string.Join(", ", symbol.TypeArguments));
+            }
+
+            Logger.Log("writing custom mapped type members for " + mappedTypeName + " public: " + isPublic + " qualified name: " + qualifiedName);
             void AddMethod(string name, Parameter[] parameters, Symbol returnType)
             {
                 parameters ??= new Parameter[0];
                 if (isDefinition)
                 {
-                    var methodDefinitionHandle = AddMethodDefinition(name, parameters, returnType, false, false);
-                    currentTypeDeclaration.AddMethod(symbol, name, methodDefinitionHandle);
+                    var methodName = isPublic ? name : QualifiedName(qualifiedName, name);
+                    var methodDefinitionHandle = AddMethodDefinition(methodName, parameters, returnType, false, false, false, isPublic);
+                    currentTypeDeclaration.AddMethod(symbol, methodName, methodDefinitionHandle);
                 }
                 else
                 {
@@ -998,7 +1010,8 @@ namespace Generator
             {
                 if (isDefinition)
                 {
-                    AddPropertyDefinition(name, type, symbol, setProperty, false);
+                    var propertyName = isPublic ? name : QualifiedName(qualifiedName, name);
+                    AddPropertyDefinition(propertyName, type, symbol, setProperty, false, isPublic);
                 }
                 else
                 {
@@ -1010,7 +1023,8 @@ namespace Generator
             {
                 if (isDefinition)
                 {
-                    AddEventDeclaration(name, eventType.Type, symbol, false);
+                    var eventName = isPublic ? name : QualifiedName(qualifiedName, name);
+                    AddEventDeclaration(eventName, eventType.Type, symbol, false, isPublic);
                 }
                 else
                 {

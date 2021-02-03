@@ -200,6 +200,13 @@ namespace cswinrt
         bool authoredType = settings.component && settings.filter.includes(type);
         auto typeNamespace = type.TypeNamespace();
         auto typeName = type.TypeName();
+
+        if (nameType == typedef_name_type::NonProjected)
+        {
+            w.write("%.%", typeNamespace, typeName);
+            return;
+        }
+
         if (auto proj = get_mapped_type(typeNamespace, typeName))
         {
             typeNamespace = proj->mapped_namespace;
@@ -825,7 +832,7 @@ namespace cswinrt
         );
     }
 
-    auto method_signature_equal(MethodDef const& first, MethodDef const& second)
+    auto method_signature_equal(writer& w, MethodDef const& first, MethodDef const& second)
     {
         method_signature signature_first{ first };
         method_signature signature_second{ second };
@@ -835,37 +842,66 @@ namespace cswinrt
             return false;
         }
 
-        writer first_method_return_type, second_method_return_type;
-        write_projection_return_type(first_method_return_type, signature_first);
-        write_projection_return_type(second_method_return_type, signature_second);
-        if (first_method_return_type.flush_to_string() != second_method_return_type.flush_to_string())
+        auto first_method_return_type = w.write_temp("%", bind<write_projection_return_type>(signature_first));
+        auto second_method_return_type = w.write_temp("%", bind<write_projection_return_type>(signature_second));
+        if (first_method_return_type != second_method_return_type)
         {
             return false;
         }
 
-        writer first_method_parameters, second_method_parameters;
-        bind_list<write_projection_parameter>(", ", signature_first.params())(first_method_parameters);
-        bind_list<write_projection_parameter>(", ", signature_second.params())(second_method_parameters);
-
-        return first_method_parameters.flush_to_string() == second_method_parameters.flush_to_string();
+        auto first_method_parameters = w.write_temp("%", bind_list<write_projection_parameter>(", ", signature_first.params()));
+        auto second_method_parameters = w.write_temp("%", bind_list<write_projection_parameter>(", ", signature_second.params()));
+        return first_method_parameters == second_method_parameters;
     }
 
-    auto is_implemented_as_private_method(TypeDef const& class_type, MethodDef const& interface_method)
+    void write_non_projected_type(writer& w, TypeDef const& type)
     {
-        writer writer;
-        auto interface_method_name = writer.write_temp(
-            "%.%.%",
-            interface_method.Parent().TypeNamespace(),
-            interface_method.Parent().TypeName(),
+        writer::write_generic_type_name_guard g(w, [&](writer& w, uint32_t index)
+        {
+            write_projection_type_for_name_type(w, w.get_generic_arg_scope(index).first, typedef_name_type::NonProjected);
+        });
+
+        w.write("%", bind<write_type_name>(type, typedef_name_type::NonProjected, false));
+    }
+
+    auto is_implemented_as_private_method(writer& w, TypeDef const& class_type, MethodDef const& interface_method)
+    {
+        auto interface_method_name = w.write_temp(
+            "%.%",
+            bind<write_non_projected_type>(interface_method.Parent()),
             interface_method.Name());
         for (auto&& class_method : class_type.MethodList())
         {
             if (class_method.Flags().Access() == MemberAccess::Private &&
                 class_method.Name() == interface_method_name &&
-                method_signature_equal(class_method, interface_method))
+                method_signature_equal(w, class_method, interface_method))
             {
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    auto is_implemented_as_private_mapped_interface(writer& w, TypeDef const& class_type, TypeDef const& interface_type)
+    {
+        // Assume as long as one member of the custom mapped interface is implemented as a private member,
+        // that the entire interface is implemented as an explicit implementation.
+        if (size(interface_type.MethodList()) != 0)
+        {
+            return is_implemented_as_private_method(w, class_type, interface_type.MethodList().first);
+        }
+
+        if (size(interface_type.PropertyList()) != 0)
+        {
+            auto [getter, _] = get_property_methods(interface_type.PropertyList().first);
+            return is_implemented_as_private_method(w, class_type, getter);
+        }
+
+        if (size(interface_type.EventList()) != 0)
+        {
+            auto [add, _] = get_event_methods(interface_type.EventList().first);
+            return is_implemented_as_private_method(w, class_type, add);
         }
 
         return false;
@@ -917,7 +953,7 @@ namespace cswinrt
             }
         }
 
-        bool is_private = is_implemented_as_private_method(class_type, method);
+        bool is_private = is_implemented_as_private_method(w, class_type, method);
         if (!is_private)
         {
             write_method(w, signature, method.Name(), return_type, interface_member, access_spec, method_spec, platform_attribute);
@@ -1114,7 +1150,7 @@ remove => %.% -= value;
         }
 
         auto [add, _] = get_event_methods(event);
-        bool is_private = is_implemented_as_private_method(class_type, add);
+        bool is_private = is_implemented_as_private_method(w, class_type, add);
         if (!is_private)
         {
             write_event(w, event.Name(), event, interface_member, visibility, ""sv, platform_attribute);
@@ -1827,9 +1863,19 @@ IEnumerator IEnumerable.GetEnumerator() => %.GetEnumerator();
             visibility, element, self,  target);
 
         if (!include_nongeneric) return;
-        w.write(R"(
+
+        if (emit_explicit)
+        {
+            w.write(R"(
+IEnumerator IEnumerable.GetEnumerator() => %.GetEnumerator();
+)", target);
+        }
+        else
+        {
+            w.write(R"(
 IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 )");
+        }
     }
 
     void write_enumerator_members(writer& w, std::string_view target, bool emit_explicit)
@@ -2086,31 +2132,31 @@ bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors {get => HasErr
 )", target, target, target, target);
     }
 
-    void write_custom_mapped_type_members(writer& w, std::string_view target, mapped_type const& mapping)
+    void write_custom_mapped_type_members(writer& w, std::string_view target, mapped_type const& mapping, bool is_private)
     {
         if (mapping.abi_name == "IIterable`1") 
         {
-            write_enumerable_members(w, target, true, false);
+            write_enumerable_members(w, target, true, is_private);
         }
         else if (mapping.abi_name == "IIterator`1") 
         {
-            write_enumerator_members(w, target, false);
+            write_enumerator_members(w, target, is_private);
         }
         else if (mapping.abi_name == "IMapView`2") 
         {
-            write_readonlydictionary_members(w, target, false, false);
+            write_readonlydictionary_members(w, target, false, is_private);
         }
         else if (mapping.abi_name == "IMap`2") 
         {
-            write_dictionary_members(w, target, false, false);
+            write_dictionary_members(w, target, false, is_private);
         }
         else if (mapping.abi_name == "IVectorView`1")
         {
-            write_readonlylist_members(w, target, false, false);
+            write_readonlylist_members(w, target, false, is_private);
         }
         else if (mapping.abi_name == "IVector`1")
         {
-            write_list_members(w, target, false, false);
+            write_list_members(w, target, false, is_private);
         }
         else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IEnumerable")
         {
@@ -2118,11 +2164,11 @@ bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors {get => HasErr
         }
         else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IList")
         {
-            write_nongeneric_list_members(w, target, false, false);
+            write_nongeneric_list_members(w, target, false, is_private);
         }
         else if (mapping.mapped_namespace == "System" && mapping.mapped_name == "IDisposable")
         {
-            write_idisposable_members(w, target, false);
+            write_idisposable_members(w, target, is_private);
         }
         else if (mapping.mapped_namespace == "System.ComponentModel" && mapping.mapped_name == "INotifyDataErrorInfo")
         {
@@ -2225,7 +2271,8 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
 
                 if(auto mapping = get_mapped_type(interface_type.TypeNamespace(), interface_type.TypeName()); mapping && mapping->has_custom_members_output)
                 {
-                    write_custom_mapped_type_members(w, target, *mapping);
+                    bool is_private = is_implemented_as_private_mapped_interface(w, type, interface_type);
+                    write_custom_mapped_type_members(w, target, *mapping, is_private);
                     return;
                 }
 
@@ -2242,7 +2289,7 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
                     MethodDef getter, setter;
                     std::tie(getter, setter) = get_property_methods(prop);
                     auto prop_type = write_prop_type(w, prop);
-                    auto is_private = getter && is_implemented_as_private_method(type, getter);  // for explicitly implemented interfaces, assume there is always a get.
+                    auto is_private = getter && is_implemented_as_private_method(w, type, getter);  // for explicitly implemented interfaces, assume there is always a get.
                     auto property_name = is_private ? w.write_temp("%.%", interface_name, prop.Name()) : std::string(prop.Name());
                     auto [prop_targets, inserted]  = properties.try_emplace(property_name,
                         prop_type,

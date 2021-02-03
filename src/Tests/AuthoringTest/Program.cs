@@ -1233,128 +1233,115 @@ namespace AuthoringTest
         }
     }
 
-    // Windows.Foundation.Collections.IObservableVector<DisposableClass>
-    /*    public sealed class MultipleInterfaceMappingClass : IList<DisposableClass>, IList
+    public sealed class MultipleInterfaceMappingClass : IList<DisposableClass>, IList
+    {
+        private List<DisposableClass> _list = new List<DisposableClass>();
+
+        DisposableClass IList<DisposableClass>.this[int index] { get => _list[index]; set => _list[index] = value; }
+        object IList.this[int index] { get => _list[index]; set => ((IList)_list) [index] = value; }
+
+        int ICollection<DisposableClass>.Count => _list.Count;
+
+        int ICollection.Count => _list.Count;
+
+        bool ICollection<DisposableClass>.IsReadOnly => true;
+
+        bool IList.IsReadOnly => true;
+
+        bool IList.IsFixedSize => false;
+
+        bool ICollection.IsSynchronized => true;
+
+        object ICollection.SyncRoot => ((ICollection) _list).SyncRoot;
+
+        void ICollection<DisposableClass>.Add(DisposableClass item)
         {
-            DisposableClass IList<DisposableClass>.this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            object IList.this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-            int ICollection<DisposableClass>.Count => throw new NotImplementedException();
-
-            int ICollection.Count => throw new NotImplementedException();
-
-            bool ICollection<DisposableClass>.IsReadOnly => throw new NotImplementedException();
-
-            bool IList.IsReadOnly => throw new NotImplementedException();
-
-            bool IList.IsFixedSize => throw new NotImplementedException();
-
-            bool ICollection.IsSynchronized => throw new NotImplementedException();
-
-            object ICollection.SyncRoot => throw new NotImplementedException();
-
-            void ICollection<DisposableClass>.Add(DisposableClass item)
-            {
-                throw new NotImplementedException();
-            }
-
-            int IList.Add(object value)
-            {
-                throw new NotImplementedException();
-            }
-
-            void ICollection<DisposableClass>.Clear()
-            {
-                throw new NotImplementedException();
-            }
-
-            void IList.Clear()
-            {
-                throw new NotImplementedException();
-            }
-
-            bool ICollection<DisposableClass>.Contains(DisposableClass item)
-            {
-                throw new NotImplementedException();
-            }
-
-            bool IList.Contains(object value)
-            {
-                throw new NotImplementedException();
-            }
-
-            void ICollection<DisposableClass>.CopyTo(DisposableClass[] array, int arrayIndex)
-            {
-                throw new NotImplementedException();
-            }
-
-            void ICollection.CopyTo(Array array, int index)
-            {
-                throw new NotImplementedException();
-            }
-
-            IEnumerator<DisposableClass> IEnumerable<DisposableClass>.GetEnumerator()
-            {
-                throw new NotImplementedException();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                throw new NotImplementedException();
-            }
-
-            int IList<DisposableClass>.IndexOf(DisposableClass item)
-            {
-                throw new NotImplementedException();
-            }
-
-            int IList.IndexOf(object value)
-            {
-                throw new NotImplementedException();
-            }
-
-            void IList<DisposableClass>.Insert(int index, DisposableClass item)
-            {
-                throw new NotImplementedException();
-            }
-
-            void IList.Insert(int index, object value)
-            {
-                throw new NotImplementedException();
-            }
-
-            bool ICollection<DisposableClass>.Remove(DisposableClass item)
-            {
-                throw new NotImplementedException();
-            }
-
-            void IList.Remove(object value)
-            {
-                throw new NotImplementedException();
-            }
-
-            void IList<DisposableClass>.RemoveAt(int index)
-            {
-                throw new NotImplementedException();
-            }
-
-            void IList.RemoveAt(int index)
-            {
-                throw new NotImplementedException();
-            }
-        }*/
-
-    /*    public sealed partial class PartialClass
-        {
-            public void function1()
-            {
-            }
+            _list.Add(item);
         }
 
-        public partial class PartialClass
+        int IList.Add(object value)
         {
-            public void function2()
-            {
-            }
-        }*/
+            return ((IList) _list).Add(value);
+        }
+
+        void ICollection<DisposableClass>.Clear()
+        {
+            _list.Clear();
+        }
+
+        void IList.Clear()
+        {
+            _list.Clear();
+        }
+
+        bool ICollection<DisposableClass>.Contains(DisposableClass item)
+        {
+            return _list.Contains(item);
+        }
+
+        bool IList.Contains(object value)
+        {
+            return ((IList) _list).Contains(value);
+        }
+
+        void ICollection<DisposableClass>.CopyTo(DisposableClass[] array, int arrayIndex)
+        {
+            _list.CopyTo(array, arrayIndex);
+        }
+
+        void ICollection.CopyTo(Array array, int index)
+        {
+             ((ICollection) _list).CopyTo(array, index);
+        }
+
+        IEnumerator<DisposableClass> IEnumerable<DisposableClass>.GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
+        int IList<DisposableClass>.IndexOf(DisposableClass item)
+        {
+            return _list.IndexOf(item);
+        }
+
+        int IList.IndexOf(object value)
+        {
+            return ((IList) _list).IndexOf(value);
+        }
+
+        void IList<DisposableClass>.Insert(int index, DisposableClass item)
+        {
+            _list.Insert(index, item);
+        }
+
+        void IList.Insert(int index, object value)
+        {
+            ((IList) _list).Insert(index, value);
+        }
+
+        bool ICollection<DisposableClass>.Remove(DisposableClass item)
+        {
+            return _list.Remove(item);
+        }
+
+        void IList.Remove(object value)
+        {
+            ((IList) _list).Remove(value);
+        }
+
+        void IList<DisposableClass>.RemoveAt(int index)
+        {
+            _list.RemoveAt(index);
+        }
+
+        void IList.RemoveAt(int index)
+        {
+            _list.RemoveAt(index);
+        }
+    }
 }
