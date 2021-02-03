@@ -3,7 +3,6 @@
     <PropertyGroup>
         <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
         <Platforms>x64</Platforms>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
     </PropertyGroup>
 
     <!-- CsWinRT properties -->
@@ -11,7 +10,6 @@
         <CsWinRTComponent>true</CsWinRTComponent>
         <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
         <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
-        <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
     </PropertyGroup>
     
     <ItemGroup>
@@ -24,10 +22,6 @@
         <Version>1.0.0</Version>
         <PackageOutputPath>.\nuget</PackageOutputPath>
     </PropertyGroup>
-    
-    <ItemGroup>
-        <Content Include="AuthoringDemo.targets" PackagePath="build;buildTransitive" />
-    </ItemGroup>
     
     <ItemGroup>
       <Folder Include="nuget\" />
