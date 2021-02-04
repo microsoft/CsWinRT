@@ -2125,26 +2125,24 @@ IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
             visibility, self, target);
     }
 
-    void write_notify_data_error_info_members(writer& w, std::string_view target)
+    void write_notify_data_error_info_members(writer& w, std::string_view target, bool emit_explicit)
     {
-        w.write(R"(
-public global::System.Collections.IEnumerable GetErrors(string propertyName) => %.GetErrors(propertyName);
+        auto self = emit_explicit ? "global::System.ComponentModel.INotifyDataErrorInfo." : "";
+        auto visibility = emit_explicit ? "" : "public ";
 
-global::System.Collections.IEnumerable global::System.ComponentModel.INotifyDataErrorInfo.GetErrors(string propertyName) => GetErrors(propertyName);
-public event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> ErrorsChanged
+        w.write(R"(
+%global::System.Collections.IEnumerable %GetErrors(string propertyName) => %.GetErrors(propertyName);
+
+%event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> %ErrorsChanged
 {
 add => %.ErrorsChanged += value;
 remove => %.ErrorsChanged -= value;
 }
-
-event global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> global::System.ComponentModel.INotifyDataErrorInfo.ErrorsChanged
-{
-add => this.ErrorsChanged += value;
-remove => this.ErrorsChanged -= value;
-}
-public bool HasErrors => %.HasErrors;
-bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors {get => HasErrors; }
-)", target, target, target, target);
+%bool %HasErrors {get => %.HasErrors; }
+)", 
+    visibility, self, target,
+    visibility, self, target, target,
+    visibility, self, target);
     }
 
     void write_custom_mapped_type_members(writer& w, std::string_view target, mapped_type const& mapping, bool is_private)
@@ -2187,7 +2185,7 @@ bool global::System.ComponentModel.INotifyDataErrorInfo.HasErrors {get => HasErr
         }
         else if (mapping.mapped_namespace == "System.ComponentModel" && mapping.mapped_name == "INotifyDataErrorInfo")
         {
-            write_notify_data_error_info_members(w, target);
+            write_notify_data_error_info_members(w, target, is_private);
         }
     }
 

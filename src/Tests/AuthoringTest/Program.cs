@@ -975,6 +975,29 @@ namespace AuthoringTest
         }
     }
 
+    public sealed class CustomNotifyDataErrorInfo2 : INotifyDataErrorInfo
+    {
+        bool INotifyDataErrorInfo.HasErrors => throw new NotImplementedException();
+
+        event EventHandler<DataErrorsChangedEventArgs> INotifyDataErrorInfo.ErrorsChanged
+        {
+            add
+            {
+                throw new NotImplementedException();
+            }
+
+            remove
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        IEnumerable INotifyDataErrorInfo.GetErrors(string propertyName)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public sealed class CustomEnumerable : IEnumerable
     {
         private IEnumerable _enumerable;
