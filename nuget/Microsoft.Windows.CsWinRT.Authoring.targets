@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-      <HostingSupport-NativeDir>$(MSBuildThisFileDirectory)..\lib\native</HostingSupport-NativeDir>
-      <HostingSupport-MetadataDir>$(MSBuildThisFileDirectory)..\winmd</HostingSupport-MetadataDir>
+      <HostingSupport-NativeDir>$(MSBuildThisFileDirectory)..\lib\net5.0*</HostingSupport-NativeDir>
+      <HostingSupport-MetadataDir>$(HostingSupport-NativeDir)\winmd</HostingSupport-MetadataDir>
       <HostingSupport-RuntimesDir>$(MSBuildThisFileDirectory)..\runtimes</HostingSupport-RuntimesDir>
       <HostingSupport-IsNative  Condition="'$(TargetFramework)' == 'native' OR '$(TargetFramework)' == ''">true</HostingSupport-IsNative>
       <HostingSupport-IsArmArch Condition="'$(Platform)' == 'arm' OR '$(Platform)' == 'arm64'">true</HostingSupport-IsArmArch>
@@ -19,7 +19,10 @@
   <Target Name="CsWinRTAddAuthoredWinMDReference" Condition="'$(HostingSupport-IsNative)' == 'true'" Outputs="@(Reference)">
     
     <ItemGroup Label="Add the WinMD file as a reference of the native app"> 
-      <Reference Include="$(HostingSupport-MetadataDir)\*" />
+      <Reference Include="$(HostingSupport-MetadataDir)\*.winmd">
+        <IsWinMDFile>true</IsWinMDFile>
+        <Implementation>WinRT.Host.dll</Implementation>
+      </Reference>
     </ItemGroup>
 
   </Target>
@@ -28,7 +31,7 @@
   <Target Name="CsWinRTCopyAuthoringDlls" Condition="'$(HostingSupport-IsNative)' == 'true'" Outputs="@(ReferenceCopyLocalPaths)">
     
     <ItemGroup Label="Copy Dlls needed for hosting/using authored components">
-      <ReferenceCopyLocalPaths Include="$(HostingSupport-NativeDir)\*" />
+      <ReferenceCopyLocalPaths Include="$(HostingSupport-NativeDir)\*.dll" />
     </ItemGroup>
 
     <ItemGroup Label="Copy the WinRT.Host dll, based on architecture">
