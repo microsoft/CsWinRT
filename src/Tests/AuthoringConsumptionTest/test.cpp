@@ -570,4 +570,21 @@ TEST(AuthoringTest, ExplicitInterfaces)
     {
         EXPECT_TRUE(obj.IsDisposed());
     }
+
+    CustomDictionary2 dictionary;
+
+    EXPECT_FALSE(dictionary.Insert(L"first", 1));
+    EXPECT_FALSE(dictionary.Insert(L"second", 2));
+    EXPECT_TRUE(dictionary.Insert(L"second", 4));
+    EXPECT_FALSE(dictionary.Insert(L"third", 4));
+    EXPECT_EQ(dictionary.Size(), 3);
+
+    EXPECT_TRUE(dictionary.HasKey(L"first"));
+    EXPECT_FALSE(dictionary.HasKey(L"fourth"));
+    EXPECT_TRUE(dictionary.HasKey(L"third"));
+
+    dictionary.Clear();
+    EXPECT_FALSE(dictionary.HasKey(L"first"));
+    EXPECT_FALSE(dictionary.HasKey(L"fourth"));
+    EXPECT_FALSE(dictionary.HasKey(L"third"));
 }

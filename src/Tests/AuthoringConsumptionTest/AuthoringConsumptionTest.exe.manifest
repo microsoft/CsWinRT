@@ -15,6 +15,10 @@
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass
+        name="AuthoringTest.CustomDictionary2"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />    
+    <activatableClass
         name="AuthoringTest.CustomReadOnlyDictionary"
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />

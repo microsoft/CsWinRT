@@ -1344,4 +1344,74 @@ namespace AuthoringTest
             _list.RemoveAt(index);
         }
     }
+
+    public sealed class CustomDictionary2 : IDictionary<string, int>
+    {
+        private readonly Dictionary<string, int> _dictionary = new Dictionary<string, int>();
+
+        int IDictionary<string, int>.this[string key] { get => _dictionary[key]; set => _dictionary[key] = value; }
+
+        ICollection<string> IDictionary<string, int>.Keys => _dictionary.Keys;
+
+        ICollection<int> IDictionary<string, int>.Values => _dictionary.Values;
+
+        int ICollection<KeyValuePair<string, int>>.Count => _dictionary.Count;
+
+        bool ICollection<KeyValuePair<string, int>>.IsReadOnly => false;
+
+        void IDictionary<string, int>.Add(string key, int value)
+        {
+            _dictionary.Add(key, value);
+        }
+
+        void ICollection<KeyValuePair<string, int>>.Add(KeyValuePair<string, int> item)
+        {
+            ((ICollection<KeyValuePair<string, int>>) _dictionary).Add(item);
+        }
+
+        void ICollection<KeyValuePair<string, int>>.Clear()
+        {
+            _dictionary.Clear();
+        }
+
+        bool ICollection<KeyValuePair<string, int>>.Contains(KeyValuePair<string, int> item)
+        {
+            return _dictionary.Contains(item);
+        }
+
+        bool IDictionary<string, int>.ContainsKey(string key)
+        {
+            return _dictionary.ContainsKey(key);
+        }
+
+        void ICollection<KeyValuePair<string, int>>.CopyTo(KeyValuePair<string, int>[] array, int arrayIndex)
+        {
+            ((ICollection<KeyValuePair<string, int>>) _dictionary).CopyTo(array, arrayIndex);
+        }
+
+        IEnumerator<KeyValuePair<string, int>> IEnumerable<KeyValuePair<string, int>>.GetEnumerator()
+        {
+            return _dictionary.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _dictionary.GetEnumerator();
+        }
+
+        bool IDictionary<string, int>.Remove(string key)
+        {
+            return _dictionary.Remove(key);
+        }
+
+        bool ICollection<KeyValuePair<string, int>>.Remove(KeyValuePair<string, int> item)
+        {
+            return ((ICollection<KeyValuePair<string, int>>) _dictionary).Remove(item);
+        }
+
+        bool IDictionary<string, int>.TryGetValue(string key, out int value)
+        {
+            return _dictionary.TryGetValue(key, out value);
+        }
+    }
 }
