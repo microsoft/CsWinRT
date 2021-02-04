@@ -935,7 +935,7 @@ namespace Generator
         private void ProcessCustomMappedInterfaces(INamedTypeSymbol classSymbol)
         {
             Logger.Log("writing custom mapped interfaces for " + QualifiedName(classSymbol));
-            Dictionary<INamedTypeSymbol, bool> IsPublicImplementation = new Dictionary<INamedTypeSymbol, bool>();
+            Dictionary<INamedTypeSymbol, bool> isPublicImplementation = new Dictionary<INamedTypeSymbol, bool>();
 
             // Mark custom mapped interface members for removal later.
             // Note we want to also mark members from interfaces without mappings.
@@ -951,13 +951,13 @@ namespace Generator
                     currentTypeDeclaration.CustomMappedSymbols.Add(classMember);
                     isPubliclyImplemented |= (classMember.DeclaredAccessibility == Accessibility.Public);
                 }
-                IsPublicImplementation[implementedInterface] = isPubliclyImplemented;
+                isPublicImplementation[implementedInterface] = isPubliclyImplemented;
             }
 
             foreach (var implementedInterface in GetInterfaces(classSymbol)
                         .Where(symbol => MappedCSharpTypes.ContainsKey(QualifiedName(symbol))))
             {
-                WriteCustomMappedTypeMembers(implementedInterface, true, IsPublicImplementation[implementedInterface]);
+                WriteCustomMappedTypeMembers(implementedInterface, true, isPublicImplementation[implementedInterface]);
             }
         }
 
