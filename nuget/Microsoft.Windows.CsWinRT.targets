@@ -119,7 +119,7 @@ $(CsWinRTFilters)
     <CompilerVisibleProperty Include="AssemblyVersion" />
     <CompilerVisibleProperty Include="CsWinRTComponent" />
     <CompilerVisibleProperty Include="CsWinRTEnableLogging" />
-    <CompilerVisibleProperty Include="GeneratedFilesDir" />
+    <CompilerVisibleProperty Include="CsWinRTGeneratedFilesDir" />
     <CompilerVisibleProperty Include="CsWinRTExe" />
     <CompilerVisibleProperty Include="CsWinRTKeepGeneratedSources" />
     <CompilerVisibleProperty Include="CsWinRTWindowsMetadata" />
@@ -128,7 +128,7 @@ $(CsWinRTFilters)
   </ItemGroup>
 
   <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
-  <Target Name="CsWinRTSetAuthoringWinMDs" BeforeTargets="GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore" DependsOnTargets="CsWinRTRemoveWinMDReferences" Condition="$(CsWinRTEnabled)">
+  <Target Name="CsWinRTSetAuthoringWinMDs" BeforeTargets="GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore" DependsOnTargets="CsWinRTRemoveWinMDReferences;GetAssemblyVersion;CsWinRTPrepareProjection" Condition="$(CsWinRTEnabled) And '$(CsWinRTComponent)' == 'true'">
     <PropertyGroup>
       <CsWinRTAuthoringInputs>$(CsWinRTAuthoringInputs) @(CsWinRTInputs->'"%(FullPath)"', ' ') @(CsWinRTAuthoringWinMDs->'"%(FullPath)"', ' ')</CsWinRTAuthoringInputs>
     </PropertyGroup>
