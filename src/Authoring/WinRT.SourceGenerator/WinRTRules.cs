@@ -36,7 +36,7 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor NamespacesDifferByCase = MakeRule(
             "CsWinRT1002",
             "Namespace names cannot differ only by case",
-            "Multiple namespaces found with the name '{0}'; namespace names cannot differ only by case in the Windows Runtime.");
+            "Multiple namespaces found with the name '{0}'; namespace names cannot differ only by case in the Windows Runtime");
 
         public static DiagnosticDescriptor NoPublicTypesRule = MakeRule(
             "CsWinRT1003",
@@ -79,7 +79,7 @@ namespace WinRT.SourceGenerator
             "CsWinRT1010",
             "Parameter Named Value Rule",
             "The parameter name {1} in method {0} is the same as the return value parameter name "
-            + "used in the generated C#/WinRT interop; use a different parameter name.");
+            + "used in the generated C#/WinRT interop; use a different parameter name");
 
         public static DiagnosticDescriptor StructHasPrivateFieldRule = MakeRule(
             "CsWinRT1011",
@@ -100,7 +100,7 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor OperatorOverloadedRule = MakeRule(
             "CsWinRT1014",
             "Operator overload exposed",
-            "{0} is an operator overload. Managed types cannot expose operator overloads in the Windows Runtime");
+            "{0} is an operator overload, managed types cannot expose operator overloads in the Windows Runtime");
 
         public static DiagnosticDescriptor MultipleDefaultOverloadAttribute = MakeRule(
             "CsWinRT1015",
@@ -112,7 +112,7 @@ namespace WinRT.SourceGenerator
             "CsWinRT1016",
             "Multiple overloads seen, one needs a default", // todo better msg
             "In class {2}: The {0}-parameter overloads of {1} must have exactly one method specified as the default " 
-            + "overload by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute.");
+            + "overload by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute");
 
         public static DiagnosticDescriptor JaggedArrayRule = MakeRule(
             "CsWinRT1017",
@@ -128,7 +128,7 @@ namespace WinRT.SourceGenerator
             "CsWinRT1019",
             "Array signature found with System.Array instance, which is not a valid WinRT type",
             "In type {0}: the method {1} has signature that contains a System.Array instance; SystemArray is not "
-            + "a valid Windows Runtime type. Try using a different type like IList");
+            + "a valid Windows Runtime type - try using a different type like IList");
 
         public static DiagnosticDescriptor RefParameterFound = MakeRule(
            "CsWinRT1020",
