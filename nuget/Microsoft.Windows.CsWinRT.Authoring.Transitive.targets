@@ -1,0 +1,47 @@
+<Project ToolsVersion="15.0" xmln="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <!-- Add the hosting dlls to references so they get binplaced -->
+    <ResolveReferencesDependsOn>CsWinRTCopyAuthoringDlls;$(ResolveReferencesDependsOn)</ResolveReferencesDependsOn>
+    <!-- Add authored component's winmd to references before C++/WinRT runs -->
+    <BuildDependsOn>CsWinRTAddAuthoredWinMDReference;$(BuildDependsOn)</BuildDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+      <HostingSupport-Net5Dir>$(MSBuildThisFileDirectory)..\lib\net5.0*</HostingSupport-Net5Dir>
+      <HostingSupport-MetadataDir>$(HostingSupport-Net5Dir)\winmd</HostingSupport-MetadataDir>
+      <HostingSupport-RuntimesDir>$(MSBuildThisFileDirectory)..\runtimes</HostingSupport-RuntimesDir>
+      <HostingSupport-IsNative  Condition="'$(TargetFramework)' == 'native' OR '$(TargetFramework)' == ''">true</HostingSupport-IsNative>
+      <HostingSupport-IsArmArch Condition="'$(Platform)' == 'arm' OR '$(Platform)' == 'arm64'">true</HostingSupport-IsArmArch>
+  </PropertyGroup> 
+
+  <!-- Happens before building, so C++/WinRT can make the corresponding header files -->
+  <Target Name="CsWinRTAddAuthoredWinMDReference" Condition="'$(HostingSupport-IsNative)' == 'true'" Outputs="@(Reference)">
+    
+    <ItemGroup Label="Add the WinMD file as a reference of the native app"> 
+      <Reference Include="$(HostingSupport-MetadataDir)\*.winmd">
+        <IsWinMDFile>true</IsWinMDFile>
+        <Implementation>WinRT.Host.dll</Implementation>
+      </Reference>
+    </ItemGroup>
+
+  </Target>
+
+  <!-- Happens when resolving references, so the app can be hosted -->
+  <Target Name="CsWinRTCopyAuthoringDlls" Condition="'$(HostingSupport-IsNative)' == 'true'" Outputs="@(ReferenceCopyLocalPaths)">
+    
+    <ItemGroup Label="Copy Dlls needed for hosting/using authored components">
+      <ReferenceCopyLocalPaths Include="$(HostingSupport-Net5Dir)\*.dll" />
+    </ItemGroup>
+
+    <ItemGroup Label="Copy the WinRT.Host dll, based on architecture">
+      <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\win-$(Platform)\native\WinRT.Host.dll"
+                               Condition="'$(Platform)' == 'x64' OR '$(Platform)' == 'x86' OR '$(HostingSupport-IsArmArch)' == 'true'" />
+
+      <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\win-x86\native\WinRT.Host.dll" 
+                               Condition="'$(Platform)' == 'Win32'"/> 
+    </ItemGroup> 
+
+  </Target>
+
+</Project>
