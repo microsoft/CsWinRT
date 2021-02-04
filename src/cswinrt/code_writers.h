@@ -159,6 +159,11 @@ namespace cswinrt
         w.write(to_csharp_type(type));
     }
 
+    void write_fundamental_non_projected_type(writer& w, fundamental_type type)
+    {
+        w.write(to_dotnet_type(type));
+    }
+
     void write_projection_type(writer& w, type_semantics const& semantics);
     void write_projection_type_for_name_type(writer& w, type_semantics const& semantics, typedef_name_type const& nameType);
 
@@ -320,7 +325,17 @@ namespace cswinrt
                     bind_list<write_projection_type_for_name_type>(", ", type.generic_args, nameType));
             },
             [&](generic_type_param const& param) { w.write(param.Name()); },
-            [&](fundamental_type const& type) { write_fundamental_type(w, type); });
+            [&](fundamental_type const& type)
+            { 
+                if (nameType == typedef_name_type::NonProjected)
+                {
+                    write_fundamental_non_projected_type(w, type);
+                }
+                else
+                {
+                    write_fundamental_type(w, type);
+                }
+            });
     }
 
     void write_projection_type(writer& w, type_semantics const& semantics)
