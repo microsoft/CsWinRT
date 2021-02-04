@@ -27,7 +27,7 @@ The library you are authoring should specify the following properties in its pro
 
 ``` csproj
 <PropertyGroup>
-  <!-- update the Windows API version to reflect your TargetFramework -->
+  <!-- Choose your TargetFramework for the desired Windows SDK projection -->
   <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
   <CsWinRTComponent>true</CsWinRTComponent>
   <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
@@ -37,7 +37,7 @@ The library you are authoring should specify the following properties in its pro
 And don't forget to include a `PackageReference` to `Microsoft.Windows.CsWinRT`!
 
 ## Generate a NuGet package for the component
-You can add the following property to the library project file to automatically generate a NuGet package.
+To generate a NuGet package for the component, you can simply right click on the project and select **Pack**. Alternatively, you can add the following property to the library project file to automatically generate a NuGet package on build.
 
 ``` csproj
 <PropertyGroup>
@@ -57,7 +57,8 @@ You can add the following property to the library project file to automatically 
   <!-- Note: you must rename the CsWinRt.Authoring.Targets as follows -->
   <file src="C:\Path\To\CsWinRT\NugetDir\buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets"   
         target="buildTransitive\MyAuthoredComponent.targets" />
-   
+        
+  <!-- buildTransitive is for consumers using packagereference, build is for consumers using packages.config --> 
   <file src="C:\Path\To\CsWinRT\NugetDir\build\Microsoft.Windows.CsWinRT.Authoring.targets"       
         target="build\MyAuthoredComponent.targets" />
    
