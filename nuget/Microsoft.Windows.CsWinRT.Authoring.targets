@@ -5,22 +5,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <!-- Copy Authored winmd to output folder -->
-  <Target Name="CsWinRTPlaceWinMDInOutputFolder" Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="GetTargetPath">
-    <Copy SourceFiles="$(CsWinRTGeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
-  </Target>
-
  <!-- This target updates the output of the component to include its DLL and its WinMD 
        We need this for C++ consumers to build, as C++/WinRT pulls in WinMDs from project references via the output 
        But dotnet throws a compile-time error when a project reference has a WinMD as output.
-       So we either need to ask C++ consumers to manually add a reference to the WinMD made by the authored component
-          or we ask dotnet to change the error (1130) to a warning -->
+       So we ask C++ referencing apps to modify their vcxproj, specifying <TargetRuntime>Native</TargetRuntime> -->  
   <Target Name="CsWinRTAddWinMDReferenceInProjectReference" 
-          Condition="'$(CsWinRTComponent)' == 'true'" 
+          Condition="'$(CsWinRTComponent)' == 'true' AND '$(TargetRuntime)' == 'Native'" 
           BeforeTargets="GetTargetPath"
           Outputs="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup>
-      <!-- <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)\*.winmd" /> -->
+      <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)\*.winmd" />
     </ItemGroup>
   </Target>
 
