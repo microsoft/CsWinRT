@@ -1,4 +1,6 @@
-<Project ToolsVersion="15.0" xmln="http://schemas.microsoft.com/developer/msbuild/2003">
+<!-- This file was produced from C#/WinRT, a Microsoft product. -->
+
+<Project ToolsVersion="14.0" xmln="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
     <!-- Add the hosting dlls to references so they get binplaced -->

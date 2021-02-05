@@ -5,7 +5,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
- <!-- This target updates the output of the component to include its DLL and its WinMD 
+  <!-- This target updates the output of the component to include its DLL and its WinMD 
        We need this for C++ consumers to build, as C++/WinRT pulls in WinMDs from project references via the output 
        But dotnet throws a compile-time error when a project reference has a WinMD as output.
        So we ask C++ referencing apps to modify their vcxproj, specifying <TargetRuntime>Native</TargetRuntime> -->  
@@ -18,7 +18,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </ItemGroup>
   </Target>
 
-  <Target Name="GetCopyToOutputDirectoryItems" Condition="'$(CsWinRTComponent)' == 'true'" Outputs="@(Content)">
+  <Target Name="CsWinRTGetCopyToOutputDirectoryItems" 
+          Condition="'$(CsWinRTComponent)' == 'true'" 
+          BeforeTargets="GetCopyToOutputDirectoryItems"  
+          Outputs="@(Content)">
     <PropertyGroup>
       <CsWinRTHosting-Platform Condition="'$(Platform)' == 'Win32'">x86</CsWinRTHosting-Platform>
       <CsWinRTHosting-Platform Condition="'$(Platform)' != 'Win32'">$(Platform)</CsWinRTHosting-Platform>
@@ -26,24 +29,24 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- We will use this item group later, if the author makes a NuGet package -->
     <ItemGroup>
       <CsWinRTAuthoringDependencyDlls Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" 
-                                      Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" 
+                                      Condition="Exists('$(TargetDir)WinRT.Host.Shim.dll')"
                                       TargetPath="WinRT.Host.Shim.dll" />
 
       <CsWinRTAuthoringDependencyDlls Include="$(TargetDir)WinRT.Runtime.dll" 
-                                      Condition="Exists('$(TargetDir)WinRT.Runtime.dll')" 
+                                      Condition="Exists('$(TargetDir)WinRT.Runtime.dll')"
                                       TargetPath="WinRT.Runtime.dll" />
 
       <CsWinRTAuthoringDependencyDlls Include="$(TargetDir)Microsoft.Windows.SDK.NET.dll" 
-                                      Condition="Exists('$(TargetDir)Microsoft.Windows.SDK.NET.dll')" 
+                                      Condition="Exists('$(TargetDir)Microsoft.Windows.SDK.NET.dll')"
                                       TargetPath="Microsoft.Windows.SDK.NET.dll" />
+
+      <CsWinRTAuthoringDependencyDlls Include="$(CsWinRTPath)runtimes\win-$(CsWinRTHosting-Platform)\native\WinRT.Host.dll" 
+                                      Condition="Exists('$(CsWinRTPath)runtimes\win-$(CsWinRTHosting-Platform)\native\WinRT.Host.dll')"
+                                      TargetPath="WinRT.Host.dll" />
     </ItemGroup>
     <!-- For project references, copy the right dlls -->
     <ItemGroup>
-      <Content Include="@(CsWinRTAuthoringDependencyDlls)" CopyToOutputDirectory="Always" />
-      <Content Include="$(CsWinRTPath)runtimes\win-$(CsWinRTHosting-Platform)\native\WinRT.Host.dll" 
-               Condition="Exists('$(CsWinRTPath)runtimes\win-$(CsWinRTHosting-Platform)\native\WinRT.Host.dll')"
-               TargetPath="WinRT.Host.dll" 
-               CopyToOutputDirectory="Always" />
+      <Content Include="@(CsWinRTAuthoringDependencyDlls)" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
   
