@@ -1018,17 +1018,17 @@ namespace AuthoringTest
         // Tests DefaultOverload attribute specified in projected interface.
         public IXamlType GetXamlType(Type type)
         {
-            throw new NotImplementedException();
+            return null;
         }
 
         public IXamlType GetXamlType(string fullName)
         {
-            throw new NotImplementedException();
+            return null;
         }
 
         public XmlnsDefinition[] GetXmlnsDefinitions()
         {
-            throw new NotImplementedException();
+            return null;
         }
     }
 
