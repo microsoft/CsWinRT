@@ -25,14 +25,25 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
     <!-- We will use this item group later, if the author makes a NuGet package -->
     <ItemGroup>
-      <CsWinRTAuthoringDependencyDlls Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" TargetPath="WinRT.Host.Shim.dll" />
-      <CsWinRTAuthoringDependencyDlls Include="$(TargetDir)WinRT.Runtime.dll" TargetPath="WinRT.Runtime.dll" />
-      <CsWinRTAuthoringDependencyDlls Include="$(TargetDir)Microsoft.Windows.SDK.NET.dll" TargetPath="Microsoft.Windows.SDK.NET.dll" />
+      <CsWinRTAuthoringDependencyDlls Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" 
+                                      Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" 
+                                      TargetPath="WinRT.Host.Shim.dll" />
+
+      <CsWinRTAuthoringDependencyDlls Include="$(TargetDir)WinRT.Runtime.dll" 
+                                      Condition="Exists('$(TargetDir)WinRT.Runtime.dll')" 
+                                      TargetPath="WinRT.Runtime.dll" />
+
+      <CsWinRTAuthoringDependencyDlls Include="$(TargetDir)Microsoft.Windows.SDK.NET.dll" 
+                                      Condition="Exists('$(TargetDir)Microsoft.Windows.SDK.NET.dll')" 
+                                      TargetPath="Microsoft.Windows.SDK.NET.dll" />
     </ItemGroup>
     <!-- For project references, copy the right dlls -->
     <ItemGroup>
       <Content Include="@(CsWinRTAuthoringDependencyDlls)" CopyToOutputDirectory="Always" />
-      <Content Include="$(CsWinRTPath)runtimes\win-$(CsWinRTHosting-Platform)\native\WinRT.Host.dll" TargetPath="WinRT.Host.dll" CopyToOutputDirectory="Always" />
+      <Content Include="$(CsWinRTPath)runtimes\win-$(CsWinRTHosting-Platform)\native\WinRT.Host.dll" 
+               Condition="Exists('$(CsWinRTPath)runtimes\win-$(CsWinRTHosting-Platform)\native\WinRT.Host.dll')"
+               TargetPath="WinRT.Host.dll" 
+               CopyToOutputDirectory="Always" />
     </ItemGroup>
   </Target>
   
