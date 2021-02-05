@@ -1,6 +1,6 @@
 # C#/WinRT Contributor's Guide
 
-Below is our guidance for how to report issues, propose new features, and submit contributions via Pull Requests (PRs). Please refer to [building and running C#/WinRT](../README.md#Building-and-running-C#/WinRT) to get started on building the repo.
+Below is our guidance for how to report issues, propose new features, and submit contributions via Pull Requests (PRs). Please refer to [building and running C#/WinRT](./README.md#Building-and-running-C#/WinRT) to get started on building the repo.
 
 ## Before you start, file an issue
 
