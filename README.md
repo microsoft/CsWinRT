@@ -60,7 +60,7 @@ The `build.cmd` script takes care of all related configuration steps and is the 
 
 ## What's New
 
-See the [releases page](https://github.com/microsoft/CsWinRT/releases) for the most recent C#/WinRT NuGet releases and updates to the .NET 5 SDK. Details on breaking changes and known issues can be found on the releases page.
+C#/WinRT [version 1.1.1](https://github.com/microsoft/CsWinRT/releases/tag/1.1.1.210120.1) is our latest release aligned with the .NET 5 February update. See the [releases page](https://github.com/microsoft/CsWinRT/releases) for the most recent C#/WinRT NuGet releases and specific updates to the .NET 5 SDK. Details on breaking changes and known issues can be found on the releases page.
 
 ## Related Projects
 
