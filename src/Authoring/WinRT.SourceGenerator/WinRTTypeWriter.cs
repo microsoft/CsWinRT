@@ -949,6 +949,12 @@ namespace Generator
                 {
                     var classMember = classSymbol.FindImplementationForInterfaceMember(interfaceMember);
                     currentTypeDeclaration.CustomMappedSymbols.Add(classMember);
+
+                    // For custom mapped interfaces, we don't have 1 to 1 mapping of members between the mapped from
+                    // and mapped to interface and due to that we need to decide if the mapped inteface as a whole
+                    // is public or not (explicitly implemented).  Due to that, as long as one member is not
+                    // explicitly implemented (i.e accessible via the class), we treat the entire mapped interface
+                    // also as accessible via the class.
                     isPubliclyImplemented |= (classMember.DeclaredAccessibility == Accessibility.Public);
                 }
                 isPublicImplementation[implementedInterface] = isPubliclyImplemented;
