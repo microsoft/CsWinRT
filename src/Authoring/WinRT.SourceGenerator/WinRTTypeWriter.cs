@@ -935,25 +935,35 @@ namespace Generator
         private void ProcessCustomMappedInterfaces(INamedTypeSymbol classSymbol)
         {
             Logger.Log("writing custom mapped interfaces for " + QualifiedName(classSymbol));
+            Dictionary<INamedTypeSymbol, bool> isPublicImplementation = new Dictionary<INamedTypeSymbol, bool>();
+
             // Mark custom mapped interface members for removal later.
             // Note we want to also mark members from interfaces without mappings.
             foreach (var implementedInterface in GetInterfaces(classSymbol, true).
                 Where(symbol => MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
                                 ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
             {
-                string interfaceName = QualifiedName(implementedInterface);
-                Logger.Log("custom mapped interface: " + interfaceName);
+                bool isPubliclyImplemented = false;
+                Logger.Log("custom mapped interface: " + QualifiedName(implementedInterface, true));
                 foreach (var interfaceMember in implementedInterface.GetMembers())
                 {
                     var classMember = classSymbol.FindImplementationForInterfaceMember(interfaceMember);
                     currentTypeDeclaration.CustomMappedSymbols.Add(classMember);
+
+                    // For custom mapped interfaces, we don't have 1 to 1 mapping of members between the mapped from
+                    // and mapped to interface and due to that we need to decide if the mapped inteface as a whole
+                    // is public or not (explicitly implemented).  Due to that, as long as one member is not
+                    // explicitly implemented (i.e accessible via the class), we treat the entire mapped interface
+                    // also as accessible via the class.
+                    isPubliclyImplemented |= (classMember.DeclaredAccessibility == Accessibility.Public);
                 }
+                isPublicImplementation[implementedInterface] = isPubliclyImplemented;
             }
 
             foreach (var implementedInterface in GetInterfaces(classSymbol)
                         .Where(symbol => MappedCSharpTypes.ContainsKey(QualifiedName(symbol))))
             {
-                WriteCustomMappedTypeMembers(implementedInterface, true);
+                WriteCustomMappedTypeMembers(implementedInterface, true, isPublicImplementation[implementedInterface]);
             }
         }
 
@@ -975,17 +985,42 @@ namespace Generator
             return types.FirstOrDefault();
         }
 
-        private void WriteCustomMappedTypeMembers(INamedTypeSymbol symbol, bool isDefinition)
+        // Convert the entire type name including the generic types to WinMD format.
+        private string GetMappedQualifiedTypeName(ITypeSymbol symbol)
+        {
+            string qualifiedName = QualifiedName(symbol);
+            if (MappedCSharpTypes.ContainsKey(qualifiedName))
+            {
+                var (@namespace, mappedTypeName, _, _, _) = MappedCSharpTypes[qualifiedName].GetMapping(currentTypeDeclaration.Node);
+                qualifiedName = QualifiedName(@namespace, mappedTypeName);
+                if (symbol is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 0)
+                {
+                    return string.Format("{0}<{1}>", qualifiedName, string.Join(", ", namedType.TypeArguments.Select(type => GetMappedQualifiedTypeName(type))));
+                }
+            }
+            else if((symbol.ContainingNamespace.ToString() == "System" && symbol.IsValueType) || qualifiedName == "System.String")
+            {
+                // WinRT fundamental types
+                return symbol.Name;
+            }
+
+            return qualifiedName;
+        }
+
+        private void WriteCustomMappedTypeMembers(INamedTypeSymbol symbol, bool isDefinition, bool isPublic = true)
         {
             var (_, mappedTypeName, _, _, _) = MappedCSharpTypes[QualifiedName(symbol)].GetMapping(currentTypeDeclaration.Node);
-            Logger.Log("writing custom mapped type members for " + mappedTypeName);
+            string qualifiedName = GetMappedQualifiedTypeName(symbol);
+
+            Logger.Log("writing custom mapped type members for " + mappedTypeName + " public: " + isPublic + " qualified name: " + qualifiedName);
             void AddMethod(string name, Parameter[] parameters, Symbol returnType)
             {
                 parameters ??= new Parameter[0];
                 if (isDefinition)
                 {
-                    var methodDefinitionHandle = AddMethodDefinition(name, parameters, returnType, false, false);
-                    currentTypeDeclaration.AddMethod(symbol, name, methodDefinitionHandle);
+                    var methodName = isPublic ? name : QualifiedName(qualifiedName, name);
+                    var methodDefinitionHandle = AddMethodDefinition(methodName, parameters, returnType, false, false, false, isPublic);
+                    currentTypeDeclaration.AddMethod(symbol, methodName, methodDefinitionHandle);
                 }
                 else
                 {
@@ -998,7 +1033,8 @@ namespace Generator
             {
                 if (isDefinition)
                 {
-                    AddPropertyDefinition(name, type, symbol, setProperty, false);
+                    var propertyName = isPublic ? name : QualifiedName(qualifiedName, name);
+                    AddPropertyDefinition(propertyName, type, symbol, setProperty, false, isPublic);
                 }
                 else
                 {
@@ -1010,7 +1046,8 @@ namespace Generator
             {
                 if (isDefinition)
                 {
-                    AddEventDeclaration(name, eventType.Type, symbol, false);
+                    var eventName = isPublic ? name : QualifiedName(qualifiedName, name);
+                    AddEventDeclaration(eventName, eventType.Type, symbol, false, isPublic);
                 }
                 else
                 {
@@ -2419,14 +2456,14 @@ namespace Generator
                 }
             }
 
-            typeDefinitionMapping[projectedTypeOverride ?? QualifiedName(type)] = currentTypeDeclaration;
+            typeDefinitionMapping[projectedTypeOverride ?? QualifiedName(type, true)] = currentTypeDeclaration;
         }
 
         void AddMappedType(INamedTypeSymbol type)
         {
             currentTypeDeclaration = new TypeDeclaration(type);
             WriteCustomMappedTypeMembers(type, false);
-            typeDefinitionMapping[QualifiedName(type)] = currentTypeDeclaration;
+            typeDefinitionMapping[QualifiedName(type, true)] = currentTypeDeclaration;
         }
 
         enum SynthesizedInterfaceType
@@ -2709,15 +2746,15 @@ namespace Generator
                 Logger.Log("finalizing class " + QualifiedName(classSymbol));
                 foreach (var implementedInterface in GetInterfaces(classSymbol))
                 {
-                    var implementedInterfaceQualifiedName = QualifiedName(implementedInterface);
-                    if (!typeDefinitionMapping.ContainsKey(implementedInterfaceQualifiedName))
+                    var implementedInterfaceQualifiedNameWithGenerics = QualifiedName(implementedInterface, true);
+                    if (!typeDefinitionMapping.ContainsKey(implementedInterfaceQualifiedNameWithGenerics))
                     {
                         AddType(implementedInterface);
                     }
 
-                    Logger.Log("finalizing interface " + implementedInterfaceQualifiedName);
-                    var interfaceTypeDeclaration = typeDefinitionMapping[implementedInterfaceQualifiedName];
-                    if (MappedCSharpTypes.ContainsKey(implementedInterfaceQualifiedName))
+                    Logger.Log("finalizing interface " + implementedInterfaceQualifiedNameWithGenerics);
+                    var interfaceTypeDeclaration = typeDefinitionMapping[implementedInterfaceQualifiedNameWithGenerics];
+                    if (MappedCSharpTypes.ContainsKey(QualifiedName(implementedInterface)))
                     {
                         Logger.Log("adding MethodImpls for custom mapped interface");
                         foreach (var interfaceMember in interfaceTypeDeclaration.MethodReferences)
@@ -2814,9 +2851,10 @@ namespace Generator
             foreach (var interfaceDeclaration in interfaceDeclarations)
             {
                 INamedTypeSymbol interfaceSymbol = interfaceDeclaration.Node as INamedTypeSymbol;
-                if (typeDefinitionMapping[QualifiedName(interfaceSymbol)].Handle != default && GetVersion(interfaceSymbol) == -1)
+                string qualifiedNameWithGenerics = QualifiedName(interfaceSymbol, true);
+                if (typeDefinitionMapping[qualifiedNameWithGenerics].Handle != default && GetVersion(interfaceSymbol) == -1)
                 {
-                    AddDefaultVersionAttribute(typeDefinitionMapping[QualifiedName(interfaceSymbol)].Handle);
+                    AddDefaultVersionAttribute(typeDefinitionMapping[qualifiedNameWithGenerics].Handle);
                 }
             }
 
@@ -2900,19 +2938,23 @@ namespace Generator
             return string.Join(".", @namespace, identifier);
         }
 
-        public static string GetGenericName(ISymbol symbol)
+        public static string GetGenericName(ISymbol symbol, bool includeGenerics = false)
         {
             string name = symbol.Name;
             if (symbol is INamedTypeSymbol namedType && namedType.TypeArguments.Length != 0)
             {
                 name += "`" + namedType.TypeArguments.Length;
+                if(includeGenerics)
+                {
+                    name += string.Format("<{0}>", string.Join(", ", namedType.TypeArguments));
+                }
             }
             return name;
         }
 
-        public string QualifiedName(ISymbol symbol)
+        public string QualifiedName(ISymbol symbol, bool includeGenerics = false)
         {
-            return QualifiedName(symbol.ContainingNamespace.ToString(), GetGenericName(symbol));
+            return QualifiedName(symbol.ContainingNamespace.ToString(), GetGenericName(symbol, includeGenerics));
         }
 
         public override void VisitNamespaceDeclaration(NamespaceDeclarationSyntax node)
