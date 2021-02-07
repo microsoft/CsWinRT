@@ -38,19 +38,19 @@ The library you are authoring should specify the following properties in its pro
 And don't forget to include a `PackageReference` to `Microsoft.Windows.CsWinRT`!
 
 
-## Using your authored component
-To use the component in a C# app, the authored component just needs to be added as a project/package reference.
+## Using your component
 
-For native (C++) apps, there are DLLs needed to host your authored component. When you use the automatic nuget packaging on-build support (in Visual Studio) to make a nupkg for your runtime component, the DLLs/WinMD are automatically added to your nupkg, before the ```GenerateNuspec``` MSBuild step.
+To make your component availabel as a NuGet package, it is important to include the DLLs necessary for C#/WinRT hosting. 
+When you pack your C#/WinRTy component the DLLs/WinMD are automatically added to your nupkg.
 
-**If you are going to write your own nuspec, i.e. not rely on automatic packaging** then the CsWinRT target that adds the hosting dlls to your package will not run, and you should make sure your nuspec contains the following ```file``` entries for ```MyAuthoredComponent``` (note: your TargetFramework may vary). If adding a file entry for ```Coords.targets``` does not work, then update the project file per the above example. 
+**If you are going to write your own nuspec**, then you should make sure your nuspec contains the following ```file``` entries for your component ```MyAuthoredComponent``` (note: your TargetFramework may vary). This is so our targets that supply the DLLs for any consumers of your package work.  
 
 ``` nuspec
 <files>
-  <file src="$(TargetDir)MyAuthoredComponent.dll"        target="lib\native\MyAuthoredComponent.dll" />
+  <file src="$(TargetDir)MyAuthoredComponent.dll"        target="lib\$(TargetFramework)\MyAuthoredComponent.dll" />
   <file src="$(TargetDir)MyAuthoredComponent.winmd"      target="winmd\MyAuthoredComponent.winmd" />
   
-  <file src="$(TargetDir)Microsoft.Windows.SDK.NET.dll"  target="lib\native\Microsoft.Windows.SDK.NET.dll" />
+  <file src="$(TargetDir)Microsoft.Windows.SDK.NET.dll"  target="lib\$(TargetFramework)\Microsoft.Windows.SDK.NET.dll" />
    
   <!-- Note: you must rename the CsWinRt.Authoring.Targets as follows -->
   <file src="C:\Path\To\CsWinRT\NugetDir\buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets"   
@@ -61,10 +61,10 @@ For native (C++) apps, there are DLLs needed to host your authored component. Wh
    
   <!-- Include the managed DLLs -->
   <file src="C:\Path\To\CsWinRT\NugetDir\lib\net5.0\WinRT.Host.Shim.dll"                                  
-        target="lib\native\WinRT.Host.Shim.dll" />
+        target="lib\$(TargetFramework)\WinRT.Host.Shim.dll" />
     
   <file src="C:\Path\To\CsWinRT\NugetDir\lib\net5.0\WinRT.Runtime.dll"                                  
-        target="lib\native\WinRT.Runtime.dll" />
+        target="lib\$(TargetFramework)\WinRT.Runtime.dll" />
     
   <!-- Include the native DLLs -->
   <file src="C:\Path\To\CsWinRT\NugetDir\runtimes\win-x64\native\WinRT.Host.dll"                                  
@@ -76,7 +76,15 @@ For native (C++) apps, there are DLLs needed to host your authored component. Wh
 ```
 
 ### For native app (C++) consumption
-Install your authored component's package -- this will come with a targets file that automatically adds a reference to the component's WinMD and copies the dlls necessary for native support.
+
+If you choose to consume your component through a project reference, then some modifications to the native app's `.vcxproj` file are needed.
+Because dotnet will assume a `TargetFramework` for your app that conflicts with `net5`, we need to specify the `TargetFramwork`, `TargetFrameworkVersion` and `TargetRuntime`. 
+Examples of this are seen in the code snippet below. 
+
+You can then use the Visual Studio UI to add a reference to the C#/WinRT component's `csproj` file, and you also need to add a reference to the WinMD file produced 
+for your component. The WinMD can be found in the output (`bin`) directory and the `Generated Files` directory.
+
+If instead you choose a package reference, installing your authored component's package is all that is needed. C#/WinRT adds a targets file to your component that automatically adds a reference to the component's WinMD and copies the DLLs necessary for native support.
 
 You'll need to use [C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/intro-to-using-cpp-with-winrt) to consume your API. So make sure you have C++/WinRT installed, and have added `#include <winrt/MyAuthoredComponent.h>` to the file `pch.h` of the native app.  
 
@@ -93,6 +101,13 @@ You should read the [hosting docs](https://github.com/microsoft/CsWinRT/blob/mas
 
 In summary, here is the fragment of additions made to the native app's project file:
 ``` vcxproj
+<!-- Note: this property group is only required if you are using a project reference -->
+<PropertyGroup>
+  <TargetFrameworkVersion>net5.0</TargetFrameworkVersion>
+  <TargetFramework>native</TargetFramework>
+  <TargetRuntime>Native</TargetRuntime>
+</PropertyGroup>
+
 <ItemGroup>
     <!-- the runtimeconfig.json -->
     <None Include="WinRT.Host.runtimeconfig.json">
