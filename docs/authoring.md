@@ -1,42 +1,43 @@
 # Authoring Components
 
 ## Overview
-**Authoring Support is still in preview**
 
-C#/WinRT is working to provide support for authoring Windows Runtime components. You can write a library in C#, and specify that it is a `CsWinRTComponent` for C#/WinRT to produce a WinMD that any WinRT compatible language can use. For example, a library written in C# can be used by a C++ program, via C#/WinRT and C++/WinRT.
+**Note: Authoring Support is still in preview**
 
+C#/WinRT provides support for authoring Windows Runtime components. You can write a library in C#, and specify that it is a `CsWinRTComponent` for C#/WinRT to produce a WinMD that any WinRT compatible language can use. For example, a library written in C# can be used by a C++ program, via C#/WinRT and C++/WinRT.
 
 ## References
 Here are some resources that demonstrate authoring C#/WinRT components and the details discussed in this document.
-1. https://github.com/microsoft/CsWinRT/tree/master/src/Tests/AuthoringTest
+1. [Simple C#/WinRT component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo) and associated [walkthrough](https://docs.microsoft.com/en-us/windows/uwp/csharp-winrt/create-windows-runtime-component-cswinrt) on creating a C#/WinRT component and consuming it from C++/WinRT
 
-2. https://github.com/microsoft/CsWinRT/tree/master/src/Tests/AuthoringConsumptionTest
+2. https://github.com/microsoft/CsWinRT/tree/master/src/Tests/AuthoringTest
 
-3. https://github.com/AdamBraden/MyRandom
-
+3. https://github.com/microsoft/CsWinRT/tree/master/src/Tests/AuthoringConsumptionTest
 
 ## Authoring the C# Component
 To create a library, select the Class Library (.NET Core) template in Visual Studio. C#/WinRT projects require Windows API version specific .NET frameworks.
 
-Accepted `<TargetFramework>` properties |
+Accepted `<TargetFramework>` versions |
 --- |
 `net5.0-windows10.0.19041.0` |
 `net5.0-windows10.0.18362.0` |
 `net5.0-windows10.0.17763.0` |
 
 The library you are authoring should specify the following properties in its project file: 
+
 ``` csproj
 <PropertyGroup>
-  <!-- update the Windows API version to reflect your TargetFramework -->
-  <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
+  <!-- Choose your TargetFramework for the desired Windows SDK projection -->
+  <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
   <CsWinRTComponent>true</CsWinRTComponent>
+  <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
   <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
-  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
 </PropertyGroup>
 ```
 And don't forget to include a `PackageReference` to `Microsoft.Windows.CsWinRT`!
 
+## Generate a NuGet package for the component
+To generate a NuGet package for the component, you can simply right click on the project and select **Pack**. Alternatively, you can add the following property to the library project file to automatically generate a NuGet package on build.
 
 ## Using your component
 
@@ -55,7 +56,8 @@ When you pack your C#/WinRTy component the DLLs/WinMD are automatically added to
   <!-- Note: you must rename the CsWinRt.Authoring.Targets as follows -->
   <file src="C:\Path\To\CsWinRT\NugetDir\buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets"   
         target="buildTransitive\MyAuthoredComponent.targets" />
-   
+        
+  <!-- buildTransitive is for consumers using packagereference, build is for consumers using packages.config --> 
   <file src="C:\Path\To\CsWinRT\NugetDir\build\Microsoft.Windows.CsWinRT.Authoring.targets"       
         target="build\MyAuthoredComponent.targets" />
    
@@ -74,6 +76,11 @@ When you pack your C#/WinRTy component the DLLs/WinMD are automatically added to
         target="runtimes\win-x86\native\WinRT.Host.dll" />
 </files>
 ```
+
+## Using your authored component
+To use the component in a C# app, the authored component just needs to be added as a project/package reference.
+
+For native (C++) apps, there are DLLs needed to host your authored component. When you use the automatic NuGet packaging on-build support (in Visual Studio) to make a nupkg for your runtime component, the DLLs/WinMD are automatically added to your nupkg, before the ```GenerateNuspec``` MSBuild step.
 
 ### For native app (C++) consumption
 

@@ -68,7 +68,7 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor NonWinRTInterface = MakeRule(
             "CsWinRT1008",
             "Invalid Interface Inherited",
-            "Windows Runtime component class {0} cannot implement interface {1}, as the interface is not a valid Windows Runtime interface");
+            "Windows Runtime component type {0} cannot implement interface {1}, as the interface is not a valid Windows Runtime interface");
 
         public static DiagnosticDescriptor ClassConstructorRule = MakeRule(
             "CsWinRT1009",
@@ -124,12 +124,6 @@ namespace WinRT.SourceGenerator
             "Array signature found with multi-dimensional array, which is not a valid Windows Runtime type",
             "Method '{0}' has a multi-dimensional array of type '{1}' in its signature. Arrays in Windows Runtime method signatures must be one dimensional.");
 
-        public static DiagnosticDescriptor ArraySignature_SystemArrayRule = MakeRule(
-            "CsWinRT1019",
-            "Array signature found with System.Array instance, which is not a valid WinRT type",
-            "In type {0}: the method {1} has signature that contains a System.Array instance; SystemArray is not "
-            + "a valid Windows Runtime type - try using a different type like IList");
-
         public static DiagnosticDescriptor RefParameterFound = MakeRule(
            "CsWinRT1020",
            "Parameter passed by reference",
@@ -159,19 +153,19 @@ namespace WinRT.SourceGenerator
             "Array paramter marked both ReadOnlyArray and WriteOnlyArray",
             "Method '{0}' has parameter '{1}' which is an array, and which has both ReadOnlyArray and WriteOnlyArray. "
             + "In the Windows Runtime, the contents array parameters must be either readable "
-            + "or writable.Please remove one of the attributes from '{1}'.");
+            + "or writable. Please remove one of the attributes from '{1}'.");
 
         public static DiagnosticDescriptor ArrayOutputParamMarkedRead = MakeRule(
             "CsWinRT1024",
             "Array parameter marked `out` and ReadOnlyArray",
             "Method '{0}' has an output parameter '{1}' which is an array, but which has ReadOnlyArray attribute. In the Windows Runtime, "
-            + "the contents of output arrays are writable.Please remove the attribute from '{1}'.");
+            + "the contents of output arrays are writable. Please remove the attribute from '{1}'.");
 
         public static DiagnosticDescriptor ArrayParamNotMarked = MakeRule(
             "CsWinRT1025",
             "Array parameter not marked ReadOnlyArray or WriteOnlyArray way",
             "Method '{0}' has parameter '{1}' which is an array. In the Windows Runtime, the "
-            + "contents of array parameters must be either readable or writable.Please apply either ReadOnlyArray or WriteOnlyArray to '{1}'.");
+            + "contents of array parameters must be either readable or writable. Please apply either ReadOnlyArray or WriteOnlyArray to '{1}'.");
 
         public static DiagnosticDescriptor NonArrayMarked = MakeRule(
             "CsWinRT1026",

@@ -14,7 +14,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </ItemGroup>
   </Target>
 
-
   <!-- When an authored component makes a nupkg, add the necessary hosting assets to the package -->
   <Target Name="CsWinRTIncludeHostDlls"  Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="AfterBuild" Outputs="@(Content)">
     <!-- Clear out dlls we are about to add to Content content that might have gotten set earlier -->
