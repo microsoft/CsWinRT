@@ -100,7 +100,7 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor OperatorOverloadedRule = MakeRule(
             "CsWinRT1014",
             "Operator overload exposed",
-            "{0} is an operator overload, managed types cannot expose operator overloads in the Windows Runtime");
+            "{0} is an operator overload. managed types cannot expose operator overloads in the Windows Runtime.");
 
         public static DiagnosticDescriptor MultipleDefaultOverloadAttribute = MakeRule(
             "CsWinRT1015",
