@@ -1765,25 +1765,6 @@ namespace Generator
             }
         }
 
-        public override void VisitAttributeList(AttributeListSyntax node)
-        {
-            base.VisitAttributeList(node);
-
-            // Skip assembly attributes
-            if (node.Target != null && node.Target.Identifier.ValueText == "assembly")
-            {
-                return;
-            }
-
-            var parentSymbol = Model.GetDeclaredSymbol(node.Parent);
-            if (!IsPublic(parentSymbol) || currentTypeDeclaration.CustomMappedSymbols.Contains(parentSymbol))
-            {
-                return;
-            }
-
-            currentTypeDeclaration.SymbolsWithAttributes.Add(parentSymbol);
-        }
-
         public override void VisitEnumDeclaration(EnumDeclarationSyntax node)
         {
             var symbol = Model.GetDeclaredSymbol(node);
@@ -1826,6 +1807,7 @@ namespace Generator
             currentTypeDeclaration = new TypeDeclaration(symbol);
 
             base.VisitDelegateDeclaration(node);
+            CheckAndMarkSymbolForAttributes(symbol);
 
             var objType = Model.Compilation.GetTypeByMetadataName(typeof(object).FullName);
             var nativeIntType = Model.Compilation.GetTypeByMetadataName(typeof(IntPtr).FullName);
@@ -1990,6 +1972,7 @@ namespace Generator
             }
 
             visitTypeDeclaration?.Invoke();
+            CheckAndMarkSymbolForAttributes(type);
 
             bool isInterface = type.TypeKind == TypeKind.Interface;
             bool hasConstructor = false;
@@ -2035,8 +2018,11 @@ namespace Generator
                     else
                     {
                         Logger.Log("member not recognized: " + member.Kind + " name: " + member.Name);
+                        continue;
                     }
                 }
+
+                CheckAndMarkSymbolForAttributes(member);
             }
 
             // implicit constructor if none defined
@@ -2370,9 +2356,19 @@ namespace Generator
             // TODO: address overridable and composable interfaces.
         }
 
-        void AddAttributeIfAny(ISymbol symbol, TypeDeclaration classDeclaration)
+        void CheckAndMarkSynthesizedInterfaceSymbolForAttributes(ISymbol symbol, TypeDeclaration classDeclaration)
         {
+            // Check the class declaration if the symbol had any attributes marked for it,
+            // and if so propagate it to the synthesized interface.
             if (classDeclaration.SymbolsWithAttributes.Contains(symbol))
+            {
+                currentTypeDeclaration.SymbolsWithAttributes.Add(symbol);
+            }
+        }
+
+        void CheckAndMarkSymbolForAttributes(ISymbol symbol)
+        {
+            if(symbol.GetAttributes().Any())
             {
                 currentTypeDeclaration.SymbolsWithAttributes.Add(symbol);
             }
@@ -2400,7 +2396,7 @@ namespace Generator
                 {
                     hasTypes = true;
                     AddFactoryMethod(classSymbol, constructorMethod);
-                    AddAttributeIfAny(classMember.Key, classDeclaration);
+                    CheckAndMarkSynthesizedInterfaceSymbolForAttributes(classMember.Key, classDeclaration);
                 }
                 else if ((interfaceType == SynthesizedInterfaceType.Default && !classMember.Key.IsStatic &&
                          !classMembersFromInterfaces.Contains(classMember.Key)) ||
@@ -2424,7 +2420,7 @@ namespace Generator
                         continue;
                     }
 
-                    AddAttributeIfAny(classMember.Key, classDeclaration);
+                    CheckAndMarkSynthesizedInterfaceSymbolForAttributes(classMember.Key, classDeclaration);
                     hasTypes = true;
                 }
             }
