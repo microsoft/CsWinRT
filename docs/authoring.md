@@ -38,7 +38,7 @@ And don't forget to include a `PackageReference` to `Microsoft.Windows.CsWinRT`!
 
 ## Using an Authored Component
 
-You'll need to author some files to assist the hosting process by the native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. 
+You'll need to author some files to assist the hosting process of a consuming native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. 
 If your app is packaged with MSIX, then you don't need to include the manifest file, otherwise you need to include your activatable class registrations in the manifest file.
 
 To add these files, **in Visual Studio**, right click on the project node on the "Solution Explorer" window, click "Add", then "New Item". 
