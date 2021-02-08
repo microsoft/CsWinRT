@@ -4,27 +4,35 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 ***********************************************************************************************
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    
+  
   <ItemGroup> 
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll" />
-    <CsWinRTAuthoringDependencyDlls Condition="Exists('$(TargetDir)Microsoft.Windows.SDK.NET.dll')" Include="$(TargetDir)Microsoft.Windows.SDK.NET.dll" />
+    <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll" />
+    
+    <None Include="@(CsWinRTAuthoringDependencyDlls)" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" 
-                                    Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll" />
-    <None Include="@(CsWinRTAuthoringDependencyDlls)">
-      <Link>%(RecursiveDir)%(FileName)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-   </ItemGroup>
+                                    Remove="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll" />
+  </ItemGroup>
+
+  <Target Name="CsWinRTCopySDKRefDllToOutDir" Condition="'$(CsWinRTComponent)' == 'true'" 
+          AfterTargets="ResolveRuntimePackAssets" BeforeTargets="GetCopyToOutputDirectoryXamlAppDefs">
+    <ItemGroup>
+      <CsWinRTSDKRefDll Include="@(RuntimePackAsset)" Condition="'%(RuntimePackAsset.DestinationSubPath)' == 'Microsoft.Windows.SDK.NET.dll'" />
+      <CsWinRTAuthoringDependencyDlls Include="@(CsWinRTSDKRefDll)" />
+      <_ThisProjectItemstoCopyToOutputDirectory Include="@(CsWinRTSDKRefDll)">
+        <Link>%(FileName)%(Extension)</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <TargetPath>Microsoft.Windows.SDK.NET.dll</TargetPath>
+      </_ThisProjectItemstoCopyToOutputDirectory>
+    </ItemGroup>
+  </Target>
 
   <!-- When an authored component makes a nupkg, add the necessary hosting assets to the package -->
   <Target Name="CsWinRTIncludeHostDlls"  Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="AfterBuild" Outputs="@(Content)">
     <!-- When packing, include all necessary DLLs and the targets file for DLL copying on the native side -->
     <ItemGroup>
-      <!-- The host was added for project references, but needs to be removed because it belongs in its own location in the nupkg -->
-      <CsWinRTAuthoringDependencyDlls Remove="@(CsWinRTCsWinRTAuthoringDependencyDlls)" Condition="'%(FileName)%(Extension)' == 'WinRT.Host.dll'" />
-
-      <!-- Add the managed DLLs and generated WinMD -->
       <Content Include="@(CsWinRTAuthoringDependencyDlls)" Pack="true" PackagePath="lib\$(TargetFramework)" />
       <Content Include="$(TargetDir)$(AssemblyName).winmd" Pack="true" PackagePath="lib\$(TargetFramework)\winmd" />
 
@@ -33,7 +41,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                Pack="true" 
                PackagePath="buildTransitive\$(AssemblyName).targets;build\$(AssemblyName).targets" />
 
-      <!-- We must packaged every architecture version of WinRT.Host.dll -->
+      <!-- We package a version of WinRT.Host.dll for each possible architecture -->
       <!-- x64 --> 
       <Content Condition="Exists('$(CsWinRTPath)runtimes\win-x64\native\WinRT.Host.dll')" 
                Include="$(CsWinRTPath)runtimes\win-x64\native\WinRT.Host.dll"
