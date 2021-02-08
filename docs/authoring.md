@@ -85,12 +85,12 @@ Because dotnet will assume a `TargetFramework` for your app that conflicts with 
 Examples of this are seen in the code snippet below. This is needed for this preview version, as we continue working on proper support.
 
 You can then use the Visual Studio UI to add a reference to the C#/WinRT component's `csproj` file, and you also need to add a reference to the WinMD file produced 
-for your component. The WinMD can be found in the output (`bin`) directory and the `Generated Files` directory of the authored component's project.
+for the component. The WinMD can be found in the output (`bin`) directory of the authored component's project.
 
 You'll need to author some files to assist the hosting process by the native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. 
 If your app is packaged with MSIX, then you don't need to include the manifest file, otherwise you need to include your activatable class registrations in the manifest file.
 
-To do add these files, **in Visual Studio**, right click on the project node on the "Solution Explorer" window, click "Add", then "New Item". 
+To add these files, **in Visual Studio**, right click on the project node on the "Solution Explorer" window, click "Add", then "New Item". 
 Search for the "Text File" template and name your file `YourNativeApp.exe.manifest`.
 Repeat this for the `WinRT.Host.runtimeconfig.json` file. 
 For each item, right-click on it in the "Solution Explorer" window of Visual Studio; then select "Properties" and change the "Content" property to "Yes" using the drop-down arrow on the right -- this ensures it will be added to the output directory of your solution.
@@ -108,7 +108,7 @@ In summary, here is the fragment of additions made to the native app's project f
 </PropertyGroup>
 ```
 
-### C++/WinRT
+### C++ Consumption
 You'll need to use [C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/intro-to-using-cpp-with-winrt) to consume your API. So make sure you have C++/WinRT installed, and have added `#include <winrt/MyAuthoredComponent.h>` to the file `pch.h` of the native app.  
 
 ## Known Authoring Issues
