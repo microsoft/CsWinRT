@@ -5,27 +5,23 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Target Name="CsWinRTAddHostingDllsAsProjectOutput" Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="GetTargetPath" Outputs="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup> 
-      <TargetPathWithTargetPlatformMoniker Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
-      <TargetPathWithTargetPlatformMoniker Condition="Exists('$(TargetDir)WinRT.Runtime.dll')" Include="$(TargetDir)WinRT.Runtime.dll" />
-      <TargetPathWithTargetPlatformMoniker Condition="Exists('$(TargetDir)Microsoft.Windows.SDK.NET.dll')" Include="$(TargetDir)Microsoft.Windows.SDK.NET.dll" />
-      <NativeReference Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll" />
+      <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
+      <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll" />
+      <CsWinRTAuthoringDependencyDlls Condition="Exists('$(TargetDir)Microsoft.Windows.SDK.NET.dll')" Include="$(TargetDir)Microsoft.Windows.SDK.NET.dll" />
+      <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll" />
+      <None Include="@(CsWinRTAuthoringDependencyDlls)">
+        <Link>%(RecursiveDir)%(FileName)%(Extension)</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
-  </Target>
 
   <!-- When an authored component makes a nupkg, add the necessary hosting assets to the package -->
   <Target Name="CsWinRTIncludeHostDlls"  Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="AfterBuild" Outputs="@(Content)">
-    <!-- Clear out dlls we are about to add to Content content that might have gotten set earlier -->
-    <ItemGroup>
-      <Content Remove="@(Content)" Condition="'%(Content.FileName)%(Extension)' == 'WinRT.Host.dll'" />
-      <Content Remove="@(Content)" Condition="'%(Content.FileName)%(Extension)' == 'WinRT.Host.Shim.dll'" />
-      <Content Remove="@(Content)" Condition="'%(Content.FileName)%(Extension)' == 'WinRT.Runtime.dll'" />
-      <Content Remove="@(Content)" Condition="'%(Content.FileName)%(Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
-    </ItemGroup>
-
     <!-- When packing, include all necessary DLLs and the targets file for DLL copying on the native side -->
     <ItemGroup>
+      <!-- take the host out -->
+      <CsWinRTAuthoringDependencyDlls Remove="@(CsWinRTCsWinRTAuthoringDependencyDlls)" Condition="'%(FileName)%(Extension)' == 'WinRT.Host.dll'" />
       <Content Include="@(CsWinRTAuthoringDependencyDlls)" Pack="true" PackagePath="lib\$(TargetFramework)" />
       <Content Include="$(TargetDir)$(AssemblyName).winmd" Pack="true" PackagePath="lib\$(TargetFramework)\winmd" />
 
