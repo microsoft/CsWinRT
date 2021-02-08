@@ -588,3 +588,30 @@ TEST(AuthoringTest, ExplicitInterfaces)
     EXPECT_FALSE(dictionary.HasKey(L"fourth"));
     EXPECT_FALSE(dictionary.HasKey(L"third"));
 }
+
+TEST(AuthoringTest, PartialClass)
+{
+    PartialClass partialClass;
+    partialClass.SetNumber(2);
+    EXPECT_EQ(partialClass.GetNumber(), 2);
+    EXPECT_EQ(partialClass.GetNumberAsString(), L"2");
+    partialClass.SetNumber(4);
+    EXPECT_EQ(partialClass.Number(), 4);
+    EXPECT_EQ(partialClass.Number2(), 8);
+    PartialStruct result = partialClass.GetPartialStruct();
+    EXPECT_EQ(result.X, 4);
+    EXPECT_EQ(result.Y, 5);
+    EXPECT_EQ(result.Z, 6);
+
+    PartialClass partialClass2(1);
+    IPartialInterface partialInterface = partialClass2;
+    EXPECT_EQ(partialInterface.GetNumberAsString(), L"1");
+    EXPECT_EQ(partialClass2.GetNumber(), 1);
+    partialClass2.SetNumber(2);
+    EXPECT_EQ(partialInterface.GetNumberAsString(), L"2");
+
+    PartialStruct partialStruct{ 3, 4, 5 };
+    EXPECT_EQ(partialStruct.X, 3);
+    EXPECT_EQ(partialStruct.Y, 4);
+    EXPECT_EQ(partialStruct.Z, 5);
+}
