@@ -5,6 +5,7 @@
 **Note: Authoring Support is still in preview**
 
 C#/WinRT provides support for authoring Windows Runtime components. You can write a library in C#, and specify that it is a `CsWinRTComponent` for C#/WinRT to produce a WinMD that any WinRT compatible language can use. For example, a library written in C# can be used by a C++ program, via C#/WinRT and C++/WinRT.
+Managed apps only need a project or package reference to the authored component, and native apps will need some extra steps that we cover in this documentation.
 
 ## References
 Here are some resources that demonstrate authoring C#/WinRT components and the details discussed in this document.
@@ -36,7 +37,7 @@ The library you are authoring should specify the following properties in its pro
 ```
 And don't forget to include a `PackageReference` to `Microsoft.Windows.CsWinRT`!
 
-## Using an Authored Component
+## Using an Authored Component in a Native App
 
 You'll need to author some files to assist the hosting process of a consuming native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. 
 If your app is packaged with MSIX, then you don't need to include the manifest file, otherwise you need to include your activatable class registrations in the manifest file.
@@ -49,7 +50,6 @@ For each item, right-click on it in the "Solution Explorer" window of Visual Stu
 We have some [hosting docs](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md) as well, that provide more information on these files.
 
 For consuming by "PackageReference", this is all that is required. C++ apps will need to use [C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/intro-to-using-cpp-with-winrt) to consume the authored component. So make sure you have C++/WinRT installed, and have added `#include <winrt/MyAuthoredComponent.h>` to the file `pch.h` of the native app.  
-
 
 ## Native Consumption by Project Reference
 
