@@ -9,15 +9,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll" />
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll" />
-    
+    <!-- For project reference support --> 
     <None Include="@(CsWinRTAuthoringDependencyDlls)" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-
+    <!-- We use this item list to populate the managed content of nupkg, so take the native dll out -->
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" 
                                     Remove="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll" />
   </ItemGroup>
 
-  <Target Name="CsWinRTCopySDKRefDllToOutDir" Condition="'$(CsWinRTComponent)' == 'true'" 
-          AfterTargets="ResolveRuntimePackAssets" BeforeTargets="GetCopyToOutputDirectoryXamlAppDefs">
+  <Target Name="CsWinRTCopySDKRefDllToOutDir" Condition="'$(CsWinRTComponent)' == 'true'" AfterTargets="ResolveRuntimePackAssets">
     <ItemGroup>
       <CsWinRTSDKRefDll Include="@(RuntimePackAsset)" Condition="'%(RuntimePackAsset.DestinationSubPath)' == 'Microsoft.Windows.SDK.NET.dll'" />
       <CsWinRTAuthoringDependencyDlls Include="@(CsWinRTSDKRefDll)" />

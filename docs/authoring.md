@@ -48,7 +48,7 @@ Similarly, any other dependencies, e.g. `Microsoft.WinUI`, will need to be inclu
 ``` nuspec
 <files>
   <file src="$(TargetDir)MyAuthoredComponent.dll"        target="lib\$(TargetFramework)\MyAuthoredComponent.dll" />
-  <file src="$(TargetDir)MyAuthoredComponent.winmd"      target="winmd\MyAuthoredComponent.winmd" />
+  <file src="$(TargetDir)MyAuthoredComponent.winmd"      target="lib\$(TargetFramework)\winmd\MyAuthoredComponent.winmd" />
   
   <file src="$(TargetDir)Microsoft.Windows.SDK.NET.dll"  target="lib\$(TargetFramework)\Microsoft.Windows.SDK.NET.dll" />
    
