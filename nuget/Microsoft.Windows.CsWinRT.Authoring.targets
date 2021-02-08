@@ -4,16 +4,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 ***********************************************************************************************
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  
+
+  <!-- For Project Reference consumers, copy the necessary WinRT DLLs to output directory --> 
   <ItemGroup> 
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll" />
-    <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll" />
-    <!-- For project reference support --> 
     <None Include="@(CsWinRTAuthoringDependencyDlls)" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <!-- We use this item list to populate the managed content of nupkg, so take the native dll out -->
-    <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" 
-                                    Remove="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll" />
+    <None Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll"
+          Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" 
+          Link="%(RecursiveDir)%(FileName)%(Extension)" 
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <Target Name="CsWinRTCopySDKRefDllToOutDir" Condition="'$(CsWinRTComponent)' == 'true'" AfterTargets="ResolveRuntimePackAssets">

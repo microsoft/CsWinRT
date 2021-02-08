@@ -78,14 +78,7 @@ Similarly, any other dependencies, e.g. `Microsoft.WinUI`, will need to be inclu
 
 Your component can then be added as a PackageReference to any consumer. 
 
-## For native app consumption
-
-If you choose to consume your component through a project reference, then some modifications to the native app's `.vcxproj` file are needed.
-Because dotnet will assume a `TargetFramework` for your app that conflicts with `net5`, we need to specify the `TargetFramwork`, `TargetFrameworkVersion` and `TargetRuntime`. 
-Examples of this are seen in the code snippet below. This is needed for this preview version, as we continue working on proper support.
-
-You can then use the Visual Studio UI to add a reference to the C#/WinRT component's `csproj` file, and you also need to add a reference to the WinMD file produced 
-for the component. The WinMD can be found in the output (`bin`) directory of the authored component's project.
+## Using an Authored Component
 
 You'll need to author some files to assist the hosting process by the native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. 
 If your app is packaged with MSIX, then you don't need to include the manifest file, otherwise you need to include your activatable class registrations in the manifest file.
@@ -97,7 +90,20 @@ For each item, right-click on it in the "Solution Explorer" window of Visual Stu
 
 We have some [hosting docs](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md) as well, that provide more information on these files.
 
-In summary, here is the fragment of additions made to the native app's project file:
+For consuming by "PackageReference", this is all that is required. C++ consumers will need to use C++/WinRT to generate a header file for their component
+C++ apps will need to use [C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/intro-to-using-cpp-with-winrt) to consume the authored component. So make sure you have C++/WinRT installed, and have added `#include <winrt/MyAuthoredComponent.h>` to the file `pch.h` of the native app.  
+
+
+## Consumption by Project Reference
+
+If you choose to consume your component through a project reference in a native app, then some modifications to the native app's `.vcxproj` file are needed.
+Because dotnet will assume a `TargetFramework` for your app that conflicts with `net5`, we need to specify the `TargetFramwork`, `TargetFrameworkVersion` and `TargetRuntime`. 
+Examples of this are seen in the code snippet below. This is needed for this preview version, as we continue working on proper support.
+
+You will need to add a reference to both the C#/WinRT component's `csproj` file, and the WinMD produced for the component. 
+The WinMD can be found in the output directory of the authored component's project.
+
+Here are the additions made to the native app's project file:
 ``` vcxproj
 <!-- Note: this property group is only required if you are using a project reference, 
            and is a part of the preview while we work on proper support -->
@@ -108,8 +114,7 @@ In summary, here is the fragment of additions made to the native app's project f
 </PropertyGroup>
 ```
 
-### C++ Consumption
-You'll need to use [C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/intro-to-using-cpp-with-winrt) to consume your API. So make sure you have C++/WinRT installed, and have added `#include <winrt/MyAuthoredComponent.h>` to the file `pch.h` of the native app.  
+Project references for managed apps do not require any such changes.
 
 ## Known Authoring Issues
 You can follow along [here](https://github.com/microsoft/CsWinRT/issues/663) as we develop authoring support. 
