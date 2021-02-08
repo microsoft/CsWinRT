@@ -43,6 +43,7 @@ To make your component available as a NuGet package, it is important to include 
 When you pack your C#/WinRT component the DLLs/WinMD are automatically added to your nupkg, based on a nuspec generated from your project file. 
 
 **If you are going to write your own nuspec**, then you should make sure your nuspec contains the following ```file``` entries for your component ```MyAuthoredComponent``` (note: your TargetFramework may vary). This is so our targets that supply the DLLs for any consumers of your package work.  
+Similarly, any other dependencies, e.g. `Microsoft.WinUI`, will need to be included in your nuspec as well.
 
 ``` nuspec
 <files>
@@ -86,18 +87,15 @@ Examples of this are seen in the code snippet below. This is needed for this pre
 You can then use the Visual Studio UI to add a reference to the C#/WinRT component's `csproj` file, and you also need to add a reference to the WinMD file produced 
 for your component. The WinMD can be found in the output (`bin`) directory and the `Generated Files` directory of the authored component's project.
 
-You'll need to use [C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/intro-to-using-cpp-with-winrt) to consume your API. So make sure you have C++/WinRT installed, and have added `#include <winrt/MyAuthoredComponent.h>` to the file `pch.h` of the native app.  
-
 You'll need to author some files to assist the hosting process by the native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. 
-
 If your app is packaged with MSIX, then you don't need to include the manifest file, otherwise you need to include your activatable class registrations in the manifest file.
 
-To do this, **in Visual Studio**, right click on the project node on the "Solution Explorer" window, click "Add", then "New Item". Search for the "Text File" template and name your file "YourNativeApp.exe.manifest".
-Repeat this for the "WinRT.Host.runtimeconfig.json" file. 
+To do add these files, **in Visual Studio**, right click on the project node on the "Solution Explorer" window, click "Add", then "New Item". 
+Search for the "Text File" template and name your file `YourNativeApp.exe.manifest`.
+Repeat this for the `WinRT.Host.runtimeconfig.json` file. 
+For each item, right-click on it in the "Solution Explorer" window of Visual Studio; then select "Properties" and change the "Content" property to "Yes" using the drop-down arrow on the right -- this ensures it will be added to the output directory of your solution.
 
-This process adds the nodes `<Manifest Include=... >` and `<None Include=... >` to your native app's project file -- **you need to update these to have `<DeploymentContent>true</DeploymentContent>` for them to be placed in the output directory with your executable**.  
-
-You should read the [hosting docs](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md) as well, for more information on these files.
+We have some [hosting docs](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md) as well, that provide more information on these files.
 
 In summary, here is the fragment of additions made to the native app's project file:
 ``` vcxproj
@@ -108,18 +106,10 @@ In summary, here is the fragment of additions made to the native app's project f
   <TargetFramework>native</TargetFramework>
   <TargetRuntime>Native</TargetRuntime>
 </PropertyGroup>
-
-<ItemGroup>
-    <!-- the runtimeconfig.json -->
-    <None Include="WinRT.Host.runtimeconfig.json">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <!-- the manifest -->
-    <Manifest Include="YourNativeApp.exe.manifest">
-      <DeploymentContent>true</DeploymentContent>
-    </Manifest>
-</ItemGroup> 
 ```
+
+### C++/WinRT
+You'll need to use [C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/intro-to-using-cpp-with-winrt) to consume your API. So make sure you have C++/WinRT installed, and have added `#include <winrt/MyAuthoredComponent.h>` to the file `pch.h` of the native app.  
 
 ## Known Authoring Issues
 You can follow along [here](https://github.com/microsoft/CsWinRT/issues/663) as we develop authoring support. 
