@@ -396,6 +396,7 @@ namespace DiagnosticTests
         {
             get
             {
+                yield return new TestCaseData(Valid_PrivateStruct).SetName("Valid. Struct. Private struct");
                 yield return new TestCaseData(Valid_PrivateSetter).SetName("Valid. Property. Private Setter");
                 yield return new TestCaseData(Valid_RollYourOwnAsyncAction).SetName("Valid. AsyncInterfaces. Implementing your own IAsyncAction");
                 yield return new TestCaseData(Valid_CustomDictionary).SetName("Valid. CustomProjection. IDictionary<string,BasicStruct>");

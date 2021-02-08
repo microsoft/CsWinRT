@@ -4,6 +4,19 @@ namespace DiagnosticTests
 {
     public sealed partial class UnitTesting
     {
+        private const string Valid_PrivateStruct = @"
+namespace DiagnosticTests
+{
+    public sealed class PrivateSetter
+    {
+        struct ExampleStruct
+        {
+            int i;
+            public void SetValue(int value) { i = value; }
+        }
+    }
+}";
+
         private const string Valid_PrivateSetter = @"
 namespace DiagnosticTests
 {

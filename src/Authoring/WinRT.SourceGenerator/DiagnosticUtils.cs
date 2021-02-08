@@ -93,7 +93,7 @@ namespace Generator
                     CheckMethods(methods, @interface.Identifier);
                 }
 
-                var structs = nodes.OfType<StructDeclarationSyntax>();
+                var structs = nodes.OfType<StructDeclarationSyntax>().Where(IsPublic);
                 foreach (StructDeclarationSyntax @struct in structs)
                 {
                     CheckStructFields(@struct); 

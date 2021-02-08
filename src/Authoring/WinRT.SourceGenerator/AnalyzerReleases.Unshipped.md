@@ -23,7 +23,6 @@ CsWinRT1015 | Usage | Error | Do not use `DefaultOverloadAttribute` more than on
 CsWinRT1016 | Usage | Error | Exactly one overload should be marked as DefaultOverload
 CsWinRT1017 | Usage | Error | Array types should be one dimensional, not jagged
 CsWinRT1018 | Usage | Error | Array types should be one dimensional
-CsWinRT1019 | Usage | Error | Do not use the `System.Array` type for array parameters or array return values 
 CsWinRT1020 | Usage | Error | Do not pass parameters by `ref`
 CsWinRT1021 | Usage | Error | Array parameters should not be marked `InAttribute` or `OutAttribute` 
 CsWinRT1022 | Usage | Error | Parameters should not be marked `InAttribute` or `OutAttribute`
