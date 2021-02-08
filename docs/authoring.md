@@ -36,13 +36,11 @@ The library you are authoring should specify the following properties in its pro
 ```
 And don't forget to include a `PackageReference` to `Microsoft.Windows.CsWinRT`!
 
-## Generate a NuGet package for the component
-To generate a NuGet package for the component, you can simply right click on the project and select **Pack**. Alternatively, you can add the following property to the library project file to automatically generate a NuGet package on build.
+## Packaging
+To generate a NuGet package for the component, you can simply right click on the project and select **Pack**. Alternatively, you can add the following property to the library project file to automatically generate a NuGet package on build: `GeneratePackageOnBuild`. 
 
-## Using your component
-
-To make your component availabel as a NuGet package, it is important to include the DLLs necessary for C#/WinRT hosting. 
-When you pack your C#/WinRTy component the DLLs/WinMD are automatically added to your nupkg.
+To make your component available as a NuGet package, it is important to include the DLLs necessary for C#/WinRT hosting. 
+When you pack your C#/WinRT component the DLLs/WinMD are automatically added to your nupkg, based on a nuspec generated from your project file. 
 
 **If you are going to write your own nuspec**, then you should make sure your nuspec contains the following ```file``` entries for your component ```MyAuthoredComponent``` (note: your TargetFramework may vary). This is so our targets that supply the DLLs for any consumers of your package work.  
 
@@ -77,21 +75,16 @@ When you pack your C#/WinRTy component the DLLs/WinMD are automatically added to
 </files>
 ```
 
-## Using your authored component
-To use the component in a C# app, the authored component just needs to be added as a project/package reference.
+Your component can then be added as a PackageReference to any consumer. 
 
-For native (C++) apps, there are DLLs needed to host your authored component. When you use the automatic NuGet packaging on-build support (in Visual Studio) to make a nupkg for your runtime component, the DLLs/WinMD are automatically added to your nupkg, before the ```GenerateNuspec``` MSBuild step.
-
-### For native app (C++) consumption
+## For native app consumption
 
 If you choose to consume your component through a project reference, then some modifications to the native app's `.vcxproj` file are needed.
 Because dotnet will assume a `TargetFramework` for your app that conflicts with `net5`, we need to specify the `TargetFramwork`, `TargetFrameworkVersion` and `TargetRuntime`. 
 Examples of this are seen in the code snippet below. 
 
 You can then use the Visual Studio UI to add a reference to the C#/WinRT component's `csproj` file, and you also need to add a reference to the WinMD file produced 
-for your component. The WinMD can be found in the output (`bin`) directory and the `Generated Files` directory.
-
-If instead you choose a package reference, installing your authored component's package is all that is needed. C#/WinRT adds a targets file to your component that automatically adds a reference to the component's WinMD and copies the DLLs necessary for native support.
+for your component. The WinMD can be found in the output (`bin`) directory and the `Generated Files` directory of the authored component's project.
 
 You'll need to use [C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/intro-to-using-cpp-with-winrt) to consume your API. So make sure you have C++/WinRT installed, and have added `#include <winrt/MyAuthoredComponent.h>` to the file `pch.h` of the native app.  
 
