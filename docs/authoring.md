@@ -81,7 +81,7 @@ Your component can then be added as a PackageReference to any consumer.
 
 If you choose to consume your component through a project reference, then some modifications to the native app's `.vcxproj` file are needed.
 Because dotnet will assume a `TargetFramework` for your app that conflicts with `net5`, we need to specify the `TargetFramwork`, `TargetFrameworkVersion` and `TargetRuntime`. 
-Examples of this are seen in the code snippet below. 
+Examples of this are seen in the code snippet below. This is needed for this preview version, as we continue working on proper support.
 
 You can then use the Visual Studio UI to add a reference to the C#/WinRT component's `csproj` file, and you also need to add a reference to the WinMD file produced 
 for your component. The WinMD can be found in the output (`bin`) directory and the `Generated Files` directory of the authored component's project.
@@ -101,7 +101,8 @@ You should read the [hosting docs](https://github.com/microsoft/CsWinRT/blob/mas
 
 In summary, here is the fragment of additions made to the native app's project file:
 ``` vcxproj
-<!-- Note: this property group is only required if you are using a project reference -->
+<!-- Note: this property group is only required if you are using a project reference, 
+           and is a part of the preview while we work on proper support -->
 <PropertyGroup>
   <TargetFrameworkVersion>net5.0</TargetFrameworkVersion>
   <TargetFramework>native</TargetFramework>
