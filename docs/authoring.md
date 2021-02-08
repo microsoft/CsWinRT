@@ -36,6 +36,43 @@ The library you are authoring should specify the following properties in its pro
 ```
 And don't forget to include a `PackageReference` to `Microsoft.Windows.CsWinRT`!
 
+## Using an Authored Component
+
+You'll need to author some files to assist the hosting process by the native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. 
+If your app is packaged with MSIX, then you don't need to include the manifest file, otherwise you need to include your activatable class registrations in the manifest file.
+
+To add these files, **in Visual Studio**, right click on the project node on the "Solution Explorer" window, click "Add", then "New Item". 
+Search for the "Text File" template and name your file `YourNativeApp.exe.manifest`.
+Repeat this for the `WinRT.Host.runtimeconfig.json` file. 
+For each item, right-click on it in the "Solution Explorer" window of Visual Studio; then select "Properties" and change the "Content" property to "Yes" using the drop-down arrow on the right -- this ensures it will be added to the output directory of your solution.
+
+We have some [hosting docs](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md) as well, that provide more information on these files.
+
+For consuming by "PackageReference", this is all that is required. C++ apps will need to use [C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/intro-to-using-cpp-with-winrt) to consume the authored component. So make sure you have C++/WinRT installed, and have added `#include <winrt/MyAuthoredComponent.h>` to the file `pch.h` of the native app.  
+
+
+## Consumption by Project Reference
+
+If you choose to consume your component through a project reference in a native app, then some modifications to the native app's `.vcxproj` file are needed.
+Because dotnet will assume a `TargetFramework` for your app that conflicts with `net5`, we need to specify the `TargetFramwork`, `TargetFrameworkVersion` and `TargetRuntime`. 
+Examples of this are seen in the code snippet below. This is needed for this preview version, as we continue working on proper support.
+
+You will need to add a reference to both the C#/WinRT component's `csproj` file, and the WinMD produced for the component. 
+The WinMD can be found in the output directory of the authored component's project.
+
+Here are the additions made to the native app's project file:
+``` vcxproj
+<!-- Note: this property group is only required if you are using a project reference, 
+           and is a part of the preview while we work on proper support -->
+<PropertyGroup>
+  <TargetFrameworkVersion>net5.0</TargetFrameworkVersion>
+  <TargetFramework>native</TargetFramework>
+  <TargetRuntime>Native</TargetRuntime>
+</PropertyGroup>
+```
+
+Project references for managed apps do not require any such changes.
+
 ## Packaging
 To generate a NuGet package for the component, you can simply right click on the project and select **Pack**. Alternatively, you can add the following property to the library project file to automatically generate a NuGet package on build: `GeneratePackageOnBuild`. 
 
@@ -78,43 +115,7 @@ Similarly, any other dependencies, e.g. `Microsoft.WinUI`, will need to be inclu
 
 Your component can then be added as a PackageReference to any consumer. 
 
-## Using an Authored Component
 
-You'll need to author some files to assist the hosting process by the native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. 
-If your app is packaged with MSIX, then you don't need to include the manifest file, otherwise you need to include your activatable class registrations in the manifest file.
-
-To add these files, **in Visual Studio**, right click on the project node on the "Solution Explorer" window, click "Add", then "New Item". 
-Search for the "Text File" template and name your file `YourNativeApp.exe.manifest`.
-Repeat this for the `WinRT.Host.runtimeconfig.json` file. 
-For each item, right-click on it in the "Solution Explorer" window of Visual Studio; then select "Properties" and change the "Content" property to "Yes" using the drop-down arrow on the right -- this ensures it will be added to the output directory of your solution.
-
-We have some [hosting docs](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md) as well, that provide more information on these files.
-
-For consuming by "PackageReference", this is all that is required. C++ consumers will need to use C++/WinRT to generate a header file for their component
-C++ apps will need to use [C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/intro-to-using-cpp-with-winrt) to consume the authored component. So make sure you have C++/WinRT installed, and have added `#include <winrt/MyAuthoredComponent.h>` to the file `pch.h` of the native app.  
-
-
-## Consumption by Project Reference
-
-If you choose to consume your component through a project reference in a native app, then some modifications to the native app's `.vcxproj` file are needed.
-Because dotnet will assume a `TargetFramework` for your app that conflicts with `net5`, we need to specify the `TargetFramwork`, `TargetFrameworkVersion` and `TargetRuntime`. 
-Examples of this are seen in the code snippet below. This is needed for this preview version, as we continue working on proper support.
-
-You will need to add a reference to both the C#/WinRT component's `csproj` file, and the WinMD produced for the component. 
-The WinMD can be found in the output directory of the authored component's project.
-
-Here are the additions made to the native app's project file:
-``` vcxproj
-<!-- Note: this property group is only required if you are using a project reference, 
-           and is a part of the preview while we work on proper support -->
-<PropertyGroup>
-  <TargetFrameworkVersion>net5.0</TargetFrameworkVersion>
-  <TargetFramework>native</TargetFramework>
-  <TargetRuntime>Native</TargetRuntime>
-</PropertyGroup>
-```
-
-Project references for managed apps do not require any such changes.
 
 ## Known Authoring Issues
 You can follow along [here](https://github.com/microsoft/CsWinRT/issues/663) as we develop authoring support. 
