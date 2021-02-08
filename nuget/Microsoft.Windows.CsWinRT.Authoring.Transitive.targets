@@ -1,6 +1,4 @@
-<!--
-  Copyright (c) Microsoft Corporation. Licensed under the MIT License
--->
+<!-- This file was produced from C#/WinRT -->
 <Project ToolsVersion="14.0" xmln="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
