@@ -9,7 +9,7 @@
     <PropertyGroup>
         <CsWinRTComponent>true</CsWinRTComponent>
         <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
-        <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
+        <!--<CsWinRTEnableLogging>true</CsWinRTEnableLogging>-->
     </PropertyGroup>
     
     <ItemGroup>
