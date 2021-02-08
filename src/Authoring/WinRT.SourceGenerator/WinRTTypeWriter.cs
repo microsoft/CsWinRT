@@ -935,25 +935,35 @@ namespace Generator
         private void ProcessCustomMappedInterfaces(INamedTypeSymbol classSymbol)
         {
             Logger.Log("writing custom mapped interfaces for " + QualifiedName(classSymbol));
+            Dictionary<INamedTypeSymbol, bool> isPublicImplementation = new Dictionary<INamedTypeSymbol, bool>();
+
             // Mark custom mapped interface members for removal later.
             // Note we want to also mark members from interfaces without mappings.
             foreach (var implementedInterface in GetInterfaces(classSymbol, true).
                 Where(symbol => MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
                                 ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
             {
-                string interfaceName = QualifiedName(implementedInterface);
-                Logger.Log("custom mapped interface: " + interfaceName);
+                bool isPubliclyImplemented = false;
+                Logger.Log("custom mapped interface: " + QualifiedName(implementedInterface, true));
                 foreach (var interfaceMember in implementedInterface.GetMembers())
                 {
                     var classMember = classSymbol.FindImplementationForInterfaceMember(interfaceMember);
                     currentTypeDeclaration.CustomMappedSymbols.Add(classMember);
+
+                    // For custom mapped interfaces, we don't have 1 to 1 mapping of members between the mapped from
+                    // and mapped to interface and due to that we need to decide if the mapped inteface as a whole
+                    // is public or not (explicitly implemented).  Due to that, as long as one member is not
+                    // explicitly implemented (i.e accessible via the class), we treat the entire mapped interface
+                    // also as accessible via the class.
+                    isPubliclyImplemented |= (classMember.DeclaredAccessibility == Accessibility.Public);
                 }
+                isPublicImplementation[implementedInterface] = isPubliclyImplemented;
             }
 
             foreach (var implementedInterface in GetInterfaces(classSymbol)
                         .Where(symbol => MappedCSharpTypes.ContainsKey(QualifiedName(symbol))))
             {
-                WriteCustomMappedTypeMembers(implementedInterface, true);
+                WriteCustomMappedTypeMembers(implementedInterface, true, isPublicImplementation[implementedInterface]);
             }
         }
 
@@ -975,17 +985,42 @@ namespace Generator
             return types.FirstOrDefault();
         }
 
-        private void WriteCustomMappedTypeMembers(INamedTypeSymbol symbol, bool isDefinition)
+        // Convert the entire type name including the generic types to WinMD format.
+        private string GetMappedQualifiedTypeName(ITypeSymbol symbol)
+        {
+            string qualifiedName = QualifiedName(symbol);
+            if (MappedCSharpTypes.ContainsKey(qualifiedName))
+            {
+                var (@namespace, mappedTypeName, _, _, _) = MappedCSharpTypes[qualifiedName].GetMapping(currentTypeDeclaration.Node);
+                qualifiedName = QualifiedName(@namespace, mappedTypeName);
+                if (symbol is INamedTypeSymbol namedType && namedType.TypeArguments.Length > 0)
+                {
+                    return string.Format("{0}<{1}>", qualifiedName, string.Join(", ", namedType.TypeArguments.Select(type => GetMappedQualifiedTypeName(type))));
+                }
+            }
+            else if((symbol.ContainingNamespace.ToString() == "System" && symbol.IsValueType) || qualifiedName == "System.String")
+            {
+                // WinRT fundamental types
+                return symbol.Name;
+            }
+
+            return qualifiedName;
+        }
+
+        private void WriteCustomMappedTypeMembers(INamedTypeSymbol symbol, bool isDefinition, bool isPublic = true)
         {
             var (_, mappedTypeName, _, _, _) = MappedCSharpTypes[QualifiedName(symbol)].GetMapping(currentTypeDeclaration.Node);
-            Logger.Log("writing custom mapped type members for " + mappedTypeName);
+            string qualifiedName = GetMappedQualifiedTypeName(symbol);
+
+            Logger.Log("writing custom mapped type members for " + mappedTypeName + " public: " + isPublic + " qualified name: " + qualifiedName);
             void AddMethod(string name, Parameter[] parameters, Symbol returnType)
             {
                 parameters ??= new Parameter[0];
                 if (isDefinition)
                 {
-                    var methodDefinitionHandle = AddMethodDefinition(name, parameters, returnType, false, false);
-                    currentTypeDeclaration.AddMethod(symbol, name, methodDefinitionHandle);
+                    var methodName = isPublic ? name : QualifiedName(qualifiedName, name);
+                    var methodDefinitionHandle = AddMethodDefinition(methodName, parameters, returnType, false, false, false, isPublic);
+                    currentTypeDeclaration.AddMethod(symbol, methodName, methodDefinitionHandle);
                 }
                 else
                 {
@@ -998,7 +1033,8 @@ namespace Generator
             {
                 if (isDefinition)
                 {
-                    AddPropertyDefinition(name, type, symbol, setProperty, false);
+                    var propertyName = isPublic ? name : QualifiedName(qualifiedName, name);
+                    AddPropertyDefinition(propertyName, type, symbol, setProperty, false, isPublic);
                 }
                 else
                 {
@@ -1010,7 +1046,8 @@ namespace Generator
             {
                 if (isDefinition)
                 {
-                    AddEventDeclaration(name, eventType.Type, symbol, false);
+                    var eventName = isPublic ? name : QualifiedName(qualifiedName, name);
+                    AddEventDeclaration(eventName, eventType.Type, symbol, false, isPublic);
                 }
                 else
                 {
@@ -1550,9 +1587,9 @@ namespace Generator
             }
         }
 
-        private void EncodeCustomElementType(IFieldSymbol field, CustomAttributeElementTypeEncoder typeEncoder)
+        private void EncodeCustomElementType(ITypeSymbol type, CustomAttributeElementTypeEncoder typeEncoder)
         {
-            switch (field.Type.SpecialType)
+            switch (type.SpecialType)
             {
                 case SpecialType.System_Boolean:
                     typeEncoder.Boolean();
@@ -1591,38 +1628,49 @@ namespace Generator
                     typeEncoder.String();
                     break;
                 case SpecialType.System_Enum:
-                    typeEncoder.Enum(field.Type.ToString());
+                    typeEncoder.Enum(type.ToString());
                     break;
                 case SpecialType.System_SByte:
                     typeEncoder.SByte();
                     break;
                 default:
-                    Logger.Log("TODO special type: " + field.Type.SpecialType);
+                    Logger.Log("TODO special type: " + type.SpecialType);
                     break;
             }
         }
 
-        private void EncodeNamedArgumentType(INamedTypeSymbol attributeType, string field, NamedArgumentTypeEncoder encoder)
+        private void EncodeNamedArgumentType(ITypeSymbol type, NamedArgumentTypeEncoder encoder)
         {
             Logger.Log("encoding named type");
-            var fieldMembers = attributeType.GetMembers(field);
-            Logger.Log("# fields: " + fieldMembers.Count());
-            var fieldSymbol = fieldMembers.First() as IFieldSymbol;
-            Logger.Log("found field: " + fieldSymbol);
-
-            if (fieldSymbol.Type.SpecialType == SpecialType.System_Object)
+            if (type.SpecialType == SpecialType.System_Object)
             {
                 encoder.Object();
             }
-            else if (fieldSymbol.Type.SpecialType == SpecialType.System_Array)
+            else if (type.SpecialType == SpecialType.System_Array)
             {
                 // TODO array type encoder
                 encoder.SZArray();
             }
             else
             {
-                EncodeCustomElementType(fieldSymbol, encoder.ScalarType());
+                EncodeCustomElementType(type, encoder.ScalarType());
             }
+        }
+
+        private ISymbol GetMember(INamedTypeSymbol type, string member)
+        {
+            var foundMembers = type.GetMembers(member);
+            var baseType = type.BaseType;
+            while(foundMembers.Count() == 0 && baseType != null)
+            {
+                foundMembers = baseType.GetMembers(member);
+                baseType = baseType.BaseType;
+            }
+
+            Logger.Log("# members found: " + foundMembers.Count());
+            var foundMember = foundMembers.First();
+            Logger.Log("found member: " + foundMember);
+            return foundMember;
         }
 
         private void EncodeNamedArguments(
@@ -1636,9 +1684,25 @@ namespace Generator
                 Logger.Log("named argument: " + argument.Key);
                 Logger.Log("value " + argument.Value);
 
+                ITypeSymbol argumentType = null;
+                var attributeClassMember = GetMember(attributeType, argument.Key);
+                if(attributeClassMember is IFieldSymbol field)
+                {
+                    argumentType = field.Type;
+                }
+                else if(attributeClassMember is IPropertySymbol property)
+                {
+                    argumentType = property.Type;
+                }
+                else
+                {
+                    Logger.Log("unexpected member: " + attributeClassMember.Name + " " + attributeClassMember.GetType());
+                    throw new InvalidOperationException();
+                }
+
                 encoder.AddArgument(
-                    true,
-                    type => EncodeNamedArgumentType(attributeType, argument.Key, type),
+                    attributeClassMember is IFieldSymbol,
+                    type => EncodeNamedArgumentType(argumentType, type),
                     name => name.Name(argument.Key),
                     literal => EncodeTypedConstant(argument.Value, literal)
                 );
@@ -1837,8 +1901,9 @@ namespace Generator
             Logger.Log("attribute type found " + attributeType);
             if (!typeDefinitionMapping.ContainsKey(attributeTypeName))
             {
+                // Even if the attribute is an external non WinRT type, treat it as a projected type.
                 Logger.Log("adding attribute type");
-                AddType(attributeType);
+                AddType(attributeType, true);
             }
 
             Logger.Log("# constructor found: " + attributeType.Constructors.Length);
@@ -1883,7 +1948,8 @@ namespace Generator
 
                 if (!typeDefinitionMapping.ContainsKey(attributeType.ToString()))
                 {
-                    AddType(attributeType);
+                    // Even if the attribute is an external non WinRT type, treat it as a projected type.
+                    AddType(attributeType, true);
                 }
 
                 var constructorReference = typeDefinitionMapping[attributeType.ToString()].MethodReferences[attribute.AttributeConstructor];
@@ -2390,14 +2456,14 @@ namespace Generator
                 }
             }
 
-            typeDefinitionMapping[projectedTypeOverride ?? QualifiedName(type)] = currentTypeDeclaration;
+            typeDefinitionMapping[projectedTypeOverride ?? QualifiedName(type, true)] = currentTypeDeclaration;
         }
 
         void AddMappedType(INamedTypeSymbol type)
         {
             currentTypeDeclaration = new TypeDeclaration(type);
             WriteCustomMappedTypeMembers(type, false);
-            typeDefinitionMapping[QualifiedName(type)] = currentTypeDeclaration;
+            typeDefinitionMapping[QualifiedName(type, true)] = currentTypeDeclaration;
         }
 
         enum SynthesizedInterfaceType
@@ -2585,7 +2651,7 @@ namespace Generator
             return (int)version;
         }
 
-        void AddType(INamedTypeSymbol type)
+        void AddType(INamedTypeSymbol type, bool treatAsProjectedType = false)
         {
             Logger.Log("add type: " + type.ToString());
             bool isProjectedType = type.GetAttributes().
@@ -2607,6 +2673,11 @@ namespace Generator
                 {
                     AddMappedType(type);
                 }
+            }
+            else if (treatAsProjectedType)
+            {
+                // Prioritize any mapped types before treating an attribute as a projected type.
+                AddProjectedType(type);
             }
             else
             {
@@ -2675,15 +2746,15 @@ namespace Generator
                 Logger.Log("finalizing class " + QualifiedName(classSymbol));
                 foreach (var implementedInterface in GetInterfaces(classSymbol))
                 {
-                    var implementedInterfaceQualifiedName = QualifiedName(implementedInterface);
-                    if (!typeDefinitionMapping.ContainsKey(implementedInterfaceQualifiedName))
+                    var implementedInterfaceQualifiedNameWithGenerics = QualifiedName(implementedInterface, true);
+                    if (!typeDefinitionMapping.ContainsKey(implementedInterfaceQualifiedNameWithGenerics))
                     {
                         AddType(implementedInterface);
                     }
 
-                    Logger.Log("finalizing interface " + implementedInterfaceQualifiedName);
-                    var interfaceTypeDeclaration = typeDefinitionMapping[implementedInterfaceQualifiedName];
-                    if (MappedCSharpTypes.ContainsKey(implementedInterfaceQualifiedName))
+                    Logger.Log("finalizing interface " + implementedInterfaceQualifiedNameWithGenerics);
+                    var interfaceTypeDeclaration = typeDefinitionMapping[implementedInterfaceQualifiedNameWithGenerics];
+                    if (MappedCSharpTypes.ContainsKey(QualifiedName(implementedInterface)))
                     {
                         Logger.Log("adding MethodImpls for custom mapped interface");
                         foreach (var interfaceMember in interfaceTypeDeclaration.MethodReferences)
@@ -2780,9 +2851,10 @@ namespace Generator
             foreach (var interfaceDeclaration in interfaceDeclarations)
             {
                 INamedTypeSymbol interfaceSymbol = interfaceDeclaration.Node as INamedTypeSymbol;
-                if (typeDefinitionMapping[QualifiedName(interfaceSymbol)].Handle != default && GetVersion(interfaceSymbol) == -1)
+                string qualifiedNameWithGenerics = QualifiedName(interfaceSymbol, true);
+                if (typeDefinitionMapping[qualifiedNameWithGenerics].Handle != default && GetVersion(interfaceSymbol) == -1)
                 {
-                    AddDefaultVersionAttribute(typeDefinitionMapping[QualifiedName(interfaceSymbol)].Handle);
+                    AddDefaultVersionAttribute(typeDefinitionMapping[qualifiedNameWithGenerics].Handle);
                 }
             }
 
@@ -2866,19 +2938,23 @@ namespace Generator
             return string.Join(".", @namespace, identifier);
         }
 
-        public static string GetGenericName(ISymbol symbol)
+        public static string GetGenericName(ISymbol symbol, bool includeGenerics = false)
         {
             string name = symbol.Name;
             if (symbol is INamedTypeSymbol namedType && namedType.TypeArguments.Length != 0)
             {
                 name += "`" + namedType.TypeArguments.Length;
+                if(includeGenerics)
+                {
+                    name += string.Format("<{0}>", string.Join(", ", namedType.TypeArguments));
+                }
             }
             return name;
         }
 
-        public string QualifiedName(ISymbol symbol)
+        public string QualifiedName(ISymbol symbol, bool includeGenerics = false)
         {
-            return QualifiedName(symbol.ContainingNamespace.ToString(), GetGenericName(symbol));
+            return QualifiedName(symbol.ContainingNamespace.ToString(), GetGenericName(symbol, includeGenerics));
         }
 
         public override void VisitNamespaceDeclaration(NamespaceDeclarationSyntax node)

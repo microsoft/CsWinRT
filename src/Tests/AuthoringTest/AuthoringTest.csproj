@@ -3,13 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <Platforms>x64;x86</Platforms>
-    <LangVersion>preview</LangVersion>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
     <CsWinRTComponent>true</CsWinRTComponent>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <GeneratedFilesDir Condition="'$(GeneratedFilesDir)'==''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'Generated Files'))</GeneratedFilesDir>
     <!-- Enable to diagnose generation issues -->
+    <!-- <CsWinRTEnableLogging>true</CsWinRTEnableLogging> -->
     <!-- <CsWinRTKeepGeneratedSources>true</CsWinRTKeepGeneratedSources> -->
   </PropertyGroup>
 
@@ -23,7 +19,7 @@
     <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.Web.WebView2.Core.winmd" />
   </ItemGroup>
   
-    <ItemGroup>    
+  <ItemGroup>    
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />    
     <ProjectReference Include="..\..\Projections\WinUI\WinUI.csproj" />
     <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />

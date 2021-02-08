@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -267,6 +268,17 @@ namespace AuthoringTest
         public static int GetDefaultNumber()
         {
             return 2;
+        }
+
+        public static int DefaultNumber { get; set; }
+
+        internal static int DefaultNumber2 { get; set; }
+
+        public static event BasicDelegate StaticDelegateEvent;
+
+        public static void FireStaticDelegate(uint value)
+        {
+            StaticDelegateEvent?.Invoke(value);
         }
 
         // Default interface
@@ -794,6 +806,17 @@ namespace AuthoringTest
         {
             return number;
         }
+
+        public static int Number { get; set; }
+
+        internal static int Number2 { get; set; }
+
+        public static event DoubleDelegate DelegateEvent;
+
+        public static void FireDelegate(double value)
+        {
+            DelegateEvent?.Invoke(value);
+        }
     }
 
     public static class ButtonUtils
@@ -952,6 +975,29 @@ namespace AuthoringTest
         }
     }
 
+    public sealed class CustomNotifyDataErrorInfo2 : INotifyDataErrorInfo
+    {
+        bool INotifyDataErrorInfo.HasErrors => throw new NotImplementedException();
+
+        event EventHandler<DataErrorsChangedEventArgs> INotifyDataErrorInfo.ErrorsChanged
+        {
+            add
+            {
+                throw new NotImplementedException();
+            }
+
+            remove
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        IEnumerable INotifyDataErrorInfo.GetErrors(string propertyName)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public sealed class CustomEnumerable : IEnumerable
     {
         private IEnumerable _enumerable;
@@ -972,17 +1018,17 @@ namespace AuthoringTest
         // Tests DefaultOverload attribute specified in projected interface.
         public IXamlType GetXamlType(Type type)
         {
-            throw new NotImplementedException();
+            return null;
         }
 
         public IXamlType GetXamlType(string fullName)
         {
-            throw new NotImplementedException();
+            return null;
         }
 
         public XmlnsDefinition[] GetXmlnsDefinitions()
         {
-            throw new NotImplementedException();
+            return null;
         }
     }
 
@@ -991,6 +1037,7 @@ namespace AuthoringTest
         private double _number;
         private DoubleDelegate _doubleDelegate;
 
+        [Required(ErrorMessage = "Number is required")]
         public double Number { get => _number; set => _number = value; }
 
         public event DoubleDelegate DoubleDelegateEvent
@@ -1164,6 +1211,230 @@ namespace AuthoringTest
         IEnumerator IEnumerable.GetEnumerator()
         {
             throw new NotImplementedException();
+        }
+    }
+
+    public interface IInterfaceInheritance : IDouble, IWwwFormUrlDecoderEntry
+    {
+        void SetNumber(double number);
+    }
+
+    public sealed class InterfaceInheritance : IInterfaceInheritance
+    {
+        private double _number;
+        public double Number { get => _number; set => _number = value; }
+
+        public string Name => "IInterfaceInheritance";
+
+        public string Value => "InterfaceInheritance";
+
+        public event DoubleDelegate DoubleDelegateEvent;
+
+        public double GetDouble()
+        {
+            return 2;
+        }
+
+        public double GetDouble(bool ignoreFactor)
+        {
+            return 2.5;
+        }
+
+        public string GetNumStr(int num)
+        {
+            return num.ToString();
+        }
+
+        public string GetNumStr(double num)
+        {
+            return num.ToString();
+        }
+
+        public void SetNumber(double number)
+        {
+            Number = number;
+        }
+    }
+
+    public sealed class MultipleInterfaceMappingClass : IList<DisposableClass>, IList
+    {
+        private List<DisposableClass> _list = new List<DisposableClass>();
+
+        DisposableClass IList<DisposableClass>.this[int index] { get => _list[index]; set => _list[index] = value; }
+        object IList.this[int index] { get => _list[index]; set => ((IList)_list) [index] = value; }
+
+        int ICollection<DisposableClass>.Count => _list.Count;
+
+        int ICollection.Count => _list.Count;
+
+        bool ICollection<DisposableClass>.IsReadOnly => true;
+
+        bool IList.IsReadOnly => true;
+
+        bool IList.IsFixedSize => false;
+
+        bool ICollection.IsSynchronized => true;
+
+        object ICollection.SyncRoot => ((ICollection) _list).SyncRoot;
+
+        void ICollection<DisposableClass>.Add(DisposableClass item)
+        {
+            _list.Add(item);
+        }
+
+        int IList.Add(object value)
+        {
+            return ((IList) _list).Add(value);
+        }
+
+        void ICollection<DisposableClass>.Clear()
+        {
+            _list.Clear();
+        }
+
+        void IList.Clear()
+        {
+            _list.Clear();
+        }
+
+        bool ICollection<DisposableClass>.Contains(DisposableClass item)
+        {
+            return _list.Contains(item);
+        }
+
+        bool IList.Contains(object value)
+        {
+            return ((IList) _list).Contains(value);
+        }
+
+        void ICollection<DisposableClass>.CopyTo(DisposableClass[] array, int arrayIndex)
+        {
+            _list.CopyTo(array, arrayIndex);
+        }
+
+        void ICollection.CopyTo(Array array, int index)
+        {
+             ((ICollection) _list).CopyTo(array, index);
+        }
+
+        IEnumerator<DisposableClass> IEnumerable<DisposableClass>.GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
+        int IList<DisposableClass>.IndexOf(DisposableClass item)
+        {
+            return _list.IndexOf(item);
+        }
+
+        int IList.IndexOf(object value)
+        {
+            return ((IList) _list).IndexOf(value);
+        }
+
+        void IList<DisposableClass>.Insert(int index, DisposableClass item)
+        {
+            _list.Insert(index, item);
+        }
+
+        void IList.Insert(int index, object value)
+        {
+            ((IList) _list).Insert(index, value);
+        }
+
+        bool ICollection<DisposableClass>.Remove(DisposableClass item)
+        {
+            return _list.Remove(item);
+        }
+
+        void IList.Remove(object value)
+        {
+            ((IList) _list).Remove(value);
+        }
+
+        void IList<DisposableClass>.RemoveAt(int index)
+        {
+            _list.RemoveAt(index);
+        }
+
+        void IList.RemoveAt(int index)
+        {
+            _list.RemoveAt(index);
+        }
+    }
+
+    public sealed class CustomDictionary2 : IDictionary<string, int>
+    {
+        private readonly Dictionary<string, int> _dictionary = new Dictionary<string, int>();
+
+        int IDictionary<string, int>.this[string key] { get => _dictionary[key]; set => _dictionary[key] = value; }
+
+        ICollection<string> IDictionary<string, int>.Keys => _dictionary.Keys;
+
+        ICollection<int> IDictionary<string, int>.Values => _dictionary.Values;
+
+        int ICollection<KeyValuePair<string, int>>.Count => _dictionary.Count;
+
+        bool ICollection<KeyValuePair<string, int>>.IsReadOnly => false;
+
+        void IDictionary<string, int>.Add(string key, int value)
+        {
+            _dictionary.Add(key, value);
+        }
+
+        void ICollection<KeyValuePair<string, int>>.Add(KeyValuePair<string, int> item)
+        {
+            ((ICollection<KeyValuePair<string, int>>) _dictionary).Add(item);
+        }
+
+        void ICollection<KeyValuePair<string, int>>.Clear()
+        {
+            _dictionary.Clear();
+        }
+
+        bool ICollection<KeyValuePair<string, int>>.Contains(KeyValuePair<string, int> item)
+        {
+            return _dictionary.Contains(item);
+        }
+
+        bool IDictionary<string, int>.ContainsKey(string key)
+        {
+            return _dictionary.ContainsKey(key);
+        }
+
+        void ICollection<KeyValuePair<string, int>>.CopyTo(KeyValuePair<string, int>[] array, int arrayIndex)
+        {
+            ((ICollection<KeyValuePair<string, int>>) _dictionary).CopyTo(array, arrayIndex);
+        }
+
+        IEnumerator<KeyValuePair<string, int>> IEnumerable<KeyValuePair<string, int>>.GetEnumerator()
+        {
+            return _dictionary.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _dictionary.GetEnumerator();
+        }
+
+        bool IDictionary<string, int>.Remove(string key)
+        {
+            return _dictionary.Remove(key);
+        }
+
+        bool ICollection<KeyValuePair<string, int>>.Remove(KeyValuePair<string, int> item)
+        {
+            return ((ICollection<KeyValuePair<string, int>>) _dictionary).Remove(item);
+        }
+
+        bool IDictionary<string, int>.TryGetValue(string key, out int value)
+        {
+            return _dictionary.TryGetValue(key, out value);
         }
     }
 }

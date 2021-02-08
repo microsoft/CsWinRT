@@ -122,7 +122,7 @@ $(CsWinRTFilters)
     <CompilerVisibleProperty Include="AssemblyVersion" />
     <CompilerVisibleProperty Include="CsWinRTComponent" />
     <CompilerVisibleProperty Include="CsWinRTEnableLogging" />
-    <CompilerVisibleProperty Include="GeneratedFilesDir" />
+    <CompilerVisibleProperty Include="CsWinRTGeneratedFilesDir" />
     <CompilerVisibleProperty Include="CsWinRTExe" />
     <CompilerVisibleProperty Include="CsWinRTKeepGeneratedSources" />
     <CompilerVisibleProperty Include="CsWinRTWindowsMetadata" />
@@ -131,7 +131,7 @@ $(CsWinRTFilters)
   </ItemGroup>
 
   <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
-  <Target Name="CsWinRTSetAuthoringWinMDs" BeforeTargets="GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore" DependsOnTargets="CsWinRTRemoveWinMDReferences" Condition="$(CsWinRTEnabled)">
+  <Target Name="CsWinRTSetAuthoringWinMDs" BeforeTargets="GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore" DependsOnTargets="CsWinRTRemoveWinMDReferences;GetAssemblyVersion;CsWinRTPrepareProjection" Condition="$(CsWinRTEnabled) And '$(CsWinRTComponent)' == 'true'">
     <PropertyGroup>
       <CsWinRTAuthoringInputs>$(CsWinRTAuthoringInputs) @(CsWinRTInputs->'"%(FullPath)"', ' ') @(CsWinRTAuthoringWinMDs->'"%(FullPath)"', ' ')</CsWinRTAuthoringInputs>
     </PropertyGroup>
@@ -141,26 +141,25 @@ $(CsWinRTFilters)
 
   <!-- Copy Authored winmd to output folder -->
   <Target Name="CsWinRTPlaceWinMDInOutputFolder" Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="AfterBuild">
-    <Copy SourceFiles="$(GeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(CsWinRTGeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>
 
   <!-- When an authored component makes a nupkg, add the necessary hosting assets to the package -->
   <Target Name="CsWinRTIncludeHostDlls"  Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="AfterBuild" Outputs="@(Content)">
     <ItemGroup>
-      <Content Include="$(TargetDir)$(AssemblyName).winmd"
-               Pack="true"
-               PackagePath="winmd" />
-      
-      <!-- The authored component gets the WinRT.Runtime and NET.SDK dlls from ReferenceCopyLocalPaths 
-            (because CopyLocalLockFileAssemblies == true) and $(TargetPath) has the assembly (e.g. PackageId.dll) -->
-      <Content Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll;@(ReferenceCopyLocalPaths);$(TargetPath)"
-               Pack="true"
-               PackagePath="lib\native" />
+      <CsWinRTAuthoringDependencyDlls Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
+      <CsWinRTAuthoringDependencyDlls Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)%(Extension)' == 'WinRT.Runtime.dll'" />
+      <CsWinRTAuthoringDependencyDlls Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)%(Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
+    </ItemGroup> 
+
+    <ItemGroup>
+      <Content Include="@(CsWinRTAuthoringDependencyDlls)" Pack="true" PackagePath="lib\$(TargetFramework)" />
+      <Content Include="$(TargetDir)$(AssemblyName).winmd" Pack="true" PackagePath="lib\$(TargetFramework)\winmd" />
 
       <!-- Custom targets that copy dlls for consumers of the authored component.
            `buildTransitive\` is for PackageReference, `build\` is for packages.config -->
-      <Content Include="$(CsWinRTPath)buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets"
-               Pack="true"
+      <Content Include="$(CsWinRTPath)buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets" 
+               Pack="true" 
                PackagePath="buildTransitive\$(AssemblyName).targets;build\$(AssemblyName).targets"/>
 
       <!-- WinRT.Host.dll is architecture specific -->
