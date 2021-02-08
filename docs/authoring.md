@@ -51,7 +51,7 @@ We have some [hosting docs](https://github.com/microsoft/CsWinRT/blob/master/doc
 For consuming by "PackageReference", this is all that is required. C++ apps will need to use [C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/intro-to-using-cpp-with-winrt) to consume the authored component. So make sure you have C++/WinRT installed, and have added `#include <winrt/MyAuthoredComponent.h>` to the file `pch.h` of the native app.  
 
 
-## Consumption by Project Reference
+## Native Consumption by Project Reference
 
 If you choose to consume your component through a project reference in a native app, then some modifications to the native app's `.vcxproj` file are needed.
 Because dotnet will assume a `TargetFramework` for your app that conflicts with `net5`, we need to specify the `TargetFramwork`, `TargetFrameworkVersion` and `TargetRuntime`. 
@@ -71,7 +71,7 @@ Here are the additions made to the native app's project file:
 </PropertyGroup>
 ```
 
-Project references for managed apps do not require any such changes.
+Project references for managed apps only need the reference to the authored component's project file.
 
 ## Packaging
 To generate a NuGet package for the component, you can simply right click on the project and select **Pack**. Alternatively, you can add the following property to the library project file to automatically generate a NuGet package on build: `GeneratePackageOnBuild`. 
