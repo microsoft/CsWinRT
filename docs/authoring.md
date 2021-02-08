@@ -57,8 +57,8 @@ If you choose to consume your component through a project reference in a native 
 Because dotnet will assume a `TargetFramework` for your app that conflicts with `net5`, we need to specify the `TargetFramwork`, `TargetFrameworkVersion` and `TargetRuntime`. 
 Examples of this are seen in the code snippet below. This is needed for this preview version, as we continue working on proper support.
 
-You will need to add a reference to both the C#/WinRT component's `csproj` file, and the WinMD produced for the component. 
-The WinMD can be found in the output directory of the authored component's project.
+You will need to add a reference to both the C#/WinRT component project, and the WinMD produced for the component. 
+The WinMD can be found in the output directory of the authored component's project. References are added by right-clicking on the project node you want to add a reference to, clicking "Add" then clicking "Reference" and browsing to the files. 
 
 Here are the additions made to the native app's project file:
 ``` vcxproj
