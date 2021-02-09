@@ -10,6 +10,32 @@ TEST(AuthoringTest, Statics)
     EXPECT_EQ(TestClass::GetDefaultNumber(), 2);
     EXPECT_EQ(StaticClass::GetNumber(), 4);
     EXPECT_EQ(StaticClass::GetNumber(2), 2);
+    EXPECT_EQ(TestClass::DefaultNumber(), 0);
+    TestClass::DefaultNumber(4);
+    EXPECT_EQ(TestClass::DefaultNumber(), 4);
+
+    int result = 0;
+    auto token = TestClass::StaticDelegateEvent(auto_revoke, [&result](uint32_t value)
+    {
+        result = value;
+    });
+    TestClass::FireStaticDelegate(1);
+    EXPECT_EQ(result, 1);
+    token.revoke();
+    TestClass::FireStaticDelegate(2);
+    EXPECT_EQ(result, 1);
+
+    EXPECT_EQ(StaticClass::Number(), 0);
+    StaticClass::Number(2);
+    EXPECT_EQ(StaticClass::Number(), 2);
+
+    double result2 = 0;
+    auto token2 = StaticClass::DelegateEvent(auto_revoke, [&result2](double value)
+    {
+        result2 = value;
+    });
+    StaticClass::FireDelegate(4.5);
+    EXPECT_EQ(result2, 4.5);
 }
 
 TEST(AuthoringTest, FunctionCalls)
@@ -64,6 +90,28 @@ TEST(AuthoringTest, ImplementExternalInterface)
     IWwwFormUrlDecoderEntry www = CustomWWW();
     EXPECT_EQ(www.Name(), hstring(L"CustomWWW"));
     EXPECT_EQ(www.Value(), hstring(L"CsWinRT"));
+}
+
+TEST(AuthoringTest, InterfaceInheritance)
+{
+    InterfaceInheritance interfaceInheritance;
+    EXPECT_EQ(interfaceInheritance.GetDouble(), 2);
+    EXPECT_EQ(interfaceInheritance.GetNumStr(2.5), hstring(L"2.5"));
+    interfaceInheritance.SetNumber(4);
+    EXPECT_EQ(interfaceInheritance.Number(), 4);
+    EXPECT_EQ(interfaceInheritance.Name(), hstring(L"IInterfaceInheritance"));
+    EXPECT_EQ(interfaceInheritance.Value(), hstring(L"InterfaceInheritance"));
+
+    IDouble doubleInterface = interfaceInheritance;
+    EXPECT_EQ(doubleInterface.GetDouble(false), 2.5);
+
+    IInterfaceInheritance interfaceInheritanceInterface = interfaceInheritance;
+    interfaceInheritanceInterface.SetNumber(2);
+    EXPECT_EQ(interfaceInheritanceInterface.Number(), 2);
+
+    IWwwFormUrlDecoderEntry www = interfaceInheritance;
+    EXPECT_EQ(www.Name(), hstring(L"IInterfaceInheritance"));
+    EXPECT_EQ(www.Value(), hstring(L"InterfaceInheritance"));
 }
 
 TEST(AuthoringTest, ReturnTypes)
@@ -481,4 +529,89 @@ TEST(AuthoringTest, ExplicitInterfaces)
     EXPECT_TRUE(eventTriggered);
     EXPECT_TRUE(event2Triggered);
     token.revoke();
+
+    DisposableClass disposed;
+    disposed.Close();
+    MultipleInterfaceMappingClass multipleInterfaces;
+    Microsoft::UI::Xaml::Interop::IBindableIterable bindable = multipleInterfaces;
+    Windows::Foundation::Collections::IVector<DisposableClass> vector = multipleInterfaces;
+    Microsoft::UI::Xaml::Interop::IBindableVector bindableVector = multipleInterfaces;
+    EXPECT_EQ(vector.Size(), 0);
+    EXPECT_EQ(bindableVector.Size(), 0);
+    vector.Append(DisposableClass());
+    vector.Append(DisposableClass());
+    vector.Append(disposed);
+    bindableVector.Append(DisposableClass());
+    EXPECT_EQ(vector.Size(), 4);
+    EXPECT_EQ(bindableVector.Size(), 4);
+
+    auto first = vector.First();
+    EXPECT_TRUE(first.HasCurrent());
+    EXPECT_FALSE(first.Current().IsDisposed());
+    auto bindableFirst = bindable.First();
+    EXPECT_TRUE(bindableFirst.HasCurrent());
+    EXPECT_FALSE(bindableFirst.Current().as<DisposableClass>().IsDisposed());
+    bindableFirst.Current().as<DisposableClass>().Close();
+    EXPECT_TRUE(first.Current().IsDisposed());
+    EXPECT_FALSE(vector.GetAt(1).IsDisposed());
+    EXPECT_TRUE(vector.GetAt(2).IsDisposed());
+    EXPECT_TRUE(bindableVector.First().Current().as<DisposableClass>().IsDisposed());
+    EXPECT_FALSE(bindableVector.GetAt(3).as<DisposableClass>().IsDisposed());
+    EXPECT_TRUE(bindableVector.GetAt(2).as<DisposableClass>().IsDisposed());
+    for (auto obj : vector.GetView())
+    {
+        obj.Close();
+    }
+
+    std::array<DisposableClass, 2> view{};
+    EXPECT_EQ(vector.GetMany(1, view), 2);
+    EXPECT_EQ(view.size(), 2);
+    for (auto& obj : view)
+    {
+        EXPECT_TRUE(obj.IsDisposed());
+    }
+
+    CustomDictionary2 dictionary;
+
+    EXPECT_FALSE(dictionary.Insert(L"first", 1));
+    EXPECT_FALSE(dictionary.Insert(L"second", 2));
+    EXPECT_TRUE(dictionary.Insert(L"second", 4));
+    EXPECT_FALSE(dictionary.Insert(L"third", 4));
+    EXPECT_EQ(dictionary.Size(), 3);
+
+    EXPECT_TRUE(dictionary.HasKey(L"first"));
+    EXPECT_FALSE(dictionary.HasKey(L"fourth"));
+    EXPECT_TRUE(dictionary.HasKey(L"third"));
+
+    dictionary.Clear();
+    EXPECT_FALSE(dictionary.HasKey(L"first"));
+    EXPECT_FALSE(dictionary.HasKey(L"fourth"));
+    EXPECT_FALSE(dictionary.HasKey(L"third"));
+}
+
+TEST(AuthoringTest, PartialClass)
+{
+    PartialClass partialClass;
+    partialClass.SetNumber(2);
+    EXPECT_EQ(partialClass.GetNumber(), 2);
+    EXPECT_EQ(partialClass.GetNumberAsString(), L"2");
+    partialClass.SetNumber(4);
+    EXPECT_EQ(partialClass.Number(), 4);
+    EXPECT_EQ(partialClass.Number2(), 8);
+    PartialStruct result = partialClass.GetPartialStruct();
+    EXPECT_EQ(result.X, 4);
+    EXPECT_EQ(result.Y, 5);
+    EXPECT_EQ(result.Z, 6);
+
+    PartialClass partialClass2(1);
+    IPartialInterface partialInterface = partialClass2;
+    EXPECT_EQ(partialInterface.GetNumberAsString(), L"1");
+    EXPECT_EQ(partialClass2.GetNumber(), 1);
+    partialClass2.SetNumber(2);
+    EXPECT_EQ(partialInterface.GetNumberAsString(), L"2");
+
+    PartialStruct partialStruct{ 3, 4, 5 };
+    EXPECT_EQ(partialStruct.X, 3);
+    EXPECT_EQ(partialStruct.Y, 4);
+    EXPECT_EQ(partialStruct.Z, 5);
 }
