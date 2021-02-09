@@ -289,6 +289,7 @@ namespace Generator
             { "System.IDisposable", new MappedType("Windows.Foundation", "IClosable", "Windows.Foundation.FoundationContract") },
             { "System.IServiceProvider", new MappedType("Microsoft.UI.Xaml", "IXamlServiceProvider", "Microsoft.UI") },
             { "System.Nullable`1", new MappedType("Windows.Foundation", "IReference`1", "Windows.Foundation.FoundationContract" ) },
+            { "System.Object", new MappedType("System", "Object", "mscorlib" ) },
             { "System.TimeSpan", new MappedType("Windows.Foundation", "TimeSpan", "Windows.Foundation.FoundationContract", true) },
             { "System.Uri", new MappedType("Windows.Foundation", "Uri", "Windows.Foundation.FoundationContract") },
             { "System.ComponentModel.DataErrorsChangedEventArgs", new MappedType("Microsoft.UI.Xaml.Data", "DataErrorsChangedEventArgs", "Microsoft.UI") },
@@ -344,7 +345,6 @@ namespace Generator
         private readonly Dictionary<string, TypeReferenceHandle> typeReferenceMapping;
         private readonly Dictionary<string, EntityHandle> assemblyReferenceMapping;
         private readonly MetadataBuilder metadataBuilder;
-        private bool hasConstructor, hasDefaultConstructor;
 
         private readonly Dictionary<string, TypeDeclaration> typeDefinitionMapping;
         private TypeDeclaration currentTypeDeclaration;
@@ -692,11 +692,6 @@ namespace Generator
             }
             else
             {
-                // TODO check if from overridable interface
-                if (!isOverridable)
-                {
-                    methodAttributes |= MethodAttributes.Final;
-                }
                 methodImplAttributes |= MethodImplAttributes.Runtime;
             }
 
@@ -713,6 +708,11 @@ namespace Generator
                 methodAttributes |=
                     MethodAttributes.Virtual |
                     MethodAttributes.NewSlot;
+
+                if (!isOverridable && !isInterfaceParent)
+                {
+                    methodAttributes |= MethodAttributes.Final;
+                }
             }
 
             if (isSpecialMethod)
@@ -732,61 +732,32 @@ namespace Generator
             return methodDefinitionHandle;
         }
 
-        public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
+        public void AddFieldDeclaration(IFieldSymbol field, bool isEnum)
         {
-            Logger.Log("method: " + node.Identifier.ValueText);
-            var methodSymbol = Model.GetDeclaredSymbol(node);
-            if ((!IsPublicNode(node) && node.ExplicitInterfaceSpecifier == null) || 
-                currentTypeDeclaration.CustomMappedSymbols.Contains(methodSymbol))
-            {
-                Logger.Log("method skipped");
-                return;
-            }
+            Logger.Log("defining field " + field.Name + " with type " + field.Type.ToString());
 
-            base.VisitMethodDeclaration(node);
-
-            Parameter[] parameters = Parameter.GetParameters(node.ParameterList, Model);
-            var methodDefinitionHandle = AddMethodDefinition(
-                methodSymbol.Name,
-                parameters,
-                new Symbol(methodSymbol.ReturnType),
-                IsStaticNode(node),
-                node.Parent is InterfaceDeclarationSyntax,
-                false,
-                node.ExplicitInterfaceSpecifier == null);
-            currentTypeDeclaration.AddMethod(methodSymbol, methodSymbol.Name, methodDefinitionHandle);
-        }
-
-        public override void VisitFieldDeclaration(FieldDeclarationSyntax node)
-        {
-            if (!IsPublicNode(node) || node.Parent is not StructDeclarationSyntax)
-            {
-                return;
-            }
-
-            base.VisitFieldDeclaration(node);
-
-            var symbol = Model.GetTypeInfo(node.Declaration.Type).Type;
             var fieldSignature = new BlobBuilder();
             var encoder = new BlobEncoder(fieldSignature);
+            EncodeSymbol(new Symbol(field.Type), encoder.FieldSignature());
 
-            if (IsEncodableAsSpecialType(symbol.SpecialType))
+            var fieldAttributes = FieldAttributes.Public;
+            if(isEnum)
             {
-                EncodeSpecialType(symbol.SpecialType, encoder.FieldSignature());
-            }
-            else
-            {
-                EncodeSymbol(new Symbol(symbol), encoder.FieldSignature());
+                fieldAttributes |=
+                    FieldAttributes.Static |
+                    FieldAttributes.Literal |
+                    FieldAttributes.HasDefault;
             }
 
-            foreach (var variable in node.Declaration.Variables)
+            var fieldDefinitionHandle = metadataBuilder.AddFieldDefinition(
+                fieldAttributes,
+                metadataBuilder.GetOrAddString(field.Name),
+                metadataBuilder.GetOrAddBlob(fieldSignature));
+            currentTypeDeclaration.AddField(field, fieldDefinitionHandle);
+
+            if (isEnum && field.HasConstantValue)
             {
-                var fieldSymbol = Model.GetDeclaredSymbol(variable);
-                var fieldDefinitionHandle = metadataBuilder.AddFieldDefinition(
-                    FieldAttributes.Public,
-                    metadataBuilder.GetOrAddString(variable.Identifier.Text),
-                    metadataBuilder.GetOrAddBlob(fieldSignature));
-                currentTypeDeclaration.AddField(fieldSymbol, fieldDefinitionHandle);
+                metadataBuilder.AddConstant(fieldDefinitionHandle, field.ConstantValue);
             }
         }
 
@@ -852,7 +823,7 @@ namespace Generator
                 getMethod);
         }
 
-        public void AddPropertyDeclaration(IPropertySymbol property, bool isInterfaceParent, bool isPublic = true)
+        public void AddPropertyDeclaration(IPropertySymbol property, bool isInterfaceParent)
         {
             AddPropertyDefinition(
                 property.Name,
@@ -860,24 +831,9 @@ namespace Generator
                 property,
                 property.SetMethod != null && 
                     (property.SetMethod.DeclaredAccessibility == Accessibility.Public || 
-                     property.SetMethod.ExplicitInterfaceImplementations.Length != 0),
+                     !property.SetMethod.ExplicitInterfaceImplementations.IsDefaultOrEmpty),
                 isInterfaceParent,
-                isPublic
-            );
-        }
-
-        public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
-        {
-            var symbol = Model.GetDeclaredSymbol(node);
-            if ((!IsPublicNode(node) && node.ExplicitInterfaceSpecifier == null) ||
-                currentTypeDeclaration.CustomMappedSymbols.Contains(symbol))
-            {
-                return;
-            }
-
-            base.VisitPropertyDeclaration(node);
-
-            AddPropertyDeclaration(symbol, node.Parent is InterfaceDeclarationSyntax, node.ExplicitInterfaceSpecifier == null);
+                property.ExplicitInterfaceImplementations.IsDefaultOrEmpty);
         }
 
         private TypeDefinitionHandle AddTypeDefinition(
@@ -1372,179 +1328,19 @@ namespace Generator
                 .OrderBy(implementedInterface => implementedInterface.ToString());
         }
 
-        private void ProcessTypeDeclaration(BaseTypeDeclarationSyntax node, Action visitTypeDeclaration)
-        {
-            if (!IsPublicNode(node))
-            {
-                return;
-            }
-
-            var symbol = Model.GetDeclaredSymbol(node);
-            currentTypeDeclaration = new TypeDeclaration(symbol);
-
-            Logger.Log("defining type " + symbol.Name);
-
-            if (node is ClassDeclarationSyntax)
-            {
-                ProcessCustomMappedInterfaces(symbol);
-            }
-
-            visitTypeDeclaration();
-
-            TypeAttributes typeAttributes =
-                TypeAttributes.Public |
-                TypeAttributes.WindowsRuntime |
-                TypeAttributes.AutoLayout |
-                TypeAttributes.AnsiClass;
-
-            if (IsSealedNode(node) ||
-                IsStaticNode(node) ||
-                (node is EnumDeclarationSyntax ||
-                    node is StructDeclarationSyntax))
-            {
-                typeAttributes |= TypeAttributes.Sealed;
-            }
-
-            if (node is ClassDeclarationSyntax && IsStaticNode(node))
-            {
-                typeAttributes |= TypeAttributes.Abstract;
-            }
-
-            EntityHandle baseType = default;
-            if (node is InterfaceDeclarationSyntax)
-            {
-                typeAttributes |=
-                    TypeAttributes.Interface |
-                    TypeAttributes.Abstract;
-            }
-            else if (node is ClassDeclarationSyntax)
-            {
-                typeAttributes |=
-                    TypeAttributes.Class |
-                    TypeAttributes.BeforeFieldInit;
-
-                // extends
-                if (node.BaseList != null)
-                {
-                    foreach (var type in node.BaseList.Types)
-                    {
-                        var typeSymbol = Model.GetTypeInfo(type.Type).Type;
-                        if (typeSymbol.TypeKind == TypeKind.Class)
-                        {
-                            baseType = GetTypeReference(typeSymbol);
-                            break;
-                        }
-                    }
-                }
-
-                if (baseType == default)
-                {
-                    baseType = GetTypeReference("System", "Object", "mscorlib");
-                }
-            }
-            else if (node is StructDeclarationSyntax)
-            {
-                typeAttributes |= TypeAttributes.SequentialLayout;
-                baseType = GetTypeReference("System", "ValueType", "mscorlib");
-            }
-            else if (node is EnumDeclarationSyntax)
-            {
-                baseType = GetTypeReference("System", "Enum", "mscorlib");
-            }
-
-            var typeDefinitionHandle = AddTypeDefinition(
-                typeAttributes,
-                GetNamespace(),
-                node.Identifier.ValueText,
-                baseType);
-            currentTypeDeclaration.Handle = typeDefinitionHandle;
-
-            if (node.BaseList != null && (node is InterfaceDeclarationSyntax || node is ClassDeclarationSyntax))
-            {
-                // Interface implementations need to be added in order of class and then typespec.  Given entries are added
-                // per class, that is already in order, but we need to sort by typespec.
-                List<KeyValuePair<INamedTypeSymbol, EntityHandle>> implementedInterfaces = new List<KeyValuePair<INamedTypeSymbol, EntityHandle>>();
-                foreach (var implementedInterface in GetInterfaces(symbol))
-                {
-                    implementedInterfaces.Add(new KeyValuePair<INamedTypeSymbol, EntityHandle>(implementedInterface, GetTypeSpecification(implementedInterface)));
-                }
-                implementedInterfaces.Sort((x, y) => CodedIndex.TypeDefOrRefOrSpec(x.Value).CompareTo(CodedIndex.TypeDefOrRefOrSpec(y.Value)));
-
-                foreach (var implementedInterface in implementedInterfaces)
-                {
-                    var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
-                        typeDefinitionHandle,
-                        implementedInterface.Value);
-                    currentTypeDeclaration.AddInterfaceImpl(implementedInterface.Key, interfaceImplHandle);
-                }
-            }
-
-            typeDefinitionMapping[QualifiedName(node.Identifier.ValueText)] = currentTypeDeclaration;
-        }
-
         public override void VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
         {
-            ProcessTypeDeclaration(node, () => base.VisitInterfaceDeclaration(node));
-
-            var interfaceTypeDeclaration = currentTypeDeclaration;
-            AddGuidAttribute(interfaceTypeDeclaration.Handle, interfaceTypeDeclaration.Node.ToString());
-            AddOverloadAttributeForInterfaceMethods(interfaceTypeDeclaration);
+            AddComponentType(Model.GetDeclaredSymbol(node), () => base.VisitInterfaceDeclaration(node));
         }
 
         public override void VisitClassDeclaration(ClassDeclarationSyntax node)
         {
-            void processClassDeclaration()
-            {
-                hasConstructor = false;
-                hasDefaultConstructor = false;
-                base.VisitClassDeclaration(node);
-
-                // implicit constructor if none defined
-                if (!hasConstructor && !IsStaticNode(node))
-                {
-                    string constructorMethodName = ".ctor";
-                    var methodDefinitionHandle = AddMethodDefinition(
-                        constructorMethodName,
-                        new Parameter[0],
-                        null,
-                        false,
-                        false,
-                        true,
-                        true,
-                        true);
-                    var symbol = Model.GetDeclaredSymbol(node);
-                    currentTypeDeclaration.AddMethod(symbol, constructorMethodName, methodDefinitionHandle);
-                    hasDefaultConstructor = true;
-                }
-            }
-
-            ProcessTypeDeclaration(node, processClassDeclaration);
-
-            if (IsPublicNode(node))
-            {
-                var classDeclaration = currentTypeDeclaration;
-                var classSymbol = classDeclaration.Node as INamedTypeSymbol;
-
-                if (hasDefaultConstructor)
-                {
-                    AddActivatableAttribute(
-                        classDeclaration.Handle,
-                        (uint)GetVersion(classSymbol, true),
-                        null);
-                }
-                AddSynthesizedInterfaces(classDeclaration);
-
-                // No synthesized default interface generated
-                if (classDeclaration.DefaultInterface == null && classSymbol.Interfaces.Length != 0)
-                {
-                    AddDefaultInterfaceImplAttribute(classDeclaration.InterfaceImplDefinitions[classSymbol.Interfaces[0]]);
-                }
-            }
+            AddComponentType(Model.GetDeclaredSymbol(node), () => base.VisitClassDeclaration(node));
         }
 
         public override void VisitStructDeclaration(StructDeclarationSyntax node)
         {
-            ProcessTypeDeclaration(node, () => base.VisitStructDeclaration(node));
+            AddComponentType(Model.GetDeclaredSymbol(node), () => base.VisitStructDeclaration(node));
         }
 
         private void EncodeTypedConstant(TypedConstant constant, LiteralEncoder encoder)
@@ -1969,22 +1765,10 @@ namespace Generator
             }
         }
 
-        public override void VisitAttributeList(AttributeListSyntax node)
-        {
-            base.VisitAttributeList(node);
-
-            // Skip assembly attributes
-            if (node.Target != null && node.Target.Identifier.ValueText == "assembly")
-            {
-                return;
-            }
-
-            var parentSymbol = Model.GetDeclaredSymbol(node.Parent);
-            currentTypeDeclaration.SymbolsWithAttributes.Add(parentSymbol);
-        }
-
         public override void VisitEnumDeclaration(EnumDeclarationSyntax node)
         {
+            var symbol = Model.GetDeclaredSymbol(node);
+
             void processEnumDeclaration()
             {
                 var enumTypeFieldAttributes =
@@ -1992,7 +1776,6 @@ namespace Generator
                     FieldAttributes.SpecialName |
                     FieldAttributes.RTSpecialName;
 
-                var symbol = Model.GetDeclaredSymbol(node);
                 var enumTypeSymbol = symbol.EnumUnderlyingType;
                 var fieldSignature = new BlobBuilder();
                 var encoder = new BlobEncoder(fieldSignature);
@@ -2008,34 +1791,7 @@ namespace Generator
                 base.VisitEnumDeclaration(node);
             }
 
-            ProcessTypeDeclaration(node, processEnumDeclaration);
-        }
-
-        public override void VisitEnumMemberDeclaration(EnumMemberDeclarationSyntax node)
-        {
-            base.VisitEnumMemberDeclaration(node);
-
-            var enumFieldAttributes =
-                FieldAttributes.Public |
-                FieldAttributes.Static |
-                FieldAttributes.Literal |
-                FieldAttributes.HasDefault;
-
-            var symbol = Model.GetDeclaredSymbol(node);
-            var fieldSignature = new BlobBuilder();
-            var encoder = new BlobEncoder(fieldSignature);
-            EncodeSymbol(new Symbol(symbol.ContainingType), encoder.FieldSignature());
-
-            var fieldDefinitionHandle = metadataBuilder.AddFieldDefinition(
-                enumFieldAttributes,
-                metadataBuilder.GetOrAddString(node.Identifier.Text),
-                metadataBuilder.GetOrAddBlob(fieldSignature));
-            currentTypeDeclaration.AddField(symbol, fieldDefinitionHandle);
-
-            if (symbol.HasConstantValue)
-            {
-                metadataBuilder.AddConstant(fieldDefinitionHandle, symbol.ConstantValue);
-            }
+            AddComponentType(symbol, processEnumDeclaration);
         }
 
         public override void VisitDelegateDeclaration(DelegateDeclarationSyntax node)
@@ -2051,6 +1807,7 @@ namespace Generator
             currentTypeDeclaration = new TypeDeclaration(symbol);
 
             base.VisitDelegateDeclaration(node);
+            CheckAndMarkSymbolForAttributes(symbol);
 
             var objType = Model.Compilation.GetTypeByMetadataName(typeof(object).FullName);
             var nativeIntType = Model.Compilation.GetTypeByMetadataName(typeof(IntPtr).FullName);
@@ -2155,89 +1912,27 @@ namespace Generator
                 removeMethod);
         }
 
-        public void AddEventDeclaration(IEventSymbol @event, bool isInterfaceParent, bool isPublic = true)
+        public void AddEventDeclaration(IEventSymbol @event, bool isInterfaceParent)
         {
-            AddEventDeclaration(@event.Name, @event.Type, @event, isInterfaceParent, isPublic);
-        }
-
-        public override void VisitEventFieldDeclaration(EventFieldDeclarationSyntax node)
-        {
-            if (!IsPublicNode(node))
-            {
-                return;
-            }
-
-            base.VisitEventFieldDeclaration(node);
-
-            foreach (var declaration in node.Declaration.Variables)
-            {
-                var eventSymbol = Model.GetDeclaredSymbol(declaration) as IEventSymbol;
-                if (currentTypeDeclaration.CustomMappedSymbols.Contains(eventSymbol))
-                {
-                    Logger.Log("event skipped");
-                    continue;
-                }
-
-                AddEventDeclaration(eventSymbol, node.Parent is InterfaceDeclarationSyntax);
-            }
-        }
-
-        public override void VisitEventDeclaration(EventDeclarationSyntax node)
-        {
-            var eventSymbol = Model.GetDeclaredSymbol(node);
-            if ((!IsPublicNode(node) && node.ExplicitInterfaceSpecifier == null) || 
-                currentTypeDeclaration.CustomMappedSymbols.Contains(eventSymbol))
-            {
-                Logger.Log("event skipped");
-                return;
-            }
-
-            base.VisitEventDeclaration(node);
-
-            AddEventDeclaration(eventSymbol, node.Parent is InterfaceDeclarationSyntax, node.ExplicitInterfaceSpecifier == null);
-        }
-
-        public override void VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
-        {
-            hasConstructor = true;
-
-            if (!IsPublicNode(node))
-            {
-                return;
-            }
-
-            base.VisitConstructorDeclaration(node);
-
-            var symbol = Model.GetDeclaredSymbol(node);
-            Parameter[] parameters = Parameter.GetParameters(node.ParameterList, Model);
-            var methodDefinitionHandle = AddMethodDefinition(
-                ".ctor",
-                parameters,
-                null,
-                false,
-                false,
-                true,
-                true,
-                true);
-            currentTypeDeclaration.AddMethod(symbol, ".ctor", methodDefinitionHandle);
-            hasDefaultConstructor |= (parameters.Length == 0);
+            AddEventDeclaration(@event.Name, @event.Type, @event, isInterfaceParent, @event.ExplicitInterfaceImplementations.IsDefaultOrEmpty);
         }
 
         void AddMethodDeclaration(IMethodSymbol method, bool isInterfaceParent)
         {
             Logger.Log("add method from symbol: " + method.Name);
 
-            string methodName = method.MethodKind == MethodKind.Constructor ? ".ctor" : method.Name;
+            bool isConstructor = method.MethodKind == MethodKind.Constructor;
+            string methodName = isConstructor ? ".ctor" : method.Name;
+            var returnType = isConstructor ? null : new Symbol(method.ReturnType);
             Parameter[] parameters = Parameter.GetParameters(method);
             var methodDefinitionHandle = AddMethodDefinition(
                 methodName,
                 parameters,
-                new Symbol(method.ReturnType),
+                returnType,
                 !isInterfaceParent && method.IsStatic,
                 isInterfaceParent,
-                method.MethodKind == MethodKind.Constructor,
-                true,
-                true);
+                isConstructor,
+                method.ExplicitInterfaceImplementations.IsDefaultOrEmpty);
             currentTypeDeclaration.AddMethod(method, methodName, methodDefinitionHandle);
         }
 
@@ -2259,68 +1954,197 @@ namespace Generator
             currentTypeDeclaration.AddMethod(method, methodName, methodDefinitionHandle);
         }
 
-        void AddExternalType(INamedTypeSymbol type)
+        void AddComponentType(INamedTypeSymbol type, Action visitTypeDeclaration = null)
         {
-            // TODO: check if custom projected interface
-            // TODO: block or warn type names with namespaces not meeting WinRT requirements.
-            // TODO: synthesized interfaces and default interface impl.
-            // TODO: extends
+            if(!IsPublic(type) || typeDefinitionMapping.ContainsKey(type.ToString()))
+            {
+                return;
+            }
 
-            Logger.Log("external type: " + type.ToString());
+            Logger.Log("defining type: " + type.TypeKind + " " + type.ToString());
 
             var typeDeclaration = new TypeDeclaration(type);
             currentTypeDeclaration = typeDeclaration;
-            bool isInterface = type.TypeKind == TypeKind.Interface;
 
+            if (type.TypeKind == TypeKind.Class)
+            {
+                ProcessCustomMappedInterfaces(type);
+            }
+
+            visitTypeDeclaration?.Invoke();
+            CheckAndMarkSymbolForAttributes(type);
+
+            bool isInterface = type.TypeKind == TypeKind.Interface;
+            bool hasConstructor = false;
+            bool hasDefaultConstructor = false;
             foreach (var member in type.GetMembers())
             {
-                if (member is IMethodSymbol method &&
-                    (method.MethodKind == MethodKind.Ordinary || method.MethodKind == MethodKind.Constructor))
+                if(!IsPublic(member) || typeDeclaration.CustomMappedSymbols.Contains(member))
                 {
-                    AddMethodDeclaration(method, isInterface);
+                    Logger.Log(member.Kind + " member skipped " + member.Name);
+                    continue;
                 }
-                else if (member is IPropertySymbol property)
+
+                if (type.TypeKind == TypeKind.Struct || type.TypeKind == TypeKind.Enum)
                 {
-                    AddPropertyDeclaration(property, isInterface);
-                }
-                else if (member is IEventSymbol @event)
-                {
-                    AddEventDeclaration(@event, isInterface);
+                    if (member is IFieldSymbol field)
+                    {
+                        AddFieldDeclaration(field, type.TypeKind == TypeKind.Enum);
+                    }
                 }
                 else
                 {
-                    Logger.Log("member not recognized: " + member.Kind + " name: " + member.Name);
+                    if (member is IMethodSymbol method &&
+                        (method.MethodKind == MethodKind.Ordinary ||
+                         method.MethodKind == MethodKind.ExplicitInterfaceImplementation ||
+                         method.MethodKind == MethodKind.Constructor))
+                    {
+                        AddMethodDeclaration(method, isInterface);
+
+                        if (method.MethodKind == MethodKind.Constructor)
+                        {
+                            hasConstructor = true;
+                            hasDefaultConstructor |= (method.Parameters.Length == 0);
+                        }
+                    }
+                    else if (member is IPropertySymbol property)
+                    {
+                        AddPropertyDeclaration(property, isInterface);
+                    }
+                    else if (member is IEventSymbol @event)
+                    {
+                        AddEventDeclaration(@event, isInterface);
+                    }
+                    else
+                    {
+                        Logger.Log("member not recognized: " + member.Kind + " name: " + member.Name);
+                        continue;
+                    }
                 }
+
+                CheckAndMarkSymbolForAttributes(member);
+            }
+
+            // implicit constructor if none defined
+            if (!hasConstructor && type.TypeKind == TypeKind.Class && !type.IsStatic)
+            {
+                string constructorMethodName = ".ctor";
+                var methodDefinitionHandle = AddMethodDefinition(
+                    constructorMethodName,
+                    new Parameter[0],
+                    null,
+                    false,
+                    false,
+                    true,
+                    true,
+                    true);
+                typeDeclaration.AddMethod(type, constructorMethodName, methodDefinitionHandle);
+                hasDefaultConstructor = true;
             }
 
             TypeAttributes typeAttributes =
                 TypeAttributes.Public |
                 TypeAttributes.WindowsRuntime |
                 TypeAttributes.AutoLayout |
-                TypeAttributes.AnsiClass |
-                TypeAttributes.Interface |
-                TypeAttributes.Abstract;
+                TypeAttributes.AnsiClass;
+
+            if(type.IsSealed || 
+               type.IsStatic || 
+               type.TypeKind == TypeKind.Struct || 
+               type.TypeKind == TypeKind.Enum)
+            {
+                typeAttributes |= TypeAttributes.Sealed;
+            }
+
+            if(type.TypeKind == TypeKind.Class && type.IsStatic)
+            {
+                typeAttributes |= TypeAttributes.Abstract;
+            }
+
+            EntityHandle baseType = default;
+            if (isInterface)
+            {
+                typeAttributes |= 
+                    TypeAttributes.Interface | 
+                    TypeAttributes.Abstract;
+            }
+            else if(type.TypeKind == TypeKind.Class)
+            {
+                typeAttributes |=
+                    TypeAttributes.Class |
+                    TypeAttributes.BeforeFieldInit;
+
+                // extends
+                if (type.BaseType != null)
+                {
+                    baseType = GetTypeReference(type.BaseType);
+                }
+                else
+                {
+                    baseType = GetTypeReference("System", "Object", "mscorlib");
+                }
+            }
+            else if (type.TypeKind == TypeKind.Struct)
+            {
+                typeAttributes |= TypeAttributes.SequentialLayout;
+                baseType = GetTypeReference("System", "ValueType", "mscorlib");
+            }
+            else if (type.TypeKind == TypeKind.Enum)
+            {
+                baseType = GetTypeReference("System", "Enum", "mscorlib");
+            }
 
             var typeDefinitionHandle = AddTypeDefinition(
                 typeAttributes,
                 type.ContainingNamespace.ToString(),
                 type.Name,
-                default);
+                baseType);
             typeDeclaration.Handle = typeDefinitionHandle;
-            typeDefinitionMapping[type.ToString()] = typeDeclaration;
 
-            foreach (var implementedInterface in GetInterfaces(type))
+            if (isInterface || type.TypeKind == TypeKind.Class)
             {
-                var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
-                    typeDefinitionHandle,
-                    GetTypeReference(implementedInterface));
-                typeDeclaration.AddInterfaceImpl(implementedInterface, interfaceImplHandle);
+                // Interface implementations need to be added in order of class and then typespec.  Given entries are added
+                // per class, that is already in order, but we need to sort by typespec.
+                List<KeyValuePair<INamedTypeSymbol, EntityHandle>> implementedInterfaces = new List<KeyValuePair<INamedTypeSymbol, EntityHandle>>();
+                foreach (var implementedInterface in GetInterfaces(type))
+                {
+                    implementedInterfaces.Add(new KeyValuePair<INamedTypeSymbol, EntityHandle>(implementedInterface, GetTypeSpecification(implementedInterface)));
+                }
+                implementedInterfaces.Sort((x, y) => CodedIndex.TypeDefOrRefOrSpec(x.Value).CompareTo(CodedIndex.TypeDefOrRefOrSpec(y.Value)));
+
+                foreach (var implementedInterface in implementedInterfaces)
+                {
+                    var interfaceImplHandle = metadataBuilder.AddInterfaceImplementation(
+                        typeDefinitionHandle,
+                        implementedInterface.Value);
+                    typeDeclaration.AddInterfaceImpl(implementedInterface.Key, interfaceImplHandle);
+                }
             }
 
             if (isInterface)
             {
                 AddGuidAttribute(typeDefinitionHandle, type.ToString());
                 AddOverloadAttributeForInterfaceMethods(typeDeclaration);
+            }
+
+            typeDefinitionMapping[QualifiedName(type, true)] = typeDeclaration;
+
+            if (type.TypeKind == TypeKind.Class)
+            {
+                if (hasDefaultConstructor)
+                {
+                    AddActivatableAttribute(
+                        typeDeclaration.Handle,
+                        (uint) GetVersion(type, true),
+                        null);
+                }
+                AddSynthesizedInterfaces(typeDeclaration);
+
+                // No synthesized default interface generated
+                if (typeDeclaration.DefaultInterface == null && type.Interfaces.Length != 0)
+                {
+                    AddDefaultInterfaceImplAttribute(typeDeclaration.InterfaceImplDefinitions[type.Interfaces[0]]);
+                }
             }
         }
 
@@ -2438,7 +2262,9 @@ namespace Generator
             foreach (var member in type.GetMembers())
             {
                 if (member is IMethodSymbol method &&
-                    (method.MethodKind == MethodKind.Ordinary || method.MethodKind == MethodKind.Constructor))
+                    (method.MethodKind == MethodKind.Ordinary ||
+                     method.MethodKind == MethodKind.ExplicitInterfaceImplementation ||
+                     method.MethodKind == MethodKind.Constructor))
                 {
                     AddMethodReference(method);
                 }
@@ -2530,9 +2356,19 @@ namespace Generator
             // TODO: address overridable and composable interfaces.
         }
 
-        void AddAttributeIfAny(ISymbol symbol, TypeDeclaration classDeclaration)
+        void CheckAndMarkSynthesizedInterfaceSymbolForAttributes(ISymbol symbol, TypeDeclaration classDeclaration)
         {
+            // Check the class declaration if the symbol had any attributes marked for it,
+            // and if so propagate it to the synthesized interface.
             if (classDeclaration.SymbolsWithAttributes.Contains(symbol))
+            {
+                currentTypeDeclaration.SymbolsWithAttributes.Add(symbol);
+            }
+        }
+
+        void CheckAndMarkSymbolForAttributes(ISymbol symbol)
+        {
+            if(symbol.GetAttributes().Any())
             {
                 currentTypeDeclaration.SymbolsWithAttributes.Add(symbol);
             }
@@ -2560,7 +2396,7 @@ namespace Generator
                 {
                     hasTypes = true;
                     AddFactoryMethod(classSymbol, constructorMethod);
-                    AddAttributeIfAny(classMember.Key, classDeclaration);
+                    CheckAndMarkSynthesizedInterfaceSymbolForAttributes(classMember.Key, classDeclaration);
                 }
                 else if ((interfaceType == SynthesizedInterfaceType.Default && !classMember.Key.IsStatic &&
                          !classMembersFromInterfaces.Contains(classMember.Key)) ||
@@ -2584,7 +2420,7 @@ namespace Generator
                         continue;
                     }
 
-                    AddAttributeIfAny(classMember.Key, classDeclaration);
+                    CheckAndMarkSynthesizedInterfaceSymbolForAttributes(classMember.Key, classDeclaration);
                     hasTypes = true;
                 }
             }
@@ -2681,7 +2517,7 @@ namespace Generator
             }
             else
             {
-                AddExternalType(type);
+                AddComponentType(type);
             }
         }
 
@@ -2887,6 +2723,14 @@ namespace Generator
         {
             return node.Modifiers.Any(modifier => modifier.ValueText == "public") ||
                 (node.Parent is InterfaceDeclarationSyntax && node.Modifiers.Count == 0);
+        }
+
+        public bool IsPublic(ISymbol type)
+        {
+            return type.DeclaredAccessibility == Accessibility.Public ||
+                type is IMethodSymbol method && !method.ExplicitInterfaceImplementations.IsDefaultOrEmpty ||
+                type is IPropertySymbol property && !property.ExplicitInterfaceImplementations.IsDefaultOrEmpty ||
+                type is IEventSymbol @event && !@event.ExplicitInterfaceImplementations.IsDefaultOrEmpty;
         }
 
         public bool IsPrivateNode(AccessorDeclarationSyntax node)

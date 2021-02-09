@@ -1437,4 +1437,105 @@ namespace AuthoringTest
             return _dictionary.TryGetValue(key, out value);
         }
     }
+
+    public partial interface IPartialInterface
+    {
+        public string GetNumberAsString();
+    }
+
+    partial interface IPartialInterface
+    {
+        public int Number2 { get; }
+    }
+
+    public sealed partial class PartialClass
+    {
+        private int _number;
+
+        public int GetNumber()
+        {
+            return _number;
+        }
+    }
+
+    public partial class PartialClass
+    {
+        public void SetNumber(int number)
+        {
+            _number = number;
+        }
+
+        private void Get()
+        {
+        }
+
+        internal void Set()
+        {
+        }
+    }
+
+    partial class PartialClass
+    {
+        public int Number
+        {
+            get { return _number; }
+        }
+
+        public PartialClass()
+        {
+        }
+
+        public PartialClass(int number)
+        {
+            _number = number;
+        }
+    }
+
+    partial class PartialClass : IPartialInterface
+    {
+        public int Number2 => _number * 2;
+
+        public string GetNumberAsString()
+        {
+            return _number.ToString();
+        }
+
+        public PartialStruct GetPartialStruct()
+        {
+            PartialStruct partialStruct;
+            partialStruct.X = _number;
+            partialStruct.Y = _number + 1;
+            partialStruct.Z = _number + 2;
+            return partialStruct;
+        }
+    }
+
+    internal partial class PartialClass2
+    {
+        public void InternalFunction()
+        {
+        }
+    }
+
+    partial class PartialClass2
+    {
+        public void InternalFunction2()
+        {
+        }
+    }
+
+    public partial struct PartialStruct
+    {
+        public int X;
+    }
+
+    partial struct PartialStruct
+    {
+        public int Y;
+    }
+
+    public partial struct PartialStruct
+    {
+        public double Z;
+    }
 }

@@ -22,10 +22,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </PropertyGroup>
 
   <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
-  <Target Name="CsWinRTRemoveHostingDllReferences" 
-          AfterTargets="ResolvePackageAssets" 
-          BeforeTargets="ResolveLockFileAnalyzers" 
-          Outputs="@(Reference)">
+  <Target Name="CsWinRTRemoveHostingDllReferences" AfterTargets="ResolvePackageAssets" BeforeTargets="ResolveLockFileAnalyzers" Outputs="@(Reference)">
     <PropertyGroup>
       <CsWinRTPkg-Net5Dir>$(CsWinRTPath)lib\net5.0</CsWinRTPkg-Net5Dir>
       <CsWinRTPkg-NativeDir>$(CsWinRTPath)runtimes\**\native</CsWinRTPkg-NativeDir>
@@ -136,54 +133,13 @@ $(CsWinRTFilters)
       <CsWinRTAuthoringInputs>$(CsWinRTAuthoringInputs) @(CsWinRTInputs->'"%(FullPath)"', ' ') @(CsWinRTAuthoringWinMDs->'"%(FullPath)"', ' ')</CsWinRTAuthoringInputs>
     </PropertyGroup>
   </Target>
-  
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
 
   <!-- Copy Authored winmd to output folder -->
   <Target Name="CsWinRTPlaceWinMDInOutputFolder" Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="AfterBuild">
     <Copy SourceFiles="$(CsWinRTGeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>
 
-  <!-- When an authored component makes a nupkg, add the necessary hosting assets to the package -->
-  <Target Name="CsWinRTIncludeHostDlls"  Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="AfterBuild" Outputs="@(Content)">
-    <ItemGroup>
-      <CsWinRTAuthoringDependencyDlls Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
-      <CsWinRTAuthoringDependencyDlls Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)%(Extension)' == 'WinRT.Runtime.dll'" />
-      <CsWinRTAuthoringDependencyDlls Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.FileName)%(Extension)' == 'Microsoft.Windows.SDK.NET.dll'" />
-    </ItemGroup> 
-
-    <ItemGroup>
-      <Content Include="@(CsWinRTAuthoringDependencyDlls)" Pack="true" PackagePath="lib\$(TargetFramework)" />
-      <Content Include="$(TargetDir)$(AssemblyName).winmd" Pack="true" PackagePath="lib\$(TargetFramework)\winmd" />
-
-      <!-- Custom targets that copy dlls for consumers of the authored component.
-           `buildTransitive\` is for PackageReference, `build\` is for packages.config -->
-      <Content Include="$(CsWinRTPath)buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets" 
-               Pack="true" 
-               PackagePath="buildTransitive\$(AssemblyName).targets;build\$(AssemblyName).targets"/>
-
-      <!-- WinRT.Host.dll is architecture specific -->
-      <!-- x64 --> 
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-x64\native\WinRT.Host.dll')" 
-               Include="$(CsWinRTPath)runtimes\win-x64\native\WinRT.Host.dll"
-               Pack="true"
-               PackagePath="runtimes\win-x64\native"/>
-      <!-- x86 --> 
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-x86\native\WinRT.Host.dll')" 
-               Include="$(CsWinRTPath)runtimes\win-x86\native\WinRT.Host.dll"
-               Pack="true"
-               PackagePath="runtimes\win-x86\native"/>
-      <!-- arm --> 
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-arm\native\WinRT.Host.dll')" 
-               Include="$(CsWinRTPath)runtimes\win-arm\native\WinRT.Host.dll"
-               Pack="true"
-               PackagePath="runtimes\win-arm\native"/>
-      <!-- arm64 --> 
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-arm64\native\WinRT.Host.dll')" 
-               Include="$(CsWinRTPath)runtimes\win-arm64\native\WinRT.Host.dll"
-               Pack="true"
-               PackagePath="runtimes\win-arm64\native"/>
-   </ItemGroup>
-  </Target>
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets')"/>
 
 </Project>
