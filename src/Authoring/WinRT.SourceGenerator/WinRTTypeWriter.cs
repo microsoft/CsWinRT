@@ -349,14 +349,18 @@ namespace Generator
         private readonly Dictionary<string, TypeDeclaration> typeDefinitionMapping;
         private TypeDeclaration currentTypeDeclaration;
 
+        private Logger Logger { get; }
+
         public WinRTTypeWriter(
             string assembly,
             string version,
-            MetadataBuilder metadataBuilder)
+            MetadataBuilder metadataBuilder,
+            Logger logger)
         {
             this.assembly = assembly;
             this.version = version;
             this.metadataBuilder = metadataBuilder;
+            Logger = logger;
             typeReferenceMapping = new Dictionary<string, TypeReferenceHandle>();
             assemblyReferenceMapping = new Dictionary<string, EntityHandle>();
             typeDefinitionMapping = new Dictionary<string, TypeDeclaration>();
