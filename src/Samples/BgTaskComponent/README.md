@@ -4,12 +4,12 @@ This sample demonstrates how to author an out-of-process C#/WinRT component usin
 
 This sample includes the following projects:
 
-- **Net5BgTaskComponent**: This is a Windows Runtime component with an example background task that pops a toast notification. It uses C#/WinRT authoring to author the component.
-- **Net5App** and **WapProj**: These projects demonstrate hosting the background task component in a packaged .NET5 desktop (WPF) application. 
+- **BgTaskComponent**: This is a Windows Runtime component with an example background task that pops a toast notification. It uses C#/WinRT authoring to author the component.
+- **WpfApp** and **WpfApp.Package**: These projects demonstrate hosting the background task component in a packaged .NET5 desktop (WPF) application. 
 
 There are a few modifications to note that are different/additional to those described in the [authoring docs](https://github.com/microsoft/CsWinRT/blob/master/docs/authoring.md):
 
-- In addition to registering the background task with the manifest designer, the following class registration must be manually added to Package.appxmanifest:
+- In addition to registering the background task with the manifest designer, the following class registration must be manually added to **Package.appxmanifest**:
   ```xml
   <!-- To host the BgTaskComponent, you must add this activatable class entry -->
   <Extensions>
