@@ -12,23 +12,28 @@ namespace WpfApp
         {
             InitializeComponent();
 
+            var taskRegistered = false;
             var exampleTaskName = "ToastBgTask";
 
             foreach (var task in BackgroundTaskRegistration.AllTasks)
             {
                 if (task.Value.Name == exampleTaskName)
                 {
+                    taskRegistered = true;
                     break;
                 }
             }
 
-            var builder = new BackgroundTaskBuilder
+            if (!taskRegistered) 
             {
-                Name = exampleTaskName,
-                TaskEntryPoint = "BgTaskComponent.ToastBgTask"
-            };
-            builder.SetTrigger(new SystemTrigger(SystemTriggerType.TimeZoneChange, false));
-            builder.Register();
+                var builder = new BackgroundTaskBuilder
+                {
+                    Name = exampleTaskName,
+                    TaskEntryPoint = "BgTaskComponent.ToastBgTask"
+                };
+                builder.SetTrigger(new SystemTrigger(SystemTriggerType.TimeZoneChange, false));
+                builder.Register();
+            }          
         }
     }
 }
