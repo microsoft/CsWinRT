@@ -2,6 +2,8 @@
 
 This sample demonstrates how to author an out-of-process C#/WinRT component using background tasks, and how to consume the component as a project reference from a packaged .NET 5 WPF app.
 
+To build this sample, set **WpfApp.Package** as the startup project before building the solution. The background task raises a toast notification and is triggered by a time zone change. 
+
 This sample includes the following projects:
 
 - **BgTaskComponent**: This is a C#/WinRT component with an example background task that pops a toast notification.
