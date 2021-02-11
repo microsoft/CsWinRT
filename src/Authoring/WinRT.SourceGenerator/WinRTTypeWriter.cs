@@ -341,7 +341,6 @@ namespace Generator
         private readonly string assembly;
         private readonly string version;
 
-        private readonly Stack<string> namespaces = new Stack<string>();
         private readonly Dictionary<string, TypeReferenceHandle> typeReferenceMapping;
         private readonly Dictionary<string, EntityHandle> assemblyReferenceMapping;
         private readonly MetadataBuilder metadataBuilder;
@@ -1800,14 +1799,13 @@ namespace Generator
 
         public override void VisitDelegateDeclaration(DelegateDeclarationSyntax node)
         {
-            if (!IsPublicNode(node))
+            var symbol = Model.GetDeclaredSymbol(node);
+            if (!IsPublic(symbol))
             {
                 return;
             }
 
-            Logger.Log("defining delegate " + node.Identifier.ValueText);
-
-            var symbol = Model.GetDeclaredSymbol(node);
+            Logger.Log("defining delegate " + symbol.Name);
             currentTypeDeclaration = new TypeDeclaration(symbol);
 
             base.VisitDelegateDeclaration(node);
@@ -1859,8 +1857,8 @@ namespace Generator
 
             var typeDefinitionHandle = AddTypeDefinition(
                 typeAttributes,
-                GetNamespace(),
-                node.Identifier.ValueText,
+                symbol.ContainingNamespace.ToString(),
+                symbol.Name,
                 GetTypeReference("System", "MulticastDelegate", "mscorlib"));
             currentTypeDeclaration.Handle = typeDefinitionHandle;
             AddGuidAttribute(typeDefinitionHandle, symbol.ToString());
@@ -2723,38 +2721,12 @@ namespace Generator
             }
         }
 
-        public bool IsPublicNode(MemberDeclarationSyntax node)
-        {
-            return node.Modifiers.Any(modifier => modifier.ValueText == "public") ||
-                (node.Parent is InterfaceDeclarationSyntax && node.Modifiers.Count == 0);
-        }
-
         public bool IsPublic(ISymbol type)
         {
             return type.DeclaredAccessibility == Accessibility.Public ||
                 type is IMethodSymbol method && !method.ExplicitInterfaceImplementations.IsDefaultOrEmpty ||
                 type is IPropertySymbol property && !property.ExplicitInterfaceImplementations.IsDefaultOrEmpty ||
                 type is IEventSymbol @event && !@event.ExplicitInterfaceImplementations.IsDefaultOrEmpty;
-        }
-
-        public bool IsPrivateNode(AccessorDeclarationSyntax node)
-        {
-            return node.Modifiers.Any(modifier => modifier.ValueText == "private");
-        }
-
-        public bool IsStaticNode(MemberDeclarationSyntax node)
-        {
-            return node.Modifiers.Any(modifier => modifier.ValueText == "static");
-        }
-
-        public bool IsSealedNode(MemberDeclarationSyntax node)
-        {
-            return node.Modifiers.Any(modifier => modifier.ValueText == "sealed");
-        }
-
-        public string GetNamespace()
-        {
-            return string.Join(".", namespaces);
         }
 
         public void GetNamespaceAndTypename(string qualifiedName, out string @namespace, out string typename)
@@ -2770,11 +2742,6 @@ namespace Generator
                 @namespace = qualifiedName.Substring(0, idx);
                 typename = qualifiedName.Substring(idx + 1);
             }
-        }
-
-        public string QualifiedName(string identifier)
-        {
-            return QualifiedName(GetNamespace(), identifier);
         }
 
         public string QualifiedName(string @namespace, string identifier)
@@ -2803,13 +2770,6 @@ namespace Generator
         public string QualifiedName(ISymbol symbol, bool includeGenerics = false)
         {
             return QualifiedName(symbol.ContainingNamespace.ToString(), GetGenericName(symbol, includeGenerics));
-        }
-
-        public override void VisitNamespaceDeclaration(NamespaceDeclarationSyntax node)
-        {
-            namespaces.Push(node.Name.ToString());
-            base.VisitNamespaceDeclaration(node);
-            namespaces.Pop();
         }
     }
 }

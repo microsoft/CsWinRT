@@ -143,7 +143,7 @@ namespace Generator
             return false;
         }
 
-        private bool IsPublic(MemberDeclarationSyntax member) { return member.Modifiers.Where(m => m.IsKind(SyntaxKind.PublicKeyword)).Any(); }
+        private bool IsPublic(MemberDeclarationSyntax member) { return member.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)); }
 
         #region Attributes        
 
@@ -348,30 +348,24 @@ namespace Generator
         {
             TypeCollector collectedTypes = new TypeCollector();
 
-            foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
+            WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)context.SyntaxReceiver;
+            foreach (var declaration in syntaxReciever.Declarations)
             {
-                var model = GetModel(tree);
+                var model = GetModel(declaration.SyntaxTree);
 
-                var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().Where(IsPublic);
-                foreach (var @class in classes) 
+                if (declaration is ClassDeclarationSyntax @class && IsPublic(@class)) 
                 {
                     collectedTypes.AddType(model.GetDeclaredSymbol(@class));
                 }
-
-                var interfaces = tree.GetRoot().DescendantNodes().OfType<InterfaceDeclarationSyntax>().Where(IsPublic);
-                foreach (var @interface in interfaces)
+                else if(declaration is InterfaceDeclarationSyntax @interface && IsPublic(@interface))
                 {
                     collectedTypes.AddType(model.GetDeclaredSymbol(@interface));
                 }
-
-                var structs = tree.GetRoot().DescendantNodes().OfType<StructDeclarationSyntax>().Where(IsPublic);
-                foreach (var @struct in structs)
+                else if(declaration is StructDeclarationSyntax @struct && IsPublic(@struct))
                 {
                     collectedTypes.AddStruct(model.GetDeclaredSymbol(@struct));
                 }
-
-                var namespaces = tree.GetRoot().DescendantNodes().OfType<NamespaceDeclarationSyntax>();
-                foreach (var @namespace in namespaces)
+                else if(declaration is NamespaceDeclarationSyntax @namespace)
                 {
                     collectedTypes.AddNamespace(model.GetDeclaredSymbol(@namespace));
                 }

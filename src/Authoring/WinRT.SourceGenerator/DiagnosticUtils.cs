@@ -32,14 +32,20 @@ namespace Generator
         { 
             HasInvalidNamespace();
             HasSomePublicTypes();
-            
-            foreach (SyntaxTree tree in _context.Compilation.SyntaxTrees)
-            {
-                var model = _context.Compilation.GetSemanticModel(tree);
-                var nodes = tree.GetRoot().DescendantNodes();
 
-                var classes = nodes.OfType<ClassDeclarationSyntax>().Where(IsPublic);
-                foreach (ClassDeclarationSyntax @class in classes)
+            WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)_context.SyntaxReceiver;
+            foreach (var declaration in syntaxReciever.Declarations)
+            {
+                var model = _context.Compilation.GetSemanticModel(declaration.SyntaxTree);
+
+                // Check symbol information for whether it is public to properly detect partial types
+                // which can leave out modifier.
+                if(model.GetDeclaredSymbol(declaration).DeclaredAccessibility != Accessibility.Public)
+                {
+                    continue;
+                }
+
+                if (declaration is ClassDeclarationSyntax @class)
                 {
                     var classId = @class.Identifier;
                     var classSymbol = model.GetDeclaredSymbol(@class);
@@ -70,9 +76,7 @@ namespace Generator
                     // check types -- todo: check for !valid types
                     CheckMethods(publicMethods, classId);
                 }
-
-                var interfaces = nodes.OfType<InterfaceDeclarationSyntax>().Where(IsPublic);
-                foreach (InterfaceDeclarationSyntax @interface in interfaces)
+                else if (declaration is InterfaceDeclarationSyntax @interface)
                 {
                     var interfaceSym = model.GetDeclaredSymbol(@interface);
                     var methods = @interface.DescendantNodes().OfType<MethodDeclarationSyntax>();
@@ -92,11 +96,9 @@ namespace Generator
                     
                     CheckMethods(methods, @interface.Identifier);
                 }
-
-                var structs = nodes.OfType<StructDeclarationSyntax>();
-                foreach (StructDeclarationSyntax @struct in structs)
+                else if (declaration is StructDeclarationSyntax @struct)
                 {
-                    CheckStructFields(@struct); 
+                    CheckStructFields(@struct);
                 }
             } 
         }

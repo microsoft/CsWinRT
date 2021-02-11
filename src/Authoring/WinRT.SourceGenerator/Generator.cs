@@ -1,9 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
@@ -165,10 +169,13 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                     version,
                     metadataBuilder,
                     Logger);
-                foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
+
+                WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)context.SyntaxReceiver;
+                Logger.Log("Found " + syntaxReciever.Declarations.Count + " types");
+                foreach (var declaration in syntaxReciever.Declarations)
                 {
-                    writer.Model = context.Compilation.GetSemanticModel(tree);
-                    writer.Visit(tree.GetRoot());
+                    writer.Model = context.Compilation.GetSemanticModel(declaration.SyntaxTree);
+                    writer.Visit(declaration);
                 }
                 writer.FinalizeGeneration();
 
@@ -207,6 +214,36 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         public void Initialize(GeneratorInitializationContext context)
         {
+            context.RegisterForSyntaxNotifications(() => new WinRTSyntaxReciever());
+        }
+    }
+
+    class WinRTSyntaxReciever : ISyntaxReceiver
+    {
+        public List<MemberDeclarationSyntax> Declarations = new List<MemberDeclarationSyntax>();
+
+        public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
+        {
+            if (syntaxNode is not MemberDeclarationSyntax decaralation || !IsPublic(decaralation))
+            {
+                return;
+            }
+
+            if (syntaxNode is ClassDeclarationSyntax ||
+                syntaxNode is InterfaceDeclarationSyntax ||
+                syntaxNode is EnumDeclarationSyntax ||
+                syntaxNode is DelegateDeclarationSyntax ||
+                syntaxNode is StructDeclarationSyntax ||
+                syntaxNode is NamespaceDeclarationSyntax)
+            {
+                Declarations.Add(decaralation);
+            }
+        }
+
+        private bool IsPublic(MemberDeclarationSyntax member)
+        {
+            // Detect whether partial types are public using symbol information later.
+            return member.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword) || m.IsKind(SyntaxKind.PartialKeyword));
         }
     }
 }
