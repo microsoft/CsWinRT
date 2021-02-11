@@ -1,16 +1,19 @@
 # Background Task C#/WinRT Authoring Sample
 
-This sample demonstrates how to author an out-of-process C#/WinRT component using background tasks, and consming the component as a project reference from a packaged .NET 5 WPF app.
+This sample demonstrates how to author an out-of-process C#/WinRT component using background tasks, and how to consume the component as a project reference from a packaged .NET 5 WPF app.
 
 This sample includes the following projects:
 
-- **BgTaskComponent**: This is a Windows Runtime component with an example background task that pops a toast notification. It uses C#/WinRT authoring to author the component.
-- **WpfApp** and **WpfApp.Package**: These projects demonstrate hosting the background task component in a packaged .NET5 desktop (WPF) application. 
+- **BgTaskComponent**: This is a C#/WinRT component with an example background task that pops a toast notification.
+- **WpfApp** and **WpfApp.Package**: These projects demonstrate hosting the background task component in a packaged .NET 5 desktop (WPF) application.
+  - **WpfApp** has a project reference to **BgTaskComponent**.
+  - **WpfApp.Package** is a packaging app with a reference to **WpfApp**. The packaging app is required for hosting out-of-process WinRT components.
 
-There are a few modifications to note that are different/additional to those described in the [authoring docs](https://github.com/microsoft/CsWinRT/blob/master/docs/authoring.md):
+There are a few modifications to note that relate to those described in the [authoring docs](https://github.com/microsoft/CsWinRT/blob/master/docs/authoring.md):
 
 - Note that **WinRT.Host.runtimeconfig.json** is part of the packaging project **WpfApp.Package**, and not **WpfApp** itself.
-- In addition to registering the background task with the manifest designer, the following class registration must be manually added to **Package.appxmanifest**. Note you do not need to create your own manifest file for activatable class registrations. 
+- In addition to registering the background task with the manifest designer, the following extension and class registration must be manually added to **Package.appxmanifest**. Note you do not need to create your own manifest file for activatable class registrations.
+
   ```xml
   <!-- To host the BgTaskComponent, you must add this activatable class entry -->
   <Extensions>
@@ -22,11 +25,12 @@ There are a few modifications to note that are different/additional to those des
       </Extension>
    </Extensions>
    ```
-- In **WPFApp.Package.wapproj**, add the following `ItemGroup`:
+
+- In **WPFApp.Package.wapproj**, the following `ItemGroup` is added in order to copy the hosting/component assemblies and the runtimeconfig file on deployment:
 
   ```xml
   <ItemGroup>
-      <!-- This C#/WinRT version requires copying the following -->
+      <!-- C#/WinRT version 1.1.2-prerelease.210208.6 requires copying the following files -->
       <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\net5.0-windows10.0.19041.0\runtimes\win-x64\native\WinRT.Host.dll">
         <Link>WinRT.Host.dll</Link>
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -52,5 +56,3 @@ There are a few modifications to note that are different/additional to those des
       </Content>
     </ItemGroup>
     ```
-  
-  
