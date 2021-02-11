@@ -9,7 +9,8 @@ This sample includes the following projects:
 
 There are a few modifications to note that are different/additional to those described in the [authoring docs](https://github.com/microsoft/CsWinRT/blob/master/docs/authoring.md):
 
-- In addition to registering the background task with the manifest designer, the following class registration must be manually added to **Package.appxmanifest**:
+- Note that **WinRT.Host.runtimeconfig.json** is part of the packaging project **WpfApp.Package**, and not **WpfApp** itself.
+- In addition to registering the background task with the manifest designer, the following class registration must be manually added to **Package.appxmanifest**. Note you do not need to create your own manifest file for activatable class registrations. 
   ```xml
   <!-- To host the BgTaskComponent, you must add this activatable class entry -->
   <Extensions>
