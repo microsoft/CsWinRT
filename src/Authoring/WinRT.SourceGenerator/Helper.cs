@@ -1,8 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Generator
 {
@@ -44,6 +44,67 @@ namespace Generator
         public int GetHashCode(AttributeData obj)
         {
             return obj.ToString().GetHashCode();
+        }
+    }
+
+    static class GeneratorExecutionContextHelper
+    {
+        public static string GetAssemblyName(this GeneratorExecutionContext context)
+        {
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.AssemblyName", out var assemblyName);
+            return assemblyName;
+        }
+
+        public static string GetAssemblyVersion(this GeneratorExecutionContext context)
+        {
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.AssemblyVersion", out var assemblyVersion);
+            return assemblyVersion;
+        }
+
+        public static string GetGeneratedFilesDir(this GeneratorExecutionContext context)
+        {
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGeneratedFilesDir", out var generatedFilesDir);
+            Directory.CreateDirectory(generatedFilesDir);
+            return generatedFilesDir;
+        }
+
+        public static bool IsCsWinRTComponent(this GeneratorExecutionContext context)
+        {
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTComponent", out var isCsWinRTComponentStr))
+            {
+                return bool.TryParse(isCsWinRTComponentStr, out var isCsWinRTComponent) && isCsWinRTComponent;
+            }
+
+            return false;
+        }
+
+        public static string GetCsWinRTExe(this GeneratorExecutionContext context)
+        {
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTExe", out var cswinrtExe);
+            return cswinrtExe;
+        }
+
+        public static bool GetKeepGeneratedSources(this GeneratorExecutionContext context)
+        {
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTKeepGeneratedSources", out var keepGeneratedSourcesStr);
+            return keepGeneratedSourcesStr != null && bool.TryParse(keepGeneratedSourcesStr, out var keepGeneratedSources) && keepGeneratedSources;
+        }
+
+        public static string GetCsWinRTWindowsMetadata(this GeneratorExecutionContext context)
+        {
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTWindowsMetadata", out var cswinrtWindowsMetadata);
+            return cswinrtWindowsMetadata;
+        }
+
+        public static string GetCsWinRTDependentMetadata(this GeneratorExecutionContext context)
+        {
+            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTAuthoringInputs", out var winmds);
+            return winmds;
+        }
+
+        public static string GetWinmdOutputFile(this GeneratorExecutionContext context)
+        {
+            return Path.Combine(context.GetGeneratedFilesDir(), context.GetAssemblyName() + ".winmd");
         }
     }
 }
