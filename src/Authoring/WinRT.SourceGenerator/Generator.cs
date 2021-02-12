@@ -1,9 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
@@ -11,8 +15,7 @@ using System.Text;
 
 namespace Generator
 {
-    [Generator]
-    public class SourceGenerator : ISourceGenerator
+    public class ComponentGenerator
     {
         private static readonly string ArrayAttributes = @"
 namespace System.Runtime.InteropServices.WindowsRuntime
@@ -28,91 +31,46 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     }
 }";
 
-        private string _tempFolder;
+        private Logger Logger { get; }
+        private readonly GeneratorExecutionContext context;
+        private string tempFolder;
 
-        private static string GetAssemblyName(GeneratorExecutionContext context)
+        public ComponentGenerator(GeneratorExecutionContext context)
         {
-            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.AssemblyName", out var assemblyName);
-            return assemblyName;
-        }
-
-        private static string GetAssemblyVersion(GeneratorExecutionContext context)
-        {
-            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.AssemblyVersion", out var assemblyVersion);
-            return assemblyVersion;
-        }
-
-        internal static string GetGeneratedFilesDir(GeneratorExecutionContext context)
-        {
-            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGeneratedFilesDir", out var generatedFilesDir);
-            Directory.CreateDirectory(generatedFilesDir);
-            return generatedFilesDir;
-        }
-
-        private static bool IsCsWinRTComponent(GeneratorExecutionContext context)
-        {
-            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTComponent", out var isCsWinRTComponentStr))
-            {
-                return bool.TryParse(isCsWinRTComponentStr, out var isCsWinRTComponent) && isCsWinRTComponent;
-            }
-
-            return false;
-        }
-
-        private static string GetCsWinRTExe(GeneratorExecutionContext context)
-        {
-            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTExe", out var cswinrtExe);
-            return cswinrtExe;
-        }
-
-        private static bool GetKeepGeneratedSources(GeneratorExecutionContext context)
-        {
-            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTKeepGeneratedSources", out var keepGeneratedSourcesStr);
-            return keepGeneratedSourcesStr != null && bool.TryParse(keepGeneratedSourcesStr, out var keepGeneratedSources) && keepGeneratedSources;
-        }
-
-        private static string GetCsWinRTWindowsMetadata(GeneratorExecutionContext context)
-        {
-            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTWindowsMetadata", out var cswinrtWindowsMetadata);
-            return cswinrtWindowsMetadata;
-        }
-
-        private static string GetCsWinRTDependentMetadata(GeneratorExecutionContext context)
-        {
-            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTAuthoringInputs", out var winmds);
-            return winmds;
+            this.context = context;
+            Logger = new Logger(context);
         }
 
         private string GetTempFolder(bool clearSourceFilesFromFolder = false)
         {
-            if(_tempFolder == null || !File.Exists(_tempFolder))
+            if (string.IsNullOrEmpty(tempFolder) || !File.Exists(tempFolder))
             {
                 string outputDir = Path.Combine(Path.GetTempPath(), "CsWinRT", Path.GetRandomFileName()).TrimEnd('\\');
                 Directory.CreateDirectory(outputDir);
-                _tempFolder = outputDir;
-                Logger.Log("Created temp folder: " + _tempFolder);
+                tempFolder = outputDir;
+                Logger.Log("Created temp folder: " + tempFolder);
             }
 
             if (clearSourceFilesFromFolder)
             {
-                foreach (var file in Directory.GetFiles(_tempFolder, "*.cs", SearchOption.TopDirectoryOnly))
+                foreach (var file in Directory.GetFiles(tempFolder, "*.cs", SearchOption.TopDirectoryOnly))
                 {
                     Logger.Log("Clearing " + file);
                     File.Delete(file);
                 }
             }
 
-            return _tempFolder;
+            return tempFolder;
         }
 
-        private void GenerateSources(GeneratorExecutionContext context)
+        private void GenerateSources()
         {
-            string cswinrtExe = GetCsWinRTExe(context);
-            string assemblyName = GetAssemblyName(context);
-            string winmdFile = GetWinmdOutputFile(context);
+            string cswinrtExe = context.GetCsWinRTExe();
+            string assemblyName = context.GetAssemblyName();
+            string winmdFile = context.GetWinmdOutputFile();
             string outputDir = GetTempFolder(true);
-            string windowsMetadata = GetCsWinRTWindowsMetadata(context);
-            string winmds = GetCsWinRTDependentMetadata(context);
+            string windowsMetadata = context.GetCsWinRTWindowsMetadata();
+            string winmds = context.GetCsWinRTDependentMetadata();
 
             string arguments = string.Format(
                 "-component -input \"{0}\" -input {1} -include {2} -output \"{3}\" -input {4} -verbose",
@@ -154,20 +112,16 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
             finally
             {
-                if (!GetKeepGeneratedSources(context))
+                if (!context.GetKeepGeneratedSources())
                 {
                     Directory.Delete(outputDir, true);
                 }
             }
         }
 
-        private string GetWinmdOutputFile(GeneratorExecutionContext context)
+        private void GenerateWinMD(MetadataBuilder metadataBuilder)
         {
-            return Path.Combine(GetGeneratedFilesDir(context), GetAssemblyName(context) + ".winmd");
-        }
-
-        private void GenerateWinMD(MetadataBuilder metadataBuilder, string outputFile)
-        {
+            string outputFile = context.GetWinmdOutputFile();
             Logger.Log("Writing " + outputFile);
             var managedPeBuilder = new ManagedPEBuilder(
                 new PEHeaderBuilder(
@@ -184,27 +138,19 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             peBlob.WriteContentTo(fs);
         }
 
-        private bool CatchWinRTDiagnostics(GeneratorExecutionContext context)
+        private bool CatchWinRTDiagnostics()
         {
             // "DiagnosticTests" is a workaround, GetAssemblyName returns null when used by unit tests 
             // shouldn't need workaround once we can pass AnalyzerConfigOptionsProvider in DiagnosticTests.Helpers.cs
-            string assemblyName = GetAssemblyName(context) ?? "DiagnosticTests";
+            string assemblyName = context.GetAssemblyName() ?? "DiagnosticTests";
             WinRTComponentScanner winrtScanner = new WinRTComponentScanner(context, assemblyName);
             winrtScanner.FindDiagnostics();
             return winrtScanner.Found();
         }
 
-        public void Execute(GeneratorExecutionContext context)
+        public void Generate()
         {
-            if (!IsCsWinRTComponent(context))
-            {
-                return;
-            }
-            
-            Logger.Initialize(context);
-            
-            
-            if (CatchWinRTDiagnostics(context))
+            if (CatchWinRTDiagnostics())
             {
                 Logger.Log("Exiting early -- found errors in authored runtime component.");
                 Logger.Close();
@@ -214,30 +160,32 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             try
             {
                 context.AddSource("System.Runtime.InteropServices.WindowsRuntime", SourceText.From(ArrayAttributes, Encoding.UTF8));
-                string assembly = GetAssemblyName(context);
-                string version = GetAssemblyVersion(context);
+                string assembly = context.GetAssemblyName();
+                string version = context.GetAssemblyVersion();
                 MetadataBuilder metadataBuilder = new MetadataBuilder();
 
                 var writer = new WinRTTypeWriter(
                     assembly,
                     version,
-                    metadataBuilder);
-                foreach (SyntaxTree tree in context.Compilation.SyntaxTrees)
+                    metadataBuilder,
+                    Logger);
+
+                WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)context.SyntaxReceiver;
+                Logger.Log("Found " + syntaxReciever.Declarations.Count + " types");
+                foreach (var declaration in syntaxReciever.Declarations)
                 {
-                    writer.Model = context.Compilation.GetSemanticModel(tree);
-                    writer.Visit(tree.GetRoot());
+                    writer.Model = context.Compilation.GetSemanticModel(declaration.SyntaxTree);
+                    writer.Visit(declaration);
                 }
                 writer.FinalizeGeneration();
 
-                string winmdFile = GetWinmdOutputFile(context);
-
-                GenerateWinMD(metadataBuilder, winmdFile);
-                GenerateSources(context);
+                GenerateWinMD(metadataBuilder);
+                GenerateSources();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Logger.Log(e.ToString());
-                if(e.InnerException != null)
+                if (e.InnerException != null)
                 {
                     Logger.Log(e.InnerException.ToString());
                 }
@@ -248,9 +196,54 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Logger.Log("Done");
             Logger.Close();
         }
+    }
+
+    [Generator]
+    public class SourceGenerator : ISourceGenerator
+    {
+        public void Execute(GeneratorExecutionContext context)
+        {
+            if (!context.IsCsWinRTComponent())
+            {
+                return;
+            }
+
+            ComponentGenerator generator = new ComponentGenerator(context);
+            generator.Generate();
+        }
 
         public void Initialize(GeneratorInitializationContext context)
         {
+            context.RegisterForSyntaxNotifications(() => new WinRTSyntaxReciever());
+        }
+    }
+
+    class WinRTSyntaxReciever : ISyntaxReceiver
+    {
+        public List<MemberDeclarationSyntax> Declarations = new List<MemberDeclarationSyntax>();
+
+        public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
+        {
+            if (syntaxNode is not MemberDeclarationSyntax decaralation || !IsPublic(decaralation))
+            {
+                return;
+            }
+
+            if (syntaxNode is ClassDeclarationSyntax ||
+                syntaxNode is InterfaceDeclarationSyntax ||
+                syntaxNode is EnumDeclarationSyntax ||
+                syntaxNode is DelegateDeclarationSyntax ||
+                syntaxNode is StructDeclarationSyntax ||
+                syntaxNode is NamespaceDeclarationSyntax)
+            {
+                Declarations.Add(decaralation);
+            }
+        }
+
+        private bool IsPublic(MemberDeclarationSyntax member)
+        {
+            // We detect whether partial types are public using symbol information later.
+            return member.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword) || m.IsKind(SyntaxKind.PartialKeyword));
         }
     }
 }
