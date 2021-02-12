@@ -30,26 +30,30 @@ There are a few modifications to note that relate to those described in the [aut
 
 - In **WPFApp.Package.wapproj**, the following `ItemGroup` is added in order to copy the hosting/component assemblies and the runtimeconfig file on deployment:
 
-  ```xml
-  <ItemGroup>
-      <!-- C#/WinRT version 1.1.2-prerelease.210208.6 requires copying the following files -->
-      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\net5.0-windows10.0.19041.0\runtimes\win-x64\native\WinRT.Host.dll">
+    ```xml
+   <!-- Define TFM for refactoring paths below-->
+    <PropertyGroup>
+      <TargetFramework>net5.0-windows$(TargetPlatformVersion)</TargetFramework>
+    </PropertyGroup>
+    <!-- C#/WinRT version 1.1.2-prerelease.210208.6 requires copying the following -->
+    <ItemGroup>
+      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\$(TargetFramework)\runtimes\win-$(Platform)\native\WinRT.Host.dll">
         <Link>WinRT.Host.dll</Link>
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
-      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\net5.0-windows10.0.19041.0\WinRT.Host.Shim.dll">
+      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\$(TargetFramework)\WinRT.Host.Shim.dll">
         <Link>WinRT.Host.Shim.dll</Link>
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
-      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\net5.0-windows10.0.19041.0\WinRT.Runtime.dll">
+      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\$(TargetFramework)\WinRT.Runtime.dll">
         <Link>WinRT.Runtime.dll</Link>
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
-      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\net5.0-windows10.0.19041.0\Microsoft.Windows.SDK.NET.dll">
+      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\$(TargetFramework)\Microsoft.Windows.SDK.NET.dll">
         <Link>Microsoft.Windows.SDK.NET.dll</Link>
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
-      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\net5.0-windows10.0.19041.0\BgTaskComponent.dll">
+      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\$(TargetFramework)\BgTaskComponent.dll">
         <Link>BgTaskComponent.dll</Link>
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
