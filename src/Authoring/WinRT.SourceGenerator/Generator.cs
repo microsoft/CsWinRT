@@ -242,7 +242,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         private bool IsPublic(MemberDeclarationSyntax member)
         {
-            // Detect whether partial types are public using symbol information later.
+            // We detect whether partial types are public using symbol information later.
             return member.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword) || m.IsKind(SyntaxKind.PartialKeyword));
         }
     }
