@@ -144,7 +144,7 @@ namespace Generator
         public Dictionary<ISymbol, ISymbol> ClassInterfaceMemberMapping = new Dictionary<ISymbol, ISymbol>();
 
         public TypeDeclaration()
-            :this(null)
+            : this(null)
         {
             IsSynthesizedInterface = true;
         }
@@ -744,7 +744,7 @@ namespace Generator
             EncodeSymbol(new Symbol(field.Type), encoder.FieldSignature());
 
             var fieldAttributes = FieldAttributes.Public;
-            if(isEnum)
+            if (isEnum)
             {
                 fieldAttributes |=
                     FieldAttributes.Static |
@@ -832,8 +832,8 @@ namespace Generator
                 property.Name,
                 new Symbol(property.Type),
                 property,
-                property.SetMethod != null && 
-                    (property.SetMethod.DeclaredAccessibility == Accessibility.Public || 
+                property.SetMethod != null &&
+                    (property.SetMethod.DeclaredAccessibility == Accessibility.Public ||
                      !property.SetMethod.ExplicitInterfaceImplementations.IsDefaultOrEmpty),
                 isInterfaceParent,
                 property.ExplicitInterfaceImplementations.IsDefaultOrEmpty);
@@ -929,7 +929,7 @@ namespace Generator
         INamedTypeSymbol GetTypeByMetadataName(string metadataName)
         {
             var namedType = Model.Compilation.GetTypeByMetadataName(metadataName);
-            if(namedType != null)
+            if (namedType != null)
             {
                 return namedType;
             }
@@ -957,7 +957,7 @@ namespace Generator
                     return string.Format("{0}<{1}>", qualifiedName, string.Join(", ", namedType.TypeArguments.Select(type => GetMappedQualifiedTypeName(type))));
                 }
             }
-            else if((symbol.ContainingNamespace.ToString() == "System" && symbol.IsValueType) || qualifiedName == "System.String")
+            else if ((symbol.ContainingNamespace.ToString() == "System" && symbol.IsValueType) || qualifiedName == "System.String")
             {
                 // WinRT fundamental types
                 return symbol.Name;
@@ -1299,14 +1299,14 @@ namespace Generator
         private IEnumerable<INamedTypeSymbol> GetInterfaces(INamedTypeSymbol symbol, bool includeInterfacesWithoutMappings = false)
         {
             HashSet<INamedTypeSymbol> interfaces = new HashSet<INamedTypeSymbol>();
-            foreach(var @interface in symbol.Interfaces)
+            foreach (var @interface in symbol.Interfaces)
             {
                 interfaces.Add(@interface);
                 interfaces.UnionWith(@interface.AllInterfaces);
             }
 
             var baseType = symbol.BaseType;
-            while(baseType != null && !IsWinRTType(baseType))
+            while (baseType != null && !IsWinRTType(baseType))
             {
                 interfaces.UnionWith(baseType.Interfaces);
                 foreach (var @interface in baseType.Interfaces)
@@ -1319,14 +1319,14 @@ namespace Generator
 
             // If the generic enumerable is implemented, don't implement the non generic one to prevent issues
             // with the interface members being implemented multiple times.
-            if(!includeInterfacesWithoutMappings && 
+            if (!includeInterfacesWithoutMappings &&
                 interfaces.Any(@interface => QualifiedName(@interface) == "System.Collections.Generic.IEnumerable`1"))
             {
                 interfaces.Remove(GetTypeByMetadataName("System.Collections.IEnumerable"));
             }
 
-            return interfaces.Where(@interface => 
-                    includeInterfacesWithoutMappings || 
+            return interfaces.Where(@interface =>
+                    includeInterfacesWithoutMappings ||
                     !ImplementedInterfacesWithoutMapping.Contains(QualifiedName(@interface)))
                 .OrderBy(implementedInterface => implementedInterface.ToString());
         }
@@ -1460,7 +1460,7 @@ namespace Generator
         {
             var foundMembers = type.GetMembers(member);
             var baseType = type.BaseType;
-            while(foundMembers.Count() == 0 && baseType != null)
+            while (foundMembers.Count() == 0 && baseType != null)
             {
                 foundMembers = baseType.GetMembers(member);
                 baseType = baseType.BaseType;
@@ -1485,11 +1485,11 @@ namespace Generator
 
                 ITypeSymbol argumentType = null;
                 var attributeClassMember = GetMember(attributeType, argument.Key);
-                if(attributeClassMember is IFieldSymbol field)
+                if (attributeClassMember is IFieldSymbol field)
                 {
                     argumentType = field.Type;
                 }
-                else if(attributeClassMember is IPropertySymbol property)
+                else if (attributeClassMember is IPropertySymbol property)
                 {
                     argumentType = property.Type;
                 }
@@ -1958,7 +1958,7 @@ namespace Generator
 
         void AddComponentType(INamedTypeSymbol type, Action visitTypeDeclaration = null)
         {
-            if(!IsPublic(type) || typeDefinitionMapping.ContainsKey(type.ToString()))
+            if (!IsPublic(type) || typeDefinitionMapping.ContainsKey(type.ToString()))
             {
                 return;
             }
@@ -1981,7 +1981,7 @@ namespace Generator
             bool hasDefaultConstructor = false;
             foreach (var member in type.GetMembers())
             {
-                if(!IsPublic(member) || typeDeclaration.CustomMappedSymbols.Contains(member))
+                if (!IsPublic(member) || typeDeclaration.CustomMappedSymbols.Contains(member))
                 {
                     Logger.Log(member.Kind + " member skipped " + member.Name);
                     continue;
@@ -2050,15 +2050,15 @@ namespace Generator
                 TypeAttributes.AutoLayout |
                 TypeAttributes.AnsiClass;
 
-            if(type.IsSealed || 
-               type.IsStatic || 
-               type.TypeKind == TypeKind.Struct || 
+            if (type.IsSealed ||
+               type.IsStatic ||
+               type.TypeKind == TypeKind.Struct ||
                type.TypeKind == TypeKind.Enum)
             {
                 typeAttributes |= TypeAttributes.Sealed;
             }
 
-            if(type.TypeKind == TypeKind.Class && type.IsStatic)
+            if (type.TypeKind == TypeKind.Class && type.IsStatic)
             {
                 typeAttributes |= TypeAttributes.Abstract;
             }
@@ -2066,11 +2066,11 @@ namespace Generator
             EntityHandle baseType = default;
             if (isInterface)
             {
-                typeAttributes |= 
-                    TypeAttributes.Interface | 
+                typeAttributes |=
+                    TypeAttributes.Interface |
                     TypeAttributes.Abstract;
             }
-            else if(type.TypeKind == TypeKind.Class)
+            else if (type.TypeKind == TypeKind.Class)
             {
                 typeAttributes |=
                     TypeAttributes.Class |
@@ -2137,7 +2137,7 @@ namespace Generator
                 {
                     AddActivatableAttribute(
                         typeDeclaration.Handle,
-                        (uint) GetVersion(type, true),
+                        (uint)GetVersion(type, true),
                         null);
                 }
                 AddSynthesizedInterfaces(typeDeclaration);
@@ -2370,7 +2370,7 @@ namespace Generator
 
         void CheckAndMarkSymbolForAttributes(ISymbol symbol)
         {
-            if(symbol.GetAttributes().Any())
+            if (symbol.GetAttributes().Any())
             {
                 currentTypeDeclaration.SymbolsWithAttributes.Add(symbol);
             }
@@ -2563,7 +2563,7 @@ namespace Generator
 
                 // Add attributes from both the class member declaration and its interface member declaration.
                 HashSet<AttributeData> attributes = new HashSet<AttributeData>(node.GetAttributes(), new AttributeDataComparer());
-                if(typeDeclaration.ClassInterfaceMemberMapping.ContainsKey(node))
+                if (typeDeclaration.ClassInterfaceMemberMapping.ContainsKey(node))
                 {
                     attributes.UnionWith(typeDeclaration.ClassInterfaceMemberMapping[node].GetAttributes());
                 }
@@ -2706,7 +2706,7 @@ namespace Generator
 
                 if (typeDeclaration.Node is INamedTypeSymbol symbol && symbol.TypeKind == TypeKind.Class)
                 {
-                    if(!string.IsNullOrEmpty(typeDeclaration.DefaultInterface))
+                    if (!string.IsNullOrEmpty(typeDeclaration.DefaultInterface))
                     {
                         Logger.Log("adding attributes for default interface " + typeDeclaration.DefaultInterface);
                         AddCustomAttributes(typeDefinitionMapping[typeDeclaration.DefaultInterface], typeDeclaration.DefaultInterface);
@@ -2746,7 +2746,7 @@ namespace Generator
 
         public string QualifiedName(string @namespace, string identifier)
         {
-            if(string.IsNullOrEmpty(@namespace))
+            if (string.IsNullOrEmpty(@namespace))
             {
                 return identifier;
             }
@@ -2759,7 +2759,7 @@ namespace Generator
             if (symbol is INamedTypeSymbol namedType && namedType.TypeArguments.Length != 0)
             {
                 name += "`" + namedType.TypeArguments.Length;
-                if(includeGenerics)
+                if (includeGenerics)
                 {
                     name += string.Format("<{0}>", string.Join(", ", namedType.TypeArguments));
                 }

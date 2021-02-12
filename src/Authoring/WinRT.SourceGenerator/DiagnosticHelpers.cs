@@ -8,15 +8,15 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using WinRT.SourceGenerator;
 
-namespace Generator 
+namespace Generator
 {
     // Helper Class, makes for clean collection of types and namespaces, needed for checking
-    internal class TypeCollector 
-    { 
-        private HashSet<INamedTypeSymbol> types; 
-        private HashSet<INamedTypeSymbol> structs; 
+    internal class TypeCollector
+    {
+        private HashSet<INamedTypeSymbol> types;
+        private HashSet<INamedTypeSymbol> structs;
         private HashSet<INamespaceSymbol> namespaces;
-            
+
         public TypeCollector()
         {
             types = new HashSet<INamedTypeSymbol>();
@@ -49,12 +49,12 @@ namespace Generator
             _context.ReportDiagnostic(d);
         }
         private SemanticModel GetModel(SyntaxTree t) { return _context.Compilation.GetSemanticModel(t); }
-        
+
         private INamedTypeSymbol GetTypeByMetadataName(string fullyQualifiedMetadataName)
         {
             return _context.Compilation.GetTypeByMetadataName(fullyQualifiedMetadataName);
         }
-        
+
         private bool SymEq(ISymbol sym1, ISymbol sym2) { return SymbolEqualityComparer.Default.Equals(sym1, sym2); }
 
         /// <summary>
@@ -70,12 +70,12 @@ namespace Generator
                 bool isWindowsFoundation = sym.ContainingNamespace.IsGlobalNamespace || sym.ContainingNamespace.Name == "Windows.Foundation";
                 bool isAsyncAction = sym.MetadataName == "IAsyncAction";
                 return isWindowsFoundation && isAsyncAction;
-            } 
+            }
 
             if (typeSymbol.BaseType != null && typeSymbol.BaseType.ContainingNamespace != null)
-            { 
+            {
                 if (AsyncActionCase(typeSymbol.BaseType))
-                { 
+                {
                     Report(WinRTRules.NonWinRTInterface, typeDeclaration.GetLocation(), typeDeclaration.Identifier, "IAsyncAction");
                 }
             }
@@ -83,7 +83,7 @@ namespace Generator
             foreach (var implementedInterface in typeSymbol.AllInterfaces)
             {
                 if (AsyncActionCase(implementedInterface))
-                { 
+                {
                     Report(WinRTRules.NonWinRTInterface, typeDeclaration.GetLocation(), typeDeclaration.Identifier, "IAsyncAction");
                 }
             }
@@ -96,7 +96,7 @@ namespace Generator
                 }
             }
         }
- 
+
         /// <summary>
         /// See if this class/interfaces inherits the given type
         /// </summary>
@@ -105,7 +105,7 @@ namespace Generator
         private bool ImplementsInterface(INamedTypeSymbol typeSymbol, string typeToCheck)
         {
             if (typeSymbol == null)
-            { 
+            {
                 return false;
             }
 
@@ -117,7 +117,7 @@ namespace Generator
                     return true;
                 }
             }
-            
+
             // class type symbols might have a BaseType, like System.Exception
             if (typeSymbol.BaseType != null)
             {
@@ -130,12 +130,12 @@ namespace Generator
                 }
                 var typeToCheckSymbol = GetTypeByMetadataName(typeToCheck);
                 if (SymEq(typeSymbol.BaseType, typeToCheckSymbol))
-                { 
+                {
                     return true;
                 }
                 // Type<T_1,T_2,...,T_n> -> Type`n
                 if (typeSymbol.BaseType.MetadataName != null)
-                { 
+                {
                     return typeSymbol.BaseType.MetadataName == typeToCheck;
                 }
             }
@@ -189,22 +189,22 @@ namespace Generator
                 var isArrayType = param.Type.IsKind(SyntaxKind.ArrayType);
                 bool hasReadOnlyArray = ParamHasReadOnlyAttribute(param);
                 bool hasWriteOnlyArray = ParamHasWriteOnlyAttribute(param);
-                
+
                 // Nothing can be marked `ref`
                 if (HasModifier(param, SyntaxKind.RefKeyword))
                 {
-                    Report(WinRTRules.RefParameterFound, method.GetLocation(), method.Identifier, param.Identifier); 
-                }    
-                
+                    Report(WinRTRules.RefParameterFound, method.GetLocation(), method.Identifier, param.Identifier);
+                }
+
                 if (ParamHasInOrOutAttribute(param))
                 {
                     // recommend using ReadOnlyArray or WriteOnlyArray instead of In/Out
-                    if (isArrayType) 
-                    { 
-                        Report(WinRTRules.ArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier); 
+                    if (isArrayType)
+                    {
+                        Report(WinRTRules.ArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier);
                     }
                     // if not array type, stil can't use [In] or [Out]
-                    else 
+                    else
                     {
                         Report(WinRTRules.NonArrayMarkedInOrOut, method.GetLocation(), method.Identifier, param.Identifier);
                     }
@@ -224,7 +224,7 @@ namespace Generator
                         Report(WinRTRules.ArrayOutputParamMarkedRead, method.GetLocation(), method.Identifier, param.Identifier);
                     }
                     // must have some indication of ReadOnly or WriteOnly
-                    else if (!hasWriteOnlyArray && !hasReadOnlyArray && !isOutputParam) 
+                    else if (!hasWriteOnlyArray && !hasReadOnlyArray && !isOutputParam)
                     {
                         Report(WinRTRules.ArrayParamNotMarked, method.GetLocation(), method.Identifier, param.Identifier);
                     }
@@ -268,9 +268,9 @@ namespace Generator
         /// <summary>Check for qualified and unqualified [DefaultOverload] attribute on the parameter<</summary>
         /// <param name="method"></param>
         /// <returns>True if any attribute is the DefaultOverload attribute</returns>
-        private bool HasDefaultOverloadAttribute(MethodDeclarationSyntax method) 
+        private bool HasDefaultOverloadAttribute(MethodDeclarationSyntax method)
         {
-            if(OverloadAttributeNames.Where(str => MatchesAnyAttribute(str, method.AttributeLists)).Any())
+            if (OverloadAttributeNames.Where(str => MatchesAnyAttribute(str, method.AttributeLists)).Any())
             {
                 return true;
             }
@@ -326,9 +326,9 @@ namespace Generator
                     // we could see this method later with the attribute, 
                     // so hold onto the diagnostic for it until we know it doesn't have the attribute
                     overloadsWithoutAttributeMap[methodNameWithArity] = Diagnostic.Create(
-                        WinRTRules.NeedDefaultOverloadAttribute, 
-                        method.GetLocation(), 
-                        methodArity, 
+                        WinRTRules.NeedDefaultOverloadAttribute,
+                        method.GetLocation(),
+                        methodArity,
                         method.Identifier,
                         classId);
                 }
@@ -353,19 +353,19 @@ namespace Generator
             {
                 var model = GetModel(declaration.SyntaxTree);
 
-                if (declaration is ClassDeclarationSyntax @class && IsPublic(@class)) 
+                if (declaration is ClassDeclarationSyntax @class && IsPublic(@class))
                 {
                     collectedTypes.AddType(model.GetDeclaredSymbol(@class));
                 }
-                else if(declaration is InterfaceDeclarationSyntax @interface && IsPublic(@interface))
+                else if (declaration is InterfaceDeclarationSyntax @interface && IsPublic(@interface))
                 {
                     collectedTypes.AddType(model.GetDeclaredSymbol(@interface));
                 }
-                else if(declaration is StructDeclarationSyntax @struct && IsPublic(@struct))
+                else if (declaration is StructDeclarationSyntax @struct && IsPublic(@struct))
                 {
                     collectedTypes.AddStruct(model.GetDeclaredSymbol(@struct));
                 }
-                else if(declaration is NamespaceDeclarationSyntax @namespace)
+                else if (declaration is NamespaceDeclarationSyntax @namespace)
                 {
                     collectedTypes.AddNamespace(model.GetDeclaredSymbol(@namespace));
                 }
@@ -380,42 +380,42 @@ namespace Generator
         {
             switch (type)
             {
-                case "System.Collections.Generic.Dictionary`2": 
+                case "System.Collections.Generic.Dictionary`2":
                     return "IDictionary<TKey,TValue>, IReadOnlyDictionary<TKey,TValue>, IEnumerable<KeyValuePair<TKey,TValue>>";
                 case "System.Collections.ObjectModel.ReadOnlyDictionary`2":
                     return "IReadOnlyDictionary<TKey,TValue>, IEnumerable<KeyValuePair<TKey,TValue>>, IDictionary<TKey,TValue>";
-                case "System.Collections.Generic.List`1": 
+                case "System.Collections.Generic.List`1":
                     return "IList<T>, IReadOnlyList<T>, IEnumerable<T>";
-                case "System.Linq.Enumerable`1": 
+                case "System.Linq.Enumerable`1":
                     return "IEnumerable<T>";
-                case "System.Collections.Generic.KeyValuePair": 
+                case "System.Collections.Generic.KeyValuePair":
                     return "KeyValuePair<TKey,TValue>";
-                case "System.Array": 
+                case "System.Array":
                     return "T[]";
                 default: return "No suggestions for type";
             }
         }
-     
+
         /// <param name="syntaxType"></param>
         /// <returns>the common term for the given syntax type</returns>
         private string SimplifySyntaxTypeString(string syntaxType)
         {
             switch (syntaxType)
             {
-                case "EventFieldDeclarationSyntax":  return "event";
+                case "EventFieldDeclarationSyntax": return "event";
                 case "ConstructorDeclarationSyntax": return "constructor";
-                case "DelegateDeclarationSyntax":    return "delegate";
-                case "IndexerDeclarationSyntax":     return "indexer";
-                case "MethodDeclarationSyntax":      return "method";
-                case "OperatorDeclarationSyntax":    return "operator";
-                case "PropertyDeclarationSyntax":    return "property";
+                case "DelegateDeclarationSyntax": return "delegate";
+                case "IndexerDeclarationSyntax": return "indexer";
+                case "MethodDeclarationSyntax": return "method";
+                case "OperatorDeclarationSyntax": return "operator";
+                case "PropertyDeclarationSyntax": return "property";
                 default: return "unknown syntax type: " + syntaxType;
             }
         }
 
-        private SpecialType[] ValidStructFieldTypes = new SpecialType[] 
+        private SpecialType[] ValidStructFieldTypes = new SpecialType[]
         {
-            SpecialType.System_Boolean, 
+            SpecialType.System_Boolean,
             SpecialType.System_String,
             SpecialType.System_Single,
             SpecialType.System_Double,
@@ -437,14 +437,14 @@ namespace Generator
         };
 
         private readonly static HashSet<string> NotValidTypes = new HashSet<string>()
-        { 
+        {
             "System.Array",
             "System.Collections.Generic.Dictionary`2",
-            "System.Collections.Generic.List`1", 
+            "System.Collections.Generic.List`1",
             "System.Collections.Generic.KeyValuePair"
         };
 
-        private readonly static HashSet<string> WIPNotValidTypes =  new HashSet<string>()
+        private readonly static HashSet<string> WIPNotValidTypes = new HashSet<string>()
         {
             "System.Linq.Enumerable",
             "Enumerable",
@@ -460,7 +460,7 @@ namespace Generator
             { "System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray", "ReadOnlyArray" };
         private static readonly HashSet<string> WriteOnlyArrayAttributeNames = new HashSet<string>()
             { "System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray", "WriteOnlyArray" };
-    
+
         private static readonly string GeneratedReturnValueName = "__retval";
     }
 }

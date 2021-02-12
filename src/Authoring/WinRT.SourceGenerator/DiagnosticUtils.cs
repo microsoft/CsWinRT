@@ -6,12 +6,12 @@ using System.Collections.Immutable;
 using System.Linq;
 using WinRT.SourceGenerator;
 
-namespace Generator 
+namespace Generator
 {
     public partial class WinRTComponentScanner
     {
-        public WinRTComponentScanner(GeneratorExecutionContext context, string assemblyName) 
-        { 
+        public WinRTComponentScanner(GeneratorExecutionContext context, string assemblyName)
+        {
             _assemblyName = assemblyName;
             _context = context;
             _flag = false;
@@ -29,7 +29,7 @@ namespace Generator
         /// Gather information on all classes, interfaces and structs
         /// Perform code analysis to find scenarios that are erroneous in Windows Runtime</summary>
         public void FindDiagnostics()
-        { 
+        {
             HasInvalidNamespace();
             HasSomePublicTypes();
 
@@ -40,7 +40,7 @@ namespace Generator
 
                 // Check symbol information for whether it is public to properly detect partial types
                 // which can leave out modifier.
-                if(model.GetDeclaredSymbol(declaration).DeclaredAccessibility != Accessibility.Public)
+                if (model.GetDeclaredSymbol(declaration).DeclaredAccessibility != Accessibility.Public)
                 {
                     continue;
                 }
@@ -64,15 +64,15 @@ namespace Generator
                     HasMultipleConstructorsOfSameArity(@class);
 
                     if (classSymbol.IsGenericType)
-                    { 
+                    {
                         Report(WinRTRules.GenericTypeRule, @class.GetLocation(), classId);
                     }
 
                     // check for things in nonWindowsRuntimeInterfaces
                     ImplementsInvalidInterface(classSymbol, @class);
-                   
+
                     CheckProperties(props, classId);
-                   
+
                     // check types -- todo: check for !valid types
                     CheckMethods(publicMethods, classId);
                 }
@@ -83,7 +83,7 @@ namespace Generator
                     var props = @interface.DescendantNodes().OfType<PropertyDeclarationSyntax>().Where(IsPublic);
 
                     // filter out methods and properties that will be replaced with our custom type mappings
-                    IgnoreCustomTypeMappings(interfaceSym, ref methods, ref props); 
+                    IgnoreCustomTypeMappings(interfaceSym, ref methods, ref props);
 
                     if (interfaceSym.IsGenericType)
                     {
@@ -91,25 +91,25 @@ namespace Generator
                     }
 
                     ImplementsInvalidInterface(interfaceSym, @interface);
-                    
+
                     CheckProperties(props, @interface.Identifier);
-                    
+
                     CheckMethods(methods, @interface.Identifier);
                 }
                 else if (declaration is StructDeclarationSyntax @struct)
                 {
                     CheckStructFields(@struct);
                 }
-            } 
+            }
         }
 
-        private void IgnoreCustomTypeMappings(INamedTypeSymbol typeSymbol, 
-            ref IEnumerable<MethodDeclarationSyntax> methods, 
+        private void IgnoreCustomTypeMappings(INamedTypeSymbol typeSymbol,
+            ref IEnumerable<MethodDeclarationSyntax> methods,
             ref IEnumerable<PropertyDeclarationSyntax> properties)
         {
-            string QualifiedName(INamedTypeSymbol sym) 
-            { 
-                return sym.OriginalDefinition.ContainingNamespace + "." + sym.OriginalDefinition.MetadataName; 
+            string QualifiedName(INamedTypeSymbol sym)
+            {
+                return sym.OriginalDefinition.ContainingNamespace + "." + sym.OriginalDefinition.MetadataName;
             }
 
             HashSet<ISymbol> classMethods = new HashSet<ISymbol>();
@@ -119,7 +119,7 @@ namespace Generator
                                         WinRTTypeWriter.ImplementedInterfacesWithoutMapping.Contains(QualifiedName(symbol))))
             {
                 foreach (var interfaceMember in @interface.GetMembers())
-                { 
+                {
                     classMethods.Add(typeSymbol.FindImplementationForInterfaceMember(interfaceMember));
                 }
             }
@@ -135,17 +135,17 @@ namespace Generator
         private bool OverloadsOperator(ClassDeclarationSyntax classDeclaration)
         {
             var operatorDeclarations = classDeclaration.DescendantNodes().OfType<OperatorDeclarationSyntax>();
-            foreach (var op in operatorDeclarations) { Report(WinRTRules.OperatorOverloadedRule, op.GetLocation(), op.OperatorToken); } 
+            foreach (var op in operatorDeclarations) { Report(WinRTRules.OperatorOverloadedRule, op.GetLocation(), op.OperatorToken); }
             return operatorDeclarations.Count() != 0;
         }
 
         /// <summary>Raise a diagnostic if there are no public types in the namespace</summary>
-        private void HasSomePublicTypes() 
+        private void HasSomePublicTypes()
         {
             // types are interfaces, classes and structs
-            if (!_typeHolder.GetTypes().Any() && !_typeHolder.GetStructs().Any()) 
-            { 
-                Report(WinRTRules.NoPublicTypesRule, null); 
+            if (!_typeHolder.GetTypes().Any() && !_typeHolder.GetStructs().Any())
+            {
+                Report(WinRTRules.NoPublicTypesRule, null);
             }
         }
 
@@ -182,9 +182,9 @@ namespace Generator
             bool IsInvalidParameterName(ParameterSyntax stx) { return stx.Identifier.Value.Equals(GeneratedReturnValueName); }
 
             var hasInvalidParams = method.ParameterList.Parameters.Where(IsInvalidParameterName).Any();
-            if (hasInvalidParams) 
-            { 
-                Report(WinRTRules.ParameterNamedValueRule, method.GetLocation(), method.Identifier); 
+            if (hasInvalidParams)
+            {
+                Report(WinRTRules.ParameterNamedValueRule, method.GetLocation(), method.Identifier);
             }
         }
 
@@ -213,7 +213,7 @@ namespace Generator
                 foreach (var arg in methodSym.Parameters)
                 {
                     ReportIfInvalidType(arg.Type, method.GetLocation(), method.Identifier, typeId);
-                } 
+                }
             }
             /* Finishes up the work started by `CheckOverloadAttributes` */
             foreach (var thing in overloadsWithoutAttributeMap)
@@ -251,29 +251,29 @@ namespace Generator
         {
             // delegates not allowed 
             if (@struct.DescendantNodes().OfType<DelegateDeclarationSyntax>().Any())
-            { 
-                Report(WinRTRules.StructHasInvalidFieldRule, @struct.GetLocation(), @struct.Identifier,  SimplifySyntaxTypeString(typeof(DelegateDeclarationSyntax).Name));
+            {
+                Report(WinRTRules.StructHasInvalidFieldRule, @struct.GetLocation(), @struct.Identifier, SimplifySyntaxTypeString(typeof(DelegateDeclarationSyntax).Name));
             }
             // methods not allowed
             if (@struct.DescendantNodes().OfType<MethodDeclarationSyntax>().Any())
-            { 
-                Report(WinRTRules.StructHasInvalidFieldRule, @struct.GetLocation(), @struct.Identifier,  SimplifySyntaxTypeString(typeof(MethodDeclarationSyntax).Name));
+            {
+                Report(WinRTRules.StructHasInvalidFieldRule, @struct.GetLocation(), @struct.Identifier, SimplifySyntaxTypeString(typeof(MethodDeclarationSyntax).Name));
             }
 
             var structSym = GetModel(@struct.SyntaxTree).GetDeclaredSymbol(@struct);
 
             // constructors not allowed 
             if (structSym.Constructors.Length > 1)
-            { 
-                Report(WinRTRules.StructHasInvalidFieldRule, @struct.GetLocation(), @struct.Identifier,  SimplifySyntaxTypeString(typeof(ConstructorDeclarationSyntax).Name));
+            {
+                Report(WinRTRules.StructHasInvalidFieldRule, @struct.GetLocation(), @struct.Identifier, SimplifySyntaxTypeString(typeof(ConstructorDeclarationSyntax).Name));
             }
 
             var fields = @struct.DescendantNodes().OfType<FieldDeclarationSyntax>();
-            foreach (var field in fields) 
+            foreach (var field in fields)
             {
                 // all fields must be public
                 if (!IsPublic(field))
-                { 
+                {
                     Report(WinRTRules.StructHasPrivateFieldRule, field.GetLocation(), @struct.Identifier);
                 }
 
@@ -292,7 +292,7 @@ namespace Generator
                         break;
                     }
                     else
-                    { 
+                    {
                         Report(WinRTRules.StructHasInvalidFieldRule, variable.GetLocation(), @struct.Identifier, varFieldSym.Name);
                     }
                 }
@@ -358,22 +358,22 @@ namespace Generator
         ///<param name="typeSymbol">The type to check</param><param name="loc">where the type is</param>
         ///<param name="memberId">The method or property with this type in its signature</param>
         /// <param name="typeId">the type this member (method/prop) lives in</param>
-        private void ReportIfInvalidType(ITypeSymbol typeSymbol, Location loc, SyntaxToken memberId, SyntaxToken typeId) 
+        private void ReportIfInvalidType(ITypeSymbol typeSymbol, Location loc, SyntaxToken memberId, SyntaxToken typeId)
         {
             // If it's of the form int[], it has to be one dimensional
-            if (typeSymbol.TypeKind == TypeKind.Array) 
+            if (typeSymbol.TypeKind == TypeKind.Array)
             {
                 IArrayTypeSymbol arrTypeSym = (IArrayTypeSymbol)typeSymbol;
 
                 // [,,]?
-                if (arrTypeSym.Rank > 1) 
-                { 
+                if (arrTypeSym.Rank > 1)
+                {
                     Report(WinRTRules.MultiDimensionalArrayRule, loc, memberId, typeId);
                     return;
-                } 
+                }
                 // [][]?
-                if (arrTypeSym.ElementType.TypeKind == TypeKind.Array) 
-                { 
+                if (arrTypeSym.ElementType.TypeKind == TypeKind.Array)
+                {
                     Report(WinRTRules.JaggedArrayRule, loc, memberId, typeId);
                     return;
                 }
@@ -381,7 +381,7 @@ namespace Generator
 
             // NotValidTypes is an array of types that don't exist in Windows Runtime, so can't be passed between functions in Windows Runtime
             foreach (var typeName in NotValidTypes)
-            { 
+            {
                 var notValidTypeSym = GetTypeByMetadataName(typeName);
                 if (SymEq(typeSymbol.OriginalDefinition, notValidTypeSym))
                 {
@@ -395,21 +395,21 @@ namespace Generator
             if (typeSymbol.ContainingNamespace != null && !typeSymbol.ContainingNamespace.IsGlobalNamespace)
             {
                 // ContainingNamespace for Enumerable is just System, but we need System.Linq which is the ContainingSymbol
-                qualifiedName += typeSymbol.ContainingSymbol + "."; 
+                qualifiedName += typeSymbol.ContainingSymbol + ".";
             }
             // instead of TypeName<int>, TypeName`1
             qualifiedName += typeSymbol.MetadataName;
 
             // GetTypeByMetadataName fails on "System.Linq.Enumerable" & "System.Collections.ObjectModel.ReadOnlyDictionary`2"
             // Would be fixed by issue #678 on the dotnet/roslyn-sdk repo
-            foreach (var notValidType in WIPNotValidTypes) 
+            foreach (var notValidType in WIPNotValidTypes)
             {
                 if (qualifiedName == notValidType)
-                { 
+                {
                     Report(WinRTRules.UnsupportedTypeRule, loc, memberId, notValidType, SuggestType(notValidType));
                     return;
                 }
             }
         }
-     }
+    }
 }
