@@ -28,7 +28,7 @@ There are a few modifications to note that relate to those described in the [aut
    </Extensions>
    ```
 
-- In **WPFApp.Package.wapproj**, the following `ItemGroup` is added in order to copy the hosting/component assemblies and the runtimeconfig file on deployment:
+- In **WPFApp.Package.wapproj**, the following properties are added in order to copy the hosting/component assemblies and the runtimeconfig file on deployment:
 
     ```xml
    <!-- Define TFM for refactoring paths below-->
