@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -236,13 +237,7 @@ namespace WinRT
                     Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
                 });
 
-                ComInterfaceEntry* nativeEntries = (ComInterfaceEntry*)Marshal.AllocCoTaskMem(sizeof(ComInterfaceEntry) * entries.Count);
-                for (int i = 0; i < entries.Count; i++)
-                {
-                    nativeEntries[i] = entries[i];
-                }
-
-                return new VtableEntries(nativeEntries, entries.Count);
+                return new VtableEntries(entries, type);
             });
 
             count = vtableEntries.Count;
@@ -330,18 +325,14 @@ namespace WinRT
                 Count = 0;
             }
 
-            public VtableEntries(ComInterfaceEntry* data, int count)
+            public VtableEntries(List<ComInterfaceEntry> entries, Type type)
             {
-                Data = data;
-                Count = count;
-            }
-
-            ~VtableEntries()
-            {
-                if (Data != null)
+                Data = (ComInterfaceEntry*)RuntimeHelpers.AllocateTypeAssociatedMemory(type, sizeof(ComInterfaceEntry) * entries.Count);
+                for (int i = 0; i < entries.Count; i++)
                 {
-                    Marshal.FreeCoTaskMem((IntPtr)Data);
+                    Data[i] = entries[i];
                 }
+                Count = entries.Count;
             }
         }
     }
