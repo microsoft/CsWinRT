@@ -51,14 +51,21 @@ namespace ABI.System.ComponentModel
 #endif
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
+#if NETSTANDARD2_0
             private readonly AgileReference _agileReference = default;
+#endif
 
             public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
             {
                 _nativeDelegate = nativeDelegate;
                 if (_nativeDelegate.TryAs<ABI.WinRT.Interop.IAgileObject.Vftbl>(out var objRef) < 0)
                 {
-                    _agileReference = new AgileReference(_nativeDelegate);
+                    var agileReference = new AgileReference(_nativeDelegate);
+#if NETSTANDARD2_0
+                    _agileReference = agileReference;
+#else
+                    ((IWinRTObject)this).AdditionalTypeData.TryAdd(typeof(AgileReference).TypeHandle, agileReference);
+#endif
                 }
                 else
                 {
@@ -75,7 +82,13 @@ namespace ABI.System.ComponentModel
 
             public void Invoke(object sender, global::System.ComponentModel.PropertyChangedEventArgs e)
             {
-                using var agileDelegate = _agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(PropertyChangedEventHandler)));
+#if NETSTANDARD2_0
+                var agileReference = _agileReference;
+#else
+                var agileReference = ((IWinRTObject)this).AdditionalTypeData.TryGetValue(typeof(AgileReference).TypeHandle, out var agileObj) ?
+                    (AgileReference)agileObj : null;
+#endif
+                using var agileDelegate = agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(PropertyChangedEventHandler)));
                 var delegateToInvoke = agileDelegate ?? _nativeDelegate;
                 IntPtr ThisPtr = delegateToInvoke.ThisPtr;
                 var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(delegateToInvoke.Vftbl.Invoke);
