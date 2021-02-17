@@ -46,6 +46,7 @@ namespace AuthoringTest
     public delegate void BasicDelegate(uint value);
     public delegate bool ComplexDelegate(double value, int value2);
     public delegate void DoubleDelegate(double value);
+    internal delegate void PrivateDelegate(uint value);
 
     public sealed class BasicClass
     {
@@ -87,28 +88,16 @@ namespace AuthoringTest
             return new CustomWWW();
         }
 
-        public BasicStruct GetBasicStruct()
-        {
-            BasicStruct basicStruct;
-            basicStruct.X = 4;
-            basicStruct.Y = 8;
-            basicStruct.Value = "CsWinRT";
-            return basicStruct;
-        }
+        public BasicStruct GetBasicStruct() => 
+            new BasicStruct() { X = 4, Y = 8, Value = "CsWinRT" };
 
         public int GetSumOfInts(BasicStruct basicStruct)
         {
             return basicStruct.X + basicStruct.Y;
         }
 
-        public ComplexStruct GetComplexStruct()
-        {
-            ComplexStruct complexStruct;
-            complexStruct.X = 12;
-            complexStruct.Val = true;
-            complexStruct.BasicStruct = GetBasicStruct();
-            return complexStruct;
-        }
+        public ComplexStruct GetComplexStruct() =>
+            new ComplexStruct() { X = 12, Val = true, BasicStruct = GetBasicStruct() };
 
         public int? GetX(ComplexStruct basicStruct)
         {
@@ -189,6 +178,12 @@ namespace AuthoringTest
         public bool? Val;
         public BasicStruct BasicStruct;
     }
+    
+    internal struct PrivateStruct
+    {
+        public int X, Y;
+        public string Value;
+    }
 
     public sealed class CustomWWW : IWwwFormUrlDecoderEntry
     {
@@ -239,6 +234,7 @@ namespace AuthoringTest
         [Windows.Foundation.Metadata.Deprecated("test", DeprecationType.Deprecate, 3)]
         public int Deprecated { get; }
         public double Number { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
 
         public TestClass()
         {
@@ -430,6 +426,25 @@ namespace AuthoringTest
             return 3;
         }
 
+        // Type-erased objects
+        public IList<object> GetTypeErasedProjectedObjects()
+        {
+            return new List<object>() {
+                42,
+                BasicEnum.First,
+                new BasicStruct() { X = 1, Y = 2, Value = "Basic" },
+                new BasicDelegate((uint value) => {}),
+            };
+        }
+
+        public IList<object> GetTypeErasedNonProjectedObjects()
+        {
+            return new List<object>() {
+                PrivateEnum.PrivateFirst,
+                new PrivateStruct() { X = 1, Y = 2, Value = "Private" },
+                new PrivateDelegate((uint value) => { })
+            };
+        }
     }
 
     public sealed class DisposableClass : IDisposable

@@ -124,11 +124,16 @@ namespace WinRT
 
             if (obj is Delegate)
             {
-                entries.Add(new ComInterfaceEntry
+                var delegateType = obj.GetType();
+                var helperType = delegateType.FindHelperType();
+                if (helperType is object)
                 {
-                    IID = GuidGenerator.GetIID(obj.GetType()),
-                    Vtable = (IntPtr)obj.GetType().GetHelperType().GetAbiToProjectionVftblPtr()
-                });
+                    entries.Add(new ComInterfaceEntry
+                    {
+                        IID = GuidGenerator.GetIID(delegateType),
+                        Vtable = (IntPtr)helperType.GetAbiToProjectionVftblPtr()
+                    });
+                }
             }
 
             if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
@@ -339,9 +344,26 @@ namespace WinRT
 
         private static bool ShouldProvideIReference(object obj)
         {
-            return obj.GetType().IsValueType || obj is string || obj is Type || obj is Delegate;
-        }
+            static bool IsWindowsRuntimeType(Type type)
+            {
+                // TODO: attribute checks are expensive - cache per-vtable
+                if (type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object)
+                    return true;
+                type = type.GetAuthoringMetadataType();
+                if (type is object && type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object)
+                    return true;
+                return false;
+            }
 
+            if (obj is string || obj is Type)
+                return true;
+            var type = obj.GetType();
+            if (obj is Delegate)
+                return IsWindowsRuntimeType(type);
+            if (!type.IsValueType)
+                return false;
+            return type.IsPrimitive || IsWindowsRuntimeType(type);
+        }
 
         private static ComInterfaceEntry IPropertyValueEntry =>
             new ComInterfaceEntry
