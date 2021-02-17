@@ -327,6 +327,22 @@ TEST(AuthoringTest, CustomTypes)
     auto type = testClass.Type();
     EXPECT_EQ(type.Kind, Windows::UI::Xaml::Interop::TypeKind::Metadata);
     EXPECT_EQ(type.Name, L"AuthoringTest.TestClass");
+
+    auto erasedProjecteds = testClass.GetTypeErasedProjectedObjects();
+    EXPECT_EQ(erasedProjecteds.Size(), 4);
+    for (auto obj : erasedProjecteds)
+    {
+        auto pv = obj.try_as<IPropertyValue>();
+        EXPECT_NE(pv, nullptr);
+    }
+
+    auto erasedNonProjecteds = testClass.GetTypeErasedNonProjectedObjects();
+    EXPECT_EQ(erasedNonProjecteds.Size(), 3);
+    for (auto obj : erasedNonProjecteds)
+    {
+        auto pv = obj.try_as<IPropertyValue>();
+        EXPECT_EQ(pv, nullptr);
+    }
 }
 
 TEST(AuthoringTest, CustomDictionaryImplementations)

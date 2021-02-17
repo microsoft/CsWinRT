@@ -124,11 +124,15 @@ namespace WinRT
 
             if (type.IsDelegate())
             {
-                entries.Add(new ComInterfaceEntry
+                var helperType = type.FindHelperType();
+                if (helperType is object)
                 {
-                    IID = GuidGenerator.GetIID(type),
-                    Vtable = (IntPtr)type.GetHelperType().GetAbiToProjectionVftblPtr()
-                });
+                    entries.Add(new ComInterfaceEntry
+                    {
+                        IID = GuidGenerator.GetIID(type),
+                        Vtable = (IntPtr)helperType.GetAbiToProjectionVftblPtr()
+                    });
+                }
             }
 
             if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
@@ -337,7 +341,23 @@ namespace WinRT
 
         private static bool ShouldProvideIReference(Type type)
         {
-            return type.IsValueType || type == typeof(string) || type == typeof(Type) || type.IsDelegate();
+            static bool IsWindowsRuntimeType(Type type)
+            {
+                if (type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object)
+                    return true;
+                type = type.GetAuthoringMetadataType();
+                if (type is object && type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object)
+                    return true;
+                return false;
+            }
+
+            if (type == typeof(string) || type == typeof(Type))
+                return true;
+            if (type.IsDelegate())
+                return IsWindowsRuntimeType(type);
+            if (!type.IsValueType)
+                return false;
+            return type.IsPrimitive || IsWindowsRuntimeType(type);
         }
 
         private static ComInterfaceEntry IPropertyValueEntry =>
