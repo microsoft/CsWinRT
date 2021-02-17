@@ -352,9 +352,8 @@ namespace WinRT
                 return false;
             }
 
-            if (obj is string || obj is Type)
+            if (type == typeof(string) || type == typeof(Type))
                 return true;
-            var type = obj.GetType();
             if (type.IsDelegate())
                 return IsWindowsRuntimeType(type);
             if (!type.IsValueType)
