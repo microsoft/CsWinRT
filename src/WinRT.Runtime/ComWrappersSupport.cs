@@ -343,7 +343,6 @@ namespace WinRT
         {
             static bool IsWindowsRuntimeType(Type type)
             {
-                // TODO: attribute checks are expensive - cache per-vtable
                 if (type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object)
                     return true;
                 type = type.GetAuthoringMetadataType();
