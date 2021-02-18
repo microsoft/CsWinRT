@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -26,7 +27,7 @@ namespace WinRT
             }
         }
 
-        internal static readonly ConditionalWeakTable<object, InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<object, InspectableInfo>();
+        internal static readonly ConditionalWeakTable<Type, InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<Type, InspectableInfo>();
         internal static readonly ThreadLocal<Type> CreateRCWType = new ThreadLocal<Type>();
 
         private static ComWrappers _comWrappers;
@@ -67,7 +68,7 @@ namespace WinRT
         internal static unsafe InspectableInfo GetInspectableInfo(IntPtr pThis)
         {
             var _this = FindObject<object>(pThis);
-            return InspectableInfoTable.GetValue(_this, o => PregenerateNativeTypeInformation(o).inspectableInfo);
+            return InspectableInfoTable.GetValue(_this.GetType(), o => PregenerateNativeTypeInformation(o).inspectableInfo);
         }
 
         public static T CreateRcwForComObject<T>(IntPtr ptr)
@@ -193,7 +194,7 @@ namespace WinRT
 
     public class DefaultComWrappers : ComWrappers
     {
-        private static ConditionalWeakTable<object, VtableEntriesCleanupScout> ComInterfaceEntryCleanupTable = new ConditionalWeakTable<object, VtableEntriesCleanupScout>();
+        private static readonly ConditionalWeakTable<Type, VtableEntries> TypeVtableEntryTable = new ConditionalWeakTable<Type, VtableEntries>();
         public static unsafe IUnknownVftbl IUnknownVftbl => Unsafe.AsRef<IUnknownVftbl>(IUnknownVftblPtr.ToPointer());
 
         internal static IntPtr IUnknownVftblPtr { get; }
@@ -213,50 +214,50 @@ namespace WinRT
 
         protected override unsafe ComInterfaceEntry* ComputeVtables(object obj, CreateComInterfaceFlags flags, out int count)
         {
-            if (IsRuntimeImplementedRCW(obj))
+            var vtableEntries = TypeVtableEntryTable.GetValue(obj.GetType(), (type) => 
             {
-                // If the object is a runtime-implemented RCW, let the runtime create a CCW.
-                count = 0;
-                return null;
-            }
+                if (IsRuntimeImplementedRCW(type))
+                {
+                    // If the object is a runtime-implemented RCW, let the runtime create a CCW.
+                    return new VtableEntries();
+                }
 
-            var entries = ComWrappersSupport.GetInterfaceTableEntries(obj);
+                var entries = ComWrappersSupport.GetInterfaceTableEntries(type);
 
-            if (flags.HasFlag(CreateComInterfaceFlags.CallerDefinedIUnknown))
-            {
+                entries.Add(new ComInterfaceEntry
+                {
+                    IID = typeof(IInspectable).GUID,
+                    Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
+                });
+
+                // This should be the last entry as it is included / excluded based on the flags.
                 entries.Add(new ComInterfaceEntry
                 {
                     IID = typeof(IUnknownVftbl).GUID,
                     Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
                 });
-            }
 
-            entries.Add(new ComInterfaceEntry
-            {
-                IID = typeof(IInspectable).GUID,
-                Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
+                return new VtableEntries(entries, type);
             });
 
-            count = entries.Count;
-            ComInterfaceEntry* nativeEntries = (ComInterfaceEntry*)Marshal.AllocCoTaskMem(sizeof(ComInterfaceEntry) * count);
-
-            for (int i = 0; i < count; i++)
+            count = vtableEntries.Count;
+            if (count != 0 && !flags.HasFlag(CreateComInterfaceFlags.CallerDefinedIUnknown))
             {
-                nativeEntries[i] = entries[i];
+                // The vtable list unconditionally has the last entry as IUnknown, but it should
+                // only be included if the flag is set.  We achieve that by excluding the last entry
+                // from the count if the flag isn't set.
+                count -= 1;
             }
 
-            ComInterfaceEntryCleanupTable.Add(obj, new VtableEntriesCleanupScout(nativeEntries));
-
-            return nativeEntries;
+            return vtableEntries.Data;
         }
 
-        private static unsafe bool IsRuntimeImplementedRCW(object obj)
+        private static unsafe bool IsRuntimeImplementedRCW(Type objType)
         {
-            Type t = obj.GetType();
-            bool isRcw = t.IsCOMObject;
-            if (t.IsGenericType)
+            bool isRcw = objType.IsCOMObject;
+            if (objType.IsGenericType)
             {
-                foreach (var arg in t.GetGenericArguments())
+                foreach (var arg in objType.GetGenericArguments())
                 {
                     if (arg.IsCOMObject)
                     {
@@ -313,18 +314,25 @@ namespace WinRT
             }
         }
 
-        unsafe class VtableEntriesCleanupScout
+        unsafe class VtableEntries
         {
-            private readonly ComInterfaceEntry* _data;
+            public ComInterfaceEntry* Data { get; }
+            public int Count { get; }
 
-            public VtableEntriesCleanupScout(ComInterfaceEntry* data)
+            public VtableEntries()
             {
-                _data = data;
+                Data = null;
+                Count = 0;
             }
 
-            ~VtableEntriesCleanupScout()
+            public VtableEntries(List<ComInterfaceEntry> entries, Type type)
             {
-                Marshal.FreeCoTaskMem((IntPtr)_data);
+                Data = (ComInterfaceEntry*)RuntimeHelpers.AllocateTypeAssociatedMemory(type, sizeof(ComInterfaceEntry) * entries.Count);
+                for (int i = 0; i < entries.Count; i++)
+                {
+                    Data[i] = entries[i];
+                }
+                Count = entries.Count;
             }
         }
     }

@@ -90,10 +90,10 @@ namespace WinRT
             return obj;
         }
 
-        internal static List<ComInterfaceEntry> GetInterfaceTableEntries(object obj)
+        internal static List<ComInterfaceEntry> GetInterfaceTableEntries(Type type)
         {
             var entries = new List<ComInterfaceEntry>();
-            var objType = obj.GetType().GetRuntimeClassCCWType() ?? obj.GetType();
+            var objType = type.GetRuntimeClassCCWType() ?? type;
             var interfaces = objType.GetInterfaces();
             foreach (var iface in interfaces)
             {
@@ -122,13 +122,17 @@ namespace WinRT
                 }
             }
 
-            if (obj is Delegate)
+            if (type.IsDelegate())
             {
-                entries.Add(new ComInterfaceEntry
+                var helperType = type.FindHelperType();
+                if (helperType is object)
                 {
-                    IID = GuidGenerator.GetIID(obj.GetType()),
-                    Vtable = (IntPtr)obj.GetType().GetHelperType().GetAbiToProjectionVftblPtr()
-                });
+                    entries.Add(new ComInterfaceEntry
+                    {
+                        IID = GuidGenerator.GetIID(type),
+                        Vtable = (IntPtr)helperType.GetAbiToProjectionVftblPtr()
+                    });
+                }
             }
 
             if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
@@ -140,15 +144,15 @@ namespace WinRT
                     Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
                 });
             }
-            else if (ShouldProvideIReference(obj))
+            else if (ShouldProvideIReference(type))
             {
                 entries.Add(IPropertyValueEntry);
-                entries.Add(ProvideIReference(obj));
+                entries.Add(ProvideIReference(type));
             }
-            else if (ShouldProvideIReferenceArray(obj))
+            else if (ShouldProvideIReferenceArray(type))
             {
                 entries.Add(IPropertyValueEntry);
-                entries.Add(ProvideIReferenceArray(obj));
+                entries.Add(ProvideIReferenceArray(type));
             }
 
             entries.Add(new ComInterfaceEntry
@@ -178,16 +182,14 @@ namespace WinRT
             return entries;
         }
 
-        internal static (InspectableInfo inspectableInfo, List<ComInterfaceEntry> interfaceTableEntries) PregenerateNativeTypeInformation(object obj)
+        internal static (InspectableInfo inspectableInfo, List<ComInterfaceEntry> interfaceTableEntries) PregenerateNativeTypeInformation(Type type)
         {
-            var interfaceTableEntries = GetInterfaceTableEntries(obj);
+            var interfaceTableEntries = GetInterfaceTableEntries(type);
             var iids = new Guid[interfaceTableEntries.Count];
             for (int i = 0; i < interfaceTableEntries.Count; i++)
             {
                 iids[i] = interfaceTableEntries[i].IID;
             }
-
-            Type type = obj.GetType();
 
             if (type.FullName.StartsWith("ABI."))
             {
@@ -337,11 +339,26 @@ namespace WinRT
             return runtimeClassName;
         }
 
-        private static bool ShouldProvideIReference(object obj)
+        private static bool ShouldProvideIReference(Type type)
         {
-            return obj.GetType().IsValueType || obj is string || obj is Type || obj is Delegate;
-        }
+            static bool IsWindowsRuntimeType(Type type)
+            {
+                if (type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object)
+                    return true;
+                type = type.GetAuthoringMetadataType();
+                if (type is object && type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object)
+                    return true;
+                return false;
+            }
 
+            if (type == typeof(string) || type == typeof(Type))
+                return true;
+            if (type.IsDelegate())
+                return IsWindowsRuntimeType(type);
+            if (!type.IsValueType)
+                return false;
+            return type.IsPrimitive || IsWindowsRuntimeType(type);
+        }
 
         private static ComInterfaceEntry IPropertyValueEntry =>
             new ComInterfaceEntry
@@ -350,10 +367,8 @@ namespace WinRT
                 Vtable = ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
             };
 
-        private static ComInterfaceEntry ProvideIReference(object obj)
+        private static ComInterfaceEntry ProvideIReference(Type type)
         {
-            Type type = obj.GetType();
-
             if (type == typeof(int))
             {
                 return new ComInterfaceEntry
@@ -482,7 +497,7 @@ namespace WinRT
                     Vtable = BoxedValueIReferenceImpl<object>.AbiToProjectionVftablePtr
                 };
             }
-            if (obj is Type)
+            if (type == typeof(Type))
             {
                 return new ComInterfaceEntry
                 {
@@ -498,14 +513,15 @@ namespace WinRT
             };
         }
 
-        private static bool ShouldProvideIReferenceArray(object obj)
+        private static bool ShouldProvideIReferenceArray(Type type)
         {
-            return obj is Array arr && arr.Rank == 1 && arr.GetLowerBound(0) == 0 && !obj.GetType().GetElementType().IsArray;
+            // Check if one dimensional array with lower bound of 0
+            return type.IsArray && type == type.GetElementType().MakeArrayType() && !type.GetElementType().IsArray;
         }
 
-        private static ComInterfaceEntry ProvideIReferenceArray(object obj)
+        private static ComInterfaceEntry ProvideIReferenceArray(Type arrayType)
         {
-            Type type = obj.GetType().GetElementType();
+            Type type = arrayType.GetElementType();
             if (type == typeof(int))
             {
                 return new ComInterfaceEntry
@@ -634,7 +650,7 @@ namespace WinRT
                     Vtable = BoxedArrayIReferenceArrayImpl<object>.AbiToProjectionVftablePtr
                 };
             }
-            if (obj is Type)
+            if (type == typeof(Type))
             {
                 return new ComInterfaceEntry
                 {

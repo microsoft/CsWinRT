@@ -304,7 +304,7 @@ namespace WinRT
             _strongHandle = IntPtr.Zero;
             WeakHandle = GCHandle.Alloc(this, GCHandleType.WeakTrackResurrection);
             ManagedObject = obj;
-            var (inspectableInfo, interfaceTableEntries) = ComWrappersSupport.PregenerateNativeTypeInformation(ManagedObject);
+            var (inspectableInfo, interfaceTableEntries) = ComWrappersSupport.PregenerateNativeTypeInformation(ManagedObject.GetType());
 
             InspectableInfo = inspectableInfo;
 

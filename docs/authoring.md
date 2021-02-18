@@ -11,9 +11,11 @@ Managed apps only need a project or package reference to the authored component,
 Here are some resources that demonstrate authoring C#/WinRT components and the details discussed in this document.
 1. [Simple C#/WinRT component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo) and associated [walkthrough](https://docs.microsoft.com/en-us/windows/uwp/csharp-winrt/create-windows-runtime-component-cswinrt) on creating a C#/WinRT component and consuming it from C++/WinRT
 
-2. https://github.com/microsoft/CsWinRT/tree/master/src/Tests/AuthoringTest
+2. [Background Task component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/BgTaskComponent) demonstrating consuming an out-of-process C#/WinRT component from a packaged .NET app
 
-3. https://github.com/microsoft/CsWinRT/tree/master/src/Tests/AuthoringConsumptionTest
+3. https://github.com/microsoft/CsWinRT/tree/master/src/Tests/AuthoringTest
+
+4. https://github.com/microsoft/CsWinRT/tree/master/src/Tests/AuthoringConsumptionTest
 
 ## Authoring the C# Component
 To create a library, select the Class Library (.NET Core) template in Visual Studio. C#/WinRT projects require Windows API version specific .NET frameworks.
