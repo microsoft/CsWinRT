@@ -1862,6 +1862,8 @@ namespace Generator
                 symbol.Name,
                 GetTypeReference("System", "MulticastDelegate", "mscorlib"));
             currentTypeDeclaration.Handle = typeDefinitionHandle;
+            typeDefinitionMapping[QualifiedName(symbol, true)] = currentTypeDeclaration;
+
             AddGuidAttribute(typeDefinitionHandle, symbol.ToString());
         }
 
@@ -2684,14 +2686,14 @@ namespace Generator
             }
 
             Logger.Log("adding default version attributes");
-            var interfaceDeclarations = typeDefinitionMapping.Values
-                .Where(declaration => declaration.Node is INamedTypeSymbol symbol && symbol.TypeKind == TypeKind.Interface)
+            var declarations = typeDefinitionMapping.Values
+                .Where(declaration => declaration.Node != null)
                 .ToList();
-            foreach (var interfaceDeclaration in interfaceDeclarations)
+            foreach (var declaration in declarations)
             {
-                INamedTypeSymbol interfaceSymbol = interfaceDeclaration.Node as INamedTypeSymbol;
-                string qualifiedNameWithGenerics = QualifiedName(interfaceSymbol, true);
-                if (typeDefinitionMapping[qualifiedNameWithGenerics].Handle != default && GetVersion(interfaceSymbol) == -1)
+                INamedTypeSymbol namedType = declaration.Node as INamedTypeSymbol;
+                string qualifiedNameWithGenerics = QualifiedName(namedType, true);
+                if (typeDefinitionMapping[qualifiedNameWithGenerics].Handle != default && GetVersion(namedType) == -1)
                 {
                     AddDefaultVersionAttribute(typeDefinitionMapping[qualifiedNameWithGenerics].Handle);
                 }
