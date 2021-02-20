@@ -311,7 +311,7 @@ namespace Generator
 
             foreach (var namespaceSymbol in _typeHolder.GetNamespaces())
             {
-                string upperNamed = namespaceSymbol.Name.ToUpper();
+                string upperNamed = namespaceSymbol.ToString().ToUpper();
                 if (simplifiedNames.Contains(upperNamed))
                 {
                     Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceSymbol.Name);

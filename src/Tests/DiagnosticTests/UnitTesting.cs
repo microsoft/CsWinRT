@@ -10,37 +10,7 @@ namespace DiagnosticTests
     [TestFixture]
     public sealed partial class UnitTesting
     {
-        /* A unit test for CsWinRT Diagnostics is a string of source code stored in either `NegativeData.cs` or `PositiveData.cs`
-         * In either file, the test should be added as
-          
-          private const string <TestName> = @"
-          // using statements
-          namespace DiagnosticTests
-          { 
-           ...
-          }";
         
-         * If the scenario the test covers is positive (should generate winmd) then label the string variable "Valid_<TestName>" instead of "<TestName>"
-         * The assumption when viewing tests is that it is negative unless the name is prefixed with 'Valid"
-        
-         * For negative scenarios, there should be a DiagnosticDescriptor that matches the scenario
-         * The CsWinRT DiagnosticDescriptors live in `WinRTRules.cs`, check there and if there's none add a new one. 
-
-         * To include the unit test in a run, it needs to be in the corresponding section of this file `UnitTesting.cs`
-
-         * The string given to `.SetName()` should try to describe the scenario succinctly. 
-         * The first few words should classify the scenario and should be separated by periods.
-         * This makes it easy to group together tests of similar scenarios
-         * This is because the Visual Studio TestExplorer for NUnit tests uses this property to display the test
-         *    and tries to be helpful by branching sections of tests based on "." in the name
-         
-         * For example, using List<T> is not allowed, so all tests for it get prefixed "InvalidType." 
-
-         Note 1: The namespace must be DiagnosticTests, as we have rules about namespaces and the winmd filename
-         Note 2: UnitTests require the "IsCsWinRTComponent" check in Generator.cs to be commented out, 
-           if all tests are failing except the valid ones, make sure that this check is disabled 
-           [this is a workaround until we can pass AnalyzerConfigOptions in `Helpers.cs` file]
-        */
 
         /// <summary>
         /// CheckNoDiagnostic asserts that no diagnostics are raised on the compilation produced 

@@ -203,10 +203,12 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     {
         public void Execute(GeneratorExecutionContext context)
         {
+            /*
             if (!context.IsCsWinRTComponent())
             {
                 return;
             }
+            */
 
             ComponentGenerator generator = new ComponentGenerator(context);
             generator.Generate();
