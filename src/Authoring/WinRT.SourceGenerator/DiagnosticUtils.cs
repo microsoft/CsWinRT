@@ -15,13 +15,11 @@ namespace Generator
             _assemblyName = assemblyName;
             _context = context;
             _flag = false;
-            _typeHolder = CollectDefinedTypes(context);
         }
 
         private string _assemblyName;
         private GeneratorExecutionContext _context;
         private bool _flag;
-        private TypeCollector _typeHolder;
 
         public bool Found() { return _flag; }
 
@@ -30,8 +28,10 @@ namespace Generator
         /// Perform code analysis to find scenarios that are erroneous in Windows Runtime</summary>
         public void FindDiagnostics()
         {
-            HasInvalidNamespace();
-            HasSomePublicTypes();
+            // check for invalid namespace names
+            // should we change the below loop to first loop over namespaces then look at classes/interfaces/structs
+            // that are children of the namespaces that are public 
+            CheckNamespaces();
 
             WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)_context.SyntaxReceiver;
             foreach (var declaration in syntaxReciever.Declarations)
@@ -137,16 +137,6 @@ namespace Generator
             var operatorDeclarations = classDeclaration.DescendantNodes().OfType<OperatorDeclarationSyntax>();
             foreach (var op in operatorDeclarations) { Report(WinRTRules.OperatorOverloadedRule, op.GetLocation(), op.OperatorToken); }
             return operatorDeclarations.Count() != 0;
-        }
-
-        /// <summary>Raise a diagnostic if there are no public types in the namespace</summary>
-        private void HasSomePublicTypes()
-        {
-            // types are interfaces, classes and structs
-            if (!_typeHolder.GetTypes().Any() && !_typeHolder.GetStructs().Any())
-            {
-                Report(WinRTRules.NoPublicTypesRule, null);
-            }
         }
 
         /// <summary>
@@ -278,7 +268,7 @@ namespace Generator
                 }
 
                 // const fields not allowed
-                if (field.Modifiers.Where(m => m.IsKind(SyntaxKind.ConstKeyword)).Any())
+                if (field.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.ConstKeyword)))
                 {
                     Report(WinRTRules.StructHasConstFieldRule, field.GetLocation(), @struct.Identifier);
                 }
@@ -301,30 +291,6 @@ namespace Generator
             if (!fields.Any())
             {
                 Report(WinRTRules.StructWithNoFieldsRule, @struct.GetLocation(), @struct.Identifier);
-            }
-        }
-
-        /// <summary>Namespaces can't only differ by cases, also check if the name is invalid for the winmd being made</summary>
-        private void HasInvalidNamespace()
-        {
-            HashSet<string> simplifiedNames = new HashSet<string>();
-
-            foreach (var namespaceSymbol in _typeHolder.GetNamespaces())
-            {
-                string upperNamed = namespaceSymbol.ToString().ToUpper();
-                if (simplifiedNames.Contains(upperNamed))
-                {
-                    Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceSymbol.Name);
-                }
-                else
-                {
-                    simplifiedNames.Add(upperNamed);
-                }
-
-                if (IsInvalidNamespace(namespaceSymbol, _assemblyName))
-                {
-                    Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), _assemblyName, namespaceSymbol.Name);
-                }
             }
         }
 

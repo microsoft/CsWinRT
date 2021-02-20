@@ -342,35 +342,60 @@ namespace Generator
 
         #endregion 
 
+
         /// <summary>Gather the type symbols for all classes, interfaces and structs</summary>
         /// <param name="context">Context used for syntax trees</param><returns>A TypeCollector populated with the type symbols</returns>
-        private TypeCollector CollectDefinedTypes(GeneratorExecutionContext context)
+        private void CheckNamespaces()
         {
-            TypeCollector collectedTypes = new TypeCollector();
+            WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)_context.SyntaxReceiver;
+            bool libraryHasSomePublicTypes = false;
+            HashSet<string> simplifiedNames = new HashSet<string>();
 
-            WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)context.SyntaxReceiver;
             foreach (var declaration in syntaxReciever.Declarations)
             {
                 var model = GetModel(declaration.SyntaxTree);
+                if (declaration is NamespaceDeclarationSyntax @namespace)
+                {
+                    // public type is a class, interface or struct
+                    bool namespaceHasSomePublicTypes = false;
+                    
+                    // any public classes in this namespace? 
+                    namespaceHasSomePublicTypes |= @namespace.ChildNodes().OfType<ClassDeclarationSyntax>().Any(@class => IsPublic(@class));
 
-                if (declaration is ClassDeclarationSyntax @class && IsPublic(@class))
-                {
-                    collectedTypes.AddType(model.GetDeclaredSymbol(@class));
-                }
-                else if (declaration is InterfaceDeclarationSyntax @interface && IsPublic(@interface))
-                {
-                    collectedTypes.AddType(model.GetDeclaredSymbol(@interface));
-                }
-                else if (declaration is StructDeclarationSyntax @struct && IsPublic(@struct))
-                {
-                    collectedTypes.AddStruct(model.GetDeclaredSymbol(@struct));
-                }
-                else if (declaration is NamespaceDeclarationSyntax @namespace)
-                {
-                    collectedTypes.AddNamespace(model.GetDeclaredSymbol(@namespace));
+                    // any public interfaces in this namespace?
+                    namespaceHasSomePublicTypes |= @namespace.ChildNodes().OfType<InterfaceDeclarationSyntax>().Any(@interface => IsPublic(@interface));
+
+                    // any public structs in this namespace?
+                    namespaceHasSomePublicTypes |= @namespace.ChildNodes().OfType<StructDeclarationSyntax>().Any(@struct => IsPublic(@struct));
+
+                    if (namespaceHasSomePublicTypes)
+                    {
+                        var namespaceSymbol = model.GetDeclaredSymbol(@namespace);
+
+                        string upperNamed = namespaceSymbol.ToString().ToUpper();
+                        if (simplifiedNames.Contains(upperNamed))
+                        {
+                            Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceSymbol.Name);
+                        }
+                        else
+                        {
+                            simplifiedNames.Add(upperNamed);
+                        }
+
+                        if (IsInvalidNamespace(namespaceSymbol, _assemblyName))
+                        {
+                            Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), _assemblyName, namespaceSymbol.Name);
+                        }
+                    }
+
+                    libraryHasSomePublicTypes |= namespaceHasSomePublicTypes;
                 }
             }
-            return collectedTypes;
+
+            if (!libraryHasSomePublicTypes)
+            {
+                Report(WinRTRules.NoPublicTypesRule, null);
+            }             
         }
 
         /// <summary>Make a suggestion for types to use instead of the given type</summary>
