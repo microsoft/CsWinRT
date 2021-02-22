@@ -34,8 +34,7 @@ namespace Generator
             if (!syntaxReciever.Declarations.Any())
             {
                 Report(WinRTRules.NoPublicTypesRule, null);
-                // exit early?
-                // return;
+                return;
             }
 
             // Used to check for conflicitng namespace names
@@ -61,10 +60,10 @@ namespace Generator
                     bool newNamespaceDeclaration = true;
                     // Because modules could have a namespace defined in different places (i.e. defines a partial class)
                     // we can't rely on `Contains` so we manually check that namespace names cannot differ by case only
-                    foreach (var str in namespaceNames)
+                    foreach (var usedNamespaceName in namespaceNames)
                     {
-                        if (String.Equals(namespaceString, str, StringComparison.OrdinalIgnoreCase) &&
-                            !String.Equals(namespaceString, str, StringComparison.Ordinal))
+                        if (String.Equals(namespaceString, usedNamespaceName, StringComparison.OrdinalIgnoreCase) &&
+                            !String.Equals(namespaceString, usedNamespaceName, StringComparison.Ordinal))
                         {
                             newNamespaceDeclaration = false;
                             Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceString);

@@ -226,11 +226,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         private bool HasSomePublicTypes(SyntaxNode syntaxNode)
         {
-            bool hasSomePublicTypes = false;
-            hasSomePublicTypes |= syntaxNode.ChildNodes().OfType<ClassDeclarationSyntax>().Any(IsPublic);
-            hasSomePublicTypes |= syntaxNode.ChildNodes().OfType<InterfaceDeclarationSyntax>().Any(IsPublic);
-            hasSomePublicTypes |= syntaxNode.ChildNodes().OfType<StructDeclarationSyntax>().Any(IsPublic);
-            return hasSomePublicTypes;
+            return syntaxNode.ChildNodes().OfType<MemberDeclarationSyntax>().Any(IsPublic);
         }
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
