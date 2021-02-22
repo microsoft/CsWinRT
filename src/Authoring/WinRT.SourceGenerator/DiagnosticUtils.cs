@@ -29,13 +29,6 @@ namespace Generator
         /// Perform code analysis to find scenarios that are erroneous in Windows Runtime</summary>
         public void FindDiagnostics()
         {
-            // check for invalid namespace names
-            // should we change the below loop to first loop over namespaces then look at classes/interfaces/structs
-            // that are children of the namespaces that are public 
-            // CheckNamespaces();
-            // bool libraryHasSomePublicTypes = false;
-            HashSet<string> simplifiedNames = new();
-            
             WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)_context.SyntaxReceiver;
 
             if (!syntaxReciever.Declarations.Any())
@@ -44,6 +37,9 @@ namespace Generator
                 // exit early?
                 // return;
             }
+
+            // Used to check for conflicitng namespace names
+            HashSet<string> namespaceNames = new();
 
             foreach (var declaration in syntaxReciever.Declarations)
             {
@@ -58,59 +54,35 @@ namespace Generator
 
                 if (declaration is NamespaceDeclarationSyntax @namespace)
                 {
-                    /*
-                    // public type is a class, interface or struct
-                    bool namespaceHasSomePublicTypes = false;
+                    var namespaceSymbol = model.GetDeclaredSymbol(@namespace);
 
-                    // any public classes in this namespace? 
-                    namespaceHasSomePublicTypes |= @namespace.DescendantNodes().OfType<ClassDeclarationSyntax>().Any(@class => IsPublic(@class));
+                    string namespaceString = namespaceSymbol.ToString();
 
-                    // any public interfaces in this namespace?
-                    namespaceHasSomePublicTypes |= @namespace.DescendantNodes().OfType<InterfaceDeclarationSyntax>().Any(@interface => IsPublic(@interface));
-
-                    // any public structs in this namespace?
-                    namespaceHasSomePublicTypes |= @namespace.DescendantNodes().OfType<StructDeclarationSyntax>().Any(@struct => IsPublic(@struct));
-
-                    if (namespaceHasSomePublicTypes)
+                    bool newNamespaceDeclaration = true;
+                    // Because modules could have a namespace defined in different places (i.e. defines a partial class)
+                    // we can't rely on `Contains` so we manually check that namespace names cannot differ by case only
+                    foreach (var str in namespaceNames)
                     {
-                    */
-                        var namespaceSymbol = model.GetDeclaredSymbol(@namespace);
-
-                        string upperNamed = namespaceSymbol.ToString(); // .ToUpper();
-
-                        bool newNamespaceDeclaration = true;
-                        // Because modules could have a namespace defined in different places (i.e. defines a partial class)
-                        // we can't rely on `Contains` so we manually check that namespace names cannot differ by case only
-                        foreach (var str in simplifiedNames)
+                        if (String.Equals(namespaceString, str, StringComparison.OrdinalIgnoreCase) &&
+                            !String.Equals(namespaceString, str, StringComparison.Ordinal))
                         {
-                            if (String.Equals(upperNamed, str, StringComparison.OrdinalIgnoreCase) &&
-                                !String.Equals(upperNamed, str, StringComparison.Ordinal))
-                            {
-                                newNamespaceDeclaration = false;
-                                Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceSymbol.ToString());
-                            }
+                            newNamespaceDeclaration = false;
+                            Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceString);
                         }
-                        if (newNamespaceDeclaration)
-                        {
-                            simplifiedNames.Add(upperNamed);
-                        }
+                    }
+                    
+                    if (newNamespaceDeclaration)
+                    {
+                        namespaceNames.Add(namespaceString);
+                    }
 
-                        if (IsInvalidNamespace(namespaceSymbol, _assemblyName))
-                        {
-                            Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), _assemblyName, namespaceSymbol.ToString());
-                        }
-                    /*}
-
-                    libraryHasSomePublicTypes |= namespaceHasSomePublicTypes;
-                    */
+                    if (IsInvalidNamespace(namespaceSymbol, _assemblyName))
+                    {
+                        Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), _assemblyName, namespaceString);
+                    }
                 }
-                /*
-                if (!libraryHasSomePublicTypes)
-                {
-                    bool f = true;
-                    Report(WinRTRules.NoPublicTypesRule, null);
-                }
-                */
+
+
                 if (declaration is ClassDeclarationSyntax @class)
                 {
                     var classId = @class.Identifier;
