@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System;
 using WinRT.SourceGenerator;
 
 namespace Generator
@@ -17,8 +18,8 @@ namespace Generator
             _flag = false;
         }
 
-        private string _assemblyName;
-        private GeneratorExecutionContext _context;
+        private readonly string _assemblyName;
+        private readonly GeneratorExecutionContext _context;
         private bool _flag;
 
         public bool Found() { return _flag; }
@@ -31,9 +32,19 @@ namespace Generator
             // check for invalid namespace names
             // should we change the below loop to first loop over namespaces then look at classes/interfaces/structs
             // that are children of the namespaces that are public 
-            CheckNamespaces();
-
+            // CheckNamespaces();
+            // bool libraryHasSomePublicTypes = false;
+            HashSet<string> simplifiedNames = new();
+            
             WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)_context.SyntaxReceiver;
+
+            if (!syntaxReciever.Declarations.Any())
+            {
+                Report(WinRTRules.NoPublicTypesRule, null);
+                // exit early?
+                // return;
+            }
+
             foreach (var declaration in syntaxReciever.Declarations)
             {
                 var model = _context.Compilation.GetSemanticModel(declaration.SyntaxTree);
@@ -45,6 +56,61 @@ namespace Generator
                     continue;
                 }
 
+                if (declaration is NamespaceDeclarationSyntax @namespace)
+                {
+                    /*
+                    // public type is a class, interface or struct
+                    bool namespaceHasSomePublicTypes = false;
+
+                    // any public classes in this namespace? 
+                    namespaceHasSomePublicTypes |= @namespace.DescendantNodes().OfType<ClassDeclarationSyntax>().Any(@class => IsPublic(@class));
+
+                    // any public interfaces in this namespace?
+                    namespaceHasSomePublicTypes |= @namespace.DescendantNodes().OfType<InterfaceDeclarationSyntax>().Any(@interface => IsPublic(@interface));
+
+                    // any public structs in this namespace?
+                    namespaceHasSomePublicTypes |= @namespace.DescendantNodes().OfType<StructDeclarationSyntax>().Any(@struct => IsPublic(@struct));
+
+                    if (namespaceHasSomePublicTypes)
+                    {
+                    */
+                        var namespaceSymbol = model.GetDeclaredSymbol(@namespace);
+
+                        string upperNamed = namespaceSymbol.ToString(); // .ToUpper();
+
+                        bool newNamespaceDeclaration = true;
+                        // Because modules could have a namespace defined in different places (i.e. defines a partial class)
+                        // we can't rely on `Contains` so we manually check that namespace names cannot differ by case only
+                        foreach (var str in simplifiedNames)
+                        {
+                            if (String.Equals(upperNamed, str, StringComparison.OrdinalIgnoreCase) &&
+                                !String.Equals(upperNamed, str, StringComparison.Ordinal))
+                            {
+                                newNamespaceDeclaration = false;
+                                Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceSymbol.ToString());
+                            }
+                        }
+                        if (newNamespaceDeclaration)
+                        {
+                            simplifiedNames.Add(upperNamed);
+                        }
+
+                        if (IsInvalidNamespace(namespaceSymbol, _assemblyName))
+                        {
+                            Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), _assemblyName, namespaceSymbol.ToString());
+                        }
+                    /*}
+
+                    libraryHasSomePublicTypes |= namespaceHasSomePublicTypes;
+                    */
+                }
+                /*
+                if (!libraryHasSomePublicTypes)
+                {
+                    bool f = true;
+                    Report(WinRTRules.NoPublicTypesRule, null);
+                }
+                */
                 if (declaration is ClassDeclarationSyntax @class)
                 {
                     var classId = @class.Identifier;
@@ -112,7 +178,7 @@ namespace Generator
                 return sym.OriginalDefinition.ContainingNamespace + "." + sym.OriginalDefinition.MetadataName;
             }
 
-            HashSet<ISymbol> classMethods = new HashSet<ISymbol>();
+            HashSet<ISymbol> classMethods = new();
 
             foreach (var @interface in typeSymbol.AllInterfaces.
                         Where(symbol => WinRTTypeWriter.MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
@@ -146,7 +212,7 @@ namespace Generator
         {
             IEnumerable<ConstructorDeclarationSyntax> constructors = classDeclaration.ChildNodes().OfType<ConstructorDeclarationSyntax>().Where(IsPublic);
 
-            HashSet<int> aritiesSeenSoFar = new HashSet<int>();
+            HashSet<int> aritiesSeenSoFar = new();
 
             foreach (ConstructorDeclarationSyntax constructor in constructors)
             {
@@ -184,7 +250,7 @@ namespace Generator
         /// <param name="methodDeclarations">Collection of methods</param><param name="typeId">Containing class or interface</param>
         private void CheckMethods(IEnumerable<MethodDeclarationSyntax> methodDeclarations, SyntaxToken typeId)
         {
-            Dictionary<string, bool> methodsHasAttributeMap = new Dictionary<string, bool>();
+            Dictionary<string, bool> methodsHasAttributeMap = new();
             Dictionary<string, Diagnostic> overloadsWithoutAttributeMap = new Dictionary<string, Diagnostic>();
 
             // var methodDeclarations = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();

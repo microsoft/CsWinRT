@@ -4,6 +4,7 @@ namespace DiagnosticTests
 {
     public sealed partial class UnitTesting
     {
+        
         private const string Valid_UnrelatedNamespaceWithNoPublicTypes = @"
 namespace DiagnosticTests
 {

@@ -10,8 +10,6 @@ namespace DiagnosticTests
     [TestFixture]
     public sealed partial class UnitTesting
     {
-        
-
         /// <summary>
         /// CheckNoDiagnostic asserts that no diagnostics are raised on the compilation produced 
         /// from the cswinrt source generator based on the given source code</summary>
@@ -23,7 +21,7 @@ namespace DiagnosticTests
             RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator());
             
             var WinRTDiagnostics = diagnosticsFound.Where(diag => diag.Id.StartsWith("CsWinRT"));
-            if (WinRTDiagnostics.Count() != 0)
+            if (WinRTDiagnostics.Any())
             {
                 string foundDiagnostics = "";
                 foreach (var d in WinRTDiagnostics)
@@ -366,6 +364,8 @@ namespace DiagnosticTests
         {
             get
             {
+                yield return new TestCaseData(Valid_UnrelatedNamespaceWithNoPublicTypes).SetName("NEW. Namespace. Helper namespace with no public types");
+                yield return new TestCaseData(Valid_SubNamespacesWithOverlappingNames).SetName("NEW. Namespace. Overlapping namesepaces names is OK if in different namespaces");
                 yield return new TestCaseData(Valid_PrivateSetter).SetName("Valid. Property. Private Setter");
                 yield return new TestCaseData(Valid_RollYourOwnAsyncAction).SetName("Valid. AsyncInterfaces. Implementing your own IAsyncAction");
                 yield return new TestCaseData(Valid_CustomDictionary).SetName("Valid. CustomProjection. IDictionary<string,BasicStruct>");

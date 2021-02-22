@@ -143,7 +143,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             // "DiagnosticTests" is a workaround, GetAssemblyName returns null when used by unit tests 
             // shouldn't need workaround once we can pass AnalyzerConfigOptionsProvider in DiagnosticTests.Helpers.cs
             string assemblyName = context.GetAssemblyName() ?? "DiagnosticTests";
-            WinRTComponentScanner winrtScanner = new WinRTComponentScanner(context, assemblyName);
+            WinRTComponentScanner winrtScanner = new(context, assemblyName);
             winrtScanner.FindDiagnostics();
             return winrtScanner.Found();
         }
@@ -224,9 +224,20 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     {
         public List<MemberDeclarationSyntax> Declarations = new List<MemberDeclarationSyntax>();
 
+        private bool HasSomePublicTypes(SyntaxNode syntaxNode)
+        {
+            bool hasSomePublicTypes = false;
+            hasSomePublicTypes |= syntaxNode.ChildNodes().OfType<ClassDeclarationSyntax>().Any(IsPublic);
+            hasSomePublicTypes |= syntaxNode.ChildNodes().OfType<InterfaceDeclarationSyntax>().Any(IsPublic);
+            hasSomePublicTypes |= syntaxNode.ChildNodes().OfType<StructDeclarationSyntax>().Any(IsPublic);
+            return hasSomePublicTypes;
+        }
+
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
-            if (syntaxNode is not MemberDeclarationSyntax decaralation || !IsPublic(decaralation))
+            // We will lose namespaces in `Declarations` if we don't special case them as exempt from the `IsPublic` check
+            if (syntaxNode is not MemberDeclarationSyntax decaralation || 
+                (syntaxNode is not NamespaceDeclarationSyntax @namespace && !IsPublic(decaralation)))
             {
                 return;
             }
@@ -238,6 +249,11 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 syntaxNode is StructDeclarationSyntax ||
                 syntaxNode is NamespaceDeclarationSyntax)
             {
+                if (syntaxNode is NamespaceDeclarationSyntax && !HasSomePublicTypes(syntaxNode))
+                {
+                    // Don't analyze/generate code for namespaces that don't have public types, because they won't be used in the Windows Runtime
+                    return;
+                }
                 Declarations.Add(decaralation);
             }
         }

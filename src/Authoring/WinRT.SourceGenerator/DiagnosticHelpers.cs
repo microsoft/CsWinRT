@@ -360,31 +360,40 @@ namespace Generator
                     bool namespaceHasSomePublicTypes = false;
                     
                     // any public classes in this namespace? 
-                    namespaceHasSomePublicTypes |= @namespace.ChildNodes().OfType<ClassDeclarationSyntax>().Any(@class => IsPublic(@class));
+                    namespaceHasSomePublicTypes |= @namespace.DescendantNodes().OfType<ClassDeclarationSyntax>().Any(@class => IsPublic(@class));
 
                     // any public interfaces in this namespace?
-                    namespaceHasSomePublicTypes |= @namespace.ChildNodes().OfType<InterfaceDeclarationSyntax>().Any(@interface => IsPublic(@interface));
+                    namespaceHasSomePublicTypes |= @namespace.DescendantNodes().OfType<InterfaceDeclarationSyntax>().Any(@interface => IsPublic(@interface));
 
                     // any public structs in this namespace?
-                    namespaceHasSomePublicTypes |= @namespace.ChildNodes().OfType<StructDeclarationSyntax>().Any(@struct => IsPublic(@struct));
+                    namespaceHasSomePublicTypes |= @namespace.DescendantNodes().OfType<StructDeclarationSyntax>().Any(@struct => IsPublic(@struct));
 
                     if (namespaceHasSomePublicTypes)
                     {
                         var namespaceSymbol = model.GetDeclaredSymbol(@namespace);
 
-                        string upperNamed = namespaceSymbol.ToString().ToUpper();
-                        if (simplifiedNames.Contains(upperNamed))
+                        string upperNamed = namespaceSymbol.ToString(); // .ToUpper();
+
+                        bool newNamespaceDeclaration = true;
+                        // Because modules could have a namespace defined in different places (i.e. defines a partial class)
+                        // we can't rely on `Contains` so we manually check that namespace names cannot differ by case only
+                        foreach (var str in simplifiedNames)
                         {
-                            Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceSymbol.Name);
+                            if (String.Equals(upperNamed, str, StringComparison.OrdinalIgnoreCase) &&
+                                !String.Equals(upperNamed, str, StringComparison.Ordinal))
+                            {
+                                newNamespaceDeclaration = false;
+                                Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceSymbol.ToString());
+                            }
                         }
-                        else
+                        if (newNamespaceDeclaration)
                         {
                             simplifiedNames.Add(upperNamed);
                         }
 
                         if (IsInvalidNamespace(namespaceSymbol, _assemblyName))
                         {
-                            Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), _assemblyName, namespaceSymbol.Name);
+                            Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), _assemblyName, namespaceSymbol.ToString());
                         }
                     }
 
@@ -394,6 +403,7 @@ namespace Generator
 
             if (!libraryHasSomePublicTypes)
             {
+                bool f = true;
                 Report(WinRTRules.NoPublicTypesRule, null);
             }             
         }
