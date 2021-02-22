@@ -364,8 +364,8 @@ namespace DiagnosticTests
         {
             get
             {
-                yield return new TestCaseData(Valid_UnrelatedNamespaceWithNoPublicTypes).SetName("NEW. Namespace. Helper namespace with no public types");
-                yield return new TestCaseData(Valid_SubNamespacesWithOverlappingNames).SetName("NEW. Namespace. Overlapping namesepaces names is OK if in different namespaces");
+                yield return new TestCaseData(Valid_UnrelatedNamespaceWithNoPublicTypes).SetName("Valid. Namespace. Helper namespace with no public types");
+                yield return new TestCaseData(Valid_SubNamespacesWithOverlappingNames).SetName("Valid. Namespace. Overlapping namesepaces names is OK if in different namespaces");
                 yield return new TestCaseData(Valid_PrivateSetter).SetName("Valid. Property. Private Setter");
                 yield return new TestCaseData(Valid_RollYourOwnAsyncAction).SetName("Valid. AsyncInterfaces. Implementing your own IAsyncAction");
                 yield return new TestCaseData(Valid_CustomDictionary).SetName("Valid. CustomProjection. IDictionary<string,BasicStruct>");
