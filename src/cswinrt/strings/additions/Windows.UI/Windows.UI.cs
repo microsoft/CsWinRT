@@ -4,7 +4,7 @@ namespace Windows.UI
     using global::System;
     using global::System.Globalization;
 
-    [global::WinRT.WindowsRuntimeType]
+    [global::WinRT.WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
     [StructLayout(LayoutKind.Sequential)]
     public struct Color : IFormattable
     {

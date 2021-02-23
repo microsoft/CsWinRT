@@ -3,7 +3,7 @@ namespace Microsoft.UI.Xaml.Media.Animation
 {
     using Windows.Foundation;
 
-    [global::WinRT.WindowsRuntimeType]
+    [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
     [StructLayout(LayoutKind.Sequential)]
     public struct KeyTime
     {
@@ -72,7 +72,7 @@ namespace Microsoft.UI.Xaml.Media.Animation
         }
     }
 
-    [global::WinRT.WindowsRuntimeType]
+    [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
     public enum RepeatBehaviorType
     {
         Count,
@@ -80,7 +80,7 @@ namespace Microsoft.UI.Xaml.Media.Animation
         Forever
     }
 
-    [global::WinRT.WindowsRuntimeType]
+    [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
     [StructLayout(LayoutKind.Sequential)]
     public struct RepeatBehavior : IFormattable
     {

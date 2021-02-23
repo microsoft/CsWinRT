@@ -322,6 +322,7 @@ namespace Generator
             { "System.Collections.Generic.IDictionary`2", new MappedType("Windows.Foundation.Collections", "IMap`2", "Windows.Foundation.FoundationContract") },
             { "System.Collections.Generic.IReadOnlyList`1", new MappedType("Windows.Foundation.Collections", "IVectorView`1", "Windows.Foundation.FoundationContract") },
             { "System.Collections.Generic.IList`1", new MappedType("Windows.Foundation.Collections", "IVector`1", "Windows.Foundation.FoundationContract") },
+            { "Windows.UI.Color", new MappedType("Windows.UI", "Color", "Windows.Foundation.UniversalApiContract", true) },
         };
 
         internal static readonly List<string> ImplementedInterfacesWithoutMapping = new List<string>()
@@ -768,6 +769,7 @@ namespace Generator
             string propertyName,
             Symbol type,
             ISymbol symbol,
+            bool isStatic,
             bool hasSetMethod,
             bool isInterfaceParent,
             bool isPublic = true)
@@ -777,7 +779,7 @@ namespace Generator
 
             var propertySignature = new BlobBuilder();
             new BlobEncoder(propertySignature)
-                .PropertySignature(true)
+                .PropertySignature(!isStatic)
                 .Parameters(
                     0,
                     returnType => EncodeReturnType(type, returnType),
@@ -797,7 +799,7 @@ namespace Generator
                     setMethodName,
                     new Parameter[] { new Parameter(type, "value", ParameterAttributes.In) },
                     null,
-                    false,
+                    !isInterfaceParent && isStatic,
                     isInterfaceParent,
                     true,
                     isPublic);
@@ -814,7 +816,7 @@ namespace Generator
                 getMethodName,
                 new Parameter[0],
                 type,
-                false,
+                !isInterfaceParent && isStatic,
                 isInterfaceParent,
                 true,
                 isPublic);
@@ -832,6 +834,7 @@ namespace Generator
                 property.Name,
                 new Symbol(property.Type),
                 property,
+                property.IsStatic,
                 property.SetMethod != null &&
                     (property.SetMethod.DeclaredAccessibility == Accessibility.Public ||
                      !property.SetMethod.ExplicitInterfaceImplementations.IsDefaultOrEmpty),
@@ -993,7 +996,7 @@ namespace Generator
                 if (isDefinition)
                 {
                     var propertyName = isPublic ? name : QualifiedName(qualifiedName, name);
-                    AddPropertyDefinition(propertyName, type, symbol, setProperty, false, isPublic);
+                    AddPropertyDefinition(propertyName, type, symbol, false, setProperty, false, isPublic);
                 }
                 else
                 {
@@ -1006,7 +1009,7 @@ namespace Generator
                 if (isDefinition)
                 {
                     var eventName = isPublic ? name : QualifiedName(qualifiedName, name);
-                    AddEventDeclaration(eventName, eventType.Type, symbol, false, isPublic);
+                    AddEventDeclaration(eventName, eventType.Type, symbol, false, false, isPublic);
                 }
                 else
                 {
@@ -1866,7 +1869,7 @@ namespace Generator
             AddGuidAttribute(typeDefinitionHandle, symbol.ToString());
         }
 
-        public void AddEventDeclaration(string eventName, ITypeSymbol eventType, ISymbol symbol, bool isInterfaceParent, bool isPublic = true)
+        public void AddEventDeclaration(string eventName, ITypeSymbol eventType, ISymbol symbol, bool isStatic, bool isInterfaceParent, bool isPublic = true)
         {
             Logger.Log("defining event " + eventName + " with type " + eventType.ToString());
 
@@ -1888,7 +1891,7 @@ namespace Generator
                 addMethodName,
                 new Parameter[] { new Parameter(delegateSymbolType, "handler", ParameterAttributes.In) },
                 eventRegistrationToken,
-                false,
+                !isInterfaceParent && isStatic,
                 isInterfaceParent,
                 true,
                 isPublic);
@@ -1904,7 +1907,7 @@ namespace Generator
                 removeMethodName,
                 new Parameter[] { new Parameter(eventRegistrationToken, "token", ParameterAttributes.In) },
                 null,
-                false,
+                !isInterfaceParent && isStatic,
                 isInterfaceParent,
                 true,
                 isPublic);
@@ -1918,7 +1921,7 @@ namespace Generator
 
         public void AddEventDeclaration(IEventSymbol @event, bool isInterfaceParent)
         {
-            AddEventDeclaration(@event.Name, @event.Type, @event, isInterfaceParent, @event.ExplicitInterfaceImplementations.IsDefaultOrEmpty);
+            AddEventDeclaration(@event.Name, @event.Type, @event, @event.IsStatic, isInterfaceParent, @event.ExplicitInterfaceImplementations.IsDefaultOrEmpty);
         }
 
         void AddMethodDeclaration(IMethodSymbol method, bool isInterfaceParent)
