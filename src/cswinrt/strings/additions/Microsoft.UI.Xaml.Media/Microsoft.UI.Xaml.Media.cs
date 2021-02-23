@@ -3,7 +3,7 @@ namespace Microsoft.UI.Xaml.Media
 {
     using Windows.Foundation;
 
-    [global::WinRT.WindowsRuntimeType]
+    [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
     [StructLayout(LayoutKind.Sequential)]
     public struct Matrix : IFormattable
     {
