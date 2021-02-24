@@ -53,9 +53,9 @@ namespace DiagnosticTests
         /// </summary>
         /// <param name="arr"></param>
         /// <returns></returns>
-        private HashSet<DiagnosticDescriptor> MakeDiagnosticSet(ImmutableArray<Diagnostic> arr)
+        private static HashSet<DiagnosticDescriptor> MakeDiagnosticSet(ImmutableArray<Diagnostic> arr)
         { 
-            HashSet<DiagnosticDescriptor> setSoFar = new HashSet<DiagnosticDescriptor>();
+            HashSet<DiagnosticDescriptor> setSoFar = new();
             foreach (var d in arr)
             {
                 setSoFar.Add(d.Descriptor);

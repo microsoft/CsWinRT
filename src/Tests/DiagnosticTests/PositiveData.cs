@@ -4,6 +4,45 @@ namespace DiagnosticTests
 {
     public sealed partial class UnitTesting
     {
+        
+        private const string Valid_UnrelatedNamespaceWithNoPublicTypes = @"
+namespace DiagnosticTests
+{
+    namespace Foo
+    {
+        public sealed class Dog
+        {
+            public int Woof { get; set; }
+        }
+    }
+}
+namespace Utilities
+{
+    private class Sandwich
+    {
+        private int BreadCount { get; set; }
+    }
+}";
+
+        private const string Valid_SubNamespacesWithOverlappingNames = @"
+namespace DiagnosticTests
+{
+    namespace Bar.Dog.Test
+    {
+        public sealed class Dog
+        {
+            public int Woof { get; set; }
+        }
+    }
+    namespace Bar.Cat.Test
+    {
+        public sealed class Cat
+        {
+            public int Meow { get; set; }
+        }
+    }
+}";
+
         private const string Valid_PrivateSetter = @"
 namespace DiagnosticTests
 {
