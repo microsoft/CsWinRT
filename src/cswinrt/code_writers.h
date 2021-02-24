@@ -5550,19 +5550,25 @@ private class NativeDelegateWrapper : IWinRTObject
 #endif
 {
 private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
+#if NETSTANDARD2_0
 private readonly AgileReference _agileReference = default;
+#endif
 
 public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
 {
 _nativeDelegate = nativeDelegate;
 #if NETSTANDARD2_0
 if (_nativeDelegate.TryAs<ABI.WinRT.Interop.IAgileObject.Vftbl>(out var objRef) < 0)
-#else
-if (_nativeDelegate.TryAs<IUnknownVftbl>(IAgileObject.IID, out var objRef) < 0)
-#endif
 {
 _agileReference = new AgileReference(_nativeDelegate);
 }
+#else
+if (_nativeDelegate.TryAs<IUnknownVftbl>(IAgileObject.IID, out var objRef) < 0)
+{
+var agileReference = new AgileReference(_nativeDelegate);
+((IWinRTObject)this).AdditionalTypeData.TryAdd(typeof(AgileReference).TypeHandle, agileReference);
+}
+#endif
 else
 {
 objRef.Dispose();
@@ -5578,7 +5584,12 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
 
 public unsafe % Invoke(%)
 {
-using var agileDelegate = _agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%))); 
+#if NETSTANDARD2_0
+var agileReference = _agileReference;
+#else
+var agileReference = ((IWinRTObject)this).AdditionalTypeData.TryGetValue(typeof(AgileReference).TypeHandle, out var agileObj) ? (AgileReference)agileObj : null;
+#endif
+using var agileDelegate = agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%))); 
 var delegateToInvoke = agileDelegate ?? _nativeDelegate;
 IntPtr ThisPtr = delegateToInvoke.ThisPtr;
 %%
