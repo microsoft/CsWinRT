@@ -173,6 +173,13 @@ namespace WinRT
                 {
                     cached.Value.Resurrect();
                 }
+
+                // Delegates store their agile reference as an additional type data.
+                // These should be recreated when instances are resurrect.
+                if (AdditionalTypeData.TryGetValue(typeof(AgileReference).TypeHandle, out var agileObj))
+                {
+                    AdditionalTypeData.TryUpdate(typeof(AgileReference).TypeHandle, new AgileReference(NativeObject), agileObj);
+                }
             }
         }
     }
