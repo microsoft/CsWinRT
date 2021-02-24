@@ -14,7 +14,7 @@ namespace DiagnosticTests
         /// </summary>
         /// <param name="source">string of source code</param>
         /// <returns></returns>
-        private Compilation CreateCompilation(string source)
+        private static Compilation CreateCompilation(string source)
             => CSharpCompilation.Create(
                 assemblyName: "compilation",
                 syntaxTrees: new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Preview)) },
