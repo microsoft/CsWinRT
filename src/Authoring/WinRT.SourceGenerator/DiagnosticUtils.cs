@@ -37,8 +37,52 @@ namespace Generator
                 return;
             }
 
+            CheckNamespaces();
+            CheckDeclarations();
+        }
+
+        private void CheckNamespaces()
+        {
+            WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)_context.SyntaxReceiver;
+
             // Used to check for conflicitng namespace names
             HashSet<string> namespaceNames = new();
+
+            foreach (var @namespace in syntaxReciever.Namespaces)
+            {
+                var model = _context.Compilation.GetSemanticModel(@namespace.SyntaxTree);
+                var namespaceSymbol = model.GetDeclaredSymbol(@namespace);
+
+                string namespaceString = namespaceSymbol.ToString();
+
+                bool newNamespaceDeclaration = true;
+                // Because modules could have a namespace defined in different places (i.e. defines a partial class)
+                // we can't rely on `Contains` so we manually check that namespace names cannot differ by case only
+                foreach (var usedNamespaceName in namespaceNames)
+                {
+                    if (String.Equals(namespaceString, usedNamespaceName, StringComparison.OrdinalIgnoreCase) &&
+                        !String.Equals(namespaceString, usedNamespaceName, StringComparison.Ordinal))
+                    {
+                        newNamespaceDeclaration = false;
+                        Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceString);
+                    }
+                }
+
+                if (newNamespaceDeclaration)
+                {
+                    namespaceNames.Add(namespaceString);
+                }
+
+                if (IsInvalidNamespace(namespaceSymbol, _assemblyName))
+                {
+                    Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), _assemblyName, namespaceString);
+                }
+            }
+        }
+
+        private void CheckDeclarations()
+        {
+            WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)_context.SyntaxReceiver;
 
             foreach (var declaration in syntaxReciever.Declarations)
             {
@@ -50,37 +94,6 @@ namespace Generator
                 {
                     continue;
                 }
-
-                if (declaration is NamespaceDeclarationSyntax @namespace)
-                {
-                    var namespaceSymbol = model.GetDeclaredSymbol(@namespace);
-
-                    string namespaceString = namespaceSymbol.ToString();
-
-                    bool newNamespaceDeclaration = true;
-                    // Because modules could have a namespace defined in different places (i.e. defines a partial class)
-                    // we can't rely on `Contains` so we manually check that namespace names cannot differ by case only
-                    foreach (var usedNamespaceName in namespaceNames)
-                    {
-                        if (String.Equals(namespaceString, usedNamespaceName, StringComparison.OrdinalIgnoreCase) &&
-                            !String.Equals(namespaceString, usedNamespaceName, StringComparison.Ordinal))
-                        {
-                            newNamespaceDeclaration = false;
-                            Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceString);
-                        }
-                    }
-                    
-                    if (newNamespaceDeclaration)
-                    {
-                        namespaceNames.Add(namespaceString);
-                    }
-
-                    if (IsInvalidNamespace(namespaceSymbol, _assemblyName))
-                    {
-                        Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), _assemblyName, namespaceString);
-                    }
-                }
-
 
                 if (declaration is ClassDeclarationSyntax @class)
                 {
@@ -169,11 +182,13 @@ namespace Generator
         /// Class to check for operator declarations 
         /// operator declarations are just like method declarations except they use the `operator` keyword</param>
         /// <returns>True iff an operator is overloaded by the given class</returns>
-        private bool OverloadsOperator(ClassDeclarationSyntax classDeclaration)
+        private void OverloadsOperator(ClassDeclarationSyntax classDeclaration)
         {
             var operatorDeclarations = classDeclaration.DescendantNodes().OfType<OperatorDeclarationSyntax>();
-            foreach (var op in operatorDeclarations) { Report(WinRTRules.OperatorOverloadedRule, op.GetLocation(), op.OperatorToken); }
-            return operatorDeclarations.Count() != 0;
+            foreach (var op in operatorDeclarations) 
+            { 
+                Report(WinRTRules.OperatorOverloadedRule, op.GetLocation(), op.OperatorToken); 
+            }
         }
 
         /// <summary>
@@ -208,7 +223,7 @@ namespace Generator
             // check if the identifier is our special name GeneratedReturnValueName
             bool IsInvalidParameterName(ParameterSyntax stx) { return stx.Identifier.Value.Equals(GeneratedReturnValueName); }
 
-            var hasInvalidParams = method.ParameterList.Parameters.Where(IsInvalidParameterName).Any();
+            var hasInvalidParams = method.ParameterList.Parameters.Any(IsInvalidParameterName);
             if (hasInvalidParams)
             {
                 Report(WinRTRules.ParameterNamedValueRule, method.GetLocation(), method.Identifier);

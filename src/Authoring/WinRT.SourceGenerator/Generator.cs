@@ -222,7 +222,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
     class WinRTSyntaxReciever : ISyntaxReceiver
     {
-        public List<MemberDeclarationSyntax> Declarations = new List<MemberDeclarationSyntax>();
+        public List<MemberDeclarationSyntax> Declarations = new();
+        public List<NamespaceDeclarationSyntax> Namespaces = new();
 
         private bool HasSomePublicTypes(SyntaxNode syntaxNode)
         {
@@ -231,9 +232,23 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
-            // We will lose namespaces in `Declarations` if we don't special case them as exempt from the `IsPublic` check
-            if (syntaxNode is not MemberDeclarationSyntax decaralation || 
-                (syntaxNode is not NamespaceDeclarationSyntax @namespace && !IsPublic(decaralation)))
+            // Store namespaces separately as we only need to look at them for diagnostics
+            // If we did store them in declarations, we would get duplicate entries in the WinMD,
+            // once from the namespace declaration and once from the member's declaration
+            if (syntaxNode is NamespaceDeclarationSyntax @namespace)
+            {
+                if (!HasSomePublicTypes(syntaxNode))
+                {
+                    // Don't analyze/generate code for namespaces that don't have public types, because they won't be used in the Windows Runtime
+                    return;
+                }
+                else
+                {
+                    Namespaces.Add(@namespace);
+                }
+            }
+
+            if (syntaxNode is not MemberDeclarationSyntax decaralation || !IsPublic(decaralation))
             {
                 return;
             }
@@ -242,14 +257,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 syntaxNode is InterfaceDeclarationSyntax ||
                 syntaxNode is EnumDeclarationSyntax ||
                 syntaxNode is DelegateDeclarationSyntax ||
-                syntaxNode is StructDeclarationSyntax ||
-                syntaxNode is NamespaceDeclarationSyntax)
+                syntaxNode is StructDeclarationSyntax)
             {
-                if (syntaxNode is NamespaceDeclarationSyntax && !HasSomePublicTypes(syntaxNode))
-                {
-                    // Don't analyze/generate code for namespaces that don't have public types, because they won't be used in the Windows Runtime
-                    return;
-                }
                 Declarations.Add(decaralation);
             }
         }
