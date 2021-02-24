@@ -203,12 +203,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     {
         public void Execute(GeneratorExecutionContext context)
         {
-            /*
             if (!context.IsCsWinRTComponent())
             {
                 return;
             }
-            */
 
             ComponentGenerator generator = new ComponentGenerator(context);
             generator.Generate();
@@ -234,18 +232,16 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         {
             // Store namespaces separately as we only need to look at them for diagnostics
             // If we did store them in declarations, we would get duplicate entries in the WinMD,
-            // once from the namespace declaration and once from the member's declaration
+            //   once from the namespace declaration and once from the member's declaration
             if (syntaxNode is NamespaceDeclarationSyntax @namespace)
             {
-                if (!HasSomePublicTypes(syntaxNode))
-                {
-                    // Don't analyze/generate code for namespaces that don't have public types, because they won't be used in the Windows Runtime
-                    return;
-                }
-                else
+                if (HasSomePublicTypes(syntaxNode))
                 {
                     Namespaces.Add(@namespace);
                 }
+            
+                // Subsequent checks will fail, small performance boost to return now. 
+                return;
             }
 
             if (syntaxNode is not MemberDeclarationSyntax decaralation || !IsPublic(decaralation))
