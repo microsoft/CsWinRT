@@ -143,7 +143,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             // "DiagnosticTests" is a workaround, GetAssemblyName returns null when used by unit tests 
             // shouldn't need workaround once we can pass AnalyzerConfigOptionsProvider in DiagnosticTests.Helpers.cs
             string assemblyName = context.GetAssemblyName() ?? "DiagnosticTests";
-            WinRTComponentScanner winrtScanner = new WinRTComponentScanner(context, assemblyName);
+            WinRTComponentScanner winrtScanner = new(context, assemblyName);
             winrtScanner.FindDiagnostics();
             return winrtScanner.Found();
         }
@@ -220,10 +220,30 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
     class WinRTSyntaxReciever : ISyntaxReceiver
     {
-        public List<MemberDeclarationSyntax> Declarations = new List<MemberDeclarationSyntax>();
+        public List<MemberDeclarationSyntax> Declarations = new();
+        public List<NamespaceDeclarationSyntax> Namespaces = new();
+
+        private bool HasSomePublicTypes(SyntaxNode syntaxNode)
+        {
+            return syntaxNode.ChildNodes().OfType<MemberDeclarationSyntax>().Any(IsPublic);
+        }
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
+            // Store namespaces separately as we only need to look at them for diagnostics
+            // If we did store them in declarations, we would get duplicate entries in the WinMD,
+            //   once from the namespace declaration and once from the member's declaration
+            if (syntaxNode is NamespaceDeclarationSyntax @namespace)
+            {
+                if (HasSomePublicTypes(syntaxNode))
+                {
+                    Namespaces.Add(@namespace);
+                }
+            
+                // Subsequent checks will fail, small performance boost to return now. 
+                return;
+            }
+
             if (syntaxNode is not MemberDeclarationSyntax decaralation || !IsPublic(decaralation))
             {
                 return;
@@ -233,8 +253,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 syntaxNode is InterfaceDeclarationSyntax ||
                 syntaxNode is EnumDeclarationSyntax ||
                 syntaxNode is DelegateDeclarationSyntax ||
-                syntaxNode is StructDeclarationSyntax ||
-                syntaxNode is NamespaceDeclarationSyntax)
+                syntaxNode is StructDeclarationSyntax)
             {
                 Declarations.Add(decaralation);
             }

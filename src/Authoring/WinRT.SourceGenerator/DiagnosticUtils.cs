@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System;
 using WinRT.SourceGenerator;
 
 namespace Generator
@@ -15,13 +16,11 @@ namespace Generator
             _assemblyName = assemblyName;
             _context = context;
             _flag = false;
-            _typeHolder = CollectDefinedTypes(context);
         }
 
-        private string _assemblyName;
-        private GeneratorExecutionContext _context;
+        private readonly string _assemblyName;
+        private readonly GeneratorExecutionContext _context;
         private bool _flag;
-        private TypeCollector _typeHolder;
 
         public bool Found() { return _flag; }
 
@@ -30,10 +29,61 @@ namespace Generator
         /// Perform code analysis to find scenarios that are erroneous in Windows Runtime</summary>
         public void FindDiagnostics()
         {
-            HasInvalidNamespace();
-            HasSomePublicTypes();
-
             WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)_context.SyntaxReceiver;
+
+            if (!syntaxReciever.Declarations.Any())
+            {
+                Report(WinRTRules.NoPublicTypesRule, null);
+                return;
+            }
+
+            CheckNamespaces();
+            CheckDeclarations();
+        }
+
+        private void CheckNamespaces()
+        {
+            WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)_context.SyntaxReceiver;
+
+            // Used to check for conflicitng namespace names
+            HashSet<string> namespaceNames = new();
+
+            foreach (var @namespace in syntaxReciever.Namespaces)
+            {
+                var model = _context.Compilation.GetSemanticModel(@namespace.SyntaxTree);
+                var namespaceSymbol = model.GetDeclaredSymbol(@namespace);
+
+                string namespaceString = namespaceSymbol.ToString();
+
+                bool newNamespaceDeclaration = true;
+                // Because modules could have a namespace defined in different places (i.e. defines a partial class)
+                // we can't rely on `Contains` so we manually check that namespace names cannot differ by case only
+                foreach (var usedNamespaceName in namespaceNames)
+                {
+                    if (String.Equals(namespaceString, usedNamespaceName, StringComparison.OrdinalIgnoreCase) &&
+                        !String.Equals(namespaceString, usedNamespaceName, StringComparison.Ordinal))
+                    {
+                        newNamespaceDeclaration = false;
+                        Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceString);
+                    }
+                }
+
+                if (newNamespaceDeclaration)
+                {
+                    namespaceNames.Add(namespaceString);
+                }
+
+                if (IsInvalidNamespace(namespaceSymbol, _assemblyName))
+                {
+                    Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), _assemblyName, namespaceString);
+                }
+            }
+        }
+
+        private void CheckDeclarations()
+        {
+            WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)_context.SyntaxReceiver;
+
             foreach (var declaration in syntaxReciever.Declarations)
             {
                 var model = _context.Compilation.GetSemanticModel(declaration.SyntaxTree);
@@ -112,7 +162,7 @@ namespace Generator
                 return sym.OriginalDefinition.ContainingNamespace + "." + sym.OriginalDefinition.MetadataName;
             }
 
-            HashSet<ISymbol> classMethods = new HashSet<ISymbol>();
+            HashSet<ISymbol> classMethods = new();
 
             foreach (var @interface in typeSymbol.AllInterfaces.
                         Where(symbol => WinRTTypeWriter.MappedCSharpTypes.ContainsKey(QualifiedName(symbol)) ||
@@ -132,20 +182,12 @@ namespace Generator
         /// Class to check for operator declarations 
         /// operator declarations are just like method declarations except they use the `operator` keyword</param>
         /// <returns>True iff an operator is overloaded by the given class</returns>
-        private bool OverloadsOperator(ClassDeclarationSyntax classDeclaration)
+        private void OverloadsOperator(ClassDeclarationSyntax classDeclaration)
         {
             var operatorDeclarations = classDeclaration.DescendantNodes().OfType<OperatorDeclarationSyntax>();
-            foreach (var op in operatorDeclarations) { Report(WinRTRules.OperatorOverloadedRule, op.GetLocation(), op.OperatorToken); }
-            return operatorDeclarations.Count() != 0;
-        }
-
-        /// <summary>Raise a diagnostic if there are no public types in the namespace</summary>
-        private void HasSomePublicTypes()
-        {
-            // types are interfaces, classes and structs
-            if (!_typeHolder.GetTypes().Any() && !_typeHolder.GetStructs().Any())
-            {
-                Report(WinRTRules.NoPublicTypesRule, null);
+            foreach (var op in operatorDeclarations) 
+            { 
+                Report(WinRTRules.OperatorOverloadedRule, op.GetLocation(), op.OperatorToken); 
             }
         }
 
@@ -156,7 +198,7 @@ namespace Generator
         {
             IEnumerable<ConstructorDeclarationSyntax> constructors = classDeclaration.ChildNodes().OfType<ConstructorDeclarationSyntax>().Where(IsPublic);
 
-            HashSet<int> aritiesSeenSoFar = new HashSet<int>();
+            HashSet<int> aritiesSeenSoFar = new();
 
             foreach (ConstructorDeclarationSyntax constructor in constructors)
             {
@@ -181,7 +223,7 @@ namespace Generator
             // check if the identifier is our special name GeneratedReturnValueName
             bool IsInvalidParameterName(ParameterSyntax stx) { return stx.Identifier.Value.Equals(GeneratedReturnValueName); }
 
-            var hasInvalidParams = method.ParameterList.Parameters.Where(IsInvalidParameterName).Any();
+            var hasInvalidParams = method.ParameterList.Parameters.Any(IsInvalidParameterName);
             if (hasInvalidParams)
             {
                 Report(WinRTRules.ParameterNamedValueRule, method.GetLocation(), method.Identifier);
@@ -194,7 +236,7 @@ namespace Generator
         /// <param name="methodDeclarations">Collection of methods</param><param name="typeId">Containing class or interface</param>
         private void CheckMethods(IEnumerable<MethodDeclarationSyntax> methodDeclarations, SyntaxToken typeId)
         {
-            Dictionary<string, bool> methodsHasAttributeMap = new Dictionary<string, bool>();
+            Dictionary<string, bool> methodsHasAttributeMap = new();
             Dictionary<string, Diagnostic> overloadsWithoutAttributeMap = new Dictionary<string, Diagnostic>();
 
             // var methodDeclarations = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
@@ -278,7 +320,7 @@ namespace Generator
                 }
 
                 // const fields not allowed
-                if (field.Modifiers.Where(m => m.IsKind(SyntaxKind.ConstKeyword)).Any())
+                if (field.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.ConstKeyword)))
                 {
                     Report(WinRTRules.StructHasConstFieldRule, field.GetLocation(), @struct.Identifier);
                 }
@@ -301,30 +343,6 @@ namespace Generator
             if (!fields.Any())
             {
                 Report(WinRTRules.StructWithNoFieldsRule, @struct.GetLocation(), @struct.Identifier);
-            }
-        }
-
-        /// <summary>Namespaces can't only differ by cases, also check if the name is invalid for the winmd being made</summary>
-        private void HasInvalidNamespace()
-        {
-            HashSet<string> simplifiedNames = new HashSet<string>();
-
-            foreach (var namespaceSymbol in _typeHolder.GetNamespaces())
-            {
-                string upperNamed = namespaceSymbol.Name.ToUpper();
-                if (simplifiedNames.Contains(upperNamed))
-                {
-                    Report(WinRTRules.NamespacesDifferByCase, namespaceSymbol.Locations.First(), namespaceSymbol.Name);
-                }
-                else
-                {
-                    simplifiedNames.Add(upperNamed);
-                }
-
-                if (IsInvalidNamespace(namespaceSymbol, _assemblyName))
-                {
-                    Report(WinRTRules.DisjointNamespaceRule, namespaceSymbol.Locations.First(), _assemblyName, namespaceSymbol.Name);
-                }
             }
         }
 

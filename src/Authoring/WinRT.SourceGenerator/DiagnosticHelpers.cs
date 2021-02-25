@@ -342,37 +342,6 @@ namespace Generator
 
         #endregion 
 
-        /// <summary>Gather the type symbols for all classes, interfaces and structs</summary>
-        /// <param name="context">Context used for syntax trees</param><returns>A TypeCollector populated with the type symbols</returns>
-        private TypeCollector CollectDefinedTypes(GeneratorExecutionContext context)
-        {
-            TypeCollector collectedTypes = new TypeCollector();
-
-            WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)context.SyntaxReceiver;
-            foreach (var declaration in syntaxReciever.Declarations)
-            {
-                var model = GetModel(declaration.SyntaxTree);
-
-                if (declaration is ClassDeclarationSyntax @class && IsPublic(@class))
-                {
-                    collectedTypes.AddType(model.GetDeclaredSymbol(@class));
-                }
-                else if (declaration is InterfaceDeclarationSyntax @interface && IsPublic(@interface))
-                {
-                    collectedTypes.AddType(model.GetDeclaredSymbol(@interface));
-                }
-                else if (declaration is StructDeclarationSyntax @struct && IsPublic(@struct))
-                {
-                    collectedTypes.AddStruct(model.GetDeclaredSymbol(@struct));
-                }
-                else if (declaration is NamespaceDeclarationSyntax @namespace)
-                {
-                    collectedTypes.AddNamespace(model.GetDeclaredSymbol(@namespace));
-                }
-            }
-            return collectedTypes;
-        }
-
         /// <summary>Make a suggestion for types to use instead of the given type</summary>
         /// <param name="type">A type that is not valid in Windows Runtime</param>
         /// <returns>string of types that the given type implements and are valid Windows Runtime types</returns>
