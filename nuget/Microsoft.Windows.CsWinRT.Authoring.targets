@@ -16,10 +16,39 @@ Copyright (C) Microsoft Corporation. All rights reserved.
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <Target Name="CsWinRTCopySDKRefDllToOutDir" Condition="'$(CsWinRTComponent)' == 'true'" AfterTargets="ResolveRuntimePackAssets">
+  <!-- Update the project's output to include the generated WinMD, 
+       We set ResolveableAssembly to false so this is only consumed by native apps -->
+  <Target Name="CsWinRTAddWinMDReferenceInProjectReference" 
+            BeforeTargets="GetTargetPath" 
+            DependsOnTargets="GetTargetPathWithTargetPlatformMoniker"
+            Outputs="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)\*.winmd" ResolveableAssembly="false"/>
+    </ItemGroup>
+  </Target>
+
+  <!-- Prevent C++ apps from thinking there is a framework mismatch by setting our target framework to blank.
+       Note, this does prevent C#/WinRT apps from cross-platform targeting, but a netcore3.1 app wouldn't use C#/WinRT anyway -->
+  <Target Name="GetTargetFrameworks" Returns="@(_ThisProjectBuildMetadata)">
+    <ItemGroup>
+      <_ThisProjectBuildMetadata Include="$(MSBuildProjectFullPath)">
+        <TargetFrameworks></TargetFrameworks>
+        <TargetFrameworkMonikers></TargetFrameworkMonikers>
+        <TargetPlatformMonikers></TargetPlatformMonikers>
+        <HasSingleTargetFramework>true</HasSingleTargetFramework>
+        <IsRidAgnostic>true</IsRidAgnostic>
+      </_ThisProjectBuildMetadata>
+    </ItemGroup>
+  </Target>
+
+  <!-- For project references, we need to copy the SDK.NET.dll to the output directory -->
+  <Target Name="CsWinRTCopySDKRefDllToOutDir" AfterTargets="ResolveRuntimePackAssets">
+    <ItemGroup>
+      <!-- Local item group to store the SDK.NET.dll -->
       <CsWinRTSDKRefDll Include="@(RuntimePackAsset)" Condition="'%(RuntimePackAsset.DestinationSubPath)' == 'Microsoft.Windows.SDK.NET.dll'" />
+      <!-- Use the below item group to package up managed DLLs from one source -->
       <CsWinRTAuthoringDependencyDlls Include="@(CsWinRTSDKRefDll)" />
+      <!-- Make sure it is copied out -->
       <_ThisProjectItemstoCopyToOutputDirectory Include="@(CsWinRTSDKRefDll)">
         <Link>%(FileName)%(Extension)</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -29,13 +58,22 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   </Target>
 
   <!-- When an authored component makes a nupkg, add the necessary hosting assets to the package -->
-  <Target Name="CsWinRTIncludeHostDlls"  Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="AfterBuild" Outputs="@(Content)">
+  <Target Name="CsWinRTIncludeHostDlls" BeforeTargets="AfterBuild" Outputs="@(Content)">
     <!-- When packing, include all necessary DLLs and the targets file for DLL copying on the native side -->
     <ItemGroup>
+      <!-- We must pack any managed DLLs the component depends on, because a native consumer won't restore them -->
+      <Content Include="@(ReferenceCopyLocalPaths)" 
+               Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime'" 
+               Pack="true" 
+               PackagePath="build\native" /> 
+
+      <!-- Store managed dlls the component needs in the target framework dir --> 
       <Content Include="@(CsWinRTAuthoringDependencyDlls)" Pack="true" PackagePath="lib\$(TargetFramework)" />
+
+      <!-- Pack the WinMD we generated in its own folder, under the managed TFM folder -->
       <Content Include="$(TargetDir)$(AssemblyName).winmd" Pack="true" PackagePath="lib\$(TargetFramework)\winmd" />
 
-      <!-- Custom targets that copy dlls for consumers of the authored component. -->
+      <!-- Custom targets that copy DLLs for consumers of the authored component. -->
       <Content Include="$(CsWinRTPath)buildTransitive\Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" 
                Pack="true" 
                PackagePath="buildTransitive\$(AssemblyName).targets;build\$(AssemblyName).targets" />

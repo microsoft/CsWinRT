@@ -9,26 +9,33 @@
   </PropertyGroup>
 
   <PropertyGroup>
+      <!-- Local variables -->
       <HostingSupport-Net5Dir>$(MSBuildThisFileDirectory)..\lib\net5.0*</HostingSupport-Net5Dir>
       <HostingSupport-MetadataDir>$(HostingSupport-Net5Dir)\winmd</HostingSupport-MetadataDir>
       <HostingSupport-RuntimesDir>$(MSBuildThisFileDirectory)..\runtimes</HostingSupport-RuntimesDir>
+      <HostingSupport-DependenciesDir>$(MSBuildThisFileDirectory)..\build\native</HostingSupport-DependenciesDir>
       <HostingSupport-IsNative  Condition="'$(TargetFramework)' == 'native' OR '$(TargetFramework)' == ''">true</HostingSupport-IsNative>
       <HostingSupport-IsArmArch Condition="'$(Platform)' == 'arm' OR '$(Platform)' == 'arm64'">true</HostingSupport-IsArmArch>
   </PropertyGroup> 
 
   <Target Name="CsWinRTAddAuthoredWinMDReference" Condition="'$(HostingSupport-IsNative)' == 'true'" Outputs="@(Reference)">
-    <ItemGroup Label="Add the WinMD file as a reference of the native app"> 
+    <!-- Add the WinMD file as a reference of the native app --> 
+    <ItemGroup> 
       <Reference Include="$(HostingSupport-MetadataDir)\*.winmd" IsWinMDFile="true" Implementation="WinRT.Host.dll" />
     </ItemGroup>
   </Target>
 
   <Target Name="CsWinRTCopyAuthoringDlls" Condition="'$(HostingSupport-IsNative)' == 'true'" Outputs="@(ReferenceCopyLocalPaths)">
     <ItemGroup>
+      <!-- Managed, WinRT and SDK.NET dlls --> 
       <ReferenceCopyLocalPaths Include="$(HostingSupport-Net5Dir)\*.dll" />
 
+      <!-- Managed DLLs from packages the component depends on --> 
+      <ReferenceCopyLocalPaths Include="$(HostingSupport-DependenciesDir)\*.dll" />
+
+      <!-- Get the proper WinRT.Host.dll -->
       <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\win-$(Platform)\native\WinRT.Host.dll"
                                Condition="'$(Platform)' == 'x64' OR '$(Platform)' == 'x86' OR '$(HostingSupport-IsArmArch)' == 'true'" />
-
       <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\win-x86\native\WinRT.Host.dll" 
                                Condition="'$(Platform)' == 'Win32'"/> 
     </ItemGroup> 
