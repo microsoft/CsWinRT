@@ -2296,6 +2296,28 @@ namespace UnitTest
             Assert.True(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
         }
 
+        [Fact]
+        public void TestStaticEventWithGC()
+        {
+            bool eventCalled = false;
+            void Class_StaticIntPropertyChanged(object sender, int e)
+            {
+                eventCalled = (e == 3);
+            }
+
+            Class.StaticIntPropertyChanged += Class_StaticIntPropertyChanged;
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            Class.StaticIntPropertyChanged -= Class_StaticIntPropertyChanged;
+            Class.StaticIntProperty = 3;
+            Assert.False(eventCalled);
+            Class.StaticIntPropertyChanged += Class_StaticIntPropertyChanged;
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            Class.StaticIntProperty = 3;
+            Assert.True(eventCalled);
+        }
+
 #if NET5_0
         [TestComponentCSharp.Warning]  // NO warning CA1416
         class WarningManaged { };
