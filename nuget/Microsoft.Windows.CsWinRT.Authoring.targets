@@ -5,6 +5,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <PropertyGroup>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <ProjectRuntimeConfigFileName>WinRT.Host</ProjectRuntimeConfigFileName>
+  </PropertyGroup>
+
   <!-- For Project Reference consumers, copy the necessary WinRT DLLs to output directory --> 
   <ItemGroup> 
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
@@ -18,12 +23,18 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <!-- Update the project's output to include the generated WinMD, 
        We set ResolveableAssembly to false so this is only consumed by native apps -->
-  <Target Name="CsWinRTAddWinMDReferenceInProjectReference" 
-            BeforeTargets="GetTargetPath" 
-            DependsOnTargets="GetTargetPathWithTargetPlatformMoniker"
-            Outputs="@(TargetPathWithTargetPlatformMoniker)">
+  <!-- ResolveableAssembly metadata decides who we can support,
+          if it is not present, we support cpp (but not c# => sdk1130) 
+          if it is present, we support c# (but not cpp => cppwinrt targets need to use _ResolvedNativeProjectReferencePaths)-->
+  <Target Name="GetTargetPath" Returns="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup>
-      <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)\*.winmd" ResolveableAssembly="false"/>
+      <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)$(AssemblyName).winmd" 
+                                           BuildReference="true" 
+                                           WinMDFile="true" 
+                                           Implementation="WinRT.Host.dll"
+                                           ResolveableAssembly="false"
+                                           FileType="winmd"
+                                           Primary="true" /> 
     </ItemGroup>
   </Target>
 
