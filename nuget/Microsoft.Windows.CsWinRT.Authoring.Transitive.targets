@@ -19,9 +19,12 @@
   </PropertyGroup> 
 
   <Target Name="CsWinRTAddAuthoredWinMDReference" Condition="'$(HostingSupport-IsNative)' == 'true'" Outputs="@(Reference)">
-    <!-- Add the WinMD file as a reference of the native app --> 
+    <!-- Add the WinMD file as a reference of the native app, so a projection can be made --> 
     <ItemGroup> 
-      <Reference Include="$(HostingSupport-MetadataDir)\*.winmd" IsWinMDFile="true" Implementation="WinRT.Host.dll" />
+      <Reference Include="$(HostingSupport-MetadataDir)\*.winmd">
+        <IsWinMDFile>true</IsWinMDFile>
+        <Implementation>WinRT.Host.dll</Implementation>
+      </Reference>
     </ItemGroup>
   </Target>
 
@@ -33,9 +36,14 @@
       <!-- Managed DLLs from packages the component depends on --> 
       <ReferenceCopyLocalPaths Include="$(HostingSupport-DependenciesDir)\*.dll" />
 
+      <!-- Add the runtimeconfig.json -->
+      <ReferenceCopyLocalPaths Include="$(HostingSupport-DependenciesDir)\WinRT.Host.runtimeconfig.json" />
+
       <!-- Get the proper WinRT.Host.dll -->
       <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\win-$(Platform)\native\WinRT.Host.dll"
                                Condition="'$(Platform)' == 'x64' OR '$(Platform)' == 'x86' OR '$(HostingSupport-IsArmArch)' == 'true'" />
+
+      <!-- Treat Win32 platform as win-x86 architecture -->
       <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\win-x86\native\WinRT.Host.dll" 
                                Condition="'$(Platform)' == 'Win32'"/> 
     </ItemGroup> 

@@ -4,37 +4,63 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 ***********************************************************************************************
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
+  
   <PropertyGroup>
+    <!-- Generate a RuntimeConfig -->
     <EnableDynamicLoading>true</EnableDynamicLoading>
-    <ProjectRuntimeConfigFileName>WinRT.Host</ProjectRuntimeConfigFileName>
+    <!-- Name the RuntimeConfig properly -->
+    <ProjectRuntimeConfigFileName>WinRT.Host.runtimeconfig.json</ProjectRuntimeConfigFileName>
   </PropertyGroup>
 
   <!-- For Project Reference consumers, copy the necessary WinRT DLLs to output directory --> 
   <ItemGroup> 
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
+    <!-- We may want to look into how to use the WinRT.Runtime.dll that ships with dotnet, instead of the one C#/WinRT ships -->
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll" />
-    <None Include="@(CsWinRTAuthoringDependencyDlls)" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll"
-          Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" 
-          Link="%(RecursiveDir)%(FileName)%(Extension)" 
-          CopyToOutputDirectory="PreserveNewest" />
+   
+    <None Include="@(CsWinRTAuthoringDependencyDlls)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  
+    <None Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll" Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
-  <!-- Update the project's output to include the generated WinMD, 
-       We set ResolveableAssembly to false so this is only consumed by native apps -->
-  <!-- ResolveableAssembly metadata decides who we can support,
-          if it is not present, we support cpp (but not c# => sdk1130) 
-          if it is present, we support c# (but not cpp => cppwinrt targets need to use _ResolvedNativeProjectReferencePaths)-->
+  <!-- Add the RuntimeConfig to output of project reference consumers -->
+  <Target Name="CsWinRTAuthoring_AddRuntimeDependenciesToContent" AfterTargets="GenerateBuildRuntimeConfigurationFiles" BeforeTargets="GetCopyToOutputDirectoryItems;_GetCopyToOutputDirectoryItemsFromThisProject">
+    <ItemGroup>
+      <AllItemsFullPathWithTargetPath Include="$(ProjectRuntimeConfigFilePath)">
+        <TargetPath>$([System.IO.Path]::GetFileName($(ProjectRuntimeConfigFilePath)))</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </AllItemsFullPathWithTargetPath>
+
+      <AllPublishItemsFullPathWithTargetPath  Include="$(ProjectRuntimeConfigFilePath)">
+        <TargetPath>$([System.IO.Path]::GetFileName($(ProjectRuntimeConfigFilePath)))</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </AllPublishItemsFullPathWithTargetPath>
+    </ItemGroup>
+  </Target>
+
+  <!-- Update the project's output to include the generated WinMD.
+ 
+       ResolveableAssembly metadata decides who we can support:
+          if it is not present, we support cpp, but not c# 
+            => solution: sdk1130 error becomes a warning) 
+
+          if it is present (as 'false'), we support c#, but not cpp 
+            => solution: cppwinrt targets need to use _ResolvedNativeProjectReferencePaths)
+  -->
   <Target Name="GetTargetPath" Returns="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup>
-      <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)$(AssemblyName).winmd" 
-                                           BuildReference="true" 
-                                           WinMDFile="true" 
-                                           Implementation="WinRT.Host.dll"
-                                           ResolveableAssembly="false"
-                                           FileType="winmd"
-                                           Primary="true" /> 
+      <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)$(AssemblyName).winmd">
+        <BuildReference>true</BuildReference>
+        <WinMDFile>true</WinMDFile>
+        <Implementation>WinRT.Host.dll</mplementation>
+        <ResolveableAssembly>false</ResolveableAssembly>
+        <FileType>winmd</FileType>
+        <Primary>true</Primary>
+      </TargetPathWithTargetPlatformMoniker>
     </ItemGroup>
   </Target>
 
@@ -77,6 +103,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
                Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime'" 
                Pack="true" 
                PackagePath="build\native" /> 
+
+      <!-- Add WinRT.Host.runtimeconfig.json to package -->
+      <Content Include="$(ProjectRuntimeConfigFilePath)" Pack="true" PackagePath="build\native" />
 
       <!-- Store managed dlls the component needs in the target framework dir --> 
       <Content Include="@(CsWinRTAuthoringDependencyDlls)" Pack="true" PackagePath="lib\$(TargetFramework)" />
