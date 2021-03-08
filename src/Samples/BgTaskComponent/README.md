@@ -2,19 +2,51 @@
 
 This sample demonstrates how to author an out-of-process C#/WinRT component using background tasks, and how to consume the component as a project reference from a packaged .NET 5 WPF app.
 
-To build this sample, set **WpfApp.Package** as the startup project before building the solution. The background task raises a toast notification and is triggered by a time zone change. 
-
 This sample includes the following projects:
 
 - **BgTaskComponent**: This is a C#/WinRT component with an example background task that pops a toast notification.
+
 - **WpfApp** and **WpfApp.Package**: These projects demonstrate hosting the background task component in a packaged .NET 5 desktop (WPF) application.
+
   - **WpfApp** has a project reference to **BgTaskComponent**.
+
   - **WpfApp.Package** is a packaging app with a reference to **WpfApp**. The packaging app is required for hosting out-of-process WinRT components.
+
+## Build and run the sample
+
+### Build the sample
+
+1. Open the **BgTaskComponent.sln** in Visual Studio.
+
+2. Right click on the **WpfApp.Package** project as select **Set as Startup Project**.
+
+3. Press Ctrl+Shift+B, or select **Build** -> **Build Solution**.
+
+### Deploy and run the  sample
+
+1. Select **Build** -> **Deploy Solution** to deploy the sample.
+
+2. To debug and run the sample, press F5 or select **Debug** -> **Start Debugging**.
+
+### Triggering background tasks
+
+The **ToastBgTask** background task raises a toast notification and is triggered by a TimeZoneChange event. You can invoke the background task while running the sample either by using the **Lifecycle Events** dropdown in Visual Studio, or by changing your device's timezone in **Date & time settings**.
+
+## C#/WinRT authoring modifications
 
 There are a few modifications to note that relate to those described in the [authoring docs](https://github.com/microsoft/CsWinRT/blob/master/docs/authoring.md):
 
-- Note that **WinRT.Host.runtimeconfig.json** is part of the packaging project **WpfApp.Package**, and not **WpfApp** itself.
-- In addition to registering the background task with the manifest designer, the following extension and class registration must be manually added to **Package.appxmanifest**. Note you do not need to create your own manifest file for activatable class registrations.
+- Note that **WinRT.Host.runtimeconfig.json** is part of the authored component project, **BgTaskComponent**. This file is copied to the packaging project output by adding the following item group to **BgTaskComponent.csproj**:
+
+  ```xml
+    <ItemGroup>
+      <None Update="WinRT.Host.runtimeconfig.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+  ```
+
+- In addition to registering the background task with the manifest designer, the following extension and class registration must be manually added to **Package.appxmanifest**. To do this, in Solution Explorer right click **Package.appxmanifest**, click **View Code**, and paste the code below. Note you do not need to create your own manifest file as this is a packaged app.
 
   ```xml
   <!-- To host the BgTaskComponent, you must add this activatable class entry -->
@@ -27,38 +59,3 @@ There are a few modifications to note that relate to those described in the [aut
       </Extension>
    </Extensions>
    ```
-
-- In **WPFApp.Package.wapproj**, the following properties are added in order to copy the hosting/component assemblies and the runtimeconfig file on deployment:
-
-    ```xml
-   <!-- Define TFM for refactoring paths below-->
-    <PropertyGroup>
-      <TargetFramework>net5.0-windows$(TargetPlatformVersion)</TargetFramework>
-    </PropertyGroup>
-    <!-- C#/WinRT version 1.1.2-prerelease.210208.6 requires copying the following -->
-    <ItemGroup>
-      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\$(TargetFramework)\runtimes\win-$(Platform)\native\WinRT.Host.dll">
-        <Link>WinRT.Host.dll</Link>
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\$(TargetFramework)\WinRT.Host.Shim.dll">
-        <Link>WinRT.Host.Shim.dll</Link>
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\$(TargetFramework)\WinRT.Runtime.dll">
-        <Link>WinRT.Runtime.dll</Link>
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\$(TargetFramework)\Microsoft.Windows.SDK.NET.dll">
-        <Link>Microsoft.Windows.SDK.NET.dll</Link>
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <Content Include="..\WpfApp\bin\$(Platform)\$(Configuration)\$(TargetFramework)\BgTaskComponent.dll">
-        <Link>BgTaskComponent.dll</Link>
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-      <Content Include="WinRT.Host.runtimeconfig.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
-    </ItemGroup>
-    ```
