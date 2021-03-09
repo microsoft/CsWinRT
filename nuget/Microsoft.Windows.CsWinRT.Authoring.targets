@@ -14,17 +14,24 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <!-- For Project Reference consumers, copy the necessary WinRT DLLs to output directory --> 
   <ItemGroup> 
-    <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
-    <!-- We may want to look into how to use the WinRT.Runtime.dll that ships with dotnet, instead of the one C#/WinRT ships -->
+     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll" />
-   
-    <None Include="@(CsWinRTAuthoringDependencyDlls)">
+    
+    <AllItemsFullPathWithTargetPath Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll">
+      <TargetPath>WinRT.Host.Shim.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  
-    <None Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll" Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')">
+    </AllItemsFullPathWithTargetPath>
+
+    <AllItemsFullPathWithTargetPath Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll">
+      <TargetPath>WinRT.Runtime.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </AllItemsFullPathWithTargetPath>
+
+    <AllItemsFullPathWithTargetPath Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" 
+                                    Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll">
+      <TargetPath>WinRT.Host.dll</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AllItemsFullPathWithTargetPath>
   </ItemGroup>
 
   <!-- Add the RuntimeConfig to output of project reference consumers -->
