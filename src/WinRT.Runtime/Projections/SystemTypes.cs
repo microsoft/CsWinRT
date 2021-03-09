@@ -67,14 +67,21 @@ namespace ABI.System
 
         public static Marshaler CreateMarshaler(global::System.DateTimeOffset value)
         {
-            return new Marshaler { __abi = new DateTimeOffset { UniversalTime = value.Ticks - ManagedUtcTicksAtNativeZero } };
+            return new Marshaler { __abi = new DateTimeOffset { UniversalTime = value.UtcTicks - ManagedUtcTicksAtNativeZero } };
         }
 
         public static DateTimeOffset GetAbi(Marshaler m) => m.__abi;
 
         public static global::System.DateTimeOffset FromAbi(DateTimeOffset value)
         {
-            return new global::System.DateTimeOffset(value.UniversalTime + ManagedUtcTicksAtNativeZero, global:: System.TimeSpan.Zero);
+            var utcTime = new global::System.DateTimeOffset(value.UniversalTime + ManagedUtcTicksAtNativeZero, global::System.TimeSpan.Zero);
+            var offset = TimeZoneInfo.Local.GetUtcOffset(utcTime);
+            long localTicks = utcTime.Ticks + offset.Ticks;
+            if (localTicks < DateTime.MinValue.Ticks || localTicks > DateTime.MaxValue.Ticks)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+            return utcTime.ToLocalTime();
         }
 
         public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) =>
