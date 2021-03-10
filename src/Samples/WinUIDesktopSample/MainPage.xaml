@@ -6,7 +6,12 @@
         xmlns:local="WinUIDesktopSample"
         mc:Ignorable="d"
         Height="450" Width="800">
-    <Grid>
-        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Hello from WinUI Desktop!" x:Name="text"/>
-    </Grid>
+
+
+    <StackPanel>
+        <Button x:Name="Button1" Content="Aggregation" Click="Button1Click" />
+        <Button x:Name="Button2" Content="AggregationAndInvoke" Click="Button2Click" />
+        <Button x:Name="Button3" Content="Event" Click="Button3Click" />
+    </StackPanel>
+
 </Page>

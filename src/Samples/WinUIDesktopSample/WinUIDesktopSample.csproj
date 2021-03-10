@@ -3,21 +3,16 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
-    <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
-    <ApplicationManifest>WinUIDesktopSample.exe.manifest</ApplicationManifest>
+<!--    <RootNamespace>WinUIDesktopSample</RootNamespace> -->
+    <!--    <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants> -->
     <!--
     There seems to be a codegen bug when referencing the cswinrt interop assembly of the Win32XamlHost
     project. Since we don't really need those metadata providers yet, this is just an easy workaround
     -->
-    <XamlCodeGenerationControlFlags>DoNotGenerateOtherProviders</XamlCodeGenerationControlFlags>
     <Platforms>x86;x64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition="'$(Platform)'!='AnyCPU'">win-$(Platform)</RuntimeIdentifier>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Manifest Include="WinUIDesktopSample.exe.manifest">
-      <DeploymentContent>true</DeploymentContent>
-    </Manifest>
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
@@ -28,7 +23,7 @@
       since we are building our own in the WinUIProjection project
     -->
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
-      <ExcludeAssets>compile; runtime</ExcludeAssets>
+      <ExcludeAssets>compile;runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
 
