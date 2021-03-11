@@ -1915,6 +1915,15 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestDateTimeMappingNegative()
+        {
+            var time = new DateTimeOffset(1501, 1, 1, 0, 0, 0, TimeSpan.Zero);
+            TestObject.DateTimeProperty = time;
+            Assert.Equal(time, TestObject.DateTimeProperty);
+            Assert.Equal(time, TestObject.GetDateTimeProperty().Value);
+        }
+
+        [Fact]
         public void TestExceptionMapping()
         {
             var ex = new ArgumentOutOfRangeException();

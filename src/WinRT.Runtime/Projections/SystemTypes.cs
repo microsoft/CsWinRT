@@ -55,6 +55,11 @@ namespace ABI.System
         // 'System.DateTimeOffset.Ticks' is relative to 01/01/0001
         public long UniversalTime;
 
+        // Numer of ticks counted between 0001-01-01, 00:00:00 and 1601-01-01, 00:00:00.
+        // You can get this through:  (new DateTimeOffset(1601, 1, 1, 0, 0, 1, TimeSpan.Zero)).Ticks;
+        private const long ManagedUtcTicksAtNativeZero = 504911232000000000;
+        // DO NOT use ToFileTime/FromFileTime, which don't support negative UniversalTime.
+
         public struct Marshaler
         {
             public DateTimeOffset __abi;
@@ -62,14 +67,21 @@ namespace ABI.System
 
         public static Marshaler CreateMarshaler(global::System.DateTimeOffset value)
         {
-            return new Marshaler { __abi = new DateTimeOffset { UniversalTime = value.ToFileTime() } };
+            return new Marshaler { __abi = new DateTimeOffset { UniversalTime = value.UtcTicks - ManagedUtcTicksAtNativeZero } };
         }
 
         public static DateTimeOffset GetAbi(Marshaler m) => m.__abi;
 
         public static global::System.DateTimeOffset FromAbi(DateTimeOffset value)
         {
-            return global::System.DateTimeOffset.FromFileTime(value.UniversalTime);
+            var utcTime = new global::System.DateTimeOffset(value.UniversalTime + ManagedUtcTicksAtNativeZero, global::System.TimeSpan.Zero);
+            var offset = TimeZoneInfo.Local.GetUtcOffset(utcTime);
+            long localTicks = utcTime.Ticks + offset.Ticks;
+            if (localTicks < DateTime.MinValue.Ticks || localTicks > DateTime.MaxValue.Ticks)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+            return utcTime.ToLocalTime();
         }
 
         public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) =>
@@ -77,7 +89,7 @@ namespace ABI.System
 
         public static DateTimeOffset FromManaged(global::System.DateTimeOffset value)
         {
-            return new DateTimeOffset { UniversalTime = value.ToFileTime() };
+            return new DateTimeOffset { UniversalTime = value.UtcTicks - ManagedUtcTicksAtNativeZero };
         }
 
         public static unsafe void CopyManaged(global::System.DateTimeOffset arg, IntPtr dest) =>

@@ -329,7 +329,7 @@ TEST(AuthoringTest, CustomTypes)
     EXPECT_EQ(type.Name, L"AuthoringTest.TestClass");
 
     auto erasedProjecteds = testClass.GetTypeErasedProjectedObjects();
-    EXPECT_EQ(erasedProjecteds.Size(), 4);
+    EXPECT_EQ(erasedProjecteds.Size(), 6);
     for (auto obj : erasedProjecteds)
     {
         auto pv = obj.try_as<IPropertyValue>();
@@ -342,6 +342,15 @@ TEST(AuthoringTest, CustomTypes)
     {
         auto pv = obj.try_as<IPropertyValue>();
         EXPECT_EQ(pv, nullptr);
+    }
+
+    auto erasedProjectedArrays = testClass.GetTypeErasedProjectedArrays();
+    EXPECT_EQ(erasedProjectedArrays.Size(), 8);
+    for (auto obj : erasedProjectedArrays)
+    {
+        auto ra = obj.try_as<IPropertyValue>();
+        EXPECT_NE(ra, nullptr);
+        auto type = ra.Type();
     }
 }
 

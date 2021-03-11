@@ -434,6 +434,8 @@ namespace AuthoringTest
                 BasicEnum.First,
                 new BasicStruct() { X = 1, Y = 2, Value = "Basic" },
                 new BasicDelegate((uint value) => {}),
+                typeof(TestClass),
+                new DisposableClass().GetType()
             };
         }
 
@@ -443,6 +445,20 @@ namespace AuthoringTest
                 PrivateEnum.PrivateFirst,
                 new PrivateStruct() { X = 1, Y = 2, Value = "Private" },
                 new PrivateDelegate((uint value) => { })
+            };
+        }
+
+        public IList<object> GetTypeErasedProjectedArrays()
+        {
+            return new List<object>() {
+                new int[] {42, 24, 12 },
+                new AsyncStatus[] { AsyncStatus.Canceled, AsyncStatus.Completed},
+                new BasicEnum[] {BasicEnum.First, BasicEnum.Fourth },
+                new BasicStruct[] {new BasicStruct() { X = 1, Y = 2, Value = "Basic" } },
+                new BasicDelegate[] { new BasicDelegate((uint value) => {}) },
+                new [] { new DisposableClass().GetType() , new NonProjectedDisposableClass().GetType() },
+                new Type[] { typeof(TestClass), typeof(DisposableClass) },
+                new PrivateEnum[] { PrivateEnum.PrivateFirst, PrivateEnum.PrivateSecond}
             };
         }
     }
