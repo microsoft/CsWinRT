@@ -17,21 +17,21 @@ Copyright (C) Microsoft Corporation. All rights reserved.
      <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll" />
     
-    <AllItemsFullPathWithTargetPath Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll">
+    <None Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll">
       <TargetPath>WinRT.Host.Shim.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AllItemsFullPathWithTargetPath>
+    </None>
 
-    <AllItemsFullPathWithTargetPath Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll">
+    <None Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll">
       <TargetPath>WinRT.Runtime.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AllItemsFullPathWithTargetPath>
+    </None>
 
-    <AllItemsFullPathWithTargetPath Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" 
+    <None Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" 
                                     Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll">
       <TargetPath>WinRT.Host.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </AllItemsFullPathWithTargetPath>
+    </None>
   </ItemGroup>
 
   <!-- Add the RuntimeConfig to output of project reference consumers -->
