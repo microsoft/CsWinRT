@@ -89,7 +89,7 @@ namespace ABI.System
 
         public static DateTimeOffset FromManaged(global::System.DateTimeOffset value)
         {
-            return new DateTimeOffset { UniversalTime = value.ToFileTime() };
+            return new DateTimeOffset { UniversalTime = value.UtcTicks - ManagedUtcTicksAtNativeZero };
         }
 
         public static unsafe void CopyManaged(global::System.DateTimeOffset arg, IntPtr dest) =>
