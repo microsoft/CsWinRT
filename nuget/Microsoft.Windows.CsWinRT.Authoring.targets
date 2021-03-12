@@ -14,7 +14,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <!-- For Project Reference consumers, copy the necessary WinRT DLLs to output directory --> 
   <ItemGroup> 
-     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
+    <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll" />
     
     <None Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll">
@@ -28,7 +28,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </None>
 
     <None Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" 
-                                    Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll">
+          Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll">
       <TargetPath>WinRT.Host.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -54,11 +54,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Update the project's output to include the generated WinMD.
  
        ResolveableAssembly metadata decides who we can support:
-          if it is not present, we support cpp, but not c# 
-            => solution: sdk1130 error becomes a warning) 
+          if it is not present, we support C++, but not C# 
+            => solution: sdk1130 error becomes a warning
 
-          if it is present (as 'false'), we support c#, but not cpp 
-            => solution: cppwinrt targets need to use _ResolvedNativeProjectReferencePaths)
+          if it is present (as 'false'), we support C#, but not C++
+            => solution: C++/WinRT targets need to use _ResolvedNativeProjectReferencePaths
   -->
   <Target Name="GetTargetPath" Returns="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup>
