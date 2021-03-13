@@ -98,7 +98,7 @@ This section describes the steps needed to consume a C#/WinRT component from the
 
 - [C++/WinRT desktop applications](#Consuming-from-C++/WinRT)
 - [C# .NET 5+ desktop applications](#Consuming-from-C#-applications)
-- [Out of process components](#Consuming-out-of-process-components)
+- [Out of process components](#Consuming-an-out-of-process-component)
 - [Packaged applications](#Consuming-from-packaged-applications)
 
 ### Consuming from C++/WinRT
