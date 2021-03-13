@@ -98,43 +98,34 @@ For an example of authoring an out-of-process C#/WinRT component, see the [backg
 
 This section describes the steps needed to consume a C#/WinRT component from the following kinds of applications:
 
-- C++/WinRT desktop applications
-- C# .NET 5+ desktop applications
+- [C++/WinRT desktop applications](#Consuming-from-C++/WinRT)
+- [C# .NET 5+ desktop applications](#Consuming-from-C#-applications)
+- [Packaged applications](#Consuming-from-packaged-applications)
 
 ### Consuming from C++/WinRT
 
-You'll need to author some files to assist the hosting process of a consuming native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. If your app is packaged with MSIX, then you don't need to include the manifest file, otherwise you need to include your activatable class registrations in the manifest file.
+You'll need to create a manifest file to consume a C#/WinRT component from native app named `YourNativeApp.exe.manifest`. If your app is packaged with MSIX, then you don't need to include the manifest file, otherwise you need to include your activatable class registrations in the manifest file.
 
-You can find an example of the contents of these two files in this [sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo/CppConsoleApp). You can also refer to the [hosting docs](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md) for more information on these files.
+You can find an example of the manifest file in this [sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo/CppConsoleApp). For more information on managed component hosting, refer to the [hosting docs](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md).
 
-1. To add these files in Visual Studio, right click on the project node under **Solution Explorer** and click **Add -> New Item**. Search for the **Text File** template and name your file `YourNativeApp.exe.manifest`. Repeat this for the `WinRT.Host.runtimeconfig.json` file.
+1. To add this manifest file in Visual Studio, right click on the project node under **Solution Explorer** and click **Add -> New Item**. Search for the **Text File** template and name your file `YourNativeApp.exe.manifest`.
 
-2. Modify the project to include the runtimeconfig.json and manifest files in the output when deploying the project. For both of these files, right-click on it in **Solution Explorer**, select **Properties**, and set the **Content** property to **True** using the drop-down arrow on the right.
+2. Modify the project to include the manifest file in the output when deploying the project. Right-click on the file in **Solution Explorer**, select **Properties**, and set the **Content** property to **True** using the drop-down arrow on the right.
 
 3. Add a reference to the C#/WinRT component either as a NuGet package reference or project reference.
 
-      **Option 1 (Package reference)**: Right click the **CppConsoleApp** project and select **Manage NuGet packages**. You may need to configure your package sources to add a reference to the AuthoringDemo NuGet package. To do this, click the **Settings** icon in NuGet Package Manager and add a package source to the appropriate path.
-
-      **Option 2 (Project reference)**: If you choose to consume your component through a project reference in a native app, you will need the following modifications.
-      
-      -  Add a reference to both the C#/WinRT component project and the WinMD produced for the component. The WinMD can be found in the output directory of the authored component's project. To add references, right-click on the native project node, and click **Add** -> **Reference**. Select the C#/WinRT component project under the **Projects** node and the generated WinMD file from the **Browse** node.
-
-      - Add the following properties to the native application's `.vcxproj` project file. To edit the project file, first right click on the project node and select **Unload Project**. Because .NET will assume a `TargetFramework` for your app that conflicts with `net5`, we need to specify the `TargetFramwork`, `TargetFrameworkVersion` and `TargetRuntime`. 
-      This is required as of the latest C#/WinRT version.
-
-      ```xml
-      <!-- Note: this property group is only required if you are using a project reference, 
-            and is a part of the preview while we work on proper support -->
-      <PropertyGroup>
-            <TargetFrameworkVersion>net5.0</TargetFrameworkVersion>
-            <TargetFramework>native</TargetFramework>
-            <TargetRuntime>Native</TargetRuntime>
-      </PropertyGroup>
-      ```
+      If you choose to consume your component as a **project reference** in a native app, you will also need to add a reference to the component's generated WinMD. The WinMD can be found in the output directory of the authored component's project. To add references, right-click on the native project node, and click **Add** -> **Reference**. Select the C#/WinRT component project under the **Projects** node and the generated WinMD file from the **Browse** node.
 
 ### Consuming from C# applications
 
 Both NuGet package references and project references to C#/WinRT coponents are supported for managed apps written in C#/.NET 5.
+
+### Consuming from packaged applications
+
+Consuming C#/WinRT components from MSIX-packaged applications is supported for some scenarios. The latest Visual Studio Preview version is recommended for packaging scenarios.
+
+- Consuming a C#/WinRT component from packaged C# apps is supported.
+- Consuming a C#/WinRT component from packaged C++ apps works as a package reference, but not project reference.
 
 ## Known Authoring Issues
 
