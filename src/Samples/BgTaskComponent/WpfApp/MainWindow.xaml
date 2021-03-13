@@ -7,6 +7,18 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-
+        <Grid.RowDefinitions>
+            <RowDefinition Height="70" />
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="20"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Text="WPF With Background Task" 
+                   FontSize="25" TextWrapping="Wrap"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <StackPanel Grid.Row="1" Orientation="Vertical" Margin="10">
+            <TextBlock  x:Name="InfoBGTask" Text="No BGTasks Registered" Margin="10"/>
+            <Button x:Name="RegisterButton" Content="Register BG Task" Margin="10" Click="RegisterButton_Click" IsEnabled="False"/>
+            <Button x:Name="UnregisterButton" Content="Unregister BG Task" Margin="10" Click="UnregisterButton_Click" IsEnabled="True"/>
+        </StackPanel>
     </Grid>
 </Window>
