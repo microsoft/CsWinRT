@@ -109,7 +109,7 @@ Consuming a C#/WinRT component from a C++/WinRT desktop application is supported
 
 - For project references, you also currently need a reference to the component's generated WinMD. The WinMD can be found in the output directory of the authored component's project. To add both the project and WinMD references, right-click on the native project node, and click **Add** -> **Reference**. Select the C#/WinRT component project under the **Projects** node and the generated WinMD file from the **Browse** node.
 
-For native consumption of C#/WinRT components, you also need to create a manifest file named `YourNativeApp.exe.manifest`. If your app is packaged with MSIX, then you don't need to include the manifest file, otherwise you need to include your activatable class registrations in the manifest file. Here is an authoring sample with an [example of the manifest file](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo/CppConsoleApp). To create the manifest file:
+For native consumption of C#/WinRT components, you also need to create a manifest file named `YourNativeApp.exe.manifest`. If your app is packaged with MSIX, then you don't need to include the manifest file, otherwise you need to include your activatable class registrations in the manifest file. We provide an [authoring sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo/CppConsoleApp) with an example manifest file. To create the manifest file:
 
 1. In Visual Studio, right click on the project node under **Solution Explorer** and click **Add -> New Item**. Search for the **Text File** template and name your file `YourNativeApp.exe.manifest`.
 
