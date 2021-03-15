@@ -36,12 +36,12 @@ The **ToastBgTask** background task raises a toast notification and is triggered
 
 There are a few modifications to note that relate to those described in the [authoring docs](https://github.com/microsoft/CsWinRT/blob/master/docs/authoring.md):
 
-- Note that **WinRT.Host.runtimeconfig.json** is part of the authored component project, **BgTaskComponent**. This file is copied to the packaging project output by adding the following item group to **BgTaskComponent.csproj**:
+- Note that **WinRT.Host.runtimeconfig.json** is part of the authored component project, **BgTaskComponent**. The runtimeconfig file needs to be manually added to the project. This file is copied to the packaging project output by adding the following item group to **BgTaskComponent.csproj**:
 
   ```xml
     <ItemGroup>
       <None Update="WinRT.Host.runtimeconfig.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>
   ```

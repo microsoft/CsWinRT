@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 using Windows.ApplicationModel.Background;
 
 namespace WpfApp
@@ -43,7 +42,7 @@ namespace WpfApp
 
         private void LoadTasks()
         {
-            var registeredTasks = BackgroundTaskRegistration.AllTasks.Select(t => t.Value.Name).ToList<string>();
+            var registeredTasks = BackgroundTaskRegistration.AllTasks;
 
             if (registeredTasks.Count == 0)
             {
@@ -54,11 +53,7 @@ namespace WpfApp
             }
             RegisterButton.IsEnabled = false;
             UnregisterButton.IsEnabled = true;
-            InfoBGTask.Text = string.Empty;
-            foreach (string item in registeredTasks)
-            {
-                InfoBGTask.Text += item;
-            }
+            InfoBGTask.Text = "Bg Task Registered: " + exampleTaskName;
         }
     }
 }
