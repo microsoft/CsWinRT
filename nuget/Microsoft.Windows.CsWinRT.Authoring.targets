@@ -66,7 +66,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <BuildReference>true</BuildReference>
         <WinMDFile>true</WinMDFile>
         <Implementation>WinRT.Host.dll</Implementation>
-        <!-- <ResolveableAssembly>false</ResolveableAssembly> -->
+        <ResolveableAssembly>false</ResolveableAssembly>
         <FileType>winmd</FileType>
         <Primary>true</Primary>
       </TargetPathWithTargetPlatformMoniker>
