@@ -25,7 +25,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Directory.Build.targets" />
-    <None Include="WinRT.Host.runtimeconfig.json" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="app.manifest" />
