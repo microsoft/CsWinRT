@@ -30,7 +30,11 @@ This sample includes the following projects:
 
 ### Triggering background tasks
 
-The **ToastBgTask** background task raises a toast notification and is triggered by a TimeZoneChange event. You can invoke the background task while running the sample either by using the **Lifecycle Events** dropdown in Visual Studio, or by changing your device's timezone in **Date & time settings**.
+The **ToastBgTask** background task raises a toast notification and is triggered by a TimeZoneChange event. You can invoke the background task while debugging the sample by using the **Lifecycle Events** dropdown in Visual Studio as shown below: 
+
+![Lifecycle Events dropdown](LifecycleEvents.png)
+
+You can also trigger the background task by changing your device's timezone in **Date & time settings**.
 
 ## C#/WinRT authoring modifications
 
