@@ -343,12 +343,13 @@ namespace WinRT
         {
             static bool IsWindowsRuntimeType(Type type)
             {
-                if (type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object)
+                if ((type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object) ||
+                    WinRT.Projections.IsTypeWindowsRuntimeType(type))
                     return true;
                 type = type.GetAuthoringMetadataType();
                 if (type is object && type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object)
                     return true;
-                return false;
+                return WinRT.Projections.IsTypeWindowsRuntimeType(type);
             }
 
             if (type == typeof(string) || type.IsTypeOfType())
