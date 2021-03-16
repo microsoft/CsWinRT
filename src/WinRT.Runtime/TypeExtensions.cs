@@ -84,9 +84,14 @@ namespace WinRT
             return typeof(Delegate).IsAssignableFrom(type);
         }
 
+        internal static bool IsTypeOfType(this Type type)
+        {
+            return typeof(Type).IsAssignableFrom(type);
+        }
+
         public static Type GetRuntimeClassCCWType(this Type type)
         {
-            return type.IsClass ? type.GetAuthoringMetadataType() : null;
+            return type.IsClass && !type.IsArray ? type.GetAuthoringMetadataType() : null;
         }
 
         internal static Type GetAuthoringMetadataType(this Type type)
