@@ -123,7 +123,7 @@ Consuming a C#/WinRT component from C#/.NET 5 is supported by both package refer
 
 ### Consuming an out of process component
 
-C#/WinRT supports authoring out-of-process components that can be consumed by other languages. Currently, consuming an out-of-process component is supported for managed C# apps with the use of a packaging project. Native consumption of out-of-process components is not fully supported yet.
+C#/WinRT supports authoring out-of-process components that can be consumed by other languages. Currently, consuming an out-of-process component is supported for managed C# apps with the use of a packaging project. A manual WinRT.Host.runtimeconfig.json file is currently required for this scenario, which is demonstrated in the sample below. Native consumption of out-of-process components is not fully supported yet.
 
 For an example of authoring and consuming an out-of-process C#/WinRT component, see the [background task component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/BgTaskComponent).
 
@@ -132,7 +132,7 @@ For an example of authoring and consuming an out-of-process C#/WinRT component, 
 Consuming C#/WinRT components from MSIX-packaged applications is supported for some scenarios. The latest Visual Studio Preview version is recommended for packaging scenarios.
 
 - Consuming a C#/WinRT component from packaged C# apps is supported.
-- Consuming a C#/WinRT component from packaged C++ apps works as a package reference, but not project reference.
+- Consuming a C#/WinRT component from packaged C++ apps is supported as a package reference, and requires the exe.manifest file.
 
 ## Known Authoring Issues
 
