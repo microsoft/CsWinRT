@@ -134,9 +134,6 @@
   <ItemGroup>
     <None Include="Directory.Build.targets" />
     <None Include="packages.config" />
-    <None Include="WinRT.Host.runtimeconfig.json">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AuthoringTest">

@@ -7,7 +7,6 @@
     <Page Include="MainWindow.xaml" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="App.idl" />
     <Midl Include="MainWindow.idl" />
   </ItemGroup>
   <ItemGroup>
@@ -25,7 +24,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="Directory.Build.targets" />
-    <None Include="WinRT.Host.runtimeconfig.json" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="app.manifest" />
