@@ -1,4 +1,4 @@
-﻿{
+{
     "runtimeOptions": {
         "tfm": "net5.0",
         "rollForward": "LatestMinor",

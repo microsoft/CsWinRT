@@ -8,32 +8,52 @@ namespace WpfApp
     /// </summary>
     public partial class MainWindow : Window
     {
+        string exampleTaskName = "ToastBgTask";
+
         public MainWindow()
         {
             InitializeComponent();
+            LoadTasks();
+        }
 
-            var taskRegistered = false;
-            var exampleTaskName = "ToastBgTask";
+        private void RegisterButton_Click(object sender, RoutedEventArgs e)
+        {
+            var builder = new BackgroundTaskBuilder
+            {
+                Name = exampleTaskName,
+                TaskEntryPoint = "BgTaskComponent.ToastBgTask"
+            };
+            builder.SetTrigger(new SystemTrigger(SystemTriggerType.TimeZoneChange, false));
+            builder.Register();
+            LoadTasks();
+        }
 
+        private void UnregisterButton_Click(object sender, RoutedEventArgs e)
+        {
             foreach (var task in BackgroundTaskRegistration.AllTasks)
             {
                 if (task.Value.Name == exampleTaskName)
                 {
-                    taskRegistered = true;
-                    break;
+                    task.Value.Unregister(true);
                 }
             }
+            LoadTasks();
+        }
 
-            if (!taskRegistered) 
+        private void LoadTasks()
+        {
+            var registeredTasks = BackgroundTaskRegistration.AllTasks;
+
+            if (registeredTasks.Count == 0)
             {
-                var builder = new BackgroundTaskBuilder
-                {
-                    Name = exampleTaskName,
-                    TaskEntryPoint = "BgTaskComponent.ToastBgTask"
-                };
-                builder.SetTrigger(new SystemTrigger(SystemTriggerType.TimeZoneChange, false));
-                builder.Register();
-            }          
+                InfoBGTask.Text = "No BG Tasks Registered";
+                RegisterButton.IsEnabled = true;
+                UnregisterButton.IsEnabled = false;
+                return;
+            }
+            RegisterButton.IsEnabled = false;
+            UnregisterButton.IsEnabled = true;
+            InfoBGTask.Text = "Bg Task Registered: " + exampleTaskName;
         }
     }
 }
