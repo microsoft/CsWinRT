@@ -343,15 +343,20 @@ namespace WinRT
         {
             static bool IsWindowsRuntimeType(Type type)
             {
-                if (type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object)
+                if ((type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object) ||
+                    WinRT.Projections.IsTypeWindowsRuntimeType(type))
                     return true;
                 type = type.GetAuthoringMetadataType();
-                if (type is object && type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object)
-                    return true;
+                if (type is object)
+                {
+                    if ((type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object) ||
+                        WinRT.Projections.IsTypeWindowsRuntimeType(type))
+                        return true;
+                }
                 return false;
             }
 
-            if (type == typeof(string) || type == typeof(Type))
+            if (type == typeof(string) || type.IsTypeOfType())
                 return true;
             if (type.IsDelegate())
                 return IsWindowsRuntimeType(type);
@@ -497,7 +502,7 @@ namespace WinRT
                     Vtable = BoxedValueIReferenceImpl<object>.AbiToProjectionVftablePtr
                 };
             }
-            if (type == typeof(Type))
+            if (type.IsTypeOfType())
             {
                 return new ComInterfaceEntry
                 {
@@ -650,7 +655,7 @@ namespace WinRT
                     Vtable = BoxedArrayIReferenceArrayImpl<object>.AbiToProjectionVftablePtr
                 };
             }
-            if (type == typeof(Type))
+            if (type.IsTypeOfType())
             {
                 return new ComInterfaceEntry
                 {

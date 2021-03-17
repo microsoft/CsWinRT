@@ -1545,9 +1545,29 @@ remove => %.% -= value;
 
     std::string write_static_cache_object(writer& w, std::string_view cache_type_name, TypeDef const& class_type)
     {
-        if (settings.netstandard_compat)
+        bool hasStaticEvent = false;
+        for (auto&& evt : class_type.EventList())
         {
-            
+            auto [add, _] = get_event_methods(evt);
+            if (add.Flags().Static())
+            {
+                hasStaticEvent = true;
+                break;
+            }
+        }
+
+        auto instance = hasStaticEvent ?
+            w.write_temp(
+                "private static readonly _% _instance = new _%();",
+                cache_type_name,
+                cache_type_name) :
+            w.write_temp(
+                "private static readonly WeakLazy<_%> _instance = new WeakLazy<_%>();",
+                cache_type_name,
+                cache_type_name);
+
+        if (settings.netstandard_compat)
+        {            
         auto cache_vftbl_type = w.write_temp("ABI.%.%.Vftbl",
                 class_type.TypeNamespace(),
                 cache_type_name);
@@ -1562,8 +1582,8 @@ remove => %.% -= value;
 internal class _% : ABI.%.%
 {
 public _%() : base(%()) { }
-private static WeakLazy<_%> _instance = new WeakLazy<_%>();
-internal static % Instance => _instance.Value;
+%
+internal static % Instance => %;
 }
 )",
                 cache_type_name,
@@ -1571,9 +1591,9 @@ internal static % Instance => _instance.Value;
                 cache_type_name,
                 cache_type_name,
                 cache_interface,
+                instance,
                 cache_type_name,
-                cache_type_name,
-                cache_type_name);
+                hasStaticEvent ? "_instance" : "_instance.Value");
         }
         else
         {
@@ -1586,8 +1606,8 @@ public _%()
 _obj = (new BaseActivationFactory("%", "%.%"))._As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
 }
 
-private static WeakLazy<_%> _instance = new WeakLazy<_%>();
-internal static % Instance => (%)_instance.Value;
+%
+internal static % Instance => (%)%;
 
 IObjectReference IWinRTObject.NativeObject => _obj;
 bool IWinRTObject.HasUnwrappableNativeObject => false;
@@ -1602,10 +1622,10 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
                 class_type.TypeName(),
                 class_type.TypeNamespace(),
                 cache_type_name,
+                instance,
                 cache_type_name,
                 cache_type_name,
-                cache_type_name,
-                cache_type_name);
+                hasStaticEvent ? "_instance" : "_instance.Value");
         }
 
         return w.write_temp("_%.Instance", cache_type_name);
