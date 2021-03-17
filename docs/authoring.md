@@ -7,91 +7,66 @@
 C#/WinRT provides support for authoring Windows Runtime components. You can write a library in C#, and specify that it is a `CsWinRTComponent` for C#/WinRT to produce a WinMD that any WinRT compatible language can use. For example, a library written in C# can be used by a C++ program, via C#/WinRT and C++/WinRT.
 Managed apps only need a project or package reference to the authored component, and native apps will need some extra steps that we cover in this documentation.
 
-## References
-Here are some resources that demonstrate authoring C#/WinRT components and the details discussed in this document.
-1. [Simple C#/WinRT component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo) and associated [walkthrough](https://docs.microsoft.com/en-us/windows/uwp/csharp-winrt/create-windows-runtime-component-cswinrt) on creating a C#/WinRT component and consuming it from C++/WinRT
+## Authoring a C#/WinRT Component
 
-2. [Background Task component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/BgTaskComponent) demonstrating consuming an out-of-process C#/WinRT component from a packaged .NET app
+To author your component, first create a project using the C# **Class Library (.NET Core)** template in Visual Studio. You will need to make the following modifications to the project.
 
-3. https://github.com/microsoft/CsWinRT/tree/master/src/Tests/AuthoringTest
+1. In the library project file, update the `TargetFramework` property.
 
-4. https://github.com/microsoft/CsWinRT/tree/master/src/Tests/AuthoringConsumptionTest
+      ```xml
+      <PropertyGroup>
+            <!-- Choose your TargetFramework for the desired Windows SDK projection -->
+            <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
+      </PropertyGroup>
+      ```
 
-## Authoring the C# Component
-To create a library, select the Class Library (.NET Core) template in Visual Studio. C#/WinRT projects require Windows API version specific .NET frameworks.
+      C#/WinRT projects require Windows API version specific .NET frameworks. The following versions are supported:
 
-Accepted `<TargetFramework>` versions |
---- |
-`net5.0-windows10.0.19041.0` |
-`net5.0-windows10.0.18362.0` |
-`net5.0-windows10.0.17763.0` |
+      - **net5.0-windows10.0.17763.0**
+      - **net5.0-windows10.0.18362.0**
+      - **net5.0-windows10.0.19041.0**
 
-The library you are authoring should specify the following properties in its project file: 
+2. Install the latest version of the [Microsoft.Windows.CsWinRT](https://www.nuget.org/packages/Microsoft.Windows.CsWinRT) NuGet package.
 
-``` csproj
-<PropertyGroup>
-  <!-- Choose your TargetFramework for the desired Windows SDK projection -->
-  <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
-  <CsWinRTComponent>true</CsWinRTComponent>
-  <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
-  <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
-</PropertyGroup>
-```
-And don't forget to include a `PackageReference` to `Microsoft.Windows.CsWinRT`!
+3. Add the following C#/WinRT specific properties to the project file. The `CsWinRTComponent` property specifies that your project is a Windows Runtime component, so that a WinMD file is generated for the component. The `CsWinRTWindowsMetadata` property provides a source for Windows Metadata and is required as of the latest C#/WinRT version.
 
-## Using an Authored Component in a Native App
+      ```xml
+      <PropertyGroup>
+            <CsWinRTComponent>true</CsWinRTComponent>
+            <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
+      </PropertyGroup>
+      ```
 
-You'll need to author some files to assist the hosting process of a consuming native app: `YourNativeApp.exe.manifest` and `WinRT.Host.runtimeconfig.json`. 
-If your app is packaged with MSIX, then you don't need to include the manifest file, otherwise you need to include your activatable class registrations in the manifest file.
+4. Implement your runtime classes in the class files in your library project, following the necessary [WinRT guidelines and type restrictions](https://docs.microsoft.com/windows/uwp/winrt-components/creating-windows-runtime-components-in-csharp-and-visual-basic#declaring-types-in-windows-runtime-components).
 
-To add these files, **in Visual Studio**, right click on the project node on the "Solution Explorer" window, click "Add", then "New Item". 
-Search for the "Text File" template and name your file `YourNativeApp.exe.manifest`.
-Repeat this for the `WinRT.Host.runtimeconfig.json` file. 
-For each item, right-click on it in the "Solution Explorer" window of Visual Studio; then select "Properties" and change the "Content" property to "Yes" using the drop-down arrow on the right -- this ensures it will be added to the output directory of your solution.
 
-We have some [hosting docs](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md) as well, that provide more information on these files.
+### Packaging your component
 
-For consuming by "PackageReference", this is all that is required. C++ apps will need to use [C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/intro-to-using-cpp-with-winrt) to consume the authored component. So make sure you have C++/WinRT installed, and have added `#include <winrt/MyAuthoredComponent.h>` to the file `pch.h` of the native app.  
+To generate a NuGet package for the component, you can choose one of the following methods:
 
-## Native Consumption by Project Reference
+- If you want to generate a NuGet package every time you build the project, add the following property to the project file.
 
-If you choose to consume your component through a project reference in a native app, then some modifications to the native app's `.vcxproj` file are needed.
-Because dotnet will assume a `TargetFramework` for your app that conflicts with `net5`, we need to specify the `TargetFramwork`, `TargetFrameworkVersion` and `TargetRuntime`. 
-Examples of this are seen in the code snippet below. This is needed for this preview version, as we continue working on proper support.
+    ```xml
+    <PropertyGroup>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
+    ```
 
-You will need to add a reference to both the C#/WinRT component project, and the WinMD produced for the component. 
-The WinMD can be found in the output directory of the authored component's project. References are added by right-clicking on the project node you want to add a reference to, clicking "Add" then clicking "Reference" and browsing to the files. 
+- Alternatively, you can generate a NuGet package by right clicking the project in **Solution Explorer** and selecting **Pack**.
 
-Here are the additions made to the native app's project file:
-``` vcxproj
-<!-- Note: this property group is only required if you are using a project reference, 
-           and is a part of the preview while we work on proper support -->
-<PropertyGroup>
-  <TargetFrameworkVersion>net5.0</TargetFrameworkVersion>
-  <TargetFramework>native</TargetFramework>
-  <TargetRuntime>Native</TargetRuntime>
-</PropertyGroup>
-```
-
-Project references for managed apps only need the reference to the authored component's project file.
-
-## Packaging
-To generate a NuGet package for the component, you can simply right click on the project and select **Pack**. Alternatively, you can add the following property to the library project file to automatically generate a NuGet package on build: `GeneratePackageOnBuild`. 
-
-To make your component available as a NuGet package, it is important to include the DLLs necessary for C#/WinRT hosting. 
-When you pack your C#/WinRT component the DLLs/WinMD are automatically added to your nupkg, based on a nuspec generated from your project file. 
+To make your component available as a NuGet package, it is important to include the DLLs necessary for C#/WinRT hosting. When you pack your C#/WinRT component the DLLs/WinMD are automatically added to your nupkg, based on a nuspec generated from your project file.
 
 **If you are going to write your own nuspec**, then you should make sure your nuspec contains the following ```file``` entries for your component ```MyAuthoredComponent``` (note: your TargetFramework may vary). This is so our targets that supply the DLLs for any consumers of your package work.  
 Similarly, any other dependencies, e.g. `Microsoft.WinUI`, will need to be included in your nuspec as well.
 
-``` nuspec
+``` xml
 <files>
   <file src="$(TargetDir)MyAuthoredComponent.dll"        target="lib\$(TargetFramework)\MyAuthoredComponent.dll" />
   <file src="$(TargetDir)MyAuthoredComponent.winmd"      target="lib\$(TargetFramework)\winmd\MyAuthoredComponent.winmd" />
   
   <file src="$(TargetDir)Microsoft.Windows.SDK.NET.dll"  target="lib\$(TargetFramework)\Microsoft.Windows.SDK.NET.dll" />
    
-  <!-- Note: you must rename the CsWinRt.Authoring.Targets as follows -->
+  <!-- Note: you must rename the CsWinRT.Authoring.Targets as follows -->
   <file src="C:\Path\To\CsWinRT\NugetDir\buildTransitive\Microsoft.Windows.CsWinRT.Authoring.targets"   
         target="buildTransitive\MyAuthoredComponent.targets" />
         
@@ -115,9 +90,68 @@ Similarly, any other dependencies, e.g. `Microsoft.WinUI`, will need to be inclu
 </files>
 ```
 
-Your component can then be added as a PackageReference to any consumer. 
+Your component can then be used in consuming apps by a `PackageReference`.
 
+## Consuming C#/WinRT Components
 
+This section describes the steps needed to consume a C#/WinRT component from the following kinds of applications:
+
+- [C++/WinRT desktop applications](#Consuming-from-C++/WinRT)
+- [C# .NET 5+ desktop applications](#Consuming-from-C#-applications)
+- [Out of process components](#Consuming-an-out-of-process-component)
+- [Packaged applications](#Consuming-from-packaged-applications)
+
+### Consuming from C++/WinRT
+
+Consuming a C#/WinRT component from a C++/WinRT desktop application is supported by both package reference or project reference.
+
+- For package references, simply right-click on the native project node and click **Manage NuGet packages** to find and install the component package.
+
+- For project references, you also currently need a reference to the component's generated WinMD. The WinMD can be found in the output directory of the authored component's project. To add both the project and WinMD references, right-click on the native project node, and click **Add** -> **Reference**. Select the C#/WinRT component project under the **Projects** node and the generated WinMD file from the **Browse** node.
+
+For native consumption of C#/WinRT components, you also need to create a manifest file named `YourNativeApp.exe.manifest`. If your app is packaged with MSIX, then you don't need to include the manifest file. In the case that you do make a manifest, you need to add activatable class registrations for the public types in your component. We provide an [authoring sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo/CppConsoleApp) with an example manifest file. To create the manifest file:
+
+1. In Visual Studio, right click on the project node under **Solution Explorer** and click **Add -> New Item**. Search for the **Text File** template and name your file `YourNativeApp.exe.manifest`.
+
+2. Add your activatable class registrations to the manifest file. You can use the manifest file from [this sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo/CppConsoleApp) as an example.
+
+3. Modify the project to include the manifest file in the output when deploying the project. Right-click on the file in **Solution Explorer**, select **Properties**, and set the **Content** property to **True** using the drop-down arrow on the right.
+
+### Consuming from C# applications
+
+Consuming a C#/WinRT component from C#/.NET 5 is supported by both package reference or project reference. This scenario is equivalent to consuming any ordinary C# class library and does not involve WinRT activation in most cases.
+
+### Consuming an out of process component
+
+C#/WinRT supports authoring out-of-process components that can be consumed by other languages. Currently, consuming an out-of-process component is supported for managed C# apps with the use of a packaging project. A manual WinRT.Host.runtimeconfig.json file is currently required for this scenario, which is demonstrated in the sample below. Native consumption of out-of-process components is not fully supported yet.
+
+For an example of authoring and consuming an out-of-process C#/WinRT component, see the [background task component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/BgTaskComponent).
+
+### Consuming from packaged applications
+
+Consuming C#/WinRT components from MSIX-packaged applications is supported for some scenarios. The latest Visual Studio Preview version is recommended for packaging scenarios.
+
+- Consuming a C#/WinRT component from packaged C# apps is supported.
+- Consuming a C#/WinRT component from packaged C++ apps is supported as a package reference, and requires the `exe.manifest` file.
 
 ## Known Authoring Issues
-You can follow along [here](https://github.com/microsoft/CsWinRT/issues/663) as we develop authoring support. 
+
+You can follow along [here](https://github.com/microsoft/CsWinRT/issues/663) as we develop authoring support.
+
+Authoring issues are tagged under the *authoring* label under this repo. Feel free to [file an issue](https://github.com/microsoft/CsWinRT/issues/new/choose) tagged with the *authoring* label if you encounter any new issues!
+
+## Resources
+
+Here are some resources that demonstrate authoring C#/WinRT components and the details discussed in this document.
+
+1. [Simple C#/WinRT component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo) and associated [walkthrough](https://docs.microsoft.com/en-us/windows/uwp/csharp-winrt/create-windows-runtime-component-cswinrt) on creating a C#/WinRT component and consuming it from C++/WinRT
+
+2. [Background Task component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/BgTaskComponent) demonstrating consuming an out-of-process C#/WinRT component from a packaged .NET 5 app
+
+3. Testing projects used for authoring:
+      - [Test Component](https://github.com/microsoft/CsWinRT/tree/master/src/Tests/AuthoringTest)
+      - [Test Application](https://github.com/microsoft/CsWinRT/tree/master/src/Tests/AuthoringConsumptionTest)
+
+4. [Managed component hosting](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md) 
+
+5. [Diagnose component errors](https://docs.microsoft.com/en-us/windows/uwp/csharp-winrt/authoring-diagnostics)
