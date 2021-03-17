@@ -322,19 +322,6 @@ namespace UnitTest
             Assert.True(LookupPorts().Wait(1000));
         }
 
-        async Task InvokeGetFilesAsync()
-        {
-            var folder = ApplicationData.Current.LocalFolder;
-            var files = await folder.GetFilesAsync();
-            var fileList = ((IReadOnlyList<IStorageFile>) files).ToList();
-        }
-
-        [Fact]
-        public void TestGetFilesAsync()
-        {
-            Assert.True(InvokeGetFilesAsync().Wait(1000));
-        }
-
 #if NET5_0
         async Task InvokeStreamWriteZeroBytes()
         {
