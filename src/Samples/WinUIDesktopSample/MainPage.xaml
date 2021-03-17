@@ -6,7 +6,14 @@
         xmlns:local="WinUIDesktopSample"
         mc:Ignorable="d"
         Height="450" Width="800">
-    <Grid>
-        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="Hello from WinUI Desktop!" x:Name="text"/>
-    </Grid>
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <TextBlock x:Name="Build" Text="" />
+        <Button x:Name="WithoutCapture" Click="WithoutCapture_Click">Grid and handler without capture</Button>
+        <Button x:Name="WithoutCaptureCheck" Click="WithoutCapture_Check">Check grid and handler without capture</Button>
+        <Button x:Name="WithCapture" Click="WithCapture_Click">Grid and handler with capture</Button>
+        <Button x:Name="WithCaptureCheck" Click="WithCapture_Check">Check grid and handler with capture</Button>
+        <Button x:Name="Alloc" Click="Alloc_Click">1. Allocate various aggregates</Button>
+        <Button x:Name="Check" Click="Check_Click">2. Check for leaks of aggregates</Button>
+        <TextBlock x:Name="Status" Text="(click a button)" />
+    </StackPanel>
 </Page>

@@ -2322,7 +2322,7 @@ namespace UnitTest
             Assert.True(IsCollectible(nonComposableNoDelegate));
 
             // Test collection of composable without self-referential delegate
-            var composableNoDelegate = CreateObject<Composable>();
+            var composableNoDelegate = CreateObject<TrackableComposable>();
             Assert.True(IsCollectible(composableNoDelegate));
 
             // Test collection of non-composable with self-referential delegate
@@ -2333,8 +2333,8 @@ namespace UnitTest
             Assert.True(!IsCollectible(nonComposableWithDelegate));
 
             // Test collection of composable with self-referential delegate
-            var composableWithDelegate = CreateObject<Composable>((obj) => {
-                obj.StringPropertyChanged += (Composable sender, string value) => Assert.Equal(sender, obj);
+            var composableWithDelegate = CreateObject<TrackableComposable>((obj) => {
+                obj.StringPropertyChanged += (TrackableComposable sender, string value) => Assert.Equal(sender, obj);
             });
             // TODO: implement IReferenceTracker to prevent delegate creating cycle
             Assert.True(!IsCollectible(composableWithDelegate));

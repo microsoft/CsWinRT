@@ -63,7 +63,6 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Composable.h" />
     <ClInclude Include="ManualProjectionTestClasses.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Class.h">
@@ -71,12 +70,13 @@
     </ClInclude>
     <ClInclude Include="NonAgileClass.h" />
     <ClInclude Include="ComImports.h" />
+    <ClInclude Include="TrackableComposable.h" />
+    <ClInclude Include="TrackableSealed.h" />
     <ClInclude Include="WarningClass.h" />
     <ClInclude Include="WarningStatic.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
-    <ClCompile Include="Composable.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -86,6 +86,9 @@
     <ClCompile Include="NonAgileClass.cpp" />
     <ClCompile Include="ComImports.cpp" />
     <ClCompile Include="ManualProjectionTestClasses.cpp" />
+    <ClCompile Include="ReferenceTrackerRuntime.cpp" />
+    <ClCompile Include="TrackableComposable.cpp" />
+    <ClCompile Include="TrackableSealed.cpp" />
     <ClCompile Include="WarningClass.cpp" />
     <ClCompile Include="WarningStatic.cpp" />
   </ItemGroup>

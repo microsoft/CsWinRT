@@ -15,7 +15,9 @@
     <ClCompile Include="ManualProjectionTestClasses.cpp" />
     <ClCompile Include="WarningClass.cpp" />
     <ClCompile Include="WarningStatic.cpp" />
-    <ClCompile Include="Composable.cpp" />
+    <ClCompile Include="ReferenceTrackerRuntime.cpp" />
+    <ClCompile Include="TrackableComposable.cpp" />
+    <ClCompile Include="TrackableSealed.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -24,7 +26,8 @@
     <ClInclude Include="ManualProjectionTestClasses.h" />
     <ClInclude Include="WarningStatic.h" />
     <ClInclude Include="WarningClass.h" />
-    <ClInclude Include="Composable.h" />
+    <ClInclude Include="TrackableSealed.h" />
+    <ClInclude Include="TrackableComposable.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />

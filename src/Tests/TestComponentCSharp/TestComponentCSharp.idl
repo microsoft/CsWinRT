@@ -369,10 +369,17 @@ namespace TestComponentCSharp
     }
 
     [default_interface]
-    unsealed runtimeclass Composable
+    runtimeclass TrackableSealed
     {
-        Composable();
-        event Windows.Foundation.TypedEventHandler<Composable, String> StringPropertyChanged;
+        TrackableSealed();
+        event Windows.Foundation.TypedEventHandler<TrackableSealed, String> StringPropertyChanged;
+    }
+
+    [default_interface]
+    unsealed runtimeclass TrackableComposable
+    {
+        TrackableComposable();
+        event Windows.Foundation.TypedEventHandler<TrackableComposable, String> StringPropertyChanged;
     }
 
     // SupportedOSPlatform warning tests
