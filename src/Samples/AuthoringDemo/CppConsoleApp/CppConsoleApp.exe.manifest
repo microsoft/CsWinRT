@@ -6,8 +6,6 @@
         name="AuthoringDemo.Example"
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
-  </file>
-  <file name="WinRT.Host.dll">
     <activatableClass
         name="AuthoringDemo.FolderEnumeration"
         threadingModel="both"
