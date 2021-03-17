@@ -60,7 +60,7 @@ The `build.cmd` script takes care of all related configuration steps and is the 
 
 ## What's New
 
-C#/WinRT version 1.1.2 features a preview of C#/WinRT [authoring support](https://github.com/microsoft/CsWinRT/blob/master/docs/authoring.md). C#/WinRT [version 1.1.1](https://github.com/microsoft/CsWinRT/releases/tag/1.1.1.210120.1) is aligned with the [.NET 5 February update](https://devblogs.microsoft.com/dotnet/net-february-2021/). See the [releases page](https://github.com/microsoft/CsWinRT/releases) for the most recent C#/WinRT NuGet releases and specific updates to the .NET 5 SDK. Details on breaking changes and known issues can be found on the releases page.
+C#/WinRT [version 1.1.4](https://github.com/microsoft/CsWinRT/releases/tag/1.1.4.210316.1) is the latest release and includes bugfixes for the Windows SDK projections, as well as improvements to [C#/WinRT authoring support](https://github.com/microsoft/CsWinRT/blob/master/docs/authoring.md) currently in preview. C#/WinRT [version 1.1.2](https://github.com/microsoft/CsWinRT/releases/tag/1.1.2.210216.1) is aligned with the most recent [.NET 5 March update](https://devblogs.microsoft.com/dotnet/net-march-2021/). See the [releases page](https://github.com/microsoft/CsWinRT/releases) for the most recent C#/WinRT NuGet releases and corresponding versions for .NET SDK updates. Details on breaking changes and known issues can be found on the releases page.
 
 ## Related Projects
 

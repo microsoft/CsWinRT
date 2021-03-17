@@ -104,9 +104,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="WinRT.Host.runtimeconfig.json">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="CppConsoleApp.exe.manifest">
