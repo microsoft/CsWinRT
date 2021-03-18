@@ -38,13 +38,13 @@ namespace WinRT
         };
         public HStringHeader _header;
         public GCHandle _gchandle;
-        private GCHandle _gchandleHeader;
+        private GCHandle _gchandleSelf;
         public IntPtr _handle;
 
         public void Dispose()
         {
             _gchandle.Dispose();
-            _gchandleHeader.Dispose();
+            _gchandleSelf.Dispose();
         }
 
         public static unsafe MarshalString CreateMarshaler(string value)
@@ -56,7 +56,7 @@ namespace WinRT
             try
             {
                 m._gchandle = GCHandle.Alloc(value, GCHandleType.Pinned);
-                m._gchandleHeader = GCHandle.Alloc(m._header, GCHandleType.Pinned);
+                m._gchandleSelf = GCHandle.Alloc(m, GCHandleType.Pinned);
                 fixed (void* chars = value, header = &m._header, handle = &m._handle)
                 {
                     Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
