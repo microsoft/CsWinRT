@@ -237,7 +237,6 @@ namespace WinRT
         {
             // TODO: "using var" with ref struct and remove the try/catch below
             var m = MarshalString.CreateMarshaler(runtimeClassId);
-            Func<bool> dispose = () => { m.Dispose(); return false; };
             try
             {
                 IntPtr instancePtr;
@@ -245,10 +244,9 @@ namespace WinRT
                 (instancePtr, hr) = GetActivationFactory(MarshalString.GetAbi(m));
                 return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
             }
-            catch (Exception) when (dispose())
+            finally
             {
-                // Will never execute
-                return default;
+                m.Dispose();
             }
         }
         
