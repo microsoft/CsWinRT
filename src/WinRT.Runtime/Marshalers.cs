@@ -32,19 +32,15 @@ namespace WinRT
     // as well as passing marshalers to FromAbi by ref so they can be conditionally disposed.
     public class MarshalString
     {
-        public unsafe struct HStringHeader // sizeof(HSTRING_HEADER)
-        {
-            public fixed byte Reserved[24];
-        };
-        public HStringHeader _header;
+        private IntPtr _header;
         public GCHandle _gchandle;
-        private GCHandle _gchandleSelf;
         public IntPtr _handle;
 
         public void Dispose()
         {
             _gchandle.Dispose();
-            _gchandleSelf.Dispose();
+            Marshal.FreeHGlobal(_header);
+            _header = IntPtr.Zero;
         }
 
         public static unsafe MarshalString CreateMarshaler(string value)
@@ -56,11 +52,11 @@ namespace WinRT
             try
             {
                 m._gchandle = GCHandle.Alloc(value, GCHandleType.Pinned);
-                m._gchandleSelf = GCHandle.Alloc(m, GCHandleType.Pinned);
-                fixed (void* chars = value, header = &m._header, handle = &m._handle)
+                m._header = Marshal.AllocHGlobal(24); // sizeof(HSTRING_HEADER)
+                fixed (void* chars = value, handle = &m._handle)
                 {
                     Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
-                        (char*)chars, value.Length, (IntPtr*)header, (IntPtr*)handle));
+                        (char*)chars, value.Length, (IntPtr*)m._header, (IntPtr*)handle));
                 };
                 return m;
             }
