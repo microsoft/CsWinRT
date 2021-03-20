@@ -32,16 +32,13 @@ namespace WinUIDesktopSample
             if (button != null)
             {
                 num++;
-//                GarbageCollect();
             }
         }
 
         private void Button2Click(object sender, RoutedEventArgs e)
         {
             var button = new CustomButton2();
-            button.Tag = 42;
-
-//            GarbageCollect();
+            var res = button.Tag;
         }
 
 
@@ -49,8 +46,27 @@ namespace WinUIDesktopSample
         {
             var button = new CustomButton3();
             button.Click += (s, e) => button.Content = "Click";
+        }
 
-//            GarbageCollect();
+        private void Button4Click(object sender, RoutedEventArgs e)
+        {
+            var button = new Button();
+            if (button != null)
+            {
+                num++;
+            }
+        }
+
+        private void Button5Click(object sender, RoutedEventArgs e)
+        {
+            var button = new Button();
+            button.Tag = 42;
+        }
+
+        private void Button6Click(object sender, RoutedEventArgs e)
+        {
+            var button = new Button();
+            button.Click += (s, e) => button.Content = "Click";
         }
 
         private void GarbageCollect()
@@ -62,13 +78,16 @@ namespace WinUIDesktopSample
 
     public partial class CustomButton : Button
     {
+        byte[] bytes = new byte[10_000_000];
     }
 
     public partial class CustomButton2 : Button
     {
+        byte[] bytes = new byte[10_000_000];
     }
 
     public partial class CustomButton3 : Button
     {
+        byte[] bytes = new byte[10_000_000];
     }
 }
