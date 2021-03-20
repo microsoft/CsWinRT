@@ -1,1 +1,2 @@
-Total Issues: 0
+MembersMustExist : Member 'public WinRT.MarshalString.HStringHeader WinRT.MarshalString.HStringHeader WinRT.MarshalString._header' does not exist in the implementation but it does exist in the contract.
+TypesMustExist : Type 'WinRT.MarshalString.HStringHeader' does not exist in the implementation but it does exist in the contract.
