@@ -15,6 +15,14 @@
         <Button x:Name="Button4" Content="Button" Click="Button4Click" />
         <Button x:Name="Button5" Content="ButtonAndInvoke" Click="Button5Click" />
         <Button x:Name="Button6" Content="ButtonEvent" Click="Button6Click" />
+        <TextBlock x:Name="Build" Text="" />
+        <Button x:Name="WithoutCapture" Click="WithoutCapture_Click">Grid and handler without capture</Button>
+        <Button x:Name="WithCapture" Click="WithCapture_Click">Grid and handler with capture</Button>
+        <Button x:Name="DerivedWithoutCapture" Click="DerivedWithoutCapture_Click">Derived Grid and handler without capture</Button>
+        <Button x:Name="DerivedWithCapture" Click="DerivedWithCapture_Click">Derived Grid and handler with capture</Button>
+        <Button x:Name="Alloc" Click="Alloc_Click">1. Allocate various aggregates</Button>
+        <Button x:Name="Check" Click="Check_Click">2. Check for leaks of aggregates</Button>
+        <TextBlock x:Name="Status" Text="(click a button)" />
     </StackPanel>
 
 </Page>

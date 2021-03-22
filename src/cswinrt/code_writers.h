@@ -1548,7 +1548,6 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
         auto cache_object = write_factory_cache_object<write_composing_factory_method>(w, composable_type, class_type);
         auto default_interface_name = get_default_interface_name(w, class_type, false);
         auto default_interface_abi_name = get_default_interface_name(w, class_type);
-        bool finalizer_written = false;
 
         for (auto&& method : composable_type.MethodList())
         {
@@ -1598,24 +1597,6 @@ MarshalInspectable<object>.DisposeAbi(ptr);
             }
             else
             {
-                if (!finalizer_written)
-                {
-                    finalizer_written = true;
-                    w.write(R"(
-private ComWrappersHelper.ClassNative classNative;
-~%()
-{
-if (classNative.Inner != IntPtr.Zero)
-{
-// detach inner in aggregation scenario
-_inner.Detach();
-}
-ComWrappersHelper.Cleanup(ref classNative);
-}
-)",
-                        class_type.TypeName());
-                }
-
                 auto platform_attribute = write_platform_attribute_temp(w, composable_type);
 
                 w.write(R"(
@@ -1626,14 +1607,11 @@ object baseInspectable = isAggregation ? this : null;
 IntPtr composed = %.%(%%baseInspectable, out IntPtr inner);
 try
 {
-_inner = ComWrappersSupport.GetObjectReferenceForInterface(inner);
-if(baseInspectable == null) _inner = _inner.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
+ComWrappersHelper.Init(isAggregation, this, composed, inner, out _inner);
 _defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
 };
-classNative = new ComWrappersHelper.ClassNative();
-ComWrappersHelper.Init(ref classNative, isAggregation, this, composed, inner);
 }
 finally
 {
@@ -1652,7 +1630,6 @@ Marshal.Release(inner);
                     method.Name(),
                     bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
                     [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
-                    default_interface_name,
                     default_interface_name,
                     default_interface_name,
                     default_interface_name,

@@ -182,33 +182,16 @@ namespace WinRT
     {
         private static Guid IID_IReferenceTracker = new Guid("11d3b13a-180e-4789-a8be-7712882893e6");
 
-        [Flags]
-        public enum ReleaseFlags
-        {
-            None = 0,
-            Instance = 1,
-            Inner = 2,
-            ReferenceTracker = 4
-        }
-
-        public struct ClassNative
-        {
-            public ReleaseFlags Release;
-            public IntPtr Instance;
-            public IntPtr Inner;
-            public IntPtr ReferenceTracker;
-        }
-
         public unsafe static void Init(
-            ref ClassNative classNative,
             bool isAggregation,
             object thisInstance,
             IntPtr newInstance,
-            IntPtr inner)
+            IntPtr inner,
+            out IObjectReference objRef)
         {
-            classNative.Instance = newInstance;
-            classNative.Inner = inner;
+            objRef = ComWrappersSupport.GetObjectReferenceForInterface(isAggregation ? inner : newInstance);
 
+            IntPtr referenceTracker = default;
             {
                 // Determine if the instance supports IReferenceTracker (e.g. WinUI).
                 // Acquiring this interface is useful for:
@@ -220,18 +203,17 @@ namespace WinRT
                 // otherwise the new instance will be used. Since the inner was composed
                 // it should answer immediately without going through the outer. Either way
                 // the reference count will go to the new instance.
-                IntPtr queryForTracker = isAggregation ? classNative.Inner : classNative.Instance;
-                int hr = Marshal.QueryInterface(queryForTracker, ref IID_IReferenceTracker, out classNative.ReferenceTracker);
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref IID_IReferenceTracker, out referenceTracker);
                 if (hr != 0)
                 {
-                    classNative.ReferenceTracker = default;
+                    referenceTracker = default;
                 }
             }
 
             {
                 // Determine flags needed for native object wrapper (i.e. RCW) creation.
                 var createObjectFlags = CreateObjectFlags.None;
-                IntPtr instanceToWrap = classNative.Instance;
+                IntPtr instanceToWrap = newInstance;
 
                 // Update flags if the native instance is being used in an aggregation scenario.
                 if (isAggregation)
@@ -240,7 +222,7 @@ namespace WinRT
                     createObjectFlags |= (CreateObjectFlags)4;
 
                     // The instance supports IReferenceTracker.
-                    if (classNative.ReferenceTracker != default(IntPtr))
+                    if (referenceTracker != default(IntPtr))
                     {
                         createObjectFlags |= CreateObjectFlags.TrackerObject;
 
@@ -248,7 +230,7 @@ namespace WinRT
                         // It is not needed because all QueryInterface() calls on an
                         // object are followed by an immediately release of the returned
                         // pointer - see below for details.
-                        Marshal.Release(classNative.ReferenceTracker);
+                        Marshal.Release(referenceTracker);
 
                         // .NET 5 limitation
                         //
@@ -259,7 +241,7 @@ namespace WinRT
                         //
                         // The API doesn't handle inner lifetime in any other scenario
                         // in the .NET 5 timeframe.
-                        instanceToWrap = classNative.Inner;
+                        instanceToWrap = inner;
                     }
                 }
 
@@ -272,28 +254,8 @@ namespace WinRT
                 ComWrappersSupport.RegisterObjectForInterface(thisInstance, instanceToWrap, createObjectFlags);
             }
 
-            if (isAggregation)
-            {
-                // We release the instance here, but continue to use it since
-                // ownership was transferred to the API and it will guarantee
-                // the appropriate lifetime.
-                Marshal.Release(classNative.Instance);
-            }
-            else
-            {
-                // In non-aggregation scenarios where an inner exists and
-                // reference tracker is involved, we release the inner.
-                //
-                // .NET 5 limitation - see logic above.
-                if (classNative.Inner != default(IntPtr) && classNative.ReferenceTracker != default(IntPtr))
-                {
-                    Marshal.Release(classNative.Inner);
-                }
-            }
-
             // The following describes the valid local values to consider and details
             // on their usage during the object's lifetime.
-            classNative.Release = ReleaseFlags.None;
             if (isAggregation)
             {
                 // Aggregation scenarios should avoid calling AddRef() on the
@@ -302,90 +264,31 @@ namespace WinRT
                 // the CCW which in turn will ensure it cannot be cleaned up. Calling
                 // AddRef() on the instance when passed to unmanaged code is correct
                 // since unmanaged code is required to call Release() at some point.
-                if (classNative.ReferenceTracker == default(IntPtr))
-                {
-                    // COM scenario
-                    // The pointer to dispatch on for the instance.
-                    // ** Never release.
-                    classNative.Release |= ReleaseFlags.None; // Instance
 
-                    // A pointer to the inner that should be queried for
-                    //    additional interfaces. Immediately after a QueryInterface()
-                    //    a Release() should be called on the returned pointer but the
-                    //    pointer can be retained and used.
-                    // ** Release in this class's Finalizer.
-                    classNative.Release |= ReleaseFlags.Inner; // Inner
-                }
-                else
+                // A pointer to the inner that should be queried for
+                //    additional interfaces. Immediately after a QueryInterface()
+                //    a Release() should be called on the returned pointer but the
+                //    pointer can be retained and used.
+                objRef.IsAggregated = true;
+
+                if (referenceTracker != default(IntPtr))
                 {
                     // WinUI scenario
-                    // The pointer to dispatch on for the instance.
-                    // ** Never release.
-                    classNative.Release |= ReleaseFlags.None; // Instance
-
-                    // A pointer to the inner that should be queried for
-                    //    additional interfaces. Immediately after a QueryInterface()
-                    //    a Release() should be called on the returned pointer but the
-                    //    pointer can be retained and used.
-                    // ** Never release.
-                    classNative.Release |= ReleaseFlags.None; // Inner
-
-                    // No longer needed.
-                    // ** Never release.
-                    classNative.Release |= ReleaseFlags.None; // ReferenceTracker
+                    objRef.PreventReleaseOnDispose = true;
                 }
             }
             else
             {
-                if (classNative.ReferenceTracker == default(IntPtr))
-                {
-                    // COM scenario
-                    // The pointer to dispatch on for the instance.
-                    // ** Release in this class's Finalizer.
-                    classNative.Release |= ReleaseFlags.Instance; // Instance
-                }
-                else
+                if (referenceTracker != default(IntPtr))
                 {
                     // WinUI scenario
-                    // The pointer to dispatch on for the instance.
-                    // ** Release in this class's Finalizer.
-                    classNative.Release |= ReleaseFlags.Instance; // Instance
 
                     // This instance should be used to tell the
                     //    Reference Tracker runtime whenever an AddRef()/Release()
                     //    is performed on newInstance.
-                    // ** Release in this class's Finalizer.
-                    classNative.Release |= ReleaseFlags.ReferenceTracker; // ReferenceTracker
+                    objRef.ReferenceTracker = (IReferenceTracker) Marshal.GetObjectForIUnknown(referenceTracker);
+                    objRef.ReferenceTracker.AddRefFromTrackerSource();
                 }
-            }
-
-#if DEBUG
-            if (isAggregation)
-            {
-                Marshal.AddRef(newInstance);
-                var outerRC = Marshal.Release(newInstance);
-                if ((outerRC != 0) && System.Diagnostics.Debugger.IsAttached)
-                {
-                    // In aggregation scenarios, at this point outer's refcount must be 0
-                    System.Diagnostics.Debugger.Break();
-                }
-            }
-#endif
-        }
-
-        public static void Cleanup(ref ClassNative classNative)
-        {
-            if (classNative.Release.HasFlag(ReleaseFlags.Inner))
-            {
-                Marshal.Release(classNative.Inner);
-            }
-            if (classNative.Release.HasFlag(ReleaseFlags.Instance))
-            {
-                Marshal.Release(classNative.Instance);
-            }
-            if (classNative.Release.HasFlag(ReleaseFlags.ReferenceTracker))
-            {
-                Marshal.Release(classNative.ReferenceTracker);
             }
         }
     }
