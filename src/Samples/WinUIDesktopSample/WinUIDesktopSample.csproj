@@ -2,16 +2,11 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows10.0.19041.0</TargetFramework>
-<!--    <RootNamespace>WinUIDesktopSample</RootNamespace> -->
-    <!--    <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants> -->
-    <!--
-    There seems to be a codegen bug when referencing the cswinrt interop assembly of the Win32XamlHost
-    project. Since we don't really need those metadata providers yet, this is just an easy workaround
-    -->
+    <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
     <Platforms>x86;x64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
     <RuntimeIdentifier Condition="'$(Platform)'!='AnyCPU'">win-$(Platform)</RuntimeIdentifier>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,6 +20,7 @@
     <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
       <ExcludeAssets>compile;runtime</ExcludeAssets>
     </PackageReference>
+    <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
   <!--
