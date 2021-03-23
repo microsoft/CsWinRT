@@ -74,15 +74,16 @@ namespace WinRT
         {
             ThrowIfDisposed();
             Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
-            if(IsAggregated)
+            if (IsAggregated)
             {
                 Marshal.Release(thatPtr);
-            }    
+            }
+            ReferenceTracker?.AddRefFromTrackerSource();
+
             var objRef = ObjectReference<T>.Attach(ref thatPtr);
             objRef.IsAggregated = IsAggregated;
             objRef.PreventReleaseOnDispose = IsAggregated;
             objRef.ReferenceTracker = ReferenceTracker;
-            objRef.ReferenceTracker?.AddRefFromTrackerSource();
             return objRef;
         }
 
@@ -124,12 +125,12 @@ namespace WinRT
                 {
                     Marshal.Release(thatPtr);
                 }
+                ReferenceTracker?.AddRefFromTrackerSource();
 
                 objRef = ObjectReference<T>.Attach(ref thatPtr);
                 objRef.IsAggregated = IsAggregated;
                 objRef.PreventReleaseOnDispose = IsAggregated;
                 objRef.ReferenceTracker = ReferenceTracker;
-                objRef.ReferenceTracker?.AddRefFromTrackerSource();
             }
             return hr;
         }
@@ -186,7 +187,10 @@ namespace WinRT
                 }
 #endif
 
-                Release();
+                if (!PreventReleaseOnDispose)
+                {
+                    Release();
+                }
                 disposed = true;
             }
         }
@@ -228,10 +232,7 @@ namespace WinRT
         protected virtual unsafe void Release()
         {
             ReferenceTracker?.ReleaseFromTrackerSource();
-            if (!PreventReleaseOnDispose)
-            {
-                VftblIUnknown.Release(ThisPtr);
-            }
+            VftblIUnknown.Release(ThisPtr);
         }
 
         internal unsafe bool IsReferenceToManagedObject
@@ -361,6 +362,7 @@ namespace WinRT
                 {
                     Marshal.Release(thatPtr);
                 }
+                ReferenceTracker?.AddRefFromTrackerSource();
 
                 using (var contextCallbackReference = ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.FromAbi(_contextCallbackPtr))
                 {
@@ -370,7 +372,6 @@ namespace WinRT
                         PreventReleaseOnDispose = IsAggregated,
                         ReferenceTracker = ReferenceTracker
                     };
-                    objRef.ReferenceTracker?.AddRefFromTrackerSource();
                 }
             }
             return hr;

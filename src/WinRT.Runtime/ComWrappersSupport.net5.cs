@@ -180,8 +180,6 @@ namespace WinRT
 
     public class ComWrappersHelper
     {
-        private static Guid IID_IReferenceTracker = new Guid("11d3b13a-180e-4789-a8be-7712882893e6");
-
         public unsafe static void Init(
             bool isAggregation,
             object thisInstance,
@@ -191,7 +189,7 @@ namespace WinRT
         {
             objRef = ComWrappersSupport.GetObjectReferenceForInterface(isAggregation ? inner : newInstance);
 
-            IntPtr referenceTracker = default;
+            IntPtr referenceTracker;
             {
                 // Determine if the instance supports IReferenceTracker (e.g. WinUI).
                 // Acquiring this interface is useful for:
@@ -203,7 +201,8 @@ namespace WinRT
                 // otherwise the new instance will be used. Since the inner was composed
                 // it should answer immediately without going through the outer. Either way
                 // the reference count will go to the new instance.
-                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref IID_IReferenceTracker, out referenceTracker);
+                Guid iid = typeof(IReferenceTracker).GUID;
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref iid, out referenceTracker);
                 if (hr != 0)
                 {
                     referenceTracker = default;
@@ -215,6 +214,12 @@ namespace WinRT
                 var createObjectFlags = CreateObjectFlags.None;
                 IntPtr instanceToWrap = newInstance;
 
+                // The instance supports IReferenceTracker.
+                if (referenceTracker != default(IntPtr))
+                {
+                    createObjectFlags |= CreateObjectFlags.TrackerObject;
+                }
+
                 // Update flags if the native instance is being used in an aggregation scenario.
                 if (isAggregation)
                 {
@@ -224,8 +229,6 @@ namespace WinRT
                     // The instance supports IReferenceTracker.
                     if (referenceTracker != default(IntPtr))
                     {
-                        createObjectFlags |= CreateObjectFlags.TrackerObject;
-
                         // IReferenceTracker is not needed in aggregation scenarios.
                         // It is not needed because all QueryInterface() calls on an
                         // object are followed by an immediately release of the returned
@@ -254,8 +257,8 @@ namespace WinRT
                 ComWrappersSupport.RegisterObjectForInterface(thisInstance, instanceToWrap, createObjectFlags);
             }
 
-            // The following describes the valid local values to consider and details
-            // on their usage during the object's lifetime.
+            // The following sets up the object reference to correctly handle AddRefs and releases
+            // based on the scenario.
             if (isAggregation)
             {
                 // Aggregation scenarios should avoid calling AddRef() on the
@@ -266,28 +269,31 @@ namespace WinRT
                 // since unmanaged code is required to call Release() at some point.
 
                 // A pointer to the inner that should be queried for
-                //    additional interfaces. Immediately after a QueryInterface()
-                //    a Release() should be called on the returned pointer but the
-                //    pointer can be retained and used.
+                // additional interfaces. Immediately after a QueryInterface()
+                // a Release() should be called on the returned pointer but the
+                // pointer can be retained and used.  This is determined by the
+                // IsAggregated and PreventReleaseOnDispose properties on IObjectReference.
                 objRef.IsAggregated = true;
-
-                if (referenceTracker != default(IntPtr))
-                {
-                    // WinUI scenario
-                    objRef.PreventReleaseOnDispose = true;
-                }
+                // In WinUI scenario don't release inner
+                objRef.PreventReleaseOnDispose = referenceTracker != default(IntPtr);
             }
             else
             {
                 if (referenceTracker != default(IntPtr))
                 {
                     // WinUI scenario
-
                     // This instance should be used to tell the
-                    //    Reference Tracker runtime whenever an AddRef()/Release()
-                    //    is performed on newInstance.
+                    // Reference Tracker runtime whenever an AddRef()/Release()
+                    // is performed on newInstance.
                     objRef.ReferenceTracker = (IReferenceTracker) Marshal.GetObjectForIUnknown(referenceTracker);
-                    objRef.ReferenceTracker.AddRefFromTrackerSource();
+                    objRef.ReferenceTracker.AddRefFromTrackerSource();  // GetObjectForIUnknown
+                    objRef.ReferenceTracker.AddRefFromTrackerSource();  // IReferenceTracker
+                    objRef.ReferenceTracker.AddRefFromTrackerSource();  // ObjRef instance
+                    Marshal.Release(referenceTracker);
+                }
+                else
+                {
+                    Marshal.Release(newInstance);
                 }
             }
         }
