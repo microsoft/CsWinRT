@@ -23,7 +23,7 @@ namespace DesktopWinUICSharpLeakTest
     /// </summary>
     public sealed partial class SecondPage : Page
     {
-        private static WeakReference lastInstance;
+        private static List<WeakReference> instances = new List<WeakReference>();
 
         public SecondPage()
         {
@@ -31,17 +31,14 @@ namespace DesktopWinUICSharpLeakTest
 
             this.TheListView.ItemsSource = GetItems();
 
-            if (lastInstance != null)
-            {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                if (lastInstance.IsAlive && System.Diagnostics.Debugger.IsAttached)
-                {
-                    System.Diagnostics.Debug.WriteLine("last instance of SecondPage leaked");
-                    System.Diagnostics.Debugger.Break();
-                }
-            }
-            lastInstance = new WeakReference(this);
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            var collected = instances.Count((WeakReference wr) => !wr.IsAlive);
+            var leaked = instances.Count((WeakReference wr) => wr.IsAlive);
+            System.Diagnostics.Debug.WriteLine("SecondPage instances: ");
+            System.Diagnostics.Debug.WriteLine("  collected: " + collected);
+            System.Diagnostics.Debug.WriteLine("  leaked: " + leaked);
+            instances.Add(new WeakReference(this));
         }
 
         public IEnumerable<string> GetItems()
