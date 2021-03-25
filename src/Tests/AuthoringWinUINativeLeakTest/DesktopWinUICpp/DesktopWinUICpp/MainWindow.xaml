@@ -1,0 +1,23 @@
+﻿<Window
+    x:Class="DesktopWinUICpp.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:DesktopWinUICpp"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <StackPanel x:Name="myStackPanel" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Button x:Name="acquireCustomButton" Background="Green" Click="acquireCustomButton_Click">Acquire Custom Button</Button>
+        <Button x:Name="acquireRegularButton" Background="Green" Click="acquireRegularButton_Click">Acquire Regular Button</Button>
+
+        <Button x:Name="releaseCustomButton" Background="Red" Click="releaseCustomButton_Click">Release Custom Button</Button>
+        <Button x:Name="releaseRegularButton" Background="Red" Click="releaseRegularButton_Click">Release Regular Button</Button>
+
+        <Button x:Name="aliveCustomButton" Background="Purple" Click="isAliveCustomButton_Click">Check Custom Button Alive</Button>
+        <Button x:Name="aliveRegularButton" Background="Purple" Click="isAliveRegularButton_Click">Check Regular Button Alive</Button>
+
+        <TextBlock x:Name="labelCustom" Text="Custom Button isAlive: " TextWrapping="Wrap" Margin="5"></TextBlock>
+        <TextBlock x:Name="labelRegular" Text="Regular Button isAlive: " TextWrapping="Wrap" Margin="5"></TextBlock>
+    </StackPanel>
+</Window>

@@ -2,6 +2,8 @@
 using Microsoft.UI.Xaml.Controls;
 using Windows.Foundation;
 
+#pragma warning disable CA1416
+
 namespace WinUIComponent
 {
     public sealed class CustomButton : Button

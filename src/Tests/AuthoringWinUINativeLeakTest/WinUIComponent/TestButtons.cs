@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Controls;
+
+#pragma warning disable CA1416
 
 namespace WinUIComponent
 {
@@ -11,8 +9,6 @@ namespace WinUIComponent
     {
         public static WeakReference weakRefCustomButton = null;
         public static WeakReference weakRefRegularButton = null;
-        public static bool isAliveCustomButton { get { return weakRefCustomButton.IsAlive; } }
-        public static bool isAliveRegularButton { get { return weakRefRegularButton.IsAlive; } }
 
         public static CustomButton GetCustomButton()
         {
@@ -29,6 +25,16 @@ namespace WinUIComponent
             };
             weakRefRegularButton = new WeakReference(button);
             return button;
+        }
+
+        public static bool IsAliveCustomButton()
+        {
+            return (weakRefCustomButton != null && weakRefCustomButton.IsAlive);
+        }
+
+        public static bool IsAliveRegularButton()
+        {
+            return (weakRefRegularButton != null && weakRefRegularButton.IsAlive);
         }
     }
 }
