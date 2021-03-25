@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="WinUIDesktopSample"
         mc:Ignorable="d"
-        Height="450" Width="800">
+        Height="500" Width="800">
 
 
     <StackPanel>
@@ -15,6 +15,8 @@
         <Button x:Name="Button4" Content="Button" Click="Button4Click" />
         <Button x:Name="Button5" Content="ButtonAndInvoke" Click="Button5Click" />
         <Button x:Name="Button6" Content="ButtonEvent" Click="Button6Click" />
+        <Button x:Name="Button7" Content="XamlPageWithButton" Click="Button7Click" />
+        <Button x:Name="Button8" Content="CSharpPageWithButton" Click="Button8Click" />
         <TextBlock x:Name="Build" Text="" />
         <Button x:Name="WithoutCapture" Click="WithoutCapture_Click">Grid and handler without capture</Button>
         <Button x:Name="WithCapture" Click="WithCapture_Click">Grid and handler with capture</Button>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using WinRT;
 
 namespace WinUIDesktopSample
 {
@@ -44,19 +45,29 @@ namespace WinUIDesktopSample
         }
 
 
+        private WeakReference weakButton3 = new WeakReference(null);
         private void Button3Click(object sender, RoutedEventArgs e)
         {
+            if (weakButton3.IsAlive)
+            {
+                Debugger.Break();
+            }
+
             var button = new CustomButton3();
             button.Click += (s, e) => button.Content = "Click";
+            weakButton3 = new WeakReference(button);
         }
 
+        private WeakReference weakButton4 = new WeakReference(null);
         private void Button4Click(object sender, RoutedEventArgs e)
         {
-            var button = new Button();
-            if (button != null)
+            if (weakButton4.IsAlive)
             {
-                num++;
+                Debugger.Break();
             }
+
+            var button = new Button();
+            weakButton4 = new WeakReference(button);
         }
 
         private void Button5Click(object sender, RoutedEventArgs e)
@@ -69,6 +80,30 @@ namespace WinUIDesktopSample
         {
             var button = new Button();
             button.Click += (s, e) => button.Content = "Click";
+        }
+
+        private WeakReference weakPage = new WeakReference(null);
+        private void Button7Click(object sender, RoutedEventArgs e)
+        {
+            if (weakPage.IsAlive)
+            {
+                Debugger.Break();
+            }
+
+            var page = new XamlPage();
+            weakPage = new WeakReference(page);
+        }
+
+        private WeakReference weakPage2 = new WeakReference(null);
+        private void Button8Click(object sender, RoutedEventArgs e)
+        {
+            if (weakPage2.IsAlive)
+            {
+                Debugger.Break();
+            }
+
+            var page = new PageWithButton();
+            weakPage2 = new WeakReference(page);
         }
 
         private WeakReference baseRef;
@@ -192,4 +227,23 @@ namespace WinUIDesktopSample
     {
         byte[] bytes = new byte[10_000_000];
     };
+
+    public class PageWithButton : Page
+    {
+        byte[] bytes = new byte[10_000_000];
+
+        public PageWithButton()
+        {
+            Button button = new Button();
+            button.Click += Button_Click;
+
+            StackPanel panel = new StackPanel();
+            panel.Children.Add(button);
+            this.Content = panel;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+        }
+    }
 }
