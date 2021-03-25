@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
+    <Platforms>x64;x86</Platforms>
+    <CsWinRTComponent>true</CsWinRTComponent>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\..\..\Projections\WinUI\WinUI.csproj" />
+    <ProjectReference Include="..\..\..\Authoring\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\..\cswinrt\cswinrt.vcxproj" />
+    <ProjectReference Include="..\..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
+	
+	 <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
+      <ExcludeAssets>compile;runtime</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  
+ 
+  <!-- NuGet package generation properties -->
+  <PropertyGroup>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.0</Version>
+    <PackageOutputPath>.\nuget</PackageOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="nuget\" />
+  </ItemGroup>
+
+</Project>
