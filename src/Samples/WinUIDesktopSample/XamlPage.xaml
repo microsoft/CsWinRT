@@ -10,7 +10,7 @@
 
     <StackPanel>
         <Button Content="Navigate to SecondPage" Click="Button_Click" />
-        <!--       <TextBlock x:Name="Status">Statu</TextBlock>
-        <ListView x:Name="TheListView" />-->
+        <TextBlock x:Name="Status">Statu</TextBlock>
+        <ListView x:Name="TheListView" />
     </StackPanel>
 </Page>

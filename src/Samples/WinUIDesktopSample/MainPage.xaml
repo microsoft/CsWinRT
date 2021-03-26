@@ -5,18 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="WinUIDesktopSample"
         mc:Ignorable="d"
-        Height="500" Width="800">
+        Height="600" Width="800">
 
 
     <StackPanel>
         <Button x:Name="Button1" Content="Aggregation" Click="Button1Click" />
-        <Button x:Name="Button2" Content="AggregationAndInvoke" Click="Button2Click" />
-        <Button x:Name="Button3" Content="Event" Click="Button3Click" />
+        <Button x:Name="Button2" Content="AggregationAndProperty" Click="Button2Click" />
+        <Button x:Name="Button3" Content="AggregationAndEvent" Click="Button3Click" />
         <Button x:Name="Button4" Content="Button" Click="Button4Click" />
-        <Button x:Name="Button5" Content="ButtonAndInvoke" Click="Button5Click" />
-        <Button x:Name="Button6" Content="ButtonEvent" Click="Button6Click" />
-        <Button x:Name="Button7" Content="XamlPageWithButton" Click="Button7Click" />
-        <Button x:Name="Button8" Content="CSharpPageWithButton" Click="Button8Click" />
+        <Button x:Name="Button5" Content="ButtonAndProperty" Click="Button5Click" />
+        <Button x:Name="Button6" Content="ButtonAndEvent" Click="Button6Click" />
+        <Button x:Name="Button7" Content="XamlMarkup-PageWithButton" Click="Button7Click" />
+        <Button x:Name="Button8" Content="XamlCode-PageWithButton" Click="Button8Click" />
+        <Button x:Name="Button9" Content="StrongButton" Click="Button9Click" />
         <TextBlock x:Name="Build" Text="" />
         <Button x:Name="WithoutCapture" Click="WithoutCapture_Click">Grid and handler without capture</Button>
         <Button x:Name="WithCapture" Click="WithCapture_Click">Grid and handler with capture</Button>

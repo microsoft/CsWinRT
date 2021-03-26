@@ -10,6 +10,7 @@
 
     <StackPanel>
         <Button Content="Navigate to FirstPage" Click="Button_Click" />
+        <TextBlock x:Name="Status" />
         <ListView x:Name="TheListView" />
     </StackPanel>
 </Page>

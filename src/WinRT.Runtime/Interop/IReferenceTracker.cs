@@ -1,21 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace WinRT.Interop
 {
-    [ComImport]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("11d3b13a-180e-4789-a8be-7712882893e6")]
-    internal interface IReferenceTracker
+    [Guid("11D3B13A-180E-4789-A8BE-7712882893E6")]
+    internal unsafe struct IReferenceTrackerVftbl
     {
-        void ConnectFromTrackerSource();
-        void DisconnectFromTrackerSource();
-        void FindTrackerTargets(IntPtr callback);
-        void GetReferenceTrackerManager(out IntPtr value);
-        void AddRefFromTrackerSource();
-        void ReleaseFromTrackerSource();
-        void PegFromTrackerSource();
-    };
+        public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
+        private void* _ConnectFromTrackerSource_0;
+        private void* _DisconnectFromTrackerSource_1;
+        private void* _FindTrackerTargets_2;
+        private void* _GetReferenceTrackerManager_3;
+        private void* _AddRefFromTrackerSource_4;
+        public delegate* unmanaged[Stdcall]<IntPtr, int> AddRefFromTrackerSource { get => (delegate* unmanaged[Stdcall]<IntPtr, int>)_AddRefFromTrackerSource_4; set => _AddRefFromTrackerSource_4 = (void*)value; }
+        private void* _ReleaseFromTrackerSource_5;
+        public delegate* unmanaged[Stdcall]<IntPtr, int> ReleaseFromTrackerSource { get => (delegate* unmanaged[Stdcall]<IntPtr, int>)_ReleaseFromTrackerSource_5; set => _ReleaseFromTrackerSource_5 = (void*)value; }
+        private void* _PegFromTrackerSource_6;
+    }
 }

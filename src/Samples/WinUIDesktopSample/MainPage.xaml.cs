@@ -29,21 +29,30 @@ namespace WinUIDesktopSample
             GarbageCollect();
         }
 
+        private WeakReference weakButton1 = new WeakReference(null);
         private void Button1Click(object sender, RoutedEventArgs e)
         {
-            var button = new CustomButton();
-            if (button != null)
+            if (weakButton1.IsAlive)
             {
-                num++;
+                Debugger.Break();
             }
+
+            var button = new CustomButton();
+            weakButton1 = new WeakReference(button);
         }
 
+        private WeakReference weakButton2 = new WeakReference(null);
         private void Button2Click(object sender, RoutedEventArgs e)
         {
+            if (weakButton2.IsAlive)
+            {
+                Debugger.Break();
+            }
+
             var button = new CustomButton2();
             var res = button.Tag;
+            weakButton2 = new WeakReference(button);
         }
-
 
         private WeakReference weakButton3 = new WeakReference(null);
         private void Button3Click(object sender, RoutedEventArgs e)
@@ -70,16 +79,31 @@ namespace WinUIDesktopSample
             weakButton4 = new WeakReference(button);
         }
 
+        private WeakReference weakButton5 = new WeakReference(null);
         private void Button5Click(object sender, RoutedEventArgs e)
         {
+            if (weakButton5.IsAlive)
+            {
+                Debugger.Break();
+            }
+
             var button = new Button();
-            button.Tag = 42;
+            button.MaxHeight = 10;
+            button.MaxWidth = 30;
+            weakButton5 = new WeakReference(button);
         }
 
+        private WeakReference weakButton6 = new WeakReference(null);
         private void Button6Click(object sender, RoutedEventArgs e)
         {
+            if (weakButton6.IsAlive)
+            {
+                Debugger.Break();
+            }
+
             var button = new Button();
             button.Click += (s, e) => button.Content = "Click";
+            weakButton6 = new WeakReference(button);
         }
 
         private WeakReference weakPage = new WeakReference(null);
@@ -104,6 +128,20 @@ namespace WinUIDesktopSample
 
             var page = new PageWithButton();
             weakPage2 = new WeakReference(page);
+        }
+
+        private Button button9 = null;
+        private WeakReference weakButton9 = new WeakReference(null);
+        private void Button9Click(object sender, RoutedEventArgs e)
+        {
+            if (button9 != null && !weakButton9.IsAlive)
+            {
+                Debugger.Break();
+            }
+
+            var button = new Button();
+            button9 = button;
+            weakButton9 = new WeakReference(button);
         }
 
         private WeakReference baseRef;

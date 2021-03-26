@@ -1062,13 +1062,13 @@ namespace WinRT
         public static void DisposeAbi(IntPtr ptr) => MarshalInterfaceHelper<T>.DisposeAbi(ptr);
         public static IntPtr FromManaged(T o, bool unwrapObject = true)
         {
-            var objRef = CreateMarshaler(o, unwrapObject);
+            using var objRef = CreateMarshaler(o, unwrapObject);
             return objRef?.GetRef() ?? IntPtr.Zero;
         }
 
         public static unsafe void CopyManaged(T o, IntPtr dest, bool unwrapObject = true)
         {
-            var objRef = CreateMarshaler(o, unwrapObject);
+            using var objRef = CreateMarshaler(o, unwrapObject);
             *(IntPtr*)dest.ToPointer() = objRef?.GetRef() ?? IntPtr.Zero;
         }
 

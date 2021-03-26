@@ -42,6 +42,7 @@ namespace DesktopWinUICSharpLeakTest
             System.Diagnostics.Debug.WriteLine("FirstPage instances: ");
             System.Diagnostics.Debug.WriteLine("  collected: " + collected);
             System.Diagnostics.Debug.WriteLine("  leaked: " + leaked);
+            this.Status.Text = "FirstPage instances: collected: " + collected + "  leaked: " + leaked;
             instances.Add(new WeakReference(this));
         }
 

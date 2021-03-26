@@ -201,7 +201,7 @@ namespace WinRT
                 // otherwise the new instance will be used. Since the inner was composed
                 // it should answer immediately without going through the outer. Either way
                 // the reference count will go to the new instance.
-                Guid iid = typeof(IReferenceTracker).GUID;
+                Guid iid = typeof(IReferenceTrackerVftbl).GUID;
                 int hr = Marshal.QueryInterface(objRef.ThisPtr, ref iid, out referenceTracker);
                 if (hr != 0)
                 {
@@ -285,15 +285,28 @@ namespace WinRT
                     // This instance should be used to tell the
                     // Reference Tracker runtime whenever an AddRef()/Release()
                     // is performed on newInstance.
-                    objRef.ReferenceTracker = (IReferenceTracker) Marshal.GetObjectForIUnknown(referenceTracker);
-                    objRef.ReferenceTracker.AddRefFromTrackerSource();  // GetObjectForIUnknown
-                    objRef.ReferenceTracker.AddRefFromTrackerSource();  // IReferenceTracker
-                    objRef.ReferenceTracker.AddRefFromTrackerSource();  // ObjRef instance
+                    objRef.ReferenceTrackerPtr = referenceTracker;
+                    objRef.AddRefFromTrackerSource();  // ObjRef instance
                     Marshal.Release(referenceTracker);
                 }
                 else
                 {
                     Marshal.Release(newInstance);
+                }
+            }
+        }
+
+        public unsafe static void Init(IObjectReference objRef)
+        {
+            if (objRef.ReferenceTrackerPtr == IntPtr.Zero)
+            {
+                Guid iid = typeof(IReferenceTrackerVftbl).GUID;
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref iid, out var referenceTracker);
+                if (hr == 0)
+                {
+                    objRef.ReferenceTrackerPtr = referenceTracker;
+                    objRef.AddRefFromTrackerSource();  // ObjRef instance
+                    Marshal.Release(referenceTracker);
                 }
             }
         }
