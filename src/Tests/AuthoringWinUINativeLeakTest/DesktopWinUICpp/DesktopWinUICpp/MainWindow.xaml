@@ -11,11 +11,17 @@
         <Button x:Name="acquireCustomButton" Background="Green" Click="acquireCustomButton_Click">Acquire Custom Button</Button>
         <Button x:Name="acquireRegularButton" Background="Green" Click="acquireRegularButton_Click">Acquire Regular Button</Button>
 
-        <Button x:Name="releaseCustomButton" Background="Red" Click="releaseCustomButton_Click">Release Custom Button</Button>
-        <Button x:Name="releaseRegularButton" Background="Red" Click="releaseRegularButton_Click">Release Regular Button</Button>
+        <Button x:Name="releaseCustomButton" Background="Red" Click="releaseCustomButton_Click">Release native reference to Custom Button</Button>
+        <Button x:Name="releaseRegularButton" Background="Red" Click="releaseRegularButton_Click">Release native reference to Regular Button</Button>
 
         <Button x:Name="aliveCustomButton" Background="Purple" Click="isAliveCustomButton_Click">Check Custom Button Alive</Button>
         <Button x:Name="aliveRegularButton" Background="Purple" Click="isAliveRegularButton_Click">Check Regular Button Alive</Button>
+
+        <Button x:Name="setCustomButton" Background="Orange" Click="setCustomButton_Click">Set Custom Button</Button>
+        <Button x:Name="setRegularButton" Background="Orange" Click="setRegularButton_Click">Set Regular Button</Button>
+
+        <Button x:Name="releaseManagedCustomButton" Background="Orange" Click="releaseManagedCustomButton_Click">Release managed reference to Custom Button</Button>
+        <Button x:Name="releaseManagedRegularButton" Background="Orange" Click="releaseManagedRegularButton_Click">Release managed reference to Regular Button</Button>
 
         <TextBlock x:Name="labelCustom" Text="Custom Button isAlive: " TextWrapping="Wrap" Margin="5"></TextBlock>
         <TextBlock x:Name="labelRegular" Text="Regular Button isAlive: " TextWrapping="Wrap" Margin="5"></TextBlock>

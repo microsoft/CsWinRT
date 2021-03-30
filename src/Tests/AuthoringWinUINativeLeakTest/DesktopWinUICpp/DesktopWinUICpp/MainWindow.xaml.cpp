@@ -6,6 +6,7 @@
 
 using namespace winrt;
 using namespace Microsoft::UI::Xaml;
+using namespace Microsoft::UI::Xaml::Controls;
 using namespace WinUIComponent;
 
 namespace winrt::DesktopWinUICpp::implementation
@@ -46,6 +47,30 @@ namespace winrt::DesktopWinUICpp::implementation
     void MainWindow::releaseCustomButton_Click(IInspectable const&, RoutedEventArgs const&)
     {
         ReleaseCustomButton();
+    }
+
+    void MainWindow::setRegularButton_Click(IInspectable const& sender, RoutedEventArgs const& args)
+    {
+        regularButton = Button();
+        TestButtons::SetButton(regularButton);
+        regularButtonWeak = winrt::make_weak(regularButton);
+    }
+
+    void MainWindow::setCustomButton_Click(IInspectable const&, RoutedEventArgs const&)
+    {
+        customButton = CustomButton();
+        TestButtons::SetCustomButton(customButton);
+        customButtonWeak = winrt::make_weak(customButton);
+    }
+
+    void MainWindow::releaseManagedRegularButton_Click(IInspectable const& sender, RoutedEventArgs const& args)
+    {
+        TestButtons::ReleaseRegularButton();
+    }
+
+    void MainWindow::releaseManagedCustomButton_Click(IInspectable const&, RoutedEventArgs const&)
+    {
+        TestButtons::ReleaseCustomButton();
     }
 
     void MainWindow::isAliveRegularButton_Click(IInspectable const& sender, RoutedEventArgs const& args)

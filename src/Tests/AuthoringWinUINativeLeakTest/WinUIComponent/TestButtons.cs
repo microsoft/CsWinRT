@@ -9,6 +9,8 @@ namespace WinUIComponent
     {
         public static WeakReference weakRefCustomButton = null;
         public static WeakReference weakRefRegularButton = null;
+        public static CustomButton customButton = null;
+        public static Button regularButton = null;
 
         public static CustomButton GetCustomButton()
         {
@@ -27,9 +29,30 @@ namespace WinUIComponent
             return button;
         }
 
+        public static void SetCustomButton(CustomButton button)
+        {
+            customButton = button;
+            weakRefCustomButton = new WeakReference(customButton);
+        }
+
+        public static void SetButton(Button button)
+        {
+            regularButton = button;
+            weakRefRegularButton = new WeakReference(regularButton);
+        }
+
+        public static void ReleaseCustomButton()
+        {
+            customButton = null;
+        }
+
+        public static void ReleaseRegularButton()
+        {
+            regularButton = null;
+        }
+
         public static bool IsAliveCustomButton()
         {
-            GC.Collect(2, GCCollectionMode.Forced);
             GC.Collect();
             GC.WaitForPendingFinalizers();
             return (weakRefCustomButton != null && weakRefCustomButton.IsAlive);
@@ -37,7 +60,6 @@ namespace WinUIComponent
 
         public static bool IsAliveRegularButton()
         {
-            GC.Collect(2, GCCollectionMode.Forced);
             GC.Collect();
             GC.WaitForPendingFinalizers();
             return (weakRefRegularButton != null && weakRefRegularButton.IsAlive);
