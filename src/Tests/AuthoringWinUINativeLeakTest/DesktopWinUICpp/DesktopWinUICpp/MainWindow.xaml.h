@@ -14,7 +14,9 @@ namespace winrt::DesktopWinUICpp::implementation
         MainWindow();
 
         WinUIComponent::CustomButton customButton;
+        winrt::weak_ref<WinUIComponent::CustomButton> customButtonWeak;
         Microsoft::UI::Xaml::Controls::Button regularButton;
+        winrt::weak_ref<Microsoft::UI::Xaml::Controls::Button> regularButtonWeak;
 
         void ReleaseRegularButton();
         void ReleaseCustomButton();

@@ -29,11 +29,17 @@ namespace WinUIComponent
 
         public static bool IsAliveCustomButton()
         {
+            GC.Collect(2, GCCollectionMode.Forced);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             return (weakRefCustomButton != null && weakRefCustomButton.IsAlive);
         }
 
         public static bool IsAliveRegularButton()
         {
+            GC.Collect(2, GCCollectionMode.Forced);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             return (weakRefRegularButton != null && weakRefRegularButton.IsAlive);
         }
     }
