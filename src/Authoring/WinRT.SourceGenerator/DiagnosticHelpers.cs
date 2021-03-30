@@ -10,32 +10,10 @@ using WinRT.SourceGenerator;
 
 namespace Generator
 {
-    // Helper Class, makes for clean collection of types and namespaces, needed for checking
-    internal class TypeCollector
-    {
-        private HashSet<INamedTypeSymbol> types;
-        private HashSet<INamedTypeSymbol> structs;
-        private HashSet<INamespaceSymbol> namespaces;
-
-        public TypeCollector()
-        {
-            types = new HashSet<INamedTypeSymbol>();
-            structs = new HashSet<INamedTypeSymbol>();
-            namespaces = new HashSet<INamespaceSymbol>();
-        }
-
-        public void AddType(INamedTypeSymbol newType) { types.Add(newType); }
-        public void AddStruct(INamedTypeSymbol newType) { structs.Add(newType); }
-        public void AddNamespace(INamespaceSymbol newType) { namespaces.Add(newType); }
-
-        public HashSet<INamedTypeSymbol> GetTypes() { return types; }
-        public HashSet<INamedTypeSymbol> GetStructs() { return structs; }
-        public HashSet<INamespaceSymbol> GetNamespaces() { return namespaces; }
-    }
-
     public partial class WinRTComponentScanner
     {
         private void Flag() { _flag |= true; }
+
         /// <summary>Raise the flag so we don't make a winmd, and add a diagnostic to the sourcegenerator</summary>
         /// <param name="d"></param><param name="loc"></param><param name="args"></param>
         private void Report(DiagnosticDescriptor d, Location loc, params object[] args)
@@ -43,6 +21,7 @@ namespace Generator
             Flag();
             _context.ReportDiagnostic(Diagnostic.Create(d, loc, args));
         }
+
         private void ReportDiagnostic(Diagnostic d)
         {
             Flag();

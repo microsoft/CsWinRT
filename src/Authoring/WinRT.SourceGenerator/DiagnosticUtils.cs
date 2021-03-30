@@ -258,9 +258,9 @@ namespace Generator
                 }
             }
             /* Finishes up the work started by `CheckOverloadAttributes` */
-            foreach (var thing in overloadsWithoutAttributeMap)
+            foreach (var overloadWithDiagnostic in overloadsWithoutAttributeMap)
             {
-                ReportDiagnostic(thing.Value);
+                ReportDiagnostic(overloadWithDiagnostic.Value);
             }
         }
 
