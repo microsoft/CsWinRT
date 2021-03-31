@@ -45,6 +45,8 @@ namespace WinRT
 
         internal bool PreventReleaseOnDispose { get; set; }
 
+        internal bool PreventReleaseFromTrackerSourceOnDispose { get; set; }
+
         internal unsafe IntPtr ReferenceTrackerPtr
         { 
             get
@@ -216,8 +218,9 @@ namespace WinRT
                 if (!PreventReleaseOnDispose)
                 {
                     Release();
-                    DisposeTrackerSource();
                 }
+
+                DisposeTrackerSource();
                 disposed = true;
             }
         }
@@ -290,7 +293,10 @@ namespace WinRT
         {
             if (ReferenceTrackerPtr != IntPtr.Zero)
             {
-                ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
+                if (!PreventReleaseFromTrackerSourceOnDispose)
+                {
+                    ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
+                }
                 ReferenceTracker.IUnknownVftbl.Release(ReferenceTrackerPtr);
             }
         }

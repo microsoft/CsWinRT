@@ -4560,7 +4560,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         if (!std::holds_alternative<object_type>(type))
         {
             w.write(R"(
-    : base(objRef)
+    : base(global::WinRT.DerivedComposed.Instance)
 )");
         }
     }
@@ -5157,7 +5157,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 % %(IObjectReference objRef)%
 {
 _inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
-%
+ComWrappersHelper.Init(_inner);
 _defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
@@ -5195,13 +5195,6 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             type_name,
             bind<write_base_constructor_dispatch>(base_semantics),
             default_interface_name,
-            bind([&](writer& w)
-            {
-                if (!type.Flags().Sealed())
-                {
-                    w.write(R"(ComWrappersHelper.Init(_inner);)");
-                }
-            }),
             default_interface_name,
             default_interface_name,
             default_interface_name,
@@ -5409,6 +5402,7 @@ private readonly AgileReference _agileReference = default;
 public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
 {
 _nativeDelegate = nativeDelegate;
+
 #if NETSTANDARD2_0
 if (_nativeDelegate.TryAs<ABI.WinRT.Interop.IAgileObject.Vftbl>(out var objRef) < 0)
 #else

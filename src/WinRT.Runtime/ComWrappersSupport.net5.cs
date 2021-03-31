@@ -286,13 +286,15 @@ namespace WinRT
                     // Reference Tracker runtime whenever an AddRef()/Release()
                     // is performed on newInstance.
                     objRef.ReferenceTrackerPtr = referenceTracker;
-                    objRef.AddRefFromTrackerSource();  // ObjRef instance
+
+                    // This instance is already AddRefFromTrackerSource by the CLR,
+                    // so it would also ReleaseFromTrackerSource on destruction.
+                    objRef.PreventReleaseFromTrackerSourceOnDispose = true;
+
                     Marshal.Release(referenceTracker);
                 }
-                else
-                {
-                    Marshal.Release(newInstance);
-                }
+
+                Marshal.Release(newInstance);
             }
         }
 
@@ -304,8 +306,15 @@ namespace WinRT
                 int hr = Marshal.QueryInterface(objRef.ThisPtr, ref iid, out var referenceTracker);
                 if (hr == 0)
                 {
+                    // WinUI scenario
+                    // This instance should be used to tell the
+                    // Reference Tracker runtime whenever an AddRef()/Release()
+                    // is performed on newInstance.
                     objRef.ReferenceTrackerPtr = referenceTracker;
-                    objRef.AddRefFromTrackerSource();  // ObjRef instance
+
+                    // This instance is already AddRefFromTrackerSource by the CLR,
+                    // so it would also ReleaseFromTrackerSource on destruction.
+                    objRef.PreventReleaseFromTrackerSourceOnDispose = true;
                     Marshal.Release(referenceTracker);
                 }
             }
