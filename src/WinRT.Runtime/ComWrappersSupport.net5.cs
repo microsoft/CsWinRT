@@ -311,10 +311,7 @@ namespace WinRT
                     // Reference Tracker runtime whenever an AddRef()/Release()
                     // is performed on newInstance.
                     objRef.ReferenceTrackerPtr = referenceTracker;
-
-                    // This instance is already AddRefFromTrackerSource by the CLR,
-                    // so it would also ReleaseFromTrackerSource on destruction.
-                    objRef.PreventReleaseFromTrackerSourceOnDispose = true;
+                    objRef.AddRefFromTrackerSource(); // ObjRef instance
                     Marshal.Release(referenceTracker);
                 }
             }
@@ -398,10 +395,8 @@ namespace WinRT
             return isRcw;
         }
 
-        protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
+        private static object CreateObject(IObjectReference objRef)
         {
-            IObjectReference objRef = ComWrappersSupport.GetObjectReferenceForInterface(externalComObject);
-
             if (objRef.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
             {
                 IInspectable inspectable = new IInspectable(inspectableRef);
@@ -419,13 +414,32 @@ namespace WinRT
             {
                 // IWeakReference is IUnknown-based, so implementations of it may not (and likely won't) implement
                 // IInspectable. As a result, we need to check for them explicitly.
-                
+
                 return new SingleInterfaceOptimizedObject(typeof(IWeakReference), weakRef);
             }
+
             // If the external COM object isn't IInspectable or IWeakReference, we can't handle it.
             // If we're registered globally, we want to let the runtime fall back for IUnknown and IDispatch support.
             // Return null so the runtime can fall back gracefully in IUnknown and IDispatch scenarios.
             return null;
+        }
+
+        protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
+        {
+            IObjectReference objRef = ComWrappersSupport.GetObjectReferenceForInterface(externalComObject);
+            ComWrappersHelper.Init(objRef);
+
+            var obj = CreateObject(objRef);
+            if(obj is IWinRTObject winrtObj && winrtObj.HasUnwrappableNativeObject && winrtObj.NativeObject != null)
+            {
+                // Handle the scenario where the CLR has already done an AddRefFromTrackerSource on the instance
+                // stored by the RCW type.  We handle it by releasing the AddRef we did and not doing an release
+                // on destruction as the CLR would do it.
+                winrtObj.NativeObject.ReleaseFromTrackerSource();
+                winrtObj.NativeObject.PreventReleaseFromTrackerSourceOnDispose = true;
+            }
+
+            return obj;
         }
 
         protected override void ReleaseObjects(IEnumerable objects)

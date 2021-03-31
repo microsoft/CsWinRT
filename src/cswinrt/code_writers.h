@@ -5157,7 +5157,6 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 % %(IObjectReference objRef)%
 {
 _inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
-ComWrappersHelper.Init(_inner);
 _defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
