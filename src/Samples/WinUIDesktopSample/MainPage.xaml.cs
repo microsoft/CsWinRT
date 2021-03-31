@@ -1,9 +1,8 @@
-﻿using System;
+﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using WinRT;
 
 namespace WinUIDesktopSample
 {
@@ -232,6 +231,11 @@ namespace WinUIDesktopSample
             var gridStatus = gridRef.IsAlive ? "Grid leaked" : "Grid collected";
             var derivedGridStatus = derivedGridRef.IsAlive ? "DerivedGrid leaked" : "DerivedGrid collected";
             Status.Text = baseStatus + ", " + derivedStatus + ", " + gridStatus + ", " + derivedGridStatus;
+        }
+
+        private void Navigate_Click(object sender, RoutedEventArgs e)
+        {
+            App.Navigate(typeof(FirstPage));
         }
 
         private void GarbageCollect()

@@ -25,6 +25,7 @@
         <Button x:Name="DerivedWithCapture" Click="DerivedWithCapture_Click">Derived Grid and handler with capture</Button>
         <Button x:Name="Alloc" Click="Alloc_Click">1. Allocate various aggregates</Button>
         <Button x:Name="Check" Click="Check_Click">2. Check for leaks of aggregates</Button>
+        <Button x:Name="NavigateButton" Click="Navigate_Click">Navigate to first page</Button>
         <TextBlock x:Name="Status" Text="(click a button)" />
     </StackPanel>
 
