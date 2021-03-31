@@ -99,6 +99,8 @@ Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "AuthoringWinUITest (Package
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AuthoringWinUITest", "Tests\AuthoringWinUITest\AuthoringWinUITest\AuthoringWinUITest.vcxproj", "{493C7729-2F21-4198-AB09-BDF56BF501D3}"
 EndProject
+Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "WinUIDesktopSamplePackage", "Samples\WinUIDesktopSamplePackage\WinUIDesktopSamplePackage.wapproj", "{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -301,6 +303,18 @@ Global
 		{493C7729-2F21-4198-AB09-BDF56BF501D3}.Release|x64.Build.0 = Release|x64
 		{493C7729-2F21-4198-AB09-BDF56BF501D3}.Release|x86.ActiveCfg = Release|Win32
 		{493C7729-2F21-4198-AB09-BDF56BF501D3}.Release|x86.Build.0 = Release|Win32
+		{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678}.Debug|x64.ActiveCfg = Debug|x64
+		{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678}.Debug|x64.Build.0 = Debug|x64
+		{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678}.Debug|x64.Deploy.0 = Debug|x64
+		{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678}.Debug|x86.ActiveCfg = Debug|x86
+		{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678}.Debug|x86.Build.0 = Debug|x86
+		{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678}.Debug|x86.Deploy.0 = Debug|x86
+		{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678}.Release|x64.ActiveCfg = Release|x64
+		{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678}.Release|x64.Build.0 = Release|x64
+		{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678}.Release|x64.Deploy.0 = Release|x64
+		{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678}.Release|x86.ActiveCfg = Release|x86
+		{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678}.Release|x86.Build.0 = Release|x86
+		{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678}.Release|x86.Deploy.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -326,6 +340,7 @@ Global
 		{FC05C557-C974-4CB3-9DA7-BB5476710E91} = {CFB651EC-DAA4-4A11-ABCD-C77F90602EB5}
 		{75B1621F-EC51-4D77-BD7E-BEE576B3ADC9} = {CFB651EC-DAA4-4A11-ABCD-C77F90602EB5}
 		{493C7729-2F21-4198-AB09-BDF56BF501D3} = {CFB651EC-DAA4-4A11-ABCD-C77F90602EB5}
+		{2A0C72E3-A6C4-4AF2-81C4-4E790CD0B678} = {6DA854DB-57BF-4FDD-AFF6-F70C965F48F6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5AE8C9D7-2613-4E1A-A4F2-579BAC28D0A2}
