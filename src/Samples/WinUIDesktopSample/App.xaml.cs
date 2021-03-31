@@ -18,36 +18,19 @@ namespace WinUIDesktopSample
     {
         public App()
         {
+            this.InitializeComponent();
         }
 
         Window myWindow;
         protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
-            var value = DependencyProperty.UnsetValue;
-            var button = new Button
-            {
-                Content = "Click me to load MainPage",
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            button.Click += Button_Click;
-            var window = new Microsoft.UI.Xaml.Window
-            {
-                Content = button
-            };
-
-            window.Activate();
-
-            myWindow = window;
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
+            myWindow = new Window();
+            myWindow.Activate();
             myWindow.Content = new MainPage();
         }
     }
 
-    public static class Program
+/*    public static class Program
     {
         static void Main(string[] args)
         {
@@ -55,5 +38,5 @@ namespace WinUIDesktopSample
 
             Microsoft.UI.Xaml.Application.Start((e) => new App());
         }
-    }
+    }*/
 }
