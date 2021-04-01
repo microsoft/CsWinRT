@@ -234,6 +234,7 @@ namespace WinRT
                     return false;
                 }
                 disposed = false;
+                ResurrectTrackerSource();
                 AddRef();
                 GC.ReRegisterForFinalize(this);
                 return true;
@@ -281,6 +282,18 @@ namespace WinRT
             if (ReferenceTrackerPtr != IntPtr.Zero)
             {
                 ReferenceTracker.ReleaseFromTrackerSource(ReferenceTrackerPtr);
+            }
+        }
+
+        private unsafe void ResurrectTrackerSource()
+        {
+            if (ReferenceTrackerPtr != IntPtr.Zero)
+            {
+                ReferenceTracker.IUnknownVftbl.AddRef(ReferenceTrackerPtr);
+                if (!PreventReleaseFromTrackerSourceOnDispose)
+                {
+                    ReferenceTracker.AddRefFromTrackerSource(ReferenceTrackerPtr);
+                }
             }
         }
 

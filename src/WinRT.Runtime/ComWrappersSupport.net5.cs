@@ -316,7 +316,7 @@ namespace WinRT
             }
         }
 
-        public unsafe static void Init(IObjectReference objRef)
+        public unsafe static void Init(IObjectReference objRef, bool addRefFromTrackerSource = true)
         {
             if (objRef.ReferenceTrackerPtr == IntPtr.Zero)
             {
@@ -329,7 +329,16 @@ namespace WinRT
                     // Reference Tracker runtime whenever an AddRef()/Release()
                     // is performed on newInstance.
                     objRef.ReferenceTrackerPtr = referenceTracker;
-                    objRef.AddRefFromTrackerSource(); // ObjRef instance
+
+                    if (addRefFromTrackerSource)
+                    {
+                        objRef.AddRefFromTrackerSource(); // ObjRef instance
+                    }
+                    else
+                    {
+                        objRef.PreventReleaseFromTrackerSourceOnDispose = true;
+                    }
+
                     Marshal.Release(referenceTracker);
                 }
             }

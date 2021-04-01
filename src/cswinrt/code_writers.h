@@ -1660,7 +1660,8 @@ MarshalInspectable<object>.DisposeAbi(ptr);
 }
 }))())
 {
-    ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+%
 }
 )",
                     platform_attribute, 
@@ -1670,7 +1671,8 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                     cache_object,
                     method.Name(),
                     bind_list<write_parameter_name_with_modifier>(", ", signature.params()),
-                    settings.netstandard_compat ? "new " + default_interface_name : "");
+                    settings.netstandard_compat ? "new " + default_interface_name : "",
+                    settings.netstandard_compat ? "" : "ComWrappersHelper.Init(_inner, false);");
             }
         }
         else
@@ -1679,11 +1681,13 @@ MarshalInspectable<object>.DisposeAbi(ptr);
 public %() : this(%(ActivationFactory<%>.ActivateInstance<IUnknownVftbl>()))
 {
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+%
 }
 )",
                 class_type.TypeName(),
                 settings.netstandard_compat ? "new " + default_interface_name : "",
-                class_type.TypeName());
+                class_type.TypeName(),
+                settings.netstandard_compat ? "" : "ComWrappersHelper.Init(_inner, false);");
         }
     }
 
