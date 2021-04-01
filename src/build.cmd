@@ -40,9 +40,7 @@ set cswinrt_configuration=%2
 set cswinrt_version_number=%3
 set cswinrt_version_string=%4
 set cswinrt_assembly_version=%5
-:: if %6 is true then don't build the samples in the solution
-set cswinrt_no_samples=%6
-:: set "%6"!="" set cswinrt_label=%6
+set "%6"!="" set cswinrt_label=%6
 
 if "%cswinrt_platform%"=="" set cswinrt_platform=x64
 
@@ -126,12 +124,7 @@ call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%cswinrt.sln
 
 :build
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-set nosampletarget=""
-if %cswinrt_no_samples%=="true" (
-  :: this is a target in Directory.Build.targets that removes all project files under the Samples directory
-  set nosampletarget="/t:CsWinRTDontBuildSamples"
-)
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% %this_dir%cswinrt.sln %nosampletarget% /bl
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% %this_dir%cswinrt.sln /bl:CsWinRT.Build.binlog
 if ErrorLevel 1 (
   echo.
   echo ERROR: Build failed
@@ -156,7 +149,17 @@ rem WinUI NuGet package's Microsoft.WinUI.AppX.targets attempts to import a file
 rem executing "dotnet test --no-build ...", which evidently still needs to parse and load the entire project.
 rem Work around by using a dummy targets file and assigning it to the MsAppxPackageTargets property.
 echo ^<Project/^> > %temp%\EmptyMsAppxPackage.Targets
-call :exec %dotnet_exe% test --verbosity normal --no-build --logger xunit;LogFilePath=%~dp0unittest_%cswinrt_version_string%.xml %this_dir%Tests/unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets 
+
+rem Pass a basic configuration to the unittest so it doesn't try to use the Pipeline* configurations
+if "%cswinrt_configuration%"=="PipelineDebug" (
+  set unittest_configuration="Debug"
+) else if "%cswinrt_configuration%"=="PipelineRelease" (
+  set unittest_configuration="Release"
+) else (
+  set unittest_configuration=%cswinrt_configuration%
+)
+
+call :exec %dotnet_exe% test --verbosity normal --no-build --logger xunit;LogFilePath=%~dp0unittest_%cswinrt_version_string%.xml %this_dir%Tests/unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%unittest_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets 
 if ErrorLevel 1 (
   echo.
   echo ERROR: Unit test failed, skipping NuGet pack
@@ -184,6 +187,12 @@ if ErrorLevel 1 (
 )
 
 :package
+rem the %cswinrt_configuration% might need to change if we are using Pipeline/Pipeline version
+if "%cswinrt_configuration%"=="PipelineDebug" (
+  set %cswinrt_configuration%="Debug"
+) else if "%cswinrt_configuration%"=="PipelineRelease" (
+  set %cswinrt_configuration%="Release"
+)
 set cswinrt_bin_dir=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
 set netstandard2_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Runtime.dll
