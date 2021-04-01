@@ -1746,23 +1746,20 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                 w.write(R"(
 %% %(%)%
 {
-object baseInspectable = this.GetType() != typeof(%) ? this : null;
-IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
-using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
+bool isAggregation = this.GetType() != typeof(%);
+object baseInspectable = isAggregation ? this : null;
+IntPtr composed = %.%(%%baseInspectable, out IntPtr inner);
 try
 {
-_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
-if(baseInspectable == null) _inner = _inner.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
+ComWrappersHelper.Init(isAggregation, this, composed, inner, out _inner);
 _defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
 };
-
-ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
 finally
 {
-MarshalInspectable<object>.DisposeAbi(ptr);
+Marshal.Release(inner);   
 }
 }
 )",
@@ -1776,7 +1773,6 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                     method.Name(),
                     bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
                     [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
-                    default_interface_name,
                     default_interface_name,
                     default_interface_name,
                     default_interface_name,
@@ -4734,7 +4730,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         if (!std::holds_alternative<object_type>(type))
         {
             w.write(R"(
-    : base(objRef)
+    : base(global::WinRT.DerivedComposed.Instance)
 )");
         }
     }

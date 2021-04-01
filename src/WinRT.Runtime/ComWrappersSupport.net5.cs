@@ -128,7 +128,11 @@ namespace WinRT
             return false;
         }
 
-        public static void RegisterObjectForInterface(object obj, IntPtr thisPtr) => TryRegisterObjectForInterface(obj, thisPtr);
+        public static void RegisterObjectForInterface(object obj, IntPtr thisPtr, CreateObjectFlags createObjectFlags) =>
+            ComWrappers.GetOrRegisterObjectForComInstance(thisPtr, createObjectFlags, obj);
+
+        public static void RegisterObjectForInterface(object obj, IntPtr thisPtr) => 
+            TryRegisterObjectForInterface(obj, thisPtr);
 
         public static object TryRegisterObjectForInterface(object obj, IntPtr thisPtr)
         {
@@ -189,6 +193,146 @@ namespace WinRT
                 Expression.New(implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
                     Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
                 parms).Compile();
+        }
+    }
+
+    public class ComWrappersHelper
+    {
+        public unsafe static void Init(
+            bool isAggregation,
+            object thisInstance,
+            IntPtr newInstance,
+            IntPtr inner,
+            out IObjectReference objRef)
+        {
+            objRef = ComWrappersSupport.GetObjectReferenceForInterface(isAggregation ? inner : newInstance);
+
+            IntPtr referenceTracker;
+            {
+                // Determine if the instance supports IReferenceTracker (e.g. WinUI).
+                // Acquiring this interface is useful for:
+                //   1) Providing an indication of what value to pass during RCW creation.
+                //   2) Informing the Reference Tracker runtime during non-aggregation
+                //      scenarios about new references.
+                //
+                // If aggregation, query the inner since that will have the implementation
+                // otherwise the new instance will be used. Since the inner was composed
+                // it should answer immediately without going through the outer. Either way
+                // the reference count will go to the new instance.
+                Guid iid = typeof(IReferenceTrackerVftbl).GUID;
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref iid, out referenceTracker);
+                if (hr != 0)
+                {
+                    referenceTracker = default;
+                }
+            }
+
+            {
+                // Determine flags needed for native object wrapper (i.e. RCW) creation.
+                var createObjectFlags = CreateObjectFlags.None;
+                IntPtr instanceToWrap = newInstance;
+
+                // The instance supports IReferenceTracker.
+                if (referenceTracker != default(IntPtr))
+                {
+                    createObjectFlags |= CreateObjectFlags.TrackerObject;
+                }
+
+                // Update flags if the native instance is being used in an aggregation scenario.
+                if (isAggregation)
+                {
+                    // Indicate the scenario is aggregation
+                    createObjectFlags |= (CreateObjectFlags)4;
+
+                    // The instance supports IReferenceTracker.
+                    if (referenceTracker != default(IntPtr))
+                    {
+                        // IReferenceTracker is not needed in aggregation scenarios.
+                        // It is not needed because all QueryInterface() calls on an
+                        // object are followed by an immediately release of the returned
+                        // pointer - see below for details.
+                        Marshal.Release(referenceTracker);
+
+                        // .NET 5 limitation
+                        //
+                        // For aggregated scenarios involving IReferenceTracker
+                        // the API handles object cleanup. In .NET 5 the API
+                        // didn't expose an option to handle this so we pass the inner
+                        // in order to handle its lifetime.
+                        //
+                        // The API doesn't handle inner lifetime in any other scenario
+                        // in the .NET 5 timeframe.
+                        instanceToWrap = inner;
+                    }
+                }
+
+                // Create a native object wrapper (i.e. RCW).
+                //
+                // Note this function will call QueryInterface() on the supplied instance,
+                // therefore it is important that the enclosing CCW forwards to its inner
+                // if aggregation is involved. This is typically accomplished through an
+                // implementation of ICustomQueryInterface.
+                ComWrappersSupport.RegisterObjectForInterface(thisInstance, instanceToWrap, createObjectFlags);
+            }
+
+            // The following sets up the object reference to correctly handle AddRefs and releases
+            // based on the scenario.
+            if (isAggregation)
+            {
+                // Aggregation scenarios should avoid calling AddRef() on the
+                // newInstance value. This is due to the semantics of COM Aggregation
+                // and the fact that calling an AddRef() on the instance will increment
+                // the CCW which in turn will ensure it cannot be cleaned up. Calling
+                // AddRef() on the instance when passed to unmanaged code is correct
+                // since unmanaged code is required to call Release() at some point.
+
+                // A pointer to the inner that should be queried for
+                // additional interfaces. Immediately after a QueryInterface()
+                // a Release() should be called on the returned pointer but the
+                // pointer can be retained and used.  This is determined by the
+                // IsAggregated and PreventReleaseOnDispose properties on IObjectReference.
+                objRef.IsAggregated = true;
+                // In WinUI scenario don't release inner
+                objRef.PreventReleaseOnDispose = referenceTracker != default(IntPtr);
+            }
+            else
+            {
+                if (referenceTracker != default(IntPtr))
+                {
+                    // WinUI scenario
+                    // This instance should be used to tell the
+                    // Reference Tracker runtime whenever an AddRef()/Release()
+                    // is performed on newInstance.
+                    objRef.ReferenceTrackerPtr = referenceTracker;
+
+                    // This instance is already AddRefFromTrackerSource by the CLR,
+                    // so it would also ReleaseFromTrackerSource on destruction.
+                    objRef.PreventReleaseFromTrackerSourceOnDispose = true;
+
+                    Marshal.Release(referenceTracker);
+                }
+
+                Marshal.Release(newInstance);
+            }
+        }
+
+        public unsafe static void Init(IObjectReference objRef)
+        {
+            if (objRef.ReferenceTrackerPtr == IntPtr.Zero)
+            {
+                Guid iid = typeof(IReferenceTrackerVftbl).GUID;
+                int hr = Marshal.QueryInterface(objRef.ThisPtr, ref iid, out var referenceTracker);
+                if (hr == 0)
+                {
+                    // WinUI scenario
+                    // This instance should be used to tell the
+                    // Reference Tracker runtime whenever an AddRef()/Release()
+                    // is performed on newInstance.
+                    objRef.ReferenceTrackerPtr = referenceTracker;
+                    objRef.AddRefFromTrackerSource(); // ObjRef instance
+                    Marshal.Release(referenceTracker);
+                }
+            }
         }
     }
 
@@ -269,10 +413,8 @@ namespace WinRT
             return isRcw;
         }
 
-        protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
+        private static object CreateObject(IObjectReference objRef)
         {
-            IObjectReference objRef = ComWrappersSupport.GetObjectReferenceForInterface(externalComObject);
-
             if (objRef.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
             {
                 IInspectable inspectable = new IInspectable(inspectableRef);
@@ -290,13 +432,32 @@ namespace WinRT
             {
                 // IWeakReference is IUnknown-based, so implementations of it may not (and likely won't) implement
                 // IInspectable. As a result, we need to check for them explicitly.
-                
+
                 return new SingleInterfaceOptimizedObject(typeof(IWeakReference), weakRef);
             }
+
             // If the external COM object isn't IInspectable or IWeakReference, we can't handle it.
             // If we're registered globally, we want to let the runtime fall back for IUnknown and IDispatch support.
             // Return null so the runtime can fall back gracefully in IUnknown and IDispatch scenarios.
             return null;
+        }
+
+        protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
+        {
+            IObjectReference objRef = ComWrappersSupport.GetObjectReferenceForInterface(externalComObject);
+            ComWrappersHelper.Init(objRef);
+
+            var obj = CreateObject(objRef);
+            if (obj is IWinRTObject winrtObj && winrtObj.HasUnwrappableNativeObject && winrtObj.NativeObject != null)
+            {
+                // Handle the scenario where the CLR has already done an AddRefFromTrackerSource on the instance
+                // stored by the RCW type.  We handle it by releasing the AddRef we did and not doing an release
+                // on destruction as the CLR would do it.
+                winrtObj.NativeObject.ReleaseFromTrackerSource();
+                winrtObj.NativeObject.PreventReleaseFromTrackerSourceOnDispose = true;
+            }
+
+            return obj;
         }
 
         protected override void ReleaseObjects(IEnumerable objects)
