@@ -40,7 +40,9 @@ set cswinrt_configuration=%2
 set cswinrt_version_number=%3
 set cswinrt_version_string=%4
 set cswinrt_assembly_version=%5
-set "%6"!="" set cswinrt_label=%6
+:: if %6 is true then don't build the samples in the solution
+set cswinrt_no_samples=%6
+:: set "%6"!="" set cswinrt_label=%6
 
 if "%cswinrt_platform%"=="" set cswinrt_platform=x64
 
@@ -103,7 +105,7 @@ if ErrorLevel 1 (
 )
 :skip_build_tools
 
-if not "%cswinrt_label%"=="" goto %cswinrt_label%
+:: if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
 rem When a preview nuget is required, update -self doesn't work, so manually update 
@@ -124,7 +126,12 @@ call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%cswinrt.sln
 
 :build
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% %this_dir%cswinrt.sln 
+set nosampletarget=""
+if %cswinrt_no_samples%=="true" (
+  :: this is a target in Directory.Build.targets that removes all project files under the Samples directory
+  set nosampletarget="/t:CsWinRTDontBuildSamples"
+)
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% %this_dir%cswinrt.sln %nosampletarget% /bl
 if ErrorLevel 1 (
   echo.
   echo ERROR: Build failed

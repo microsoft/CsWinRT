@@ -35,4 +35,15 @@
     <Error Condition="!Exists('$(SolutionDir)TestWinRT')" Text="This solution requires the TestWinRT repo, which is missing. Please run build.cmd from a Visual Studio command prompt." />
   </Target>
 
+<!--
+  <ItemGroup>
+      <CsWinRTProjectsNoSamples Include="**\*.*proj" />
+      <CsWinRTProjectsNoSamples Remove="Samples\**\*.*proj" />
+  </ItemGroup>
+-->
+  <Target Name="CsWinRTDontBuildSamples">
+    <ProjectReference Exclude="Samples\**\*.*proj" />
+    <!-- <MSBuild Projects="@(CsWinRTProjectsNoSamples)" Targets="Build" /> -->
+  </Target>
+
 </Project>

@@ -45,15 +45,4 @@ namespace WinUIDesktopSample
             // Save application state and stop any background activity
         }
     }
-
-    /*    
-    public static class Program
-    {
-        static void Main(string[] args)
-        {
-            WinRT.ComWrappersSupport.InitializeComWrappers();
-
-            Microsoft.UI.Xaml.Application.Start((e) => new App());
-        }
-    }*/
 }

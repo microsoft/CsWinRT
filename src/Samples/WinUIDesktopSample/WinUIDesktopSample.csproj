@@ -5,7 +5,9 @@
     <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
     <Platforms>x86;x64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+    <!-- 
     <RuntimeIdentifier Condition="'$(Platform)'!='AnyCPU'">win-$(Platform)</RuntimeIdentifier>
+    -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
@@ -33,31 +35,18 @@
     <Page Update="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Update="SecondPage.xaml">
+   <Page Update="SecondPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Update="FirstPage.xaml">
+   <Page Update="FirstPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Page Update="MainPage.xaml">
+   <Page Update="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Update="App.xaml">
+   <Page Update="App.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    
     <Page Update="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
