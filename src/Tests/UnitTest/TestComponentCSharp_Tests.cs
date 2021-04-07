@@ -9,6 +9,7 @@ using WinRT;
 
 using Windows.Foundation;
 using Windows.UI;
+using Windows.Security.Credentials.UI;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Microsoft.UI.Xaml;
@@ -1094,8 +1095,8 @@ namespace UnitTest
 
             // IInspectable-based (projected) interop interface
             var interop = Windows.Security.Credentials.UI.UserConsentVerifier.As<IUserConsentVerifierInterop>();
-            var guid = GuidGenerator.CreateIID(typeof(Windows.Foundation.IAsyncOperation<Windows.Security.Credentials.UI.UserConsentVerificationResult>));
-            var operation = interop.RequestVerificationForWindowAsync(0, "message", guid);
+            var guid = GuidGenerator.CreateIID(typeof(IAsyncOperation<UserConsentVerificationResult>));
+            var operation = (IAsyncOperation<UserConsentVerificationResult>)interop.RequestVerificationForWindowAsync(0, "message", guid);
             Assert.NotNull(operation);
         }
 
