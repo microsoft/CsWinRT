@@ -410,6 +410,12 @@ namespace ABI.System.Collections.Generic
             public object Current => _Current;
 
             public bool MoveNext() => _MoveNext();
+
+            uint IBindableIterator.GetMany(ref object[] items)
+            {
+                // Should not be called.
+                throw new NotImplementedException();
+            }
         }
 
         [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
