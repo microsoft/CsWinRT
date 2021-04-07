@@ -84,6 +84,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> get_HasCurrent_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_get_HasCurrent_1; set => _get_HasCurrent_1 = value; }
             private void* _MoveNext_2;
             public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> MoveNext_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_MoveNext_2; set => _MoveNext_2 = value; }
+            // Note this may not be a valid address and should not be called.
             private void* _GetMany_3;
             public delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, uint*, int> GetMany_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, uint*, int>)_GetMany_3; set => _GetMany_3 = value; }
 
