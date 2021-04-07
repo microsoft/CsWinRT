@@ -27,6 +27,12 @@ namespace Microsoft.UI.Xaml.Interop
     internal interface IBindableIterator
     {
         bool MoveNext();
+        // GetMany is not implemented by IBindableIterator, but it is here
+        // for compat purposes with WinUI where there are scenarios they do
+        // reinterpret_cast from IBindableIterator to IIterable<object>.  It is
+        // the last function in the vftable and shouldn't be called by anyone.
+        // If called, it will return NotImplementedException.
+        uint GetMany(ref object[] items);
         object Current { get; }
         bool HasCurrent { get; }
     }
@@ -78,6 +84,8 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> get_HasCurrent_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_get_HasCurrent_1; set => _get_HasCurrent_1 = value; }
             private void* _MoveNext_2;
             public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> MoveNext_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_MoveNext_2; set => _MoveNext_2 = value; }
+            private void* _GetMany_3;
+            public delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, uint*, int> GetMany_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, uint*, int>)_GetMany_3; set => _GetMany_3 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
@@ -90,10 +98,10 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
                     _get_Current_0 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_get_Current_0,
                     _get_HasCurrent_1 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_get_HasCurrent_1,
-                    _MoveNext_2 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_MoveNext_2
-
+                    _MoveNext_2 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_MoveNext_2,
+                    _GetMany_3 = (delegate* unmanaged<IntPtr, int, IntPtr, uint*, int>)&Do_Abi_GetMany_3
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 3);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -116,6 +124,24 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
                 }
                 return 0;
+            }
+
+            [UnmanagedCallersOnly]
+
+            private static unsafe int Do_Abi_GetMany_3(IntPtr thisPtr, int __itemsSize, IntPtr items, uint* result)
+            {
+                *result = default;
+
+                try
+                {
+                    // Should never be called.
+                    throw new NotImplementedException();
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
             }
 
             [UnmanagedCallersOnly]
@@ -167,6 +193,12 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             return __retval != 0;
         }
 
+        unsafe uint global::Microsoft.UI.Xaml.Interop.IBindableIterator.GetMany(ref object[] items)
+        {
+            // Should never be called.
+            throw new NotImplementedException();
+        }
+
         unsafe object global::Microsoft.UI.Xaml.Interop.IBindableIterator.Current
         {
             get
@@ -205,6 +237,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         public unsafe delegate int get_Current_0(IntPtr thisPtr, IntPtr* result);
         public unsafe delegate int get_HasCurrent_1(IntPtr thisPtr, byte* result);
         public unsafe delegate int MoveNext_2(IntPtr thisPtr, byte* result);
+        public unsafe delegate int GetMany_3(IntPtr thisPtr, int itemSize, IntPtr items, uint* result);
     }
 
     [DynamicInterfaceCastableImplementation]
