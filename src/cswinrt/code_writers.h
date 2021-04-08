@@ -4428,7 +4428,7 @@ private static unsafe int Do_Abi_%%
 try
 {
 var __this = global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
-if(_%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(%, out var __handler))
+if(__this != null && _%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(%, out var __handler))
 {
 __this.% -= __handler;
 }

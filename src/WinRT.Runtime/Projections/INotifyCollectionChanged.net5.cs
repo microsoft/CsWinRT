@@ -67,7 +67,7 @@ namespace ABI.System.Collections.Specialized
                 try
                 {
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.Collections.Specialized.INotifyCollectionChanged>(thisPtr);
-                    if (_CollectionChanged_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(token, out var __handler))
+                    if (__this != null && _CollectionChanged_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(token, out var __handler))
                     {
                         __this.CollectionChanged -= __handler;
                     }
