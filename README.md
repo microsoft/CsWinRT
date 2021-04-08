@@ -16,7 +16,7 @@ However, C#/WinRT is a general effort and is intended to support other scenarios
 
 ## What's New
 
-See our [release notes](https://github.com/microsoft/CsWinRT/releases) for the most recent C#/WinRT releases and corresponding .NET SDK versions. C#/WinRT runtime and Windows SDK projection updates typically become available in an upcoming .NET SDK update, which follows a monthly release cadence. We also make updates to the C#/WinRT tool itself, which are shipped through the C#/WInRT NuGet package. Details on breaking changes and specific issues can be found in the releases notes.
+See our [release notes](https://github.com/microsoft/CsWinRT/releases) for the latest C#/WinRT releases and corresponding .NET SDK versions. C#/WinRT runtime and Windows SDK projection updates typically become available in a future .NET SDK update, which follows a monthly release cadence. We also make updates to the C#/WinRT tool itself, which are shipped through the C#/WinRT NuGet package. Details on breaking changes and specific issues can be found in the releases notes.
 
 [C#/WinRT version 1.1.4](https://github.com/microsoft/CsWinRT/releases/tag/1.1.4.210316.1) is aligned with the [.NET April 2021 Update](https://github.com/dotnet/core/blob/main/release-notes/5.0/5.0.5/5.0.5.md) which includes bugfixes to the runtime and Windows SDK projections, as well as improvements to [C#/WinRT authoring support](https://github.com/microsoft/CsWinRT/blob/master/docs/authoring.md) which is currently in preview.  
 
@@ -26,7 +26,7 @@ Download the C#/WinRT NuGet package here: https://www.nuget.org/packages/Microso
 
 ### Documentation
 
-- [Usage guide](docs/usage.md) - information on how to use the C#/WinRT package to generate a projection 
+- [Usage guide](docs/usage.md) - usage guide for developers
 - [C#/WinRT NuGet properties](nuget/readme.md) - documentation on customizing C#/WinRT NuGet package properties
 - [Repository structure](docs/structure.md) - detailed breakdown of this repository
 - [COM Interop guide](docs/interop.md) - for recommendations on migrating from System.Runtime.InteropServices
@@ -36,22 +36,6 @@ For additional documentation and walkthroughs, visit <http://aka.ms/cswinrt>.
 ### C#/WinRT Architecture
 
 The C#/WinRT runtime assembly, `WinRT.Runtime.dll`, is required by all C#/WinRT assemblies.  It provides an abstraction layer over the .NET runtime, supporting .NET 5+. The runtime assembly implements several features for all projected C#/WinRT types, including WinRT activation, marshaling logic, and [COM wrapper](https://docs.microsoft.com/dotnet/standard/native-interop/com-wrappers) lifetime management.
-
-### Create and distribute an interop assembly
-
-Component authors need to build a C#/WinRT interop assembly for .NET 5+ consumers. In the diagram below, the **cswinrt.exe** tool processes Windows Metadata (`*.winmd`) files in the "Contoso" namespace to create projection source files. These source files are then compiled into an interop projection assembly named `Contoso.projection.dll`. The interop assembly must be distributed along with the implementation assemblies (`Contoso.*.dll`) as a NuGet package. See [this walkthrough](https://docs.microsoft.com/windows/uwp/csharp-winrt/net-projection-from-cppwinrt-component) for details on how to generate a .NET 5+ projection using C#/WinRT.
-
-<img alt="Creating projection"
-    src="docs/images/Diagram_CreateProjection.jpg"
-    width="70%" height="50%">
-
-### Reference an interop assembly
-
-Application developers on .NET 5+ can reference C#/WinRT interop assemblies by adding a reference to the interop NuGet package. This replaces any `*.winmd` references. The .NET 5+ application includes `WinRT.Runtime.dll` which handles WinRT type activation logic.
-
-<img alt = "Adding projection"
-    src="docs/images/Diagram_AddProjection.jpg"
-    width="70%" height="50%">
 
 ## Building and running C#/WinRT
 
