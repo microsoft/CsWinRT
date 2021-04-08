@@ -24,6 +24,8 @@ See our [release notes](https://github.com/microsoft/CsWinRT/releases) for the l
 
 Download the C#/WinRT NuGet package here: https://www.nuget.org/packages/Microsoft.Windows.CsWinRT/
 
+You can also build a C#/WinRT package yourself from source: see our [Contributor's Guide](CONTRIBUTING.md) for more information on building the repo.
+
 ### Documentation
 
 - [Usage guide](docs/usage.md) - usage guide for developers
@@ -37,35 +39,17 @@ For additional documentation and walkthroughs, visit <http://aka.ms/cswinrt>.
 
 The C#/WinRT runtime assembly, `WinRT.Runtime.dll`, is required by all C#/WinRT assemblies.  It provides an abstraction layer over the .NET runtime, supporting .NET 5+. The runtime assembly implements several features for all projected C#/WinRT types, including WinRT activation, marshaling logic, and [COM wrapper](https://docs.microsoft.com/dotnet/standard/native-interop/com-wrappers) lifetime management.
 
-## Building and running C#/WinRT
+## Contributing
 
-C#/WinRT currently requires the following packages, or newer, to build:
+File a [new issue!](https://github.com/microsoft/CsWinRT/issues/new) This project welcomes contributions and suggestions of all types.
 
-- [Visual Studio 16.8](https://visualstudio.microsoft.com/downloads/) 
-- [.NET 5.0 SDK](https://dotnet.microsoft.com/download/dotnet/5.0) 
-- [.NET Core 2.1 SDK](https://dotnet.microsoft.com/download/dotnet-core/2.1)
-- [nuget.exe 5.8.0-preview.3](https://www.nuget.org/downloads)
-- WinUI 3 3.0.0-preview1.200515.3
-
-The `build.cmd` script takes care of all related configuration steps and is the simplest way to get started building C#/WinRT. It installs prerequisites such as nuget and the .NET 5 SDK, configures the environment to use .NET 5 (creating a `global.json` if necessary), builds the compiler, and builds and executes the unit tests. To build C#/WinRT, follow these steps: 
-
-- Open a Visual Studio Developer command prompt pointing at the repo.
-- Run `build.cmd`. 
-- To launch the project in Visual Studio, run `devenv cswinrt.sln` from the same command prompt. This will inherit the necessary environment.
-
-**Note:**  By default, projection projects only generate source files for Release configurations, where cswinrt.exe can execute in seconds.  To generate projection sources for Debug configurations, set the project property GenerateTestProjection to 'true'.  In either case, existing projection sources under the "Generated Files" folder will still be compiled into the projection assembly.  This configuration permits a faster inner loop in Visual Studio.
+We ask that **before you start work on a feature that you would like to contribute**, please read our [Contributor's Guide](CONTRIBUTING.md), which also includes steps on building the C#/WinRT repo.
 
 ## Related Projects
 
 C#/WinRT is part of the [xlang](https://github.com/microsoft/xlang) family of projects that help developers create APIs that can run on multiple platforms and be used with a variety of languages. The mission of C#/WinRT is not to support cross-platform execution directly, but to support the cross-platform goals of .NET Core. 
 
 C#/WinRT is also part of [Project Reunion](https://github.com/microsoft/ProjectReunion) - a set of libraries, frameworks, components, and tools that you can use in your apps to access powerful platform functionality across many versions of Windows. Project Reunion combines Win32 native app capabilities with modern API usage techniques, so your apps light up everywhere your users are. Project Reunion also includes [WinUI](https://docs.microsoft.com/en-us/windows/apps/winui/), [WebView2](https://docs.microsoft.com/en-us/microsoft-edge/webview2/), [MSIX](https://docs.microsoft.com/en-us/windows/msix/overview), [C++/WinRT](https://github.com/microsoft/CppWinRT/), and [Rust/WinRT](https://github.com/microsoft/winrt-rs).
-
-## Contributing
-
-File a [new issue!](https://github.com/microsoft/CsWinRT/issues/new) This project welcomes contributions and suggestions of all types.
-
-We ask that **before you start work on a feature that you would like to contribute**, please read our [Contributor's Guide](CONTRIBUTING.md). 
 
 ### License Info
 
