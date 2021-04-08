@@ -1660,7 +1660,8 @@ MarshalInspectable<object>.DisposeAbi(ptr);
 }
 }))())
 {
-    ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+%
 }
 )",
                     platform_attribute, 
@@ -1670,7 +1671,8 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                     cache_object,
                     method.Name(),
                     bind_list<write_parameter_name_with_modifier>(", ", signature.params()),
-                    settings.netstandard_compat ? "new " + default_interface_name : "");
+                    settings.netstandard_compat ? "new " + default_interface_name : "",
+                    settings.netstandard_compat ? "" : "ComWrappersHelper.Init(_inner, false);");
             }
         }
         else
@@ -1679,11 +1681,13 @@ MarshalInspectable<object>.DisposeAbi(ptr);
 public %() : this(%(ActivationFactory<%>.ActivateInstance<IUnknownVftbl>()))
 {
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
+%
 }
 )",
                 class_type.TypeName(),
                 settings.netstandard_compat ? "new " + default_interface_name : "",
-                class_type.TypeName());
+                class_type.TypeName(),
+                settings.netstandard_compat ? "" : "ComWrappersHelper.Init(_inner, false);");
         }
     }
 
@@ -1746,23 +1750,20 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                 w.write(R"(
 %% %(%)%
 {
-object baseInspectable = this.GetType() != typeof(%) ? this : null;
-IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
-using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
+bool isAggregation = this.GetType() != typeof(%);
+object baseInspectable = isAggregation ? this : null;
+IntPtr composed = %.%(%%baseInspectable, out IntPtr inner);
 try
 {
-_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
-if(baseInspectable == null) _inner = _inner.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
+ComWrappersHelper.Init(isAggregation, this, composed, inner, out _inner);
 _defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));
 _lazyInterfaces = new Dictionary<Type, object>()
 {%
 };
-
-ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
 finally
 {
-MarshalInspectable<object>.DisposeAbi(ptr);
+Marshal.Release(inner);   
 }
 }
 )",
@@ -1776,7 +1777,6 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                     method.Name(),
                     bind_list<write_parameter_name_with_modifier>(", ", params_without_objects),
                     [&](writer& w) {w.write("%", params_without_objects.empty() ? " " : ", "); },
-                    default_interface_name,
                     default_interface_name,
                     default_interface_name,
                     default_interface_name,
@@ -4428,7 +4428,7 @@ private static unsafe int Do_Abi_%%
 try
 {
 var __this = global::WinRT.ComWrappersSupport.FindObject<%>(thisPtr);
-if(_%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(%, out var __handler))
+if(__this != null && _%_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(%, out var __handler))
 {
 __this.% -= __handler;
 }
@@ -4734,7 +4734,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         if (!std::holds_alternative<object_type>(type))
         {
             w.write(R"(
-    : base(objRef)
+    : base(global::WinRT.DerivedComposed.Instance)
 )");
         }
     }

@@ -27,6 +27,12 @@ namespace Microsoft.UI.Xaml.Interop
     internal interface IBindableIterator
     {
         bool MoveNext();
+        // GetMany is not implemented by IBindableIterator, but it is here
+        // for compat purposes with WinUI where there are scenarios they do
+        // reinterpret_cast from IBindableIterator to IIterable<object>.  It is
+        // the last function in the vftable and shouldn't be called by anyone.
+        // If called, it will return NotImplementedException.
+        uint GetMany(ref object[] items);
         object Current { get; }
         bool HasCurrent { get; }
     }
@@ -71,11 +77,14 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> get_HasCurrent_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_get_HasCurrent_1; set => _get_HasCurrent_1 = value; }
             private void* _MoveNext_2;
             public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> MoveNext_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_MoveNext_2; set => _MoveNext_2 = value; }
+            // Note this may not be a valid address and should not be called.
+            private void* _GetMany_3;
+            public delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, uint*, int> GetMany_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, uint*, int>)_GetMany_3; set => _GetMany_3 = value; }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-            private static readonly Delegate[] DelegateCache = new Delegate[3];
+            private static readonly Delegate[] DelegateCache = new Delegate[4];
 
             static unsafe Vftbl()
             {
@@ -86,9 +95,9 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                     _get_Current_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new IBindableIterator_Delegates.get_Current_0(Do_Abi_get_Current_0)).ToPointer(),
                     _get_HasCurrent_1 = Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IBindableIterator_Delegates.get_HasCurrent_1(Do_Abi_get_HasCurrent_1)).ToPointer(),
                     _MoveNext_2 = Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new IBindableIterator_Delegates.MoveNext_2(Do_Abi_MoveNext_2)).ToPointer(),
-
+                    _GetMany_3 = Marshal.GetFunctionPointerForDelegate(DelegateCache[3] = new IBindableIterator_Delegates.GetMany_3(Do_Abi_GetMany_3)).ToPointer(),
                 };
-                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 3);
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
                 Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -110,6 +119,23 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 }
                 return 0;
             }
+
+            private static unsafe int Do_Abi_GetMany_3(IntPtr thisPtr, int __itemsSize, IntPtr items, uint* result)
+            {
+                *result = default;
+
+                try
+                {
+                    // Should never be called.
+                    throw new NotImplementedException();
+                }
+                catch (Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+            }
+
 
             private static unsafe int Do_Abi_get_Current_0(IntPtr thisPtr, IntPtr* value)
             {
@@ -193,6 +219,12 @@ namespace ABI.Microsoft.UI.Xaml.Interop
             }
         }
 
+        public unsafe uint GetMany(ref object[] items)
+        {
+            // Should never be called.
+            throw new NotImplementedException();
+        }
+
     }
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     internal static class IBindableIterator_Delegates
@@ -200,6 +232,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         public unsafe delegate int get_Current_0(IntPtr thisPtr, IntPtr* result);
         public unsafe delegate int get_HasCurrent_1(IntPtr thisPtr, byte* result);
         public unsafe delegate int MoveNext_2(IntPtr thisPtr, byte* result);
+        public unsafe delegate int GetMany_3(IntPtr thisPtr, int itemSize, IntPtr items, uint* result);
     }
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]

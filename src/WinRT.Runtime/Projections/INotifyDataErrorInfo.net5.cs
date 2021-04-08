@@ -108,7 +108,7 @@ namespace ABI.System.ComponentModel
                 try
                 {
                     var __this = global::WinRT.ComWrappersSupport.FindObject<global::System.ComponentModel.INotifyDataErrorInfo>(thisPtr);
-                    if (_ErrorsChanged_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(token, out var __handler))
+                    if (__this != null && _ErrorsChanged_TokenTables.TryGetValue(__this, out var __table) && __table.RemoveEventHandler(token, out var __handler))
                     {
                         __this.ErrorsChanged -= __handler;
                     }
