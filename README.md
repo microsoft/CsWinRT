@@ -4,7 +4,7 @@
 
 C#/WinRT provides Windows Runtime (WinRT) projection support for the C# language. A "projection" is an adapter that enables programming the WinRT APIs in a natural and familiar way for the target language. The C#/WinRT projection hides the details of interop between C# and WinRT interfaces, and provides mappings of many WinRT types to appropriate .NET equivalents, such as strings, URIs, common value types, and generic collections.  
 
-WinRT APIs are defined in `*.winmd` format, and C#/WinRT includes tooling that generates C# code that can be compiled into interop assemblies, similar to how [C++/WinRT](https://github.com/Microsoft/cppwinrt) generates headers for the C++ language projection. This means that neither the C# compiler nor the .NET Runtime require built-in knowledge of WinRT any longer.
+WinRT APIs are defined in `*.winmd` format, and C#/WinRT includes tooling that generates C# code for consumption scenarios, or generates a `*.winmd` for authoring scenarios. Generated C# source code can be compiled into interop assemblies, similar to how [C++/WinRT](https://github.com/Microsoft/cppwinrt) generates headers for the C++ language projection. This means that neither the C# compiler nor the .NET Runtime require built-in knowledge of WinRT any longer.
 
 ## Motivation
 
@@ -17,8 +17,6 @@ However, C#/WinRT is a general effort and is intended to support other scenarios
 ## What's New
 
 See our [release notes](https://github.com/microsoft/CsWinRT/releases) for the latest C#/WinRT releases and corresponding .NET SDK versions. C#/WinRT runtime and Windows SDK projection updates typically become available in a future .NET SDK update, which follows a monthly release cadence. We also make updates to the C#/WinRT tool itself, which are shipped through the C#/WinRT NuGet package. Details on breaking changes and specific issues can be found in the releases notes.
-
-[C#/WinRT version 1.1.4](https://github.com/microsoft/CsWinRT/releases/tag/1.1.4.210316.1) is aligned with the [.NET April 2021 Update](https://github.com/dotnet/core/blob/main/release-notes/5.0/5.0.5/5.0.5.md) which includes bugfixes to the runtime and Windows SDK projections, as well as improvements to [C#/WinRT authoring support](https://github.com/microsoft/CsWinRT/blob/master/docs/authoring.md) which is currently in preview.  
 
 ## Using C#/WinRT
 
@@ -41,7 +39,7 @@ The C#/WinRT runtime assembly, `WinRT.Runtime.dll`, is required by all C#/WinRT 
 
 ## Contributing
 
-File a [new issue!](https://github.com/microsoft/CsWinRT/issues/new) This project welcomes contributions and suggestions of all types.
+File a [new issue!](https://github.com/microsoft/CsWinRT/issues/new/choose) This project welcomes contributions and suggestions of all types.
 
 We ask that **before you start work on a feature that you would like to contribute**, please read our [Contributor's Guide](CONTRIBUTING.md), which also includes steps on building the C#/WinRT repo.
 
