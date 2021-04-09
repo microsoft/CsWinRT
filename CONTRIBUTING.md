@@ -47,7 +47,7 @@ build.cmd [Platform] [Configuration] [VersionNumber] [VersionString] [AssemblyVe
     ```cmd
     build.cmd x86 Debug
     ```
-- Building in Debug mode for platform x86, and creates a 2.0.0-mycswinrt.0.nupkg that has `WinRT.Runtime` with AssemblyVersion of 2.0.0.0
+- Building in Debug mode for platform x64, and creates a 2.0.0-mycswinrt.0.nupkg that has `WinRT.Runtime` with AssemblyVersion of 2.0.0.0
     ```cmd
     build.cmd x64 Debug 2.0.0.0 2.0.0-mycswinrt.0 2.0.0.0
     ```
