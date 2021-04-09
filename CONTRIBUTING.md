@@ -12,7 +12,7 @@ C#/WinRT currently requires the following packages, or newer, to build:
 - [nuget.exe 5.8.0-preview.3](https://www.nuget.org/downloads)
 - Microsoft.WinUI 3.0.0-preview4.210210.4
 
-The [`build.cmd`](src\build.cmd) script takes care of all related configuration steps and is the simplest way to get started building C#/WinRT. It installs prerequisites such as `nuget.exe` and the .NET 5 SDK, configures the environment to use .NET 5 (creating a `global.json` if necessary), builds the compiler, and builds and executes the unit tests. To build C#/WinRT, follow these steps: 
+The [`build.cmd`](src/build.cmd) script takes care of all related configuration steps and is the simplest way to get started building C#/WinRT. It installs prerequisites such as `nuget.exe` and the .NET 5 SDK, configures the environment to use .NET 5 (creating a `global.json` if necessary), builds the compiler, and builds and executes the unit tests. To build C#/WinRT, follow these steps: 
 
 - Open a Visual Studio Developer command prompt pointing at the repo.
 - Run `src\build.cmd`. 
