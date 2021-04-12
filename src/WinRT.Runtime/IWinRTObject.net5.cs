@@ -63,6 +63,7 @@ namespace WinRT
                         return true;
                     }
                 }
+
                 Type iList = typeof(IList<>).MakeGenericType(new[] { itemType });
                 if (IsInterfaceImplemented(iList.TypeHandle, throwIfNotImplemented))
                 {
@@ -72,7 +73,6 @@ namespace WinRT
                     }
                     return true;
                 }
-
                 return false;
             }
             else if (type == typeof(System.Collections.IEnumerable))
@@ -93,6 +93,8 @@ namespace WinRT
             {
                 return false;
             }
+
+
             int hr = NativeObject.TryAs<IUnknownVftbl>(GuidGenerator.GetIID(helperType), out var objRef);
             if (hr < 0)
             {
@@ -103,31 +105,74 @@ namespace WinRT
                 return false;
             }
 
+            // If we are casting to a Generic Collection, see if it (or its base types) supports covariance
+            // If so, then add a mapping from each variant type to this object to the QI cache
+            FindAllVariants(type, objRef, helperType);
+            foreach (var ifaceImplemented in type.GetInterfaces())
+            {
+                FindAllVariants(ifaceImplemented, objRef, helperType);
+            }
+
+
             if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type))
             {
                 RuntimeTypeHandle projectIEnum = typeof(System.Collections.IEnumerable).TypeHandle;
                 AdditionalTypeData.GetOrAdd(projectIEnum, (_) => new ABI.System.Collections.IEnumerable.AdaptiveFromAbiHelper(type, this));
             }
 
-            var vftblType = helperType.FindVftblType();
             using (objRef)
             {
-                if (vftblType is null)
-                {
-                    var qiObjRef = objRef.As<IUnknownVftbl>(GuidGenerator.GetIID(helperType));
-                    if (!QueryInterfaceCache.TryAdd(interfaceType, qiObjRef))
+                return PopulateQICache(objRef, helperType, interfaceType); 
+            }
+        }
+
+        /// <summary>
+        /// Add entries in the QueryInterfaceCache for any variant types supported by the given type 
+        /// </summary>
+        /// <param name="type">type we are casting to</param>
+        /// <param name="objRef">native object used for the type we are casting to</param>
+        /// <param name="helperType">ABI version of the type we are casting to</param>
+        internal void FindAllVariants(Type type, ObjectReference<IUnknownVftbl> objRef, Type helperType)
+        {
+            if (type.IsGenericType) // && supportsVariance (?)
+            { 
+                Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(type, out var variantTypes);
+                if (variantTypes != null)
+                { 
+                    foreach (var covariantInterface in variantTypes) 
                     {
-                        objRef.Dispose();
-                    }
-                    return true;
-                }
-                IObjectReference typedObjRef = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
-                if (!QueryInterfaceCache.TryAdd(interfaceType, typedObjRef))
+                        PopulateQICache(objRef, helperType, covariantInterface.TypeHandle);
+                    } 
+                } 
+            }
+        }
+        
+        /// <summary>
+        /// Update QueryInterfaceCache: add a mapping from the given interfaceType to the proper object reference
+        /// the proper object reference is based on the given object reference -- either use the IUnknown vtable or use the one associated with the helper type
+        /// </summary>
+        /// <param name="objRef">ObjectReference made for the native object we are casting to</param>
+        /// <param name="helperType">the ABI version of the type we are casting to</param>
+        /// <param name="interfaceType">key to add to the cache, i.e. either the type we are casting to or its (ancestor) variants</param>
+        /// <returns></returns>
+        internal bool PopulateQICache(ObjectReference<IUnknownVftbl> objRef, Type helperType, RuntimeTypeHandle interfaceType)
+        {
+            var vftblType = helperType.FindVftblType();
+            if (vftblType is null)
+            {
+                var qiObjRef = objRef.As<IUnknownVftbl>(GuidGenerator.GetIID(helperType));
+                if (!QueryInterfaceCache.TryAdd(interfaceType, qiObjRef))
                 {
-                    typedObjRef.Dispose();
+                    objRef.Dispose();
                 }
                 return true;
             }
+            IObjectReference typedObjRef = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
+            if (!QueryInterfaceCache.TryAdd(interfaceType, typedObjRef))
+            {
+                typedObjRef.Dispose();
+            }
+            return true;
         }
 
         RuntimeTypeHandle IDynamicInterfaceCastable.GetInterfaceImplementation(RuntimeTypeHandle interfaceType)

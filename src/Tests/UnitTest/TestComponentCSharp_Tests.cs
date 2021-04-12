@@ -333,7 +333,7 @@ namespace UnitTest
         [Fact]
         public void TestGenericCollectionCovariance()
         {
-            Assert.True(InvokeGetFilesAsync().Wait(1000));
+            Assert.True(InvokeGetFilesAsync().Wait(-1));
         }
 
 #if NET5_0
