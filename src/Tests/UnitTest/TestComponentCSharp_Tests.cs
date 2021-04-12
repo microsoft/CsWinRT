@@ -325,13 +325,13 @@ namespace UnitTest
 
         async Task InvokeGetFilesAsync()
         {
-            var folder = ApplicationData.Current.LocalFolder;
+            var folder = KnownFolders.DocumentsLibrary;
             var files = await folder.GetFilesAsync();
             _ = ((IReadOnlyList<IStorageFile>)files).ToList();
         }
 
         [Fact]
-        public void TestGetFilesAsync()
+        public void TestGenericCollectionCovariance()
         {
             Assert.True(InvokeGetFilesAsync().Wait(1000));
         }
