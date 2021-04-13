@@ -14,7 +14,7 @@ namespace ABI.System
         public static Boolean FromManaged(bool value) => GetAbi(value);
         public static unsafe void CopyManaged(bool arg, IntPtr dest) => *(byte*)dest.ToPointer() = FromManaged(arg).value;
         public static void DisposeMarshaler(bool m) { }
-        public static void DisposeAbi(byte abi) { }
+        public static void DisposeAbi(Boolean abi) { }
     }
 
     internal struct Char
