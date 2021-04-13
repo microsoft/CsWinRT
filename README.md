@@ -12,7 +12,7 @@ WinRT APIs are defined in `*.winmd` format, and C#/WinRT includes tooling that g
 
 [WinUI 3](https://github.com/Microsoft/microsoft-ui-xaml) is the effort to lift official native Microsoft UI controls and features out of the operating system, so app developers can use the latest controls and visuals on any in-market version of the OS. C#/WinRT is needed to support the changes required for lifting the XAML APIs out of Windows.UI.XAML and into Microsoft.UI.XAML.
 
-However, C#/WinRT is a general effort and is intended to support other scenarios and versions of the .NET runtime, compatible down to .NET Standard 2.0.
+However, C#/WinRT is a general effort and is intended to support other scenarios and versions of the .NET runtime. While our focus is on supporting .NET 5, we aspire to generate projections that are compatible down to .NET Standard 2.0. Please refer to our issues backlog for more information.
 
 ## What's New
 
