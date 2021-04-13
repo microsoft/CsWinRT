@@ -28,7 +28,7 @@ There are several settings that can be set with `build.cmd` that you might not k
 build.cmd [Platform] [Configuration] [VersionNumber] [VersionString] [AssemblyVersion]
 ```
 
-| Property | Value(s) |
+| Parameter | Value(s) |
 |-|-|
 | Platform | *x64 \| x86 | Default is `x64`
 | Configuration | *Release \| Debug | 
