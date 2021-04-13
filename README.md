@@ -4,75 +4,50 @@
 
 C#/WinRT provides Windows Runtime (WinRT) projection support for the C# language. A "projection" is an adapter that enables programming the WinRT APIs in a natural and familiar way for the target language. The C#/WinRT projection hides the details of interop between C# and WinRT interfaces, and provides mappings of many WinRT types to appropriate .NET equivalents, such as strings, URIs, common value types, and generic collections.  
 
-WinRT APIs are defined in `*.winmd` format, and C#/WinRT includes tooling that generates C# code that can be compiled into interop assemblies, similar to how [C++/WinRT](https://github.com/Microsoft/cppwinrt) generates headers for the C++ language projection. This means that neither the C# compiler nor the .NET Runtime require built-in knowledge of WinRT any longer.
-
-## C#/WinRT Architecture
-
-The C#/WinRT runtime assembly, `WinRT.Runtime.dll`, is required by all C#/WinRT assemblies.  It provides an abstraction layer over the .NET runtime, supporting .NET 5. The runtime assembly implements several features for all projected C#/WinRT types, including WinRT activation, marshaling logic, and [COM wrapper](https://docs.microsoft.com/dotnet/standard/native-interop/com-wrappers) lifetime management.
-
-### Create and distribute an interop assembly
-
-Component authors need to build a C#/WinRT projection assembly for .NET5+ consumers. In the diagram below, the **cswinrt.exe** tool processes Windows Metadata (`*.winmd`) files in the "Contoso" namespace to create projection source files. These source files are then compiled into an interop projection assembly named `Contoso.projection.dll`. The projection assembly must be distributed along with the implementation assemblies (`Contoso.*.dll`) as a NuGet package.
-
-<img alt="Creating projection"
-    src="docs/images/Diagram_CreateProjection.jpg"
-    width="70%" height="50%">
-
-### Reference an interop assembly
-
-Application developers on .NET5+ can reference C#/WinRT interop assemblies by adding a reference to the interop NuGet package. This replaces any `*.winmd` references. The .NET5+ application includes `WinRT.Runtime.dll` which handles WinRT type activation logic.
-
-<img alt = "Adding projection"
-    src="docs/images/Diagram_AddProjection.jpg"
-    width="70%" height="50%">
+WinRT APIs are defined in `*.winmd` format, and C#/WinRT includes tooling that generates C# code for consumption scenarios, or generates a `*.winmd` for authoring scenarios. Generated C# source code can be compiled into interop assemblies, similar to how [C++/WinRT](https://github.com/Microsoft/cppwinrt) generates headers for the C++ language projection. This means that neither the C# compiler nor the .NET Runtime require built-in knowledge of WinRT any longer.
 
 ## Motivation
 
-[.NET Core](https://docs.microsoft.com/en-us/dotnet/core/) is the focus for the .NET platform. It is an open-source, cross-platform runtime that can be used to build device, cloud, and IoT applications. Previous versions of .NET Framework and .NET Core have built-in knowledge of WinRT which is a Windows-specific technology. By lifting this projection support out of the compiler and runtime, we are supporting efforts to make .NET more efficient for its .NET 5 release. 
+[.NET Core](https://docs.microsoft.com/en-us/dotnet/core/) is the focus for the .NET platform. It is an open-source, cross-platform runtime that can be used to build device, cloud, and IoT applications. Previous versions of .NET Framework and .NET Core have built-in knowledge of WinRT which is a Windows-specific technology. By lifting this projection support out of the compiler and runtime, we are supporting efforts to make .NET more efficient for .NET 5 onwards. 
 
-[WinUI3.0](https://github.com/Microsoft/microsoft-ui-xaml) is the effort to lift official native Microsoft UI controls and features out of the operating system, so app developers can use the latest controls and visuals on any in-market version of the OS. C#/WinRT is needed to support the changes required for lifting the XAML APIs out of Windows.UI.XAML and into Microsoft.UI.XAML.
+[WinUI 3](https://github.com/Microsoft/microsoft-ui-xaml) is the effort to lift official native Microsoft UI controls and features out of the operating system, so app developers can use the latest controls and visuals on any in-market version of the OS. C#/WinRT is needed to support the changes required for lifting the XAML APIs out of Windows.UI.XAML and into Microsoft.UI.XAML.
 
 However, C#/WinRT is a general effort and is intended to support other scenarios and versions of the .NET runtime, compatible down to .NET Standard 2.0.
 
-## Usage and Developer Guidance
+## What's New
+
+See our [release notes](https://github.com/microsoft/CsWinRT/releases) for the latest C#/WinRT releases and corresponding .NET SDK versions. C#/WinRT runtime and Windows SDK projection updates typically become available in a future .NET SDK update, which follows a monthly release cadence. We also make updates to the C#/WinRT tool itself, which are shipped through the C#/WinRT NuGet package. Details on breaking changes and specific issues can be found in the releases notes.
+
+## Using C#/WinRT
 
 Download the C#/WinRT NuGet package here: https://www.nuget.org/packages/Microsoft.Windows.CsWinRT/
 
-Please read the [usage](docs/usage.md) and [repository structure](docs/structure.md) docs for a detailed breakdown. For recommendations on migrating from System.Runtime.InteropServices, see the [COM Interop](docs/interop.md) guide. For additional documentation and walkthroughs, visit <http://aka.ms/cswinrt>.
+You can also build a C#/WinRT package yourself from source: see our [Contributor's Guide](CONTRIBUTING.md) for more information on building the repo.
 
-## Building and running C#/WinRT
+### Documentation
 
-C#/WinRT currently requires the following packages, or newer, to build:
+- [Usage guide](docs/usage.md) - usage guide for developers
+- [C#/WinRT NuGet properties](nuget/readme.md) - documentation on customizing C#/WinRT NuGet package properties
+- [Repository structure](docs/structure.md) - detailed breakdown of this repository
+- [COM Interop guide](docs/interop.md) - for recommendations on migrating from System.Runtime.InteropServices
 
-- [Visual Studio 16.8](https://visualstudio.microsoft.com/downloads/) 
-- [.NET 5.0 SDK](https://dotnet.microsoft.com/download/dotnet/5.0) 
-- [.NET Core 2.1 SDK](https://dotnet.microsoft.com/download/dotnet-core/2.1)
-- [nuget.exe 5.8.0-preview.3](https://www.nuget.org/downloads)
-- WinUI 3 3.0.0-preview1.200515.3
+For additional documentation and walkthroughs, visit <http://aka.ms/cswinrt>.
 
-The `build.cmd` script takes care of all related configuration steps and is the simplest way to get started building C#/WinRT. It installs prerequisites such as nuget and the .NET 5 SDK, configures the environment to use .NET 5 (creating a `global.json` if necessary), builds the compiler, and builds and executes the unit tests. To build C#/WinRT, follow these steps: 
+### C#/WinRT Architecture
 
-- Open a Visual Studio Developer command prompt pointing at the repo.
-- Run `build.cmd`. 
-- To launch the project in Visual Studio, run `devenv cswinrt.sln` from the same command prompt. This will inherit the necessary environment.
+The C#/WinRT runtime assembly, `WinRT.Runtime.dll`, is required by all C#/WinRT assemblies.  It provides an abstraction layer over the .NET runtime, supporting .NET 5+. The runtime assembly implements several features for all projected C#/WinRT types, including WinRT activation, marshaling logic, and [COM wrapper](https://docs.microsoft.com/dotnet/standard/native-interop/com-wrappers) lifetime management.
 
-**Note:**  By default, projection projects only generate source files for Release configurations, where cswinrt.exe can execute in seconds.  To generate projection sources for Debug configurations, set the project property GenerateTestProjection to 'true'.  In either case, existing projection sources under the "Generated Files" folder will still be compiled into the projection assembly.  This configuration permits a faster inner loop in Visual Studio.
+## Contributing
 
-## What's New
+File a [new issue!](https://github.com/microsoft/CsWinRT/issues/new/choose) This project welcomes contributions and suggestions of all types.
 
-C#/WinRT [version 1.1.4](https://github.com/microsoft/CsWinRT/releases/tag/1.1.4.210316.1) is the latest release and includes bugfixes for the Windows SDK projections, as well as improvements to [C#/WinRT authoring support](https://github.com/microsoft/CsWinRT/blob/master/docs/authoring.md) currently in preview. C#/WinRT [version 1.1.2](https://github.com/microsoft/CsWinRT/releases/tag/1.1.2.210216.1) is aligned with the most recent [.NET 5 March update](https://devblogs.microsoft.com/dotnet/net-march-2021/). See the [releases page](https://github.com/microsoft/CsWinRT/releases) for the most recent C#/WinRT NuGet releases and corresponding versions for .NET SDK updates. Details on breaking changes and known issues can be found on the releases page.
+We ask that **before you start work on a feature that you would like to contribute**, please read our [Contributor's Guide](CONTRIBUTING.md), which also includes steps on building the C#/WinRT repo.
 
 ## Related Projects
 
 C#/WinRT is part of the [xlang](https://github.com/microsoft/xlang) family of projects that help developers create APIs that can run on multiple platforms and be used with a variety of languages. The mission of C#/WinRT is not to support cross-platform execution directly, but to support the cross-platform goals of .NET Core. 
 
 C#/WinRT is also part of [Project Reunion](https://github.com/microsoft/ProjectReunion) - a set of libraries, frameworks, components, and tools that you can use in your apps to access powerful platform functionality across many versions of Windows. Project Reunion combines Win32 native app capabilities with modern API usage techniques, so your apps light up everywhere your users are. Project Reunion also includes [WinUI](https://docs.microsoft.com/en-us/windows/apps/winui/), [WebView2](https://docs.microsoft.com/en-us/microsoft-edge/webview2/), [MSIX](https://docs.microsoft.com/en-us/windows/msix/overview), [C++/WinRT](https://github.com/microsoft/CppWinRT/), and [Rust/WinRT](https://github.com/microsoft/winrt-rs).
-
-## Contributing
-
-File a [new issue!](https://github.com/microsoft/CsWinRT/issues/new) This project welcomes contributions and suggestions of all types.
-
-We ask that **before you start work on a feature that you would like to contribute**, please read our [Contributor's Guide](CONTRIBUTING.md). 
 
 ### License Info
 
