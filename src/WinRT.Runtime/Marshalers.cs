@@ -359,6 +359,7 @@ namespace WinRT
             FromManaged = BindFromManaged();
             CopyManaged = BindCopyManaged();
             DisposeMarshaler = BindDisposeMarshaler();
+            DisposeAbi = BindDisposeAbi();
             CreateMarshalerArray = BindCreateMarshalerArray();
             GetAbiArray = BindGetAbiArray();
             FromAbiArray = BindFromAbiArray();
@@ -432,6 +433,16 @@ namespace WinRT
             return Expression.Lambda<Action<object>>(
                 Expression.Call(HelperType.GetMethod("DisposeMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
                     new[] { Expression.Convert(parms[0], MarshalerType) }), parms).Compile();
+        }
+
+        internal static readonly Action<object> DisposeAbi;
+        private static Action<object> BindDisposeAbi()
+        {
+            var disposeAbi = HelperType.GetMethod("DisposeAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            if (disposeAbi == null) return null;
+            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
+            return Expression.Lambda<Action<object>>(
+                Expression.Call(disposeAbi, new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
         }
 
         internal static readonly Func<T[], object> CreateMarshalerArray;
@@ -1154,7 +1165,7 @@ namespace WinRT
                 FromManaged = MarshalGeneric<T>.FromManaged;
                 CopyManaged = MarshalGeneric<T>.CopyManaged;
                 DisposeMarshaler = MarshalGeneric<T>.DisposeMarshaler;
-                DisposeAbi = (object box) => { };
+                DisposeAbi = MarshalGeneric<T>.DisposeAbi;
                 CreateMarshalerArray = (T[] array) => MarshalGeneric<T>.CreateMarshalerArray(array);
                 GetAbiArray = (object box) => MarshalGeneric<T>.GetAbiArray(box);
                 FromAbiArray = (object box) => MarshalGeneric<T>.FromAbiArray(box);
@@ -1255,7 +1266,7 @@ namespace WinRT
                 FromManaged = MarshalGeneric<T>.FromManaged;
                 CopyManaged = MarshalGeneric<T>.CopyManaged;
                 DisposeMarshaler = MarshalGeneric<T>.DisposeMarshaler;
-                DisposeAbi = (object box) => { };
+                DisposeAbi = MarshalGeneric<T>.DisposeAbi;
                 CreateMarshalerArray = (T[] array) => MarshalGeneric<T>.CreateMarshalerArray(array);
                 GetAbiArray = (object box) => MarshalGeneric<T>.GetAbiArray(box);
                 FromAbiArray = (object box) => MarshalGeneric<T>.FromAbiArray(box);
