@@ -1427,7 +1427,9 @@ remove => %.% -= value;
                 }
             }
             // Skip metadata attributes
-            if (attribute_namespace == "Windows.Foundation.Metadata" && attribute_name != "DefaultOverload" && attribute_name != "Overload") continue;
+            if (attribute_namespace == "Windows.Foundation.Metadata" && 
+                attribute_name != "DefaultOverload" && attribute_name != "Overload" && attribute_name != "AttributeUsage") 
+                continue;
             attributes[attribute_full] = std::move(params);
         }
         if (auto&& usage = attributes.find("AttributeUsage"); usage != attributes.end())
