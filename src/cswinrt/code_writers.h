@@ -1407,6 +1407,7 @@ remove => %.% -= value;
     void write_custom_attributes(writer& w, std::pair<CustomAttribute, CustomAttribute> const& custom_attributes, bool enable_platform_attrib)
     {
         std::map<std::string, std::vector<std::string>> attributes;
+        bool allow_multiple = false;
         for (auto&& attribute : custom_attributes)
         {
             auto [attribute_namespace, attribute_name] = attribute.TypeNamespaceAndName();
@@ -1426,13 +1427,22 @@ remove => %.% -= value;
                     attributes["global::System.Runtime.Versioning.SupportedOSPlatform"].push_back(platform);
                 }
             }
-            // Skip metadata attributes
-            if (attribute_namespace == "Windows.Foundation.Metadata" && attribute_name != "DefaultOverload" && attribute_name != "Overload") continue;
+            // Skip metadata attributes without a projection
+            if (attribute_namespace == "Windows.Foundation.Metadata")
+            {
+                if (attribute_name == "AllowMultiple")
+                {
+                    allow_multiple = true;
+                }
+                if (attribute_name != "DefaultOverload" && attribute_name != "Overload" && attribute_name != "AttributeUsage")
+                {
+                    continue;
+                }
+            }
             attributes[attribute_full] = std::move(params);
         }
         if (auto&& usage = attributes.find("AttributeUsage"); usage != attributes.end())
         {
-            bool allow_multiple = attributes.find("Windows.Foundation.Metadata.AllowMultiple") != attributes.end();
             usage->second.push_back(w.write_temp("AllowMultiple = %", allow_multiple ? "true" : "false"));
         }
 
