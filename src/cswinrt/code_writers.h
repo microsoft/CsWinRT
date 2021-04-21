@@ -1434,7 +1434,8 @@ remove => %.% -= value;
                 {
                     allow_multiple = true;
                 }
-                if (attribute_name != "DefaultOverload" && attribute_name != "Overload" && attribute_name != "AttributeUsage")
+                if (attribute_name != "DefaultOverload" && attribute_name != "Overload" && 
+                    attribute_name != "AttributeUsage" && attribute_name != "ContractVersion")
                 {
                     continue;
                 }
