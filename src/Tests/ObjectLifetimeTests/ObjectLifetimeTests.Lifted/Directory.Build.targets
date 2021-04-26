@@ -1,0 +1,4 @@
+<Project>
+    <Import Project="ObjectLifetimeTests.Lifted\CSWinRTInApp.targets"/>
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+</Project>

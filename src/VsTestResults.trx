@@ -1,0 +1,812 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="140d787a-23c7-478d-b9c8-eeb344604aa8" name="shasnayak@DESKTOP-V5VHPHF 2021-06-15 18:56:36" runUser="NORTHAMERICA\shasnayak" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2021-06-15T18:56:36.4935878-04:00" queuing="2021-06-15T18:56:36.4935878-04:00" start="2021-06-15T18:56:23.2865498-04:00" finish="2021-06-15T18:56:36.6940195-04:00" />
+  <TestSettings name="default" id="7326abee-ffba-453d-99bc-706796467951">
+    <Deployment runDeploymentRoot="shasnayak_DESKTOP-V5VHPHF_2021-06-15_18_56_36" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="67b68d4d-1f6e-4652-b52c-d907ee1f8c0f" testId="184baa54-ab03-4f47-9d9e-aae420fbcbd0" testName="CycleTest6b" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0038027" startTime="2021-06-15T18:56:36.4586956-04:00" endTime="2021-06-15T18:56:36.4625722-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="67b68d4d-1f6e-4652-b52c-d907ee1f8c0f" />
+    <UnitTestResult executionId="1fc3f366-a308-4f27-b489-cc86723c2fc7" testId="6d3c10de-e599-4cc9-b609-692de0d96dcb" testName="CycleTest7" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0040105" startTime="2021-06-15T18:56:36.4657477-04:00" endTime="2021-06-15T18:56:36.4698293-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1fc3f366-a308-4f27-b489-cc86723c2fc7" />
+    <UnitTestResult executionId="950f5770-368c-4395-aaba-a7034bfd5ff2" testId="c742ad6f-fe50-4ab4-bdbd-b737fd7a6771" testName="BasicTest2" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0026228" startTime="2021-06-15T18:56:35.6880753-04:00" endTime="2021-06-15T18:56:35.6907860-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="950f5770-368c-4395-aaba-a7034bfd5ff2" />
+    <UnitTestResult executionId="8491f149-2a83-43c3-8042-c9f6bef06eb2" testId="608d77a4-ff9d-4f80-a6aa-5cc88efa278d" testName="BasicTest5" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0064803" startTime="2021-06-15T18:56:35.7000334-04:00" endTime="2021-06-15T18:56:35.7065644-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8491f149-2a83-43c3-8042-c9f6bef06eb2" />
+    <UnitTestResult executionId="eef43a51-4905-4077-b019-36427ca7ac03" testId="ab46ddd9-9fa4-48b3-9fb2-000b57af5e07" testName="CycleTest6c" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0030178" startTime="2021-06-15T18:56:36.4626176-04:00" endTime="2021-06-15T18:56:36.4657091-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="eef43a51-4905-4077-b019-36427ca7ac03" />
+    <UnitTestResult executionId="32cb35c9-eb05-4344-9445-2a1d48e972aa" testId="6205c731-b326-414f-b27c-2df6087a8c3f" testName="BasicTest6" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0083119" startTime="2021-06-15T18:56:35.7065925-04:00" endTime="2021-06-15T18:56:35.7149619-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="32cb35c9-eb05-4344-9445-2a1d48e972aa" />
+    <UnitTestResult executionId="f31ade43-51c0-48f1-9650-0084b819b796" testId="3ee2c31a-e686-45c7-8b19-26ab3ceabc36" testName="RadioButtonGroupTest" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0114938" startTime="2021-06-15T18:56:36.5073818-04:00" endTime="2021-06-15T18:56:36.5189538-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f31ade43-51c0-48f1-9650-0084b819b796" />
+    <UnitTestResult executionId="f819a868-cd64-4434-a042-7cb3016f8b2c" testId="f0abaca2-96cc-4f3d-b9b3-ff615419934a" testName="CycleTest8" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0131979" startTime="2021-06-15T18:56:36.4698752-04:00" endTime="2021-06-15T18:56:36.4831649-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f819a868-cd64-4434-a042-7cb3016f8b2c" />
+    <UnitTestResult executionId="4a6b5423-239c-4660-9ca7-3bf4cabc7629" testId="e44a4997-0ed2-4035-8110-70ec5fcc11ea" testName="LeakTest1" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0052122" startTime="2021-06-15T18:56:36.4862724-04:00" endTime="2021-06-15T18:56:36.4915515-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4a6b5423-239c-4660-9ca7-3bf4cabc7629" />
+    <UnitTestResult executionId="9346d272-f3fc-4559-a569-2a4efb598f39" testId="ce33ed05-8414-4389-acfe-c7103dca734a" testName="CycleTest5" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0034710" startTime="2021-06-15T18:56:36.4478960-04:00" endTime="2021-06-15T18:56:36.4514444-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9346d272-f3fc-4559-a569-2a4efb598f39" />
+    <UnitTestResult executionId="a84d13ea-9363-4c00-99ed-eeb4921585d2" testId="62301272-406e-428f-85ea-5af799d31071" testName="CycleTest1c" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0086685" startTime="2021-06-15T18:56:36.4134921-04:00" endTime="2021-06-15T18:56:36.4222537-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a84d13ea-9363-4c00-99ed-eeb4921585d2" />
+    <UnitTestResult executionId="15e6df20-838d-424b-bc41-5d32525020a3" testId="a6933383-011e-4940-ae0e-09c1602221ce" testName="BasicTest3" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0064789" startTime="2021-06-15T18:56:35.6908263-04:00" endTime="2021-06-15T18:56:35.6973624-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="15e6df20-838d-424b-bc41-5d32525020a3" />
+    <UnitTestResult executionId="45717c1b-8c82-4227-aace-8cd236fba7f9" testId="e117ed86-00da-43b3-a7cc-08184dd79aad" testName="BasicTest6b" computerName="DESKTOP-V5VHPHF" duration="00:00:00.5134773" startTime="2021-06-15T18:56:35.7150046-04:00" endTime="2021-06-15T18:56:36.2285615-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="45717c1b-8c82-4227-aace-8cd236fba7f9" />
+    <UnitTestResult executionId="d76f3cb7-ce76-430a-b58d-6a07e9a69453" testId="acab4d68-6da6-4904-80b7-7daeff0ef5e1" testName="LeakTest1b" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0156663" startTime="2021-06-15T18:56:36.4915949-04:00" endTime="2021-06-15T18:56:36.5073358-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d76f3cb7-ce76-430a-b58d-6a07e9a69453" />
+    <UnitTestResult executionId="f6f5766e-ed6c-462c-a6e6-02c2d627a492" testId="d08a2f50-46aa-498f-a319-c8b737c26f5a" testName="BasicTest4" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0025536" startTime="2021-06-15T18:56:35.6973983-04:00" endTime="2021-06-15T18:56:35.7000104-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f6f5766e-ed6c-462c-a6e6-02c2d627a492" />
+    <UnitTestResult executionId="012c2ec1-676b-4bc1-8140-5f7f8f1f2691" testId="bc23caf5-fca3-43a9-822a-cbcab58664a5" testName="CycleTest4" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0048398" startTime="2021-06-15T18:56:36.4429390-04:00" endTime="2021-06-15T18:56:36.4478502-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="012c2ec1-676b-4bc1-8140-5f7f8f1f2691" />
+    <UnitTestResult executionId="b0bf5fdb-4712-4b07-80b3-4cb056550bdd" testId="f5ce0c1c-f129-4885-9445-f620bbf941ad" testName="CycleTest1" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0280449" startTime="2021-06-15T18:56:36.2286118-04:00" endTime="2021-06-15T18:56:36.2567706-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b0bf5fdb-4712-4b07-80b3-4cb056550bdd" />
+    <UnitTestResult executionId="e260dbec-5f7a-47db-916c-8075d2127ef4" testId="86180d8d-f11a-421d-8ab1-7245f108ba4f" testName="CycleTest10" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0029556" startTime="2021-06-15T18:56:36.4832097-04:00" endTime="2021-06-15T18:56:36.4862358-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e260dbec-5f7a-47db-916c-8075d2127ef4" />
+    <UnitTestResult executionId="bd97a094-9e13-4391-9ba8-de555611abe3" testId="36d9bec5-e156-4e90-a506-9456141b87dc" testName="CycleTest1b" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0119243" startTime="2021-06-15T18:56:36.2568428-04:00" endTime="2021-06-15T18:56:36.2688797-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bd97a094-9e13-4391-9ba8-de555611abe3" />
+    <UnitTestResult executionId="29118ad3-1de2-4347-a032-62e3998f15c9" testId="d6d40bb4-66de-4741-ac5f-700ba2f09d32" testName="BasicTest1" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0244832" startTime="2021-06-15T18:56:35.6494215-04:00" endTime="2021-06-15T18:56:35.6829728-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="29118ad3-1de2-4347-a032-62e3998f15c9" />
+    <UnitTestResult executionId="157296f3-9912-4172-9a4d-c795ff50c88d" testId="45ed0f8f-b36d-4011-bc39-18d24010be07" testName="CycleTest3b" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0030457" startTime="2021-06-15T18:56:36.4397784-04:00" endTime="2021-06-15T18:56:36.4429018-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="157296f3-9912-4172-9a4d-c795ff50c88d" />
+    <UnitTestResult executionId="8b330f73-b3fa-4d31-bc37-0cb9f96d05f3" testId="aa045e2f-b2df-4260-92e5-d39542a0f08f" testName="CycleTest3" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0051333" startTime="2021-06-15T18:56:36.4345208-04:00" endTime="2021-06-15T18:56:36.4397324-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8b330f73-b3fa-4d31-bc37-0cb9f96d05f3" />
+    <UnitTestResult executionId="e270ebc0-bdb9-4e71-8155-e95192c0f0f3" testId="18f41098-b0a1-47db-ab7d-b4501c5f27c3" testName="CycleTest2" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0046229" startTime="2021-06-15T18:56:36.4222996-04:00" endTime="2021-06-15T18:56:36.4269978-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e270ebc0-bdb9-4e71-8155-e95192c0f0f3" />
+    <UnitTestResult executionId="8a484f5e-f6ba-4d67-abc1-e51fa33aa880" testId="e609f3ad-c5a9-40ac-be14-63ebd9412ffc" testName="CycleTest2c" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0045596" startTime="2021-06-15T18:56:36.4298488-04:00" endTime="2021-06-15T18:56:36.4344784-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8a484f5e-f6ba-4d67-abc1-e51fa33aa880" />
+    <UnitTestResult executionId="53d3e117-a988-4928-9bab-42feadcacccd" testId="d53773c4-08ff-4040-a19e-886785d19f58" testName="CycleTest2b" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0027070" startTime="2021-06-15T18:56:36.4270330-04:00" endTime="2021-06-15T18:56:36.4298118-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="53d3e117-a988-4928-9bab-42feadcacccd" />
+    <UnitTestResult executionId="fc6818dd-56b1-43fe-837b-d5faf8899e30" testId="73c19068-d264-4466-8b8e-8d6322c679fc" testName="CycleTest6" computerName="DESKTOP-V5VHPHF" duration="00:00:00.0036169" startTime="2021-06-15T18:56:36.4514884-04:00" endTime="2021-06-15T18:56:36.4551806-04:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fc6818dd-56b1-43fe-837b-d5faf8899e30" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="BasicTest3" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="a6933383-011e-4940-ae0e-09c1602221ce">
+      <Execution id="15e6df20-838d-424b-bc41-5d32525020a3" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="BasicTest3" />
+    </UnitTest>
+    <UnitTest name="BasicTest6" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="6205c731-b326-414f-b27c-2df6087a8c3f">
+      <Execution id="32cb35c9-eb05-4344-9445-2a1d48e972aa" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="BasicTest6" />
+    </UnitTest>
+    <UnitTest name="CycleTest8" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="f0abaca2-96cc-4f3d-b9b3-ff615419934a">
+      <Execution id="f819a868-cd64-4434-a042-7cb3016f8b2c" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest8" />
+    </UnitTest>
+    <UnitTest name="BasicTest4" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="d08a2f50-46aa-498f-a319-c8b737c26f5a">
+      <Execution id="f6f5766e-ed6c-462c-a6e6-02c2d627a492" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="BasicTest4" />
+    </UnitTest>
+    <UnitTest name="CycleTest3" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="aa045e2f-b2df-4260-92e5-d39542a0f08f">
+      <Execution id="8b330f73-b3fa-4d31-bc37-0cb9f96d05f3" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest3" />
+    </UnitTest>
+    <UnitTest name="CycleTest3b" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="45ed0f8f-b36d-4011-bc39-18d24010be07">
+      <Execution id="157296f3-9912-4172-9a4d-c795ff50c88d" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest3b" />
+    </UnitTest>
+    <UnitTest name="BasicTest1" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="d6d40bb4-66de-4741-ac5f-700ba2f09d32">
+      <Execution id="29118ad3-1de2-4347-a032-62e3998f15c9" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="BasicTest1" />
+    </UnitTest>
+    <UnitTest name="CycleTest5" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="ce33ed05-8414-4389-acfe-c7103dca734a">
+      <Execution id="9346d272-f3fc-4559-a569-2a4efb598f39" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest5" />
+    </UnitTest>
+    <UnitTest name="CycleTest1b" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="36d9bec5-e156-4e90-a506-9456141b87dc">
+      <Execution id="bd97a094-9e13-4391-9ba8-de555611abe3" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest1b" />
+    </UnitTest>
+    <UnitTest name="CycleTest6" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="73c19068-d264-4466-8b8e-8d6322c679fc">
+      <Execution id="fc6818dd-56b1-43fe-837b-d5faf8899e30" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest6" />
+    </UnitTest>
+    <UnitTest name="CycleTest10" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="86180d8d-f11a-421d-8ab1-7245f108ba4f">
+      <Execution id="e260dbec-5f7a-47db-916c-8075d2127ef4" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest10" />
+    </UnitTest>
+    <UnitTest name="CycleTest6c" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="ab46ddd9-9fa4-48b3-9fb2-000b57af5e07">
+      <Execution id="eef43a51-4905-4077-b019-36427ca7ac03" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest6c" />
+    </UnitTest>
+    <UnitTest name="LeakTest1" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="e44a4997-0ed2-4035-8110-70ec5fcc11ea">
+      <Execution id="4a6b5423-239c-4660-9ca7-3bf4cabc7629" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="LeakTest1" />
+    </UnitTest>
+    <UnitTest name="CycleTest4" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="bc23caf5-fca3-43a9-822a-cbcab58664a5">
+      <Execution id="012c2ec1-676b-4bc1-8140-5f7f8f1f2691" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest4" />
+    </UnitTest>
+    <UnitTest name="BasicTest6b" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="e117ed86-00da-43b3-a7cc-08184dd79aad">
+      <Execution id="45717c1b-8c82-4227-aace-8cd236fba7f9" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="BasicTest6b" />
+    </UnitTest>
+    <UnitTest name="CycleTest7" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="6d3c10de-e599-4cc9-b609-692de0d96dcb">
+      <Execution id="1fc3f366-a308-4f27-b489-cc86723c2fc7" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest7" />
+    </UnitTest>
+    <UnitTest name="RadioButtonGroupTest" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="3ee2c31a-e686-45c7-8b19-26ab3ceabc36">
+      <Execution id="f31ade43-51c0-48f1-9650-0084b819b796" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="RadioButtonGroupTest" />
+    </UnitTest>
+    <UnitTest name="CycleTest2b" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="d53773c4-08ff-4040-a19e-886785d19f58">
+      <Execution id="53d3e117-a988-4928-9bab-42feadcacccd" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest2b" />
+    </UnitTest>
+    <UnitTest name="BasicTest2" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="c742ad6f-fe50-4ab4-bdbd-b737fd7a6771">
+      <Execution id="950f5770-368c-4395-aaba-a7034bfd5ff2" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="BasicTest2" />
+    </UnitTest>
+    <UnitTest name="LeakTest1b" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="acab4d68-6da6-4904-80b7-7daeff0ef5e1">
+      <Execution id="d76f3cb7-ce76-430a-b58d-6a07e9a69453" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="LeakTest1b" />
+    </UnitTest>
+    <UnitTest name="CycleTest6b" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="184baa54-ab03-4f47-9d9e-aae420fbcbd0">
+      <Execution id="67b68d4d-1f6e-4652-b52c-d907ee1f8c0f" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest6b" />
+    </UnitTest>
+    <UnitTest name="CycleTest2" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="18f41098-b0a1-47db-ab7d-b4501c5f27c3">
+      <Execution id="e270ebc0-bdb9-4e71-8155-e95192c0f0f3" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest2" />
+    </UnitTest>
+    <UnitTest name="CycleTest1c" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="62301272-406e-428f-85ea-5af799d31071">
+      <Execution id="a84d13ea-9363-4c00-99ed-eeb4921585d2" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest1c" />
+    </UnitTest>
+    <UnitTest name="BasicTest5" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="608d77a4-ff9d-4f80-a6aa-5cc88efa278d">
+      <Execution id="8491f149-2a83-43c3-8042-c9f6bef06eb2" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="BasicTest5" />
+    </UnitTest>
+    <UnitTest name="CycleTest1" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="f5ce0c1c-f129-4885-9445-f620bbf941ad">
+      <Execution id="b0bf5fdb-4712-4b07-80b3-4cb056550bdd" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest1" />
+    </UnitTest>
+    <UnitTest name="CycleTest2c" storage="c:\users\shasnayak\cswinrt\src\tests\objectlifetimetests\objectlifetimetests.lifted\objectlifetimetests.lifted\bin\x64\release\net5.0-windows10.0.19041.0\win10-x64\objectlifetimetests.lifted.build.appxrecipe" id="e609f3ad-c5a9-40ac-be14-63ebd9412ffc">
+      <Execution id="8a484f5e-f6ba-4d67-abc1-e51fa33aa880" />
+      <TestMethod codeBase="C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe" adapterTypeName="executor://mstestadapter/v2" className="ObjectLifetimeTests.ObjectLifetimeTestsRunner" name="CycleTest2c" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="184baa54-ab03-4f47-9d9e-aae420fbcbd0" executionId="67b68d4d-1f6e-4652-b52c-d907ee1f8c0f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6d3c10de-e599-4cc9-b609-692de0d96dcb" executionId="1fc3f366-a308-4f27-b489-cc86723c2fc7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c742ad6f-fe50-4ab4-bdbd-b737fd7a6771" executionId="950f5770-368c-4395-aaba-a7034bfd5ff2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="608d77a4-ff9d-4f80-a6aa-5cc88efa278d" executionId="8491f149-2a83-43c3-8042-c9f6bef06eb2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ab46ddd9-9fa4-48b3-9fb2-000b57af5e07" executionId="eef43a51-4905-4077-b019-36427ca7ac03" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6205c731-b326-414f-b27c-2df6087a8c3f" executionId="32cb35c9-eb05-4344-9445-2a1d48e972aa" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3ee2c31a-e686-45c7-8b19-26ab3ceabc36" executionId="f31ade43-51c0-48f1-9650-0084b819b796" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f0abaca2-96cc-4f3d-b9b3-ff615419934a" executionId="f819a868-cd64-4434-a042-7cb3016f8b2c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e44a4997-0ed2-4035-8110-70ec5fcc11ea" executionId="4a6b5423-239c-4660-9ca7-3bf4cabc7629" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ce33ed05-8414-4389-acfe-c7103dca734a" executionId="9346d272-f3fc-4559-a569-2a4efb598f39" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="62301272-406e-428f-85ea-5af799d31071" executionId="a84d13ea-9363-4c00-99ed-eeb4921585d2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a6933383-011e-4940-ae0e-09c1602221ce" executionId="15e6df20-838d-424b-bc41-5d32525020a3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e117ed86-00da-43b3-a7cc-08184dd79aad" executionId="45717c1b-8c82-4227-aace-8cd236fba7f9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="acab4d68-6da6-4904-80b7-7daeff0ef5e1" executionId="d76f3cb7-ce76-430a-b58d-6a07e9a69453" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d08a2f50-46aa-498f-a319-c8b737c26f5a" executionId="f6f5766e-ed6c-462c-a6e6-02c2d627a492" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bc23caf5-fca3-43a9-822a-cbcab58664a5" executionId="012c2ec1-676b-4bc1-8140-5f7f8f1f2691" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f5ce0c1c-f129-4885-9445-f620bbf941ad" executionId="b0bf5fdb-4712-4b07-80b3-4cb056550bdd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="86180d8d-f11a-421d-8ab1-7245f108ba4f" executionId="e260dbec-5f7a-47db-916c-8075d2127ef4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="36d9bec5-e156-4e90-a506-9456141b87dc" executionId="bd97a094-9e13-4391-9ba8-de555611abe3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d6d40bb4-66de-4741-ac5f-700ba2f09d32" executionId="29118ad3-1de2-4347-a032-62e3998f15c9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="45ed0f8f-b36d-4011-bc39-18d24010be07" executionId="157296f3-9912-4172-9a4d-c795ff50c88d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="aa045e2f-b2df-4260-92e5-d39542a0f08f" executionId="8b330f73-b3fa-4d31-bc37-0cb9f96d05f3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="18f41098-b0a1-47db-ab7d-b4501c5f27c3" executionId="e270ebc0-bdb9-4e71-8155-e95192c0f0f3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e609f3ad-c5a9-40ac-be14-63ebd9412ffc" executionId="8a484f5e-f6ba-4d67-abc1-e51fa33aa880" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d53773c4-08ff-4040-a19e-886785d19f58" executionId="53d3e117-a988-4928-9bab-42feadcacccd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="73c19068-d264-4466-8b8e-8d6322c679fc" executionId="fc6818dd-56b1-43fe-837b-d5faf8899e30" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="26" executed="26" passed="26" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>	DeviceConfiguration/GetDevice/Name&#xD;
+		Caller = Deployer&#xD;
+		Name = &#xD;
+ConfigurationParser/Constructor: START&#xD;
+ConfigurationParser/Constructor/EnumeratePackages: START&#xD;
+Reading tools configuration from Visual Studio installation at 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\TailoredProjectServices'.&#xD;
+	GlobalConfigurationFolderPresent = True&#xD;
+	NumberOfPackagesFound = 25&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = e0999a8f-0200-4738-ae1e-b45742be6b6b&#xD;
+		Name = CoreCLR&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = 745b7b79-84d4-4033-8554-e1ed88d1321e&#xD;
+		Name = JavaScriptCollectionAgent Package&#xD;
+		Architectures = Arm|X86|X64&#xD;
+		VisualStudioPackage = False&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = cba47ef1-9f90-4af4-bf90-6c2c09e350b6&#xD;
+		Name = NetworkCollectionAgent Package&#xD;
+		Architectures = Arm|X86|X64&#xD;
+		VisualStudioPackage = False&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = f8ce90e1-19bc-472a-b625-9c081fac46df&#xD;
+		Name = VSGraphics Debugging Package DUIC&#xD;
+		Architectures = Arm|X86|X64&#xD;
+		VisualStudioPackage = False&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = 44eeed0d-971c-4546-bc24-b6a5cbfae959&#xD;
+		Name = GPU Collector Agent&#xD;
+		Architectures = Arm|X86|X64&#xD;
+		VisualStudioPackage = False&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = 8e61b271-9853-41c9-b845-4d32865c306f&#xD;
+		Name = App Analysis Collection Agent&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = efb65f05-52ca-49fe-9799-0d120b3e8c40&#xD;
+		Name = Memory Profiler Collection Agent&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = c99f0de0-95fe-4c64-9d17-efa7574c358b&#xD;
+		Name = Memory Profiler v2 Collection Agent&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = bff8ef71-b423-4e11-8f4b-9ce1061615a2&#xD;
+		Name = Native Memory Profiler Win10 Collection Agent&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = eb22551a-7f66-465f-b53f-e5aba0c0574e&#xD;
+		Name = msvsmon native Package&#xD;
+		Architectures = Arm|X86|X64|Arm64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = 62b807e2-6539-46fb-8d67-a73dc9499940&#xD;
+		Name = msvsmon managed Package&#xD;
+		Architectures = Arm|X86|X64|Arm64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = d8b19935-bdbf-4d5b-9619-a6693afd4554&#xD;
+		Name = msvsmon script Package&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = 322e47a7-c871-4db0-b663-2b836b9a6427&#xD;
+		Name = Diagnostics Hub Standard Collector (Post-mortem)&#xD;
+		Architectures = Arm|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = f4461251-3ffb-4108-9743-364bb931faf2&#xD;
+		Name = Diagnostics Hub Standard Collector Service&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = 98e13d7b-2ac3-4b11-bbeb-758ad8bd607a&#xD;
+		Name = Diagnostics Hub Collector Bridge&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = 96f1f3e8-f762-4cd2-8ed9-68ec25c2c722&#xD;
+		Name = CPU Usage&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = 87c20e3c-a84e-4f56-8bcb-a09a23bfe077&#xD;
+		Name = DotNetAlloc&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = 4ec3701d-0b28-4ae9-8bc4-20e88ce94c81&#xD;
+		Name = EventsViewer&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = f1498e2f-1808-4e2a-8c86-b888a59d8446&#xD;
+		Name = Database&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = db99fe6f-5272-4638-bf5c-c32fc1527b26&#xD;
+		Name = DotNetAsync&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = b8202f68-c106-47e4-a154-c01594600475&#xD;
+		Name = DotNetCounters&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = cc6587b3-a749-4158-989f-1c3bb2b234f5&#xD;
+		Name = Windows10RemoteTools&#xD;
+		Architectures = Arm|Arm64|X64|X86&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = 9093ee4a-01e5-44ed-9214-0b4d15023fde&#xD;
+		Name = XAML UI Debugger package&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = b968cc6a-d2c8-4197-88e3-11662042c291&#xD;
+		Name = XAML UI Debugger package&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = True&#xD;
+	ConfigurationParser/Constructor/EnumeratePackages/Package&#xD;
+		Id = 57e8cc1f-36e5-41b7-972f-80e4f1016bfc&#xD;
+		Name = XAML UI Debugger dependency Package&#xD;
+		Architectures = Arm|Arm64|X86|X64&#xD;
+		VisualStudioPackage = False&#xD;
+ConfigurationParser/Constructor/EnumeratePackages: END (Success, 0:00:00.521)&#xD;
+ConfigurationParser/Constructor/EnumerateEmulators: START&#xD;
+	NumberOfDevicesFound = 0&#xD;
+ConfigurationParser/Constructor/EnumerateEmulators: END (Success, 0:00:00.318)&#xD;
+ConfigurationParser/Constructor: END (Success, 0:00:00.85)&#xD;
+		DeviceFound = False&#xD;
+Attempting to deploy to target 'Local Machine'.&#xD;
+Starting local deployment...&#xD;
+Deploy: START&#xD;
+DeployAsync: START&#xD;
+Reading package recipe file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.build.appxrecipe"...&#xD;
+Deployment layout folder location: "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppX"&#xD;
+Unregistering application: "3fb45547-1ef1-4576-a2b9-3be5d5659cca_1.0.0.0_x86__cbsymgqb2db4y"&#xD;
+Creating a new clean layout...&#xD;
+Copying files: Total 151 mb to layout...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\CoreMessagingXP.dll" to layout "CoreMessagingXP.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\dcompi.dll" to layout "dcompi.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\dwmcorei.dll" to layout "dwmcorei.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\DwmSceneI.dll" to layout "DwmSceneI.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\DWriteCore.dll" to layout "DWriteCore.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\marshal.dll" to layout "marshal.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.ApplicationModel.Resources.dll" to layout "Microsoft.ApplicationModel.Resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.ApplicationModel.Resources.Projection.dll" to layout "Microsoft.ApplicationModel.Resources.Projection.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.DirectManipulation.dll" to layout "Microsoft.DirectManipulation.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.InputStateManager.dll" to layout "Microsoft.InputStateManager.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.Internal.FrameworkUdk.dll" to layout "Microsoft.Internal.FrameworkUdk.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.ProjectReunion.dll" to layout "Microsoft.ProjectReunion.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.UI.Composition.OSSupport.dll" to layout "Microsoft.UI.Composition.OSSupport.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.UI.Input.dll" to layout "Microsoft.UI.Input.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.UI.Xaml.Controls.dll" to layout "Microsoft.UI.Xaml.Controls.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.ui.xaml.dll" to layout "Microsoft.ui.xaml.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.UI.Xaml.Internal.dll" to layout "Microsoft.UI.Xaml.Internal.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.UI.Xaml.Phone.dll" to layout "Microsoft.UI.Xaml.Phone.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.ui.xaml.resources.19h1.dll" to layout "Microsoft.ui.xaml.resources.19h1.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.ui.xaml.resources.common.dll" to layout "Microsoft.ui.xaml.resources.common.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.Web.WebView2.Core.dll" to layout "Microsoft.Web.WebView2.Core.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\MRM.dll" to layout "MRM.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\WinUIEdit.dll" to layout "WinUIEdit.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\wuceffectsi.dll" to layout "wuceffectsi.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\Microsoft.UI.Xaml.Controls.pri" to layout "Microsoft.UI.Xaml.Controls.pri"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\af-ZA\Microsoft.ui.xaml.dll.mui" to layout "af-ZA\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\af-ZA\Microsoft.UI.Xaml.Phone.dll.mui" to layout "af-ZA\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ar-SA\Microsoft.ui.xaml.dll.mui" to layout "ar-SA\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ar-SA\Microsoft.UI.Xaml.Phone.dll.mui" to layout "ar-SA\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\az-Latn-AZ\Microsoft.ui.xaml.dll.mui" to layout "az-Latn-AZ\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\az-Latn-AZ\Microsoft.UI.Xaml.Phone.dll.mui" to layout "az-Latn-AZ\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\bg-BG\Microsoft.ui.xaml.dll.mui" to layout "bg-BG\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\bg-BG\Microsoft.UI.Xaml.Phone.dll.mui" to layout "bg-BG\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\bs-Latn-BA\Microsoft.ui.xaml.dll.mui" to layout "bs-Latn-BA\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\bs-Latn-BA\Microsoft.UI.Xaml.Phone.dll.mui" to layout "bs-Latn-BA\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ca-ES\Microsoft.ui.xaml.dll.mui" to layout "ca-ES\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ca-ES\Microsoft.UI.Xaml.Phone.dll.mui" to layout "ca-ES\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\cs-CZ\Microsoft.ui.xaml.dll.mui" to layout "cs-CZ\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\cs-CZ\Microsoft.UI.Xaml.Phone.dll.mui" to layout "cs-CZ\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\cy-GB\Microsoft.ui.xaml.dll.mui" to layout "cy-GB\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\cy-GB\Microsoft.UI.Xaml.Phone.dll.mui" to layout "cy-GB\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\da-DK\Microsoft.ui.xaml.dll.mui" to layout "da-DK\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\da-DK\Microsoft.UI.Xaml.Phone.dll.mui" to layout "da-DK\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\de-DE\Microsoft.ui.xaml.dll.mui" to layout "de-DE\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\de-DE\Microsoft.UI.Xaml.Phone.dll.mui" to layout "de-DE\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\el-GR\Microsoft.ui.xaml.dll.mui" to layout "el-GR\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\el-GR\Microsoft.UI.Xaml.Phone.dll.mui" to layout "el-GR\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\en-GB\Microsoft.ui.xaml.dll.mui" to layout "en-GB\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\en-GB\Microsoft.UI.Xaml.Phone.dll.mui" to layout "en-GB\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\en-US\Microsoft.ui.xaml.dll.mui" to layout "en-US\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\en-US\Microsoft.UI.Xaml.Phone.dll.mui" to layout "en-US\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\es-ES\Microsoft.ui.xaml.dll.mui" to layout "es-ES\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\es-ES\Microsoft.UI.Xaml.Phone.dll.mui" to layout "es-ES\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\es-MX\Microsoft.ui.xaml.dll.mui" to layout "es-MX\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\es-MX\Microsoft.UI.Xaml.Phone.dll.mui" to layout "es-MX\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\et-EE\Microsoft.ui.xaml.dll.mui" to layout "et-EE\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\et-EE\Microsoft.UI.Xaml.Phone.dll.mui" to layout "et-EE\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\eu-ES\Microsoft.ui.xaml.dll.mui" to layout "eu-ES\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\eu-ES\Microsoft.UI.Xaml.Phone.dll.mui" to layout "eu-ES\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\fa-IR\Microsoft.ui.xaml.dll.mui" to layout "fa-IR\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\fa-IR\Microsoft.UI.Xaml.Phone.dll.mui" to layout "fa-IR\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\fi-FI\Microsoft.ui.xaml.dll.mui" to layout "fi-FI\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\fi-FI\Microsoft.UI.Xaml.Phone.dll.mui" to layout "fi-FI\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\fr-CA\Microsoft.ui.xaml.dll.mui" to layout "fr-CA\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\fr-CA\Microsoft.UI.Xaml.Phone.dll.mui" to layout "fr-CA\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\fr-FR\Microsoft.ui.xaml.dll.mui" to layout "fr-FR\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\fr-FR\Microsoft.UI.Xaml.Phone.dll.mui" to layout "fr-FR\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\gl-ES\Microsoft.ui.xaml.dll.mui" to layout "gl-ES\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\gl-ES\Microsoft.UI.Xaml.Phone.dll.mui" to layout "gl-ES\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\he-IL\Microsoft.ui.xaml.dll.mui" to layout "he-IL\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\he-IL\Microsoft.UI.Xaml.Phone.dll.mui" to layout "he-IL\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\hi-IN\Microsoft.ui.xaml.dll.mui" to layout "hi-IN\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\hi-IN\Microsoft.UI.Xaml.Phone.dll.mui" to layout "hi-IN\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\hr-HR\Microsoft.ui.xaml.dll.mui" to layout "hr-HR\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\hr-HR\Microsoft.UI.Xaml.Phone.dll.mui" to layout "hr-HR\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\hu-HU\Microsoft.ui.xaml.dll.mui" to layout "hu-HU\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\hu-HU\Microsoft.UI.Xaml.Phone.dll.mui" to layout "hu-HU\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\id-ID\Microsoft.ui.xaml.dll.mui" to layout "id-ID\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\id-ID\Microsoft.UI.Xaml.Phone.dll.mui" to layout "id-ID\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\is-IS\Microsoft.ui.xaml.dll.mui" to layout "is-IS\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\is-IS\Microsoft.UI.Xaml.Phone.dll.mui" to layout "is-IS\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\it-IT\Microsoft.ui.xaml.dll.mui" to layout "it-IT\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\it-IT\Microsoft.UI.Xaml.Phone.dll.mui" to layout "it-IT\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ja-JP\Microsoft.ui.xaml.dll.mui" to layout "ja-JP\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ja-JP\Microsoft.UI.Xaml.Phone.dll.mui" to layout "ja-JP\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ka-GE\Microsoft.ui.xaml.dll.mui" to layout "ka-GE\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ka-GE\Microsoft.UI.Xaml.Phone.dll.mui" to layout "ka-GE\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\kk-KZ\Microsoft.ui.xaml.dll.mui" to layout "kk-KZ\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\kk-KZ\Microsoft.UI.Xaml.Phone.dll.mui" to layout "kk-KZ\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ko-KR\Microsoft.ui.xaml.dll.mui" to layout "ko-KR\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ko-KR\Microsoft.UI.Xaml.Phone.dll.mui" to layout "ko-KR\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\lt-LT\Microsoft.ui.xaml.dll.mui" to layout "lt-LT\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\lt-LT\Microsoft.UI.Xaml.Phone.dll.mui" to layout "lt-LT\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\lv-LV\Microsoft.ui.xaml.dll.mui" to layout "lv-LV\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\lv-LV\Microsoft.UI.Xaml.Phone.dll.mui" to layout "lv-LV\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ms-MY\Microsoft.ui.xaml.dll.mui" to layout "ms-MY\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ms-MY\Microsoft.UI.Xaml.Phone.dll.mui" to layout "ms-MY\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\nb-NO\Microsoft.ui.xaml.dll.mui" to layout "nb-NO\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\nb-NO\Microsoft.UI.Xaml.Phone.dll.mui" to layout "nb-NO\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\nl-NL\Microsoft.ui.xaml.dll.mui" to layout "nl-NL\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\nl-NL\Microsoft.UI.Xaml.Phone.dll.mui" to layout "nl-NL\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\nn-NO\Microsoft.ui.xaml.dll.mui" to layout "nn-NO\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\nn-NO\Microsoft.UI.Xaml.Phone.dll.mui" to layout "nn-NO\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\pl-PL\Microsoft.ui.xaml.dll.mui" to layout "pl-PL\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\pl-PL\Microsoft.UI.Xaml.Phone.dll.mui" to layout "pl-PL\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\pt-BR\Microsoft.ui.xaml.dll.mui" to layout "pt-BR\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\pt-BR\Microsoft.UI.Xaml.Phone.dll.mui" to layout "pt-BR\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\pt-PT\Microsoft.ui.xaml.dll.mui" to layout "pt-PT\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\pt-PT\Microsoft.UI.Xaml.Phone.dll.mui" to layout "pt-PT\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ro-RO\Microsoft.ui.xaml.dll.mui" to layout "ro-RO\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ro-RO\Microsoft.UI.Xaml.Phone.dll.mui" to layout "ro-RO\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ru-RU\Microsoft.ui.xaml.dll.mui" to layout "ru-RU\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\ru-RU\Microsoft.UI.Xaml.Phone.dll.mui" to layout "ru-RU\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\sk-SK\Microsoft.ui.xaml.dll.mui" to layout "sk-SK\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\sk-SK\Microsoft.UI.Xaml.Phone.dll.mui" to layout "sk-SK\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\sl-SI\Microsoft.ui.xaml.dll.mui" to layout "sl-SI\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\sl-SI\Microsoft.UI.Xaml.Phone.dll.mui" to layout "sl-SI\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\sq-AL\Microsoft.ui.xaml.dll.mui" to layout "sq-AL\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\sq-AL\Microsoft.UI.Xaml.Phone.dll.mui" to layout "sq-AL\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\sr-Cyrl-RS\Microsoft.ui.xaml.dll.mui" to layout "sr-Cyrl-RS\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\sr-Cyrl-RS\Microsoft.UI.Xaml.Phone.dll.mui" to layout "sr-Cyrl-RS\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\sr-Latn-RS\Microsoft.ui.xaml.dll.mui" to layout "sr-Latn-RS\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\sr-Latn-RS\Microsoft.UI.Xaml.Phone.dll.mui" to layout "sr-Latn-RS\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\sv-SE\Microsoft.ui.xaml.dll.mui" to layout "sv-SE\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\sv-SE\Microsoft.UI.Xaml.Phone.dll.mui" to layout "sv-SE\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\th-TH\Microsoft.ui.xaml.dll.mui" to layout "th-TH\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\th-TH\Microsoft.UI.Xaml.Phone.dll.mui" to layout "th-TH\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\tr-TR\Microsoft.ui.xaml.dll.mui" to layout "tr-TR\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\tr-TR\Microsoft.UI.Xaml.Phone.dll.mui" to layout "tr-TR\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\uk-UA\Microsoft.ui.xaml.dll.mui" to layout "uk-UA\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\uk-UA\Microsoft.UI.Xaml.Phone.dll.mui" to layout "uk-UA\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\vi-VN\Microsoft.ui.xaml.dll.mui" to layout "vi-VN\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\vi-VN\Microsoft.UI.Xaml.Phone.dll.mui" to layout "vi-VN\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\zh-CN\Microsoft.ui.xaml.dll.mui" to layout "zh-CN\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\zh-CN\Microsoft.UI.Xaml.Phone.dll.mui" to layout "zh-CN\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\zh-TW\Microsoft.ui.xaml.dll.mui" to layout "zh-TW\Microsoft.ui.xaml.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxContent\zh-TW\Microsoft.UI.Xaml.Phone.dll.mui" to layout "zh-TW\Microsoft.UI.Xaml.Phone.dll.mui"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\resources.pri" to layout "resources.pri"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.runtimeconfig.json" to layout "ObjectLifetimeTests.Lifted.runtimeconfig.json"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.dll" to layout "ObjectLifetimeTests.Lifted.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\obj\x64\Release\net5.0-windows10.0.19041.0\win10-x64\apphost.exe" to layout "ObjectLifetimeTests.Lifted.exe"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\mstest.testadapter\2.2.4-preview-20210513-02\build\_common\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" to layout "Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\mstest.testadapter\2.2.4-preview-20210513-02\build\_common\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" to layout "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\mstest.testadapter\2.2.4-preview-20210513-02\build\net5.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" to layout "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\mstest.testadapter\2.2.4-preview-20210513-02\build\net5.0-windows10.0.18362.0\Microsoft.TestPlatform.AdapterUtilities.dll" to layout "Microsoft.TestPlatform.AdapterUtilities.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\ObjectLifetimeTests.Lifted.deps.json" to layout "ObjectLifetimeTests.Lifted.deps.json"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\Microsoft.CSharp.dll" to layout "Microsoft.CSharp.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\Microsoft.VisualBasic.Core.dll" to layout "Microsoft.VisualBasic.Core.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\Microsoft.VisualBasic.dll" to layout "Microsoft.VisualBasic.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\Microsoft.Win32.Primitives.dll" to layout "Microsoft.Win32.Primitives.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\Microsoft.Win32.Registry.dll" to layout "Microsoft.Win32.Registry.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.AppContext.dll" to layout "System.AppContext.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Buffers.dll" to layout "System.Buffers.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Collections.Concurrent.dll" to layout "System.Collections.Concurrent.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Collections.Immutable.dll" to layout "System.Collections.Immutable.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Collections.NonGeneric.dll" to layout "System.Collections.NonGeneric.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Collections.Specialized.dll" to layout "System.Collections.Specialized.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Collections.dll" to layout "System.Collections.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.ComponentModel.Annotations.dll" to layout "System.ComponentModel.Annotations.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.ComponentModel.DataAnnotations.dll" to layout "System.ComponentModel.DataAnnotations.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.ComponentModel.EventBasedAsync.dll" to layout "System.ComponentModel.EventBasedAsync.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.ComponentModel.Primitives.dll" to layout "System.ComponentModel.Primitives.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.ComponentModel.TypeConverter.dll" to layout "System.ComponentModel.TypeConverter.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.ComponentModel.dll" to layout "System.ComponentModel.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Configuration.dll" to layout "System.Configuration.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Console.dll" to layout "System.Console.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Core.dll" to layout "System.Core.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Data.Common.dll" to layout "System.Data.Common.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Data.DataSetExtensions.dll" to layout "System.Data.DataSetExtensions.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Data.dll" to layout "System.Data.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Diagnostics.Contracts.dll" to layout "System.Diagnostics.Contracts.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Diagnostics.Debug.dll" to layout "System.Diagnostics.Debug.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Diagnostics.DiagnosticSource.dll" to layout "System.Diagnostics.DiagnosticSource.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Diagnostics.FileVersionInfo.dll" to layout "System.Diagnostics.FileVersionInfo.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Diagnostics.Process.dll" to layout "System.Diagnostics.Process.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Diagnostics.StackTrace.dll" to layout "System.Diagnostics.StackTrace.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Diagnostics.TextWriterTraceListener.dll" to layout "System.Diagnostics.TextWriterTraceListener.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Diagnostics.Tools.dll" to layout "System.Diagnostics.Tools.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Diagnostics.TraceSource.dll" to layout "System.Diagnostics.TraceSource.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Diagnostics.Tracing.dll" to layout "System.Diagnostics.Tracing.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Drawing.Primitives.dll" to layout "System.Drawing.Primitives.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Drawing.dll" to layout "System.Drawing.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Dynamic.Runtime.dll" to layout "System.Dynamic.Runtime.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Formats.Asn1.dll" to layout "System.Formats.Asn1.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Globalization.Calendars.dll" to layout "System.Globalization.Calendars.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Globalization.Extensions.dll" to layout "System.Globalization.Extensions.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Globalization.dll" to layout "System.Globalization.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.Compression.Brotli.dll" to layout "System.IO.Compression.Brotli.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.Compression.FileSystem.dll" to layout "System.IO.Compression.FileSystem.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.Compression.ZipFile.dll" to layout "System.IO.Compression.ZipFile.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.Compression.dll" to layout "System.IO.Compression.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.FileSystem.AccessControl.dll" to layout "System.IO.FileSystem.AccessControl.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.FileSystem.DriveInfo.dll" to layout "System.IO.FileSystem.DriveInfo.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.FileSystem.Primitives.dll" to layout "System.IO.FileSystem.Primitives.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.FileSystem.Watcher.dll" to layout "System.IO.FileSystem.Watcher.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.FileSystem.dll" to layout "System.IO.FileSystem.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.IsolatedStorage.dll" to layout "System.IO.IsolatedStorage.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.MemoryMappedFiles.dll" to layout "System.IO.MemoryMappedFiles.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.Pipes.AccessControl.dll" to layout "System.IO.Pipes.AccessControl.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.Pipes.dll" to layout "System.IO.Pipes.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.UnmanagedMemoryStream.dll" to layout "System.IO.UnmanagedMemoryStream.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.IO.dll" to layout "System.IO.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Linq.Expressions.dll" to layout "System.Linq.Expressions.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Linq.Parallel.dll" to layout "System.Linq.Parallel.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Linq.Queryable.dll" to layout "System.Linq.Queryable.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Linq.dll" to layout "System.Linq.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Memory.dll" to layout "System.Memory.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.Http.Json.dll" to layout "System.Net.Http.Json.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.Http.dll" to layout "System.Net.Http.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.HttpListener.dll" to layout "System.Net.HttpListener.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.Mail.dll" to layout "System.Net.Mail.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.NameResolution.dll" to layout "System.Net.NameResolution.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.NetworkInformation.dll" to layout "System.Net.NetworkInformation.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.Ping.dll" to layout "System.Net.Ping.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.Primitives.dll" to layout "System.Net.Primitives.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.Requests.dll" to layout "System.Net.Requests.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.Security.dll" to layout "System.Net.Security.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.ServicePoint.dll" to layout "System.Net.ServicePoint.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.Sockets.dll" to layout "System.Net.Sockets.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.WebClient.dll" to layout "System.Net.WebClient.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.WebHeaderCollection.dll" to layout "System.Net.WebHeaderCollection.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.WebProxy.dll" to layout "System.Net.WebProxy.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.WebSockets.Client.dll" to layout "System.Net.WebSockets.Client.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.WebSockets.dll" to layout "System.Net.WebSockets.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Net.dll" to layout "System.Net.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Numerics.Vectors.dll" to layout "System.Numerics.Vectors.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Numerics.dll" to layout "System.Numerics.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.ObjectModel.dll" to layout "System.ObjectModel.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Private.DataContractSerialization.dll" to layout "System.Private.DataContractSerialization.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Private.Uri.dll" to layout "System.Private.Uri.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Private.Xml.Linq.dll" to layout "System.Private.Xml.Linq.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Private.Xml.dll" to layout "System.Private.Xml.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Reflection.DispatchProxy.dll" to layout "System.Reflection.DispatchProxy.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Reflection.Emit.ILGeneration.dll" to layout "System.Reflection.Emit.ILGeneration.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Reflection.Emit.Lightweight.dll" to layout "System.Reflection.Emit.Lightweight.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Reflection.Emit.dll" to layout "System.Reflection.Emit.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Reflection.Extensions.dll" to layout "System.Reflection.Extensions.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Reflection.Metadata.dll" to layout "System.Reflection.Metadata.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Reflection.Primitives.dll" to layout "System.Reflection.Primitives.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Reflection.TypeExtensions.dll" to layout "System.Reflection.TypeExtensions.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Reflection.dll" to layout "System.Reflection.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Resources.Reader.dll" to layout "System.Resources.Reader.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Resources.ResourceManager.dll" to layout "System.Resources.ResourceManager.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Resources.Writer.dll" to layout "System.Resources.Writer.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.CompilerServices.Unsafe.dll" to layout "System.Runtime.CompilerServices.Unsafe.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.CompilerServices.VisualC.dll" to layout "System.Runtime.CompilerServices.VisualC.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.Extensions.dll" to layout "System.Runtime.Extensions.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.Handles.dll" to layout "System.Runtime.Handles.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.InteropServices.RuntimeInformation.dll" to layout "System.Runtime.InteropServices.RuntimeInformation.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.InteropServices.dll" to layout "System.Runtime.InteropServices.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.Intrinsics.dll" to layout "System.Runtime.Intrinsics.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.Loader.dll" to layout "System.Runtime.Loader.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.Numerics.dll" to layout "System.Runtime.Numerics.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.Serialization.Formatters.dll" to layout "System.Runtime.Serialization.Formatters.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.Serialization.Json.dll" to layout "System.Runtime.Serialization.Json.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.Serialization.Primitives.dll" to layout "System.Runtime.Serialization.Primitives.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.Serialization.Xml.dll" to layout "System.Runtime.Serialization.Xml.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.Serialization.dll" to layout "System.Runtime.Serialization.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Runtime.dll" to layout "System.Runtime.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Security.AccessControl.dll" to layout "System.Security.AccessControl.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Security.Claims.dll" to layout "System.Security.Claims.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Security.Cryptography.Algorithms.dll" to layout "System.Security.Cryptography.Algorithms.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Security.Cryptography.Cng.dll" to layout "System.Security.Cryptography.Cng.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Security.Cryptography.Csp.dll" to layout "System.Security.Cryptography.Csp.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Security.Cryptography.Encoding.dll" to layout "System.Security.Cryptography.Encoding.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Security.Cryptography.OpenSsl.dll" to layout "System.Security.Cryptography.OpenSsl.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Security.Cryptography.Primitives.dll" to layout "System.Security.Cryptography.Primitives.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Security.Cryptography.X509Certificates.dll" to layout "System.Security.Cryptography.X509Certificates.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Security.Principal.Windows.dll" to layout "System.Security.Principal.Windows.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Security.Principal.dll" to layout "System.Security.Principal.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Security.SecureString.dll" to layout "System.Security.SecureString.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Security.dll" to layout "System.Security.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.ServiceModel.Web.dll" to layout "System.ServiceModel.Web.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.ServiceProcess.dll" to layout "System.ServiceProcess.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Text.Encoding.CodePages.dll" to layout "System.Text.Encoding.CodePages.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Text.Encoding.Extensions.dll" to layout "System.Text.Encoding.Extensions.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Text.Encoding.dll" to layout "System.Text.Encoding.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Text.Encodings.Web.dll" to layout "System.Text.Encodings.Web.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Text.Json.dll" to layout "System.Text.Json.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Text.RegularExpressions.dll" to layout "System.Text.RegularExpressions.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Threading.Channels.dll" to layout "System.Threading.Channels.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Threading.Overlapped.dll" to layout "System.Threading.Overlapped.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Threading.Tasks.Dataflow.dll" to layout "System.Threading.Tasks.Dataflow.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Threading.Tasks.Extensions.dll" to layout "System.Threading.Tasks.Extensions.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Threading.Tasks.Parallel.dll" to layout "System.Threading.Tasks.Parallel.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Threading.Tasks.dll" to layout "System.Threading.Tasks.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Threading.Thread.dll" to layout "System.Threading.Thread.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Threading.ThreadPool.dll" to layout "System.Threading.ThreadPool.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Threading.Timer.dll" to layout "System.Threading.Timer.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Threading.dll" to layout "System.Threading.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Transactions.Local.dll" to layout "System.Transactions.Local.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Transactions.dll" to layout "System.Transactions.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.ValueTuple.dll" to layout "System.ValueTuple.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Web.HttpUtility.dll" to layout "System.Web.HttpUtility.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Web.dll" to layout "System.Web.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Windows.dll" to layout "System.Windows.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Xml.Linq.dll" to layout "System.Xml.Linq.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Xml.ReaderWriter.dll" to layout "System.Xml.ReaderWriter.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Xml.Serialization.dll" to layout "System.Xml.Serialization.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Xml.XDocument.dll" to layout "System.Xml.XDocument.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Xml.XPath.XDocument.dll" to layout "System.Xml.XPath.XDocument.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Xml.XPath.dll" to layout "System.Xml.XPath.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Xml.XmlDocument.dll" to layout "System.Xml.XmlDocument.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Xml.XmlSerializer.dll" to layout "System.Xml.XmlSerializer.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.Xml.dll" to layout "System.Xml.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\System.dll" to layout "System.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\WindowsBase.dll" to layout "WindowsBase.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\mscorlib.dll" to layout "mscorlib.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\lib\net5.0\netstandard.dll" to layout "netstandard.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\Microsoft.DiaSymReader.Native.amd64.dll" to layout "Microsoft.DiaSymReader.Native.amd64.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\System.Private.CoreLib.dll" to layout "System.Private.CoreLib.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-console-l1-1-0.dll" to layout "api-ms-win-core-console-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-console-l1-2-0.dll" to layout "api-ms-win-core-console-l1-2-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-datetime-l1-1-0.dll" to layout "api-ms-win-core-datetime-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-debug-l1-1-0.dll" to layout "api-ms-win-core-debug-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-errorhandling-l1-1-0.dll" to layout "api-ms-win-core-errorhandling-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-file-l1-1-0.dll" to layout "api-ms-win-core-file-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-file-l1-2-0.dll" to layout "api-ms-win-core-file-l1-2-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-file-l2-1-0.dll" to layout "api-ms-win-core-file-l2-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-handle-l1-1-0.dll" to layout "api-ms-win-core-handle-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-heap-l1-1-0.dll" to layout "api-ms-win-core-heap-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-interlocked-l1-1-0.dll" to layout "api-ms-win-core-interlocked-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-libraryloader-l1-1-0.dll" to layout "api-ms-win-core-libraryloader-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-localization-l1-2-0.dll" to layout "api-ms-win-core-localization-l1-2-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-memory-l1-1-0.dll" to layout "api-ms-win-core-memory-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-namedpipe-l1-1-0.dll" to layout "api-ms-win-core-namedpipe-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-processenvironment-l1-1-0.dll" to layout "api-ms-win-core-processenvironment-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-processthreads-l1-1-0.dll" to layout "api-ms-win-core-processthreads-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-processthreads-l1-1-1.dll" to layout "api-ms-win-core-processthreads-l1-1-1.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-profile-l1-1-0.dll" to layout "api-ms-win-core-profile-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-rtlsupport-l1-1-0.dll" to layout "api-ms-win-core-rtlsupport-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-string-l1-1-0.dll" to layout "api-ms-win-core-string-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-synch-l1-1-0.dll" to layout "api-ms-win-core-synch-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-synch-l1-2-0.dll" to layout "api-ms-win-core-synch-l1-2-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-sysinfo-l1-1-0.dll" to layout "api-ms-win-core-sysinfo-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-timezone-l1-1-0.dll" to layout "api-ms-win-core-timezone-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-core-util-l1-1-0.dll" to layout "api-ms-win-core-util-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-conio-l1-1-0.dll" to layout "api-ms-win-crt-conio-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-convert-l1-1-0.dll" to layout "api-ms-win-crt-convert-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-environment-l1-1-0.dll" to layout "api-ms-win-crt-environment-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-filesystem-l1-1-0.dll" to layout "api-ms-win-crt-filesystem-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-heap-l1-1-0.dll" to layout "api-ms-win-crt-heap-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-locale-l1-1-0.dll" to layout "api-ms-win-crt-locale-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-math-l1-1-0.dll" to layout "api-ms-win-crt-math-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-multibyte-l1-1-0.dll" to layout "api-ms-win-crt-multibyte-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-private-l1-1-0.dll" to layout "api-ms-win-crt-private-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-process-l1-1-0.dll" to layout "api-ms-win-crt-process-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-runtime-l1-1-0.dll" to layout "api-ms-win-crt-runtime-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-stdio-l1-1-0.dll" to layout "api-ms-win-crt-stdio-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-string-l1-1-0.dll" to layout "api-ms-win-crt-string-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-time-l1-1-0.dll" to layout "api-ms-win-crt-time-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\api-ms-win-crt-utility-l1-1-0.dll" to layout "api-ms-win-crt-utility-l1-1-0.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\clrcompression.dll" to layout "clrcompression.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\clretwrc.dll" to layout "clretwrc.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\clrjit.dll" to layout "clrjit.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\coreclr.dll" to layout "coreclr.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\createdump.exe" to layout "createdump.exe"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\dbgshim.dll" to layout "dbgshim.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\hostfxr.dll" to layout "hostfxr.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\hostpolicy.dll" to layout "hostpolicy.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\mscordaccore.dll" to layout "mscordaccore.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\mscordaccore_amd64_amd64_5.0.621.22011.dll" to layout "mscordaccore_amd64_amd64_5.0.621.22011.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\mscordbi.dll" to layout "mscordbi.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\mscorrc.dll" to layout "mscorrc.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.netcore.app.runtime.win-x64\5.0.6\runtimes\win-x64\native\ucrtbase.dll" to layout "ucrtbase.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Projections\Reunion\bin\x64\Release\net5.0\Microsoft.WinUI.dll" to layout "Microsoft.WinUI.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\Microsoft.TestPlatform.CoreUtilities.dll" to layout "Microsoft.TestPlatform.CoreUtilities.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\Microsoft.TestPlatform.PlatformAbstractions.dll" to layout "Microsoft.TestPlatform.PlatformAbstractions.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" to layout "Microsoft.VisualStudio.TestPlatform.ObjectModel.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\Microsoft.TestPlatform.CommunicationUtilities.dll" to layout "Microsoft.TestPlatform.CommunicationUtilities.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\Microsoft.TestPlatform.CrossPlatEngine.dll" to layout "Microsoft.TestPlatform.CrossPlatEngine.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\Microsoft.TestPlatform.Utilities.dll" to layout "Microsoft.TestPlatform.Utilities.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\Microsoft.VisualStudio.TestPlatform.Common.dll" to layout "Microsoft.VisualStudio.TestPlatform.Common.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\testhost.dll" to layout "testhost.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\mstest.testframework\2.2.4-preview-20210513-02\lib\net5.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" to layout "Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\mstest.testframework\2.2.4-preview-20210513-02\lib\net5.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" to layout "Microsoft.VisualStudio.TestPlatform.TestFramework.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\newtonsoft.json\10.0.3\lib\netstandard1.3\Newtonsoft.Json.dll" to layout "Newtonsoft.Json.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\nuget.frameworks\5.0.0\lib\netstandard2.0\NuGet.Frameworks.dll" to layout "NuGet.Frameworks.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\cs\Microsoft.TestPlatform.CoreUtilities.resources.dll" to layout "cs\Microsoft.TestPlatform.CoreUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\cs\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll" to layout "cs\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\de\Microsoft.TestPlatform.CoreUtilities.resources.dll" to layout "de\Microsoft.TestPlatform.CoreUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\de\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll" to layout "de\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\es\Microsoft.TestPlatform.CoreUtilities.resources.dll" to layout "es\Microsoft.TestPlatform.CoreUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\es\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll" to layout "es\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\fr\Microsoft.TestPlatform.CoreUtilities.resources.dll" to layout "fr\Microsoft.TestPlatform.CoreUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\fr\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll" to layout "fr\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\it\Microsoft.TestPlatform.CoreUtilities.resources.dll" to layout "it\Microsoft.TestPlatform.CoreUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\it\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll" to layout "it\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\ja\Microsoft.TestPlatform.CoreUtilities.resources.dll" to layout "ja\Microsoft.TestPlatform.CoreUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\ja\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll" to layout "ja\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\ko\Microsoft.TestPlatform.CoreUtilities.resources.dll" to layout "ko\Microsoft.TestPlatform.CoreUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\ko\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll" to layout "ko\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\pl\Microsoft.TestPlatform.CoreUtilities.resources.dll" to layout "pl\Microsoft.TestPlatform.CoreUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\pl\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll" to layout "pl\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\pt-BR\Microsoft.TestPlatform.CoreUtilities.resources.dll" to layout "pt-BR\Microsoft.TestPlatform.CoreUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\pt-BR\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll" to layout "pt-BR\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\ru\Microsoft.TestPlatform.CoreUtilities.resources.dll" to layout "ru\Microsoft.TestPlatform.CoreUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\ru\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll" to layout "ru\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\tr\Microsoft.TestPlatform.CoreUtilities.resources.dll" to layout "tr\Microsoft.TestPlatform.CoreUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\tr\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll" to layout "tr\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\zh-Hans\Microsoft.TestPlatform.CoreUtilities.resources.dll" to layout "zh-Hans\Microsoft.TestPlatform.CoreUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\zh-Hans\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll" to layout "zh-Hans\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\zh-Hant\Microsoft.TestPlatform.CoreUtilities.resources.dll" to layout "zh-Hant\Microsoft.TestPlatform.CoreUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.objectmodel\16.10.0-release-20210429-01\lib\netcoreapp2.1\zh-Hant\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll" to layout "zh-Hant\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\cs\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" to layout "cs\Microsoft.TestPlatform.CommunicationUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\cs\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" to layout "cs\Microsoft.TestPlatform.CrossPlatEngine.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\cs\Microsoft.VisualStudio.TestPlatform.Common.resources.dll" to layout "cs\Microsoft.VisualStudio.TestPlatform.Common.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\de\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" to layout "de\Microsoft.TestPlatform.CommunicationUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\de\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" to layout "de\Microsoft.TestPlatform.CrossPlatEngine.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\de\Microsoft.VisualStudio.TestPlatform.Common.resources.dll" to layout "de\Microsoft.VisualStudio.TestPlatform.Common.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\es\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" to layout "es\Microsoft.TestPlatform.CommunicationUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\es\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" to layout "es\Microsoft.TestPlatform.CrossPlatEngine.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\es\Microsoft.VisualStudio.TestPlatform.Common.resources.dll" to layout "es\Microsoft.VisualStudio.TestPlatform.Common.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\fr\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" to layout "fr\Microsoft.TestPlatform.CommunicationUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\fr\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" to layout "fr\Microsoft.TestPlatform.CrossPlatEngine.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\fr\Microsoft.VisualStudio.TestPlatform.Common.resources.dll" to layout "fr\Microsoft.VisualStudio.TestPlatform.Common.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\it\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" to layout "it\Microsoft.TestPlatform.CommunicationUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\it\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" to layout "it\Microsoft.TestPlatform.CrossPlatEngine.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\it\Microsoft.VisualStudio.TestPlatform.Common.resources.dll" to layout "it\Microsoft.VisualStudio.TestPlatform.Common.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\ja\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" to layout "ja\Microsoft.TestPlatform.CommunicationUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\ja\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" to layout "ja\Microsoft.TestPlatform.CrossPlatEngine.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\ja\Microsoft.VisualStudio.TestPlatform.Common.resources.dll" to layout "ja\Microsoft.VisualStudio.TestPlatform.Common.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\ko\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" to layout "ko\Microsoft.TestPlatform.CommunicationUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\ko\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" to layout "ko\Microsoft.TestPlatform.CrossPlatEngine.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\ko\Microsoft.VisualStudio.TestPlatform.Common.resources.dll" to layout "ko\Microsoft.VisualStudio.TestPlatform.Common.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\pl\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" to layout "pl\Microsoft.TestPlatform.CommunicationUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\pl\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" to layout "pl\Microsoft.TestPlatform.CrossPlatEngine.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\pl\Microsoft.VisualStudio.TestPlatform.Common.resources.dll" to layout "pl\Microsoft.VisualStudio.TestPlatform.Common.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\pt-BR\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" to layout "pt-BR\Microsoft.TestPlatform.CommunicationUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\pt-BR\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" to layout "pt-BR\Microsoft.TestPlatform.CrossPlatEngine.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\pt-BR\Microsoft.VisualStudio.TestPlatform.Common.resources.dll" to layout "pt-BR\Microsoft.VisualStudio.TestPlatform.Common.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\ru\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" to layout "ru\Microsoft.TestPlatform.CommunicationUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\ru\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" to layout "ru\Microsoft.TestPlatform.CrossPlatEngine.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\ru\Microsoft.VisualStudio.TestPlatform.Common.resources.dll" to layout "ru\Microsoft.VisualStudio.TestPlatform.Common.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\tr\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" to layout "tr\Microsoft.TestPlatform.CommunicationUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\tr\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" to layout "tr\Microsoft.TestPlatform.CrossPlatEngine.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\tr\Microsoft.VisualStudio.TestPlatform.Common.resources.dll" to layout "tr\Microsoft.VisualStudio.TestPlatform.Common.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\zh-Hans\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" to layout "zh-Hans\Microsoft.TestPlatform.CommunicationUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\zh-Hans\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" to layout "zh-Hans\Microsoft.TestPlatform.CrossPlatEngine.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\zh-Hans\Microsoft.VisualStudio.TestPlatform.Common.resources.dll" to layout "zh-Hans\Microsoft.VisualStudio.TestPlatform.Common.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\zh-Hant\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" to layout "zh-Hant\Microsoft.TestPlatform.CommunicationUtilities.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\zh-Hant\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" to layout "zh-Hant\Microsoft.TestPlatform.CrossPlatEngine.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\.nuget\packages\microsoft.testplatform.testhost\16.10.0-release-20210429-01\lib\netcoreapp2.1\zh-Hant\Microsoft.VisualStudio.TestPlatform.Common.resources.dll" to layout "zh-Hant\Microsoft.VisualStudio.TestPlatform.Common.resources.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Projections\Windows\bin\x64\Release\net5.0\Microsoft.Windows.SDK.NET.dll" to layout "Microsoft.Windows.SDK.NET.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\WinRT.Runtime\bin\Release\net5.0\WinRT.Runtime.dll" to layout "WinRT.Runtime.dll"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\Images\LockScreenLogo.scale-200.png" to layout "Images\LockScreenLogo.scale-200.png"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\Images\SplashScreen.scale-200.png" to layout "Images\SplashScreen.scale-200.png"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\Images\Square150x150Logo.scale-200.png" to layout "Images\Square150x150Logo.scale-200.png"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\Images\Square44x44Logo.scale-200.png" to layout "Images\Square44x44Logo.scale-200.png"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\Images\Square44x44Logo.targetsize-24_altform-unplated.png" to layout "Images\Square44x44Logo.targetsize-24_altform-unplated.png"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\Images\StoreLogo.png" to layout "Images\StoreLogo.png"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\Images\Wide310x150Logo.scale-200.png" to layout "Images\Wide310x150Logo.scale-200.png"...&#xD;
+Copying file "C:\Users\shasnayak\CsWinRT\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\x64\Release\net5.0-windows10.0.19041.0\win10-x64\AppxManifest.xml" to layout "AppxManifest.xml"...&#xD;
+Checking whether required frameworks are installed...&#xD;
+Framework: Microsoft.VCLibs.140.00.UWPDesktop/ARM. Skipping installation because framework package architecture does not match target architecture X64 and app package architecture X64.&#xD;
+Framework: Microsoft.VCLibs.140.00.UWPDesktop/ARM64. Skipping installation because framework package architecture does not match target architecture X64 and app package architecture X64.&#xD;
+Framework: Microsoft.VCLibs.140.00.UWPDesktop/X64, app package version 14.0.29231.0 is installed.&#xD;
+Framework: Microsoft.VCLibs.140.00.UWPDesktop/X86. Skipping installation because framework package architecture does not match target architecture X64 and app package architecture X64.&#xD;
+Framework: Microsoft.VCLibs.140.00/ARM. Skipping installation because framework package architecture does not match target architecture X64 and app package architecture X64.&#xD;
+Framework: Microsoft.VCLibs.140.00/ARM64. Skipping installation because framework package architecture does not match target architecture X64 and app package architecture X64.&#xD;
+Framework: Microsoft.VCLibs.140.00/X64, app package version 14.0.29231.0 is installed.&#xD;
+Framework: Microsoft.VCLibs.140.00/X86. Skipping installation because framework package architecture does not match target architecture X64 and app package architecture X64.&#xD;
+Registering the application to run from layout...&#xD;
+	PackageArchitecture = X64&#xD;
+	TargetOSArchitecture = X64&#xD;
+	IsOptionalProject = False&#xD;
+	SolutionConfiguration = Release&#xD;
+	SolutionPlatform = x64&#xD;
+	Context.FileChanged = False&#xD;
+	Context.InOtherLocation = True&#xD;
+	Context.ManifestChanged = True&#xD;
+	Context.Registered = False&#xD;
+	Action.CleanReinstall = True&#xD;
+	Action.Register = False&#xD;
+	Action.UpdateLayout = False&#xD;
+Deployment complete (0:00:06.574). Full package name: "3fb45547-1ef1-4576-a2b9-3be5d5659cca_1.0.0.0_x64__cbsymgqb2db4y"&#xD;
+	DeploymentSucceeded = True&#xD;
+	TimeToDeploy = 6574&#xD;
+	HasSharedCode = False&#xD;
+DeployAsync: END (Success, 0:00:06.576)&#xD;
+Deployment operation succeeded, package moniker: '3fb45547-1ef1-4576-a2b9-3be5d5659cca_1.0.0.0_x64__cbsymgqb2db4y'.&#xD;
+Deploy: END (Success, 0:00:06.586)&#xD;
+Attempting to launch app with app user model Id '3fb45547-1ef1-4576-a2b9-3be5d5659cca_cbsymgqb2db4y!App' and arguments '--port 60980 --endpoint 127.0.0.1:060980 --role client --parentprocessid 3492 --telemetryoptedin false'.&#xD;
+Successfully launched process Id '27572'.&#xD;
+Closing app with package full name '3fb45547-1ef1-4576-a2b9-3be5d5659cca_1.0.0.0_x64__cbsymgqb2db4y'.&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

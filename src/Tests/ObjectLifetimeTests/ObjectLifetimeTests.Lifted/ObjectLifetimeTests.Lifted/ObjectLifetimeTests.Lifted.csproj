@@ -1,0 +1,121 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
+        <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+        <RootNamespace>ObjectLifetimeTests.Lifted</RootNamespace>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <Platforms>x86;x64;arm64</Platforms>
+        <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+        <EnablePreviewMsixTooling>True</EnablePreviewMsixTooling>
+        <PublishProfile>win10-$(Platform).pubxml</PublishProfile>
+        <PrepareMsixPackageDependsOn></PrepareMsixPackageDependsOn>
+        <PublishReadyToRun>false</PublishReadyToRun>
+        <ProjectReunionVerifyWinrtRuntimeVersion>false</ProjectReunionVerifyWinrtRuntimeVersion>
+        <WindowsPackageType>Desktop</WindowsPackageType>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Remove="Images\LockScreenLogo.scale-200.png" />
+        <None Remove="Images\SplashScreen.scale-200.png" />
+        <None Remove="Images\Square150x150Logo.scale-200.png" />
+        <None Remove="Images\Square44x44Logo.scale-200.png" />
+        <None Remove="Images\Square44x44Logo.targetsize-24_altform-unplated.png" />
+        <None Remove="Images\StoreLogo.png" />
+        <None Remove="Images\Wide310x150Logo.scale-200.png" />
+        <None Remove="Package.appxmanifest" />
+        <None Remove="RealMainPage.xaml" />
+        <None Remove="Tests\RealMainPage.xaml" />
+    </ItemGroup>
+    <ItemGroup>
+        <AppxManifest Include="Package.appxmanifest">
+            <SubType>Designer</SubType>
+        </AppxManifest>
+    </ItemGroup>
+    <ItemGroup>
+        <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="..\..\Tests\AsyncQueue.cs" Link="Tests\AsyncQueue.cs" />
+        <Compile Include="..\..\Tests\ClrObjects.cs" Link="Tests\ClrObjects.cs" />
+        <Compile Include="..\..\Tests\CollectionExtensions.cs" Link="Tests\CollectionExtensions.cs" />
+        <Compile Include="..\..\Tests\CustomClrObject.cs" Link="Tests\CustomClrObject.cs" />
+        <Compile Include="..\..\Tests\CustomControl.cs" Link="Tests\CustomControl.cs" />
+        <Compile Include="..\..\Tests\CustomDependencyObject.cs" Link="Tests\CustomDependencyObject.cs" />
+        <Compile Include="..\..\Tests\CustomGroupedItemPages.cs" Link="Tests\CustomGroupedItemPages.cs" />
+        <Compile Include="..\..\Tests\CycleTestCanvas.cs" Link="Tests\CycleTestCanvas.cs" />
+        <Compile Include="..\..\Tests\MyControl.xaml.cs" Link="Tests\MyControl.xaml.cs" />
+        <Compile Include="..\..\Tests\ObjectLifetimePage.xaml.cs" Link="Tests\ObjectLifetimePage.xaml.cs" />
+        <Compile Include="..\..\Tests\ObjectLifetimeTests.cs" Link="Tests\ObjectLifetimeTests.cs" />
+        <Compile Include="..\..\Tests\ObservableDictionary.cs" Link="Tests\ObservableDictionary.cs" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="Images\LockScreenLogo.scale-200.png" />
+        <Content Include="Images\SplashScreen.scale-200.png" />
+        <Content Include="Images\Square150x150Logo.scale-200.png" />
+        <Content Include="Images\Square44x44Logo.scale-200.png" />
+        <Content Include="Images\Square44x44Logo.targetsize-24_altform-unplated.png" />
+        <Content Include="Images\StoreLogo.png" />
+        <Content Include="Images\Wide310x150Logo.scale-200.png" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectCapability Include="TestContainer" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.TestPlatform.TestHost">
+            <Version>16.10.0-release-20210429-01</Version>
+            <ExcludeAssets>build</ExcludeAssets>
+        </PackageReference>
+        <PackageReference Include="MSTest.TestAdapter">
+            <Version>2.2.4-preview-20210513-02</Version>
+        </PackageReference>
+        <PackageReference Include="MSTest.TestFramework">
+            <Version>2.2.4-preview-20210513-02</Version>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\..\Projections\Windows\Windows.csproj" />
+        <ProjectReference Include="..\..\..\..\Projections\Reunion\Reunion.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="Microsoft.ProjectReunion.WinUI">
+            <Version>0.5.7</Version>
+            <ExcludeAssets>compile</ExcludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    
+    <ItemGroup>
+        <Page Include="..\..\Tests\MyControl.xaml" Link="Tests\MyControl.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+        <Page Include="..\..\Tests\ObjectLifetimePage.xaml" Link="Tests\ObjectLifetimePage.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Page Update="Tests\RealMainPage.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Page Update="RealMainPage.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Resource Update="..\..\Tests\MyControl.xaml">
+            <Link>Tests\MyControl.xaml</Link>
+        </Resource>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Resource Update="..\..\Tests\ObjectLifetimePage.xaml">
+            <Link>Tests\ObjectLifetimePage.xaml</Link>
+        </Resource>
+    </ItemGroup>    
+</Project>
