@@ -356,11 +356,11 @@ namespace TestComponentCSharp
     }
     
     // IInspectable-based interop interface
-    [uuid(39E050C3-4E74-441A-8DC0-B81104DF949C)]
+    /*[uuid(39E050C3-4E74-441A-8DC0-B81104DF949C)]
     interface IUserConsentVerifierInterop
     {
         Object RequestVerificationForWindowAsync(UInt64 appWindow, String message, GUID riid);
-    }
+    }*/
 
     [default_interface]
     runtimeclass CustomBindableVectorTest : Microsoft.UI.Xaml.Interop.IBindableVector

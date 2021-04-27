@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <ProjectReference Include="..\..\Tests\Interop\Interop.vcxproj " />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
   </ItemGroup>
@@ -28,7 +29,7 @@
 -include Windows.UI.Text.FontStyle
 -include Windows.UI.Text.FontWeight
 -include Windows.UI.Text.UnderlineType
--include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute      
+-include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute     
     </CsWinRTFilters>
   </PropertyGroup>
  
