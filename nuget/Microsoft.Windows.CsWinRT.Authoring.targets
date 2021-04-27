@@ -51,23 +51,22 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </ItemGroup>
   </Target>
 
-  <!-- Update the project's output to include the generated WinMD.
- 
-       ResolveableAssembly metadata decides who we can support:
-          if it is not present, we support C++, but not C# 
-            => solution: sdk1130 error becomes a warning
-
-          if it is present (as 'false'), we support C#, but not C++
-            => solution: C++/WinRT targets need to use _ResolvedNativeProjectReferencePaths
-  -->
+  <!-- Update the project to only output the .winmd -->
   <Target Name="GetTargetPath" Returns="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup>
+      <!-- Clear the .dll -->
+      <TargetPathWithTargetPlatformMoniker Remove="@(TargetPathWithTargetPlatformMoniker)" />
+      <!-- Add the .winmd -->
       <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)$(AssemblyName).winmd">
-        <BuildReference>true</BuildReference>
-        <WinMDFile>true</WinMDFile>
+        <!-- implementation is NOT $(AssemblyName).dll -->
         <Implementation>WinRT.Host.dll</Implementation>
-        <ResolveableAssembly>false</ResolveableAssembly>
+        <!-- show to c++ compiler (native case) and dotnet sdk (managed case) -->
+        <ResolveableAssembly>true</ResolveableAssembly>
+        <!-- Try: Use in dotnet sdk to swap out the .winmd for $(AssemblyName).dll -->
+        <ManagedImplementation>$(AssemblyName).dll</ManagedImplementation>
         <FileType>winmd</FileType>
+        <WinMDFile>true</WinMDFile>
+        <BuildReference>true</BuildReference>
         <Primary>true</Primary>
       </TargetPathWithTargetPlatformMoniker>
     </ItemGroup>
