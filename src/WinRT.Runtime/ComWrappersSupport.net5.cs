@@ -99,12 +99,20 @@ namespace WinRT
                 winrtObj.Resurrect();
             }
 
-            return rcw switch
+            try
             {
-                ABI.System.Nullable<string> ns => (T)(object) ns.Value,
-                ABI.System.Nullable<Type> nt => (T)(object) nt.Value,
-                _ => (T) rcw
-            };
+                return rcw switch
+                {
+                    ABI.System.Nullable<string> ns => (T)(object)ns.Value,
+                    ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                    _ => (T)rcw
+                };
+            }
+            catch(Exception)
+            {
+                System.Console.WriteLine("CreateRCW: " + ptr.ToString() + " " + typeof(T).FullName + " " + rcw.GetType().FullName);
+                throw;
+            }
         }
 
         public static bool TryUnwrapObject(object o, out IObjectReference objRef)
@@ -143,8 +151,15 @@ namespace WinRT
             if (target is IWinRTObject winrtObj)
             {
                 winrtObj.Resurrect();
+                winrtObj.NativeObject.CleanupRCW = true;
             }
             return rcw;
+        }
+
+        internal static void CleanupRCW(IObjectReference objRefForRCW)
+        {
+            objRefForRCW.TryAs<IUnknownVftbl>(typeof(IUnknownVftbl).GUID, out var objRefForFinalRelease);
+            GC.KeepAlive(objRefForFinalRelease);
         }
 
         public static IObjectReference CreateCCWForObject(object obj)
@@ -206,6 +221,7 @@ namespace WinRT
             out IObjectReference objRef)
         {
             objRef = ComWrappersSupport.GetObjectReferenceForInterface(isAggregation ? inner : newInstance);
+            objRef.CleanupRCW = true;
 
             IntPtr referenceTracker;
             {
@@ -464,6 +480,7 @@ namespace WinRT
                 // on destruction as the CLR would do it.
                 winrtObj.NativeObject.ReleaseFromTrackerSource();
                 winrtObj.NativeObject.PreventReleaseFromTrackerSourceOnDispose = true;
+                winrtObj.NativeObject.CleanupRCW = true;
             }
 
             return obj;

@@ -74,6 +74,8 @@ namespace WinRT
             }
         }
 
+        internal bool CleanupRCW { get; set; }
+
         protected  unsafe IUnknownVftbl VftblIUnknown
         {
             get
@@ -196,6 +198,13 @@ namespace WinRT
 
         public void Dispose()
         {
+            // If this is the object reference associated with the RCW,
+            // defer dispose to RCW finalizer for .NET 5.
+            if (CleanupRCW)
+            {
+                return;
+            }
+
             Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -208,6 +217,7 @@ namespace WinRT
                 {
                     return;
                 }
+
 #if DEBUG
                 if (BreakOnDispose && System.Diagnostics.Debugger.IsAttached)
                 {
@@ -217,6 +227,11 @@ namespace WinRT
 
                 if (!PreventReleaseOnDispose)
                 {
+                    if (CleanupRCW)
+                    {
+                        ComWrappersSupport.CleanupRCW(this);
+                    }
+
                     Release();
                 }
 
