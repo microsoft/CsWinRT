@@ -8,6 +8,8 @@ using Xunit;
 using WinRT;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 
 namespace UnitTest
 {
@@ -21,6 +23,11 @@ namespace UnitTest
         {
 
         }
+
+        // Compile time test to ensure multiple allowed attributes 
+        [TemplatePart(Name = "PartButton", Type = typeof(Button))]
+        [TemplatePart(Name = "PartGrid", Type = typeof(Grid))]
+        public class TestAllowMultipleAttributes { };
 
         [Fact]
         public void TestApp()
