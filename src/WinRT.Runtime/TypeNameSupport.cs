@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -25,10 +26,32 @@ namespace WinRT
     static class TypeNameSupport
     {
         private static List<Assembly> projectionAssemblies = new List<Assembly>();
+        private static ConcurrentDictionary<string, Type> typeNameCache = new ConcurrentDictionary<string, Type>() { ["TrackerCollection<T>"] = null };
 
         public static void RegisterProjectionAssembly(Assembly assembly)
         {
             projectionAssemblies.Add(assembly);
+        }
+
+        /// <summary>
+        /// Parses and loads the given type name, if not found in the cache.
+        /// </summary>
+        /// <param name="runtimeClassName">The runtime class name to attempt to parse.</param>
+        /// <returns>The type, if found.  Null otherwise</returns>
+        public static Type FindTypeByNameCached(string runtimeClassName)
+        {
+            return typeNameCache.GetOrAdd(runtimeClassName, (runtimeClassName) =>
+            {
+                Type implementationType = null;
+                try
+                {
+                    implementationType = FindTypeByName(runtimeClassName.AsSpan()).type;
+                }
+                catch (Exception)
+                {
+                }
+                return implementationType;
+            });
         }
 
         /// <summary>
