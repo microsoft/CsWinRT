@@ -148,6 +148,7 @@ namespace WinRT
 
             return registered;
         }
+
         public static IObjectReference CreateCCWForObject(object obj)
         {
             var wrapper = ComWrapperCache.GetValue(obj, _ => new ComCallableWrapper(obj));
