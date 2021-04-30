@@ -18,6 +18,7 @@ namespace WinRT
         private readonly IntPtr _thisPtr;
         private object _disposedLock = new object();
         private IntPtr _referenceTrackerPtr;
+        private int RCWCleanupCounter = 2;
 
         public IntPtr ThisPtr
         {
@@ -199,7 +200,7 @@ namespace WinRT
         public void Dispose()
         {
             // If this is the object reference associated with the RCW,
-            // defer dispose to RCW finalizer for .NET 5.
+            // defer dispose to after the RCW has been finalized for .NET 5.
             if (CleanupRCW)
             {
                 return;
@@ -218,6 +219,18 @@ namespace WinRT
                     return;
                 }
 
+                // If the object reference is associated with the RCW, we need to
+                // defer the final release on the ThisPtr until after the RCW has been
+                // finalized and it has been removed from the ComWrappers cache.
+                // In .NET 6, there will be a new API for us to use, but until then
+                // in .NET 5, we defer the finalization of this object until it
+                // has reached Gen 2 by reregistering for finalization.
+                if(CleanupRCW && --RCWCleanupCounter >= 0)
+                {
+                    GC.ReRegisterForFinalize(this);
+                    return;
+                }
+
 #if DEBUG
                 if (BreakOnDispose && System.Diagnostics.Debugger.IsAttached)
                 {
@@ -227,11 +240,6 @@ namespace WinRT
 
                 if (!PreventReleaseOnDispose)
                 {
-                    if (CleanupRCW)
-                    {
-                        ComWrappersSupport.CleanupRCW(this);
-                    }
-
                     Release();
                 }
 
@@ -249,6 +257,7 @@ namespace WinRT
                     return false;
                 }
                 disposed = false;
+                RCWCleanupCounter = 2;
                 ResurrectTrackerSource();
                 AddRef();
                 GC.ReRegisterForFinalize(this);

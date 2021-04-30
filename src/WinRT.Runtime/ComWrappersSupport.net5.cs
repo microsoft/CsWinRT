@@ -156,12 +156,6 @@ namespace WinRT
             return rcw;
         }
 
-        internal static void CleanupRCW(IObjectReference objRefForRCW)
-        {
-            objRefForRCW.TryAs<IUnknownVftbl>(typeof(IUnknownVftbl).GUID, out var objRefForFinalRelease);
-            GC.KeepAlive(objRefForFinalRelease);
-        }
-
         public static IObjectReference CreateCCWForObject(object obj)
         {
             IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);

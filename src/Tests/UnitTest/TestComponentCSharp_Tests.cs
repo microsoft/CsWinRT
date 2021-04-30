@@ -2222,23 +2222,31 @@ namespace UnitTest
             static void TestImports()
             {
                 var (initializeWithWindow, windowNative) = MakeImports();
-                
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
+
+                GCCollect();
 
                 var hwnd = new IntPtr(0x12345678);
                 initializeWithWindow.Initialize(hwnd);
                 Assert.Equal(windowNative.WindowHandle, hwnd);
             }
 
+            static void GCCollect()
+            {
+                // Require multiple GC collects due to
+                // the final release is not done immediately.
+                for(int idx = 0; idx < 3; idx++)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                }
+            }
+
             TestObject();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            GCCollect();
             Assert.Equal(0, ComImports.NumObjects);
 
             TestImports();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            GCCollect();
             Assert.Equal(0, ComImports.NumObjects);
         }
 
