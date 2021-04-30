@@ -99,20 +99,12 @@ namespace WinRT
                 winrtObj.Resurrect();
             }
 
-            try
+            return rcw switch
             {
-                return rcw switch
-                {
-                    ABI.System.Nullable<string> ns => (T)(object)ns.Value,
-                    ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
-                    _ => (T)rcw
-                };
-            }
-            catch(Exception)
-            {
-                System.Console.WriteLine("CreateRCW: " + ptr.ToString() + " " + typeof(T).FullName + " " + rcw.GetType().FullName);
-                throw;
-            }
+                ABI.System.Nullable<string> ns => (T)(object)ns.Value,
+                ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                _ => (T)rcw
+            };
         }
 
         public static bool TryUnwrapObject(object o, out IObjectReference objRef)
