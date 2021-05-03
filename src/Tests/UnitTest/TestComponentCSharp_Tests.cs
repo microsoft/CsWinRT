@@ -2201,6 +2201,14 @@ namespace UnitTest
         [Fact]
         unsafe public void TestComImports()
         {
+            TestObject();
+            GCCollect();
+            Assert.Equal(0, ComImports.NumObjects);
+
+            TestImports();
+            GCCollect();
+            Assert.Equal(0, ComImports.NumObjects);
+
             static Object MakeObject()
             {
                 Assert.Equal(0, ComImports.NumObjects);
@@ -2240,14 +2248,6 @@ namespace UnitTest
                     GC.WaitForPendingFinalizers();
                 }
             }
-
-            TestObject();
-            GCCollect();
-            Assert.Equal(0, ComImports.NumObjects);
-
-            TestImports();
-            GCCollect();
-            Assert.Equal(0, ComImports.NumObjects);
         }
 
         [Fact]

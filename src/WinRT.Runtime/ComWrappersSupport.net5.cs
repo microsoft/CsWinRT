@@ -143,7 +143,7 @@ namespace WinRT
             if (target is IWinRTObject winrtObj)
             {
                 winrtObj.Resurrect();
-                winrtObj.NativeObject.CleanupRCW = true;
+                winrtObj.NativeObject.MarkCleanupRCW();
             }
             return rcw;
         }
@@ -207,7 +207,7 @@ namespace WinRT
             out IObjectReference objRef)
         {
             objRef = ComWrappersSupport.GetObjectReferenceForInterface(isAggregation ? inner : newInstance);
-            objRef.CleanupRCW = true;
+            objRef.MarkCleanupRCW();
 
             IntPtr referenceTracker;
             {
@@ -466,7 +466,7 @@ namespace WinRT
                 // on destruction as the CLR would do it.
                 winrtObj.NativeObject.ReleaseFromTrackerSource();
                 winrtObj.NativeObject.PreventReleaseFromTrackerSourceOnDispose = true;
-                winrtObj.NativeObject.CleanupRCW = true;
+                winrtObj.NativeObject.MarkCleanupRCW();
             }
 
             return obj;

@@ -18,7 +18,7 @@ namespace WinRT
         private readonly IntPtr _thisPtr;
         private object _disposedLock = new object();
         private IntPtr _referenceTrackerPtr;
-        private int RCWCleanupCounter = 2;
+        private byte _rcwCleanupCounter;
 
         public IntPtr ThisPtr
         {
@@ -74,8 +74,6 @@ namespace WinRT
                 return **(IReferenceTrackerVftbl**)ReferenceTrackerPtr;
             }
         }
-
-        internal bool CleanupRCW { get; set; }
 
         protected  unsafe IUnknownVftbl VftblIUnknown
         {
@@ -201,7 +199,7 @@ namespace WinRT
         {
             // If this is the object reference associated with the RCW,
             // defer dispose to after the RCW has been finalized for .NET 5.
-            if (CleanupRCW)
+            if (!Cleanup)
             {
                 return;
             }
@@ -225,8 +223,9 @@ namespace WinRT
                 // In .NET 6, there will be a new API for us to use, but until then
                 // in .NET 5, we defer the finalization of this object until it
                 // has reached Gen 2 by reregistering for finalization.
-                if(CleanupRCW && --RCWCleanupCounter >= 0)
+                if(!Cleanup)
                 {
+                    _rcwCleanupCounter--;
                     GC.ReRegisterForFinalize(this);
                     return;
                 }
@@ -257,7 +256,6 @@ namespace WinRT
                     return false;
                 }
                 disposed = false;
-                RCWCleanupCounter = 2;
                 ResurrectTrackerSource();
                 AddRef();
                 GC.ReRegisterForFinalize(this);
@@ -332,6 +330,10 @@ namespace WinRT
                 ReferenceTracker.IUnknownVftbl.Release(ReferenceTrackerPtr);
             }
         }
+        
+        internal void MarkCleanupRCW() => _rcwCleanupCounter = 2;
+
+        private bool Cleanup { get => _rcwCleanupCounter == 0; }
     }
 
     public class ObjectReference<T> : IObjectReference
