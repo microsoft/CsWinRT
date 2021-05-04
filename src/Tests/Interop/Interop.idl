@@ -71,7 +71,6 @@ namespace WinRT.Interop
 #endif
 
     // Print3DManagerInterop.idl
-#if UAC_VERSION > 0
     [uuid(9CA31010-1484-4587-B26B-DDDF9F9CAECD), ProjectionInternal]
     interface IPrinting3DManagerInterop
     {
@@ -83,7 +82,6 @@ namespace WinRT.Interop
             HWND appWindow,
             GUID riid);
     }
-#endif
 
     // PrintManagerInterop.idl
 #if UAC_VERSION > 0
