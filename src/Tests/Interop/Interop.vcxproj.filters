@@ -19,7 +19,7 @@
     <Midl Include="Interop.idl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Directory.Build.props" />
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
