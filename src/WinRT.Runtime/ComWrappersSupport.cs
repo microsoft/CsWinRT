@@ -264,13 +264,8 @@ namespace WinRT
                 return (IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef);
             }
 
-            Type implementationType = null;
-
-            try
-            {
-                (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
-            }
-            catch (TypeLoadException)
+            Type implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
+            if(implementationType == null)
             {
                 // If we reach here, then we couldn't find a type that matches the runtime class name.
                 // Fall back to using IInspectable directly.
@@ -318,13 +313,7 @@ namespace WinRT
                 Type implementationType = null;
                 if (!string.IsNullOrEmpty(runtimeClassName))
                 {
-                    try
-                    {
-                        (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
-                    }
-                    catch (TypeLoadException)
-                    {
-                    }
+                    implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
                 }
 
                 if (!(implementationType != null &&
