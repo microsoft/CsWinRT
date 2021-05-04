@@ -169,6 +169,7 @@ namespace WinRT
         {
             if (NativeObject.Resurrect())
             {
+                NativeObject.MarkCleanupRCW();
                 foreach (var cached in QueryInterfaceCache)
                 {
                     cached.Value.Resurrect();
