@@ -28,7 +28,6 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
 using System.Reflection;
-using Windows.Interop;
 
 #if NET5_0
 using WeakRefNS = System;

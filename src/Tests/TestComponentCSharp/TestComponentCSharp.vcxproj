@@ -92,7 +92,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Directory.Build.props" />
-    <None Include="Directory.Build.targets" />
     <None Include="packages.config" />
     <None Include="TestComponentCSharp.def" />
   </ItemGroup>

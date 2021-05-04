@@ -1,154 +1,197 @@
 // Modern IDL 3.0: https://docs.microsoft.com/en-us/uwp/midl-3/intro
 
-namespace Windows.Interop
+// Note: the projection generated for this metadata should be internal, and only
+// accesseed indirectly with the user-friendly wrappers in ComInteropHelpers.cs.
+namespace WinRT.Interop
 {
+    // C#/WinRT provides support for generating internal interface projections
+    [attributeusage(target_interface)]
+    [attributename("ProjectionInternal")]
+    attribute ProjectionInternalAttribute
+    {
+    }
+
+    // C#/WinRT provides a custom mapping of WinRT.Interop.HWND to System.IntPtr
+    struct HWND
+    {
+        Int32 unused;
+    };
+
     // accountssettingspaneinterop.idl
-   [uuid(D3EE12AD-3865-4362-9746-B75A682DF0E6)]
-   interface IAccountsSettingsPaneInterop 
-   {
-       Object GetForWindow(
-           UInt64 appWindow,
-           GUID riid);
-       Object ShowManageAccountsForWindowAsync(
-           UInt64 appWindow,
-           GUID riid);
-       Object ShowAddAccountForWindowAsync(
-           UInt64 appWindow,
-           GUID riid);
-   }
+#if UAC_VERSION > 2
+    [uuid(D3EE12AD-3865-4362-9746-B75A682DF0E6), ProjectionInternal]
+    interface IAccountsSettingsPaneInterop
+    {
+        Object GetForWindow(
+            HWND appWindow,
+            GUID riid);
+        Object ShowManageAccountsForWindowAsync(
+            HWND appWindow,
+            GUID riid);
+        Object ShowAddAccountForWindowAsync(
+            HWND appWindow,
+            GUID riid);
+    }
+#endif
 
-   // dragdropinterop.idl
-   [uuid(5AD8CBA7-4C01-4DAC-9074-827894292D63)]
-   interface IDragDropManagerInterop 
-   {
-       Object GetForWindow(
-           UInt64 hwnd, 
-           GUID riid);
-   }
+    // dragdropinterop.idl
+#if UAC_VERSION > 0
+    [uuid(5AD8CBA7-4C01-4DAC-9074-827894292D63), ProjectionInternal]
+    interface IDragDropManagerInterop
+    {
+        Object GetForWindow(
+            HWND hwnd,
+            GUID riid);
+    }
+#endif
 
-   // inputpaneinterop.idl
-   [uuid(75CF2C57-9195-4931-8332-F0B409E916AF)]
-   interface IInputPaneInterop 
-   {
-       Object GetForWindow(
-           UInt64 appWindow,
-           GUID riid);
-   }
+    // inputpaneinterop.idl
+#if UAC_VERSION > 2
+    [uuid(75CF2C57-9195-4931-8332-F0B409E916AF), ProjectionInternal]
+    interface IInputPaneInterop
+    {
+        Object GetForWindow(
+            HWND appWindow,
+            GUID riid);
+    }
+#endif
 
-   // PlayToManagerInterop.idl
-   [uuid(24394699-1F2C-4EB3-8CD7-0EC1DA42A540),]
-   interface IPlayToManagerInterop 
-   {
-       Object GetForWindow(
-           UInt64 appWindow,
-           GUID riid);
+    // PlayToManagerInterop.idl
+#if UAC_VERSION > 0
+    [uuid(24394699-1F2C-4EB3-8CD7-0EC1DA42A540), ProjectionInternal]
+    interface IPlayToManagerInterop
+    {
+        Object GetForWindow(
+            HWND appWindow,
+            GUID riid);
 
-       void ShowPlayToUIForWindow(
-           UInt64 appWindow);
-   }
+        void ShowPlayToUIForWindow(
+            HWND appWindow);
+    }
+#endif
 
-   // Print3DManagerInterop.idl
-   [uuid(9CA31010-1484-4587-B26B-DDDF9F9CAECD)]
-   interface IPrinting3DManagerInterop 
-   {
-       Object GetForWindow(
-           UInt64 appWindow,
-           GUID riid);
+    // Print3DManagerInterop.idl
+#if UAC_VERSION > 0
+    [uuid(9CA31010-1484-4587-B26B-DDDF9F9CAECD), ProjectionInternal]
+    interface IPrinting3DManagerInterop
+    {
+        Object GetForWindow(
+            HWND appWindow,
+            GUID riid);
 
-       Object ShowPrintUIForWindowAsync(
-           UInt64 appWindow,
-           GUID riid);
-   }
+        Object ShowPrintUIForWindowAsync(
+            HWND appWindow,
+            GUID riid);
+    }
+#endif
 
-   // PrintManagerInterop.idl
-   [uuid(c5435a42-8d43-4e7b-a68a-ef311e392087)]
-   interface IPrintManagerInterop 
-   {
-       Object GetForWindow(
-           UInt64 appWindow,
-           GUID riid);
+    // PrintManagerInterop.idl
+#if UAC_VERSION > 0
+    [uuid(c5435a42-8d43-4e7b-a68a-ef311e392087), ProjectionInternal]
+    interface IPrintManagerInterop
+    {
+        Object GetForWindow(
+            HWND appWindow,
+            GUID riid);
 
-       Object ShowPrintUIForWindowAsync(
-           UInt64 appWindow,
-           GUID riid);
-   }
+        Object ShowPrintUIForWindowAsync(
+            HWND appWindow,
+            GUID riid);
+    }
+#endif
 
-   // RadialControllerInterop.idl
-   [uuid(1B0535C9-57AD-45C1-9D79-AD5C34360513)]
-   interface IRadialControllerInterop 
-   {
-       Object CreateForWindow(
-           UInt64 hwnd,
-           GUID riid);
-   }
+    // RadialControllerInterop.idl
+#if UAC_VERSION > 2
+    [uuid(1B0535C9-57AD-45C1-9D79-AD5C34360513), ProjectionInternal]
+    interface IRadialControllerInterop
+    {
+        Object CreateForWindow(
+            HWND hwnd,
+            GUID riid);
+    }
+#endif
 
-   [uuid(787cdaac-3186-476d-87e4-b9374a7b9970)]
-   interface IRadialControllerConfigurationInterop 
-   {
-       Object GetForWindow(
-           UInt64 hwnd,
-           GUID riid);
-   }
+#if UAC_VERSION > 2
+    [uuid(787cdaac-3186-476d-87e4-b9374a7b9970), ProjectionInternal]
+    interface IRadialControllerConfigurationInterop
+    {
+        Object GetForWindow(
+            HWND hwnd,
+            GUID riid);
+    }
+#endif
 
-   [uuid(3D577EFF-4CEE-11E6-B535-001BDC06AB3B)]
-   interface IRadialControllerIndependentInputSourceInterop 
-   {
-       Object CreateForWindow(
-           UInt64 hwnd,
-           GUID riid);
-   }
+#if UAC_VERSION > 3
+    [uuid(3D577EFF-4CEE-11E6-B535-001BDC06AB3B), ProjectionInternal]
+    interface IRadialControllerIndependentInputSourceInterop
+    {
+        Object CreateForWindow(
+            HWND hwnd,
+            GUID riid);
+    }
+#endif
 
-   // SpatialInteractionManagerInterop.idl
-   // This interop interface is duplicated by IHolographicSpaceInterop, which has the same IID
-   [uuid(5C4EE536-6A98-4B86-A170-587013D6FD4B)]
-   interface ISpatialInteractionManagerInterop 
-   {
-       Object GetForWindow(
-           UInt64 window,
-           GUID riid);
-   }
+    // SpatialInteractionManagerInterop.idl
+    // This interop interface is duplicated by IHolographicSpaceInterop, which has the same IID
+#if UAC_VERSION > 3
+    [uuid(5C4EE536-6A98-4B86-A170-587013D6FD4B), ProjectionInternal]
+    interface ISpatialInteractionManagerInterop
+    {
+        Object GetForWindow(
+            HWND window,
+            GUID riid);
+    }
+#endif
 
-   // SystemMediaTransportControlsInterop.idl
-   [uuid(ddb0472d-c911-4a1f-86d9-dc3d71a95f5a)]
-   interface ISystemMediaTransportControlsInterop 
-   {
-       Object GetForWindow(
-           UInt64 appWindow,
-           GUID riid);
-   }
+    // SystemMediaTransportControlsInterop.idl
+#if UAC_VERSION > 0
+    [uuid(ddb0472d-c911-4a1f-86d9-dc3d71a95f5a), ProjectionInternal]
+    interface ISystemMediaTransportControlsInterop
+    {
+        Object GetForWindow(
+            HWND appWindow,
+            GUID riid);
+    }
+#endif
 
-   // UIViewSettingsInterop.idl
-   [uuid(3694dbf9-8f68-44be-8ff5-195c98ede8a6)]
-   interface IUIViewSettingsInterop 
-   {
-       Object GetForWindow(
-           UInt64 hwnd,
-           GUID riid);
-   }
+    // UIViewSettingsInterop.idl
+#if UAC_VERSION > 0
+    [uuid(3694dbf9-8f68-44be-8ff5-195c98ede8a6), ProjectionInternal]
+    interface IUIViewSettingsInterop
+    {
+        Object GetForWindow(
+            HWND hwnd,
+            GUID riid);
+    }
+#endif
 
-   // UserConsentVerifierInterop.idl
-   [uuid(39E050C3-4E74-441A-8DC0-B81104DF949C)]
-   interface IUserConsentVerifierInterop 
-   {
-       Object RequestVerificationForWindowAsync(
-           UInt64 appWindow,
-           String message,
-           GUID riid);
-   }
+    // UserConsentVerifierInterop.idl
+#if UAC_VERSION > 4
+    [uuid(39E050C3-4E74-441A-8DC0-B81104DF949C), ProjectionInternal]
+    interface IUserConsentVerifierInterop
+    {
+        Object RequestVerificationForWindowAsync(
+            HWND appWindow,
+            String message,
+            GUID riid);
+    }
+#endif
 
-   // WebAuthenticationCoreManagerInterop.idl
-   [uuid(F4B8E804-811E-4436-B69C-44CB67B72084)]
-   interface IWebAuthenticationCoreManagerInterop 
-   {
-       Object RequestTokenForWindowAsync(
-           UInt64 appWindow,
-           Windows.Security.Authentication.Web.Core.WebTokenRequest request, // Windows.Security.Authentication.Web.Core.WebTokenRequest as IInspectable
-           GUID riid); // __uuidof(IAsyncOperation<WebTokenRequestResult*>)    
-   
-       Object RequestTokenWithWebAccountForWindowAsync(
-           UInt64 appWindow,
-           Windows.Security.Authentication.Web.Core.WebTokenRequest request, 
-           Windows.Security.Credentials.WebAccount webAccount, 
-           GUID riid); // __uuidof(IAsyncOperation<WebTokenRequestResult*>)
-   }
+    // WebAuthenticationCoreManagerInterop.idl
+#if UAC_VERSION > 0
+    [uuid(F4B8E804-811E-4436-B69C-44CB67B72084), ProjectionInternal]
+    interface IWebAuthenticationCoreManagerInterop
+    {
+        Object RequestTokenForWindowAsync(
+            HWND appWindow,
+            Windows.Security.Authentication.Web.Core.WebTokenRequest request, 
+            GUID riid); // __uuidof(IAsyncOperation<WebTokenRequestResult*>)    
+
+        Object RequestTokenWithWebAccountForWindowAsync(
+            HWND appWindow,
+            Windows.Security.Authentication.Web.Core.WebTokenRequest request,
+            Windows.Security.Credentials.WebAccount webAccount,
+            GUID riid); // __uuidof(IAsyncOperation<WebTokenRequestResult*>)
+    }
+#endif
 }

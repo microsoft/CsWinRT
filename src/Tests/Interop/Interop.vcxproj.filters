@@ -20,8 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="PropertySheet.props" />
+    <None Include="Directory.Build.props" />
   </ItemGroup>
 </Project>

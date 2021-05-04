@@ -31,6 +31,5 @@
     <None Include="TestComponentCSharp.def" />
     <None Include="packages.config" />
     <None Include="Directory.Build.props" />
-    <None Include="Directory.Build.targets" />
   </ItemGroup>
 </Project>

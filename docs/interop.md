@@ -95,7 +95,10 @@ SetString(MarshalString.GetAbi(marshalStr));
 ```
 
 #### Interop Interfaces
-**Note:** The CLR still supports marshaling COM (IUnknown), but not WinRT (IInspectable), interop interfaces. There are two approaches to marshaling IInspectable interfaces in C#/WinRT. 
+The Windows SDK projection provides definitions for several COM interop interfaces, including ***Windows.Storage.Streams.IBufferByteAccess***, ***WinRT.Interop.IWindowNative***, and ***WinRT.Interop.IInitializeWithWindow***. The Windows SDK projection also provides wrappers for all WinRT interop interfaces included in the Universal API Contract, such as ***Windows.Security.Credentials.UI.UserConsentVerifierInterop***. 
+
+For custom or extension SDK interop interfaces, C#/WinRT supports two marshaling techniques.
+**Note:** The CLR still supports marshaling COM (IUnknown), but not WinRT (IInspectable), interop interfaces. 
 
 ##### Projected
 If possible, the interop interface should be defined in IDL and a C#/WinRT projection produced for it. This automatically generates all marshaling logic so that calling code can pass and receive projected types. This definition of `IUserConsentVerifierInterop` from one of our test components is an example of this: 

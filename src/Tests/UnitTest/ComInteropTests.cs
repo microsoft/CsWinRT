@@ -1,8 +1,17 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using Windows.Interop;
+using Windows.ApplicationModel.DataTransfer.DragDrop.Core;
+using Windows.Graphics.Printing;
+using Windows.Media;
+using Windows.Media.PlayTo;
 using Windows.Security.Authentication.Web.Core;
 using Windows.Security.Credentials;
+using Windows.Security.Credentials.UI;
+using Windows.UI.ApplicationSettings;
+using Windows.UI.Input;
+using Windows.UI.Input.Core;
+using Windows.UI.Input.Spatial;
+using Windows.UI.ViewManagement;
 using Xunit;
 
 namespace UnitTest

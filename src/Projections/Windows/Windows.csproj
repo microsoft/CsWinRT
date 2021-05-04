@@ -30,7 +30,12 @@
 -include Windows.UI.Text.FontWeight
 -include Windows.UI.Text.UnderlineType
 -include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute     
+-include WinRT.Interop
     </CsWinRTFilters>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants>TRACE;MANUAL_IUNKNOWN,UAC_VERSION_13</DefineConstants>
   </PropertyGroup>
  
 </Project>
