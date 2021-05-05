@@ -36,23 +36,11 @@
 #endif
 
 using System;
-using Windows.ApplicationModel.DataTransfer.DragDrop.Core;
+using System.Runtime.InteropServices;
 using Windows.Foundation;
-using Windows.Graphics.Printing;
-using Windows.Graphics.Printing3D;
-using Windows.Media.PlayTo;
-using Windows.Security.Credentials.UI;
-using Windows.UI.ApplicationSettings;
-using Windows.UI.ViewManagement;
+using Windows.Security.Credentials;
 using WinRT;
 using WinRT.Interop;
-using Windows.UI.Input;
-using Windows.UI.Input.Core;
-using Windows.UI.Input.Spatial;
-using Windows.Media;
-using Windows.Security.Authentication.Web.Core;
-using Windows.Security.Credentials;
-using System.Runtime.InteropServices;
 
 namespace WinRT.Interop
 {
@@ -94,27 +82,6 @@ namespace Windows.ApplicationModel.DataTransfer.DragDrop.Core
 
 namespace Windows.Graphics.Printing
 {
-    // Windows.Graphics.Printing3D.Printing3DContract, v1
-#if !NETSTANDARD2_0
-    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows.Graphics.Printing3D.Printing3DContract - please use ApiInformation checks.")]
-#endif
-    public static class Printing3DManagerInterop
-    {
-        private static IPrinting3DManagerInterop printing3DManagerInterop = Print3DManager.As<IPrinting3DManagerInterop>();
-
-        public static Print3DManager GetForWindow(IntPtr appWindow)
-        {
-            Guid iid = GuidGenerator.CreateIID(typeof(IPrint3DManager));
-            return (Print3DManager)printing3DManagerInterop.GetForWindow(appWindow, iid);
-        }
-
-        public static IAsyncOperation<bool> ShowPrintUIForWindowAsync(IntPtr appWindow)
-        {
-            Guid iid = GuidGenerator.CreateIID(typeof(IAsyncOperation<bool>));
-            return (IAsyncOperation<bool>)printing3DManagerInterop.ShowPrintUIForWindowAsync(appWindow, iid);
-        }
-    }
-
 #if UAC_VERSION_1
 #if !NETSTANDARD2_0
     [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]

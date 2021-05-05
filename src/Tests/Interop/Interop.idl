@@ -70,19 +70,6 @@ namespace WinRT.Interop
     }
 #endif
 
-    // Print3DManagerInterop.idl
-    [uuid(9CA31010-1484-4587-B26B-DDDF9F9CAECD), ProjectionInternal]
-    interface IPrinting3DManagerInterop
-    {
-        Object GetForWindow(
-            HWND appWindow,
-            GUID riid);
-
-        Object ShowPrintUIForWindowAsync(
-            HWND appWindow,
-            GUID riid);
-    }
-
     // PrintManagerInterop.idl
 #if UAC_VERSION > 0
     [uuid(c5435a42-8d43-4e7b-a68a-ef311e392087), ProjectionInternal]

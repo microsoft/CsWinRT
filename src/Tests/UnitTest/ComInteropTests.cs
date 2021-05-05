@@ -53,13 +53,6 @@ namespace UnitTest
         }
 
         [Fact]
-        public void TestPrinting3DManager()
-        {
-            Assert.Throws<COMException>(() => Printing3DManagerInterop.GetForWindow(new IntPtr(0)));
-            Assert.Throws<COMException>(() => Printing3DManagerInterop.ShowPrintUIForWindowAsync(new IntPtr(0)));
-        }
-
-        [Fact]
         public void TestRadialControllerConfiguration()
         {
             Assert.Throws<COMException>(() => RadialControllerConfigurationInterop.GetForWindow(new IntPtr(0)));
