@@ -1331,6 +1331,43 @@ namespace UnitTest
             Assert.NotNull(marshalCCW2);
         }
 
+#if !NETCOREAPP2_0
+        [Fact]
+        public void TestDelegateCCWMarshaler()
+        {
+            CreateAndValidateStreamedFile().Wait();
+        }
+
+        private async Task CreateAndValidateStreamedFile()
+        {
+            var storageFile = await StorageFile.CreateStreamedFileAsync("CreateAndValidateStreamedFile.txt", StreamedFileWriter, null);
+            using var inputStream = await storageFile.OpenSequentialReadAsync();
+            using var stream = inputStream.AsStreamForRead();
+            byte[] buff = new byte[50];
+            var numRead = stream.Read(buff, 0, 50);
+            Assert.True(numRead > 0);
+            var result = System.Text.Encoding.Default.GetString(buff, 0, numRead).TrimEnd(null);
+            Assert.Equal("Success!", result);
+        }
+
+        private static async void StreamedFileWriter(StreamedFileDataRequest request)
+        {
+            try
+            {
+                using (var stream = request.AsStreamForWrite())
+                using (var streamWriter = new StreamWriter(stream))
+                {
+                    await streamWriter.WriteLineAsync("Success!");
+                }
+                request.Dispose();
+            }
+            catch (Exception)
+            {
+                request.FailAndClose(StreamedFileFailureMode.Incomplete);
+            }
+        }
+#endif
+
         [Fact]
         public void TestWeakReference()
         {
