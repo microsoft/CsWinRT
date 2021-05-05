@@ -79,7 +79,8 @@ namespace ABI.System.Collections.Generic
 
             public global::System.Collections.Generic.IEnumerator<T> GetEnumerator()
             {
-                var first = ((global::Windows.Foundation.Collections.IIterable<T>)(IWinRTObject)_iterable).First();
+                IWinRTObject _iWinRTObj = (IWinRTObject)_iterable;
+                var first = ((global::Windows.Foundation.Collections.IIterable<T>)_iWinRTObj).First();
                 if (first is global::ABI.System.Collections.Generic.IEnumerator<T> iterator)
                 {
                     return iterator;
@@ -160,6 +161,10 @@ namespace ABI.System.Collections.Generic
 
         private static FromAbiHelper _FromIterable(IWinRTObject _this)
         {
+            if (_this.AdditionalTypeData.Count > 1)
+            { 
+                // we have a covariant implementation we should use instead
+            }
             return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle,
                 () => new FromAbiHelper((global::System.Collections.Generic.IEnumerable<T>)_this));
         }

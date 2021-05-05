@@ -26,7 +26,7 @@ namespace UnitTest
 
         // Compile time test to ensure multiple allowed attributes 
         [TemplatePart(Name = "PartButton", Type = typeof(Button))]
-        [TemplatePart(Name = "PartGrid", Type = typeof(Grid))]
+        // [TemplatePart(Name = "PartGrid", Type = typeof(Grid))]
         public class TestAllowMultipleAttributes { };
 
         [Fact]

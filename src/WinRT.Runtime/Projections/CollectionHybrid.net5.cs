@@ -6,8 +6,54 @@ using WinRT;
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
 #pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
 
+
+
 namespace ABI.System.Collections.Generic
 {
+
+
+    [DynamicInterfaceCastableImplementation]
+    interface IEnumerable<T> : global::System.Collections.Generic.IEnumerable<T>
+    {
+        private static global::System.Collections.Generic.IEnumerable<T> CreateHelper(IWinRTObject _this)
+        {
+            var genericType = typeof(T);
+            if (genericType.IsGenericType && genericType.GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.KeyValuePair<,>))
+            {
+                var iEnumerable = typeof(global::System.Collections.Generic.IEnumerable<>).MakeGenericType(genericType.GetGenericArguments());
+                if (_this.IsInterfaceImplemented(iEnumerable.TypeHandle, false))
+                {
+                    return (global::System.Collections.Generic.ICollection<T>)
+                        iEnumerable.FindHelperType().GetMethod(
+                            "_FromMap????",
+                            global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.NonPublic | global::System.Reflection.BindingFlags.Static
+                        ).Invoke(null, global::System.Reflection.BindingFlags.Default, null, new object[] { _this }, null);
+                }
+            }
+    
+            /*
+            var iList = typeof(global::System.Collections.Generic.IList<T>);
+            if (_this.IsInterfaceImplemented(iList.TypeHandle, false))
+            {
+                return IList<T>._FromVector(_this);
+            }
+            */
+            throw new InvalidOperationException("ICollection helper can not determine derived type.");
+        }
+
+        private static global::System.Collections.Generic.IEnumerable<T> GetHelper(IWinRTObject _this)
+        {
+            return (global::System.Collections.Generic.IEnumerable<T>)_this.GetOrCreateTypeHelperData( 
+                typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle, 
+                () => CreateHelper(_this));
+        }
+
+        global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator()
+            => GetHelper((IWinRTObject)this).GetEnumerator();
+
+
+    }
+
     [DynamicInterfaceCastableImplementation]
     interface IReadOnlyCollection<T> : global::System.Collections.Generic.IReadOnlyCollection<T>
     {
