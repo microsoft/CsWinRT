@@ -1316,6 +1316,22 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestCCWMarshaler()
+        {
+            Guid IID_IMarshal = new Guid("00000003-0000-0000-c000-000000000046");
+            var managedProperties = new ManagedProperties(42);
+            IObjectReference ccw = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
+            ccw.TryAs<IUnknownVftbl>(IID_IMarshal, out var marshalCCW);
+            Assert.NotNull(marshalCCW);
+
+            var array = new byte[] { 0x01 };
+            var buff = array.AsBuffer();
+            IObjectReference ccw2 = MarshalInterface<IBuffer>.CreateMarshaler(buff);
+            ccw2.TryAs<IUnknownVftbl>(IID_IMarshal, out var marshalCCW2);
+            Assert.NotNull(marshalCCW2);
+        }
+
+        [Fact]
         public void TestWeakReference()
         {
             var managedProperties = new ManagedProperties(42);
