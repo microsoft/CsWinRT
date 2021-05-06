@@ -13,6 +13,38 @@ namespace ABI.System.Collections.Generic
 
 
     [DynamicInterfaceCastableImplementation]
+    interface IReadOnlyList<T> : global::System.Collections.Generic.IReadOnlyList<T>
+    {
+        private static global::System.Collections.Generic.IReadOnlyList<T> CreateHelper(IWinRTObject _this)
+        {
+            var genericType = typeof(T);
+            if (genericType.IsGenericType && genericType.GetGenericTypeDefinition() == typeof(global::System.Collections.Generic.KeyValuePair<,>))
+            {
+                // was ROCollection does Dictionary, I changed to ROList here v
+                var iROList = typeof(global::System.Collections.Generic.IReadOnlyList<>).MakeGenericType(genericType.GetGenericArguments());
+                if (_this.IsInterfaceImplemented(iROList.TypeHandle, false))
+                {
+                    return (global::System.Collections.Generic.IReadOnlyList<T>) 
+                        iROList.FindHelperType().GetMethod(
+                            "_FromMapView", //  change?
+                            global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.NonPublic | global::System.Reflection.BindingFlags.Static
+                        ).Invoke(null, global::System.Reflection.BindingFlags.Default, null, new object[] { _this }, null);
+                }
+            }
+            
+            // needed ? 
+            var iReadOnlyList = typeof(global::System.Collections.Generic.IReadOnlyList<T>);
+            if (_this.IsInterfaceImplemented(iReadOnlyList.TypeHandle, false))
+            {
+                return IReadOnlyList<T>._FromVectorView(_this);
+            }
+
+            throw new InvalidOperationException("IReadOnlyCollection helper can not determine derived type.");
+        }
+    }
+
+    /*
+    [DynamicInterfaceCastableImplementation]
     interface IEnumerable<T> : global::System.Collections.Generic.IEnumerable<T>
     {
         private static global::System.Collections.Generic.IEnumerable<T> CreateHelper(IWinRTObject _this)
@@ -31,13 +63,11 @@ namespace ABI.System.Collections.Generic
                 }
             }
     
-            /*
-            var iList = typeof(global::System.Collections.Generic.IList<T>);
-            if (_this.IsInterfaceImplemented(iList.TypeHandle, false))
-            {
-                return IList<T>._FromVector(_this);
-            }
-            */
+            // var iList = typeof(global::System.Collections.Generic.IList<T>);
+            // if (_this.IsInterfaceImplemented(iList.TypeHandle, false))
+            // {
+            //     return IList<T>._FromVector(_this);
+            // }
             throw new InvalidOperationException("ICollection helper can not determine derived type.");
         }
 
@@ -50,9 +80,8 @@ namespace ABI.System.Collections.Generic
 
         global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator()
             => GetHelper((IWinRTObject)this).GetEnumerator();
-
-
     }
+    */
 
     [DynamicInterfaceCastableImplementation]
     interface IReadOnlyCollection<T> : global::System.Collections.Generic.IReadOnlyCollection<T>
