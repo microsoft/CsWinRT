@@ -1329,6 +1329,59 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestCCWMarshaler()
+        {
+            Guid IID_IMarshal = new Guid("00000003-0000-0000-c000-000000000046");
+            var managedProperties = new ManagedProperties(42);
+            IObjectReference ccw = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
+            ccw.TryAs<IUnknownVftbl>(IID_IMarshal, out var marshalCCW);
+            Assert.NotNull(marshalCCW);
+
+            var array = new byte[] { 0x01 };
+            var buff = array.AsBuffer();
+            IObjectReference ccw2 = MarshalInterface<IBuffer>.CreateMarshaler(buff);
+            ccw2.TryAs<IUnknownVftbl>(IID_IMarshal, out var marshalCCW2);
+            Assert.NotNull(marshalCCW2);
+        }
+
+#if !NETCOREAPP2_0
+        [Fact]
+        public void TestDelegateCCWMarshaler()
+        {
+            CreateAndValidateStreamedFile().Wait();
+        }
+
+        private async Task CreateAndValidateStreamedFile()
+        {
+            var storageFile = await StorageFile.CreateStreamedFileAsync("CreateAndValidateStreamedFile.txt", StreamedFileWriter, null);
+            using var inputStream = await storageFile.OpenSequentialReadAsync();
+            using var stream = inputStream.AsStreamForRead();
+            byte[] buff = new byte[50];
+            var numRead = stream.Read(buff, 0, 50);
+            Assert.True(numRead > 0);
+            var result = System.Text.Encoding.Default.GetString(buff, 0, numRead).TrimEnd(null);
+            Assert.Equal("Success!", result);
+        }
+
+        private static async void StreamedFileWriter(StreamedFileDataRequest request)
+        {
+            try
+            {
+                using (var stream = request.AsStreamForWrite())
+                using (var streamWriter = new StreamWriter(stream))
+                {
+                    await streamWriter.WriteLineAsync("Success!");
+                }
+                request.Dispose();
+            }
+            catch (Exception)
+            {
+                request.FailAndClose(StreamedFileFailureMode.Incomplete);
+            }
+        }
+#endif
+
+        [Fact]
         public void TestWeakReference()
         {
             var managedProperties = new ManagedProperties(42);
@@ -2214,6 +2267,14 @@ namespace UnitTest
         [Fact]
         unsafe public void TestComImports()
         {
+            TestObject();
+            GCCollect();
+            Assert.Equal(0, ComImports.NumObjects);
+
+            TestImports();
+            GCCollect();
+            Assert.Equal(0, ComImports.NumObjects);
+
             static Object MakeObject()
             {
                 Assert.Equal(0, ComImports.NumObjects);
@@ -2235,24 +2296,24 @@ namespace UnitTest
             static void TestImports()
             {
                 var (initializeWithWindow, windowNative) = MakeImports();
-                
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
+
+                GCCollect();
 
                 var hwnd = new IntPtr(0x12345678);
                 initializeWithWindow.Initialize(hwnd);
                 Assert.Equal(windowNative.WindowHandle, hwnd);
             }
 
-            TestObject();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Assert.Equal(0, ComImports.NumObjects);
-
-            TestImports();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Assert.Equal(0, ComImports.NumObjects);
+            static void GCCollect()
+            {
+                // Require multiple GC collects due to
+                // the final release is not done immediately.
+                for(int idx = 0; idx < 3; idx++)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                }
+            }
         }
 
         [Fact]

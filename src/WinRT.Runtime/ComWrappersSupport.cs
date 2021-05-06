@@ -95,16 +95,23 @@ namespace WinRT
             var entries = new List<ComInterfaceEntry>();
             var objType = type.GetRuntimeClassCCWType() ?? type;
             var interfaces = objType.GetInterfaces();
+            bool hasCustomIMarshalInterface = false;
             foreach (var iface in interfaces)
             {
                 if (Projections.IsTypeWindowsRuntimeType(iface))
                 {
                     var ifaceAbiType = iface.FindHelperType();
+                    Guid iid = GuidGenerator.GetIID(ifaceAbiType);
                     entries.Add(new ComInterfaceEntry
                     {
-                        IID = GuidGenerator.GetIID(ifaceAbiType),
+                        IID = iid,
                         Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
                     });
+
+                    if(!hasCustomIMarshalInterface && iid == typeof(ABI.WinRT.Interop.IMarshal.Vftbl).GUID)
+                    {
+                        hasCustomIMarshalInterface = true;
+                    }
                 }
 
                 if (iface.IsConstructedGenericType
@@ -172,6 +179,17 @@ namespace WinRT
                 IID = typeof(ABI.WinRT.Interop.IWeakReferenceSource.Vftbl).GUID,
                 Vtable = ABI.WinRT.Interop.IWeakReferenceSource.Vftbl.AbiToProjectionVftablePtr
             });
+
+            // Add IMarhal implemented using the free threaded marshaler
+            // to all CCWs if it doesn't already have its own.
+            if (!hasCustomIMarshalInterface)
+            {
+                entries.Add(new ComInterfaceEntry
+                {
+                    IID = typeof(ABI.WinRT.Interop.IMarshal.Vftbl).GUID,
+                    Vtable = ABI.WinRT.Interop.IMarshal.Vftbl.AbiToProjectionVftablePtr
+                });
+            }
 
             // Add IAgileObject to all CCWs
             entries.Add(new ComInterfaceEntry
