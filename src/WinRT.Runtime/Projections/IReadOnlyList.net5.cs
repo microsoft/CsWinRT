@@ -342,13 +342,70 @@ namespace ABI.System.Collections.Generic
         }
         public static Guid PIID = Vftbl.PIID;
 
-        internal static FromAbiHelper _FromVectorView(IWinRTObject _this)
+        internal static IReadOnlyList<T> _FromVectorView(IWinRTObject _this)
         {
             var _obj = ((ObjectReference<Vftbl>)_this.GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyList<T>).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
 
-            return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IReadOnlyList<T>).TypeHandle,
-                () => new FromAbiHelper((global::Windows.Foundation.Collections.IVectorView<T>)_this, _obj));
+            return (IReadOnlyList<T>)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IReadOnlyList<T>).TypeHandle,
+                () =>
+                {
+                    // If this cast succeeds, we are not in the covariance case, and can proceed as normal
+                    if ((_this as global::Windows.Foundation.Collections.IVectorView<T>) != null)
+                    {
+                        return new FromAbiHelper((global::Windows.Foundation.Collections.IVectorView<T>)_this, _obj);
+                    }
+                    else
+                    {   // otherwise we need to populate AdditionalTypeData for all the covariant interfaces
+                        // We create a mapping from the covariant type to the original type's known implementation (FromAbiHelper)
+                        // variable `var` keeps track of the implementation we should return 
+                        object matchingImplementation = null; 
+                        foreach (var typeData in _this.AdditionalTypeData)
+                        {
+                            var typeName = typeData.Key;
+                            var _fromAbiHelper = typeData.Value;
+                            Type t = Type.GetTypeFromHandle(typeData.Key);
+                            if (t.IsGenericType)
+                            {
+                                Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(t, out var variantTypes);
+                                if (variantTypes != null)
+                                { 
+                                    foreach (var variantType in variantTypes)
+                                    {
+                                        if (variantType == typeof(global::System.Collections.Generic.IReadOnlyList<T>))
+                                        {
+                                            // initialize var 
+                                            matchingImplementation = _fromAbiHelper;
+                                        }
+                                        _this.AdditionalTypeData.GetOrAdd(variantType.TypeHandle, _fromAbiHelper);
+                                    }
+                                }
+                            }
+                            foreach (var implementedIFace in t.GetInterfaces())
+                            { 
+                                // this condition and its contents are the same as done above for the `typeData`,
+                                // just done for each interface implemented by `typeData`
+                                if (implementedIFace.IsGenericType)
+                                {
+                                    Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(implementedIFace, out var variantTypes);
+                                    if (variantTypes != null)
+                                    { 
+                                        foreach (var variantType in variantTypes)
+                                        {
+                                            if (variantType == typeof(global::System.Collections.Generic.IReadOnlyList<T>))
+                                            {
+                                                // initialize var IF we did not in the first loop 
+                                                matchingImplementation = matchingImplementation ?? _fromAbiHelper;
+                                            }
+                                            _this.AdditionalTypeData.GetOrAdd(variantType.TypeHandle, _fromAbiHelper);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return matchingImplementation;
+                    }
+                });
         }
 
         unsafe T global::Windows.Foundation.Collections.IVectorView<T>.GetAt(uint index)
