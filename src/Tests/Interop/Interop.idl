@@ -1,7 +1,7 @@
 // Modern IDL 3.0: https://docs.microsoft.com/en-us/uwp/midl-3/intro
 
 // Note: the projection generated for this metadata should be internal, and only
-// accesseed indirectly with the user-friendly wrappers in ComInteropHelpers.cs.
+// accessed indirectly with the user-friendly wrappers in ComInteropHelpers.cs.
 namespace WinRT.Interop
 {
     // C#/WinRT provides support for generating internal interface projections
