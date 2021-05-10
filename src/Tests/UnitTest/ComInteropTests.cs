@@ -16,6 +16,8 @@ using Xunit;
 
 namespace UnitTest
 {
+    // Note: Many of the COM interop APIs cannot be easily tested without significant test setup.
+    // These cases either expect a runtime exception, or are compile-time only (skipped to validate types).
     public class ComInteropTests
     {
         [Fact]
