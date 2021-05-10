@@ -34,6 +34,9 @@
 #if UAC_VERSION_2
 #define UAC_VERSION_1
 #endif
+#if !UAC_VERSION_1
+#error Unsupported Universal API Contract version
+#endif
 
 using System;
 using System.Runtime.InteropServices;
