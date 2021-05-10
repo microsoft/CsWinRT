@@ -1714,19 +1714,988 @@ namespace UnitTest
             Assert.True(TestObject.GeneratorPositionProperty == generatorPosition);
         }
 
-        [Fact]
-        public void TestMatrixTypeMapping()
-        {
-            var matrix = new Matrix { M11 = 11, M12 = 12, M21 = 21, M22 = 22, OffsetX = 3, OffsetY = 4 };
-            TestObject.MatrixProperty = matrix;
-            Assert.Equal(matrix.M11, TestObject.MatrixProperty.M11);
-            Assert.Equal(matrix.M12, TestObject.MatrixProperty.M12);
-            Assert.Equal(matrix.M21, TestObject.MatrixProperty.M21);
-            Assert.Equal(matrix.M22, TestObject.MatrixProperty.M22);
-            Assert.Equal(matrix.OffsetX, TestObject.MatrixProperty.OffsetX);
-            Assert.Equal(matrix.OffsetY, TestObject.MatrixProperty.OffsetY);
-            Assert.True(TestObject.MatrixProperty == matrix);
+            var objectUriArray = new object[] { new Uri("http://github.com") };
+            TestObject.ObjectIterableProperty = objectUriArray;
+            Assert.True(TestObject.ObjectIterableProperty.SequenceEqual(objectUriArray));
         }
+
+        [Fact]
+        public void TestStringMap()
+        {
+            var map = new Dictionary<string, string> { ["foo"] = "bar", ["hello"] = "world" };
+            var stringMap = new Windows.Foundation.Collections.StringMap();
+            foreach (var item in map)
+            {
+                stringMap[item.Key] = item.Value;
+            }
+            Assert.Equal(map.Count, stringMap.Count);
+            foreach (var item in map)
+            {
+                Assert.Equal(stringMap[item.Key], item.Value);
+            }
+        }
+
+        [Fact]
+        public void TestPropertySet()
+        {
+            var map = new Dictionary<string, string> { ["foo"] = "bar", ["hello"] = "world" };
+            var propertySet = new Windows.Foundation.Collections.PropertySet();
+            foreach (var item in map)
+            {
+                propertySet[item.Key] = item.Value;
+            }
+            Assert.Equal(map.Count, propertySet.Count);
+            foreach (var item in map)
+            {
+                Assert.Equal(propertySet[item.Key], item.Value);
+            }
+        }
+
+        [Fact]
+        public void TestValueSet()
+        {
+            var map = new Dictionary<string, string> { ["foo"] = "bar", ["hello"] = "world" };
+            var valueSet = new Windows.Foundation.Collections.ValueSet();
+            foreach (var item in map)
+            {
+                valueSet[item.Key] = item.Value;
+            }
+            Assert.Equal(map.Count, valueSet.Count);
+            foreach (var item in map)
+            {
+                Assert.Equal(valueSet[item.Key], item.Value);
+            }
+        }
+
+        [Fact]
+        public void TestFactories()
+        {
+            var cls1 = new Class();
+
+            var cls2 = new Class(42);
+            Assert.Equal(42, cls2.IntProperty); 
+
+            var cls3 = new Class(42, "foo");
+            Assert.Equal(42, cls3.IntProperty); 
+            Assert.Equal("foo", cls3.StringProperty);
+        }
+
+        [Fact]
+        public void TestStaticMembers()
+        {
+            Class.StaticIntProperty = 42;
+            Assert.Equal(42, Class.StaticIntProperty);
+
+            Class.StaticStringProperty = "foo";
+            Assert.Equal("foo", Class.StaticStringProperty);
+        }
+
+        [Fact]
+        public void TestInterfaces()
+        {
+            var expected = "hello";
+            TestObject.StringProperty = expected;
+
+            // projected wrapper
+            Assert.Equal(expected, TestObject.ToString());
+
+            // implicit cast
+            var str = (IStringable)TestObject;
+            Assert.Equal(expected, str.ToString());
+
+            var str2 = TestObject as IStringable;
+            Assert.Equal(expected, str2.ToString());
+
+            Assert.IsAssignableFrom<IStringable>(TestObject);
+        }
+
+        [Fact]
+        public void TestAsync()
+        {
+            TestObject.IntProperty = 42;
+            var async_get_int = TestObject.GetIntAsync();
+            int async_int = 0;
+            async_get_int.Completed = (info, status) => async_int = info.GetResults();
+            async_get_int.GetResults();
+            Assert.Equal(42, async_int);
+
+            TestObject.StringProperty = "foo";
+            var async_get_string = TestObject.GetStringAsync();
+            string async_string = "";
+            async_get_string.Completed = (info, status) => async_string = info.GetResults();
+            int async_progress;
+            async_get_string.Progress = (info, progress) => async_progress = progress;
+            async_get_string.GetResults();
+            Assert.Equal("foo", async_string);
+        }
+
+        [Fact]
+        public void TestPrimitives()
+        {
+            var test_int = 21;
+            TestObject.IntPropertyChanged += (object sender, Int32 value) =>
+            {
+                Assert.IsAssignableFrom<Class>(sender);
+                var c = (Class)sender;
+                Assert.Equal(value, test_int);
+            };
+            TestObject.IntProperty = test_int;
+
+            var expectedVal = true;
+            var hits = 0;
+            TestObject.BoolPropertyChanged += (object sender, bool value) =>
+            {
+                Assert.Equal(expectedVal, value);
+                ++hits;
+            };
+
+            TestObject.BoolProperty = true;
+            Assert.Equal(1, hits);
+
+            expectedVal = false;
+            TestObject.CallForBool(() => false);
+            Assert.Equal(2, hits);
+
+            TestObject.RaiseBoolChanged();
+            Assert.Equal(3, hits);
+        }
+
+        [Fact]
+        public void TestStrings()
+        {
+            string test_string = "x";
+            string test_string2 = "y";
+
+            // In hstring from managed->native implicitly creates hstring reference
+            TestObject.StringProperty = test_string;
+
+            // Out hstring from native->managed only creates System.String on demand
+            var sp = TestObject.StringProperty;
+            Assert.Equal(sp, test_string);
+
+            // Out hstring from managed->native always creates HString from System.String
+            TestObject.CallForString(() => test_string2);
+            Assert.Equal(TestObject.StringProperty, test_string2);
+
+            // In hstring from native->managed only creates System.String on demand
+            TestObject.StringPropertyChanged += (Class sender, string value) => sender.StringProperty2 = value;
+            TestObject.RaiseStringChanged();
+            Assert.Equal(TestObject.StringProperty2, test_string2);
+        }
+
+        [Fact]
+        public void TestBlittableStruct()
+        {
+            // Property setter/getter
+            var val = new BlittableStruct() { i32 = 42 };
+            TestObject.BlittableStructProperty = val;
+            Assert.Equal(42, TestObject.BlittableStructProperty.i32);
+
+            // Manual getter
+            Assert.Equal(42, TestObject.GetBlittableStruct().i32);
+
+            // Manual setter
+            val.i32 = 8;
+            TestObject.SetBlittableStruct(val);
+            Assert.Equal(8, TestObject.BlittableStructProperty.i32);
+
+            // Output argument
+            val = default;
+            TestObject.OutBlittableStruct(out val);
+            Assert.Equal(8, val.i32);
+        }
+
+        [Fact]
+        public void TestComposedBlittableStruct()
+        {
+            // Property setter/getter
+            var val = new ComposedBlittableStruct() { blittable = new BlittableStruct() { i32 = 42 } };
+            TestObject.ComposedBlittableStructProperty = val;
+            Assert.Equal(42, TestObject.ComposedBlittableStructProperty.blittable.i32);
+
+            // Manual getter
+            Assert.Equal(42, TestObject.GetComposedBlittableStruct().blittable.i32);
+
+            // Manual setter
+            val.blittable.i32 = 8;
+            TestObject.SetComposedBlittableStruct(val);
+            Assert.Equal(8, TestObject.ComposedBlittableStructProperty.blittable.i32);
+
+            // Output argument
+            val = default;
+            TestObject.OutComposedBlittableStruct(out val);
+            Assert.Equal(8, val.blittable.i32);
+        }
+
+        [Fact]
+        public void TestNonBlittableStringStruct()
+        {
+            // Property getter/setter
+            var val = new NonBlittableStringStruct() { str = "I like tacos" };
+            TestObject.NonBlittableStringStructProperty = val;
+            Assert.Equal("I like tacos", TestObject.NonBlittableStringStructProperty.str.ToString());
+
+            // Manual getter
+            Assert.Equal("I like tacos", TestObject.GetNonBlittableStringStruct().str.ToString());
+
+            // Manual setter
+            val.str = "Hello, world";
+            TestObject.SetNonBlittableStringStruct(val);
+            Assert.Equal("Hello, world", TestObject.NonBlittableStringStructProperty.str.ToString());
+
+            // Output argument
+            val = default;
+            TestObject.OutNonBlittableStringStruct(out val);
+            Assert.Equal("Hello, world", val.str.ToString());
+        }
+
+        [Fact]
+        public void TestNonBlittableBoolStruct()
+        {
+            // Property getter/setter
+            var val = new NonBlittableBoolStruct() { w = true, x = false, y = true, z = false };
+            TestObject.NonBlittableBoolStructProperty = val;
+            Assert.True(TestObject.NonBlittableBoolStructProperty.w);
+            Assert.False(TestObject.NonBlittableBoolStructProperty.x);
+            Assert.True(TestObject.NonBlittableBoolStructProperty.y);
+            Assert.False(TestObject.NonBlittableBoolStructProperty.z);
+
+            // Manual getter
+            Assert.True(TestObject.GetNonBlittableBoolStruct().w);
+            Assert.False(TestObject.GetNonBlittableBoolStruct().x);
+            Assert.True(TestObject.GetNonBlittableBoolStruct().y);
+            Assert.False(TestObject.GetNonBlittableBoolStruct().z);
+
+            // Manual setter
+            val.w = false;
+            val.x = true;
+            val.y = false;
+            val.z = true;
+            TestObject.SetNonBlittableBoolStruct(val);
+            Assert.False(TestObject.NonBlittableBoolStructProperty.w);
+            Assert.True(TestObject.NonBlittableBoolStructProperty.x);
+            Assert.False(TestObject.NonBlittableBoolStructProperty.y);
+            Assert.True(TestObject.NonBlittableBoolStructProperty.z);
+
+            // Output argument
+            val = default;
+            TestObject.OutNonBlittableBoolStruct(out val);
+            Assert.False(val.w);
+            Assert.True(val.x);
+            Assert.False(val.y);
+            Assert.True(val.z);
+        }
+
+        [Fact]
+        public void TestNonBlittableRefStruct()
+        {
+            // Property getter/setter
+            // TODO: Need to either support interface inheritance or project IReference/INullable for setter
+            Assert.Equal(42, TestObject.NonBlittableRefStructProperty.ref32.Value);
+
+            // Manual getter
+            Assert.Equal(42, TestObject.GetNonBlittableRefStruct().ref32.Value);
+
+            // TODO: Manual setter
+
+            // Output argument
+            NonBlittableRefStruct val;
+            TestObject.OutNonBlittableRefStruct(out val);
+            Assert.Equal(42, val.ref32.Value);
+        }
+
+        [Fact]
+        public void TestComposedNonBlittableStruct()
+        {
+            // Property getter/setter
+            var val = new ComposedNonBlittableStruct()
+            {
+                blittable = new BlittableStruct() { i32 = 42 },
+                strings = new NonBlittableStringStruct() { str = "I like tacos" },
+                bools = new NonBlittableBoolStruct() { w = true, x = false, y = true, z = false },
+                refs = TestObject.NonBlittableRefStructProperty // TODO: Need to either support interface inheritance or project IReference/INullable for setter
+            };
+            TestObject.ComposedNonBlittableStructProperty = val;
+            Assert.Equal(42, TestObject.ComposedNonBlittableStructProperty.blittable.i32);
+            Assert.Equal("I like tacos", TestObject.ComposedNonBlittableStructProperty.strings.str);
+            Assert.True(TestObject.ComposedNonBlittableStructProperty.bools.w);
+            Assert.False(TestObject.ComposedNonBlittableStructProperty.bools.x);
+            Assert.True(TestObject.ComposedNonBlittableStructProperty.bools.y);
+            Assert.False(TestObject.ComposedNonBlittableStructProperty.bools.z);
+
+            // Manual getter
+            Assert.Equal(42, TestObject.GetComposedNonBlittableStruct().blittable.i32);
+            Assert.Equal("I like tacos", TestObject.GetComposedNonBlittableStruct().strings.str);
+            Assert.True(TestObject.GetComposedNonBlittableStruct().bools.w);
+            Assert.False(TestObject.GetComposedNonBlittableStruct().bools.x);
+            Assert.True(TestObject.GetComposedNonBlittableStruct().bools.y);
+            Assert.False(TestObject.GetComposedNonBlittableStruct().bools.z);
+
+            // Manual setter
+            val.blittable.i32 = 8;
+            val.strings.str = "Hello, world";
+            val.bools.w = false;
+            val.bools.x = true;
+            val.bools.y = false;
+            val.bools.z = true;
+            TestObject.SetComposedNonBlittableStruct(val);
+            Assert.Equal(8, TestObject.ComposedNonBlittableStructProperty.blittable.i32);
+            Assert.Equal("Hello, world", TestObject.ComposedNonBlittableStructProperty.strings.str);
+            Assert.False(TestObject.ComposedNonBlittableStructProperty.bools.w);
+            Assert.True(TestObject.ComposedNonBlittableStructProperty.bools.x);
+            Assert.False(TestObject.ComposedNonBlittableStructProperty.bools.y);
+            Assert.True(TestObject.ComposedNonBlittableStructProperty.bools.z);
+
+            // Output argument
+            val = default;
+            TestObject.OutComposedNonBlittableStruct(out val);
+            Assert.Equal(8, val.blittable.i32);
+            Assert.Equal("Hello, world", val.strings.str);
+            Assert.False(val.bools.w);
+            Assert.True(val.bools.x);
+            Assert.False(val.bools.y);
+            Assert.True(val.bools.z);
+        }
+
+#if NETCOREAPP2_0
+        [Fact]
+        public void TestGenericCast()
+        {
+            var ints = TestObject.GetIntVector();
+            var abiView = (ABI.System.Collections.Generic.IReadOnlyList<int>)ints;
+            Assert.Equal(abiView.ThisPtr, abiView.As<WinRT.IInspectable>().As<ABI.System.Collections.Generic.IReadOnlyList<int>.Vftbl>().ThisPtr);
+        }
+#endif
+
+        [ComImport]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        [Guid("96369F54-8EB6-48F0-ABCE-C1B211E627C3")]
+        internal unsafe interface IStringableInterop
+        {
+            // Note: Invoking methods on ComInterfaceType.InterfaceIsIInspectable interfaces
+            // no longer appears supported in the runtime (probably with removal of WinRT support),
+            // so simulate with IUnknown.
+            void GetIids(out int iidCount, out IntPtr iids);
+            void GetRuntimeClassName(out IntPtr className);
+            void GetTrustLevel(out TrustLevel trustLevel);
+
+            void ToString(out IntPtr hstr);
+        }
+
+        [Fact]
+        public unsafe void TestFactoryCast()
+        {
+            IntPtr hstr;
+
+            // Access nonstatic class factory 
+            var instanceFactory = Class.As<IStringableInterop>();
+            instanceFactory.ToString(out hstr);
+            Assert.Equal("Class", MarshalString.FromAbi(hstr));
+
+            // Access static class factory
+            var staticFactory = ComImports.As<IStringableInterop>();
+            staticFactory.ToString(out hstr);
+            Assert.Equal("ComImports", MarshalString.FromAbi(hstr));
+        }
+
+        [Fact]
+        public void TestFundamentalGeneric()
+        {
+            var ints = TestObject.GetIntVector();
+            Assert.Equal(10, ints.Count);
+            for (int i = 0; i < 10; ++i)
+            {
+                Assert.Equal(i, ints[i]);
+            }
+
+            var bools = TestObject.GetBoolVector();
+            Assert.Equal(4, bools.Count);
+            for (int i = 0; i < 4; ++i)
+            {
+                Assert.Equal(i % 2 == 0, bools[i]);
+            }
+        }
+
+        [Fact]
+        public void TestStringGeneric()
+        {
+            var strings = TestObject.GetStringVector();
+            Assert.Equal(5, strings.Count);
+            for (int i = 0; i < 5; ++i)
+            {
+                Assert.Equal("String" + i, strings[i]);
+            }
+        }
+
+        [Fact]
+        public void TestStructGeneric()
+        {
+            var blittable = TestObject.GetBlittableStructVector();
+            Assert.Equal(5, blittable.Count);
+            for (int i = 0; i < 5; ++i)
+            {
+                Assert.Equal(i, blittable[i].blittable.i32);
+            }
+
+            var nonblittable = TestObject.GetNonBlittableStructVector();
+            Assert.Equal(3, nonblittable.Count);
+            for (int i = 0; i < 3; ++i)
+            {
+                var val = nonblittable[i];
+                Assert.Equal(i, val.blittable.i32);
+                Assert.Equal("String" + i, val.strings.str);
+                Assert.Equal(i % 2 == 0, val.bools.w);
+                Assert.Equal(i % 2 == 1, val.bools.x);
+                Assert.Equal(i % 2 == 0, val.bools.y);
+                Assert.Equal(i % 2 == 1, val.bools.z);
+                Assert.Equal(i, val.refs.ref32.Value);
+            }
+        }
+
+        [Fact]
+        public void TestValueUnboxing()
+        {
+            var objs = TestObject.GetObjectVector();
+            Assert.Equal(3, objs.Count);
+            for (int i = 0; i < 3; ++i)
+            {
+                Assert.Equal(i, (int)objs[i]);
+            }
+        }
+
+        [Fact]
+        void TestInterfaceGeneric()
+        {
+            var objs = TestObject.GetInterfaceVector();
+            Assert.Equal(3, objs.Count);
+            TestObject.ReadWriteProperty = 42;
+            for (int i = 0; i < 3; ++i)
+            {
+                var obj = objs[i];
+                Assert.Same(obj, TestObject);
+                Assert.Equal(42, obj.ReadWriteProperty);
+            }
+        }
+
+        [Fact]
+        public void TestIterable()
+        {
+            var ints_in = new int[] { 0, 1, 2 };
+            TestObject.SetIntIterable(ints_in);
+            var ints_out = TestObject.GetIntIterable();
+            Assert.True(ints_in.SequenceEqual(ints_out));
+        }
+
+        class ManagedBindableObservable : IBindableObservableVector
+        {
+            private IList _list;
+
+            public class TObservation : IProperties2
+            {
+                private int _value = 0;
+
+                public int ReadWriteProperty { get => _value; set => _value = value; }
+
+                int IProperties1.ReadWriteProperty => ReadWriteProperty;
+            }
+            TObservation _observation;
+
+            public int Observation { get => _observation.ReadWriteProperty; }
+
+            public ManagedBindableObservable(IList list) => _list = new ArrayList(list);
+
+            private void OnChanged()
+            {
+                VectorChanged.Invoke(this, _observation = new TObservation());
+            }
+
+            public event BindableVectorChangedEventHandler VectorChanged;
+
+            public object this[int index]
+            {
+                get => _list[index];
+                set { _list[index] = value; OnChanged(); }
+            }
+
+            public bool IsFixedSize => false;
+
+            public bool IsReadOnly => false;
+
+            public int Count => _list.Count;
+
+            public bool IsSynchronized => _list.IsSynchronized;
+
+            public object SyncRoot => _list;
+
+            public int Add(object value)
+            {
+                var result = _list.Add(value);
+                OnChanged();
+                return result;
+            }
+
+            public void Clear()
+            {
+                _list.Clear();
+                OnChanged();
+            }
+
+            public bool Contains(object value) => _list.Contains(value);
+
+            public void CopyTo(Array array, int index) => _list.CopyTo(array, index);
+
+            public IEnumerator GetEnumerator() => _list.GetEnumerator();
+
+            public int IndexOf(object value) => _list.IndexOf(value);
+
+            public void Insert(int index, object value)
+            {
+                _list.Insert(index, value);
+                OnChanged();
+            }
+
+            public void Remove(object value)
+            {
+                _list.Remove(value);
+                OnChanged();
+            }
+
+            public void RemoveAt(int index)
+            {
+                _list.RemoveAt(index);
+                OnChanged();
+            }
+        }
+
+        [Fact]
+        public void TestBindable()
+        {
+            var expected = new int[] { 0, 1, 2 };
+
+            TestObject.BindableIterableProperty = expected;
+            Assert.Equal(expected, TestObject.BindableIterableProperty);
+            TestObject.CallForBindableIterable(() => expected);
+            TestObject.BindableIterablePropertyChanged +=
+                (object sender, IEnumerable value) => Assert.Equal(expected, value);
+            TestObject.RaiseBindableIterableChanged();
+
+            TestObject.BindableVectorProperty = expected;
+            Assert.Equal(expected, TestObject.BindableVectorProperty);
+            TestObject.CallForBindableVector(() => expected);
+            TestObject.BindableVectorPropertyChanged +=
+                (object sender, IList value) => Assert.Equal(expected, value);
+            TestObject.RaiseBindableVectorChanged();
+
+            var observable = new ManagedBindableObservable(expected);
+            TestObject.BindableObservableVectorProperty = observable;
+            observable.Add(3);
+            Assert.Equal(6, observable.Observation);
+        }
+
+        [Fact]
+        public void TestClassGeneric()
+        {
+            var objs = TestObject.GetClassVector();
+            Assert.Equal(3, objs.Count);
+            for (int i = 0; i < 3; ++i)
+            {
+                var obj = objs[i];
+                Assert.Same(obj, TestObject);
+                Assert.Equal(TestObject, objs[i]);
+            }
+        }
+
+        [Fact]
+        public void TestSimpleCCWs()
+        {
+            var managedProperties = new ManagedProperties(42);
+            TestObject.CopyProperties(managedProperties);
+            Assert.Equal(managedProperties.ReadWriteProperty, TestObject.ReadWriteProperty);
+        }
+
+        [Fact]
+        public void TestCCWMarshaler()
+        {
+            Guid IID_IMarshal = new Guid("00000003-0000-0000-c000-000000000046");
+            var managedProperties = new ManagedProperties(42);
+            IObjectReference ccw = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
+            ccw.TryAs<IUnknownVftbl>(IID_IMarshal, out var marshalCCW);
+            Assert.NotNull(marshalCCW);
+
+            var array = new byte[] { 0x01 };
+            var buff = array.AsBuffer();
+            IObjectReference ccw2 = MarshalInterface<IBuffer>.CreateMarshaler(buff);
+            ccw2.TryAs<IUnknownVftbl>(IID_IMarshal, out var marshalCCW2);
+            Assert.NotNull(marshalCCW2);
+        }
+
+#if !NETCOREAPP2_0
+        [Fact]
+        public void TestDelegateCCWMarshaler()
+        {
+            CreateAndValidateStreamedFile().Wait();
+        }
+
+        private async Task CreateAndValidateStreamedFile()
+        {
+            var storageFile = await StorageFile.CreateStreamedFileAsync("CreateAndValidateStreamedFile.txt", StreamedFileWriter, null);
+            using var inputStream = await storageFile.OpenSequentialReadAsync();
+            using var stream = inputStream.AsStreamForRead();
+            byte[] buff = new byte[50];
+            var numRead = stream.Read(buff, 0, 50);
+            Assert.True(numRead > 0);
+            var result = System.Text.Encoding.Default.GetString(buff, 0, numRead).TrimEnd(null);
+            Assert.Equal("Success!", result);
+        }
+
+        private static async void StreamedFileWriter(StreamedFileDataRequest request)
+        {
+            try
+            {
+                using (var stream = request.AsStreamForWrite())
+                using (var streamWriter = new StreamWriter(stream))
+                {
+                    await streamWriter.WriteLineAsync("Success!");
+                }
+                request.Dispose();
+            }
+            catch (Exception)
+            {
+                request.FailAndClose(StreamedFileFailureMode.Incomplete);
+            }
+        }
+#endif
+
+        [Fact]
+        public void TestWeakReference()
+        {
+            var managedProperties = new ManagedProperties(42);
+            TestObject.CopyPropertiesViaWeakReference(managedProperties);
+            Assert.Equal(managedProperties.ReadWriteProperty, TestObject.ReadWriteProperty);
+        }
+
+        [Fact]
+        public void TestCCWIdentity()
+        {
+            var managedProperties = new ManagedProperties(42);
+            IObjectReference ccw1 = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
+            IObjectReference ccw2 = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
+            Assert.Equal(ccw1.ThisPtr, ccw2.ThisPtr);
+        }
+
+        [Fact]
+        public void TestInterfaceCCWLifetime()
+        {
+            static (WeakReference, IObjectReference) CreateCCW()
+            {
+                var managedProperties = new ManagedProperties(42);
+                IObjectReference ccw1 = MarshalInterface<IProperties1>.CreateMarshaler(managedProperties);
+                return (new WeakReference(managedProperties), ccw1);
+            }
+
+            static (WeakReference obj, WeakReference ccw) GetWeakReferenceToObjectAndCCW()
+            {
+                var (reference, ccw) = CreateCCW();
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                Assert.True(reference.IsAlive);
+                return (reference, new WeakReference(ccw));
+            }
+
+            var (obj, ccw) = GetWeakReferenceToObjectAndCCW();
+
+            while (ccw.IsAlive)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+
+            // Now that the CCW is dead, we should have no references to the managed object.
+            // Run GC one more time to collect the managed object.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.False(obj.IsAlive);
+        }
+
+        [Fact]
+        public void TestDelegateCCWLifetime()
+        {
+            static (WeakReference, IObjectReference) CreateCCW(Action<object, int> action)
+            {
+                TypedEventHandler<object, int> eventHandler = (o, i) => action(o, i);
+                IObjectReference ccw1 = ABI.Windows.Foundation.TypedEventHandler<object, int>.CreateMarshaler(eventHandler);
+                return (new WeakReference(eventHandler), ccw1);
+            }
+
+            static (WeakReference obj, WeakReference ccw) GetWeakReferenceToObjectAndCCW(Action<object, int> action)
+            {
+                var (reference, ccw) = CreateCCW(action);
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+                Assert.True(reference.IsAlive);
+                return (reference, new WeakReference(ccw));
+            }
+
+            var (obj, ccw) = GetWeakReferenceToObjectAndCCW((o, i) => { });
+
+            while (ccw.IsAlive)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+
+            // Now that the CCW is dead, we should have no references to the managed object.
+            // Run GC one more time to collect the managed object.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.False(obj.IsAlive);
+        }
+
+        [Fact]
+        public void TestCCWIdentityThroughRefCountZero()
+        {
+            static (WeakReference, IntPtr) CreateCCWReference(IProperties1 properties)
+            {
+                IObjectReference ccw = MarshalInterface<IProperties1>.CreateMarshaler(properties);
+                return (new WeakReference(ccw), ccw.ThisPtr);
+            }
+
+            var obj = new ManagedProperties(42);
+
+            var (ccwWeakReference, ptr) = CreateCCWReference(obj);
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            Assert.False(ccwWeakReference.IsAlive);
+
+            var (_, ptr2) = CreateCCWReference(obj);
+
+            Assert.Equal(ptr, ptr2);
+        }
+
+        [Fact()]
+        public void TestExceptionPropagation_Managed()
+        {
+            var exceptionToThrow = new ArgumentNullException("foo");
+            var properties = new ThrowingManagedProperties(exceptionToThrow);
+            Assert.Throws<ArgumentNullException>("foo", () => TestObject.CopyProperties(properties));
+        }
+
+        class ManagedProperties : IProperties1
+        {
+            private readonly int _value;
+
+            public ManagedProperties(int value)
+            {
+                _value = value;
+            }
+            public int ReadWriteProperty => _value;
+        }
+
+        class ThrowingManagedProperties : IProperties1
+        {
+            public ThrowingManagedProperties(Exception exceptionToThrow)
+            {
+                ExceptionToThrow = exceptionToThrow;
+            }
+
+            public Exception ExceptionToThrow { get; }
+
+            public int ReadWriteProperty => throw ExceptionToThrow;
+        }
+
+        readonly int E_FAIL = -2147467259;
+
+        async Task InvokeDoitAsync()
+        {
+            await TestObject.DoitAsync();
+        }
+
+        [Fact]
+        public void TestAsyncAction()
+        {
+            var task = InvokeDoitAsync();
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+
+            task = InvokeDoitAsync();
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = TestObject.DoitAsync().AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        async Task InvokeDoitAsyncWithProgress()
+        {
+            await TestObject.DoitAsyncWithProgress();
+        }
+
+        [Fact]
+        public void TestAsyncActionWithProgress()
+        {
+            int progress = 0;
+            var evt = new AutoResetEvent(false);
+            var task = TestObject.DoitAsyncWithProgress().AsTask(new Progress<int>((v) =>
+            {
+                progress = v;
+                evt.Set();
+            }));
+
+            for (int i = 1; i <= 10; ++i)
+            {
+                TestObject.AdvanceAsync(10);
+                Assert.True(evt.WaitOne(1000));
+                Assert.Equal(10 * i, progress);
+            }
+
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+
+            task = InvokeDoitAsyncWithProgress();
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = TestObject.DoitAsyncWithProgress().AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        async Task<int> InvokeAddAsync(int lhs, int rhs)
+        {
+            return await TestObject.AddAsync(lhs, rhs);
+        }
+
+        [Fact]
+        public void TestAsyncOperation()
+        {
+            var task = InvokeAddAsync(42, 8);
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+            Assert.Equal(50, task.Result);
+
+            task = InvokeAddAsync(0, 0);
+            Assert.False(task.Wait(25));
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = TestObject.AddAsync(0, 0).AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        async Task<int> InvokeAddAsyncWithProgress(int lhs, int rhs)
+        {
+            return await TestObject.AddAsyncWithProgress(lhs, rhs);
+        }
+
+        [Fact]
+        public void TestAsyncOperationWithProgress()
+        {
+            int progress = 0;
+            var evt = new AutoResetEvent(false);
+            var task = TestObject.AddAsyncWithProgress(42, 8).AsTask(new Progress<int>((v) =>
+            {
+                progress = v;
+                evt.Set();
+            }));
+
+            for (int i = 1; i <= 10; ++i)
+            {
+                TestObject.AdvanceAsync(10);
+                Assert.True(evt.WaitOne(1000));
+                Assert.Equal(10 * i, progress);
+            }
+
+            TestObject.CompleteAsync();
+            Assert.True(task.Wait(1000));
+            Assert.Equal(TaskStatus.RanToCompletion, task.Status);
+            Assert.Equal(50, task.Result);
+
+            task = InvokeAddAsyncWithProgress(0, 0);
+            TestObject.CompleteAsync(E_FAIL);
+            var e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.Equal(E_FAIL, e.InnerException.HResult);
+            Assert.Equal(TaskStatus.Faulted, task.Status);
+
+            var src = new CancellationTokenSource();
+            task = TestObject.AddAsyncWithProgress(0, 0).AsTask(src.Token);
+            Assert.False(task.Wait(25));
+            src.Cancel();
+            e = Assert.Throws<AggregateException>(() => task.Wait(1000));
+            Assert.True(e.InnerException is TaskCanceledException);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
+        [Fact]
+        public void TestPointTypeMapping()
+        {
+            var pt = new Point { X = 3.14, Y = 42 };
+            TestObject.PointProperty = pt;
+            Assert.Equal(pt.X, TestObject.PointProperty.X);
+            Assert.Equal(pt.Y, TestObject.PointProperty.Y);
+            Assert.True(TestObject.PointProperty == pt);
+            Assert.Equal(pt, TestObject.GetPointReference().Value);
+
+            var vector2 = TestObject.PointProperty.ToVector2();
+            Assert.Equal(pt.X, vector2.X);
+            Assert.Equal(pt.Y, vector2.Y);
+
+            TestObject.PointProperty = vector2.ToPoint();
+            Assert.Equal(pt.X, TestObject.PointProperty.X);
+            Assert.Equal(pt.Y, TestObject.PointProperty.Y);
+        }
+
+        [Fact]
+        public void TestRectTypeMapping()
+        {
+            var rect = new Rect { X = 3.14, Y = 42, Height = 3.14, Width = 42 };
+            TestObject.RectProperty = rect;
+            Assert.Equal(rect.X, TestObject.RectProperty.X);
+            Assert.Equal(rect.Y, TestObject.RectProperty.Y);
+            Assert.Equal(rect.Height, TestObject.RectProperty.Height);
+            Assert.Equal(rect.Width, TestObject.RectProperty.Width);
+            Assert.True(TestObject.RectProperty == rect);
+        }
+
+        [Fact]
+        public void TestSizeTypeMapping()
+        {
+            var size = new Size { Height = 3.14, Width = 42 };
+            TestObject.SizeProperty = size;
+            Assert.Equal(size.Height, TestObject.SizeProperty.Height);
+            Assert.Equal(size.Width, TestObject.SizeProperty.Width);
+            Assert.True(TestObject.SizeProperty == size);
 
         [Fact]
         public void TestKeyTimeTypeMapping()
@@ -1916,6 +2885,7 @@ namespace UnitTest
             TestObject.DateTimeProperty = time;
             Assert.Equal(time, TestObject.DateTimeProperty);
             Assert.Equal(time, TestObject.GetDateTimeProperty().Value);
+<<<<<<< HEAD
         }
 
         [Fact]
@@ -2258,6 +3228,358 @@ namespace UnitTest
         }
 
         [Fact(Skip="Operation not supported")]
+=======
+        }
+
+        [Fact]
+        public void TestExceptionMapping()
+        {
+            var ex = new ArgumentOutOfRangeException();
+
+            TestObject.HResultProperty = ex;
+
+            Assert.IsType<ArgumentOutOfRangeException>(TestObject.HResultProperty);
+
+            TestObject.HResultProperty = null;
+
+            Assert.Null(TestObject.HResultProperty);
+        }
+
+        [Fact]
+        public void TestGeneratedRuntimeClassName()
+        {
+            IInspectable inspectable = new IInspectable(ComWrappersSupport.CreateCCWForObject(new ManagedProperties(2)));
+            Assert.Equal(typeof(IProperties1).FullName, inspectable.GetRuntimeClassName());
+        }
+
+        [Fact]
+        public void TestGeneratedRuntimeClassName_Primitive()
+        {
+            IInspectable inspectable = new IInspectable(ComWrappersSupport.CreateCCWForObject(2));
+            Assert.Equal("Windows.Foundation.IReference`1<Int32>", inspectable.GetRuntimeClassName());
+        }
+
+        [Fact]
+        public void TestGeneratedRuntimeClassName_Array()
+        {
+            IInspectable inspectable = new IInspectable(ComWrappersSupport.CreateCCWForObject(new int[0]));
+            Assert.Equal("Windows.Foundation.IReferenceArray`1<Int32>", inspectable.GetRuntimeClassName());
+        }
+
+        [Fact]
+        public void TestValueBoxing()
+        {
+            int i = 42;
+            Assert.Equal(i, Class.UnboxInt32(i));
+
+            bool b = true;
+            Assert.Equal(b, Class.UnboxBoolean(b));
+
+            string s = "Hello World!";
+            Assert.Equal(s, Class.UnboxString(s));
+        }
+
+        [Fact]
+        public void TestArrayBoxing()
+        {
+            int[] i = new[] { 42, 1, 4, 50, 0, -23 };
+            Assert.Equal((IEnumerable<int>)i, Class.UnboxInt32Array(i));
+
+            bool[] b = new[] { true, false, true, true, false };
+            Assert.Equal((IEnumerable<bool>)b, Class.UnboxBooleanArray(b));
+
+            string[] s = new[] { "Hello World!", "WinRT", "C#", "Boxing" };
+            Assert.Equal((IEnumerable<string>)s, Class.UnboxStringArray(s));
+        }
+
+        [Fact]
+        public void TestArrayUnboxing()
+        {
+            int[] i = new[] { 42, 1, 4, 50, 0, -23 };
+
+            var obj = PropertyValue.CreateInt32Array(i);
+            Assert.IsType<int[]>(obj);
+            Assert.Equal(i, (IEnumerable<int>)obj);
+        }
+
+        [Fact]
+        public void PrimitiveTypeInfo()
+        {
+            Assert.Equal(typeof(int), Class.Int32Type);
+            Assert.True(Class.VerifyTypeIsInt32Type(typeof(int)));
+        }
+
+        [Fact]
+        public void WinRTTypeInfo()
+        {
+            Assert.Equal(typeof(Class), Class.ThisClassType);
+            Assert.True(Class.VerifyTypeIsThisClassType(typeof(Class)));
+        }
+
+        [Fact]
+        public void ProjectedTypeInfo()
+        {
+            Assert.Equal(typeof(int?), Class.ReferenceInt32Type);
+            Assert.True(Class.VerifyTypeIsReferenceInt32Type(typeof(int?)));
+        }
+
+        [Fact]
+        public void TypeInfoGenerics()
+        {
+            var typeName = Class.GetTypeNameForType(typeof(IList<int>));
+
+            Assert.Equal("Windows.Foundation.Collections.IVector`1<Int32>", typeName);
+        }
+
+        [Fact]
+        public void TestGenericTypeMarshalling()
+        {
+            Assert.Equal(typeof(ABI.System.Type), Marshaler<Type>.AbiType);
+        }
+
+        [Fact]
+        public void TestStringUnboxing()
+        {
+            var str1 = Class.EmptyString;
+            var str2 = Class.EmptyString;
+            Assert.IsType<string>(str1);
+            Assert.IsType<string>(str2);
+            Assert.Equal(string.Empty, (string)str1);
+            Assert.Equal(string.Empty, (string)str2);
+        }
+
+        internal class ManagedType { }
+
+        [Fact]
+        public void CCWOfListOfManagedType()
+        {
+            using var ccw = ComWrappersSupport.CreateCCWForObject(new List<ManagedType>());
+            using var qiResult = ccw.As(GuidGenerator.GetIID(typeof(global::System.Collections.Generic.IEnumerable<object>).GetHelperType()));
+        }
+
+        [Fact]
+        public void WeakReferenceOfManagedObject()
+        {
+            var properties = new ManagedProperties(42);
+            WeakRefNS.WeakReference<IProperties1> weakReference = new WeakRefNS.WeakReference<IProperties1>(properties);
+            Assert.True(weakReference.TryGetTarget(out var propertiesStrong));
+            Assert.Same(properties, propertiesStrong);
+        }
+
+        [Fact]
+        public void WeakReferenceOfNativeObject()
+        {
+            var weakReference = new WeakRefNS.WeakReference<Class>(TestObject);
+            Assert.True(weakReference.TryGetTarget(out var classStrong));
+            Assert.Same(TestObject, classStrong);
+        }
+
+        [Fact]
+        public void WeakReferenceOfNativeObjectRehydratedAfterWrapperIsCollected()
+        {
+            static (WeakRefNS.WeakReference<Class> winrt, WeakReference net, IObjectReference objRef) GetWeakReferences()
+            {
+                var obj = new Class();
+                ComWrappersSupport.TryUnwrapObject(obj, out var objRef);
+                return (new WeakRefNS.WeakReference<Class>(obj), new WeakReference(obj), objRef);
+            }
+
+            var (winrt, net, objRef) = GetWeakReferences();
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Assert.False(net.IsAlive);
+            Assert.True(winrt.TryGetTarget(out _));
+            GC.KeepAlive(objRef);
+        }
+
+        [Fact]
+        public void TestUnwrapInspectable()
+        {
+            using var objRef = MarshalInspectable<object>.CreateMarshaler(TestObject);
+            var inspectable = IInspectable.FromAbi(objRef.ThisPtr);
+            Assert.True(ComWrappersSupport.TryUnwrapObject(inspectable, out _));
+
+            using var objRef2 = MarshalInspectable<Class>.CreateMarshaler(TestObject);
+            var inspectable2 = IInspectable.FromAbi(objRef2.ThisPtr);
+            Assert.True(ComWrappersSupport.TryUnwrapObject(inspectable2, out _));
+        }
+
+        [Fact]
+        public void TestManagedAgileObject()
+        {
+            using var testObjectAgileRef = TestObject.AsAgile();
+            var agileTestObject = testObjectAgileRef.Get();
+            Assert.Equal(TestObject, agileTestObject);
+
+            IProperties1 properties = new ManagedProperties(42);
+            using var propertiesAgileRef = properties.AsAgile();
+            var agileProperties = propertiesAgileRef.Get();
+            Assert.Equal(properties.ReadWriteProperty, agileProperties.ReadWriteProperty);
+
+            var agileObject = TestObject.As<IAgileObject>();
+            Assert.NotNull(agileObject);
+
+            IProperties1 properties2 = null;
+            using var properties2AgileRef = properties2.AsAgile();
+            var agileProperties2 = properties2AgileRef.Get();
+            Assert.Null(agileProperties2);
+        }
+
+        class NonAgileClassCaller
+        {
+            public void AcquireObject()
+            {
+                Assert.Equal(ApartmentState.STA, Thread.CurrentThread.GetApartmentState());
+                nonAgileObject = new Windows.UI.Popups.PopupMenu();
+                nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test"));
+                nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test2"));
+                Assert.ThrowsAny<System.Exception>(() => nonAgileObject.As<IAgileObject>());
+
+                agileReference = nonAgileObject.AsAgile();
+                objectAcquired.Set();
+                valueAcquired.WaitOne();
+
+                // Call to proxy object acquired from MTA which should throw
+                Assert.ThrowsAny<System.Exception>(() => proxyObject.Commands.Count);
+                agileReference.Dispose();
+            }
+
+            public void CheckValue()
+            {
+                objectAcquired.WaitOne();
+
+                Assert.Equal(ApartmentState.MTA, Thread.CurrentThread.GetApartmentState());
+                proxyObject = agileReference.Get();
+                Assert.Equal(2, proxyObject.Commands.Count);
+                valueAcquired.Set();
+            }
+
+            private Windows.UI.Popups.PopupMenu nonAgileObject;
+            private Windows.UI.Popups.PopupMenu proxyObject;
+            private AgileReference<Windows.UI.Popups.PopupMenu> agileReference;
+            private readonly AutoResetEvent objectAcquired = new AutoResetEvent(false);
+            private readonly AutoResetEvent valueAcquired = new AutoResetEvent(false);
+        }
+
+
+        [Fact]
+        public void TestNonAgileObjectCall()
+        {
+            NonAgileClassCaller caller = new NonAgileClassCaller();
+            Thread staThread = new Thread(new ThreadStart(caller.AcquireObject));
+            staThread.SetApartmentState(ApartmentState.STA);
+            staThread.Start();
+
+            Thread mtaThread = new Thread(new ThreadStart(caller.CheckValue));
+            mtaThread.SetApartmentState(ApartmentState.MTA);
+            mtaThread.Start();
+            mtaThread.Join();
+            staThread.Join();
+        }
+
+        [Fact]
+        public void TestNonAgileDelegateCall()
+        {
+            var expected = new int[] { 0, 1, 2 };
+            var observable = new ManagedBindableObservable(expected);
+            var nonAgileClass = new NonAgileClass();
+            nonAgileClass.Observe(observable);
+            observable.Add(3);
+            Assert.Equal(6, observable.Observation);
+        }
+
+        [ComImport]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        [Guid("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB")]
+        internal interface IWindowNative
+        {
+            IntPtr WindowHandle { get; }
+        }
+
+        [ComImport]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        [Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
+        internal interface IInitializeWithWindow
+        {
+            void Initialize(IntPtr hwnd);
+        }
+
+        [Fact]
+        unsafe public void TestComImports()
+        {
+            TestObject();
+            GCCollect();
+            Assert.Equal(0, ComImports.NumObjects);
+
+            TestImports();
+            GCCollect();
+            Assert.Equal(0, ComImports.NumObjects);
+
+            static Object MakeObject()
+            {
+                Assert.Equal(0, ComImports.NumObjects);
+                var obj = ComImports.MakeObject();
+                Assert.Equal(1, ComImports.NumObjects);
+                return obj;
+            }
+
+            static void TestObject() => MakeObject();
+
+            static (IInitializeWithWindow, IWindowNative) MakeImports() 
+            { 
+                var obj = MakeObject();
+                var initializeWithWindow = obj.As<IInitializeWithWindow>();
+                var windowNative = obj.As<IWindowNative>();
+                return (initializeWithWindow, windowNative);
+            }
+
+            static void TestImports()
+            {
+                var (initializeWithWindow, windowNative) = MakeImports();
+
+                GCCollect();
+
+                var hwnd = new IntPtr(0x12345678);
+                initializeWithWindow.Initialize(hwnd);
+                Assert.Equal(windowNative.WindowHandle, hwnd);
+            }
+
+            static void GCCollect()
+            {
+                // Require multiple GC collects due to
+                // the final release is not done immediately.
+                for(int idx = 0; idx < 3; idx++)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                }
+            }
+        }
+
+        [Fact]
+        public void TestInterfaceObjectMarshalling()
+        {
+            var nativeProperties = Class.NativeProperties1;
+
+            TestObject.CopyProperties(nativeProperties);
+
+            Assert.Equal(TestObject.ReadWriteProperty, nativeProperties.ReadWriteProperty);
+        }
+
+        // Test scenario where type reported by runtimeclass name is not a valid type (i.e. internal type).
+        [Fact]
+        public void TestNonProjectedRuntimeClass()
+        {
+            string key = ".....";
+            IBuffer keyMaterial = CryptographicBuffer.ConvertStringToBinary(key, BinaryStringEncoding.Utf8);
+            MacAlgorithmProvider mac = MacAlgorithmProvider.OpenAlgorithm(MacAlgorithmNames.HmacSha1);
+            CryptographicKey cryptoKey = mac.CreateKey(keyMaterial);
+            Assert.NotNull(cryptoKey);
+        }
+
+        [Fact(Skip="Operation not supported")]
+>>>>>>> master
         public void TestIBindableIterator()
         {
             CustomBindableIteratorTest bindableIterator = new CustomBindableIteratorTest();

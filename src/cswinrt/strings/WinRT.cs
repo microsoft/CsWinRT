@@ -16,10 +16,6 @@ using System.Linq.Expressions;
 #pragma warning disable 0649 // Field 'xxx' is never assigned to, and will always have its default value
 #pragma warning disable CA1060
 
-#if !NETSTANDARD2_0
-[assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows")]
-#endif
-
 namespace WinRT
 {
     using System.Diagnostics;
