@@ -18,7 +18,6 @@ namespace WinRT
         private readonly IntPtr _thisPtr;
         private object _disposedLock = new object();
         private IntPtr _referenceTrackerPtr;
-        private byte _rcwCleanupCounter;
 
         public IntPtr ThisPtr
         {
@@ -197,13 +196,6 @@ namespace WinRT
 
         public void Dispose()
         {
-            // If this is the object reference associated with the RCW,
-            // defer dispose to after the RCW has been finalized for .NET 5.
-            if (!Cleanup)
-            {
-                return;
-            }
-
             Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -216,20 +208,6 @@ namespace WinRT
                 {
                     return;
                 }
-
-                // If the object reference is associated with the RCW, we need to
-                // defer the final release on the ThisPtr until after the RCW has been
-                // finalized and it has been removed from the ComWrappers cache.
-                // In .NET 6, there will be a new API for us to use, but until then
-                // in .NET 5, we defer the finalization of this object until it
-                // has reached Gen 2 by reregistering for finalization.
-                if(!Cleanup)
-                {
-                    _rcwCleanupCounter--;
-                    GC.ReRegisterForFinalize(this);
-                    return;
-                }
-
 #if DEBUG
                 if (BreakOnDispose && System.Diagnostics.Debugger.IsAttached)
                 {
@@ -330,10 +308,6 @@ namespace WinRT
                 ReferenceTracker.IUnknownVftbl.Release(ReferenceTrackerPtr);
             }
         }
-        
-        internal void MarkCleanupRCW() => _rcwCleanupCounter = 2;
-
-        private bool Cleanup { get => _rcwCleanupCounter == 0; }
     }
 
     public class ObjectReference<T> : IObjectReference
