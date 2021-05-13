@@ -156,72 +156,72 @@ namespace ABI.System.Collections.Generic
             var vftblT = new Vftbl(thisPtr);
             return ObjectReference<Vftbl>.FromAbi(thisPtr, vftblT);
         }
+
         public static Guid PIID = Vftbl.PIID;
 
-        // Updates _this.AdditionalTypeData to have all the interfaces that are covariant of the given type `t` 
-        // if we find one that matches our type (IReadOnlyList<T>) then we can cast the original object to IReadOnlyList<T>
-        private static object FindAllCovariantInterfaces(Type t, IWinRTObject _this, object _fromAbiHelper)
+        private static Func<object> _FromIterHelper(IWinRTObject _this)
         {
-            object matchingImplementation = null;
-            if (t.IsGenericType)
+            object implementation = null;
+
+            /* prevent an invalid cast that would happen when later trying 
+             * to call this function as a covariant for another type,       */
+            if ((_this as global::System.Collections.Generic.IEnumerable<T>) != null)
+            { 
+                implementation = new FromAbiHelper((global::System.Collections.Generic.IEnumerable<T>)_this); 
+            }
+            else
             {
-                Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(t, out var variantTypes);
-                if (variantTypes != null)
+                foreach (var kvpair in _this.AdditionalTypeData)
                 {
-                    foreach (var variantType in variantTypes)
-                    {
-                        // if we find ourselves in the variants, return the original object reference, as we are covariant of its type 
-                        if (variantType == typeof(global::System.Collections.Generic.IEnumerable<T>))
+                    if (kvpair.Value is CovarianceSupport covSupport) 
+                    { 
+                        covSupport.FindAllVariants();
+                        if (covSupport.covariantTypes.Contains(typeof(global::System.Collections.Generic.IEnumerable<T>)))
                         {
-                            matchingImplementation = matchingImplementation ?? _fromAbiHelper;
+                            RuntimeTypeHandle implementationType = _this.GetInterfaceImplementation(covSupport.baseType.TypeHandle);
+                            var z = _this.IsInterfaceImplemented(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle, false);
+                            Type implementationType2 = implementationType.GetType();
+                            // var objRef = _this.GetObjectReferenceForType(implementationType);
+                            
+                            // implementation = objRef.AsInterface<global::System.Collections.Generic.IEnumerable<T>>();
+                            // var z = false;
+
+                            //implementation = (global::System.Collections.Generic.IEnumerable<T>)objRef;
                         }
-                        _this.AdditionalTypeData.GetOrAdd(variantType.TypeHandle, _fromAbiHelper);
-                    }
+                    } 
                 }
             }
-            return matchingImplementation;
+            return () => { return implementation; };
         }
 
-        private static object SupportCovariance(IWinRTObject _this)
-        {
-            // we need to populate AdditionalTypeData for all the covariant interfaces
-            // We create a mapping from the covariant type to the original type's known implementation (FromAbiHelper)
-            // variable `matchingImplementation` keeps track of the implementation we should return 
-            foreach (var x in _this.QueryInterfaceCache)
-            { 
-            }
-            /*
-            object matchingImplementation = null;
-            foreach (var typeData in _this.AdditionalTypeData)
-            {
-                var typeName = typeData.Key;
-                var _fromAbiHelper = typeData.Value;
-                Type t = Type.GetTypeFromHandle(typeData.Key);
-                // for t and all the interfaces t implements, populate type information for covariant interfaces 
-                matchingImplementation = FindAllCovariantInterfaces(t, _this, _fromAbiHelper);
-                foreach (var implementedIFace in t.GetInterfaces())
-                {
-                    matchingImplementation = matchingImplementation ?? FindAllCovariantInterfaces(implementedIFace, _this, _fromAbiHelper);
-                }
-            }
-            return matchingImplementation;
-            */
-        }
+        /* Notes
+         * 
+         *   An alternative consturctor is used to call an API on the object for the covariant type
+         *   below won't work because the key isnt for Covariance support but for the variant type (e.g. IReadOnlyList`1) 
+         *   _this.AdditionalTypeData.TryGetValue(typeof(CovarianceSupport).TypeHandle, out object obj);
+         *   ...... _this.AdditionalTypeData
+         * 
+         *
+         *   (RuntimeTypeHandle)kvpair.Key).GetType()
+         *   
+         *   This won't work because it isn't a compile time value. 
+         *   Instead we take advantage of covariance and assume we are one of 4 coviarant interfaces. 
+         *   Then we can construct a type for each one. 
+         * 
+         * 
+         *  we want an intermediate cast to `originalType`
+         *  typeof(global::System.Collections.Generic.IReadOnlyList<>).MakeGenericType(originalType.GetGenericArguments())
+         *  var x = _this.As<(typeof(global::System.Collections.Generic.IReadOnlyList<>).MakeGenericType(originalType.GetGenericArguments())>();
+         *  abstract this into covarianceSupport... match on originalType. it will be one of the 4 covariant-compatible interfaces we use in WinRT.Runtime
+         *  Then we can case-by-case do this cast based on the originalType 
+         *  we need to pass in the type that we want to return (i.e. the type we are calling the FindImplementation for, in this case it would be IEnumerable<T>
+         *                  
+         *
+         */
 
         private static global::System.Collections.Generic.IEnumerable<T> _FromIterable(IWinRTObject _this)
         {
-            return (global::System.Collections.Generic.IEnumerable<T>)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle,
-                () =>
-                {
-                    if ((_this as global::System.Collections.Generic.IEnumerable<T>) != null)
-                    {
-                        return new FromAbiHelper((global::System.Collections.Generic.IEnumerable<T>)_this);
-                    }
-                    else
-                    {
-                        return SupportCovariance(_this);
-                    }
-                });
+            return (global::System.Collections.Generic.IEnumerable<T>)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle, _FromIterHelper(_this)); 
         }
 
         unsafe global::System.Collections.Generic.IEnumerator<T> global::Windows.Foundation.Collections.IIterable<T>.First()

@@ -104,6 +104,9 @@ namespace WinRT
                 }
                 return false;
             }
+ 
+            CovarianceSupport covarianceSupport = new CovarianceSupport(type);
+            AdditionalTypeData.GetOrAdd(type.TypeHandle, covarianceSupport);
 
             if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type))
             {

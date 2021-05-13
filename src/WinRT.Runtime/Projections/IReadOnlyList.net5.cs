@@ -342,51 +342,6 @@ namespace ABI.System.Collections.Generic
         }
         public static Guid PIID = Vftbl.PIID;
 
-        // Updates _this.AdditionalTypeData to have all the interfaces that are covariant of the given type `t` 
-        // if we find one that matches our type (IReadOnlyList<T>) then we can cast the original object to IReadOnlyList<T>
-        private static object FindAllCovariantInterfaces(Type t, IWinRTObject _this, object _fromAbiHelper) 
-        {
-            object matchingImplementation = null;
-            if (t.IsGenericType)
-            {
-                Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(t, out var variantTypes);
-                if (variantTypes != null)
-                { 
-                    foreach (var variantType in variantTypes)
-                    {
-                        // if we find ourselves in the variants, return the original object reference, as we are covariant of its type 
-                        if (variantType == typeof(global::System.Collections.Generic.IReadOnlyList<T>))
-                        {
-                            matchingImplementation = matchingImplementation ?? _fromAbiHelper;
-                        }
-                        _this.AdditionalTypeData.GetOrAdd(variantType.TypeHandle, _fromAbiHelper);
-                    }
-                }
-            }
-            return matchingImplementation;
-        }
-
-        private static object SupportCovariance(IWinRTObject _this)
-        {   
-            // we need to populate AdditionalTypeData for all the covariant interfaces
-            // We create a mapping from the covariant type to the original type's known implementation (FromAbiHelper)
-            // variable `matchingImplementation` keeps track of the implementation we should return 
-            object matchingImplementation = null; 
-            foreach (var typeData in _this.AdditionalTypeData)
-            {
-                var typeName = typeData.Key;
-                var _fromAbiHelper = typeData.Value;
-                Type t = Type.GetTypeFromHandle(typeData.Key);
-                // for t and all the interfaces t implements, populate type information for covariant interfaces 
-                matchingImplementation = FindAllCovariantInterfaces(t, _this, _fromAbiHelper);
-                foreach (var implementedIFace in t.GetInterfaces())
-                {
-                    matchingImplementation = matchingImplementation ?? FindAllCovariantInterfaces(implementedIFace, _this, _fromAbiHelper);
-                }
-            }
-            return matchingImplementation;
-        }
-
         internal static global::System.Collections.Generic.IReadOnlyList<T> _FromVectorView(IWinRTObject _this)
         {
             var _obj = ((ObjectReference<Vftbl>)_this.GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyList<T>).TypeHandle));
@@ -402,7 +357,8 @@ namespace ABI.System.Collections.Generic
                     }
                     else
                     {
-                        return SupportCovariance(_this);
+                        // replace below with something like _FromIterHelper in IEnum projection
+                        return null // SupportCovariance(_this);
                     }
                 });
         }
