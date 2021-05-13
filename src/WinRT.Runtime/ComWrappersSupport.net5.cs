@@ -101,9 +101,9 @@ namespace WinRT
 
             return rcw switch
             {
-                ABI.System.Nullable<string> ns => (T)(object)ns.Value,
-                ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
-                _ => (T)rcw
+                ABI.System.Nullable<string> ns => (T)(object) ns.Value,
+                ABI.System.Nullable<Type> nt => (T)(object) nt.Value,
+                _ => (T) rcw
             };
         }
 
@@ -143,7 +143,6 @@ namespace WinRT
             if (target is IWinRTObject winrtObj)
             {
                 winrtObj.Resurrect();
-                winrtObj.NativeObject.MarkCleanupRCW();
             }
             return rcw;
         }
@@ -207,7 +206,6 @@ namespace WinRT
             out IObjectReference objRef)
         {
             objRef = ComWrappersSupport.GetObjectReferenceForInterface(isAggregation ? inner : newInstance);
-            objRef.MarkCleanupRCW();
 
             IntPtr referenceTracker;
             {
@@ -466,7 +464,6 @@ namespace WinRT
                 // on destruction as the CLR would do it.
                 winrtObj.NativeObject.ReleaseFromTrackerSource();
                 winrtObj.NativeObject.PreventReleaseFromTrackerSourceOnDispose = true;
-                winrtObj.NativeObject.MarkCleanupRCW();
             }
 
             return obj;
