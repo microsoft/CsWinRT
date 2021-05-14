@@ -240,6 +240,11 @@ namespace %%
             }
         };
 
+        struct helper_writer
+        {
+
+        };
+
         struct write_platform_guard
         {
             writer& _writer;

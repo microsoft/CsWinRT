@@ -453,6 +453,101 @@ namespace cswinrt
             bind<write_parameter_name>(param));
     }
 
+    void write_projection_arg(writer& w, method_signature::param_t const& param)
+    {
+        w.write("%",
+            bind<write_parameter_name>(param));
+    }
+
+    void write_event_source_type_name(writer& w, TypeDef const& eventType, std::vector<std::string_view> genericArgs = {})
+    {
+        auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
+        std::string eventTypeName = "_EventSource_" + eventTypeCode;
+        std::replace(eventTypeName.begin(), eventTypeName.end(), '<', '_');
+        std::replace(eventTypeName.begin(), eventTypeName.end(), '>', '_');
+        std::replace(eventTypeName.begin(), eventTypeName.end(), ':', '_');
+        std::replace(eventTypeName.begin(), eventTypeName.end(), ',', '_');
+        std::replace(eventTypeName.begin(), eventTypeName.end(), ' ', '_');
+        std::replace(eventTypeName.begin(), eventTypeName.end(), '.', '_');
+        w.write("%", eventTypeName);
+        if (genericArgs.size() > 0)
+        {
+            //w.write("<%>", bind_list(", ", genericArgs));
+            w.write("<%>", bind_list([](writer& w, auto&& value) { w.write("%", value); },
+                ", "sv, genericArgs));
+        }
+    }
+
+    void write_event_source_type_sem_name(writer& w, type_semantics const& semantics)
+    {
+        std::vector<std::string_view> v{};
+        for_typedef(w, semantics, [&](TypeDef const& eventType)
+        {
+            /*for (auto&& genericParam : eventType.GenericParam())
+            {
+                if (std::holds_alternative<generic_type_instance>(semantics))
+                {
+                    auto g = std::get<generic_type_instance>(semantics);
+                    g.generic_args
+                }
+            }*/
+            write_event_source_type_name(w, eventType, v);
+            if (w.write_temp("%", bind<write_event_source_type_name>(eventType, v)) == "_EventSource_global__Windows_Foundation_Collections_MapChangedEventHandler_K__V_")
+            {
+                w.write("%", "<K, V>");
+            }
+            else if (w.write_temp("%", bind<write_event_source_type_name>(eventType, v)) == "_EventSource_global__Windows_Foundation_Collections_VectorChangedEventHandler_T_")
+            {
+                w.write("%", "<T>");
+            }
+        });
+    }
+
+    void write_event_invoke_params(writer& w, TypeDef const& eventType)
+    {
+        for (auto&& method : eventType.MethodList())
+        {
+            if (method.Name() == "Invoke")
+            {
+                method_signature methodSig(method);
+                w.write("%", bind_list<write_projection_parameter>(", ", methodSig.params()));
+                return;
+            }
+        }
+        throw_invalid("Event type must have an Invoke method");
+    }
+
+    void write_event_invoke_return(writer& w, TypeDef const& eventType)
+    {
+        for (auto&& method : eventType.MethodList())
+        {
+            if (method.Name() == "Invoke")
+            {
+                method_signature methodSig(method);
+                if (methodSig.return_signature())
+                {
+                    w.write("return ");
+                }
+                return;
+            }
+        }
+        throw_invalid("Event type must have an Invoke method");
+    }
+
+    void write_event_invoke_args(writer& w, TypeDef const& eventType)
+    {
+        for (auto&& method : eventType.MethodList())
+        {
+            if (method.Name() == "Invoke")
+            {
+                method_signature methodSig(method);
+                w.write("%", bind_list<write_projection_arg>(", ", methodSig.params()));
+                return;
+            }
+        }
+        throw_invalid("Event type must have an Invoke method");
+    }
+
     void write_abi_type(writer& w, type_semantics const& semantics)
     {
         call(semantics,
@@ -2430,6 +2525,11 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
         }
     }
 
+    void write_event_source_definition(writer& w)
+    {
+
+    }
+
     void write_winrt_attribute(writer& w, TypeDef const& type)
     {
         std::filesystem::path db_path(type.get_database().path());
@@ -2471,10 +2571,10 @@ db_path.stem().string());
     {
         auto [add, remove] = get_event_methods(evt);
         w.write(R"(
-    new EventSource<%>(_obj,
+    new %(_obj,
     %,
     %))",
-            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+            bind<write_event_source_type_sem_name>(get_type_semantics(evt.EventType())),
             get_invoke_info(w, add).first,
             get_invoke_info(w, remove).first);
     }
@@ -6344,4 +6444,5 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
 types
 ));
     }
+
 }
