@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "WinUIComInteropSample": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}
