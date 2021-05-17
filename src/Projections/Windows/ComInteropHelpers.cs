@@ -50,17 +50,27 @@ namespace WinRT.Interop
     [ComImport]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("EECDBF0E-BAE9-4CB6-A68E-9598E1CB57BB")]
-    public interface IWindowNative
+    internal interface IWindowNative
     {
         IntPtr WindowHandle { get; }
+    }
+
+    public static class WindowNative
+    {
+        public static IntPtr GetWindowHandle(object target) => target.As<IWindowNative>().WindowHandle;
     }
 
     [ComImport]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1")]
-    public interface IInitializeWithWindow
+    internal interface IInitializeWithWindow
     {
         void Initialize(IntPtr hwnd);
+    }
+
+    public static class InitializeWithWindow
+    {
+        public static void Initialize(object target, IntPtr hwnd) => target.As<IInitializeWithWindow>().Initialize(hwnd);
     }
 }
 
