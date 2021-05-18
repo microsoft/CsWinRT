@@ -147,6 +147,12 @@ $(CsWinRTFilters)
     <Copy SourceFiles="$(CsWinRTGeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>
 
+  <!-- Call The GuidPatch tool on the projection .dll -->
+  <Target Name="CsWinRTInvokeGuidPatcher" AfterTargets="Compile" BeforeTargets="Link">
+    <Message Text="Preparing to invoke GuidPatcher" />
+     
+  </Target>
+  
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
 
