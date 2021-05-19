@@ -2186,8 +2186,8 @@ namespace UnitTest
                 objectAcquired.Set();
                 valueAcquired.WaitOne();
 
-                // Call to proxy object acquired from MTA which should throw
-                Assert.ThrowsAny<System.Exception>(() => proxyObject.Commands.Count);
+                // Object gets proxied to apartment.
+                Assert.Equal(2, proxyObject.Commands.Count);
                 agileReference.Dispose();
             }
 

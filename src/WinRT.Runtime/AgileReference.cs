@@ -52,7 +52,14 @@ namespace WinRT
             {
                 if (_cookie != IntPtr.Zero)
                 {
-                    Git.Value.RevokeInterfaceFromGlobal(_cookie);
+                    try
+                    {
+                        Git.Value.RevokeInterfaceFromGlobal(_cookie);
+                    }
+                    catch(ArgumentException)
+                    {
+                        // Revoking cookie from GIT table may fail if apartment is gone.
+                    }
                 }
                 disposed = true;
             }

@@ -69,7 +69,8 @@ namespace WinRT
             {
                 return new ObjectReferenceWithContext<IUnknownVftbl>(
                     unknownRef.GetRef(),
-                    Context.GetContextCallback());
+                    Context.GetContextCallback(),
+                    Context.GetContextToken());
             }
         }
 

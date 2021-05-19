@@ -69,17 +69,11 @@ namespace ABI.WinRT.Interop
             public ComCallData* userData;
         }
 
-        private const int RPC_E_DISCONNECTED = unchecked((int)0x80010108);
-
         public unsafe void ContextCallback(global::WinRT.Interop.PFNCONTEXTCALL pfnCallback, ComCallData* pParam, Guid riid, int iMethod)
         {
             var callback = Marshal.GetFunctionPointerForDelegate(pfnCallback);
             var result = _obj.Vftbl.ContextCallback_4(ThisPtr, callback, pParam, &riid, iMethod, IntPtr.Zero);
             GC.KeepAlive(pfnCallback);
-            if (result != RPC_E_DISCONNECTED)
-            {
-                Marshal.ThrowExceptionForHR(result);
-            }
         }
     }
 }
