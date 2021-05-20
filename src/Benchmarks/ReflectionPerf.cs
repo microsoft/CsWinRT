@@ -1,4 +1,5 @@
 ﻿using BenchmarkComponent;
+using TestComponentCSharp;
 using BenchmarkDotNet.Attributes;
 
 namespace Benchmarks
@@ -7,59 +8,81 @@ namespace Benchmarks
     public class ReflectionPerf
     {
         ClassWithMarshalingRoutines instance;
+        Class TestObject;
 
         [GlobalSetup]
         public void Setup()
         {
+            TestObject = new Class();
             instance = new ClassWithMarshalingRoutines();
         }
 
-        [Benchmark]
-        public object ExecuteMarshalingForNewKeyValuePair()
-        {
-            return instance.NewTypeErasedKeyValuePairObject;
-        }
+        //[Benchmark]
+        //public object ExecuteMarshalingForNewKeyValuePair()
+        //{
+        //    return instance.NewTypeErasedKeyValuePairObject;
+        //}
+
+        //[Benchmark]
+        //public object ExecuteMarshalingForNewArray()
+        //{
+        //    return instance.NewTypeErasedArrayObject;
+        //}
+
+        //[Benchmark]
+        //public object ExecuteMarshalingForNewNullable()
+        //{
+        //    return instance.NewTypeErasedNullableObject;
+        //}
+
+        //[Benchmark]
+        //public object ExecuteMarshalingForExistingKeyvaluePair()
+        //{
+        //    return instance.ExistingTypeErasedKeyValuePairObject;
+        //}
+
+        //[Benchmark]
+        //public object ExecuteMarshalingForExistingArray()
+        //{
+        //    return instance.ExistingTypeErasedArrayObject;
+        //}
+
+        //[Benchmark]
+        //public object ExecuteMarshalingForExistingNullable()
+        //{
+        //    return instance.ExistingTypeErasedNullableObject;
+        //}
+
+        //[Benchmark]
+        //public object ExecuteMarshalingForString()
+        //{
+        //    return instance.DefaultStringProperty;
+        //}
+
+        //[Benchmark]
+        //public object ExecuteMarshalingForCustomObject()
+        //{
+        //    return instance.NewWrappedClassObject;
+        //}
 
         [Benchmark]
-        public object ExecuteMarshalingForNewArray()
+        public void StringEventSource()
         {
-            return instance.NewTypeErasedArrayObject;
-        }
+            string test_string = "x";
+            string test_string2 = "y";
 
-        [Benchmark]
-        public object ExecuteMarshalingForNewNullable()
-        {
-            return instance.NewTypeErasedNullableObject;
-        }
+            // In hstring from managed->native implicitly creates hstring reference
+            TestObject.StringProperty = test_string;
 
-        [Benchmark]
-        public object ExecuteMarshalingForExistingKeyvaluePair()
-        {
-            return instance.ExistingTypeErasedKeyValuePairObject;
-        }
+            // Out hstring from native->managed only creates System.String on demand
+            var sp = TestObject.StringProperty;
 
-        [Benchmark]
-        public object ExecuteMarshalingForExistingArray()
-        {
-            return instance.ExistingTypeErasedArrayObject;
-        }
+            // Out hstring from managed->native always creates HString from System.String
+            TestObject.CallForString(() => test_string2);
 
-        [Benchmark]
-        public object ExecuteMarshalingForExistingNullable()
-        {
-            return instance.ExistingTypeErasedNullableObject;
-        }
-
-        [Benchmark]
-        public object ExecuteMarshalingForString()
-        {
-            return instance.DefaultStringProperty;
-        }
-
-        [Benchmark]
-        public object ExecuteMarshalingForCustomObject()
-        {
-            return instance.NewWrappedClassObject;
+            // In hstring from native->managed only creates System.String on demand
+            TestObject.StringPropertyChanged += (Class sender, string value) => sender.StringProperty2 = value;
+            TestObject.RaiseStringChanged();
         }
     }
 }

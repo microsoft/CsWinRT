@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <Platforms>x64;x86</Platforms>
-    <TargetFrameworks>netcoreapp2.0;net5.0;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.0;net5.0;</TargetFrameworks>
     <UseWinmd>false</UseWinmd>
     <BenchmarkWinmdSupport Condition="'$(BenchmarkWinmdSupport)' == ''">false</BenchmarkWinmdSupport>
     <!-- Controls whether to build using WinMDs or the projection. -->
@@ -17,10 +17,37 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" Condition="$(UseWinmd) == false"/>
   </ItemGroup>
 
+  <Target Name="Print Test Path">
+	    <Message Text="HELOOO $(MSBuildThisFileDirectory)..\_build\$(Platform)\$(Configuration)\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.dll" Importance="high"/>
+    </Target>
+	
   <ItemGroup>
-    <ProjectReference Include="..\Projections\Windows\Windows.csproj" Condition="$(UseWinmd) == false" />
-    <ProjectReference Include="..\Projections\Benchmark\Benchmark.csproj" Condition="$(UseWinmd) == false" />
-    <ProjectReference Include="..\TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj" Condition="$(UseWinmd) == true" />
+    <Reference Condition="'$(TargetFramework)' == 'netcoreapp2.0'" Include="$(MSBuildThisFileDirectory)..\Projections\Windows\bin\x64\Release\netstandard2.0\Windows.dll"></Reference>
+    <Reference Condition="'$(TargetFramework)' != 'netcoreapp2.0'" Include="$(MSBuildThisFileDirectory)..\Projections\Windows\bin\x64\Release\$(TargetFramework)\Windows.dll"></Reference>
+    
+    <Reference Condition="'$(TargetFramework)' == 'netcoreapp2.0'" Include="$(MSBuildThisFileDirectory)..\Projections\Benchmark\bin\x64\Release\netstandard2.0\Benchmark.dll"></Reference>
+    <Reference Condition="'$(TargetFramework)' != 'netcoreapp2.0'" Include="$(MSBuildThisFileDirectory)..\Projections\Benchmark\bin\x64\Release\$(TargetFramework)\Benchmark.dll"></Reference>
+
+	<Reference Condition="'$(TargetFramework)' == 'netcoreapp2.0'" Include="$(MSBuildThisFileDirectory)..\Projections\Test\bin\x64\Release\netstandard2.0\Test.dll"></Reference>
+	<Reference Condition="'$(TargetFramework)' != 'netcoreapp2.0'" Include="$(MSBuildThisFileDirectory)..\Projections\Test\bin\x64\Release\$(TargetFramework)\Test.dll"></Reference>
+
+	  <!-- <Reference Include="$(MSBuildThisFileDirectory)..\_build\x64\Release\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.dll"></Reference>
+    <Reference Include="$(MSBuildThisFileDirectory)..\_build\x64\Release\TestComponentCSharp\bin\TestComponentCSharp\TestComponentCSharp.dll"></Reference> -->
+    
+    <!-- <ProjectReference Include="..\Projections\Windows\Windows.csproj" Condition="$(UseWinmd) == false" /> -->
+    <!-- <ProjectReference Include="..\Projections\Benchmark\Benchmark.csproj" Condition="$(UseWinmd) == false" /> -->
+    <!-- <ProjectReference Include="..\TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj" Condition="$(UseWinmd) == true" /> -->
+
+    <None Include="$(MSBuildThisFileDirectory)..\_build\$(Platform)\$(Configuration)\TestComponentCSharp\bin\TestComponentCSharp\TestComponentCSharp.dll">
+      <Link>TestComponentCSharp.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>True</Visible>
+    </None>
+
+	<Reference Include="TestComponentCSharp.winmd" Condition="$(UseWinmd) == true">
+		<HintPath>$(MSBuildThisFileDirectory)..\_build\$(Platform)\$(Configuration)\TestComponentCSharp\bin\TestComponentCSharp</HintPath>
+		<IsWinMDFile>true</IsWinMDFile>
+	</Reference>
 
     <!-- The Benchmark / BenchmarkCompnent reference doesn't seem to bring over the dll when building with dotnet cli, so including both dll and winmd as includes. -->
     <None Include="$(MSBuildThisFileDirectory)..\_build\$(Platform)\$(Configuration)\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.dll">
@@ -42,7 +69,7 @@
     </None>
 
   </ItemGroup>
-  
+
   <Target Name="FilterProjection" BeforeTargets="CoreCompile" Condition="$(UseWinmd) == false">
     <ItemGroup>
       <!--Remove references to projection source winmds to prevent compile conflict warnings-->

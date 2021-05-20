@@ -6445,4 +6445,68 @@ types
 ));
     }
 
+    std::vector<std::string> get_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics)
+    {
+        //auto&& x = w.write_temp("%", bind<write_generic_type_name>(0));
+
+        std::vector<std::string> genericArgs;
+        for_typedef(w, eventTypeSemantics, [&](TypeDef const& eventType)
+            {
+                std::cout << eventType.TypeName() <<" : ";
+                int i = 0;
+                for (auto&& genericParam : eventType.GenericParam())
+                {
+                    //std::cout << w.write_temp("%", bind<write_generic_type_name>(i));
+                    auto&& x =  w.write_temp("%", bind<write_generic_type_name>(i++));
+                    genericArgs.push_back(x);
+                }
+                std::cout << std::endl;
+            });
+        return genericArgs;
+    }
+
+    void write_event_source_subclass(writer& w, cswinrt::type_semantics eventTypeSemantics)
+    {
+        for_typedef(w, eventTypeSemantics, [&](TypeDef const& eventType)
+            {
+                std::vector<std::string_view> genericParams;
+                std::vector<std::string_view> empty;
+                for (auto genericParam : eventType.GenericParam())
+                {
+                    /*if (std::find(typeGenericParams.begin(), typeGenericParams.end(), genericParam.Name()) != typeGenericParams.end())
+                    {
+                        genericParams.push_back(genericParam.Name());
+                    }*/
+                    //write_type_params
+                    //write_generic_type_name()
+                }
+                auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
+                w.write(R"(
+    internal unsafe class % : EventSource<%>
+    {
+        internal %(IObjectReference obj,
+            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler) : base(obj, addHandler, removeHandler)
+        {
+        }
+
+        override protected System.Delegate EventInvoke
+        {
+            get
+            {
+                % handler = (%) =>
+                {
+                    %_event.Invoke(%);
+                };
+                return handler;
+            }
+        }
+    }
+)", bind<write_event_source_type_name>(eventType, genericParams), eventTypeCode, bind<write_event_source_type_name>(eventType, empty), eventTypeCode, bind<write_event_invoke_params>(eventType), bind<write_event_invoke_return>(eventType), bind<write_event_invoke_args>(eventType));
+
+                //helperWriter.write("\n\n");
+                //std::cout << eventTypeCode << ":\n" << typeNameToDefinitionMap[eventTypeCode] << std::endl << std::endl;
+            });
+    }
+
 }

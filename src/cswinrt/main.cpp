@@ -286,6 +286,7 @@ Where <spec> is one or more of:
                                 write_interface(w, type);
                                 for (auto&& eventObj : type.EventList())
                                 {
+                                    get_generic_args(helperWriter, get_type_semantics(eventObj.EventType()));
                                     for_typedef(helperWriter, get_type_semantics(eventObj.EventType()), [&](TypeDef const& eventType)
                                         {
                                             std::vector<std::string_view> genericParams;
