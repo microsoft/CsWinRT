@@ -454,30 +454,47 @@ namespace WinRT
         private protected override IntPtr GetThisPtrForCurrentContext()
         {
             IntPtr currentContext = Context.GetContextToken();
-            if (_contextCallbackPtr == IntPtr.Zero || currentContext == _contextToken)
+            ObjectReference<T> cachedObjRef;
+            if (_contextCallbackPtr == IntPtr.Zero ||
+                currentContext == _contextToken ||
+                (cachedObjRef = GetCachedContext(currentContext)) == null)
             {
                 return base.GetThisPtrForCurrentContext();
             }
 
-            return GetCachedContext(currentContext).ThisPtr;
+            return cachedObjRef.ThisPtr;
         }
 
         private protected override T GetVftblForCurrentContext()
         {
             IntPtr currentContext = Context.GetContextToken();
-            if (_contextCallbackPtr == IntPtr.Zero || currentContext == _contextToken)
+            ObjectReference<T> cachedObjRef;
+            if (_contextCallbackPtr == IntPtr.Zero ||
+                currentContext == _contextToken ||
+                (cachedObjRef = GetCachedContext(currentContext)) == null)
             {
                 return base.GetVftblForCurrentContext();
             }
 
-            return GetCachedContext(currentContext).Vftbl;
+            return cachedObjRef.Vftbl;
         }
 
         private ObjectReference<T> GetCachedContext(IntPtr context)
         {
-            return _cachedContext.Value.GetOrAdd(context, (_) =>
+            return _cachedContext.Value.GetOrAdd(context, GetForCurrentContext);
+
+            ObjectReference<T> GetForCurrentContext(IntPtr _)
             {
-                using var referenceInContext = _agileReference.Value.Get();
+                var agileReference = _agileReference.Value;
+                // During process termination, we may fail to switch context
+                // and thereby not get an agile reference.  In these cases,
+                // fallback to using the current context.
+                if (agileReference == null)
+                {
+                    return null;
+                }
+
+                using var referenceInContext = agileReference.Get();
                 if (_iid == Guid.Empty)
                 {
                     return referenceInContext.As<T>();
@@ -486,7 +503,7 @@ namespace WinRT
                 {
                     return referenceInContext.As<T>(_iid);
                 }
-            });
+            }
         }
 
         protected override unsafe void Release()
