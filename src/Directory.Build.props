@@ -27,6 +27,11 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <CsWinRTGuidPatchPath>$(MSBuildProjectDirectory)\Perf\GuidPatch\bin\$(Platform)\$(Configuration)\net5.0\</CsWinRTGuidPatchPath>
+    <CsWinRTGuidPatchRuntimePath>$(MSBuildProjectDirectory)\WinRT.Runtime\bin\$(Configuration)\net5.0\</CsWinRTGuidPatchRuntimePath>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <VersionNumber Condition="'$(VersionNumber)'==''">0.0.0.0</VersionNumber>
     <VersionString Condition="'$(VersionString)'==''">0.0.0-private.0</VersionString>
     <BuildPlatform>$(Platform)</BuildPlatform>

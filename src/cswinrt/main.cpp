@@ -119,6 +119,7 @@ Where <spec> is one or more of:
         int result{};
         writer w;
 
+        /* Special case the usage exceptions to print CLI options */
         try
         {
             auto start = get_start_time();

@@ -149,8 +149,34 @@ $(CsWinRTFilters)
 
   <!-- Call The GuidPatch tool on the projection .dll -->
   <Target Name="CsWinRTInvokeGuidPatcher" AfterTargets="Compile" BeforeTargets="Link">
-    <Message Text="Preparing to invoke GuidPatcher" />
-     
+
+    <!-- You can use a Directory.Build.props file to set two properties as the path to the patcher and the winrt.runtime used
+          - CsWinRTGuidPatchPath
+          - CsWinRTGuidPatchRuntimeDll
+    -->
+    <PropertyGroup>
+      <CsWinRTGuidPatchExePath Condition="'$(CsWinRTGuidPatchPath)' != ''">$(CsWinRTGuidPatchPath)</CsWinRTGuidPatchExePath>
+      <CsWinRTGuidPatchRuntimeDll Condition="'$(CsWinRTGuidPatchRuntimePath)' != ''">$(CsWinRTGuidPatchRuntimePath)</CsWinRTGuidPatchRuntimeDll> 
+
+      <CsWinRTGuidPatchExePath Condition="'$(CsWinRTGuidPatchPath)' == ''">$(CsWinRTPath)build\tools\</CsWinRTGuidPatchExePath>
+      <CsWinRTGuidPatchRuntimeDll Condition="'$(CsWinRTGuidPatchRuntimePath)' == ''">$(CsWinRTPath)lib\net5.0\</CsWinRTGuidPatchRuntimeDll> 
+
+      <CsWinRTGuidPatchInput Condition="'$(CsWinRTGuidPatchInput)' == ''">@(BuiltProjectOutputGroupKeyOutput->'%(Identity)')</CsWinRTGuidPatchInput>
+    </PropertyGroup>
+    
+
+    <Exec Command="$(CsWinRTGuidPatchExePath)GuidPatch.exe $(CsWinRTGuidPatchInput) $(CsWinRTGuidPatchRuntimeDll)" ConsoleToMsBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="CsWinRTGuidPatchOutput" />
+    </Exec>
+    <!-- Special case when the GuidPatcherOutput doesn't exist? -->
+    
+    <ItemGroup>
+      <PatchedFiles Include="$(_DirectoryBuildTargetsBasePath)\GuidPatcherOutput\*.dll" />
+    </ItemGroup>
+    
+    <!-- what is the file handed to Link ? Can we pass the output one along? -->
+    <Copy SourceFiles="@(PatchedFiles)" DestinationFolder="$(TargetDir)" />
+
   </Target>
   
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>

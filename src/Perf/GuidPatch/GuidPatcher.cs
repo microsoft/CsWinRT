@@ -30,7 +30,7 @@ namespace GuidPatch
         private readonly TypeDefinition guidDataBlockType;
         private SignatureGenerator signatureGenerator;
 
-        public GuidPatcher(string assemblyPath, IAssemblyResolver assemblyResolver)
+        public GuidPatcher(string assemblyPath, IAssemblyResolver assemblyResolver, AssemblyDefinition winRTRuntime)
         {
             assembly = AssemblyDefinition.ReadAssembly(assemblyPath, new ReaderParameters(ReadingMode.Deferred)
             {
@@ -42,7 +42,7 @@ namespace GuidPatch
                 ApplyWindowsRuntimeProjections = false
             });
 
-            winRTRuntimeAssembly = assemblyResolver.Resolve(new AssemblyNameReference("WinRT.Runtime", default));
+            winRTRuntimeAssembly = winRTRuntime; // assemblyResolver.Resolve(new AssemblyNameReference("WinRT.Runtime", default));
 
             guidImplementationDetailsType = new TypeDefinition(null, "<GuidPatcherImplementationDetails>", TypeAttributes.AutoClass | TypeAttributes.Sealed, assembly.MainModule.TypeSystem.Object);
 
