@@ -96,7 +96,7 @@ namespace WinRT
             // Resurrect IWinRTObject's disposed IObjectReferences, if necessary
             if (rcw is IWinRTObject winrtObj)
             {
-                winrtObj.Resurrect();
+//                winrtObj.Resurrect();
             }
 
             return rcw switch
@@ -142,7 +142,7 @@ namespace WinRT
             var target = rcw is Delegate del ? del.Target : rcw;
             if (target is IWinRTObject winrtObj)
             {
-                winrtObj.Resurrect();
+//                winrtObj.Resurrect();
             }
             return rcw;
         }
