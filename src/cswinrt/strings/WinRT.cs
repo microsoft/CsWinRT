@@ -354,7 +354,6 @@ namespace WinRT
                 return handler;
             }
         }
-
     }
 
     internal unsafe class EventSource<TDelegate>
@@ -468,6 +467,28 @@ namespace WinRT
             _token.Value = 0;
         }
     }
+
+    internal unsafe class EventSource__EventHandler<T> : EventSource<System.EventHandler<T>>
+    {
+        internal EventSource__EventHandler(IObjectReference obj,
+            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler) : base(obj, addHandler, removeHandler)
+        {
+        }
+
+        override protected System.Delegate EventInvoke
+        {
+            get
+            {
+                System.EventHandler<T> handler = (System.Object obj, T e) =>
+                {
+                    _event.Invoke(obj, e);
+                };
+                return handler;
+            }
+        }
+    }
+
 #pragma warning restore CA2002
 
     // An event registration token table stores mappings from delegates to event tokens, in order to support

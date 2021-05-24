@@ -226,51 +226,14 @@ Where <spec> is one or more of:
                                 }
                                 for (auto&& ii : type.InterfaceImpl())
                                 {
-                                    for_typedef(helperWriter, get_type_semantics(ii.Interface()), [&](TypeDef const& type)
+                                    auto const& containerType = type;
+                                    for_typedef(helperWriter, get_type_semantics(ii.Interface()), [&](TypeDef const& interfaceType)
                                     {
-                                        //std::cout << type.TypeName() << std::endl;
-                                        
-                                        for (auto&& eventObj : type.EventList())
+                                        for (auto&& eventObj : interfaceType.EventList())
                                         {
-                                            for_typedef(helperWriter, get_type_semantics(eventObj.EventType()), [&](TypeDef const& eventType)
-                                            {
-                                                std::vector<std::string_view> genericParams;
-                                                for (auto genericParam : eventType.GenericParam())
-                                                {
-                                                    if (std::find(typeGenericParams.begin(), typeGenericParams.end(), genericParam.Name()) != typeGenericParams.end())
-                                                    {
-                                                        genericParams.push_back(genericParam.Name());
-                                                    }
-                                                }
-                                                auto eventTypeCode = helperWriter.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
-                                                helperWriter.write(R"(
-    internal unsafe class % : EventSource<%>
-    {
-        internal %(IObjectReference obj,
-            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler) : base(obj, addHandler, removeHandler)
-        {
-        }
-
-        override protected System.Delegate EventInvoke
-        {
-            get
-            {
-                % handler = (%) =>
-                {
-                    %_event.Invoke(%);
-                };
-                return handler;
-            }
-        }
-    }
-)", bind<write_event_source_type_name>(eventType, genericParams), eventTypeCode, bind<write_event_source_type_name>(eventType, genericParams), eventTypeCode, bind<write_event_invoke_params>(eventType), bind<write_event_invoke_return>(eventType), bind<write_event_invoke_args>(eventType));
-                                                
-                                                helperWriter.write("\n\n");
-                                                typeNameToDefinitionMap[eventTypeCode] = helperWriter.flush_to_string();
-                                                //std::cout << eventTypeCode << ":\n" << typeNameToDefinitionMap[eventTypeCode] << std::endl << std::endl;
-                                            });
-
+                                            auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
+                                            auto&& eventTypeCode = helperWriter.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
+                                            typeNameToDefinitionMap[eventTypeCode] = helperWriter.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics, containerType));
                                         }
                                     });
                                 }
@@ -286,46 +249,9 @@ Where <spec> is one or more of:
                                 write_interface(w, type);
                                 for (auto&& eventObj : type.EventList())
                                 {
-                                    get_generic_args(helperWriter, get_type_semantics(eventObj.EventType()));
-                                    for_typedef(helperWriter, get_type_semantics(eventObj.EventType()), [&](TypeDef const& eventType)
-                                        {
-                                            std::vector<std::string_view> genericParams;
-                                            std::vector<std::string_view> empty;
-                                            for (auto genericParam : eventType.GenericParam())
-                                            {
-                                                if (std::find(typeGenericParams.begin(), typeGenericParams.end(), genericParam.Name()) != typeGenericParams.end())
-                                                {
-                                                    genericParams.push_back(genericParam.Name());
-                                                }
-                                            }
-                                            auto eventTypeCode = helperWriter.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
-                                            helperWriter.write(R"(
-    internal unsafe class % : EventSource<%>
-    {
-        internal %(IObjectReference obj,
-            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler) : base(obj, addHandler, removeHandler)
-        {
-        }
-
-        override protected System.Delegate EventInvoke
-        {
-            get
-            {
-                % handler = (%) =>
-                {
-                    %_event.Invoke(%);
-                };
-                return handler;
-            }
-        }
-    }
-)", bind<write_event_source_type_name>(eventType, genericParams), eventTypeCode, bind<write_event_source_type_name>(eventType, empty), eventTypeCode, bind<write_event_invoke_params>(eventType), bind<write_event_invoke_return>(eventType), bind<write_event_invoke_args>(eventType));
-
-                                            helperWriter.write("\n\n");
-                                            typeNameToDefinitionMap[eventTypeCode] = helperWriter.flush_to_string();
-                                            //std::cout << eventTypeCode << ":\n" << typeNameToDefinitionMap[eventTypeCode] << std::endl << std::endl;
-                                        });
+                                    auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
+                                    auto&& eventTypeCode = helperWriter.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
+                                    typeNameToDefinitionMap[eventTypeCode] = helperWriter.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics, type));
                                 }
                                 break;
                             case category::struct_type:
@@ -429,6 +355,7 @@ Where <spec> is one or more of:
             group.get();
             writer eventHelperWriter("WinRT");
             eventHelperWriter.write("namespace WinRT\n{\n%\n}", bind([&](writer& w) {
+                //write_special_event_sources(w);
                 for (auto&& [key, value] : typeNameToDefinitionMap)
                 {
                     w.write("%", value);
@@ -456,12 +383,12 @@ Where <spec> is one or more of:
         {
             print_usage(w);
         }
-        /*catch (std::exception const& e)
+        catch (std::exception const& e)
         {
             w.write(" error: %\n", e.what());
             result = 1;
             throw e;
-        }*/
+        }
 
         w.flush_to_console();
         return result;

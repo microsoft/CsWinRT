@@ -1,6 +1,6 @@
 ﻿using BenchmarkComponent;
-using TestComponentCSharp;
 using BenchmarkDotNet.Attributes;
+using System;
 
 namespace Benchmarks
 {
@@ -8,12 +8,11 @@ namespace Benchmarks
     public class ReflectionPerf
     {
         ClassWithMarshalingRoutines instance;
-        Class TestObject;
 
         [GlobalSetup]
         public void Setup()
         {
-            TestObject = new Class();
+            //TestObject = new Class();
             instance = new ClassWithMarshalingRoutines();
         }
 
@@ -65,24 +64,40 @@ namespace Benchmarks
         //    return instance.NewWrappedClassObject;
         //}
 
+        //[Benchmark]
+        //public void StringEventSource()
+        //{
+        //    string test_string = "x";
+        //    string test_string2 = "y";
+
+        //    // In hstring from managed->native implicitly creates hstring reference
+        //    TestObject.StringProperty = test_string;
+
+        //    // Out hstring from native->managed only creates System.String on demand
+        //    var sp = TestObject.StringProperty;
+
+        //    // Out hstring from managed->native always creates HString from System.String
+        //    TestObject.CallForString(() => test_string2);
+
+        //    // In hstring from native->managed only creates System.String on demand
+        //    TestObject.StringPropertyChanged += (Class sender, string value) => sender.StringProperty2 = value;
+        //    TestObject.RaiseStringChanged();
+        //}
+
         [Benchmark]
-        public void StringEventSource()
+        public void IntEventSource()
         {
-            string test_string = "x";
-            string test_string2 = "y";
+            ClassWithMarshalingRoutines instance = new ClassWithMarshalingRoutines();
 
-            // In hstring from managed->native implicitly creates hstring reference
-            TestObject.StringProperty = test_string;
+            int x = 0;
+            int y = 1;
+            int z;
 
-            // Out hstring from native->managed only creates System.String on demand
-            var sp = TestObject.StringProperty;
+            instance.IntProperty = x;
+            instance.CallForInt(() => y);
 
-            // Out hstring from managed->native always creates HString from System.String
-            TestObject.CallForString(() => test_string2);
-
-            // In hstring from native->managed only creates System.String on demand
-            TestObject.StringPropertyChanged += (Class sender, string value) => sender.StringProperty2 = value;
-            TestObject.RaiseStringChanged();
+            instance.IntPropertyChanged += (object sender, int value) => z = value;
+            instance.RaiseIntChanged();
         }
     }
 }
