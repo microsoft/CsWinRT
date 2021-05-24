@@ -27,8 +27,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <CsWinRTGuidPatchPath>$(MSBuildProjectDirectory)\Perf\GuidPatch\bin\$(Platform)\$(Configuration)\net5.0\</CsWinRTGuidPatchPath>
-    <CsWinRTGuidPatchRuntimePath>$(MSBuildProjectDirectory)\WinRT.Runtime\bin\$(Configuration)\net5.0\</CsWinRTGuidPatchRuntimePath>
+    <CsWinRTIIDOptimizerPath>$(MSBuildThisFileDirectory)Perf\IIDOptimizer\bin\$(Configuration)\net5.0\</CsWinRTIIDOptimizerPath>
+    <CsWinRTIIDOptimizerRuntimePath>$(MSBuildThisFileDirectory)WinRT.Runtime\bin\$(Configuration)\net5.0\</CsWinRTIIDOptimizerRuntimePath>
   </PropertyGroup>
 
   <PropertyGroup>

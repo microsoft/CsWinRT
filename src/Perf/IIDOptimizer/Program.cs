@@ -27,8 +27,8 @@ namespace GuidPatch
                         resolver,
                         winRTRuntimeAssembly);
                     int numPatches = guidPatcher.ProcessAssembly();
-                    Directory.CreateDirectory("GuidPatcherOutput");
-                    guidPatcher.SaveAssembly("GuidPatcherOutput");
+                    Directory.CreateDirectory("obj\\IIDOptimizer");
+                    guidPatcher.SaveAssembly("obj\\IIDOptimizer");
                     Console.WriteLine($"{numPatches} IID calculations/fetches patched");
                 }
                 catch (AssemblyResolutionException)

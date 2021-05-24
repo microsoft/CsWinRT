@@ -10,16 +10,6 @@ rem Install required .NET 5 SDK version and add to environment
 set DOTNET_ROOT=%LocalAppData%\Microsoft\dotnet
 set DOTNET_ROOT(86)=%LocalAppData%\Microsoft\dotnet\x86
 set path=%DOTNET_ROOT%;%path%
-powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
-&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTNet5SdkVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' ^
--AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
-powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
-&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTNet5SdkVersion%' -InstallDir '%DOTNET_ROOT(86)%' -Architecture 'x86' ^
--AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 
 :globaljson
 rem Create global.json for current .NET SDK, and with allowPrerelease=true
@@ -185,7 +175,7 @@ set net5_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net5.0\WinR
 set source_generator=%this_dir%Authoring\WinRT.SourceGenerator\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
 set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net5.0\WinRT.Host.Shim.dll
-set guid_patch=%this_dir%Perf\IIDOptimizer\bin\%cswinrt_configuration%\net5.0\*.*
+set guid_patch=%this_dir%Perf\GuidPatch\bin\%cswinrt_platform%\%cswinrt_configuration%\net5.0\GuidPatch.exe
 echo Creating nuget package
 call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;netstandard2_runtime=%netstandard2_runtime%;net5_runtime=%net5_runtime%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_shim=%winrt_shim%;guid_patch=%guid_patch% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
 goto :eof
