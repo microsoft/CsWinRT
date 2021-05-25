@@ -5,6 +5,10 @@
     <Platforms>x64;x86</Platforms>
   </PropertyGroup>
   
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <CsWinRTIIDOptimizerOptOut>true</CsWinRTIIDOptimizerOptOut>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\Tests\TestComponentCSharp\TestComponentCSharp.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\TestComponent\TestComponent.vcxproj" />
