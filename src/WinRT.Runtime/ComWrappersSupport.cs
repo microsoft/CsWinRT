@@ -72,6 +72,8 @@ namespace WinRT
                     Context.GetContextToken());
             }
 
+            // If we are free threaded, we do not need to keep track of context.
+            // This can either be if the object implements IAgileObject or the free threaded marshaler.
             unsafe bool IsFreeThreaded()
             {
                 if (unknownRef.TryAs<IUnknownVftbl>(typeof(ABI.WinRT.Interop.IAgileObject.Vftbl).GUID, out var agileRef) >= 0)
