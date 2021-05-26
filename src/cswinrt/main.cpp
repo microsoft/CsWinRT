@@ -179,8 +179,6 @@ Where <spec> is one or more of:
                         writer w(ns);
                         writer helperWriter("WinRT");
                         
-                        //if (ns != "Windows.System") return;
-                        std::cout << ns << std::endl;
                         w.write_begin();
                         bool written = false;
                         bool requires_abi = false;
@@ -224,6 +222,7 @@ Where <spec> is one or more of:
                                         write_factory_class(w, type);
                                     }
                                 }
+                                // Event source code generation:
                                 for (auto&& ii : type.InterfaceImpl())
                                 {
                                     auto const& containerType = type;
@@ -247,6 +246,7 @@ Where <spec> is one or more of:
                                 break;
                             case category::interface_type:
                                 write_interface(w, type);
+                                // Event source code generation:
                                 for (auto&& eventObj : type.EventList())
                                 {
                                     auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
@@ -355,7 +355,6 @@ Where <spec> is one or more of:
             group.get();
             writer eventHelperWriter("WinRT");
             eventHelperWriter.write("namespace WinRT\n{\n%\n}", bind([&](writer& w) {
-                //write_special_event_sources(w);
                 for (auto&& [key, value] : typeNameToDefinitionMap)
                 {
                     w.write("%", value);
@@ -397,7 +396,5 @@ Where <spec> is one or more of:
 
 int main(int const argc, char** argv)
 {
-    std::cout << "Started" << std::endl;
     return cswinrt::run(argc, argv);
-    std::cout << "Ended" << std::endl;
 }

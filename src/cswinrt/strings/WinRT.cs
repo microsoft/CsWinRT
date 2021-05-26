@@ -335,27 +335,6 @@ namespace WinRT
 
 #pragma warning disable CA2002
 
-    internal unsafe class EventSourceURI : EventSource<EventHandler<System.Uri>>
-    {
-        internal EventSourceURI(IObjectReference obj,
-            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler) : base(obj, addHandler, removeHandler)
-        {
-        }
-
-        override protected System.Delegate EventInvoke
-        {
-            get
-            {
-                EventHandler<System.Uri> handler = (Object obj, Uri e) =>
-                {
-                    _event.Invoke(obj, e);
-                };
-                return handler;
-            }
-        }
-    }
-
     internal unsafe class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
     {
