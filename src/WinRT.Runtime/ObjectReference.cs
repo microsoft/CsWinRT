@@ -486,9 +486,8 @@ namespace WinRT
             ObjectReference<T> GetForCurrentContext(IntPtr _)
             {
                 var agileReference = _agileReference.Value;
-                // During process termination, we may fail to switch context
-                // and thereby not get an agile reference.  In these cases,
-                // fallback to using the current context.
+                // We may fail to switch context and thereby not get an agile reference.
+                // In these cases, fallback to using the current context.
                 if (agileReference == null)
                 {
                     return null;

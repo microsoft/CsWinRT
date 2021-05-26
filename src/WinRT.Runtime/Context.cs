@@ -25,6 +25,10 @@ namespace WinRT
             return contextToken;
         }
 
+        // Calls the given callback in the right context.
+        // On any exception, calls onFail callback if any set.
+        // If not set, exception is handled due to today we don't
+        // have any scenario to propagate it from here.
         public unsafe static void CallInContext(IntPtr contextCallbackPtr, IntPtr contextToken, Action callback, Action onFailCallback)
         {
             // Check if we are already on the same context, if so we do not need to switch.
@@ -45,9 +49,9 @@ namespace WinRT
                     return 0;
                 }, &data, IID_ICallbackWithNoReentrancyToApplicationSTA, 5);
             } 
-            catch(Exception) when (onFailCallback != null)
+            catch(Exception)
             {
-                onFailCallback();
+                onFailCallback?.Invoke();
             }
         }
 
