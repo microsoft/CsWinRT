@@ -16,10 +16,6 @@
     <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.18362.2005" Condition="$(UseWinmd) == true"/>
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" Condition="$(UseWinmd) == false"/>
   </ItemGroup>
-
-  <Target Name="Print Test Path">
-	    <Message Text="HELOOO $(MSBuildThisFileDirectory)..\_build\$(Platform)\$(Configuration)\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.dll" Importance="high"/>
-    </Target>
 	
   <ItemGroup>
     <Reference Condition="'$(TargetFramework)' == 'netcoreapp2.0'" Include="$(MSBuildThisFileDirectory)..\Projections\Windows\bin\x64\Release\netstandard2.0\Windows.dll"></Reference>

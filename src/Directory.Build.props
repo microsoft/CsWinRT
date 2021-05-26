@@ -11,7 +11,7 @@
     <MicrosoftWinUIVersion>3.0.0-preview4.210210.4</MicrosoftWinUIVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <LangVersion>9.0</LangVersion>
+    <LangVersion>preview</LangVersion>
     <NoWarn>8305;0618</NoWarn>
     <GenerateTestProjection Condition="'$(GenerateTestProjection)$(Configuration)' == 'Release'">true</GenerateTestProjection>
     <GenerateTestProjection Condition="'$(GenerateTestProjection)' == ''">false</GenerateTestProjection>

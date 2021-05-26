@@ -1,5 +1,4 @@
 ﻿using BenchmarkComponent;
-//using TestComponentCSharp;
 using BenchmarkDotNet.Attributes;
 using Windows.ApplicationModel.Chat;
 

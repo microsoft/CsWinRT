@@ -335,7 +335,7 @@ Where <spec> is one or more of:
                         writer console;
                         console.write("error: '%' when processing %%%\n", e.what(), ns, currentType.empty() ? "" : ".", currentType);
                         console.flush_to_console();
-                        throw e;
+                        throw;
                     }
                 });
             }
