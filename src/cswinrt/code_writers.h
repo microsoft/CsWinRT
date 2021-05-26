@@ -2495,11 +2495,6 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
         }
     }
 
-    void write_event_source_definition(writer& w)
-    {
-
-    }
-
     void write_winrt_attribute(writer& w, TypeDef const& type)
     {
         std::filesystem::path db_path(type.get_database().path());
@@ -6467,7 +6462,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
             });
     }
 
-    void write_event_source_subclass(writer& w, cswinrt::type_semantics eventTypeSemantics, TypeDef const& containerType)
+    void write_event_source_subclass(writer& w, cswinrt::type_semantics eventTypeSemantics)
     {
         for_typedef(w, eventTypeSemantics, [&](TypeDef const& eventType)
             {

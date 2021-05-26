@@ -232,7 +232,7 @@ Where <spec> is one or more of:
                                         {
                                             auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
                                             auto&& eventTypeCode = helperWriter.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
-                                            typeNameToDefinitionMap[eventTypeCode] = helperWriter.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics, containerType));
+                                            typeNameToDefinitionMap[eventTypeCode] = helperWriter.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
                                         }
                                     });
                                 }
@@ -251,7 +251,7 @@ Where <spec> is one or more of:
                                 {
                                     auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
                                     auto&& eventTypeCode = helperWriter.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
-                                    typeNameToDefinitionMap[eventTypeCode] = helperWriter.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics, type));
+                                    typeNameToDefinitionMap[eventTypeCode] = helperWriter.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
                                 }
                                 break;
                             case category::struct_type:

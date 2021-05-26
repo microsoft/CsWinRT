@@ -8,9 +8,6 @@
     <ProjectName>cswinrt</ProjectName>
     <RootNamespace>cswinrt</RootNamespace>
   </PropertyGroup>
-	<Target Name="Targets Path Name">
-		<Message Text="PATH:   $(VCTargetsPath)" Importance="high"/>
-	</Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
