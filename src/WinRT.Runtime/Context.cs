@@ -7,6 +7,9 @@ namespace WinRT
     static class Context
     {
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
+        private static extern unsafe int CoGetContextToken(IntPtr* contextToken);
+
+        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         private static extern int CoGetObjectContext(ref Guid riid, out IntPtr ppv);
 
         private static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = Guid.Parse("0A299774-3E4E-FC42-1D9D-72CEE105CA57");
@@ -21,7 +24,7 @@ namespace WinRT
         public unsafe static IntPtr GetContextToken()
         {
             IntPtr contextToken;
-            Marshal.ThrowExceptionForHR(Platform.CoGetContextToken(&contextToken));
+            Marshal.ThrowExceptionForHR(CoGetContextToken(&contextToken));
             return contextToken;
         }
 

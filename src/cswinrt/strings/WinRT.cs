@@ -46,9 +46,6 @@ namespace WinRT
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         internal static extern unsafe int CoIncrementMTAUsage(IntPtr* cookie);
 
-        [DllImport("api-ms-win-core-com-l1-1-0.dll")]
-        internal static extern unsafe int CoGetContextToken(IntPtr* contextToken);
-
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool FreeLibrary(IntPtr moduleHandle);

@@ -2181,12 +2181,12 @@ namespace UnitTest
                 nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test"));
                 nonAgileObject.Commands.Add(new Windows.UI.Popups.UICommand("test2"));
                 Assert.ThrowsAny<System.Exception>(() => nonAgileObject.As<IAgileObject>());
-                agileReference = nonAgileObject.AsAgile();
 
+                agileReference = nonAgileObject.AsAgile();
                 objectAcquired.Set();
                 valueAcquired.WaitOne();
 
-                // Object gets proxied to apartment.
+                // Object gets proxied to the apartment.
                 Assert.Equal(2, proxyObject.Commands.Count);
                 agileReference.Dispose();
 
@@ -2197,7 +2197,6 @@ namespace UnitTest
             {
                 objectAcquired.WaitOne();
                 Assert.Equal(ApartmentState.MTA, Thread.CurrentThread.GetApartmentState());
-
                 proxyObject = agileReference.Get();
                 Assert.Equal(2, proxyObject.Commands.Count);
                 
@@ -2209,7 +2208,7 @@ namespace UnitTest
 
             public void CallProxyObject()
             {
-                // Call to proxy object after apartment is gone should throw
+                // Call to the proxy object after the apartment is gone should throw.
                 Assert.ThrowsAny<System.Exception>(() => proxyObject2.Commands);
             }
 
