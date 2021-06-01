@@ -13,7 +13,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <ProjectRuntimeConfigFileName>WinRT.Host.runtimeconfig.json</ProjectRuntimeConfigFileName>
     <!-- Make sure WinRT.Runtime.dll and Microsoft.Windows.SDK.NET.dll get binplaced with authored component's dll -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <CsWinRTDetectDependentAuthoringWinMDs>true</CsWinRTDetectDependentAuthoringWinMDs>
+    <CsWinRTDetectDependentAuthoringWinMDs Condition="'$(CsWinRTDetectDependentAuthoringWinMDs)'==''">true</CsWinRTDetectDependentAuthoringWinMDs>
   </PropertyGroup>
 
   <ItemGroup>
