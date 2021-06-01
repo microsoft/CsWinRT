@@ -193,11 +193,6 @@ Where <spec> is one or more of:
                             }
                             auto guard{ w.push_generic_params(type.GenericParam()) };
                             auto guard1{ helperWriter.push_generic_params(type.GenericParam()) };
-                            std::vector<std::string_view> typeGenericParams;
-                            for (auto&& genParam : type.GenericParam())
-                            {
-                                typeGenericParams.push_back(genParam.Name());
-                            }
 
                             bool type_requires_abi = true;
                             switch (get_category(type))
@@ -386,7 +381,6 @@ Where <spec> is one or more of:
         {
             w.write(" error: %\n", e.what());
             result = 1;
-            throw e;
         }
 
         w.flush_to_console();

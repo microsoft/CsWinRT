@@ -4,6 +4,7 @@
 #include <set>
 #include <filesystem>
 #include <iostream>
+#include <regex>
 
 namespace cswinrt
 {
@@ -462,15 +463,9 @@ namespace cswinrt
     void write_event_source_type_name(writer& w, type_semantics const& eventTypeSemantics)
     {
         auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
-        
         std::string eventTypeName = "_EventSource_" + eventTypeCode;
-        std::replace(eventTypeName.begin(), eventTypeName.end(), '<', '_');
-        std::replace(eventTypeName.begin(), eventTypeName.end(), '>', '_');
-        std::replace(eventTypeName.begin(), eventTypeName.end(), ':', '_');
-        std::replace(eventTypeName.begin(), eventTypeName.end(), ',', '_');
-        std::replace(eventTypeName.begin(), eventTypeName.end(), ' ', '_');
-        std::replace(eventTypeName.begin(), eventTypeName.end(), '.', '_');
-        w.write("%", eventTypeName);
+        std::regex re("(\\ |\\:|\\<|\\>|\\,|\\.)");
+        w.write("%", std::regex_replace(eventTypeName, re, "_"));
     }
 
     void write_event_invoke_params(writer& w, TypeDef const& eventType)
@@ -502,6 +497,23 @@ namespace cswinrt
             }
         }
         throw_invalid("Event type must have an Invoke method");
+    }
+
+    void write_event_invoke_return_default(writer& w, TypeDef const& eventType)
+    {
+        for (auto&& method : eventType.MethodList())
+        {
+            if (method.Name() == "Invoke")
+            {
+                method_signature methodSig(method);
+                if (!methodSig.return_signature())
+                {
+                    return;
+                }
+                auto&& semantics = get_type_semantics(methodSig.return_signature().Type());
+                w.write("default(%)", bind<write_projection_type>(semantics));
+            }
+        }
     }
 
     void write_event_invoke_args(writer& w, TypeDef const& eventType)
@@ -6474,6 +6486,8 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                 w.write(R"(
     internal unsafe class %% : EventSource<%>
     {
+        private % handler;
+
         internal %(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
             delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler) : base(obj, addHandler, removeHandler)
@@ -6484,10 +6498,17 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
         {
             get
             {
-                % handler = (%) =>
+                if (handler == null)
                 {
-                    %_event.Invoke(%);
-                };
+                    handler = (%) =>
+                    {
+                        if (_event == null)
+                        {
+                            return %;
+                        }
+                        %_event.Invoke(%);
+                    };
+                }
                 return handler;
             }
         }
@@ -6495,9 +6516,10 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
 )", bind<write_event_source_type_name>(eventTypeSemantics),
     bind<write_event_source_generic_args>(eventTypeSemantics),
     eventTypeCode, 
-    bind<write_event_source_type_name>(eventTypeSemantics),
-    eventTypeCode, 
+    eventTypeCode,
+    bind<write_event_source_type_name>(eventTypeSemantics), 
     bind<write_event_invoke_params>(eventType), 
+    bind<write_event_invoke_return_default>(eventType),
     bind<write_event_invoke_return>(eventType), 
     bind<write_event_invoke_args>(eventType));
             });
