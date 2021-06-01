@@ -68,7 +68,8 @@ namespace GuidPatch
                 {
                     new ParameterDefinition(new PointerType(assembly.MainModule.TypeSystem.Void)),
                     new ParameterDefinition(assembly.MainModule.TypeSystem.Int32),
-                }
+                },
+                HasThis = true
             });
 
             guidCtor = assembly.MainModule.ImportReference(guidType.Methods.First(m => m.IsConstructor && m.Parameters.Count == 1 && m.Parameters[0].ParameterType.Resolve() == readOnlySpanOfByte.Resolve()));

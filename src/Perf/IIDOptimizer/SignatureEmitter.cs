@@ -110,14 +110,28 @@ namespace GuidPatch
             Span<byte> hash = stackalloc byte[160];
             SHA1.HashData(data, hash);
 
-            // Encode rfc time/version/clock/reserved fields
-            hash[8] = (byte)((hash[8] & 0x3f) | 0x80);
+            if (BitConverter.IsLittleEndian)
+            {
+                // swap bytes of int a
+                byte t = hash[0];
+                hash[0] = hash[3];
+                hash[3] = t;
+                t = hash[1];
+                hash[1] = hash[2];
+                hash[2] = t;
+                // swap bytes of short b
+                t = hash[4];
+                hash[4] = hash[5];
+                hash[5] = t;
+                // swap bytes of short c and encode rfc time/version field
+                t = hash[6];
+                hash[6] = hash[7];
+                hash[7] = (byte)((t & 0x0f) | (5 << 4));
+                // encode rfc clock/reserved field
+                hash[8] = (byte)((hash[8] & 0x3f) | 0x80);
+            }
 
-            var iid = new Guid(
-                BinaryPrimitives.ReadInt32BigEndian(hash[0..4]),
-                BinaryPrimitives.ReadInt16BigEndian(hash[4..6]),
-                (short)((BinaryPrimitives.ReadInt16BigEndian(hash[6..8]) & 0xff0f) | (5 << 4)),
-                hash[8..16].ToArray());
+            var iid = new Guid(hash[0..16]);
 
             CecilExtensions.WriteIIDDataGetterBody(guidDataGetterMethod, describedType, iid, guidDataBlockType, implementationDetailsType, readOnlySpanOfByteCtor);
         }
