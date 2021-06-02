@@ -28,7 +28,7 @@ namespace WinRT
             }
         }
 
-        private protected virtual IntPtr ThisPtrFromOriginalContext
+        private protected IntPtr ThisPtrFromOriginalContext
         {
             get
             {
@@ -453,11 +453,8 @@ namespace WinRT
 
         private protected override IntPtr GetThisPtrForCurrentContext()
         {
-            IntPtr currentContext = Context.GetContextToken();
-            ObjectReference<T> cachedObjRef;
-            if (_contextCallbackPtr == IntPtr.Zero ||
-                currentContext == _contextToken ||
-                (cachedObjRef = GetCachedContext(currentContext)) == null)
+            ObjectReference<T> cachedObjRef = GetCurrentContext();
+            if (cachedObjRef == null)
             {
                 return base.GetThisPtrForCurrentContext();
             }
@@ -467,11 +464,8 @@ namespace WinRT
 
         private protected override T GetVftblForCurrentContext()
         {
-            IntPtr currentContext = Context.GetContextToken();
-            ObjectReference<T> cachedObjRef;
-            if (_contextCallbackPtr == IntPtr.Zero ||
-                currentContext == _contextToken ||
-                (cachedObjRef = GetCachedContext(currentContext)) == null)
+            ObjectReference<T> cachedObjRef = GetCurrentContext();
+            if (cachedObjRef == null)
             {
                 return base.GetVftblForCurrentContext();
             }
@@ -479,11 +473,21 @@ namespace WinRT
             return cachedObjRef.Vftbl;
         }
 
-        private ObjectReference<T> GetCachedContext(IntPtr context)
+        // Gets the object reference with respect to the current context.
+        // If we are already on the same context as when this object reference was
+        // created or failed to switch context, null is returned as the current base
+        // object reference should be used.
+        private ObjectReference<T> GetCurrentContext()
         {
-            return _cachedContext.Value.GetOrAdd(context, GetForCurrentContext);
+            IntPtr currentContext = Context.GetContextToken();
+            if (_contextCallbackPtr == IntPtr.Zero || currentContext == _contextToken)
+            {
+                return null;
+            }
 
-            ObjectReference<T> GetForCurrentContext(IntPtr _)
+            return _cachedContext.Value.GetOrAdd(currentContext, CreateForCurrentContext);
+
+            ObjectReference<T> CreateForCurrentContext(IntPtr _)
             {
                 var agileReference = _agileReference.Value;
                 // We may fail to switch context and thereby not get an agile reference.
