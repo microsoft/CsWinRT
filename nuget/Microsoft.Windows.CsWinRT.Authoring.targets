@@ -6,11 +6,48 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   
   <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Generate a RuntimeConfig -->
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <!-- Name the RuntimeConfig properly -->
     <ProjectRuntimeConfigFileName>WinRT.Host.runtimeconfig.json</ProjectRuntimeConfigFileName>
+    <!-- Make sure WinRT.Runtime.dll and Microsoft.Windows.SDK.NET.dll get binplaced with authored component's dll -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <CsWinRTDetectDependentAuthoringWinMDs Condition="'$(CsWinRTDetectDependentAuthoringWinMDs)'==''">true</CsWinRTDetectDependentAuthoringWinMDs>
   </PropertyGroup>
+
+  <ItemGroup>
+    <CompilerVisibleProperty Include="AssemblyName" />
+    <CompilerVisibleProperty Include="AssemblyVersion" />
+    <CompilerVisibleProperty Include="CsWinRTComponent" />
+    <CompilerVisibleProperty Include="CsWinRTEnableLogging" />
+    <CompilerVisibleProperty Include="CsWinRTGeneratedFilesDir" />
+    <CompilerVisibleProperty Include="CsWinRTExe" />
+    <CompilerVisibleProperty Include="CsWinRTKeepGeneratedSources" />
+    <CompilerVisibleProperty Include="CsWinRTWindowsMetadata" />
+    <CompilerVisibleProperty Include="CsWinRTGenerateProjection" />
+    <CompilerVisibleProperty Include="CsWinRTAuthoringInputs" />
+  </ItemGroup>
+
+  <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
+  <Target Name="CsWinRTSetAuthoringWinMDs" BeforeTargets="GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore" DependsOnTargets="CsWinRTRemoveWinMDReferences;GetAssemblyVersion;CsWinRTPrepareProjection" Condition="$(CsWinRTEnabled)">
+    <!-- Try to find WinMDs for respective projection DLLs by looking for WinMDs in the packages they come from. -->
+    <ItemGroup Condition="'$(CsWinRTDetectDependentAuthoringWinMDs)'=='true'">
+      <_CsWinRTRuntimeCopyLocalItemsFromNuGetPackage Include="@(RuntimeCopyLocalItems->HasMetadata('NuGetPackageVersion'))" />
+      <_CsWinRTDetectedPackages Include="%(_CsWinRTRuntimeCopyLocalItemsFromNuGetPackage.NuGetPackageId)\%(_CsWinRTRuntimeCopyLocalItemsFromNuGetPackage.NuGetPackageVersion)" Condition="@(_CsWinRTRuntimeCopyLocalItemsFromNuGetPackage->Count()) > 0" />
+      <_CsWinRTDetectedDistinctPackages Include="@(_CsWinRTDetectedPackages->Distinct())" />
+      <CsWinRTAuthoringDetectedWinMDs Include="$(NuGetPackageRoot)%(_CsWinRTDetectedDistinctPackages.Identity)\**\*.winmd" Condition="@(_CsWinRTDetectedDistinctPackages->Count()) > 0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <CsWinRTAuthoringWinMDs Include="@(CsWinRTAuthoringDetectedWinMDs)" />
+      <CsWinRTAuthoringWinMDs Include="@(CsWinRTInputs)" />
+      <CsWinRTAuthoringDistinctWinMDs Include="@(CsWinRTAuthoringWinMDs->Distinct())" />
+    </ItemGroup>
+    <PropertyGroup>
+      <CsWinRTAuthoringInputs>$(CsWinRTAuthoringInputs) @(CsWinRTAuthoringDistinctWinMDs->'"%(FullPath)"', ' ') </CsWinRTAuthoringInputs>
+    </PropertyGroup>
+  </Target>
 
   <!-- For Project Reference consumers, copy the necessary WinRT DLLs to output directory --> 
   <ItemGroup> 
@@ -159,6 +196,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <PackagePath>runtimes\win-arm64\native</PackagePath>
       </Content>
    </ItemGroup>
+  </Target>
+
+  <!-- Copy Authored winmd to output folder -->
+  <Target Name="CsWinRTPlaceWinMDInOutputFolder" BeforeTargets="AfterBuild">
+    <Copy SourceFiles="$(CsWinRTGeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>
