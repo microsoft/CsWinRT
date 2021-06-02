@@ -13,12 +13,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTEnabled Condition="'$(CsWinRTEnabled)' != 'true'">false</CsWinRTEnabled>
     <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
-    <AllowUnsafeBlocks Condition="'$(CsWinRTComponent)' == 'true'">true</AllowUnsafeBlocks>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
     <CoreCompileDependsOn>CsWinRTIncludeProjection;CsWinRTRemoveWinMDReferences;$(CoreCompileDependsOn)</CoreCompileDependsOn>
     <TrackFileAccess Condition="'$(CsWinRTComponent)' != 'true'">false</TrackFileAccess> 
-    <!-- Make sure WinRT.Runtime.dll and Microsoft.Windows.SDK.NET.dll get binplaced with authored component's dll -->
-    <CopyLocalLockFileAssemblies Condition="'$(CsWinRTComponent)' == 'true'">true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <!-- Remove WinRT.Host.dll and WinRT.Host.Shim.dll references -->
@@ -120,31 +117,6 @@ $(CsWinRTFilters)
     <ItemGroup>
       <Compile Include="$(CsWinRTGeneratedFilesDir)*.cs" Exclude="@(Compile)" />
     </ItemGroup>
-  </Target>
-
-  <ItemGroup Condition="'$(CsWinRTComponent)' == 'true'">
-    <CompilerVisibleProperty Include="AssemblyName" />
-    <CompilerVisibleProperty Include="AssemblyVersion" />
-    <CompilerVisibleProperty Include="CsWinRTComponent" />
-    <CompilerVisibleProperty Include="CsWinRTEnableLogging" />
-    <CompilerVisibleProperty Include="CsWinRTGeneratedFilesDir" />
-    <CompilerVisibleProperty Include="CsWinRTExe" />
-    <CompilerVisibleProperty Include="CsWinRTKeepGeneratedSources" />
-    <CompilerVisibleProperty Include="CsWinRTWindowsMetadata" />
-    <CompilerVisibleProperty Include="CsWinRTGenerateProjection" />
-    <CompilerVisibleProperty Include="CsWinRTAuthoringInputs" />
-  </ItemGroup>
-
-  <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
-  <Target Name="CsWinRTSetAuthoringWinMDs" BeforeTargets="GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore" DependsOnTargets="CsWinRTRemoveWinMDReferences;GetAssemblyVersion;CsWinRTPrepareProjection" Condition="$(CsWinRTEnabled) And '$(CsWinRTComponent)' == 'true'">
-    <PropertyGroup>
-      <CsWinRTAuthoringInputs>$(CsWinRTAuthoringInputs) @(CsWinRTInputs->'"%(FullPath)"', ' ') @(CsWinRTAuthoringWinMDs->'"%(FullPath)"', ' ')</CsWinRTAuthoringInputs>
-    </PropertyGroup>
-  </Target>
-
-  <!-- Copy Authored winmd to output folder -->
-  <Target Name="CsWinRTPlaceWinMDInOutputFolder" Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="AfterBuild">
-    <Copy SourceFiles="$(CsWinRTGeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>
 
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
