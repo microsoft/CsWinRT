@@ -117,7 +117,7 @@ namespace WinRT
                     var qiObjRef = objRef.As<IUnknownVftbl>(GuidGenerator.GetIID(helperType));
                     if (!QueryInterfaceCache.TryAdd(interfaceType, qiObjRef))
                     {
-                        objRef.Dispose();
+                        qiObjRef.Dispose();
                     }
                     return true;
                 }
