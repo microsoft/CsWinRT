@@ -39,7 +39,7 @@ namespace ABI.System.ComponentModel
 
         public static unsafe global::System.ComponentModel.PropertyChangedEventHandler FromAbi(IntPtr nativeDelegate)
         {
-            var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(nativeDelegate);
+            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface(nativeDelegate).As<IDelegateVftbl>(GuidGenerator.GetIID(typeof(PropertyChangedEventHandler)));
             return abiDelegate is null ? null : (global::System.ComponentModel.PropertyChangedEventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.ComponentModel.PropertyChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
         }
 
@@ -51,26 +51,10 @@ namespace ABI.System.ComponentModel
 #endif
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
-#if NETSTANDARD2_0
-            private readonly AgileReference _agileReference = default;
-#endif
 
             public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
             {
                 _nativeDelegate = nativeDelegate;
-                if (_nativeDelegate.TryAs<ABI.WinRT.Interop.IAgileObject.Vftbl>(out var objRef) < 0)
-                {
-                    var agileReference = new AgileReference(_nativeDelegate);
-#if NETSTANDARD2_0
-                    _agileReference = agileReference;
-#else
-                    ((IWinRTObject)this).AdditionalTypeData.TryAdd(typeof(AgileReference).TypeHandle, agileReference);
-#endif
-                }
-                else
-                {
-                    objRef.Dispose();
-                }
             }
 
 #if !NETSTANDARD2_0
@@ -82,16 +66,8 @@ namespace ABI.System.ComponentModel
 
             public void Invoke(object sender, global::System.ComponentModel.PropertyChangedEventArgs e)
             {
-#if NETSTANDARD2_0
-                var agileReference = _agileReference;
-#else
-                var agileReference = ((IWinRTObject)this).AdditionalTypeData.TryGetValue(typeof(AgileReference).TypeHandle, out var agileObj) ?
-                    (AgileReference)agileObj : null;
-#endif
-                using var agileDelegate = agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(PropertyChangedEventHandler)));
-                var delegateToInvoke = agileDelegate ?? _nativeDelegate;
-                IntPtr ThisPtr = delegateToInvoke.ThisPtr;
-                var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(delegateToInvoke.Vftbl.Invoke);
+                IntPtr ThisPtr = _nativeDelegate.ThisPtr;
+                var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(_nativeDelegate.Vftbl.Invoke);
                 IObjectReference __sender = default;
                 IObjectReference __e = default;
                 try
