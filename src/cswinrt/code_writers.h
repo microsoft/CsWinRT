@@ -5665,7 +5665,7 @@ public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>
 
 public static unsafe % FromAbi(IntPtr nativeDelegate)
 {
-var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(nativeDelegate);
+var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface(nativeDelegate).As<IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%)));
 return abiDelegate is null ? null : (%)ComWrappersSupport.TryRegisterObjectForInterface(new %(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
 }
 
@@ -5677,29 +5677,10 @@ private class NativeDelegateWrapper : IWinRTObject
 #endif
 {
 private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
-#if NETSTANDARD2_0
-private readonly AgileReference _agileReference = default;
-#endif
 
 public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
 {
 _nativeDelegate = nativeDelegate;
-#if NETSTANDARD2_0
-if (_nativeDelegate.TryAs<ABI.WinRT.Interop.IAgileObject.Vftbl>(out var objRef) < 0)
-{
-_agileReference = new AgileReference(_nativeDelegate);
-}
-#else
-if (_nativeDelegate.TryAs<IUnknownVftbl>(IAgileObject.IID, out var objRef) < 0)
-{
-var agileReference = new AgileReference(_nativeDelegate);
-((IWinRTObject)this).AdditionalTypeData.TryAdd(typeof(AgileReference).TypeHandle, agileReference);
-}
-#endif
-else
-{
-objRef.Dispose();
-}
 }
 
 #if !NETSTANDARD2_0
@@ -5711,14 +5692,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
 
 public unsafe % Invoke(%)
 {
-#if NETSTANDARD2_0
-var agileReference = _agileReference;
-#else
-var agileReference = ((IWinRTObject)this).AdditionalTypeData.TryGetValue(typeof(AgileReference).TypeHandle, out var agileObj) ? (AgileReference)agileObj : null;
-#endif
-using var agileDelegate = agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%))); 
-var delegateToInvoke = agileDelegate ?? _nativeDelegate;
-IntPtr ThisPtr = delegateToInvoke.ThisPtr;
+IntPtr ThisPtr = _nativeDelegate.ThisPtr;
 %%
 }
 }
@@ -5813,24 +5787,24 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             type_name,
             // FromAbi
             type_name,
+            type.TypeName(),
+            type_params,
             type_name,
             type_name,
             // NativeDelegateWrapper.Invoke
             bind<write_projection_return_type>(signature),
             bind_list<write_projection_parameter>(", ", signature.params()),
-            type.TypeName(),
-            type_params,
             bind([&](writer& w)
             {
                 if (is_generic || settings.netstandard_compat)
                 {
-                    w.write("var abiInvoke = Marshal.GetDelegateForFunctionPointer%(delegateToInvoke.Vftbl.Invoke%);",
+                    w.write("var abiInvoke = Marshal.GetDelegateForFunctionPointer%(_nativeDelegate.Vftbl.Invoke%);",
                         is_generic ? "" : "<Abi_Invoke>",
                         is_generic ? ", Abi_Invoke_Type" : "");
                 }
                 else
                 {
-                    w.write("var abiInvoke = (delegate* unmanaged[Stdcall]<%, int>)(delegateToInvoke.Vftbl.Invoke);",
+                    w.write("var abiInvoke = (delegate* unmanaged[Stdcall]<%, int>)(_nativeDelegate.Vftbl.Invoke);",
                         bind<write_abi_parameter_types>(signature));
                 }
             }),
