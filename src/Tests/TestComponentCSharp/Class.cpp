@@ -386,6 +386,82 @@ namespace winrt::TestComponentCSharp::implementation
         _bool = provideBool();
         _boolChanged(*this, _bool);
     }
+
+    TestComponentCSharp::EnumValue Class::EnumProperty()
+    {
+        return _enumValue;
+    }
+    void Class::EnumProperty(TestComponentCSharp::EnumValue const& value)
+    {
+        _enumValue = value;
+    }
+    winrt::event_token Class::EnumPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::EnumValue> const& handler)
+    {
+        return _enumChanged.add(handler);
+    }
+    void Class::EnumPropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _enumChanged.remove(token);
+    }
+    void Class::RaiseEnumChanged()
+    {
+        _enumChanged(*this, _enumValue);
+    }
+    void Class::CallForEnum(TestComponentCSharp::ProvideEnum const& provide)
+    {
+        _enumValue = provide();
+        _enumChanged(*this, _enumValue);
+    }
+    TestComponentCSharp::EnumStruct Class::EnumStructProperty()
+    {
+        return _enumStruct;
+    }
+    void Class::EnumStructProperty(TestComponentCSharp::EnumStruct const& value)
+    {
+        _enumStruct = value;
+    }
+    winrt::event_token Class::EnumStructPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::EnumStruct> const& handler)
+    {
+        return _enumStructChanged.add(handler);
+    }
+    void Class::EnumStructPropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _enumStructChanged.remove(token);
+    }
+    void Class::RaiseEnumStructChanged()
+    {
+        _enumStructChanged(*this, _enumStruct);
+    }
+    void Class::CallForEnumStruct(TestComponentCSharp::ProvideEnumStruct const& provide)
+    {
+        _enumStruct = provide();
+        _enumStructChanged(*this, _enumStruct);
+    }
+    com_array<TestComponentCSharp::EnumValue> Class::EnumsProperty()
+    {
+        return { _enums.begin(), _enums.end() };
+    }
+    void Class::EnumsProperty(array_view<TestComponentCSharp::EnumValue const> value)
+    {
+        _enums.assign(value.begin(), value.end());
+    }
+    void Class::CallForEnums(TestComponentCSharp::ProvideEnums const& provide)
+    {
+        EnumsProperty(provide());
+    }
+    com_array<TestComponentCSharp::EnumStruct> Class::EnumStructsProperty()
+    {
+        return { _enumStructs.begin(), _enumStructs.end() };
+    }
+    void Class::EnumStructsProperty(array_view<TestComponentCSharp::EnumStruct const> value)
+    {
+        _enumStructs.assign(value.begin(), value.end());
+    }
+    void Class::CallForEnumStructs(TestComponentCSharp::ProvideEnumStructs const& provide)
+    {
+        EnumStructsProperty(provide());
+    }
+
     hstring Class::StringProperty()
     {
         return _string;

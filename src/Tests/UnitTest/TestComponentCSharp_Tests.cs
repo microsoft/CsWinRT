@@ -52,6 +52,40 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestEnums()
+        {
+            var expectedEnum = EnumValue.Three;
+            TestObject.EnumProperty = expectedEnum;
+            Assert.Equal(expectedEnum, TestObject.EnumProperty);
+            expectedEnum = EnumValue.Two;
+            TestObject.CallForEnum(() => expectedEnum);
+            TestObject.EnumPropertyChanged +=
+                (object sender, EnumValue value) => Assert.Equal(expectedEnum, value);
+            TestObject.RaiseEnumChanged();
+
+            var expectedStruct = new EnumStruct() { value = EnumValue.Three };
+            TestObject.EnumStructProperty = expectedStruct;
+            Assert.Equal(expectedStruct, TestObject.EnumStructProperty);
+            expectedStruct = new EnumStruct() { value = EnumValue.Two };
+            TestObject.CallForEnumStruct(() => expectedStruct);
+            TestObject.EnumStructPropertyChanged +=
+                (object sender, EnumStruct value) => Assert.Equal(expectedStruct, value);
+            TestObject.RaiseEnumStructChanged();
+
+            var expectedEnums = new EnumValue[] { EnumValue.One, EnumValue.Two, EnumValue.Three };
+            TestObject.EnumsProperty = expectedEnums;
+            Assert.Equal(expectedEnums, TestObject.EnumsProperty);
+            TestObject.CallForEnums(() => expectedEnums);
+            Assert.Equal(expectedEnums, TestObject.EnumsProperty);
+
+            var expectedStructs = new EnumStruct[] { new EnumStruct(EnumValue.One), new EnumStruct(EnumValue.Two), new EnumStruct(EnumValue.Three) };
+            TestObject.EnumStructsProperty = expectedStructs;
+            Assert.Equal(expectedStructs, TestObject.EnumStructsProperty);
+            TestObject.CallForEnumStructs(() => expectedStructs);
+            Assert.Equal(expectedStructs, TestObject.EnumStructsProperty);
+        }
+
+        [Fact]
         public void TestGetByte()
         {
             var array = new byte[] { 0x01 };

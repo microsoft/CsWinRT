@@ -516,6 +516,8 @@ namespace WinRT
 
     public class MarshalNonBlittable<T> : MarshalGeneric<T>
     {
+        private static readonly new Type AbiType = typeof(T).IsEnum ? Enum.GetUnderlyingType(typeof(T)) : MarshalGeneric<T>.AbiType;
+
         public struct MarshalerArray
         {
             public void Dispose()
@@ -548,7 +550,7 @@ namespace WinRT
             try
             {
                 int length = array.Length;
-                var abi_element_size = Marshal.SizeOf(HelperType);
+                var abi_element_size = Marshal.SizeOf(AbiType);
                 var byte_length = length * abi_element_size;
                 m._array = Marshal.AllocCoTaskMem(byte_length);
                 m._marshalers = new object[length];
@@ -583,10 +585,10 @@ namespace WinRT
             var abi = ((int length, IntPtr data))box;
             var array = new T[abi.length];
             var data = (byte*)abi.data.ToPointer();
-            var abi_element_size = Marshal.SizeOf(HelperType);
+            var abi_element_size = Marshal.SizeOf(AbiType);
             for (int i = 0; i < abi.length; i++)
             {
-                var abi_element = Marshal.PtrToStructure((IntPtr)data, HelperType);
+                var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
                 array[i] = Marshaler<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
@@ -601,10 +603,10 @@ namespace WinRT
                 return;
             }
             var data = (byte*)abi.data.ToPointer();
-            var abi_element_size = Marshal.SizeOf(HelperType);
+            var abi_element_size = Marshal.SizeOf(AbiType);
             for (int i = 0; i < abi.length; i++)
             {
-                var abi_element = Marshal.PtrToStructure((IntPtr)data, HelperType);
+                var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
                 array[i] = Marshaler<T>.FromAbi(abi_element);
                 data += abi_element_size;
             }
@@ -628,7 +630,7 @@ namespace WinRT
             try
             {
                 int length = array.Length;
-                var abi_element_size = Marshal.SizeOf(HelperType);
+                var abi_element_size = Marshal.SizeOf(AbiType);
                 var byte_length = length * abi_element_size;
                 data = Marshal.AllocCoTaskMem(byte_length);
                 var bytes = (byte*)data.ToPointer();
@@ -658,7 +660,7 @@ namespace WinRT
             try
             {
                 int length = array.Length;
-                var abi_element_size = Marshal.SizeOf(HelperType);
+                var abi_element_size = Marshal.SizeOf(AbiType);
                 var byte_length = length * abi_element_size;
                 var bytes = (byte*)data.ToPointer();
                 for (i = 0; i < length; i++)
@@ -677,10 +679,10 @@ namespace WinRT
         public static unsafe void DisposeAbiArrayElements((int length, IntPtr data) abi)
         {
             var data = (byte*)abi.data.ToPointer();
-            var abi_element_size = Marshal.SizeOf(HelperType);
+            var abi_element_size = Marshal.SizeOf(AbiType);
             for (int i = 0; i < abi.length; i++)
             {
-                var abi_element = Marshal.PtrToStructure((IntPtr)data, HelperType);
+                var abi_element = Marshal.PtrToStructure((IntPtr)data, AbiType);
                 Marshaler<T>.DisposeAbi(abi_element);
                 data += abi_element_size;
             }
@@ -1195,13 +1197,23 @@ namespace WinRT
                     FromManaged = (T value) => value;
                     DisposeMarshaler = (object box) => { };
                     DisposeAbi = (object box) => { };
-                    CreateMarshalerArray = (T[] array) => MarshalBlittable<T>.CreateMarshalerArray(array);
-                    GetAbiArray = (object box) => MarshalBlittable<T>.GetAbiArray(box);
-                    FromAbiArray = (object box) => MarshalBlittable<T>.FromAbiArray(box);
-                    FromManagedArray = (T[] array) => MarshalBlittable<T>.FromManagedArray(array);
-                    CopyManagedArray = (T[] array, IntPtr data) => MarshalBlittable<T>.CopyManagedArray(array, data);
-                    DisposeMarshalerArray = (object box) => MarshalBlittable<T>.DisposeMarshalerArray(box);
-                    DisposeAbiArray = (object box) => MarshalBlittable<T>.DisposeAbiArray(box);
+                    if (type.IsEnum)
+                    {
+                        // For marshaling non-blittable enum arrays via MarshalNonBlittable
+                        unsafe void CopyEnum(object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)Convert.ChangeType(value, typeof(int));
+                        CopyAbi = (object value, IntPtr dest) => CopyEnum(value, dest);
+                        CopyManaged = (T value, IntPtr dest) => CopyEnum(value, dest);
+                    }
+                    else 
+                    { 
+                        CreateMarshalerArray = (T[] array) => MarshalBlittable<T>.CreateMarshalerArray(array);
+                        GetAbiArray = (object box) => MarshalBlittable<T>.GetAbiArray(box);
+                        FromAbiArray = (object box) => MarshalBlittable<T>.FromAbiArray(box);
+                        FromManagedArray = (T[] array) => MarshalBlittable<T>.FromManagedArray(array);
+                        CopyManagedArray = (T[] array, IntPtr data) => MarshalBlittable<T>.CopyManagedArray(array, data);
+                        DisposeMarshalerArray = (object box) => MarshalBlittable<T>.DisposeMarshalerArray(box);
+                        DisposeAbiArray = (object box) => MarshalBlittable<T>.DisposeAbiArray(box);
+                    }
                 }
                 else
                 {
