@@ -458,6 +458,7 @@ namespace WinRT
 
         override protected System.Delegate EventInvoke
         {
+            // This is synchronized from the base class
             get
             {
                 if (handler == null)

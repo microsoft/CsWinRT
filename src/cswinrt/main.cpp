@@ -217,20 +217,7 @@ Where <spec> is one or more of:
                                         write_factory_class(w, type);
                                     }
                                 }
-                                // Event source code generation:
-                                for (auto&& ii : type.InterfaceImpl())
-                                {
-                                    auto const& containerType = type;
-                                    for_typedef(helperWriter, get_type_semantics(ii.Interface()), [&](TypeDef const& interfaceType)
-                                    {
-                                        for (auto&& eventObj : interfaceType.EventList())
-                                        {
-                                            auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
-                                            auto&& eventTypeCode = helperWriter.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
-                                            typeNameToDefinitionMap[eventTypeCode] = helperWriter.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
-                                        }
-                                    });
-                                }
+                                write_temp_class_event_source_subclass(helperWriter, type, typeNameToDefinitionMap);
                                 break;
                             case category::delegate_type:
                                 write_delegate(w, type);
@@ -241,13 +228,7 @@ Where <spec> is one or more of:
                                 break;
                             case category::interface_type:
                                 write_interface(w, type);
-                                // Event source code generation:
-                                for (auto&& eventObj : type.EventList())
-                                {
-                                    auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
-                                    auto&& eventTypeCode = helperWriter.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
-                                    typeNameToDefinitionMap[eventTypeCode] = helperWriter.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
-                                }
+                                write_temp_interface_event_source_subclass(helperWriter, type, typeNameToDefinitionMap);
                                 break;
                             case category::struct_type:
                                 if (is_api_contract_type(type))

@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <iostream>
 #include <regex>
+#include <concurrent_unordered_map.h>
 
 namespace cswinrt
 {
@@ -464,70 +465,48 @@ namespace cswinrt
     {
         auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
         std::string eventTypeName = "_EventSource_" + eventTypeCode;
-        std::regex re("(\\ |\\:|\\<|\\>|\\,|\\.)");
+        std::regex re(R"-((\ |:|<|>|,|\.))-");
         w.write("%", std::regex_replace(eventTypeName, re, "_"));
     }
 
-    void write_event_invoke_params(writer& w, TypeDef const& eventType)
+    method_signature get_event_invoke_method(TypeDef const& eventType)
     {
         for (auto&& method : eventType.MethodList())
         {
             if (method.Name() == "Invoke")
             {
-                method_signature methodSig(method);
-                w.write("%", bind_list<write_projection_parameter>(", ", methodSig.params()));
-                return;
+                return method_signature(method);
             }
         }
         throw_invalid("Event type must have an Invoke method");
     }
 
-    void write_event_invoke_return(writer& w, TypeDef const& eventType)
+    void write_event_invoke_params(writer& w, method_signature const& methodSig)
     {
-        for (auto&& method : eventType.MethodList())
-        {
-            if (method.Name() == "Invoke")
-            {
-                method_signature methodSig(method);
-                if (methodSig.return_signature())
-                {
-                    w.write("return ");
-                }
-                return;
-            }
-        }
-        throw_invalid("Event type must have an Invoke method");
+        w.write("%", bind_list<write_projection_parameter>(", ", methodSig.params()));
     }
 
-    void write_event_invoke_return_default(writer& w, TypeDef const& eventType)
+    void write_event_invoke_return(writer& w, method_signature const& methodSig)
     {
-        for (auto&& method : eventType.MethodList())
+        if (methodSig.return_signature())
         {
-            if (method.Name() == "Invoke")
-            {
-                method_signature methodSig(method);
-                if (!methodSig.return_signature())
-                {
-                    return;
-                }
-                auto&& semantics = get_type_semantics(methodSig.return_signature().Type());
-                w.write("default(%)", bind<write_projection_type>(semantics));
-            }
+            w.write("return ");
         }
     }
 
-    void write_event_invoke_args(writer& w, TypeDef const& eventType)
+    void write_event_invoke_return_default(writer& w, method_signature const& methodSig)
     {
-        for (auto&& method : eventType.MethodList())
+        if (!methodSig.return_signature())
         {
-            if (method.Name() == "Invoke")
-            {
-                method_signature methodSig(method);
-                w.write("%", bind_list<write_projection_arg>(", ", methodSig.params()));
-                return;
-            }
+            return;
         }
-        throw_invalid("Event type must have an Invoke method");
+        auto&& semantics = get_type_semantics(methodSig.return_signature().Type());
+        w.write("default(%)", bind<write_projection_type>(semantics));
+    }
+
+    void write_event_invoke_args(writer& w, method_signature const& methodSig)
+    {
+        w.write("%", bind_list<write_projection_arg>(", ", methodSig.params()));
     }
 
     void write_abi_type(writer& w, type_semantics const& semantics)
@@ -2548,8 +2527,7 @@ db_path.stem().string());
 
     void write_event_source_ctor(writer& w, Event const& evt)
     {
-        bool isSpecialCase = false;
-        for_typedef(w, get_type_semantics(evt.EventType()), [&](TypeDef const& eventType)
+        if (for_typedef(w, get_type_semantics(evt.EventType()), [&](TypeDef const& eventType)
             {
                 if (eventType.TypeNamespace() == "System" && eventType.TypeName() == "EventHandler`1")
                 {
@@ -2558,15 +2536,17 @@ db_path.stem().string());
 new EventSource__EventHandler%(_obj,
 %,
 %))",
-                        bind<write_type_params>(eventType),
-                        get_invoke_info(w, add).first,
-                        get_invoke_info(w, remove).first);
-                    isSpecialCase = true;
+bind<write_type_params>(eventType),
+get_invoke_info(w, add).first,
+get_invoke_info(w, remove).first);
+                    return true;
                 }
-            });
-        
-        if (isSpecialCase)
+                return false;
+            }))
+        {
             return;
+        }
+
         auto [add, remove] = get_event_methods(evt);
         w.write(R"(
     new %%(_obj,
@@ -6483,6 +6463,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                     return;
                 }
                 auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
+                auto invokeMethodSig = get_event_invoke_method(eventType);
                 w.write(R"(
     internal unsafe class %% : EventSource<%>
     {
@@ -6513,16 +6494,42 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
             }
         }
     }
-)", bind<write_event_source_type_name>(eventTypeSemantics),
-    bind<write_event_source_generic_args>(eventTypeSemantics),
-    eventTypeCode, 
-    eventTypeCode,
-    bind<write_event_source_type_name>(eventTypeSemantics), 
-    bind<write_event_invoke_params>(eventType), 
-    bind<write_event_invoke_return_default>(eventType),
-    bind<write_event_invoke_return>(eventType), 
-    bind<write_event_invoke_args>(eventType));
-            });
+)",
+                    bind<write_event_source_type_name>(eventTypeSemantics),
+                    bind<write_event_source_generic_args>(eventTypeSemantics),
+                    eventTypeCode, 
+                    eventTypeCode,
+                    bind<write_event_source_type_name>(eventTypeSemantics), 
+                    bind<write_event_invoke_params>(invokeMethodSig),
+                    bind<write_event_invoke_return_default>(invokeMethodSig),
+                    bind<write_event_invoke_return>(invokeMethodSig),
+                    bind<write_event_invoke_args>(invokeMethodSig));
+                });
     }
 
+    void write_temp_class_event_source_subclass(writer& w, TypeDef const& classType, concurrency::concurrent_unordered_map<std::string, std::string>& typeNameToDefinitionMap)
+    {
+        for (auto&& ii : classType.InterfaceImpl())
+        {
+            for_typedef(w, get_type_semantics(ii.Interface()), [&](TypeDef const& interfaceType)
+                {
+                    for (auto&& eventObj : interfaceType.EventList())
+                    {
+                        auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
+                        auto&& eventTypeCode = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
+                        typeNameToDefinitionMap[eventTypeCode] = w.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
+                    }
+                });
+        }
+    }
+
+    void write_temp_interface_event_source_subclass(writer& w, TypeDef const& interfaceType, concurrency::concurrent_unordered_map<std::string, std::string>& typeNameToDefinitionMap)
+    {
+        for (auto&& eventObj : interfaceType.EventList())
+        {
+            auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
+            auto&& eventTypeCode = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
+            typeNameToDefinitionMap[eventTypeCode] = w.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
+        }
+    }
 }
