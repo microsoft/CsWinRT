@@ -1200,7 +1200,17 @@ namespace WinRT
                     if (type.IsEnum)
                     {
                         // For marshaling non-blittable enum arrays via MarshalNonBlittable
-                        unsafe void CopyEnum(object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)Convert.ChangeType(value, typeof(int));
+                        unsafe void CopyEnum(object value, IntPtr dest) 
+                        {
+                            if (type.GetEnumUnderlyingType() == typeof(int))
+                            { 
+                                *(int*)dest.ToPointer() = (int)Convert.ChangeType(value, typeof(int));
+                            }
+                            else
+                            {
+                                *(uint*)dest.ToPointer() = (uint)Convert.ChangeType(value, typeof(uint));
+                            }
+                        }
                         CopyAbi = (object value, IntPtr dest) => CopyEnum(value, dest);
                         CopyManaged = (T value, IntPtr dest) => CopyEnum(value, dest);
                     }

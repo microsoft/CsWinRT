@@ -462,6 +462,81 @@ namespace winrt::TestComponentCSharp::implementation
         EnumStructsProperty(provide());
     }
 
+    TestComponentCSharp::FlagValue Class::FlagProperty()
+    {
+        return _flagValue;
+    }
+    void Class::FlagProperty(TestComponentCSharp::FlagValue const& value)
+    {
+        _flagValue = value;
+    }
+    winrt::event_token Class::FlagPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::FlagValue> const& handler)
+    {
+        return _flagChanged.add(handler);
+    }
+    void Class::FlagPropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _flagChanged.remove(token);
+    }
+    void Class::RaiseFlagChanged()
+    {
+        _flagChanged(*this, _flagValue);
+    }
+    void Class::CallForFlag(TestComponentCSharp::ProvideFlag const& provide)
+    {
+        _flagValue = provide();
+        _flagChanged(*this, _flagValue);
+    }
+    TestComponentCSharp::FlagStruct Class::FlagStructProperty()
+    {
+        return _flagStruct;
+    }
+    void Class::FlagStructProperty(TestComponentCSharp::FlagStruct const& value)
+    {
+        _flagStruct = value;
+    }
+    winrt::event_token Class::FlagStructPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::FlagStruct> const& handler)
+    {
+        return _flagStructChanged.add(handler);
+    }
+    void Class::FlagStructPropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _flagStructChanged.remove(token);
+    }
+    void Class::RaiseFlagStructChanged()
+    {
+        _flagStructChanged(*this, _flagStruct);
+    }
+    void Class::CallForFlagStruct(TestComponentCSharp::ProvideFlagStruct const& provide)
+    {
+        _flagStruct = provide();
+        _flagStructChanged(*this, _flagStruct);
+    }
+    com_array<TestComponentCSharp::FlagValue> Class::FlagsProperty()
+    {
+        return { _flags.begin(), _flags.end() };
+    }
+    void Class::FlagsProperty(array_view<TestComponentCSharp::FlagValue const> value)
+    {
+        _flags.assign(value.begin(), value.end());
+    }
+    void Class::CallForFlags(TestComponentCSharp::ProvideFlags const& provide)
+    {
+        FlagsProperty(provide());
+    }
+    com_array<TestComponentCSharp::FlagStruct> Class::FlagStructsProperty()
+    {
+        return { _flagStructs.begin(), _flagStructs.end() };
+    }
+    void Class::FlagStructsProperty(array_view<TestComponentCSharp::FlagStruct const> value)
+    {
+        _flagStructs.assign(value.begin(), value.end());
+    }
+    void Class::CallForFlagStructs(TestComponentCSharp::ProvideFlagStructs const& provide)
+    {
+        FlagStructsProperty(provide());
+    }
+
     hstring Class::StringProperty()
     {
         return _string;

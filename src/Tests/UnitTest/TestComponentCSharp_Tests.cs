@@ -54,35 +54,67 @@ namespace UnitTest
         [Fact]
         public void TestEnums()
         {
-            var expectedEnum = EnumValue.Three;
+            // Enums
+            var expectedEnum = EnumValue.Two;
             TestObject.EnumProperty = expectedEnum;
             Assert.Equal(expectedEnum, TestObject.EnumProperty);
-            expectedEnum = EnumValue.Two;
+            expectedEnum = EnumValue.One;
             TestObject.CallForEnum(() => expectedEnum);
             TestObject.EnumPropertyChanged +=
                 (object sender, EnumValue value) => Assert.Equal(expectedEnum, value);
             TestObject.RaiseEnumChanged();
 
-            var expectedStruct = new EnumStruct() { value = EnumValue.Three };
-            TestObject.EnumStructProperty = expectedStruct;
-            Assert.Equal(expectedStruct, TestObject.EnumStructProperty);
-            expectedStruct = new EnumStruct() { value = EnumValue.Two };
-            TestObject.CallForEnumStruct(() => expectedStruct);
+            var expectedEnumStruct = new EnumStruct() { value = EnumValue.Two };
+            TestObject.EnumStructProperty = expectedEnumStruct;
+            Assert.Equal(expectedEnumStruct, TestObject.EnumStructProperty);
+            expectedEnumStruct = new EnumStruct() { value = EnumValue.One };
+            TestObject.CallForEnumStruct(() => expectedEnumStruct);
             TestObject.EnumStructPropertyChanged +=
-                (object sender, EnumStruct value) => Assert.Equal(expectedStruct, value);
+                (object sender, EnumStruct value) => Assert.Equal(expectedEnumStruct, value);
             TestObject.RaiseEnumStructChanged();
 
-            var expectedEnums = new EnumValue[] { EnumValue.One, EnumValue.Two, EnumValue.Three };
+            var expectedEnums = new EnumValue[] { EnumValue.One, EnumValue.Two };
             TestObject.EnumsProperty = expectedEnums;
             Assert.Equal(expectedEnums, TestObject.EnumsProperty);
             TestObject.CallForEnums(() => expectedEnums);
             Assert.Equal(expectedEnums, TestObject.EnumsProperty);
 
-            var expectedStructs = new EnumStruct[] { new EnumStruct(EnumValue.One), new EnumStruct(EnumValue.Two), new EnumStruct(EnumValue.Three) };
-            TestObject.EnumStructsProperty = expectedStructs;
-            Assert.Equal(expectedStructs, TestObject.EnumStructsProperty);
-            TestObject.CallForEnumStructs(() => expectedStructs);
-            Assert.Equal(expectedStructs, TestObject.EnumStructsProperty);
+            var expectedEnumStructs = new EnumStruct[] { new EnumStruct(EnumValue.One), new EnumStruct(EnumValue.Two) };
+            TestObject.EnumStructsProperty = expectedEnumStructs;
+            Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
+            TestObject.CallForEnumStructs(() => expectedEnumStructs);
+            Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
+
+            // Flags
+            var expectedFlag = FlagValue.All;
+            TestObject.FlagProperty = expectedFlag;
+            Assert.Equal(expectedFlag, TestObject.FlagProperty);
+            expectedFlag = FlagValue.One;
+            TestObject.CallForFlag(() => expectedFlag);
+            TestObject.FlagPropertyChanged +=
+                (object sender, FlagValue value) => Assert.Equal(expectedFlag, value);
+            TestObject.RaiseFlagChanged();
+
+            var expectedFlagStruct = new FlagStruct() { value = FlagValue.All };
+            TestObject.FlagStructProperty = expectedFlagStruct;
+            Assert.Equal(expectedFlagStruct, TestObject.FlagStructProperty);
+            expectedFlagStruct = new FlagStruct() { value = FlagValue.One };
+            TestObject.CallForFlagStruct(() => expectedFlagStruct);
+            TestObject.FlagStructPropertyChanged +=
+                (object sender, FlagStruct value) => Assert.Equal(expectedFlagStruct, value);
+            TestObject.RaiseFlagStructChanged();
+
+            var expectedFlags = new FlagValue[] { FlagValue.One, FlagValue.All };
+            TestObject.FlagsProperty = expectedFlags;
+            Assert.Equal(expectedFlags, TestObject.FlagsProperty);
+            TestObject.CallForFlags(() => expectedFlags);
+            Assert.Equal(expectedFlags, TestObject.FlagsProperty);
+
+            var expectedFlagStructs = new FlagStruct[] { new FlagStruct(FlagValue.One), new FlagStruct(FlagValue.All) };
+            TestObject.FlagStructsProperty = expectedFlagStructs;
+            Assert.Equal(expectedFlagStructs, TestObject.FlagStructsProperty);
+            TestObject.CallForFlagStructs(() => expectedFlagStructs);
+            Assert.Equal(expectedFlagStructs, TestObject.FlagStructsProperty);
         }
 
         [Fact]
