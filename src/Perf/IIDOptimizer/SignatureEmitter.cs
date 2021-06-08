@@ -20,6 +20,13 @@ namespace GuidPatch
         private readonly Dictionary<GenericParameter, GenericParameter> getterParameterToOriginalGenericParameterMapping = new();
         private readonly TypeReference describedType;
         private readonly MethodDefinition guidDataGetterMethod;
+        private Logger Logger { get; set; }
+
+        // OptimizerDir is the path our current process should use to write logs and patched DLLs to
+        public string OptimizerDir
+        {
+            get { return "obj\\IIDOptimizer"; }
+        }
 
         public IReadOnlyDictionary<GenericParameter, GenericParameter> GenericParameterMapping => getterParameterToOriginalGenericParameterMapping;
 
@@ -31,11 +38,18 @@ namespace GuidPatch
 
         sealed record RuntimeCustomSignatureStep(MethodReference method) : SignatureStep;
 
-        public SignatureEmitter(TypeReference describedType, MethodDefinition guidDataGetterMethod)
+        public SignatureEmitter(TypeReference describedType, MethodDefinition guidDataGetterMethod, Logger logger)
         {
             this.describedType = describedType;
             this.guidDataGetterMethod = guidDataGetterMethod;
+
+            /*
+             *  Initialize the logger with the OptimizerDir property 
+             */
+            Logger = logger; // new Logger(OptimizerDir, "emitter.log.txt");
         }
+
+        public void CloseLogger() { Logger.Close(); }
 
         public void PushString(string str)
         {
@@ -138,6 +152,11 @@ namespace GuidPatch
 
         private void GenerateGuidFactoryFromComplexSignature(TypeDefinition implementationDetailsType, TypeReference readOnlySpanOfByte, MethodReference readOnlySpanOfBytePtrCtor, TypeDefinition guidGeneratorType)
         {
+            /*
+            Logger.Log("GenerateGuidFactoryFromComplexSignature");
+            Logger.TLog($"implementationDetailsType : {implementationDetailsType}");
+            Logger.TLog($"guidGeneratorType : {guidGeneratorType}");
+            */
             var module = implementationDetailsType.Module;
 
             var readOnlySpanOfByteArrayCtor = module.ImportReference(
@@ -217,6 +236,8 @@ namespace GuidPatch
                 {
                     case StringStep(string str):
                         {
+                            // Logger.Log("(1) StringStep");
+                            // Logger.TLog($"str = {str}");
                             byte[] segmentBytes = Encoding.UTF8.GetBytes(str);
                             var staticDataField = new FieldDefinition($"<SignatureDataPart={i}>", FieldAttributes.Private | FieldAttributes.InitOnly | FieldAttributes.Static | FieldAttributes.HasFieldRVA, CecilExtensions.GetOrCreateDataBlockType(implementationDetailsType, segmentBytes.Length))
                             {
@@ -238,6 +259,8 @@ namespace GuidPatch
                         break;
                     case RuntimeGenericSignatureStep(_, GenericParameter localTypeParameter):
                         {
+                            // Logger.Log("(2) RuntimeGenericSignatureStep");
+                            // Logger.TLog($"localTypeParameter = {localTypeParameter}");
                             // byte[] bytes = Encoding.UTF8.GetBytes(GetSignature(typeof(localTypeParameter)))
                             il.Emit(OpCodes.Call, utf8EncodingGetter);
                             il.Emit(OpCodes.Ldtoken, localTypeParameter);
@@ -257,6 +280,9 @@ namespace GuidPatch
                         break;
                     case RuntimeCustomSignatureStep(MethodReference customSignatureMethod):
                         {
+                            /// not called 
+                            // Logger.Log("(3) RuntimeCustomSignatureStep");
+                            // Logger.TLog($"customSignatureMethod = {customSignatureMethod}");
                             // byte[] bytes = Encoding.UTF8.GetBytes(customSignatureMethod())
                             il.Emit(OpCodes.Call, utf8EncodingGetter);
                             il.Emit(OpCodes.Call, customSignatureMethod);

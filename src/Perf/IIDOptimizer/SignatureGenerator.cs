@@ -29,23 +29,28 @@ namespace GuidPatch
 
     record BasicSignaturePart(SignatureType Type) : SignaturePart;
 
-    abstract record SignatureWithChildren(string GroupingName, string ThisEntitySignature, IEnumerable<SignaturePart> ChildrenSignatures) : SignaturePart;
-
-    sealed record GenericSignature(Guid BaseGuid, IEnumerable<SignaturePart> GenericMemberSignatures) : SignatureWithChildren("pinterface", BaseGuid.ToString("B"), GenericMemberSignatures);
-
-    sealed record ValueTypeSignature(TypeReference Type, IEnumerable<SignaturePart> StructFieldSignatures) : SignatureWithChildren("struct", Type.FullName, StructFieldSignatures);
-
-    sealed record RuntimeClassSignature(TypeReference RuntimeClass, SignaturePart DefaultInterfaceSignature) : SignatureWithChildren("rc", RuntimeClass.FullName, new[] { DefaultInterfaceSignature });
-
-    sealed record EnumSignature(TypeReference Type, bool IsFlagEnum) : SignatureWithChildren("enum", Type.FullName, new SignaturePart[] { new BasicSignaturePart(IsFlagEnum ? SignatureType.u4 : SignatureType.i4) });
-
-    sealed record NonGenericDelegateSignature(Guid DelegateIID) : SignaturePart;
-
     sealed record GuidSignature(Guid IID) : SignaturePart;
 
-    sealed record UninstantiatedGeneric(GenericParameter OriginalGenericParameter) : SignaturePart;
 
     sealed record CustomSignatureMethod(MethodReference Method) : SignaturePart;
+
+    sealed record NonGenericDelegateSignature(Guid DelegateIID) : SignaturePart;
+    
+    sealed record UninstantiatedGeneric(GenericParameter OriginalGenericParameter) : SignaturePart;
+
+    abstract record SignatureWithChildren(string GroupingName, string ThisEntitySignature, IEnumerable<SignaturePart> ChildrenSignatures) : SignaturePart;
+
+    sealed record GenericSignature(Guid BaseGuid, IEnumerable<SignaturePart> GenericMemberSignatures) : 
+        SignatureWithChildren("pinterface", BaseGuid.ToString("B"), GenericMemberSignatures);
+
+    sealed record ValueTypeSignature(TypeReference Type, IEnumerable<SignaturePart> StructFieldSignatures) : 
+        SignatureWithChildren("struct", Type.FullName, StructFieldSignatures);
+
+    sealed record RuntimeClassSignature(TypeReference RuntimeClass, SignaturePart DefaultInterfaceSignature) : 
+        SignatureWithChildren("rc", RuntimeClass.FullName, new[] { DefaultInterfaceSignature });
+
+    sealed record EnumSignature(TypeReference Type, bool IsFlagEnum) : 
+        SignatureWithChildren("enum", Type.FullName, new SignaturePart[] { new BasicSignaturePart(IsFlagEnum ? SignatureType.u4 : SignatureType.i4) });
 
     sealed class SignatureGenerator
     {
@@ -53,11 +58,12 @@ namespace GuidPatch
         private readonly TypeDefinition guidAttributeType;
         private readonly AssemblyDefinition winRTRuntimeAssembly;
 
-        public SignatureGenerator(AssemblyDefinition assembly, TypeDefinition guidAttributeType, AssemblyDefinition winRTRuntimeAssembly)
+        /* Constructor: paramterized by the projection, the guid type (?), and the winrt.runtime (could use winrt.runtime.dll version 1.2.1 or 1.2.5 */
+        public SignatureGenerator(AssemblyDefinition assembly, TypeDefinition guidAttributeType, AssemblyDefinition runtimeAssembly)
         {
             this.assembly = assembly;
             this.guidAttributeType = guidAttributeType;
-            this.winRTRuntimeAssembly = winRTRuntimeAssembly;
+            this.winRTRuntimeAssembly = runtimeAssembly;
         }
 
         public SignaturePart GetSignatureParts(TypeReference type)

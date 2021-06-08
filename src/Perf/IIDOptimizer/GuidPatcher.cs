@@ -29,9 +29,24 @@ namespace GuidPatch
         private readonly TypeDefinition guidImplementationDetailsType;
         private readonly TypeDefinition guidDataBlockType;
         private SignatureGenerator signatureGenerator;
+        private Logger Logger { get; }
+        
+        // OptimizerDir is the path our current process should use to write logs and patched DLLs to
+        public string OptimizerDir
+        {
+            get { return "obj\\IIDOptimizer"; }
+        }
 
         public GuidPatcher(string assemblyPath, IAssemblyResolver assemblyResolver, AssemblyDefinition winRTRuntime)
         {
+            /*
+             *  Initialize the logger with the OptimizerDir property 
+             */
+            Logger = new Logger(OptimizerDir, "log.txt");
+
+            /*
+             *  Initialize readonly fields 
+             */            
             assembly = AssemblyDefinition.ReadAssembly(assemblyPath, new ReaderParameters(ReadingMode.Deferred)
             {
                 ReadWrite = true,
@@ -42,7 +57,6 @@ namespace GuidPatch
                 ApplyWindowsRuntimeProjections = false
             });
 
-            winRTRuntimeAssembly = winRTRuntime; // assemblyResolver.Resolve(new AssemblyNameReference("WinRT.Runtime", default));
 
             guidImplementationDetailsType = new TypeDefinition(null, "<GuidPatcherImplementationDetails>", TypeAttributes.AutoClass | TypeAttributes.Sealed, assembly.MainModule.TypeSystem.Object);
 
@@ -110,6 +124,8 @@ namespace GuidPatch
             {
                 return 0;
             }
+
+            Logger.Log($"Processing assembly: {assembly}.");
             int numPatches = 0;
             var methods = from module in assembly.Modules
                           from type in module.Types
@@ -122,6 +138,7 @@ namespace GuidPatch
                 numPatches += ProcessMethodBody(method.Body, getTypeFromHandleMethod, getIidMethod!, createIidMethod!);
             }
 
+            Logger.Close();
             return numPatches;
         }
 
@@ -138,6 +155,149 @@ namespace GuidPatch
             GetHelperTypeOptional
         }
 
+        private bool PatchNonGenericTypeIID(MethodBody body, int startILIndex, TypeReference type, int numberOfInstructionsToOverwrite)
+        {
+            /*
+            Logger.Log($"PatchNonGenericTypeIID");
+            Logger.Log($"\tbody.Method = {body.Method}.");
+            Logger.Log($"\ttype = {type}.");
+            */
+            if (numberOfInstructionsToOverwrite < 2)
+            {
+                return false;
+            }
+
+            if (!ClosedTypeGuidDataMapping.TryGetValue(type, out var guidDataMethod))
+            {
+                Guid? guidValue = type.ReadGuidFromAttribute(guidAttributeType!, winRTRuntimeAssembly);
+                if (guidValue == null)
+                {
+                    return false;
+                }
+
+                guidDataMethod = CecilExtensions.CreateIIDDataGetter(type, guidValue.Value, guidDataBlockType, guidImplementationDetailsType, readOnlySpanOfByte, readOnlySpanOfByteCtor);
+
+                guidImplementationDetailsType.Methods.Add(guidDataMethod);
+                ClosedTypeGuidDataMapping[type] = guidDataMethod;
+            }
+
+            ReplaceWithCallToGuidDataGetter(body, startILIndex, numberOfInstructionsToOverwrite, guidDataMethod);
+
+            return true;
+        }
+
+        private bool PatchGenericTypeIID(MethodBody body, int startILIndex, TypeReference type, int numberOfInstructionsToOverwrite)
+        {
+            /*
+            Logger.Log($"PatchGenericTypeIID:");
+            Logger.Log($"\tbody.Method = {body.Method}.");
+            Logger.Log($"\ttype = {type}.");
+            */
+            SignaturePart rootSignaturePart = signatureGenerator.GetSignatureParts(type);
+
+            var guidDataMethod = new MethodDefinition($"<IIDData>{type.FullName}", MethodAttributes.Assembly | MethodAttributes.Static, readOnlySpanOfByte);
+
+            guidImplementationDetailsType.Methods.Add(guidDataMethod);
+
+            var emitter = new SignatureEmitter(type, guidDataMethod, Logger);
+            VisitSignature(rootSignaturePart, emitter);
+
+            emitter.EmitGuidGetter(guidDataBlockType, guidImplementationDetailsType, readOnlySpanOfByte, readOnlySpanOfByteCtor, guidGeneratorType!);
+
+            MethodReference guidDataMethodReference = guidDataMethod;
+            if (guidDataMethodReference.HasGenericParameters)
+            {
+                var genericGuidDataMethodReference = new GenericInstanceMethod(guidDataMethodReference);
+                foreach (var param in guidDataMethodReference.GenericParameters)
+                {
+                    genericGuidDataMethodReference.GenericArguments.Add(emitter.GenericParameterMapping[param]);
+                }
+                guidDataMethodReference = genericGuidDataMethodReference;
+            }
+
+            ReplaceWithCallToGuidDataGetter(body, startILIndex, numberOfInstructionsToOverwrite, guidDataMethodReference);
+            return true;
+        }
+
+        private void ReplaceWithCallToGuidDataGetter(MethodBody body, int startILIndex, int numberOfInstructionsToOverwrite, MethodReference guidDataMethod)
+        {
+            /*
+            Logger.Log($"ReplaceWithCallToGuidDataGetter:");
+            Logger.Log($"\tMethodBody = {body}.");
+            Logger.Log($"\tguidDataMethod = {guidDataMethod}.");
+            */
+            var il = body.GetILProcessor();
+            il.Replace(startILIndex, Instruction.Create(OpCodes.Call, guidDataMethod));
+            il.Replace(startILIndex + 1, Instruction.Create(OpCodes.Newobj, guidCtor));
+            for (int i = 2; i < numberOfInstructionsToOverwrite; i++)
+            {
+                il.Replace(startILIndex + i, Instruction.Create(OpCodes.Nop));
+            }
+        }
+
+        private void VisitSignature(SignaturePart rootSignaturePart, SignatureEmitter emitter)
+        {
+            Logger.Log("VisitSignature");
+            Logger.Log($"emitter: {emitter}");
+            switch (rootSignaturePart)
+            {
+                case BasicSignaturePart basic:
+                    {
+                        Logger.TLog("(1)");
+                        emitter.PushString(basic.Type switch
+                        {
+                            SignatureType.@string => "string",
+                            SignatureType.iinspectable => "cinterface(IInspectable)",
+                            _ => basic.Type.ToString()
+                        });
+                    }
+                    break;
+                case SignatureWithChildren group:
+                    {
+                        Logger.TLog("(2)");
+                        emitter.PushString($"{group.GroupingName}(");
+                        emitter.PushString(group.ThisEntitySignature);
+                        foreach (var item in group.ChildrenSignatures)
+                        {
+                            emitter.PushString(";");
+                            VisitSignature(item, emitter);
+                        }
+                        emitter.PushString(")");
+                    }
+                    break;
+                case GuidSignature guid:
+                    {
+                        Logger.TLog("(3)");
+                        emitter.PushString(guid.IID.ToString("B"));
+                    }
+                    break;
+                case NonGenericDelegateSignature del:
+                    {
+                        /// here! doesnt get hit 
+                        // Logger.TLog($"(4) NonGenericDelegateSignature = {del}");
+                        Logger.TLog("(4)");
+                        emitter.PushString($"delegate({del.DelegateIID:B}");
+                    }
+                    break;
+                case UninstantiatedGeneric gen:
+                    {
+                        Logger.TLog("(5)");
+                        emitter.PushGenericParameter(gen.OriginalGenericParameter);
+                    }
+                    break;
+                case CustomSignatureMethod custom:
+                    {
+                        // Logger.TLog($"(6) CustomSignatureMethod = {custom}");
+                        /// doesnt get hit 
+                        Logger.TLog("(6)");
+                        emitter.PushCustomSignature(custom.Method);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+   
         private int ProcessMethodBody(MethodBody body, MethodDefinition getTypeFromHandleMethod, MethodDefinition getIidMethod, MethodDefinition createIidMethod)
         {
             int numberOfReplacements = 0;
@@ -155,8 +315,10 @@ namespace GuidPatch
                         {
                             continue;
                         }
-                        var typeMaybe = (TypeReference)instruction.Operand;
-                        if (!typeMaybe.IsGenericParameter)
+                        // Do safe cast in case we are given a FieldReference and
+                        // skip if so since we dont think we'll get a RuntimeTypeHandle for it 
+                        var typeMaybe = instruction.Operand as TypeReference;
+                        if (typeMaybe != null && !typeMaybe.IsGenericParameter)
                         {
                             state = State.Ldtoken;
                             type = typeMaybe;
@@ -244,122 +406,6 @@ namespace GuidPatch
                 }
             }
             return numberOfReplacements;
-        }
-
-        private bool PatchNonGenericTypeIID(MethodBody body, int startILIndex, TypeReference type, int numberOfInstructionsToOverwrite)
-        {
-            if (numberOfInstructionsToOverwrite < 2)
-            {
-                return false;
-            }
-
-            if (!ClosedTypeGuidDataMapping.TryGetValue(type, out var guidDataMethod))
-            {
-                Guid? guidValue = type.ReadGuidFromAttribute(guidAttributeType!, winRTRuntimeAssembly);
-                if (guidValue == null)
-                {
-                    return false;
-                }
-
-                guidDataMethod = CecilExtensions.CreateIIDDataGetter(type, guidValue.Value, guidDataBlockType, guidImplementationDetailsType, readOnlySpanOfByte, readOnlySpanOfByteCtor);
-
-                guidImplementationDetailsType.Methods.Add(guidDataMethod);
-                ClosedTypeGuidDataMapping[type] = guidDataMethod;
-            }
-
-            ReplaceWithCallToGuidDataGetter(body, startILIndex, numberOfInstructionsToOverwrite, guidDataMethod);
-
-            return true;
-        }
-
-        private bool PatchGenericTypeIID(MethodBody body, int startILIndex, TypeReference type, int numberOfInstructionsToOverwrite)
-        {
-            SignaturePart rootSignaturePart = signatureGenerator.GetSignatureParts(type);
-
-            var guidDataMethod = new MethodDefinition($"<IIDData>{type.FullName}", MethodAttributes.Assembly | MethodAttributes.Static, readOnlySpanOfByte);
-
-            guidImplementationDetailsType.Methods.Add(guidDataMethod);
-
-            var emitter = new SignatureEmitter(type, guidDataMethod);
-            VisitSignature(rootSignaturePart, emitter);
-
-            emitter.EmitGuidGetter(guidDataBlockType, guidImplementationDetailsType, readOnlySpanOfByte, readOnlySpanOfByteCtor, guidGeneratorType!);
-
-            MethodReference guidDataMethodReference = guidDataMethod;
-            if (guidDataMethodReference.HasGenericParameters)
-            {
-                var genericGuidDataMethodReference = new GenericInstanceMethod(guidDataMethodReference);
-                foreach (var param in guidDataMethodReference.GenericParameters)
-                {
-                    genericGuidDataMethodReference.GenericArguments.Add(emitter.GenericParameterMapping[param]);
-                }
-                guidDataMethodReference = genericGuidDataMethodReference;
-            }
-
-            ReplaceWithCallToGuidDataGetter(body, startILIndex, numberOfInstructionsToOverwrite, guidDataMethodReference);
-            return true;
-        }
-
-        private void ReplaceWithCallToGuidDataGetter(MethodBody body, int startILIndex, int numberOfInstructionsToOverwrite, MethodReference guidDataMethod)
-        {
-            var il = body.GetILProcessor();
-            il.Replace(startILIndex, Instruction.Create(OpCodes.Call, guidDataMethod));
-            il.Replace(startILIndex + 1, Instruction.Create(OpCodes.Newobj, guidCtor));
-            for (int i = 2; i < numberOfInstructionsToOverwrite; i++)
-            {
-                il.Replace(startILIndex + i, Instruction.Create(OpCodes.Nop));
-            }
-        }
-
-        private void VisitSignature(SignaturePart rootSignaturePart, SignatureEmitter emitter)
-        {
-            switch (rootSignaturePart)
-            {
-                case BasicSignaturePart basic:
-                    {
-                        emitter.PushString(basic.Type switch
-                        {
-                            SignatureType.@string => "string",
-                            SignatureType.iinspectable => "cinterface(IInspectable)",
-                            _ => basic.Type.ToString()
-                        });
-                    }
-                    break;
-                case SignatureWithChildren group:
-                    {
-                        emitter.PushString($"{group.GroupingName}(");
-                        emitter.PushString(group.ThisEntitySignature);
-                        foreach (var item in group.ChildrenSignatures)
-                        {
-                            emitter.PushString(";");
-                            VisitSignature(item, emitter);
-                        }
-                        emitter.PushString(")");
-                    }
-                    break;
-                case GuidSignature guid:
-                    {
-                        emitter.PushString(guid.IID.ToString("B"));
-                    }
-                    break;
-                case NonGenericDelegateSignature del:
-                    {
-                        emitter.PushString($"delegate({del.DelegateIID:B}");
-                    }
-                    break;
-                case UninstantiatedGeneric gen:
-                    {
-                        emitter.PushGenericParameter(gen.OriginalGenericParameter);
-                    }
-                    break;
-                case CustomSignatureMethod custom:
-                    {
-                        emitter.PushCustomSignature(custom.Method);
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
+        }        
     }
 }

@@ -9,7 +9,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <CsWinRTEnabled>false</CsWinRTEnabled>
-    <CsWinRTIIDOptimizerOptOut>true</CsWinRTIIDOptimizerOptOut>
   </PropertyGroup>
 
   <ItemGroup>

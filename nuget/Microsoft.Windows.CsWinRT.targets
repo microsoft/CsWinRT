@@ -155,26 +155,29 @@ $(CsWinRTFilters)
 
     <!-- We condition on CsWinRTIIDOptimizerPath and CsWinRTIIDOptimizerRuntimeDll in case we are doing a local (CsWinRT repo) build -->
     <PropertyGroup>
-      <CsWinRTIIDOptimizerExePath Condition="'$(CsWinRTIIDOptimizerPath)' != ''">$(CsWinRTIIDOptimizerPath)</CsWinRTIIDOptimizerExePath>
-      <CsWinRTIIDOptimizerRuntimeDll Condition="'$(CsWinRTIIDOptimizerRuntimePath)' != ''">$(CsWinRTIIDOptimizerRuntimePath)</CsWinRTIIDOptimizerRuntimeDll> 
-
-      <CsWinRTIIDOptimizerExePath Condition="'$(CsWinRTIIDOptimizerPath)' == ''">$(CsWinRTPath)build\tools\GuidPatch\</CsWinRTIIDOptimizerExePath>
-      <CsWinRTIIDOptimizerRuntimeDll Condition="'$(CsWinRTIIDOptimizerRuntimePath)' == ''">$(CsWinRTPath)lib\net5.0\</CsWinRTIIDOptimizerRuntimeDll> 
-
+      <CsWinRTIIDOptimizerPath Condition="'$(CsWinRTIIDOptimizerPath)' == ''">$(CsWinRTPath)build\tools\GuidPatch\</CsWinRTIIDOptimizerPath>
+      <CsWinRTIIDOptimizerRuntimePath Condition="'$(CsWinRTIIDOptimizerRuntimePath)' == ''">$(CsWinRTPath)lib\net5.0\</CsWinRTIIDOptimizerRuntimePath>
       <CsWinRTIIDOptimizerInput>@(BuiltProjectOutputGroupKeyOutput->'%(Identity)')</CsWinRTIIDOptimizerInput>
-
       <CsWinRTIIDOptimizerOutputDir>$([System.IO.Directory]::GetParent($(CsWinRTIIDOptimizerInput))) </CsWinRTIIDOptimizerOutputDir>
     </PropertyGroup>
 
-    <Exec Command="$(CsWinRTIIDOptimizerExePath)IIDOptimizer.exe $(CsWinRTIIDOptimizerInput) $(CsWinRTIIDOptimizerRuntimeDll)" 
-          ConsoleToMsBuild="true">
+    <Exec Command="$(CsWinRTIIDOptimizerPath)IIDOptimizer.exe $(CsWinRTIIDOptimizerInput) $(CsWinRTIIDOptimizerRuntimePath)" 
+          ConsoleToMsBuild="true"
+          IgnoreExitCode="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="CsWinRTGuidPatchOutput" />
+      <Output TaskParameter="ExitCode" PropertyName="CsWinRTGuidPatchExitCode"/>
     </Exec>
+  </Target>
+
+  <Target Name="CsWinRTReplaceForPatchedRuntime" 
+          Condition="$(CsWinRTGuidPatchExitCode) == 0"
+          AfterTargets="CsWinRTInvokeGuidPatcher">
     
+    <!-- Output dir of patcher tool -->
     <ItemGroup>
       <CsWinRTGuidPatchedFiles Include="$(MSBuildProjectDirectory)\obj\IIDOptimizer\*.dll" />
     </ItemGroup>
-    
+
     <!--  Replace the .dll in the output folder with the optimized version we just made -->
     <Copy SourceFiles="@(CsWinRTGuidPatchedFiles)" DestinationFolder="$(CsWinRTIIDOptimizerOutputDir)" />
   </Target>

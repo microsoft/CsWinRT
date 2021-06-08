@@ -41,7 +41,6 @@
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <DefaultLanguage>en-US</DefaultLanguage>
     <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
-    <AppxTargetsLocation Condition="'$(AppxTargetsLocation)'==''">$(MSBuildThisFileDirectory)build\</AppxTargetsLocation>
     <EntryPointProjectUniqueName>..\AuthoringWinUITest\AuthoringWinUITest.vcxproj</EntryPointProjectUniqueName>
     <_WinMDPlatform>$(Platform)</_WinMDPlatform>
     <_WinMDPlatform Condition="'$(Platform)' == 'Win32'">x86</_WinMDPlatform>
@@ -79,5 +78,4 @@
     <SDKReference Include="Microsoft.VCLibs, Version=14.0" Condition="'$(Configuration)' == 'Debug'" />
   </ItemGroup>
   <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" />
-  <Import Project="$(AppxTargetsLocation)Microsoft.WinUI.AppX.targets" />
 </Project>

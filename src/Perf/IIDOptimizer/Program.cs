@@ -22,13 +22,17 @@ namespace GuidPatch
                 {
                     resolver.AddSearchDirectory(args[1]);
                     AssemblyDefinition winRTRuntimeAssembly = resolver.Resolve(new AssemblyNameReference("WinRT.Runtime", default));
+
+                    Directory.CreateDirectory("obj\\IIDOptimizer");
+
                     var guidPatcher = new GuidPatcher(
                         args[0],
                         resolver,
                         winRTRuntimeAssembly);
+
+                    // moved to GuidPAtcher constructor. Directory.CreateDirectory(guidPatcher.OptimizerDir);
                     int numPatches = guidPatcher.ProcessAssembly();
-                    Directory.CreateDirectory("obj\\IIDOptimizer");
-                    guidPatcher.SaveAssembly("obj\\IIDOptimizer");
+                    guidPatcher.SaveAssembly(guidPatcher.OptimizerDir);
                     Console.WriteLine($"{numPatches} IID calculations/fetches patched");
                 }
                 catch (AssemblyResolutionException)
