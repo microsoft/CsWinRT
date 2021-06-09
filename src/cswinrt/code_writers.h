@@ -6432,18 +6432,17 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
         {
             return;
         }
-        for_typedef(w, eventTypeSemantics, [&](TypeDef const& eventType)
+        for_typedef(w, eventTypeSemantics, [&](TypeDef const&)
             {
                 std::vector<std::string> genericArgs;
-                int i = 0;
-                for (auto&& x: std::get<generic_type_instance>(eventTypeSemantics).generic_args)
+                auto arg_count = std::get<generic_type_instance>(eventTypeSemantics).generic_args.size();
+                for (int i = 0; i < arg_count; ++i )
                 {
                     auto semantics = w.get_generic_arg_scope(i).first;
                     if (std::holds_alternative<generic_type_param>(semantics))
                     {
                         genericArgs.push_back(w.write_temp("%", bind<write_generic_type_name>(i)));
                     }
-                    i++;
                 }                
                 if (genericArgs.size() == 0)
                 {
