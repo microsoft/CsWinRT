@@ -30,7 +30,8 @@ namespace Benchmarks
                     .WithPlatform(BenchmarkDotNet.Environments.Platform.X64)
                     .WithArguments(
                         new Argument[] {
-                            new MsBuildArgument("/p:platform=x64")
+                            new MsBuildArgument("/p:platform=x64"),
+                            new MsBuildArgument("/p:IsDotnetBuild=true")
                         }
                     ).AsDefault();
 
@@ -49,7 +50,8 @@ namespace Benchmarks
                         new Argument[] {
                             new MsBuildArgument("/p:platform=x64"),
                             new MsBuildArgument("/p:ApplicationManifest=" + manifestFile),
-                            new MsBuildArgument("/p:BenchmarkWinmdSupport=true")
+                            new MsBuildArgument("/p:BenchmarkWinmdSupport=true"),
+                            new MsBuildArgument("/p:IsDotnetBuild=true")
                         }
                     )
                     .WithId("WinMD NetCoreApp31");

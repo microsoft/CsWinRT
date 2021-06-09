@@ -11,6 +11,8 @@
     <ApplicationManifest Condition="$(UseWinmd) == true">Benchmarks.manifest</ApplicationManifest>
     <BenchmarkTargetFramework>$(TargetFramework)</BenchmarkTargetFramework>
     <BenchmarkTargetFramework Condition="'$(BenchmarkTargetFramework)' == 'netcoreapp2.0'">netstandard2.0</BenchmarkTargetFramework>
+    <IsDotnetBuild Condition="'$(IsDotnetBuild)' == ''">false</IsDotnetBuild>
+	  <LangVersion Condition="$(IsDotnetBuild) == true">9.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,9 +25,9 @@
     <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Windows\bin\x64\Release\$(BenchmarkTargetFramework)\Windows.dll"></Reference>
     <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Benchmark\bin\x64\Release\$(BenchmarkTargetFramework)\Benchmark.dll"></Reference>
     
-    <ProjectReference Include="..\Projections\Windows\Windows.csproj" Condition="$(UseWinmd) == false" />
-    <ProjectReference Include="..\Projections\Benchmark\Benchmark.csproj" Condition="$(UseWinmd) == false" />
-    <ProjectReference Include="..\TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj" Condition="$(UseWinmd) == true" />
+    <ProjectReference Include="..\Projections\Windows\Windows.csproj" Condition="$(IsDotnetBuild) == false" />
+    <ProjectReference Include="..\Projections\Benchmark\Benchmark.csproj" Condition="$(IsDotnetBuild) == false" />
+    <ProjectReference Include="..\TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj" Condition="$(UseWinmd) == true And $(IsDotnetBuild) == false" />
 
     <!-- The Benchmark / BenchmarkCompnent reference doesn't seem to bring over the dll when building with dotnet cli, so including both dll and winmd as includes. -->
     <None Include="$(MSBuildThisFileDirectory)..\_build\$(Platform)\$(Configuration)\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.dll">
