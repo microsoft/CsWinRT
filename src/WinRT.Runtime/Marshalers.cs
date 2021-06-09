@@ -1214,16 +1214,13 @@ namespace WinRT
                         CopyAbi = (object value, IntPtr dest) => CopyEnum(value, dest);
                         CopyManaged = (T value, IntPtr dest) => CopyEnum(value, dest);
                     }
-                    else 
-                    { 
-                        CreateMarshalerArray = (T[] array) => MarshalBlittable<T>.CreateMarshalerArray(array);
-                        GetAbiArray = (object box) => MarshalBlittable<T>.GetAbiArray(box);
-                        FromAbiArray = (object box) => MarshalBlittable<T>.FromAbiArray(box);
-                        FromManagedArray = (T[] array) => MarshalBlittable<T>.FromManagedArray(array);
-                        CopyManagedArray = (T[] array, IntPtr data) => MarshalBlittable<T>.CopyManagedArray(array, data);
-                        DisposeMarshalerArray = (object box) => MarshalBlittable<T>.DisposeMarshalerArray(box);
-                        DisposeAbiArray = (object box) => MarshalBlittable<T>.DisposeAbiArray(box);
-                    }
+                    CreateMarshalerArray = (T[] array) => MarshalBlittable<T>.CreateMarshalerArray(array);
+                    GetAbiArray = (object box) => MarshalBlittable<T>.GetAbiArray(box);
+                    FromAbiArray = (object box) => MarshalBlittable<T>.FromAbiArray(box);
+                    FromManagedArray = (T[] array) => MarshalBlittable<T>.FromManagedArray(array);
+                    CopyManagedArray = (T[] array, IntPtr data) => MarshalBlittable<T>.CopyManagedArray(array, data);
+                    DisposeMarshalerArray = (object box) => MarshalBlittable<T>.DisposeMarshalerArray(box);
+                    DisposeAbiArray = (object box) => MarshalBlittable<T>.DisposeAbiArray(box);
                 }
                 else
                 {
