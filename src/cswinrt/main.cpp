@@ -4,6 +4,7 @@
 #include "helpers.h"
 #include "type_writers.h"
 #include "code_writers.h"
+#include <concurrent_unordered_map.h>
 
 namespace cswinrt
 {
@@ -166,16 +167,19 @@ Where <spec> is one or more of:
 
             task_group group;
 
+            concurrency::concurrent_unordered_map<std::string, std::string> typeNameToDefinitionMap;
             bool projectionFileWritten = false;
             for (auto&& ns_members : c.namespaces())
             {
-                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten]
+                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &typeNameToDefinitionMap]
                 {
                     auto&& [ns, members] = ns_members;
                     std::string_view currentType = "";
                     try
                     {
                         writer w(ns);
+                        writer helperWriter("WinRT");
+                        
                         w.write_begin();
                         bool written = false;
                         bool requires_abi = false;
@@ -189,6 +193,7 @@ Where <spec> is one or more of:
                                 continue;
                             }
                             auto guard{ w.push_generic_params(type.GenericParam()) };
+                            auto guard1{ helperWriter.push_generic_params(type.GenericParam()) };
 
                             bool type_requires_abi = true;
                             switch (get_category(type))
@@ -213,6 +218,7 @@ Where <spec> is one or more of:
                                         write_factory_class(w, type);
                                     }
                                 }
+                                write_temp_class_event_source_subclass(helperWriter, type, typeNameToDefinitionMap);
                                 break;
                             case category::delegate_type:
                                 write_delegate(w, type);
@@ -223,6 +229,7 @@ Where <spec> is one or more of:
                                 break;
                             case category::interface_type:
                                 write_interface(w, type);
+                                write_temp_interface_event_source_subclass(helperWriter, type, typeNameToDefinitionMap);
                                 break;
                             case category::struct_type:
                                 if (is_api_contract_type(type))
@@ -309,7 +316,7 @@ Where <spec> is one or more of:
                     }
                 });
             }
-
+            
             if(settings.component)
             {
                 group.add([&componentActivatableClasses, &projectionFileWritten]
@@ -323,6 +330,14 @@ Where <spec> is one or more of:
             }
 
             group.get();
+            writer eventHelperWriter("WinRT");
+            eventHelperWriter.write("namespace WinRT\n{\n%\n}", bind([&](writer& w) {
+                for (auto&& [key, value] : typeNameToDefinitionMap)
+                {
+                    w.write("%", value);
+                }
+            }));
+            eventHelperWriter.flush_to_file(settings.output_folder / "WinRTEventHelpers.cs");
 
             if (projectionFileWritten)
             {
