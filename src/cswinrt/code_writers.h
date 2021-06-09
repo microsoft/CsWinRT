@@ -64,7 +64,7 @@ namespace cswinrt
         return w.write_temp("%_%", method.Name(), get_vmethod_index(type, method));
     }
 
-    bool is_type_blittable(type_semantics const& semantics)
+    bool is_type_blittable(type_semantics const& semantics, bool for_array = false)
     {
         return call(semantics,
             [&](object_type)
@@ -76,7 +76,7 @@ namespace cswinrt
                 switch (get_category(type))
                 {
                     case category::enum_type:
-                        return true;
+                        return !for_array;
                     case category::struct_type:
                         if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
                         {
@@ -2945,7 +2945,7 @@ event % %;)",
         {
             if (m.is_array())
             {
-                m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
+                m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
                 m.marshaler_type += "<" + m.param_type + ">";
                 m.local_type = m.marshaler_type + ".MarshalerArray";
             }
@@ -3062,7 +3062,7 @@ event % %;)",
             }
             else
             {
-                m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
+                m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
                 m.marshaler_type += "<" + m.param_type + ">";
                 m.local_type = m.marshaler_type + ".MarshalerArray";
             }
@@ -4256,7 +4256,7 @@ remove => %.Unsubscribe(value);
             {
                 if (m.marshaler_type.empty())
                 {
-                    m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
+                    m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
                     m.marshaler_type += "<" + m.param_type + ">";
                 }
                 m.local_type = (m.local_type.empty() ? m.param_type : m.local_type) + "[]";
