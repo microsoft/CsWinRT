@@ -333,6 +333,7 @@ namespace WinRT
     }
 
 #pragma warning disable CA2002
+
     internal unsafe class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
     {
@@ -342,13 +343,13 @@ namespace WinRT
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
 
         // Registration state, cached separately to survive EventSource garbage collection
-        class State
+        protected class State
         {
             public EventRegistrationToken token;
             public TDelegate del;
             public System.Delegate eventInvoke;
         }
-        State _state;
+        protected State _state;
 
         protected virtual IObjectReference CreateMarshaler(TDelegate del)
         {
@@ -401,7 +402,7 @@ namespace WinRT
             }
         }
 
-        private System.Delegate EventInvoke
+        protected virtual System.Delegate EventInvoke
         {
             get
             {
@@ -552,6 +553,35 @@ namespace WinRT
             _state.token.Value = 0;
         }
     }
+
+    internal unsafe class EventSource__EventHandler<T> : EventSource<System.EventHandler<T>>
+    {
+        private System.EventHandler<T> handler;
+
+        internal EventSource__EventHandler(IObjectReference obj,
+            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler) : base(obj, addHandler, removeHandler)
+        {
+        }
+
+        override protected System.Delegate EventInvoke
+        {
+            // This is synchronized from the base class
+            get
+            {
+                if (handler == null)
+                {
+                    handler = (System.Object obj, T e) =>
+                    {
+                        if (_state.del != null)
+                            _state.del.Invoke(obj, e);
+                    };
+                }
+                return handler;
+            }
+        }
+    }
+
 #pragma warning restore CA2002
 
     // An event registration token table stores mappings from delegates to event tokens, in order to support

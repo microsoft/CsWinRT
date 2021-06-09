@@ -13,6 +13,29 @@ namespace TestComponentCSharp
     delegate void EventHandlerCollection(Class sender, Windows.Foundation.Collections.IVector<Int32> arg0, Windows.Foundation.Collections.IMap<Int32, String> arg1);
     delegate Int32 EventWithReturn(Int32 arg);
 
+    [flags]
+    enum FlagValue
+    {
+        One = 0x00000001,
+        All = 0xFFFFFFFF,
+    };
+
+    struct FlagStruct
+    {
+        FlagValue value;
+    };
+
+    enum EnumValue
+    {
+        One,
+        Two,
+    };
+
+    struct EnumStruct
+    {
+        EnumValue value;
+    };
+
     struct BlittableStruct
     {
         Int32 i32;
@@ -54,6 +77,14 @@ namespace TestComponentCSharp
     delegate Boolean ProvideBool();
     delegate String ProvideString();
     delegate Object ProvideObject();
+    delegate EnumValue ProvideEnum();
+    delegate EnumValue[] ProvideEnums();
+    delegate FlagValue ProvideFlag();
+    delegate FlagValue[] ProvideFlags();
+    delegate EnumStruct ProvideEnumStruct();
+    delegate EnumStruct[] ProvideEnumStructs();
+    delegate FlagStruct ProvideFlagStruct();
+    delegate FlagStruct[] ProvideFlagStructs();
     delegate Windows.Foundation.Collections.IIterable<Object> ProvideObjectIterable();
     delegate Windows.Foundation.Uri ProvideUri();
     delegate Windows.Foundation.Collections.IKeyValuePair<String, String> ProvideStringPair();
@@ -170,6 +201,32 @@ namespace TestComponentCSharp
         void RaiseBoolChanged();
         void CallForBool(ProvideBool provideBool);
 
+        // Enums (oddly, arrays are not blittable - but all other structurings are)
+        EnumValue EnumProperty;
+        event Windows.Foundation.EventHandler<EnumValue> EnumPropertyChanged;
+        void RaiseEnumChanged();
+        void CallForEnum(ProvideEnum provide);
+        EnumStruct EnumStructProperty;
+        event Windows.Foundation.EventHandler<EnumStruct> EnumStructPropertyChanged;
+        void RaiseEnumStructChanged();
+        void CallForEnumStruct(ProvideEnumStruct provide);
+        EnumValue[] EnumsProperty;
+        void CallForEnums(ProvideEnums provide);
+        EnumStruct[] EnumStructsProperty;
+        void CallForEnumStructs(ProvideEnumStructs provide);
+        FlagValue FlagProperty;
+        event Windows.Foundation.EventHandler<FlagValue> FlagPropertyChanged;
+        void RaiseFlagChanged();
+        void CallForFlag(ProvideFlag provide);
+        FlagStruct FlagStructProperty;
+        event Windows.Foundation.EventHandler<FlagStruct> FlagStructPropertyChanged;
+        void RaiseFlagStructChanged();
+        void CallForFlagStruct(ProvideFlagStruct provide);
+        FlagValue[] FlagsProperty;
+        void CallForFlags(ProvideFlags provide);
+        FlagStruct[] FlagStructsProperty;
+        void CallForFlagStructs(ProvideFlagStructs provide);
+
         String StringProperty;
         event Windows.Foundation.TypedEventHandler<Class, String> StringPropertyChanged;
         void RaiseStringChanged();
@@ -193,7 +250,7 @@ namespace TestComponentCSharp
         Windows.Foundation.Uri UriProperty;
         void RaiseUriChanged();
         void CallForUri(ProvideUri provideUri);
-        event Windows.Foundation.EventHandler<Windows.Foundation.Uri > UriPropertyChanged;
+        event Windows.Foundation.EventHandler<Windows.Foundation.Uri> UriPropertyChanged;
 
         Windows.Foundation.Collections.IKeyValuePair<String, String> StringPairProperty;
         void RaiseStringPairChanged();
