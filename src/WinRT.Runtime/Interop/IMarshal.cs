@@ -37,6 +37,8 @@ namespace ABI.WinRT.Interop
 
         private static readonly string NotImplemented_NativeRoutineNotFound = "A native library routine was not found: {0}.";
 
+        internal static Lazy<Guid> IID_InProcFreeThreadedMarshaler = new Lazy<Guid>(Vftbl.GetInProcFreeThreadedMarshalerIID);
+
         [Guid("00000003-0000-0000-c000-000000000046")]
         public unsafe struct Vftbl
         {
@@ -119,6 +121,16 @@ namespace ABI.WinRT.Interop
                 {
                     throw new NotImplementedException(string.Format(NotImplemented_NativeRoutineNotFound, "CoCreateFreeThreadedMarshaler"), ex);
                 }
+            }
+
+            internal static Guid GetInProcFreeThreadedMarshalerIID()
+            {
+                EnsureHasFreeThreadedMarshaler();
+
+                Guid iid_IUnknown = typeof(IUnknownVftbl).GUID;
+                Guid iid_unmarshalClass;
+                t_freeThreadedMarshaler.GetUnmarshalClass(&iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass);
+                return iid_unmarshalClass;
             }
 
             public Vftbl(IntPtr ptr)

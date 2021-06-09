@@ -21,3 +21,4 @@ nuget/Microsoft.Windows.CsWinRT.Prerelease.targets
 *.binlog
 vs_buildtools.exe
 .buildtools
+src/BenchmarkDotNet.Artifacts/*

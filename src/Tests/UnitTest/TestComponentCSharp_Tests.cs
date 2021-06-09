@@ -52,6 +52,72 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestEnums()
+        {
+            // Enums
+            var expectedEnum = EnumValue.Two;
+            TestObject.EnumProperty = expectedEnum;
+            Assert.Equal(expectedEnum, TestObject.EnumProperty);
+            expectedEnum = EnumValue.One;
+            TestObject.CallForEnum(() => expectedEnum);
+            TestObject.EnumPropertyChanged +=
+                (object sender, EnumValue value) => Assert.Equal(expectedEnum, value);
+            TestObject.RaiseEnumChanged();
+
+            var expectedEnumStruct = new EnumStruct() { value = EnumValue.Two };
+            TestObject.EnumStructProperty = expectedEnumStruct;
+            Assert.Equal(expectedEnumStruct, TestObject.EnumStructProperty);
+            expectedEnumStruct = new EnumStruct() { value = EnumValue.One };
+            TestObject.CallForEnumStruct(() => expectedEnumStruct);
+            TestObject.EnumStructPropertyChanged +=
+                (object sender, EnumStruct value) => Assert.Equal(expectedEnumStruct, value);
+            TestObject.RaiseEnumStructChanged();
+
+            var expectedEnums = new EnumValue[] { EnumValue.One, EnumValue.Two };
+            TestObject.EnumsProperty = expectedEnums;
+            Assert.Equal(expectedEnums, TestObject.EnumsProperty);
+            TestObject.CallForEnums(() => expectedEnums);
+            Assert.Equal(expectedEnums, TestObject.EnumsProperty);
+
+            var expectedEnumStructs = new EnumStruct[] { new EnumStruct(EnumValue.One), new EnumStruct(EnumValue.Two) };
+            TestObject.EnumStructsProperty = expectedEnumStructs;
+            Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
+            TestObject.CallForEnumStructs(() => expectedEnumStructs);
+            Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
+
+            // Flags
+            var expectedFlag = FlagValue.All;
+            TestObject.FlagProperty = expectedFlag;
+            Assert.Equal(expectedFlag, TestObject.FlagProperty);
+            expectedFlag = FlagValue.One;
+            TestObject.CallForFlag(() => expectedFlag);
+            TestObject.FlagPropertyChanged +=
+                (object sender, FlagValue value) => Assert.Equal(expectedFlag, value);
+            TestObject.RaiseFlagChanged();
+
+            var expectedFlagStruct = new FlagStruct() { value = FlagValue.All };
+            TestObject.FlagStructProperty = expectedFlagStruct;
+            Assert.Equal(expectedFlagStruct, TestObject.FlagStructProperty);
+            expectedFlagStruct = new FlagStruct() { value = FlagValue.One };
+            TestObject.CallForFlagStruct(() => expectedFlagStruct);
+            TestObject.FlagStructPropertyChanged +=
+                (object sender, FlagStruct value) => Assert.Equal(expectedFlagStruct, value);
+            TestObject.RaiseFlagStructChanged();
+
+            var expectedFlags = new FlagValue[] { FlagValue.One, FlagValue.All };
+            TestObject.FlagsProperty = expectedFlags;
+            Assert.Equal(expectedFlags, TestObject.FlagsProperty);
+            TestObject.CallForFlags(() => expectedFlags);
+            Assert.Equal(expectedFlags, TestObject.FlagsProperty);
+
+            var expectedFlagStructs = new FlagStruct[] { new FlagStruct(FlagValue.One), new FlagStruct(FlagValue.All) };
+            TestObject.FlagStructsProperty = expectedFlagStructs;
+            Assert.Equal(expectedFlagStructs, TestObject.FlagStructsProperty);
+            TestObject.CallForFlagStructs(() => expectedFlagStructs);
+            Assert.Equal(expectedFlagStructs, TestObject.FlagStructsProperty);
+        }
+
+        [Fact]
         public void TestGetByte()
         {
             var array = new byte[] { 0x01 };
@@ -2180,24 +2246,35 @@ namespace UnitTest
                 objectAcquired.Set();
                 valueAcquired.WaitOne();
 
-                // Call to proxy object acquired from MTA which should throw
-                Assert.ThrowsAny<System.Exception>(() => proxyObject.Commands.Count);
+                // Object gets proxied to the apartment.
+                Assert.Equal(2, proxyObject.Commands.Count);
                 agileReference.Dispose();
+
+                proxyObject2 = agileReference2.Get();
             }
 
             public void CheckValue()
             {
                 objectAcquired.WaitOne();
-
                 Assert.Equal(ApartmentState.MTA, Thread.CurrentThread.GetApartmentState());
                 proxyObject = agileReference.Get();
                 Assert.Equal(2, proxyObject.Commands.Count);
+                
+                nonAgileObject2 = new Windows.UI.Popups.PopupMenu();
+                agileReference2 = nonAgileObject2.AsAgile();
+
                 valueAcquired.Set();
             }
 
-            private Windows.UI.Popups.PopupMenu nonAgileObject;
-            private Windows.UI.Popups.PopupMenu proxyObject;
-            private AgileReference<Windows.UI.Popups.PopupMenu> agileReference;
+            public void CallProxyObject()
+            {
+                // Call to the proxy object after the apartment is gone should throw.
+                Assert.ThrowsAny<System.Exception>(() => proxyObject2.Commands);
+            }
+
+            private Windows.UI.Popups.PopupMenu nonAgileObject, nonAgileObject2;
+            private Windows.UI.Popups.PopupMenu proxyObject, proxyObject2;
+            private AgileReference<Windows.UI.Popups.PopupMenu> agileReference, agileReference2;
             private readonly AutoResetEvent objectAcquired = new AutoResetEvent(false);
             private readonly AutoResetEvent valueAcquired = new AutoResetEvent(false);
         }
@@ -2216,6 +2293,14 @@ namespace UnitTest
             mtaThread.Start();
             mtaThread.Join();
             staThread.Join();
+
+            // Spin another STA thread after the other 2 threads are done and try to
+            // access one of the proxied objects.  They should fail as there is no context
+            // to switch to in order to marshal it to the current apartment.
+            Thread anotherStaThread = new Thread(new ThreadStart(caller.CallProxyObject));
+            anotherStaThread.SetApartmentState(ApartmentState.STA);
+            anotherStaThread.Start();
+            anotherStaThread.Join();
         }
 
         [Fact]
