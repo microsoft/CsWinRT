@@ -1,16 +1,16 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
+  
   <PropertyGroup>
     <PrepareForRunDependsOn>CopyTestAssets;$(PrepareForRunDependsOn)</PrepareForRunDependsOn>
   </PropertyGroup>
 
-  <!--
+  <!-- temporary until nuget support -->
   <Target Name="CopyTestAssets">
     <Copy SourceFiles="$(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll"
           DestinationFiles="$(OutDir)WinRT.Host.dll" 
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>  
-  --> 
+
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
 
 </Project>

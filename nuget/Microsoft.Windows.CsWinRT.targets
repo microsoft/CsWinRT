@@ -119,42 +119,18 @@ $(CsWinRTFilters)
     </ItemGroup>
   </Target>
 
-  <ItemGroup Condition="'$(CsWinRTComponent)' == 'true'">
-    <CompilerVisibleProperty Include="AssemblyName" />
-    <CompilerVisibleProperty Include="AssemblyVersion" />
-    <CompilerVisibleProperty Include="CsWinRTComponent" />
-    <CompilerVisibleProperty Include="CsWinRTEnableLogging" />
-    <CompilerVisibleProperty Include="CsWinRTGeneratedFilesDir" />
-    <CompilerVisibleProperty Include="CsWinRTExe" />
-    <CompilerVisibleProperty Include="CsWinRTKeepGeneratedSources" />
-    <CompilerVisibleProperty Include="CsWinRTWindowsMetadata" />
-    <CompilerVisibleProperty Include="CsWinRTGenerateProjection" />
-    <CompilerVisibleProperty Include="CsWinRTAuthoringInputs" />
-  </ItemGroup>
-
-  <!-- Note this runs before the msbuild editor config file is generated because that is what is used to pass properties to the source generator. -->
-  <Target Name="CsWinRTSetAuthoringWinMDs" BeforeTargets="GenerateMSBuildEditorConfigFile;GenerateMSBuildEditorConfigFileCore" DependsOnTargets="CsWinRTRemoveWinMDReferences;GetAssemblyVersion;CsWinRTPrepareProjection" Condition="$(CsWinRTEnabled) And '$(CsWinRTComponent)' == 'true'">
-    <PropertyGroup>
-      <CsWinRTAuthoringInputs>$(CsWinRTAuthoringInputs) @(CsWinRTInputs->'"%(FullPath)"', ' ') @(CsWinRTAuthoringWinMDs->'"%(FullPath)"', ' ')</CsWinRTAuthoringInputs>
-    </PropertyGroup>
-  </Target>
-
-  <!-- Copy Authored winmd to output folder -->
-  <Target Name="CsWinRTPlaceWinMDInOutputFolder" Condition="'$(CsWinRTComponent)' == 'true'" BeforeTargets="AfterBuild">
-    <Copy SourceFiles="$(CsWinRTGeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
-  </Target>
-
-  <!-- Call The IIDOptimizer tool on the projection .dll -->
+  <!-- Run the IIDOptimizer on the projection .dll -->
   <Target Name="CsWinRTInvokeGuidPatcher" 
           Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'" 
           AfterTargets="Compile" 
-          BeforeTargets="Link">
-
-    <!-- We condition on CsWinRTIIDOptimizerPath and CsWinRTIIDOptimizerRuntimeDll in case we are doing a local (CsWinRT repo) build -->
+          BeforeTargets="Link">  
     <PropertyGroup>
+      <!-- Set already when running locally in repo via Directory.Build.props -->
       <CsWinRTIIDOptimizerPath Condition="'$(CsWinRTIIDOptimizerPath)' == ''">$(CsWinRTPath)build\tools\GuidPatch\</CsWinRTIIDOptimizerPath>
       <CsWinRTIIDOptimizerRuntimePath Condition="'$(CsWinRTIIDOptimizerRuntimePath)' == ''">$(CsWinRTPath)lib\net5.0\</CsWinRTIIDOptimizerRuntimePath>
+      <!-- Inputs are the .dll from the obj dir -->
       <CsWinRTIIDOptimizerInput>@(BuiltProjectOutputGroupKeyOutput->'%(Identity)')</CsWinRTIIDOptimizerInput>
+      <!-- Use the above .dll to find the directory we should copy to when we finish -->
       <CsWinRTIIDOptimizerOutputDir>$([System.IO.Directory]::GetParent($(CsWinRTIIDOptimizerInput))) </CsWinRTIIDOptimizerOutputDir>
     </PropertyGroup>
 
@@ -166,11 +142,13 @@ $(CsWinRTFilters)
     </Exec>
   </Target>
 
+  <!-- When the IIDOptimizer succeeds, replace the .dll input with the patched version -->
   <Target Name="CsWinRTReplaceForPatchedRuntime" 
           Condition="$(CsWinRTGuidPatchExitCode) == 0"
-          AfterTargets="CsWinRTInvokeGuidPatcher">
-    
-    <!-- Output dir of patcher tool -->
+          AfterTargets="CsWinRTInvokeGuidPatcher"
+          BeforeTargets="Link">
+
+    <!-- Patcher tool adds a directory "IIDOptimizer" under the obj dir of the project -->
     <ItemGroup>
       <CsWinRTGuidPatchedFiles Include="$(MSBuildProjectDirectory)\obj\IIDOptimizer\*.dll" />
     </ItemGroup>

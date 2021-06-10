@@ -57,6 +57,7 @@ namespace GuidPatch
                 ApplyWindowsRuntimeProjections = false
             });
 
+            winRTRuntimeAssembly = winRTRuntime;
 
             guidImplementationDetailsType = new TypeDefinition(null, "<GuidPatcherImplementationDetails>", TypeAttributes.AutoClass | TypeAttributes.Sealed, assembly.MainModule.TypeSystem.Object);
 
@@ -125,7 +126,6 @@ namespace GuidPatch
                 return 0;
             }
 
-            Logger.Log($"Processing assembly: {assembly}.");
             int numPatches = 0;
             var methods = from module in assembly.Modules
                           from type in module.Types
@@ -157,11 +157,6 @@ namespace GuidPatch
 
         private bool PatchNonGenericTypeIID(MethodBody body, int startILIndex, TypeReference type, int numberOfInstructionsToOverwrite)
         {
-            /*
-            Logger.Log($"PatchNonGenericTypeIID");
-            Logger.Log($"\tbody.Method = {body.Method}.");
-            Logger.Log($"\ttype = {type}.");
-            */
             if (numberOfInstructionsToOverwrite < 2)
             {
                 return false;
@@ -188,11 +183,6 @@ namespace GuidPatch
 
         private bool PatchGenericTypeIID(MethodBody body, int startILIndex, TypeReference type, int numberOfInstructionsToOverwrite)
         {
-            /*
-            Logger.Log($"PatchGenericTypeIID:");
-            Logger.Log($"\tbody.Method = {body.Method}.");
-            Logger.Log($"\ttype = {type}.");
-            */
             SignaturePart rootSignaturePart = signatureGenerator.GetSignatureParts(type);
 
             var guidDataMethod = new MethodDefinition($"<IIDData>{type.FullName}", MethodAttributes.Assembly | MethodAttributes.Static, readOnlySpanOfByte);
@@ -221,11 +211,6 @@ namespace GuidPatch
 
         private void ReplaceWithCallToGuidDataGetter(MethodBody body, int startILIndex, int numberOfInstructionsToOverwrite, MethodReference guidDataMethod)
         {
-            /*
-            Logger.Log($"ReplaceWithCallToGuidDataGetter:");
-            Logger.Log($"\tMethodBody = {body}.");
-            Logger.Log($"\tguidDataMethod = {guidDataMethod}.");
-            */
             var il = body.GetILProcessor();
             il.Replace(startILIndex, Instruction.Create(OpCodes.Call, guidDataMethod));
             il.Replace(startILIndex + 1, Instruction.Create(OpCodes.Newobj, guidCtor));
@@ -237,13 +222,10 @@ namespace GuidPatch
 
         private void VisitSignature(SignaturePart rootSignaturePart, SignatureEmitter emitter)
         {
-            Logger.Log("VisitSignature");
-            Logger.Log($"emitter: {emitter}");
             switch (rootSignaturePart)
             {
                 case BasicSignaturePart basic:
                     {
-                        Logger.TLog("(1)");
                         emitter.PushString(basic.Type switch
                         {
                             SignatureType.@string => "string",
@@ -254,7 +236,6 @@ namespace GuidPatch
                     break;
                 case SignatureWithChildren group:
                     {
-                        Logger.TLog("(2)");
                         emitter.PushString($"{group.GroupingName}(");
                         emitter.PushString(group.ThisEntitySignature);
                         foreach (var item in group.ChildrenSignatures)
@@ -267,29 +248,23 @@ namespace GuidPatch
                     break;
                 case GuidSignature guid:
                     {
-                        Logger.TLog("(3)");
                         emitter.PushString(guid.IID.ToString("B"));
                     }
                     break;
                 case NonGenericDelegateSignature del:
                     {
-                        /// here! doesnt get hit 
-                        // Logger.TLog($"(4) NonGenericDelegateSignature = {del}");
-                        Logger.TLog("(4)");
+                        /// TODO test this path 
                         emitter.PushString($"delegate({del.DelegateIID:B}");
                     }
                     break;
                 case UninstantiatedGeneric gen:
                     {
-                        Logger.TLog("(5)");
                         emitter.PushGenericParameter(gen.OriginalGenericParameter);
                     }
                     break;
                 case CustomSignatureMethod custom:
                     {
-                        // Logger.TLog($"(6) CustomSignatureMethod = {custom}");
-                        /// doesnt get hit 
-                        Logger.TLog("(6)");
+                        /// TODO test this path 
                         emitter.PushCustomSignature(custom.Method);
                     }
                     break;

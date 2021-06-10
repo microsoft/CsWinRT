@@ -131,7 +131,6 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 if "%cswinrt_build_only%"=="true" goto :eof
-if "%cswinrt_buildpack%"=="true" goto :package
 
 :test
 :unittest

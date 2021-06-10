@@ -58,7 +58,6 @@ namespace GuidPatch
         private readonly TypeDefinition guidAttributeType;
         private readonly AssemblyDefinition winRTRuntimeAssembly;
 
-        /* Constructor: paramterized by the projection, the guid type (?), and the winrt.runtime (could use winrt.runtime.dll version 1.2.1 or 1.2.5 */
         public SignatureGenerator(AssemblyDefinition assembly, TypeDefinition guidAttributeType, AssemblyDefinition runtimeAssembly)
         {
             this.assembly = assembly;

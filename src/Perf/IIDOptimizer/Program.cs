@@ -30,7 +30,6 @@ namespace GuidPatch
                         resolver,
                         winRTRuntimeAssembly);
 
-                    // moved to GuidPAtcher constructor. Directory.CreateDirectory(guidPatcher.OptimizerDir);
                     int numPatches = guidPatcher.ProcessAssembly();
                     guidPatcher.SaveAssembly(guidPatcher.OptimizerDir);
                     Console.WriteLine($"{numPatches} IID calculations/fetches patched");
