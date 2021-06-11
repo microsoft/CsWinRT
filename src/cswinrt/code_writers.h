@@ -6454,7 +6454,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
             {
                 std::vector<std::string> genericArgs;
                 auto arg_count = std::get<generic_type_instance>(eventTypeSemantics).generic_args.size();
-                for (int i = 0; i < arg_count; ++i )
+                for (int i = 0; i < (int) arg_count; ++i )
                 {
                     auto semantics = w.get_generic_arg_scope(i).first;
                     if (std::holds_alternative<generic_type_param>(semantics))
