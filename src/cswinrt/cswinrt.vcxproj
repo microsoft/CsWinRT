@@ -45,6 +45,9 @@
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>kernel32.lib;user32.lib;%(AdditionalDependencies);windowsapp.lib;advapi32.lib;shlwapi.lib</AdditionalDependencies>
     </Link>
+    <ClCompile>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="cmd_reader.h" />
