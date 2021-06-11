@@ -90,7 +90,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTFilters Condition="'$(CsWinRTFilters)' == ''">
 @(CsWinRTExcludeItems->'-exclude %(Identity)', '&#x0d;&#x0a;')
 @(CsWinRTIncludeItems->'-include %(Identity)', '&#x0d;&#x0a;')
-      </CsWinRTFilters> 
+      </CsWinRTFilters>
+      <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..\metadata\WinRT.Interop.winmd'))</CsWinRTInteropMetadata>
+      <CsWinRTIncludeWinRTInterop Condition="$(CsWinRTFilters.Contains('-include Windows&#x0d;&#x0a;'))">
+-input $(CsWinRTInteropMetadata)
+-include WinRT.Interop
+      </CsWinRTIncludeWinRTInterop>
       <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
 $(CsWinRTCommandVerbosity)
 -target $(TargetFramework)
@@ -98,6 +103,7 @@ $(CsWinRTWindowsMetadataInput)
 -input @(CsWinRTInputs->'"%(FullPath)"', ' ')
 -output "$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
 $(CsWinRTFilters)
+$(CsWinRTIncludeWinRTInterop)
       </CsWinRTParams>
     </PropertyGroup>
     <MakeDir Directories="$(CsWinRTGeneratedFilesDir)" />

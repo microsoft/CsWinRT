@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.Windows.MidlRT.2.0.200924.1\build\native\Microsoft.Windows.MidlRT.props" Condition="Exists('..\packages\Microsoft.Windows.MidlRT.2.0.200924.1\build\native\Microsoft.Windows.MidlRT.props')" />
   <Import Project="..\packages\Microsoft.Windows.WinMD.1.0.191022.1\build\native\Microsoft.Windows.WinMD.props" Condition="Exists('..\packages\Microsoft.Windows.WinMD.1.0.191022.1\build\native\Microsoft.Windows.WinMD.props')" />
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -45,6 +46,9 @@
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>kernel32.lib;user32.lib;%(AdditionalDependencies);windowsapp.lib;advapi32.lib;shlwapi.lib</AdditionalDependencies>
     </Link>
+    <ClCompile>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="cmd_reader.h" />
@@ -66,6 +70,7 @@
     <ResourceCompile Include="version.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Directory.Build.props" />
     <None Include="Directory.Build.targets" />
     <None Include="packages.config" />
     <None Include="PreviousPlatforms.linq" />
@@ -105,15 +110,23 @@
     <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.cs" />
     <None Include="strings\additions\Microsoft.UI.Xaml\Microsoft.UI.Xaml.SR.cs" />
     <None Include="strings\additions\Windows.UI\Windows.UI.cs" />
+    <None Include="strings\ComInteropHelpers.cs" />
     <None Include="strings\WinRT.cs" />
     <None Include="strings\WinRT_Interop.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Midl Include="WinRT.Interop.idl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Microsoft.Windows.MidlRT.2.0.200924.1\build\native\Microsoft.Windows.MidlRT.targets" Condition="Exists('..\packages\Microsoft.Windows.MidlRT.2.0.200924.1\build\native\Microsoft.Windows.MidlRT.targets')" />
+  </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105.The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Microsoft.Windows.WinMD.1.0.191022.1\build\native\Microsoft.Windows.WinMD.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.WinMD.1.0.191022.1\build\native\Microsoft.Windows.WinMD.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.MidlRT.2.0.200924.1\build\native\Microsoft.Windows.MidlRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.MidlRT.2.0.200924.1\build\native\Microsoft.Windows.MidlRT.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.MidlRT.2.0.200924.1\build\native\Microsoft.Windows.MidlRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.MidlRT.2.0.200924.1\build\native\Microsoft.Windows.MidlRT.targets'))" />
   </Target>
 </Project>

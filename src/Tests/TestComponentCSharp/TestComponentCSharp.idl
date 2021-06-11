@@ -130,6 +130,17 @@ namespace TestComponentCSharp
         static Int32 NumObjects{ get; };
     }
 
+    interface ISingleton
+    {
+        Int32 IntProperty;
+        event Windows.Foundation.EventHandler<Int32> IntPropertyChanged;
+    }
+
+    static runtimeclass Singleton
+    {
+        static ISingleton Instance;
+    }
+
     [default_interface, gc_pressure(Windows.Foundation.Metadata.GCPressureAmount.High)]
     runtimeclass Class :
         Windows.Foundation.IStringable
@@ -416,13 +427,6 @@ namespace TestComponentCSharp
         CustomDisposableTest();
     }
     
-    // IInspectable-based interop interface
-    [uuid(39E050C3-4E74-441A-8DC0-B81104DF949C)]
-    interface IUserConsentVerifierInterop
-    {
-        Object RequestVerificationForWindowAsync(UInt64 appWindow, String message, GUID riid);
-    }
-
     [default_interface]
     runtimeclass CustomBindableVectorTest : Microsoft.UI.Xaml.Interop.IBindableVector
     {
@@ -464,7 +468,7 @@ namespace TestComponentCSharp
             static event Windows.Foundation.EventHandler<Int32> WarningEvent;
         }
     }
-
+    
     [contract(Windows.Foundation.UniversalApiContract, 8)]
     interface IWarning1
     {
