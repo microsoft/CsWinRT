@@ -2525,7 +2525,7 @@ db_path.stem().string());
 
     void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics);
 
-    void write_event_source_ctor(writer& w, Event const& evt)
+    void write_event_source_ctor(writer& w, Event const& evt, int index)
     {
         if (for_typedef(w, get_type_semantics(evt.EventType()), [&](TypeDef const& eventType)
             {
@@ -2535,10 +2535,12 @@ db_path.stem().string());
                     w.write(R"(
 new EventSource__EventHandler%(_obj,
 %,
+%,
 %))",
 bind<write_type_params>(eventType),
 get_invoke_info(w, add).first,
-get_invoke_info(w, remove).first);
+get_invoke_info(w, remove).first,
+index);
                     return true;
                 }
                 return false;
@@ -2549,13 +2551,15 @@ get_invoke_info(w, remove).first);
 
         auto [add, remove] = get_event_methods(evt);
         w.write(R"(
-    new %%(_obj,
-    %,
-    %))",
+new %%(_obj,
+%,
+%,
+%))",
             bind<write_event_source_type_name>(get_type_semantics(evt.EventType())),
             bind<write_event_source_generic_args>(get_type_semantics(evt.EventType())),
             get_invoke_info(w, add).first,
-            get_invoke_info(w, remove).first);
+            get_invoke_info(w, remove).first,
+            index);
     }
 
     void write_event_sources(writer& w, TypeDef const& type)
@@ -3463,26 +3467,37 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
             w.write("}\n");
         }
 
+        int index = 0;
         for (auto&& evt : type.EventList())
         {
             auto semantics = get_type_semantics(evt.EventType());
-            auto event_source = settings.netstandard_compat ? 
-                w.write_temp("_%", evt.Name())
-                : w.write_temp(R"(_%.GetValue((IWinRTObject)this, (key) =>
-{
-%
-return %;
-}))",
-                    evt.Name(),
-                    bind(init_call_variables),
-                    bind<write_event_source_ctor>(evt));
+            auto event_source = w.write_temp(settings.netstandard_compat ? "_%" : "Get_%()", evt.Name());
             w.write(R"(
-%event % %%
+%%event % %%
 {
 add => %.Subscribe(value);
 remove => %.Unsubscribe(value);
 }
 )",
+                bind([&](writer& w)
+                {
+                    if(settings.netstandard_compat)
+                        return;
+                    w.write(R"(private EventSource<%> Get_%()
+{
+return _%.GetValue((IWinRTObject)this, (key) =>
+{
+%
+return %;
+});
+}
+)",
+                        bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+                        evt.Name(),
+                        evt.Name(),
+                        bind(init_call_variables),
+                        bind<write_event_source_ctor>(evt, index));
+                }),
                 settings.netstandard_compat ? "public " : "",
                 bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
                 bind([&](writer& w)
@@ -3495,6 +3510,7 @@ remove => %.Unsubscribe(value);
                 evt.Name(),
                 event_source,
                 event_source);
+            index++;
         }
     }
 
@@ -4960,11 +4976,14 @@ public static Guid PIID = Vftbl.PIID;
             type_name,
             type.TypeName(),
             type.TypeName(),
-            bind_each([&](writer& w, Event const& evt)
+            [&](writer& w) 
             {
-                w.write("_% = %;\n", evt.Name(), bind<write_event_source_ctor>(evt));
+                int index = 0;
+                for (auto&& evt : type.EventList())
+                {
+                    w.write("_% = %;\n", evt.Name(), bind<write_event_source_ctor>(evt, index++));
+                }
             },
-                type.EventList()),
             [&](writer& w) {
                 for (auto required_interface : required_interfaces)
                 {
@@ -6471,7 +6490,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
 
         internal %(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler) : base(obj, addHandler, removeHandler)
+            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler, int index) : base(obj, addHandler, removeHandler, index)
         {
         }
 

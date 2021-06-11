@@ -488,7 +488,12 @@ namespace WinRT
                 IWeakReference target = null;
                 try
                 {
-                    target = obj.AsInterface<IWeakReferenceSource>().GetWeakReference();
+#if NETSTANDARD2_0
+                    var weakRefSource = (IWeakReferenceSource)typeof(IWeakReferenceSource).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { obj });
+#else
+                    var weakRefSource = (IWeakReferenceSource)(object)new WinRT.IInspectable(obj);
+#endif
+                    target = weakRefSource.GetWeakReference();
                 }
                 catch (Exception)
                 {
@@ -560,7 +565,8 @@ namespace WinRT
 
         internal EventSource__EventHandler(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler) : base(obj, addHandler, removeHandler)
+            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler,
+            int index) : base(obj, addHandler, removeHandler, index)
         {
         }
 
