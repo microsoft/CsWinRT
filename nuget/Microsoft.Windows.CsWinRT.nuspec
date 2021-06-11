@@ -26,7 +26,7 @@
     <file src="Microsoft.Windows.CsWinRT.Prerelease*.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" target="buildTransitive"/>
-    <file src="$cswinrt_exe$\..\..\obj\merged\WinRT.Interop.winmd" target="metadata"/>
+    <file src="$cswinrt_exe$\..\bin\WinRT.Interop.winmd" target="metadata"/>
     <file src="readme.txt"/>
     <file src="$net5_runtime$" target="lib\net5.0\"/>
     <file src="$source_generator$" target="analyzers\dotnet\cs\"/>
