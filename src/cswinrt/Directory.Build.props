@@ -2,11 +2,6 @@
 
     <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
-    <PropertyGroup>
-        <!--Avoid UniversalApiContract type not found error-->
-        <CppWinRTMergeNoValidate>true</CppWinRTMergeNoValidate>
-    </PropertyGroup>
-
     <ItemDefinitionGroup>
         <Midl>
             <AdditionalOptions>%(AdditionalOptions) /D UAC_VERSION=99</AdditionalOptions>

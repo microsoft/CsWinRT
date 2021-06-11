@@ -34,7 +34,7 @@
     <BuildOutDir Condition="'$(BuildOutDir)'==''">$([MSBuild]::NormalizeDirectory('$(SolutionDir)_build', '$(BuildPlatform)', '$(Configuration)'))</BuildOutDir>
     <CsWinRTPath>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', 'cswinrt', 'bin'))</CsWinRTPath>
     <CsWinRTPath Condition="'$(Platform)'=='ARM' or '$(Platform)'=='ARM64'">$([MSBuild]::NormalizeDirectory('$(SolutionDir)_build', 'x86', '$(Configuration)', 'cswinrt', 'bin'))</CsWinRTPath>
-    <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$(CsWinRTPath)WinRT.Interop.winmd</CsWinRTInteropMetadata>
+    <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$(CsWinRTPath)..\obj\merged\WinRT.Interop.winmd</CsWinRTInteropMetadata>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.vcxproj' or '$(MSBuildProjectExtension)' == '.wapproj'">
