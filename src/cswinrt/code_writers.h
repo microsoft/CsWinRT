@@ -2531,11 +2531,10 @@ db_path.stem().string());
     {
         if (for_typedef(w, get_type_semantics(evt.EventType()), [&](TypeDef const& eventType)
             {
-                if (eventType.TypeNamespace() == "System" && eventType.TypeName() == "EventHandler`1")
+                if ((eventType.TypeNamespace() == "Windows.Foundation" || eventType.TypeNamespace() == "System") && eventType.TypeName() == "EventHandler`1")
                 {
                     auto [add, remove] = get_event_methods(evt);
-                    w.write(R"(
-new EventSource__EventHandler%(_obj,
+                    w.write(R"( new EventSource__EventHandler%(_obj,
 %,
 %))",
 bind<write_type_params>(eventType),
@@ -6459,7 +6458,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
     {
         for_typedef(w, eventTypeSemantics, [&](TypeDef const& eventType)
             {
-                if (eventType.TypeNamespace() == "System" && eventType.TypeName() == "EventHandler`1")
+                if ((eventType.TypeNamespace() == "Windows.Foundation" || eventType.TypeNamespace() == "System") && eventType.TypeName() == "EventHandler`1")
                 {
                     return;
                 }
