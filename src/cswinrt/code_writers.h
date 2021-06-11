@@ -5135,13 +5135,9 @@ if (IsOverridableInterface(iid) || typeof(global::WinRT.IInspectable).GUID == ii
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
 
-if (%.TryAs<IUnknownVftbl>(iid, out ObjectReference<IUnknownVftbl> objRef) >= 0)
+if (%.TryAs(iid, out ppv) >= 0)
 {
-using (objRef)
-{
-ppv = objRef.GetRef();
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.Handled;
-}
 }
 
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;

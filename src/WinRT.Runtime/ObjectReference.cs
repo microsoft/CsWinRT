@@ -170,6 +170,23 @@ namespace WinRT
             return hr;
         }
 
+        // Used only as part of the GetInterface implementation where the
+        // result is an reference passed across the ABI and doesn't need to
+        // be tracked as an internal reference.  This is separate to handle
+        // tear off aggregate scenario where releasing an reference can end up
+        // deleting the tear off interface.
+        public virtual unsafe int TryAs(Guid iid, out IntPtr ppv)
+        {
+            ppv = IntPtr.Zero;
+            ThrowIfDisposed();
+            int hr = VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr);
+            if (hr >= 0)
+            {
+                ppv = thatPtr;
+            }
+            return hr;
+        }
+
         public unsafe IObjectReference As(Guid iid) => As<IUnknownVftbl>(iid);
 
         public T AsType<T>()
