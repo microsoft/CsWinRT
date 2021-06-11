@@ -946,6 +946,21 @@ namespace winrt::TestComponentCSharp::implementation
     {
         return winrt::single_threaded_vector_view(std::vector<TestComponentCSharp::Class>{ *this, *this, *this });
     }
+    
+    // Test IIDOptimizer
+    IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> Class::GetEventArgsVector()
+    {
+        auto mock = make<data_errors_changed_event_args>(L"name");
+        DataErrorsChangedEventArgs args(detach_abi(mock), take_ownership_from_abi_t());
+        return winrt::single_threaded_vector_view(std::vector<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs>{ args });
+    }
+
+    // Test IIDOptimizer
+    IVectorView<TestComponentCSharp::ProvideUri> Class::GetNonGenericDelegateVector()
+    {
+        TestComponentCSharp::ProvideUri handler = [] { return Windows::Foundation::Uri(L"http://microsoft.com"); };
+        return winrt::single_threaded_vector_view(std::vector<ProvideUri>{ handler });
+    }
 
     void Class::CompleteAsync()
     {

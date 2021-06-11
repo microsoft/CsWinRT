@@ -298,6 +298,10 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IVectorView<IProperties1> GetInterfaceVector();
         [noexcept] Windows.Foundation.Collections.IVectorView<Class> GetClassVector();
 
+        // Test IIDOptimizer
+        Windows.Foundation.Collections.IVectorView<Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs> GetEventArgsVector();
+        Windows.Foundation.Collections.IVectorView<ProvideUri> GetNonGenericDelegateVector();
+        
         Windows.Foundation.Collections.IIterable<Int32> GetIntIterable();
         void SetIntIterable(Windows.Foundation.Collections.IIterable<Int32> value);
 
