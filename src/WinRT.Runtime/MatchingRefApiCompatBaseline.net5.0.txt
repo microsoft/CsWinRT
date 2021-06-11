@@ -3,4 +3,6 @@ TypesMustExist : Type 'System.Numerics.VectorExtensions' does not exist in the r
 TypesMustExist : Type 'WinRT.ComWrappersHelper' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterObjectForInterface(System.Object, System.IntPtr, System.Runtime.InteropServices.CreateObjectFlags)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'protected void WinRT.IObjectReference.AddRef(System.Boolean)' does not exist in the reference but it does exist in the implementation.
-Total Issues: 4
+TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
+Total Issues: 6
