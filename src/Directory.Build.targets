@@ -29,4 +29,8 @@
     <Error Condition="!Exists('$(SolutionDir)TestWinRT')" Text="This solution requires the TestWinRT repo, which is missing. Please run build.cmd from a Visual Studio command prompt." />
   </Target>
 
+  <Target Name="CleanIntermediateDir" AfterTargets="Build">
+    <RemoveDir Directories="$(IntDir)" />
+  </Target>
+
 </Project>

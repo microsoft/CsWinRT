@@ -5,11 +5,15 @@
     </PropertyGroup>
 
     <!--Workaround for MidlRT nupkg expecting project to publish $(RootNamespace).winmd-->
-    <Target Name="CopyWinRTInteropWinMD" Inputs="$(CsWinRTInteropMetadata)" Outputs="$(MidlRTProjectWinMD)">
+    <Target Name="CopyWinRTInteropWinMD" Inputs="$(CsWinRTPath)..\obj\merged\WinRT.Interop.winmd" Outputs="$(MidlRTProjectWinMD);$(CsWinRTInteropMetadata)">
         <Copy UseHardlinksIfPossible="$(MidlRTUseHardlinksIfPossible)"
             SkipUnchangedFiles="$(MidlRTSkipUnchangedFiles)"
-            SourceFiles="$(CsWinRTInteropMetadata)"
+            SourceFiles="$(CsWinRTPath)..\obj\merged\WinRT.Interop.winmd"
             DestinationFiles="$(MidlRTProjectWinMD)" />
+        <Copy UseHardlinksIfPossible="$(MidlRTUseHardlinksIfPossible)"
+            SkipUnchangedFiles="$(MidlRTSkipUnchangedFiles)"
+            SourceFiles="$(CsWinRTPath)..\obj\merged\WinRT.Interop.winmd"
+            DestinationFiles="$(CsWinRTInteropMetadata)" />
     </Target>
 
     <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />

@@ -110,9 +110,9 @@ if not "%cswinrt_label%"=="" goto %cswinrt_label%
 :restore
 rem When a preview nuget is required, update -self doesn't work, so manually update 
 if exist %nuget_dir%\nuget.exe (
-  %nuget_dir%\nuget.exe | findstr 5.8.0 >nul
+  %nuget_dir%\nuget.exe | findstr 5.9 >nul
   if ErrorLevel 1 (
-    echo Updating to nuget 5.8.0
+    echo Updating to nuget 5.9
     rd /s/q %nuget_dir% >nul 2>&1
   )
 )
