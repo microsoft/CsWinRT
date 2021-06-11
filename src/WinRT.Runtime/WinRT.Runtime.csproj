@@ -24,7 +24,7 @@
   </PropertyGroup>
     
   <ItemGroup>
-    <Compile Include="../cswinrt/strings/*.cs" Link="cswinrt/%(FileName)%(Extension)" />
+    <Compile Include="../cswinrt/strings/WinRT*.cs" Link="cswinrt/%(FileName)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">

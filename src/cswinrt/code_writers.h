@@ -1468,8 +1468,9 @@ remove => %.% -= value;
         {
             auto [attribute_namespace, attribute_name] = attribute.TypeNamespaceAndName();
             attribute_name = attribute_name.substr(0, attribute_name.length() - "Attribute"sv.length());
-            // GCPressure, Guid, Flags are handled separately
-            if (attribute_name == "GCPressure" || attribute_name == "Guid" || attribute_name == "Flags") continue;
+            // GCPressure, Guid, Flags, ProjectionInternal are handled separately
+            if (attribute_name == "GCPressure" || attribute_name == "Guid" || 
+                attribute_name == "Flags" || attribute_name == "ProjectionInternal") continue;
             auto attribute_full = (attribute_name == "AttributeUsage") ? "AttributeUsage" :
                 w.write_temp("%.%", attribute_namespace, attribute_name);
             auto signature = attribute.Value();
@@ -2514,10 +2515,11 @@ db_path.stem().string());
 
     void write_static_class(writer& w, TypeDef const& type)
     {
-        w.write(R"(%public static class %
+        w.write(R"(%%public static class %
 {
 %})",
             bind<write_winrt_attribute>(type),
+            bind<write_type_custom_attributes>(type, true),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             bind<write_attributed_types>(type)
         );
@@ -4909,7 +4911,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             bind<write_winrt_attribute>(type),
             bind<write_guid_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
-            is_exclusive_to(type) ? "internal" : "public",
+            is_exclusive_to(type) || is_projection_internal(type) ? "internal" : "public",
             type_name,
             bind<write_type_inheritance>(type, object_type{}, false, false),
             bind<write_interface_member_signatures>(type)
@@ -6452,7 +6454,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
             {
                 std::vector<std::string> genericArgs;
                 auto arg_count = std::get<generic_type_instance>(eventTypeSemantics).generic_args.size();
-                for (int i = 0; i < arg_count; i++)
+                for (int i = 0; i < arg_count; ++i )
                 {
                     auto semantics = w.get_generic_arg_scope(i).first;
                     if (std::holds_alternative<generic_type_param>(semantics))

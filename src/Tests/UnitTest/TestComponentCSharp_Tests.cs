@@ -1158,12 +1158,6 @@ namespace UnitTest
             var staticFactory = ComImports.As<IStringableInterop>();
             staticFactory.ToString(out hstr);
             Assert.Equal("ComImports", MarshalString.FromAbi(hstr));
-
-            // IInspectable-based (projected) interop interface
-            var interop = Windows.Security.Credentials.UI.UserConsentVerifier.As<IUserConsentVerifierInterop>();
-            var guid = GuidGenerator.CreateIID(typeof(IAsyncOperation<UserConsentVerificationResult>));
-            var operation = (IAsyncOperation<UserConsentVerificationResult>)interop.RequestVerificationForWindowAsync(0, "message", guid);
-            Assert.NotNull(operation);
         }
 
         [Fact]
