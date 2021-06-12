@@ -91,7 +91,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 @(CsWinRTExcludeItems->'-exclude %(Identity)', '&#x0d;&#x0a;')
 @(CsWinRTIncludeItems->'-include %(Identity)', '&#x0d;&#x0a;')
       </CsWinRTFilters>
-      <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..\metadata\WinRT.Interop.winmd'))</CsWinRTInteropMetadata>
+      <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\metadata\WinRT.Interop.winmd'))</CsWinRTInteropMetadata>
       <CsWinRTIncludeWinRTInterop Condition="$(CsWinRTFilters.Contains('-include Windows&#x0d;&#x0a;'))">
 -input $(CsWinRTInteropMetadata)
 -include WinRT.Interop
