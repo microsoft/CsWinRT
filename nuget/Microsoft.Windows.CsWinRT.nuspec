@@ -19,6 +19,7 @@
   </metadata>
   <files>
     <file src="LICENSE"/>
+    <file src="NOTICE.txt"/>
     <file src="$cswinrt_exe$"/>
     <file src="Microsoft.Windows.CsWinRT.props" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.targets" target="build"/>

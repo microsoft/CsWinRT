@@ -132,7 +132,7 @@ $(CsWinRTIncludeWinRTInterop)
           BeforeTargets="Link">  
     <PropertyGroup>
       <!-- Set already when running locally in repo via Directory.Build.props -->
-      <CsWinRTIIDOptimizerPath Condition="'$(CsWinRTIIDOptimizerPath)' == ''">$(CsWinRTPath)build\tools\GuidPatch\</CsWinRTIIDOptimizerPath>
+      <CsWinRTIIDOptimizerPath Condition="'$(CsWinRTIIDOptimizerPath)' == ''">$(CsWinRTPath)build\tools\IIDOptimizer\</CsWinRTIIDOptimizerPath>
       <CsWinRTIIDOptimizerRuntimePath Condition="'$(CsWinRTIIDOptimizerRuntimePath)' == ''">$(CsWinRTPath)lib\net5.0\</CsWinRTIIDOptimizerRuntimePath>
       <!-- Inputs are the .dll from the obj dir -->
       <CsWinRTIIDOptimizerInput>@(BuiltProjectOutputGroupKeyOutput->'%(Identity)')</CsWinRTIIDOptimizerInput>
