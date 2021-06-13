@@ -500,4 +500,23 @@ namespace TestComponentCSharp
             //overridable event Windows.Foundation.EventHandler<Int32> WarningOverridableEvent;
         }
     }
+
+    [attributeusage(target_runtimeclass, target_interface, target_struct, target_enum, target_delegate, target_field, target_property, target_method, target_event)]
+    [attributename("attr_string")]
+    attribute MyStringAttribute
+    {
+        String Content;
+    }
+
+    [attr_string(
+"This is line one
+This is line two
+
+And this is another one"
+    )]
+    runtimeclass MultiLineStringAttributeTest
+    {
+      void f();
+    }
+
 }
