@@ -1321,7 +1321,7 @@ remove => %.% -= value;
                 },
                 [&](std::string_view type_name)
                 {
-                    w.write("\"%\"", type_name);
+                    w.write("^@\"%\"", type_name);
                 },
                 [&](auto&&)
                 {
