@@ -1,0 +1,37 @@
+﻿<!--NOTE: Directory.Build.* files are temporary until C#/WinRT nuget contains msbuild support-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="PatchRuntime" AfterTargets="Compile" BeforeTargets="Link">
+    <PropertyGroup>
+      <CsWinRTIIDOptimizerRuntimePath>C:\Users\jlarkin\.nuget\packages\microsoft.windows.cswinrt\1.2.6\lib\net5.0</CsWinRTIIDOptimizerRuntimePath>
+      <CsWinRTIIDOptimizerPath Condition="'$(CsWinRTIIDOptimizerPath)' == ''">$(CsWinRTPath)build\tools\GuidPatch\</CsWinRTIIDOptimizerPath>
+      <CsWinRTIIDOptimizerInput>@(BuiltProjectOutputGroupKeyOutput->'%(Identity)')</CsWinRTIIDOptimizerInput>
+      <CsWinRTIIDOptimizerOutputDir>$([System.IO.Directory]::GetParent($(CsWinRTIIDOptimizerInput))) </CsWinRTIIDOptimizerOutputDir>
+    </PropertyGroup>
+        
+    <Exec Command="$(CsWinRTIIDOptimizerPath)IIDOptimizer.exe $(CsWinRTIIDOptimizerInput) $(CsWinRTIIDOptimizerRuntimePath)"
+          ConsoleToMsBuild="true"
+          IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="CsWinRTGuidPatchOutput" />
+      <Output TaskParameter="ExitCode" PropertyName="CsWinRTGuidPatchExitCode"/>
+    </Exec>
+  </Target>
+
+  <Target Name="ReplaceWithPatchedRuntime"
+          Condition="$(CsWinRTGuidPatchExitCode) == 0"
+          BeforeTargets="Link"
+          AfterTargets="PatchRuntime"> 
+    <!-- Output dir of patcher tool -->
+    <ItemGroup>
+      <CsWinRTGuidPatchedFiles Include="$(MSBuildProjectDirectory)\obj\IIDOptimizer\*.dll" />
+    </ItemGroup>
+        
+    <!--  Replace the .dll in the output folder with the optimized version we just made -->
+    <Copy SourceFiles="@(CsWinRTGuidPatchedFiles)" DestinationFolder="$(CsWinRTIIDOptimizerOutputDir)" />
+  </Target>
+
+</Project>
+
+
+
+        

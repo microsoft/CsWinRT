@@ -6,11 +6,12 @@ namespace GuidPatch
 {
     class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             if (args.Length != 2)
             {
                 Console.WriteLine($"Expected to be given two arguments. Given {args.Length}");
+                return -1;
             }
             else
             {
@@ -33,11 +34,12 @@ namespace GuidPatch
                     int numPatches = guidPatcher.ProcessAssembly();
                     guidPatcher.SaveAssembly(guidPatcher.OptimizerDir);
                     Console.WriteLine($"{numPatches} IID calculations/fetches patched");
+                    return 0;
                 }
                 catch (AssemblyResolutionException)
                 {
-                    Console.WriteLine("Failed to resolve WinRT.Runtime, shutting down.");
-                    return;
+                    Console.WriteLine("Failed to resolve an assembly, shutting down.");
+                    return -2;
                 }
             }
         }
