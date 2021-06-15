@@ -7,14 +7,14 @@ namespace WinRT.Interop
 {
     [WindowsRuntimeType]
     [Guid("00000038-0000-0000-C000-000000000046")]
-    public interface IWeakReferenceSource
+    internal interface IWeakReferenceSource
     {
         IWeakReference GetWeakReference();
     }
 
     [WindowsRuntimeType]
     [Guid("00000037-0000-0000-C000-000000000046")]
-    public interface IWeakReference
+    internal interface IWeakReference
     {
         IObjectReference Resolve(Guid riid);
     }
@@ -61,19 +61,28 @@ namespace ABI.WinRT.Interop
             public static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
+#if NETSTANDARD2_0
             internal delegate int GetWeakReferenceDelegate(IntPtr thisPtr, IntPtr* weakReference);
             private static readonly Delegate[] DelegateCache = new Delegate[1];
+#endif
             static Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
+#if NETSTANDARD2_0
                     _GetWeakReference = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new GetWeakReferenceDelegate(Do_Abi_GetWeakReference)).ToPointer(),
+#else
+                    _GetWeakReference = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_GetWeakReference
+#endif
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
                 Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
             }
 
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static int Do_Abi_GetWeakReference(IntPtr thisPtr, IntPtr* weakReference)
             {
                 *weakReference = default;
@@ -132,19 +141,28 @@ namespace ABI.WinRT.Interop
             public static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
+#if NETSTANDARD2_0
             public delegate int ResolveDelegate(IntPtr thisPtr, Guid* riid, IntPtr* objectReference);
             private static readonly Delegate[] DelegateCache = new Delegate[1];
+#endif
             static Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
+#if NETSTANDARD2_0
                     _Resolve = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ResolveDelegate(Do_Abi_Resolve)).ToPointer(),
+#else
+                    _Resolve = (delegate* unmanaged<IntPtr, Guid*, IntPtr*, int>)&Do_Abi_Resolve
+#endif
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
                 Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
             }
 
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
             private static int Do_Abi_Resolve(IntPtr thisPtr, Guid* riid, IntPtr* objectReference)
             {
                 IObjectReference _objectReference = default;

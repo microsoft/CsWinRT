@@ -71,7 +71,6 @@
     </ClInclude>
     <ClInclude Include="NonAgileClass.h" />
     <ClInclude Include="ComImports.h" />
-    <ClInclude Include="Singleton.h" />
     <ClInclude Include="WarningClass.h" />
     <ClInclude Include="WarningStatic.h" />
     <ClInclude Include="Windows.Class.h" />
@@ -87,7 +86,6 @@
     <ClCompile Include="NonAgileClass.cpp" />
     <ClCompile Include="ComImports.cpp" />
     <ClCompile Include="ManualProjectionTestClasses.cpp" />
-    <ClCompile Include="Singleton.cpp" />
     <ClCompile Include="WarningClass.cpp" />
     <ClCompile Include="WarningStatic.cpp" />
     <ClCompile Include="Windows.Class.cpp" />
