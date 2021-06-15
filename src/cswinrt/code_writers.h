@@ -6428,7 +6428,6 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                     {
                         genericArgs.push_back(w.write_temp("%", bind<write_generic_type_name>(i)));
                     }
-                    i++;
                 }                
                 if (genericArgs.size() == 0)
                 {
@@ -6452,36 +6451,36 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                 auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
                 auto invokeMethodSig = get_event_invoke_method(eventType);
                 w.write(R"(
-    internal unsafe class %% : EventSource<%>
-    {
-        private % handler;
+internal unsafe class %% : EventSource<%>
+{
+private % handler;
 
-        internal %(IObjectReference obj,
-            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler) : base(obj, addHandler, removeHandler)
-        {
-        }
+internal %(IObjectReference obj,
+delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler) : base(obj, addHandler, removeHandler)
+{
+}
 
-        override protected System.Delegate EventInvoke
-        {
-            get
-            {
-                if (handler == null)
-                {
-                    handler = (%) =>
-                    {
-                        var localDel = _event;
-                        if (localDel == null)
-                        {
-                            return %;
-                        }
-                        %localDel.Invoke(%);
-                    };
-                }
-                return handler;
-            }
-        }
-    }
+override protected System.Delegate EventInvoke
+{
+get
+{
+if (handler == null)
+{
+handler = (%) =>
+{
+var localDel = _event;
+if (localDel == null)
+{
+return %;
+}
+%localDel.Invoke(%);
+};
+}
+return handler;
+}
+}
+}
 )",
                     bind<write_event_source_type_name>(eventTypeSemantics),
                     bind<write_event_source_generic_args>(eventTypeSemantics),
