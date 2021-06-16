@@ -1304,7 +1304,7 @@ remove => %.% -= value;
                             }
                         }
                         w.write("%",
-                            bind_list([](writer& w, auto&& value) { w.write("AttributeTargets.%", value); },
+                            bind_list([](writer& w, auto&& value) { w.write("global::System.AttributeTargets.%", value); },
                                 " | ", values));
                     }
                     else for (auto field : enum_value.type.m_typedef.FieldList())
@@ -1471,7 +1471,7 @@ remove => %.% -= value;
             // GCPressure, Guid, Flags, ProjectionInternal are handled separately
             if (attribute_name == "GCPressure" || attribute_name == "Guid" || 
                 attribute_name == "Flags" || attribute_name == "ProjectionInternal") continue;
-            auto attribute_full = (attribute_name == "AttributeUsage") ? "AttributeUsage" :
+            auto attribute_full = (attribute_name == "AttributeUsage") ? "System.AttributeUsage" :
                 w.write_temp("%.%", attribute_namespace, attribute_name);
             auto signature = attribute.Value();
             auto params = write_custom_attribute_args(w, attribute, signature);
@@ -1481,7 +1481,7 @@ remove => %.% -= value;
                 auto platform = get_platform(w, signature, params);
                 if (!platform.empty())
                 {
-                    attributes["global::System.Runtime.Versioning.SupportedOSPlatform"].push_back(platform);
+                    attributes["System.Runtime.Versioning.SupportedOSPlatform"].push_back(platform);
                 }
             }
             // Skip metadata attributes without a projection
@@ -1499,18 +1499,14 @@ remove => %.% -= value;
             }
             attributes[attribute_full] = std::move(params);
         }
-        if (auto&& usage = attributes.find("AttributeUsage"); usage != attributes.end())
+        if (auto&& usage = attributes.find("System.AttributeUsage"); usage != attributes.end())
         {
             usage->second.push_back(w.write_temp("AllowMultiple = %", allow_multiple ? "true" : "false"));
         }
 
         for (auto&& attribute : attributes)
         {
-            w.write("[");
-            if (w._in_abi_impl_namespace)
-            {
-                w.write("global::");
-            }
+            w.write("[global::");
             w.write(attribute.first);
             if (!attribute.second.empty())
             {

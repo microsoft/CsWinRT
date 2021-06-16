@@ -519,4 +519,29 @@ And this is another one"
       void f();
     }
 
+    // Compile time test for sub windows namespace
+    namespace Windows
+    {
+        runtimeclass Class
+        {
+            Class();
+            static void StaticMethod();
+            void Method();
+            void Method2(Windows.Foundation.IStringable stringable);
+        }
+
+        [contract(Windows.Foundation.UniversalApiContract, 8)]
+        interface IWarning
+        {
+            Int32 WarningInterfacePropertySetter{ get; };
+            event Windows.Foundation.TypedEventHandler<Class, String> StringPropertyChanged;
+        }
+
+        [contract(Windows.Foundation.UniversalApiContract, 10)]
+        [attributeusage(target_all)]
+        [attributename("warning2")]
+        attribute Warning2Attribute
+        {
+        };
+    }
 }
