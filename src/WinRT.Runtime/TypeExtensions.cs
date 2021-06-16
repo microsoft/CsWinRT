@@ -31,7 +31,7 @@ namespace WinRT
                 }
 
                 var helper = $"ABI.{fullTypeName}";
-                return Type.GetType(helper) ?? type.Assembly.GetType(helper);
+                return type.Assembly.GetType(helper) ?? Type.GetType(helper);
             });
         }
 
@@ -100,7 +100,7 @@ namespace WinRT
         internal static Type GetAuthoringMetadataType(this Type type)
         {
             var ccwTypeName = $"ABI.Impl.{type.FullName}";
-            return Type.GetType(ccwTypeName, false) ?? type.Assembly.GetType(ccwTypeName, false);
+            return type.Assembly.GetType(ccwTypeName, false) ?? Type.GetType(ccwTypeName, false);
         }
 
     }
