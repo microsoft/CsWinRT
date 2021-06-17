@@ -386,7 +386,7 @@ namespace UnitTest
         [Fact]
         public void TestReadOnlyDictionaryLookup()
         {
-            Assert.True(LookupPorts().Wait(1000));
+            Assert.True(LookupPorts().Wait(5000));
         }
 
 #if NET5_0
@@ -1158,12 +1158,6 @@ namespace UnitTest
             var staticFactory = ComImports.As<IStringableInterop>();
             staticFactory.ToString(out hstr);
             Assert.Equal("ComImports", MarshalString.FromAbi(hstr));
-
-            // IInspectable-based (projected) interop interface
-            var interop = Windows.Security.Credentials.UI.UserConsentVerifier.As<IUserConsentVerifierInterop>();
-            var guid = GuidGenerator.CreateIID(typeof(IAsyncOperation<UserConsentVerificationResult>));
-            var operation = (IAsyncOperation<UserConsentVerificationResult>)interop.RequestVerificationForWindowAsync(0, "message", guid);
-            Assert.NotNull(operation);
         }
 
         [Fact]
@@ -2444,15 +2438,14 @@ namespace UnitTest
             Assert.True(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
         }
 
+        // Ensure that event subscription state is properly cached to enable later unsubscribes
         [Fact]
-        public void TestStaticEventWithGC()
+        public void TestEventSourceCaching()
         {
             bool eventCalled = false;
-            void Class_StaticIntPropertyChanged(object sender, int e)
-            {
-                eventCalled = (e == 3);
-            }
+            void Class_StaticIntPropertyChanged(object sender, int e) => eventCalled = (e == 3);
 
+            // Test static codegen-based EventSource caching
             Class.StaticIntPropertyChanged += Class_StaticIntPropertyChanged;
             GC.Collect(2, GCCollectionMode.Forced, true);
             GC.WaitForPendingFinalizers();
@@ -2463,6 +2456,23 @@ namespace UnitTest
             GC.Collect(2, GCCollectionMode.Forced, true);
             GC.WaitForPendingFinalizers();
             Class.StaticIntProperty = 3;
+            Assert.True(eventCalled);
+
+            // Test dynamic WeakRef-based EventSource caching
+            eventCalled = false;
+            static void Subscribe(EventHandler<int> handler) => Singleton.Instance.IntPropertyChanged += handler;
+            static void Unsubscribe(EventHandler<int> handler) => Singleton.Instance.IntPropertyChanged -= handler;
+            static void Assign(int value) => Singleton.Instance.IntProperty = value;
+            Subscribe(Class_StaticIntPropertyChanged);
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            Unsubscribe(Class_StaticIntPropertyChanged);
+            Assign(3);
+            Assert.False(eventCalled);
+            Subscribe(Class_StaticIntPropertyChanged);
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            Assign(3);
             Assert.True(eventCalled);
         }
 

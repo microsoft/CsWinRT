@@ -1,0 +1,11 @@
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" >
+
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+    <ItemDefinitionGroup>
+        <Midl>
+            <AdditionalOptions>%(AdditionalOptions) /D UAC_VERSION=99</AdditionalOptions>
+        </Midl>
+    </ItemDefinitionGroup>
+
+</Project>

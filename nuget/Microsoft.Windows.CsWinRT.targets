@@ -68,7 +68,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="CsWinRTGenerateProjection" DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences" Condition="'$(CsWinRTGenerateProjection)' == 'true'">
     <PropertyGroup>
       <CsWinRTResponseFile>$(CsWinRTGeneratedFilesDir)cswinrt.rsp</CsWinRTResponseFile>
-	  <CsWinRTCommand>"$(CsWinRTExe)" %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+      <CsWinRTCommand>"$(CsWinRTExe)" %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
       <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadataInput Condition="'$(CsWinRTWindowsMetadata)' != ''">-input $(CsWinRTWindowsMetadata)</CsWinRTWindowsMetadataInput>
@@ -90,7 +90,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTFilters Condition="'$(CsWinRTFilters)' == ''">
 @(CsWinRTExcludeItems->'-exclude %(Identity)', '&#x0d;&#x0a;')
 @(CsWinRTIncludeItems->'-include %(Identity)', '&#x0d;&#x0a;')
-      </CsWinRTFilters> 
+      </CsWinRTFilters>
+      <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\metadata\WinRT.Interop.winmd'))</CsWinRTInteropMetadata>
+      <CsWinRTIncludeWinRTInterop Condition="$(CsWinRTFilters.Contains('-include Windows&#x0d;&#x0a;')) or $(CsWinRTFilters.Contains('-include Windows&#x0a;'))">
+-input $(CsWinRTInteropMetadata)
+-include WinRT.Interop
+      </CsWinRTIncludeWinRTInterop>
       <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
 $(CsWinRTCommandVerbosity)
 -target $(TargetFramework)
@@ -98,18 +103,20 @@ $(CsWinRTWindowsMetadataInput)
 -input @(CsWinRTInputs->'"%(FullPath)"', ' ')
 -output "$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
 $(CsWinRTFilters)
+$(CsWinRTIncludeWinRTInterop)
       </CsWinRTParams>
     </PropertyGroup>
     <MakeDir Directories="$(CsWinRTGeneratedFilesDir)" />
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
     <Exec Command="$(CsWinRTCommand)" />
-    <ItemGroup>
-      <CsWinRTOutputs Include="$(CsWinRTGeneratedFilesDir)/*.cs"/>
-      <UpToDateCheckInput Include="@(CsWinRTInputs)" Set="CsWinRTInputs" />
-      <UpToDateCheckOutput Include="$(CsWinRTResponseFile)" Set="CsWinRTInputs" />
-      <UpToDateCheckInput Include="$(CsWinRTResponseFile)" Set="CsWinRTOutputs" />
-      <UpToDateCheckOutput Include="@(CsWinRTOutputs)" Set="CsWinRTOutputs" />
+    <!--To support Visual Studio's FastUpToDate builds (except in authoring), need to capture the relationship of *.cs: *.winmd.
+    To ensure that modifications to input winmds are reflected in generated *.cs files, WinRT.cs is used as a build
+    marker and updated to the most recent winmd timestamp. UpToDateCheckBuilt then captures the dependency from
+    winmds to cs files.-->
+    <Touch Condition="'$(CsWinRTComponent)' != 'true'" Files="$(CsWinRTGeneratedFilesDir)/WinRT.cs" Time="%(CsWinRTInputs.ModifiedTime)"/>
+    <ItemGroup Condition="'$(CsWinRTComponent)' != 'true'">
+      <UpToDateCheckBuilt Include="$(CsWinRTGeneratedFilesDir)/WinRT.cs" Original="@(CsWinRTInputs)" />
     </ItemGroup>
   </Target>
   
