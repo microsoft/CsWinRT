@@ -370,7 +370,10 @@ namespace WinRT
         {
             lock (this)
             {
-                if (_state.del is null)
+                bool registerHandler = _state.del is null;
+                
+                _state.del = (TDelegate)global::System.Delegate.Combine(_state.del, del);
+                if (registerHandler)
                 {
                     var marshaler = CreateMarshaler((TDelegate)EventInvoke);
                     try
@@ -385,7 +388,6 @@ namespace WinRT
                         DisposeMarshaler(marshaler);
                     }
                 }
-                _state.del = (TDelegate)global::System.Delegate.Combine(_state.del, del);
             }
         }
 
@@ -445,10 +447,10 @@ namespace WinRT
             }
 
             private IWeakReference target;
-            private ConcurrentDictionary<int, EventSource<TDelegate>.State> states = new ConcurrentDictionary<int, EventSource<TDelegate>.State>();
+            private readonly ConcurrentDictionary<int, EventSource<TDelegate>.State> states = new ConcurrentDictionary<int, EventSource<TDelegate>.State>();
 
-            private static ReaderWriterLockSlim cachesLock = new ReaderWriterLockSlim();
-            private static ConcurrentDictionary<IntPtr, Cache> caches = new ConcurrentDictionary<IntPtr, Cache>();
+            private static readonly ReaderWriterLockSlim cachesLock = new ReaderWriterLockSlim();
+            private static readonly ConcurrentDictionary<IntPtr, Cache> caches = new ConcurrentDictionary<IntPtr, Cache>();
 
             private Cache Update(IWeakReference target, EventSource<TDelegate> source, int index)
             {
