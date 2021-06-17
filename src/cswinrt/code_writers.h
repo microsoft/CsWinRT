@@ -6509,7 +6509,7 @@ if (handler == null)
 {
 handler = (%) =>
 {
-var localDel = _event;
+var localDel = _state.del;
 if (localDel == null)
 {%
 return %;
