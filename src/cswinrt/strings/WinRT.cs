@@ -581,9 +581,9 @@ namespace WinRT
                 {
                     handler = (System.Object obj, T e) =>
                     {
-                        System.EventHandler<T> delLocal = _state.del;
-                        if (delLocal != null)
-                            delLocal.Invoke(obj, e);
+                        var localDel = _state.del;
+                        if (localDel != null)
+                            localDel.Invoke(obj, e);
                     };
                 }
                 return handler;
