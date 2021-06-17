@@ -130,17 +130,6 @@ namespace TestComponentCSharp
         static Int32 NumObjects{ get; };
     }
 
-    interface ISingleton
-    {
-        Int32 IntProperty;
-        event Windows.Foundation.EventHandler<Int32> IntPropertyChanged;
-    }
-
-    static runtimeclass Singleton
-    {
-        static ISingleton Instance;
-    }
-
     [default_interface, gc_pressure(Windows.Foundation.Metadata.GCPressureAmount.High)]
     runtimeclass Class :
         Windows.Foundation.IStringable
@@ -464,7 +453,7 @@ namespace TestComponentCSharp
             static event Windows.Foundation.EventHandler<Int32> WarningEvent;
         }
     }
-    
+
     [contract(Windows.Foundation.UniversalApiContract, 8)]
     interface IWarning1
     {
