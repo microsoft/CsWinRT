@@ -455,12 +455,6 @@ namespace cswinrt
             bind<write_parameter_name>(param));
     }
 
-    void write_projection_arg(writer& w, method_signature::param_t const& param)
-    {
-        w.write("%",
-            bind<write_parameter_name>(param));
-    }
-
     void write_event_source_type_name(writer& w, type_semantics const& eventTypeSemantics)
     {
         auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
@@ -506,7 +500,7 @@ namespace cswinrt
 
     void write_event_invoke_args(writer& w, method_signature const& methodSig)
     {
-        w.write("%", bind_list<write_projection_arg>(", ", methodSig.params()));
+        w.write("%", bind_list<write_parameter_name_with_modifier>(", ", methodSig.params()));
     }
 
     void write_abi_type(writer& w, type_semantics const& semantics)
