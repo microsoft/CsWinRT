@@ -114,8 +114,8 @@ $(CsWinRTIncludeWinRTInterop)
     To ensure that modifications to input winmds are reflected in generated *.cs files, WinRT.cs is used as a build
     marker and updated to the most recent winmd timestamp. UpToDateCheckBuilt then captures the dependency from
     winmds to cs files.-->
-    <Touch Condition="'$(CsWinRTComponent)' != 'true'" Files="$(CsWinRTGeneratedFilesDir)/WinRT.cs" Time="%(CsWinRTInputs.ModifiedTime)"/>
-    <ItemGroup Condition="'$(CsWinRTComponent)' != 'true'">
+    <Touch Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)/WinRT.cs')" Files="$(CsWinRTGeneratedFilesDir)/WinRT.cs" Time="%(CsWinRTInputs.ModifiedTime)"/>
+    <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)/WinRT.cs')">
       <UpToDateCheckBuilt Include="$(CsWinRTGeneratedFilesDir)/WinRT.cs" Original="@(CsWinRTInputs)" />
     </ItemGroup>
   </Target>
