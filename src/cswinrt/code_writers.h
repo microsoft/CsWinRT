@@ -505,7 +505,6 @@ namespace cswinrt
             if (get_param_category(param) == param_category::out || get_param_category(param) == param_category::receive_array)
             {
                 w.write("\n% = default(%);", bind<write_parameter_name>(param), bind<write_projection_type>(get_type_semantics(param.second->Type())));
-                break;
             }
         }
     }
