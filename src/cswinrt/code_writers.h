@@ -457,8 +457,23 @@ namespace cswinrt
 
     void write_projection_arg(writer& w, method_signature::param_t const& param)
     {
-        w.write("%",
-            bind<write_parameter_name>(param));
+        switch (get_param_category(param))
+        {
+        case param_category::in:
+        case param_category::ref:
+            w.write("%", bind<write_parameter_name>(param));
+            break;
+        case param_category::out:
+            w.write("out %", bind<write_parameter_name>(param));
+            break;
+        case param_category::pass_array:
+        case param_category::fill_array:
+            w.write("%[]", bind<write_parameter_name>(param));
+            break;
+        case param_category::receive_array:
+            w.write("out %[]", bind<write_parameter_name>(param));
+            break;
+        }
     }
 
     void write_event_source_type_name(writer& w, type_semantics const& eventTypeSemantics)
