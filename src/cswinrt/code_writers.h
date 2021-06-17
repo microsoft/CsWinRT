@@ -498,6 +498,18 @@ namespace cswinrt
         w.write("default(%)", bind<write_projection_type>(semantics));
     }
 
+    void write_event_out_defaults(writer& w, method_signature const& methodSig)
+    {
+        for (auto&& param : methodSig.params())
+        {
+            if (get_param_category(param) == param_category::out || get_param_category(param) == param_category::receive_array)
+            {
+                w.write("% = default(%)", bind<write_parameter_name>(param), bind<write_projection_type>(get_type_semantics(param.second->Type())));
+                break;
+            }
+        }
+    }
+
     void write_event_invoke_args(writer& w, method_signature const& methodSig)
     {
         w.write("%", bind_list<write_parameter_name_with_modifier>(", ", methodSig.params()));
@@ -6490,6 +6502,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                     {
                         if (_state.del == null)
                         {
+                            %;
                             return %;
                         }
                         %_state.del.Invoke(%);
@@ -6506,6 +6519,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                     eventTypeCode,
                     bind<write_event_source_type_name>(eventTypeSemantics), 
                     bind<write_event_invoke_params>(invokeMethodSig),
+                    bind<write_event_out_defaults>(invokeMethodSig),
                     bind<write_event_invoke_return_default>(invokeMethodSig),
                     bind<write_event_invoke_return>(invokeMethodSig),
                     bind<write_event_invoke_args>(invokeMethodSig));
