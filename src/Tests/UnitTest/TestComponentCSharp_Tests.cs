@@ -386,7 +386,7 @@ namespace UnitTest
         [Fact]
         public void TestReadOnlyDictionaryLookup()
         {
-            Assert.True(LookupPorts().Wait(1000));
+            Assert.True(LookupPorts().Wait(5000));
         }
 
 #if NET5_0
