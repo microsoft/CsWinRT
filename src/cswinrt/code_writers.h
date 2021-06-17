@@ -6488,11 +6488,12 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                 {
                     handler = (%) =>
                     {
-                        if (_state.del == null)
+                        % localDel = _state.del;
+                        if (localDel == null)
                         {
                             return %;
                         }
-                        %_state.del.Invoke(%);
+                        %localDel.Invoke(%);
                     };
                 }
                 return handler;
@@ -6506,6 +6507,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                     eventTypeCode,
                     bind<write_event_source_type_name>(eventTypeSemantics), 
                     bind<write_event_invoke_params>(invokeMethodSig),
+                    eventTypeCode,
                     bind<write_event_invoke_return_default>(invokeMethodSig),
                     bind<write_event_invoke_return>(invokeMethodSig),
                     bind<write_event_invoke_args>(invokeMethodSig));
