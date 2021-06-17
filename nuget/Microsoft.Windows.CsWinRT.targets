@@ -110,12 +110,12 @@ $(CsWinRTIncludeWinRTInterop)
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
     <Exec Command="$(CsWinRTCommand)" />
-    <!--To support Visual Studio's FastUpToDate builds, we need to cpature the CsWinRT relationship of *.cs: *.winmd.
+    <!--To support Visual Studio's FastUpToDate builds (except in authoring), need to capture the relationship of *.cs: *.winmd.
     To ensure that modifications to input winmds are reflected in generated *.cs files, WinRT.cs is used as a build
     marker and updated to the most recent winmd timestamp. UpToDateCheckBuilt then captures the dependency from
     winmds to cs files.-->
-    <Touch Files="$(CsWinRTGeneratedFilesDir)/WinRT.cs" Time="%(CsWinRTInputs.ModifiedTime)"/>
-    <ItemGroup>
+    <Touch Condition="'$(CsWinRTComponent)' != 'true'" Files="$(CsWinRTGeneratedFilesDir)/WinRT.cs" Time="%(CsWinRTInputs.ModifiedTime)"/>
+    <ItemGroup Condition="'$(CsWinRTComponent)' != 'true'">
       <UpToDateCheckBuilt Include="$(CsWinRTGeneratedFilesDir)/WinRT.cs" Original="@(CsWinRTInputs)" />
     </ItemGroup>
   </Target>
