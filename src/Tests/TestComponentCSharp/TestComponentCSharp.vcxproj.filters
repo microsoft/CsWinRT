@@ -15,6 +15,7 @@
     <ClCompile Include="ManualProjectionTestClasses.cpp" />
     <ClCompile Include="WarningClass.cpp" />
     <ClCompile Include="WarningStatic.cpp" />
+    <ClCompile Include="Singleton.cpp" />
     <ClCompile Include="Windows.Class.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -24,6 +25,7 @@
     <ClInclude Include="ManualProjectionTestClasses.h" />
     <ClInclude Include="WarningStatic.h" />
     <ClInclude Include="WarningClass.h" />
+    <ClInclude Include="Singleton.h" />
     <ClInclude Include="Windows.Class.h" />
   </ItemGroup>
   <ItemGroup>
