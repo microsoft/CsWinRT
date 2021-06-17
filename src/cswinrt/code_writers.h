@@ -6488,11 +6488,12 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                 {
                     handler = (%) =>
                     {
-                        if (_state.del == null)
+                        var localDel = _state.del;
+                        if (localDel == null)
                         {
                             return %;
                         }
-                        %_state.del.Invoke(%);
+                        %localDel.Invoke(%);
                     };
                 }
                 return handler;
