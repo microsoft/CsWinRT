@@ -1480,6 +1480,25 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::make<service_provider>();
     }
 
+    struct __declspec(uuid("15651B9F-6C6B-4CC0-944C-C7D7B0F36F81")) IComInterop : ::IUnknown
+    {
+        virtual HRESULT __stdcall GetForWindow(HWND window, guid riid, int64_t* value) noexcept = 0;
+    };
+
+    WF::IInspectable Class::ComInterop()
+    {
+        struct com_interop : winrt::implements<com_interop, WF::IInspectable, IComInterop>
+        {
+            HRESULT __stdcall GetForWindow(HWND window, guid riid, int64_t* value) noexcept override
+            {
+                *value = riid == winrt::guid_of<IComInterop>() ? (int64_t)window : 0;
+                return 0;
+            }
+        };
+
+        return winrt::make<com_interop>();
+    }
+
     // INotifyDataErrorInfo
     bool Class::HasErrors()
     {

@@ -137,7 +137,11 @@ if "%cswinrt_build_only%"=="true" goto :eof
 :unittest
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
 echo Running cswinrt unit tests for %cswinrt_platform% %cswinrt_configuration%
-set dotnet_exe="%DOTNET_ROOT%\dotnet.exe"
+if %cswinrt_platform%==x86 (
+  set dotnet_exe="%DOTNET_ROOT(86)%\dotnet.exe"
+) else (
+  set dotnet_exe="%DOTNET_ROOT%\dotnet.exe"
+)
 if not exist %dotnet_exe% (
   if %cswinrt_platform%==x86 (
     set dotnet_exe="%ProgramFiles(x86)%\dotnet\dotnet.exe"
