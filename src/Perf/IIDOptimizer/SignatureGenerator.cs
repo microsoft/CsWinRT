@@ -58,7 +58,7 @@ namespace GuidPatch
         private readonly TypeDefinition guidAttributeType;
         private readonly AssemblyDefinition winRTRuntimeAssembly;
 
-        public SignatureGenerator(AssemblyDefinition assembly, TypeDefinition guidAttributeType, AssemblyDefinition runtimeAssembly)
+        public SignatureGenerator(AssemblyDefinition assembly, TypeDefinition guidAttributeType, AssemblyDefinition runtimeAssembly, Logger logger)
         {
             this.assembly = assembly;
             this.guidAttributeType = guidAttributeType;
@@ -178,7 +178,6 @@ namespace GuidPatch
             {
                 return new NonGenericDelegateSignature(guidAttributeValue.Value);
             }
-
             return new GuidSignature(guidAttributeValue.Value);
         }
 

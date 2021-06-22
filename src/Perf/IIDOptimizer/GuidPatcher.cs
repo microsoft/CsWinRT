@@ -44,18 +44,21 @@ namespace GuidPatch
              */
             Logger = new Logger(OptimizerDir, "log.txt");
 
-            /*
-             *  Initialize readonly fields 
-             */            
-            assembly = AssemblyDefinition.ReadAssembly(assemblyPath, new ReaderParameters(ReadingMode.Deferred)
+            var readerParameters = new ReaderParameters(ReadingMode.Deferred)
             {
                 ReadWrite = true,
                 InMemory = true,
                 AssemblyResolver = assemblyResolver,
                 ThrowIfSymbolsAreNotMatching = false,
                 SymbolReaderProvider = new DefaultSymbolReaderProvider(false),
-                ApplyWindowsRuntimeProjections = false
-            });
+                ApplyWindowsRuntimeProjections = false,
+                ReadSymbols = true
+            };
+
+            /*
+             *  Initialize readonly fields 
+             */            
+            assembly = AssemblyDefinition.ReadAssembly(assemblyPath, readerParameters);
 
             winRTRuntimeAssembly = winRTRuntime;
 
@@ -116,7 +119,7 @@ namespace GuidPatch
                 getHelperTypeMethod = typeExtensionsType.Methods.First(m => m.Name == "GetHelperType");
             }
 
-            signatureGenerator = new SignatureGenerator(assembly, guidAttributeType!, winRTRuntimeAssembly);
+            signatureGenerator = new SignatureGenerator(assembly, guidAttributeType!, winRTRuntimeAssembly, Logger);
         }
 
         public int ProcessAssembly()
@@ -144,7 +147,13 @@ namespace GuidPatch
 
         public void SaveAssembly(string targetDirectory)
         {
-            assembly.Write($"{targetDirectory}{Path.DirectorySeparatorChar}{assembly.Name.Name}.dll");
+            var writerParameters = new WriterParameters
+            {
+                // SymbolWriterProvider = new DefaultSymbolWriterProvider(),
+                WriteSymbols = true
+            };
+
+            assembly.Write($"{targetDirectory}{Path.DirectorySeparatorChar}{assembly.Name.Name}.dll", writerParameters);
         }
 
         enum State
