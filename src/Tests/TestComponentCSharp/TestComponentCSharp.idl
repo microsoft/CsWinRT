@@ -386,6 +386,7 @@ namespace TestComponentCSharp
         // Interface projections
         static IProperties1 NativeProperties1{ get; };
         static Object ServiceProvider{ get; };
+        static Object ComInterop{ get; };
 
         // INotifyDataErrorInfo
         void RaiseDataErrorChanged();

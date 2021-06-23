@@ -24,13 +24,13 @@ namespace WinRT.Interop
     {
         Object GetForWindow(
             HWND appWindow,
-            GUID riid);
+            ref const GUID riid);
         Object ShowManageAccountsForWindowAsync(
             HWND appWindow,
-            GUID riid);
+            ref const GUID riid);
         Object ShowAddAccountForWindowAsync(
             HWND appWindow,
-            GUID riid);
+            ref const GUID riid);
     }
 #endif
 
@@ -41,7 +41,7 @@ namespace WinRT.Interop
     {
         Object GetForWindow(
             HWND hwnd,
-            GUID riid);
+            ref const GUID riid);
     }
 #endif
 
@@ -52,7 +52,7 @@ namespace WinRT.Interop
     {
         Object GetForWindow(
             HWND appWindow,
-            GUID riid);
+            ref const GUID riid);
     }
 #endif
 
@@ -63,7 +63,7 @@ namespace WinRT.Interop
     {
         Object GetForWindow(
             HWND appWindow,
-            GUID riid);
+            ref const GUID riid);
 
         void ShowPlayToUIForWindow(
             HWND appWindow);
@@ -77,11 +77,11 @@ namespace WinRT.Interop
     {
         Object GetForWindow(
             HWND appWindow,
-            GUID riid);
+            ref const GUID riid);
 
         Object ShowPrintUIForWindowAsync(
             HWND appWindow,
-            GUID riid);
+            ref const GUID riid);
     }
 #endif
 
@@ -92,7 +92,7 @@ namespace WinRT.Interop
     {
         Object CreateForWindow(
             HWND hwnd,
-            GUID riid);
+            ref const GUID riid);
     }
 #endif
 
@@ -102,7 +102,7 @@ namespace WinRT.Interop
     {
         Object GetForWindow(
             HWND hwnd,
-            GUID riid);
+            ref const GUID riid);
     }
 #endif
 
@@ -112,7 +112,7 @@ namespace WinRT.Interop
     {
         Object CreateForWindow(
             HWND hwnd,
-            GUID riid);
+            ref const GUID riid);
     }
 #endif
 
@@ -124,7 +124,7 @@ namespace WinRT.Interop
     {
         Object GetForWindow(
             HWND window,
-            GUID riid);
+            ref const GUID riid);
     }
 #endif
 
@@ -135,7 +135,7 @@ namespace WinRT.Interop
     {
         Object GetForWindow(
             HWND appWindow,
-            GUID riid);
+            ref const GUID riid);
     }
 #endif
 
@@ -146,7 +146,7 @@ namespace WinRT.Interop
     {
         Object GetForWindow(
             HWND hwnd,
-            GUID riid);
+            ref const GUID riid);
     }
 #endif
 
@@ -158,7 +158,7 @@ namespace WinRT.Interop
         Object RequestVerificationForWindowAsync(
             HWND appWindow,
             String message,
-            GUID riid);
+            ref const GUID riid);
     }
 #endif
 
@@ -170,13 +170,13 @@ namespace WinRT.Interop
         Object RequestTokenForWindowAsync(
             HWND appWindow,
             Windows.Security.Authentication.Web.Core.WebTokenRequest request, 
-            GUID riid); // __uuidof(IAsyncOperation<WebTokenRequestResult*>)    
+            ref const GUID riid); // __uuidof(IAsyncOperation<WebTokenRequestResult*>)    
 
         Object RequestTokenWithWebAccountForWindowAsync(
             HWND appWindow,
             Windows.Security.Authentication.Web.Core.WebTokenRequest request,
             Windows.Security.Credentials.WebAccount webAccount,
-            GUID riid); // __uuidof(IAsyncOperation<WebTokenRequestResult*>)
+            ref const GUID riid); // __uuidof(IAsyncOperation<WebTokenRequestResult*>)
     }
 #endif
 }

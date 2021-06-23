@@ -367,6 +367,7 @@ namespace winrt::TestComponentCSharp::implementation
 
         static IProperties1 NativeProperties1();
         static Windows::Foundation::IInspectable ServiceProvider();
+        static winrt::Windows::Foundation::IInspectable ComInterop();
 
         // IStringable
         hstring ToString();
