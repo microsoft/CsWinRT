@@ -1,4 +1,5 @@
 <Project>
     <Import Project="ObjectLifetimeTests.Lifted\CSWinRTInApp.targets"/>
-    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />    
+    <Import Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(SimulateCsWinRTNugetReference)' == 'true'" Project="..\..\..\..\nuget\Microsoft.Windows.CsWinRT.targets" />
 </Project>
