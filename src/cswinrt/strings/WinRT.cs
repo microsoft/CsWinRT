@@ -368,6 +368,8 @@ namespace WinRT
 
         public void Subscribe(TDelegate del)
         {
+            Console.WriteLine("Subscribing " + typeof(TDelegate));
+
             lock (this)
             {
                 bool registerHandler = _state.del is null;
@@ -389,19 +391,23 @@ namespace WinRT
                     }
                 }
             }
+            Console.WriteLine("Complete: Subscribing " + typeof(TDelegate));
         }
 
         public void Unsubscribe(TDelegate del)
         {
+            Console.WriteLine("Unsubscribing " + typeof(TDelegate));
             lock (this)
             {
                 var oldEvent = _state.del;
                 _state.del = (TDelegate)global::System.Delegate.Remove(_state.del, del);
                 if (oldEvent is object && _state.del is null)
                 {
+                    Console.WriteLine("Unsubscribing from native " + typeof(TDelegate));
                     _UnsubscribeFromNative();
                 }
             }
+            Console.WriteLine("Complete: Unsubscribing " + typeof(TDelegate));
         }
 
         protected virtual System.Delegate EventInvoke
@@ -455,6 +461,7 @@ namespace WinRT
             private Cache Update(IWeakReference target, EventSource<TDelegate> source, int index)
             {
                 // If target no longer exists, destroy cache
+                Console.WriteLine("Updating Cache state for " + source.GetType() + " with index" + index);
                 lock (this)
                 {
                     using var resolved = this.target.Resolve(typeof(IUnknownVftbl).GUID);
@@ -465,11 +472,13 @@ namespace WinRT
                     }
                 }
                 SetState(source, index);
+                Console.WriteLine("Complete: Setting Cache state for " + source.GetType() + " with index" + index);
                 return this;
             }
 
             private void SetState(EventSource<TDelegate> source, int index)
             {
+                Console.WriteLine("Setting Cache state for " + source.GetType() + " with index" + index);
                 // If cache exists, use it, else create new
                 if (states.ContainsKey(index))
                 {
@@ -480,6 +489,7 @@ namespace WinRT
                     source._state = new EventSource<TDelegate>.State();
                     states[index] = source._state;
                 }
+                Console.WriteLine("Complete: Setting Cache state for " + source.GetType() + " with index" + index);
             }
 
             public static void Create(IObjectReference obj, EventSource<TDelegate> source, int index)
@@ -487,6 +497,7 @@ namespace WinRT
                 // If event source implements weak reference support, track event registrations so that
                 // unsubscribes will work across garbage collections.  Note that most static/factory classes
                 // do not implement IWeakReferenceSource, so static codegen caching approach is also used.
+                Console.WriteLine("Creating Cache for " + source.GetType() + " with index" + index);
                 IWeakReference target = null;
                 try
                 {
@@ -497,8 +508,9 @@ namespace WinRT
 #endif
                     target = weakRefSource.GetWeakReference();
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    Console.WriteLine("Creating Cache for " + source.GetType() + " with index" + index + " failed with exception " + e);
                     source._state = new EventSource<TDelegate>.State();
                     return;
                 }
@@ -514,10 +526,12 @@ namespace WinRT
                 {
                     cachesLock.ExitReadLock();
                 }
+                Console.WriteLine("Complete: Create Cache for " + source.GetType() + " with index" + index);
             }
 
             public static void Remove(IntPtr thisPtr, int index)
             {
+                Console.WriteLine("Removing Cache for EventSource<" + typeof(TDelegate) + "> with index" + index);
                 if (caches.TryGetValue(thisPtr, out var cache))
                 {
                     cache.states.TryRemove(index, out var _);
@@ -538,6 +552,7 @@ namespace WinRT
                         }
                     }
                 }
+                Console.WriteLine("Complete: Removing Cache for EventSource<" + typeof(TDelegate) + "> with index" + index);
             }
         }
 
@@ -551,13 +566,17 @@ namespace WinRT
             _index = index;
             _addHandler = addHandler;
             _removeHandler = removeHandler;
+
+            Console.WriteLine("EventSource<" + typeof(TDelegate) + "> created with index " + index);
         }
 
         void _UnsubscribeFromNative()
         {
+            Console.WriteLine("Unsubscribing EventSource<" + typeof(TDelegate) + "> from native ");
             Cache.Remove(_obj.ThisPtr, _index);
             ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _state.token));
             _state.token.Value = 0;
+            Console.WriteLine("Complete: Unsubscribing EventSource<" + typeof(TDelegate) + "> from native ");
         }
     }
 
