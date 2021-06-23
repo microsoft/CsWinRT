@@ -23,7 +23,7 @@ namespace UnitTest
     [Guid("15651B9F-6C6B-4CC0-944C-C7D7B0F36F81")]
     internal interface IComInterop
     {
-        Int64 GetForWindow(IntPtr hwnd, Guid iid);
+        Int64 ReturnWindowHandle(IntPtr hwnd, Guid iid);
     }
 
     // Note: Many of the COM interop APIs cannot be easily tested without significant test setup.
@@ -37,17 +37,26 @@ namespace UnitTest
             if (System.Environment.Is64BitProcess)
             {
                 var hwnd = new IntPtr(0x0123456789ABCDEF);
-                var value = comInterop.GetForWindow(hwnd, typeof(IComInterop).GUID);
+                var value = comInterop.ReturnWindowHandle(hwnd, typeof(IComInterop).GUID);
                 var hwndValue = hwnd.ToInt64();
                 Assert.Equal(hwndValue, value);
             }
             else 
             {
                 var hwnd = new IntPtr(0x01234567);
-                var value = comInterop.GetForWindow(hwnd, typeof(IComInterop).GUID);
+                var value = comInterop.ReturnWindowHandle(hwnd, typeof(IComInterop).GUID);
                 var hwndValue = hwnd.ToInt32();
                 Assert.Equal(hwndValue, value);
             }
+        }
+
+        [Fact]
+        public void TestMockDragDropManager()
+        {
+            var interop = Class.ComInterop.As<WinRT.Interop.IDragDropManagerInterop>();
+            Guid iid = GuidGenerator.CreateIID(typeof(ICoreDragDropManager));
+            var manager = interop.GetForWindow(new IntPtr(0), iid);
+            Assert.NotNull(manager);
         }
 
         [Fact]
