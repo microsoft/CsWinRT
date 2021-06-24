@@ -9,6 +9,7 @@
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+    <InternalsVisibleTo Include="UnitTest" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -28,8 +29,12 @@
 -include Windows.UI.Text.FontStyle
 -include Windows.UI.Text.FontWeight
 -include Windows.UI.Text.UnderlineType
--include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute      
+-include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute     
     </CsWinRTFilters>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants>TRACE;MANUAL_IUNKNOWN,UAC_VERSION_13</DefineConstants>
   </PropertyGroup>
  
 </Project>

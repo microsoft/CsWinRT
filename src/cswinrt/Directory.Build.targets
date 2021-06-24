@@ -1,5 +1,21 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+    <PropertyGroup>
+        <MidlRTCopyWinMDToOutputDirectoryDependsOn>$(MidlRTCopyWinMDToOutputDirectoryDependsOn);CopyWinRTInteropWinMD</MidlRTCopyWinMDToOutputDirectoryDependsOn>
+    </PropertyGroup>
+
+    <!--Workaround for MidlRT nupkg expecting project to publish $(RootNamespace).winmd-->
+    <Target Name="CopyWinRTInteropWinMD" Inputs="$(CsWinRTPath)..\obj\merged\WinRT.Interop.winmd" Outputs="$(MidlRTProjectWinMD);$(CsWinRTInteropMetadata)">
+        <Copy UseHardlinksIfPossible="$(MidlRTUseHardlinksIfPossible)"
+            SkipUnchangedFiles="$(MidlRTSkipUnchangedFiles)"
+            SourceFiles="$(CsWinRTPath)..\obj\merged\WinRT.Interop.winmd"
+            DestinationFiles="$(MidlRTProjectWinMD)" />
+        <Copy UseHardlinksIfPossible="$(MidlRTUseHardlinksIfPossible)"
+            SkipUnchangedFiles="$(MidlRTSkipUnchangedFiles)"
+            SourceFiles="$(CsWinRTPath)..\obj\merged\WinRT.Interop.winmd"
+            DestinationFiles="$(CsWinRTInteropMetadata)" />
+    </Target>
+
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
 
 </Project>

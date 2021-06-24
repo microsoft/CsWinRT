@@ -58,6 +58,11 @@ namespace WinRT
 
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)
         {
+            if (externalComObject == IntPtr.Zero)
+            {
+                return null;
+            }
+
             using var unknownRef = ObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
 
             if (IsFreeThreaded())

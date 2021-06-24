@@ -52,6 +52,72 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestEnums()
+        {
+            // Enums
+            var expectedEnum = EnumValue.Two;
+            TestObject.EnumProperty = expectedEnum;
+            Assert.Equal(expectedEnum, TestObject.EnumProperty);
+            expectedEnum = EnumValue.One;
+            TestObject.CallForEnum(() => expectedEnum);
+            TestObject.EnumPropertyChanged +=
+                (object sender, EnumValue value) => Assert.Equal(expectedEnum, value);
+            TestObject.RaiseEnumChanged();
+
+            var expectedEnumStruct = new EnumStruct() { value = EnumValue.Two };
+            TestObject.EnumStructProperty = expectedEnumStruct;
+            Assert.Equal(expectedEnumStruct, TestObject.EnumStructProperty);
+            expectedEnumStruct = new EnumStruct() { value = EnumValue.One };
+            TestObject.CallForEnumStruct(() => expectedEnumStruct);
+            TestObject.EnumStructPropertyChanged +=
+                (object sender, EnumStruct value) => Assert.Equal(expectedEnumStruct, value);
+            TestObject.RaiseEnumStructChanged();
+
+            var expectedEnums = new EnumValue[] { EnumValue.One, EnumValue.Two };
+            TestObject.EnumsProperty = expectedEnums;
+            Assert.Equal(expectedEnums, TestObject.EnumsProperty);
+            TestObject.CallForEnums(() => expectedEnums);
+            Assert.Equal(expectedEnums, TestObject.EnumsProperty);
+
+            var expectedEnumStructs = new EnumStruct[] { new EnumStruct(EnumValue.One), new EnumStruct(EnumValue.Two) };
+            TestObject.EnumStructsProperty = expectedEnumStructs;
+            Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
+            TestObject.CallForEnumStructs(() => expectedEnumStructs);
+            Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
+
+            // Flags
+            var expectedFlag = FlagValue.All;
+            TestObject.FlagProperty = expectedFlag;
+            Assert.Equal(expectedFlag, TestObject.FlagProperty);
+            expectedFlag = FlagValue.One;
+            TestObject.CallForFlag(() => expectedFlag);
+            TestObject.FlagPropertyChanged +=
+                (object sender, FlagValue value) => Assert.Equal(expectedFlag, value);
+            TestObject.RaiseFlagChanged();
+
+            var expectedFlagStruct = new FlagStruct() { value = FlagValue.All };
+            TestObject.FlagStructProperty = expectedFlagStruct;
+            Assert.Equal(expectedFlagStruct, TestObject.FlagStructProperty);
+            expectedFlagStruct = new FlagStruct() { value = FlagValue.One };
+            TestObject.CallForFlagStruct(() => expectedFlagStruct);
+            TestObject.FlagStructPropertyChanged +=
+                (object sender, FlagStruct value) => Assert.Equal(expectedFlagStruct, value);
+            TestObject.RaiseFlagStructChanged();
+
+            var expectedFlags = new FlagValue[] { FlagValue.One, FlagValue.All };
+            TestObject.FlagsProperty = expectedFlags;
+            Assert.Equal(expectedFlags, TestObject.FlagsProperty);
+            TestObject.CallForFlags(() => expectedFlags);
+            Assert.Equal(expectedFlags, TestObject.FlagsProperty);
+
+            var expectedFlagStructs = new FlagStruct[] { new FlagStruct(FlagValue.One), new FlagStruct(FlagValue.All) };
+            TestObject.FlagStructsProperty = expectedFlagStructs;
+            Assert.Equal(expectedFlagStructs, TestObject.FlagStructsProperty);
+            TestObject.CallForFlagStructs(() => expectedFlagStructs);
+            Assert.Equal(expectedFlagStructs, TestObject.FlagStructsProperty);
+        }
+
+        [Fact]
         public void TestGetByte()
         {
             var array = new byte[] { 0x01 };
@@ -320,7 +386,7 @@ namespace UnitTest
         [Fact]
         public void TestReadOnlyDictionaryLookup()
         {
-            Assert.True(LookupPorts().Wait(1000));
+            Assert.True(LookupPorts().Wait(5000));
         }
 
 #if NET5_0
@@ -1092,12 +1158,6 @@ namespace UnitTest
             var staticFactory = ComImports.As<IStringableInterop>();
             staticFactory.ToString(out hstr);
             Assert.Equal("ComImports", MarshalString.FromAbi(hstr));
-
-            // IInspectable-based (projected) interop interface
-            var interop = Windows.Security.Credentials.UI.UserConsentVerifier.As<IUserConsentVerifierInterop>();
-            var guid = GuidGenerator.CreateIID(typeof(IAsyncOperation<UserConsentVerificationResult>));
-            var operation = (IAsyncOperation<UserConsentVerificationResult>)interop.RequestVerificationForWindowAsync(0, "message", guid);
-            Assert.NotNull(operation);
         }
 
         [Fact]

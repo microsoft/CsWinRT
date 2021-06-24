@@ -103,15 +103,16 @@ if ErrorLevel 1 (
 )
 :skip_build_tools
 
+set nuget_dir=%this_dir%.nuget
+
 if not "%cswinrt_label%"=="" goto %cswinrt_label%
 
 :restore
 rem When a preview nuget is required, update -self doesn't work, so manually update 
-set nuget_dir=%this_dir%.nuget
 if exist %nuget_dir%\nuget.exe (
-  %nuget_dir%\nuget.exe | findstr 5.8.0 >nul
+  %nuget_dir%\nuget.exe | findstr 5.9 >nul
   if ErrorLevel 1 (
-    echo Updating to nuget 5.8.0
+    echo Updating to nuget 5.9
     rd /s/q %nuget_dir% >nul 2>&1
   )
 )
@@ -136,7 +137,11 @@ if "%cswinrt_build_only%"=="true" goto :eof
 :unittest
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
 echo Running cswinrt unit tests for %cswinrt_platform% %cswinrt_configuration%
-set dotnet_exe="%DOTNET_ROOT%\dotnet.exe"
+if %cswinrt_platform%==x86 (
+  set dotnet_exe="%DOTNET_ROOT(86)%\dotnet.exe"
+) else (
+  set dotnet_exe="%DOTNET_ROOT%\dotnet.exe"
+)
 if not exist %dotnet_exe% (
   if %cswinrt_platform%==x86 (
     set dotnet_exe="%ProgramFiles(x86)%\dotnet\dotnet.exe"
@@ -179,13 +184,14 @@ if ErrorLevel 1 (
 :package
 set cswinrt_bin_dir=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
 set cswinrt_exe=%cswinrt_bin_dir%cswinrt.exe
+set interop_winmd=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\obj\merged\WinRT.Interop.winmd
 set netstandard2_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Runtime.dll
 set net5_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net5.0\WinRT.Runtime.dll
 set source_generator=%this_dir%Authoring\WinRT.SourceGenerator\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
 set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net5.0\WinRT.Host.Shim.dll
 echo Creating nuget package
-call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;netstandard2_runtime=%netstandard2_runtime%;net5_runtime=%net5_runtime%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_shim=%winrt_shim% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
+call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;interop_winmd=%interop_winmd%;netstandard2_runtime=%netstandard2_runtime%;net5_runtime=%net5_runtime%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_shim=%winrt_shim% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
 goto :eof
 
 :exec
