@@ -1,12 +1,4 @@
-﻿
-//
-// This is copied from ObjectLifetimeTests.cs in the OS repo for RS5
-// (after that the tests were removed)
-//
-
-
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -365,14 +357,14 @@ namespace ObjectLifetimeTests
         AutoResetEvent loadedSignal = new AutoResetEvent(false);
         AutoResetEvent unloadedSignal = new AutoResetEvent(false);
 
-        //[TestMethod]
+
         // Bug: _parentRef is still alive https://github.com/microsoft/CsWinRT/issues/897
-        /*public void CycleTest1()
+        public void CycleTest1()
         {
             //Debugger.Launch();
             _asyncQueue
                 .CallFromUIThread(() =>
-                {                   
+                {
                     StackPanel stackPanel = new StackPanel();
                     _parent = stackPanel;
                     _parentRef = new WeakReference(_parent);
@@ -422,16 +414,16 @@ namespace ObjectLifetimeTests
                 });
 
             _asyncQueue.Run();
-        }*/
+        }
 
         //
         // Cycle from StackPanel to custom element to delegate back to StackPanel.
         //
 
-        //[TestMethod]
+
         //[MethodImplAttribute(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         //Bug:_parentRef is still alive https://github.com/microsoft/CsWinRT/issues/897
-        /*public void CycleTest1b()
+        public void CycleTest1b()
         {
             _asyncQueue
                 .CallFromUIThread(() =>
@@ -484,47 +476,47 @@ namespace ObjectLifetimeTests
                 });
 
             _asyncQueue.Run();
-        }*/
+        }
 
         //
         // Cycle from StackPanel to built-in element to delegate on framework event back to StackPanel.
         //
 
-        //[TestMethod]
+        
         //[MethodImplAttribute(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         //Bug:_element1Ref is still alive https://github.com/microsoft/CsWinRT/issues/897
-        /* public void CycleTest1c()
-         {
-             _asyncQueue
-                 .CallFromUIThread(() =>
-                 {
-                     StackPanel sp = new StackPanel();
-                     mainCanvas.Children.Append(sp);
+        public void CycleTest1c()
+        {
+            _asyncQueue
+                .CallFromUIThread(() =>
+                {
+                    StackPanel sp = new StackPanel();
+                    mainCanvas.Children.Append(sp);
 
-                     Button button = new Button();
-                     button.Click += (s, a) => sp.ToString();
-                     sp.Children.Add(button);
+                    Button button = new Button();
+                    button.Click += (s, a) => sp.ToString();
+                    sp.Children.Add(button);
 
-                     object obj = new { Value = "foo" };
-                     sp.Tag = obj;
+                    object obj = new { Value = "foo" };
+                    sp.Tag = obj;
 
-                     _element1Ref = new WeakReference(obj);
-                 })
-                 .CallFromUIThread(() =>
-                 {
-                     GC_ForceCollect();
+                    _element1Ref = new WeakReference(obj);
+                })
+                .CallFromUIThread(() =>
+                {
+                    GC_ForceCollect();
 
-                     Verify(_element1Ref.IsAlive, "Child died");
+                    Verify(_element1Ref.IsAlive, "Child died");
 
-                     mainCanvas.Children.RemoveAt(mainCanvas.Children.Count - 1);
+                    mainCanvas.Children.RemoveAt(mainCanvas.Children.Count - 1);
 
-                     GC_ForceCollect();
+                    GC_ForceCollect();
 
-                     Verify(!_element1Ref.IsAlive, "Child is alive");
-                 });
+                    Verify(!_element1Ref.IsAlive, "Child is alive");
+                });
 
-             _asyncQueue.Run();
-         }*/
+            _asyncQueue.Run();
+        }
 
 
         //
@@ -1019,6 +1011,7 @@ namespace ObjectLifetimeTests
         // => Binding(CustomDependencyObject.AttachedObject = Button.Tag)
         // => Button.Tag = Grid
         //
+        [TestMethod]
         [MethodImplAttribute(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void CycleTest9()
         {

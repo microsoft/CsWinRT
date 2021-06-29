@@ -17,7 +17,6 @@
 
         <ItemsControl Name='_itemsControlLeakTest'>
             <Rectangle Width="100" Height="100" Fill="Red" />
-            <!--<local:MyControl  />-->
         </ItemsControl>
         
         <local:MyControl Name='MyControlToRemove' />
