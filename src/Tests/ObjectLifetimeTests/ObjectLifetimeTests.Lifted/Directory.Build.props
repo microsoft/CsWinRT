@@ -1,7 +1,0 @@
-<Project>
-    <PropertyGroup>    
-        <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
-    </PropertyGroup>    
-    <Import Project="ObjectLifetimeTests.Lifted\CSWinRTInApp.props"   />
-    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
-</Project>

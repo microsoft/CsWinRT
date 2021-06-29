@@ -35,20 +35,6 @@
         <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="..\..\Tests\AsyncQueue.cs" Link="Tests\AsyncQueue.cs" />
-        <Compile Include="..\..\Tests\ClrObjects.cs" Link="Tests\ClrObjects.cs" />
-        <Compile Include="..\..\Tests\CollectionExtensions.cs" Link="Tests\CollectionExtensions.cs" />
-        <Compile Include="..\..\Tests\CustomClrObject.cs" Link="Tests\CustomClrObject.cs" />
-        <Compile Include="..\..\Tests\CustomControl.cs" Link="Tests\CustomControl.cs" />
-        <Compile Include="..\..\Tests\CustomDependencyObject.cs" Link="Tests\CustomDependencyObject.cs" />
-        <Compile Include="..\..\Tests\CustomGroupedItemPages.cs" Link="Tests\CustomGroupedItemPages.cs" />
-        <Compile Include="..\..\Tests\CycleTestCanvas.cs" Link="Tests\CycleTestCanvas.cs" />
-        <Compile Include="..\..\Tests\MyControl.xaml.cs" Link="Tests\MyControl.xaml.cs" />
-        <Compile Include="..\..\Tests\ObjectLifetimePage.xaml.cs" Link="Tests\ObjectLifetimePage.xaml.cs" />
-        <Compile Include="..\..\Tests\ObjectLifetimeTests.cs" Link="Tests\ObjectLifetimeTests.cs" />
-        <Compile Include="..\..\Tests\ObservableDictionary.cs" Link="Tests\ObservableDictionary.cs" />
-    </ItemGroup>
-    <ItemGroup>
         <Content Include="Images\LockScreenLogo.scale-200.png" />
         <Content Include="Images\SplashScreen.scale-200.png" />
         <Content Include="Images\Square150x150Logo.scale-200.png" />
@@ -75,8 +61,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\..\Projections\Windows\Windows.csproj" />
-        <ProjectReference Include="..\..\..\..\Projections\Reunion\Reunion.csproj" />
+        <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
+        <ProjectReference Include="..\..\Projections\Reunion\Reunion.csproj" />
     </ItemGroup>
     
     <ItemGroup>
@@ -85,37 +71,5 @@
             <ExcludeAssets>compile</ExcludeAssets>
         </PackageReference>
     </ItemGroup>
-    
-    <ItemGroup>
-        <Page Include="..\..\Tests\MyControl.xaml" Link="Tests\MyControl.xaml">
-            <Generator>MSBuild:Compile</Generator>
-        </Page>
-        <Page Include="..\..\Tests\ObjectLifetimePage.xaml" Link="Tests\ObjectLifetimePage.xaml">
-            <Generator>MSBuild:Compile</Generator>
-        </Page>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Page Update="Tests\RealMainPage.xaml">
-            <Generator>MSBuild:Compile</Generator>
-        </Page>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Page Update="RealMainPage.xaml">
-            <Generator>MSBuild:Compile</Generator>
-        </Page>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Resource Update="..\..\Tests\MyControl.xaml">
-            <Link>Tests\MyControl.xaml</Link>
-        </Resource>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Resource Update="..\..\Tests\ObjectLifetimePage.xaml">
-            <Link>Tests\ObjectLifetimePage.xaml</Link>
-        </Resource>
-    </ItemGroup>    
+   
 </Project>

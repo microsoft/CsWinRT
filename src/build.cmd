@@ -125,7 +125,7 @@ call %this_dir%get_testwinrt.cmd
 set NUGET_RESTORE_MSBUILD_ARGS=/p:platform="%cswinrt_platform%"
 call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%cswinrt.sln
 rem: Calling nuget restore again on ObjectLifetimeTests.Lifted.csproj to prevent .props from \microsoft.testplatform.testhost\build\netcoreapp2.1 from being included. Nuget.exe erroneously imports props files. https://github.com/NuGet/Home/issues/9672
-call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted.csproj /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
+call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
 
 :build
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
@@ -153,7 +153,7 @@ if not exist %dotnet_exe% (
 :objectlifetimetests
 rem Running Object Lifetime Unit Tests
 pushd .
-cd %this_dir%\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted\ObjectLifetimeTests.Lifted\bin\%cswinrt_platform%\%cswinrt_configuration%\net5.0-windows10.0.19041.0\win10-%cswinrt_platform%
+cd %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_platform%\%cswinrt_configuration%\net5.0-windows10.0.19041.0\win10-%cswinrt_platform%
 sn -Vr Microsoft.Windows.SDK.NET.dll
 vstest.console.exe ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%USERPROFILE%\.nuget\packages\mstest.testadapter\2.2.4-preview-20210513-02\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx 
 popd

@@ -1,5 +1,9 @@
 <Project>
 <!-- Created to prevent unnecessary files from being inherited -->
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+    <PropertyGroup>    
+        <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
+    </PropertyGroup> 
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />   
+    <Import Project="CSWinRTInApp.props"   />
 
 </Project>
