@@ -104,5 +104,5 @@ it shouldn't be cleaned up as it is still in use.
 
 ### Related documentation
 
-[COM Reference Tracking](https://docs.microsoft.com/en-us/windows/win32/com/managing-object-lifetimes-through-reference-counting)
-[COM Aggregation](https://docs.microsoft.com/en-us/windows/win32/com/aggregation)
+-	[COM Reference Tracking](https://docs.microsoft.com/en-us/windows/win32/com/managing-object-lifetimes-through-reference-counting)
+-	[COM Aggregation](https://docs.microsoft.com/en-us/windows/win32/com/aggregation)
