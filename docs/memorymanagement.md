@@ -17,7 +17,7 @@ As per the COM design, every COM interface implements `IUnknown` which has an `A
 function. C#/WinRT calls the `AddRef` function anytime it gets a new reference to a WinRT object
 which C#/WinRT holds onto using an `IObjectReference` instance. It also calls `AddRef` whenever it gives
 out a reference to one of these objects across the ABI as an out parameter. C#/WinRT calls the
-`Release` function whenever any of the `IObjectReference` instances holding on the WinRT object is
+`Release` function whenever any of the `IObjectReference` instances holding onto the WinRT object is
 disposed or finalized by the .NET garbage collector. As long as there are still references to the
 native object, it stays alive even if the projected C# object gets finalized due to there being
 no more references to it from C# code. But if the C# reference was the last reference to it, the
@@ -64,22 +64,23 @@ tracking. For any QI calls for which the result is handed out to the native side
 not be called right after as it is a native reference which needs to be tracked by the CCW.
 
 One notable caveat to this is tear off interfaces on aggregated objects. With tear off interfaces,
-the interfaces typically perform separate COM reference counting from the object itself allowing for
-the interfaces to manage their own lifetime separate from the object itself. But this doesn't work
-well with aggregated objects if one of these interfaces need to be QI for by the composed as part
-of the projection implementation because a `Release` would happen right after which would release and
-cleanup the interface as its lifetime won't be managed by the outer. Given that tear off interfaces
-are rare and not typically used by C# consumers, C#/WinRT today doesn't address this other than
-facilitating QI calls from the native side where `Release` isn't called right after.
-The recommendation for tear off interfaces to support such aggregated objects is that they can be
-constructed on demand upon the first QI for it, but the interface should not be cleaned up until
-the object is cleaned up even if there are no longer any reference to that interface.
+the interfaces typically perform their own COM reference counting separate from the object itself
+allowing for the interfaces to manage their own lifetime. But this doesn't work well with aggregated
+objects if one of these interfaces need to be QIed for by the composed object as part of the
+projection implementation. This is because a `Release` would happen right after which would trigger
+the cleanup of the interface as its lifetime isn't tied to the outer. Given that tear off interfaces
+are rare and not typically used by C# consumers, C#/WinRT today doesn't address this
+other than facilitating QI calls for them from the native side where `Release` isn't called right after.
+The recommendation for tear off interfaces which do want to support such uses on aggregated objects
+is that they can continue to be constructed on demand upon the first QI for it, but the interface
+should not be cleaned up until the object is cleaned up even if there are no longer any reference
+to that interface.
 
 ### XAML reference tracking
 
 As mentioned earlier, the XAML runtime also manages the lifetime of XAML objects and has its own
 supplemental reference tracking to COM reference tracking which it uses when interacting with .NET
-and .NET's garbage collector.
+and its garbage collector.
 
 For native XAML objects that are being wrapped by C#/WinRT, the XAML runtime needs to
 know about all the references to it from another reference tracking system like the .NET
@@ -100,3 +101,8 @@ the XAML runtime, XAML requires the CCW to implement the `IReferenceTrackerTarge
 respective methods. This allows XAML to inform the .NET garbage collector of any references the XAML
 runtime takes and to indicate that even though an object may not have any COM reference counts that
 it shouldn't be cleaned up as it is still in use.
+
+### Related documentation
+
+[COM Reference Tracking](https://docs.microsoft.com/en-us/windows/win32/com/managing-object-lifetimes-through-reference-counting)
+[COM Aggregation](https://docs.microsoft.com/en-us/windows/win32/com/aggregation)
