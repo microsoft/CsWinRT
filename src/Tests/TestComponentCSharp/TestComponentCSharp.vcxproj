@@ -5,6 +5,7 @@
   <PropertyGroup Label="Globals">
     <CppWinRTVerbosity>high</CppWinRTVerbosity>
     <CppWinRTOptimized>true</CppWinRTOptimized>
+    <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
     <ProjectGuid>{7e3a9ab3-8cbb-4b9c-ba76-0fe7108dcaeb}</ProjectGuid>
     <ProjectName>TestComponentCSharp</ProjectName>
@@ -70,9 +71,9 @@
     </ClInclude>
     <ClInclude Include="NonAgileClass.h" />
     <ClInclude Include="ComImports.h" />
-    <ClInclude Include="Singleton.h" />
     <ClInclude Include="WarningClass.h" />
     <ClInclude Include="WarningStatic.h" />
+    <ClInclude Include="Windows.Class.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
@@ -85,9 +86,9 @@
     <ClCompile Include="NonAgileClass.cpp" />
     <ClCompile Include="ComImports.cpp" />
     <ClCompile Include="ManualProjectionTestClasses.cpp" />
-    <ClCompile Include="Singleton.cpp" />
     <ClCompile Include="WarningClass.cpp" />
     <ClCompile Include="WarningStatic.cpp" />
+    <ClCompile Include="Windows.Class.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />

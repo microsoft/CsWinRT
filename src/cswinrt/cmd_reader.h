@@ -58,11 +58,11 @@ namespace cswinrt
         }
     };
 
-    static void check_xml(HRESULT result)
+    static void check_xml(HRESULT result, const std::filesystem::path& platformXmlPath)
     {
         if (result < 0)
         {
-            throw std::invalid_argument("Could not read the Windows SDK's Platform.xml");
+            throw std::invalid_argument("Could not read the Windows SDK's Platform.xml at " + platformXmlPath.u8string());
         }
     }
 
@@ -76,16 +76,16 @@ namespace cswinrt
 
         check_xml(SHCreateStreamOnFileW(
             xml_path.c_str(),
-            STGM_READ, &stream.ptr));
+            STGM_READ, &stream.ptr), xml_path);
 
         com_ptr<IXmlReader> reader;
 
         check_xml(CreateXmlReader(
             __uuidof(IXmlReader),
             reinterpret_cast<void**>(&reader.ptr),
-            nullptr));
+            nullptr), xml_path);
 
-        check_xml(reader->SetInput(stream.ptr));
+        check_xml(reader->SetInput(stream.ptr), xml_path);
         XmlNodeType node_type = XmlNodeType_None;
 
         while (S_OK == reader->Read(&node_type))
@@ -96,7 +96,7 @@ namespace cswinrt
             }
 
             wchar_t const* value{ nullptr };
-            check_xml(reader->GetLocalName(&value, nullptr));
+            check_xml(reader->GetLocalName(&value, nullptr), xml_path);
 
             if (0 != wcscmp(value, L"ApiContract"))
             {
@@ -107,16 +107,16 @@ namespace cswinrt
             path /= L"References";
             path /= sdk_version;
 
-            check_xml(reader->MoveToAttributeByName(L"name", nullptr));
-            check_xml(reader->GetValue(&value, nullptr));
+            check_xml(reader->MoveToAttributeByName(L"name", nullptr), xml_path);
+            check_xml(reader->GetValue(&value, nullptr), xml_path);
             path /= value;
 
-            check_xml(reader->MoveToAttributeByName(L"version", nullptr));
-            check_xml(reader->GetValue(&value, nullptr));
+            check_xml(reader->MoveToAttributeByName(L"version", nullptr), xml_path);
+            check_xml(reader->GetValue(&value, nullptr), xml_path);
             path /= value;
 
-            check_xml(reader->MoveToAttributeByName(L"name", nullptr));
-            check_xml(reader->GetValue(&value, nullptr));
+            check_xml(reader->MoveToAttributeByName(L"name", nullptr), xml_path);
+            check_xml(reader->GetValue(&value, nullptr), xml_path);
             path /= value;
 
             path += L".winmd";
@@ -132,10 +132,18 @@ namespace cswinrt
             HKEY_LOCAL_MACHINE,
             L"SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
             0,
-            KEY_READ,
+            KEY_READ | KEY_WOW64_32KEY,
             &key))
         {
-            throw std::invalid_argument("Could not find the Windows SDK in the registry");
+            if (0 != RegOpenKeyExW(
+                HKEY_LOCAL_MACHINE,
+                L"SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
+                0,
+                KEY_READ,
+                &key))
+            {
+                throw std::invalid_argument("Could not find the Windows SDK in the registry");
+            }
         }
 
         return { key };

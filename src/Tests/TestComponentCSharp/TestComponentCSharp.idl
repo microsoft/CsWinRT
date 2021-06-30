@@ -130,17 +130,6 @@ namespace TestComponentCSharp
         static Int32 NumObjects{ get; };
     }
 
-    interface ISingleton
-    {
-        Int32 IntProperty;
-        event Windows.Foundation.EventHandler<Int32> IntPropertyChanged;
-    }
-
-    static runtimeclass Singleton
-    {
-        static ISingleton Instance;
-    }
-
     [default_interface, gc_pressure(Windows.Foundation.Metadata.GCPressureAmount.High)]
     runtimeclass Class :
         Windows.Foundation.IStringable
@@ -397,6 +386,7 @@ namespace TestComponentCSharp
         // Interface projections
         static IProperties1 NativeProperties1{ get; };
         static Object ServiceProvider{ get; };
+        static Object ComInterop{ get; };
 
         // INotifyDataErrorInfo
         void RaiseDataErrorChanged();
@@ -464,7 +454,7 @@ namespace TestComponentCSharp
             static event Windows.Foundation.EventHandler<Int32> WarningEvent;
         }
     }
-    
+
     [contract(Windows.Foundation.UniversalApiContract, 8)]
     interface IWarning1
     {
@@ -519,4 +509,29 @@ And this is another one"
       void f();
     }
 
+    // Compile time test for sub windows namespace
+    namespace Windows
+    {
+        runtimeclass Class
+        {
+            Class();
+            static void StaticMethod();
+            void Method();
+            void Method2(Windows.Foundation.IStringable stringable);
+        }
+
+        [contract(Windows.Foundation.UniversalApiContract, 8)]
+        interface IWarning
+        {
+            Int32 WarningInterfacePropertySetter{ get; };
+            event Windows.Foundation.TypedEventHandler<Class, String> StringPropertyChanged;
+        }
+
+        [contract(Windows.Foundation.UniversalApiContract, 10)]
+        [attributeusage(target_all)]
+        [attributename("warning2")]
+        attribute Warning2Attribute
+        {
+        };
+    }
 }

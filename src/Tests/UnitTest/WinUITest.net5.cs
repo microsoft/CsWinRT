@@ -32,9 +32,6 @@ namespace UnitTest
         [Fact]
         public void TestApp()
         {
-            WinrtModule module = new WinrtModule();
-
-            var app = new App();
             // TODO: load up some MUX!
             //Assert.Equal(true, true);
         }

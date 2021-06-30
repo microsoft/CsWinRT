@@ -68,7 +68,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="CsWinRTGenerateProjection" DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences" Condition="'$(CsWinRTGenerateProjection)' == 'true'">
     <PropertyGroup>
       <CsWinRTResponseFile>$(CsWinRTGeneratedFilesDir)cswinrt.rsp</CsWinRTResponseFile>
-	  <CsWinRTCommand>"$(CsWinRTExe)" %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+      <CsWinRTCommand>"$(CsWinRTExe)" %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
       <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadataInput Condition="'$(CsWinRTWindowsMetadata)' != ''">-input $(CsWinRTWindowsMetadata)</CsWinRTWindowsMetadataInput>
@@ -110,12 +110,13 @@ $(CsWinRTIncludeWinRTInterop)
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
     <Exec Command="$(CsWinRTCommand)" />
-    <ItemGroup>
-      <CsWinRTOutputs Include="$(CsWinRTGeneratedFilesDir)/*.cs"/>
-      <UpToDateCheckInput Include="@(CsWinRTInputs)" Set="CsWinRTInputs" />
-      <UpToDateCheckOutput Include="$(CsWinRTResponseFile)" Set="CsWinRTInputs" />
-      <UpToDateCheckInput Include="$(CsWinRTResponseFile)" Set="CsWinRTOutputs" />
-      <UpToDateCheckOutput Include="@(CsWinRTOutputs)" Set="CsWinRTOutputs" />
+    <!--To support Visual Studio's FastUpToDate builds (except in authoring), need to capture the relationship of *.cs: *.winmd.
+    To ensure that modifications to input winmds are reflected in generated *.cs files, WinRT.cs is used as a build
+    marker and updated to the most recent winmd timestamp. UpToDateCheckBuilt then captures the dependency from
+    winmds to cs files.-->
+    <Touch Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)WinRT.cs')" Files="$(CsWinRTGeneratedFilesDir)WinRT.cs" Time="%(CsWinRTInputs.ModifiedTime)"/>
+    <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)WinRT.cs')">
+      <UpToDateCheckBuilt Include="$(CsWinRTGeneratedFilesDir)WinRT.cs" Original="@(CsWinRTInputs)" />
     </ItemGroup>
   </Target>
   

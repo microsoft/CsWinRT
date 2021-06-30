@@ -13,13 +13,52 @@ using Windows.UI.Input.Core;
 using Windows.UI.Input.Spatial;
 using Windows.UI.ViewManagement;
 using Xunit;
+using WinRT;
+using TestComponentCSharp;
 
 namespace UnitTest
 {
+    [ComImport]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("15651B9F-6C6B-4CC0-944C-C7D7B0F36F81")]
+    internal interface IComInterop
+    {
+        Int64 ReturnWindowHandle(IntPtr hwnd, Guid iid);
+    }
+
     // Note: Many of the COM interop APIs cannot be easily tested without significant test setup.
     // These cases either expect a runtime exception, or are compile-time only (skipped to validate types).
     public class ComInteropTests
     {
+        [Fact]
+        public void TestHWND()
+        {
+            var comInterop = Class.ComInterop.As<IComInterop>();
+            if (System.Environment.Is64BitProcess)
+            {
+                var hwnd = new IntPtr(0x0123456789ABCDEF);
+                var value = comInterop.ReturnWindowHandle(hwnd, typeof(IComInterop).GUID);
+                var hwndValue = hwnd.ToInt64();
+                Assert.Equal(hwndValue, value);
+            }
+            else 
+            {
+                var hwnd = new IntPtr(0x01234567);
+                var value = comInterop.ReturnWindowHandle(hwnd, typeof(IComInterop).GUID);
+                var hwndValue = hwnd.ToInt32();
+                Assert.Equal(hwndValue, value);
+            }
+        }
+
+        [Fact]
+        public void TestMockDragDropManager()
+        {
+            var interop = Class.ComInterop.As<WinRT.Interop.IDragDropManagerInterop>();
+            Guid iid = GuidGenerator.CreateIID(typeof(ICoreDragDropManager));
+            var manager = interop.GetForWindow(new IntPtr(0), iid);
+            Assert.NotNull(manager);
+        }
+
         [Fact]
         public void TestAccountsSettingsPane()
         {

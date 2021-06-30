@@ -1,4 +1,5 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
@@ -9,6 +10,7 @@
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+    <InternalsVisibleTo Include="UnitTest" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -37,4 +39,3 @@
   </PropertyGroup>
  
 </Project>
-

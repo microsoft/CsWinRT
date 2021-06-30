@@ -1480,6 +1480,43 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::make<service_provider>();
     }
 
+    struct __declspec(uuid("15651B9F-6C6B-4CC0-944C-C7D7B0F36F81")) IComInterop : ::IUnknown
+    {
+        virtual HRESULT __stdcall ReturnWindowHandle(HWND window, guid riid, int64_t* value) noexcept = 0;
+    };
+
+    struct __declspec(uuid("5AD8CBA7-4C01-4DAC-9074-827894292D63")) IDragDropManagerInterop : ::IInspectable
+    {
+        virtual HRESULT __stdcall GetForWindow(HWND window, guid const& riid, void** value) noexcept = 0;
+    };
+
+    WF::IInspectable Class::ComInterop()
+    {
+        struct com_interop : winrt::implements<com_interop, WF::IInspectable, IComInterop, IDragDropManagerInterop>
+        {
+            HRESULT __stdcall ReturnWindowHandle(HWND window, guid riid, int64_t* value) noexcept override
+            {
+                *value = riid == winrt::guid_of<IComInterop>() ? (int64_t)window : 0;
+                return 0;
+            }
+
+            HRESULT __stdcall GetForWindow(HWND window, guid const& riid, void** value) noexcept override
+            {
+                static const guid ICoreDragDropManager("7D56D344-8464-4FAF-AA49-37EA6E2D7BD1");
+                if (riid == ICoreDragDropManager)
+                {
+                    auto dummy = winrt::make<com_interop>();
+                    *value = winrt::detach_abi(dummy);
+                    return 0;
+                }
+                *value = 0;
+                return 0x80070057; // E_INVALIDARG
+            }
+        };
+
+        return winrt::make<com_interop>();
+    }
+
     // INotifyDataErrorInfo
     bool Class::HasErrors()
     {
