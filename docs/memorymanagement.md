@@ -32,22 +32,27 @@ In the former, the object is implemented purely in C# and its lifetime is manage
 garbage collector. C#/WinRT only comes into play when this C# object is passed across the ABI to a
 WinRT function. When this happens, C#/WinRT creates a CCW for it using the .NET 5 ComWrappers API
 and that is passed across the ABI. Any references to that CCW from the native side are tracked by
-`AddRef` / `Release` calls on the `IUnknown` of the CCW which is implemented by ComWrappers.
+`AddRef` / `Release` calls on the `IUnknown` of the CCW which is provided by the `ComWrappers` API.
+
 This means in addition to any references to the object from C# tracked by the garbage collector
 keeping it alive, any native reference which increases the CCW reference count would also keep the
-object alive and that is managed by the .NET runtime and its ComWrappers implementation.
+object alive and that is managed by the .NET runtime and `ComWrappers` implementation.
+
 
 In the latter scenario, extending an unsealed WinRT type is typically done via COM Aggregation
 which C#/WinRT does behind the scenes when a C# class extends such a projected type. In COM aggregation,
 there is 2 objects in play: the outer object which is the CCW for the C# object and the inner object
-which is the object being extended. Both these objects are made to look like one object known as the
-composed object. To achieve that, the outer object would delegate calls for any of the inner object
+which is the WinRT object being extended. Both these objects are made to look like one object known as the
+
+composed object. To achieve that, the outer object delegates calls for any of the inner object
+
 interfaces that aren't overridden to the inner object. Any calls for interfaces that are only
 implemented on the outer object or is overridden by the outer object or is for the `IUnknown` interface
 would be handled by the outer object itself. The last part means that the lifetime and the COM reference
 counting of this aggregated object is maintained by the outer object and more specifically its `IUnknown`
 implementation on the CCW from ComWrappers. This is where the standard COM reference tracking
-convention described earlier starts to differ. As we know for CCWs, there is 2 things which
+convention described earlier starts to differ. As we know for CCWs, there are 2 things which
+
 keep it alive: any references from C# to the managed object or any native references which had done
 an `AddRef` incrementing the COM ref count. But we also know that for projected aggregated types
 to make calls on interfaces provided by the inner object, they need to QueryInterface (QI) for them
@@ -104,5 +109,6 @@ it shouldn't be cleaned up as it is still in use.
 
 ### Related documentation
 
--	[COM Reference Tracking](https://docs.microsoft.com/en-us/windows/win32/com/managing-object-lifetimes-through-reference-counting)
--	[COM Aggregation](https://docs.microsoft.com/en-us/windows/win32/com/aggregation)
+-	[COM Reference Tracking](https://docs.microsoft.com/windows/win32/com/managing-object-lifetimes-through-reference-counting)
+
+-	[COM Aggregation](https://docs.microsoft.com/windows/win32/com/aggregation)
