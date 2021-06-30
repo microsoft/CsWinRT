@@ -6482,9 +6482,9 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                 auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
                 auto invokeMethodSig = get_event_invoke_method(eventType);
                 w.write(R"(
-internal sealed unsafe class %% : EventSource<%>
-{
-private % handler;
+    internal sealed unsafe class %% : EventSource<%>
+    {
+        private System.WeakReference<%> handlerRef = new System.WeakReference<%>(null);
 
         internal %(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
@@ -6505,7 +6505,7 @@ protected override System.Delegate EventInvoke
 {
 get
 {
-if (handler == null)
+if (!handlerRef.TryGetTarget(out var handler) || handler == null)
 {
 handler = (%) =>
 {
@@ -6516,6 +6516,7 @@ return %;
 }
 %localDel.Invoke(%);
 };
+handlerRef.SetTarget(handler);
 }
 return handler;
 }
@@ -6525,6 +6526,7 @@ return handler;
                     bind<write_event_source_type_name>(eventTypeSemantics),
                     bind<write_event_source_generic_args>(eventTypeSemantics),
                     eventTypeCode, 
+                    eventTypeCode,
                     eventTypeCode,
                     bind<write_event_source_type_name>(eventTypeSemantics), 
                     eventTypeCode,
