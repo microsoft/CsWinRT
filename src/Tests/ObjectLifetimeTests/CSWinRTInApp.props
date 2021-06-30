@@ -1,0 +1,28 @@
+<!--
+  Copyright (c) Microsoft Corporation. Licensed under the MIT License
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <!--ProjectReunionFrameworkPackage must be set before importing any Microsoft.ProjectReunion.Package.props files-->
+    <PropertyGroup Condition="'$(ProjectReunionFrameworkPackage)'==''">
+        <!--Default to enabling InApp support in any project that contains an appx manifest-->
+        <PackageAppxManifest>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)'))Package.appxmanifest</PackageAppxManifest>
+        <ProjectReunionFrameworkPackage Condition="Exists('$(PackageAppxManifest)')">false</ProjectReunionFrameworkPackage>
+    </PropertyGroup>
+
+    <!--TODO, Reunion 0.8: consolidate ProjectReunionInApp and make ProjectReunionFrameworkPackage the default
+        so that only ==/!= comparisons with the overridden value 'false' are necessary.-->
+    <PropertyGroup>
+        <ProjectReunionInApp Condition="'$(ProjectReunionFrameworkPackage)'=='false'">true</ProjectReunionInApp>
+        <ProjectReunionFrameworkPackage>false</ProjectReunionFrameworkPackage>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(ProjectReunionFrameworkPackage)'=='false'">
+        <!--Disable redundant unpacking of appx to work around Xaml tooling issue in VS 16.9-->
+        <ProjectReunionCopyXamlToolingLibs>false</ProjectReunionCopyXamlToolingLibs>
+        <!--Prevent Foundation package from attempting to copy runtime files that it doesn't contain in \runtimes
+            TODO, Reunion 0.8: clean up foundation package-->
+        <_AddMrtCoreAssembliesToReferenceCopyLocalPaths>false</_AddMrtCoreAssembliesToReferenceCopyLocalPaths>
+    </PropertyGroup>
+
+</Project>
