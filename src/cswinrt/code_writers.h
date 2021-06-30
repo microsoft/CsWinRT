@@ -6483,7 +6483,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                 w.write(R"(
     internal unsafe class %% : EventSource<%>
     {
-        private % handler;
+        private System.WeakReference<%> handlerRef = new System.WeakReference<%>(null);
 
         internal %(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
@@ -6495,7 +6495,7 @@ override protected System.Delegate EventInvoke
 {
 get
 {
-if (handler == null)
+if (!handlerRef.TryGetTarget(out var handler) || handler == null)
 {
 handler = (%) =>
 {
@@ -6506,6 +6506,7 @@ return %;
 }
 %localDel.Invoke(%);
 };
+handlerRef.SetTarget(handler);
 }
 return handler;
 }
@@ -6515,6 +6516,7 @@ return handler;
                     bind<write_event_source_type_name>(eventTypeSemantics),
                     bind<write_event_source_generic_args>(eventTypeSemantics),
                     eventTypeCode, 
+                    eventTypeCode,
                     eventTypeCode,
                     bind<write_event_source_type_name>(eventTypeSemantics), 
                     bind<write_event_invoke_params>(invokeMethodSig),

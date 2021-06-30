@@ -347,7 +347,7 @@ namespace WinRT
         {
             public EventRegistrationToken token;
             public TDelegate del;
-            public System.Delegate eventInvoke;
+            public System.WeakReference<System.Delegate> eventInvoke = new System.WeakReference<System.Delegate>(null);
         }
         protected State _state;
 
@@ -408,9 +408,9 @@ namespace WinRT
         {
             get
             {
-                if (_state.eventInvoke is object)
+                if (_state.eventInvoke.TryGetTarget(out var eventInvoke) && eventInvoke is object)
                 {
-                    return _state.eventInvoke;
+                    return eventInvoke;
                 }
 
                 MethodInfo invoke = typeof(TDelegate).GetMethod("Invoke");
@@ -422,8 +422,7 @@ namespace WinRT
                 }
 
                 ParameterExpression delegateLocal = Expression.Parameter(typeof(TDelegate), "event");
-
-                _state.eventInvoke = Expression.Lambda(typeof(TDelegate),
+                eventInvoke = Expression.Lambda(typeof(TDelegate),
                     Expression.Block(
                         invoke.ReturnType,
                         new[] { delegateLocal },
@@ -433,8 +432,8 @@ namespace WinRT
                             Expression.Call(delegateLocal, invoke, parameters),
                             Expression.Default(invoke.ReturnType))),
                     parameters).Compile();
-
-                return _state.eventInvoke;
+                _state.eventInvoke.SetTarget(eventInvoke);
+                return eventInvoke;
             }
         }
 
@@ -563,7 +562,7 @@ namespace WinRT
 
     internal unsafe class EventSource__EventHandler<T> : EventSource<System.EventHandler<T>>
     {
-        private System.EventHandler<T> handler;
+        private System.WeakReference<System.EventHandler<T>> handlerRef = new System.WeakReference<System.EventHandler<T>>(null);
 
         internal EventSource__EventHandler(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
@@ -577,7 +576,7 @@ namespace WinRT
             // This is synchronized from the base class
             get
             {
-                if (handler == null)
+                if (!handlerRef.TryGetTarget(out var handler) || handler == null)
                 {
                     handler = (System.Object obj, T e) =>
                     {
@@ -585,6 +584,7 @@ namespace WinRT
                         if (localDel != null)
                             localDel.Invoke(obj, e);
                     };
+                    handlerRef.SetTarget(handler);
                 }
                 return handler;
             }
