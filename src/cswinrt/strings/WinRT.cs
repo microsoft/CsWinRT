@@ -501,7 +501,6 @@ namespace WinRT
                 {
                     source._state = new EventSource<TDelegate>.State();
                     states[index] = source._state;
-                    //eventInvokeToCleanerMap.Add()
                 }
             }
 
@@ -554,7 +553,7 @@ namespace WinRT
                     cache.states.TryRemove(index, out var _);
                     // using double-checked lock idiom
                     using var resolvedTarget = cache.target.Resolve(typeof(IUnknownVftbl).GUID);
-                    if (cache.states.IsEmpty && resolvedTarget == null) 
+                    if (resolvedTarget == null) 
                     {
                         cachesLock.EnterWriteLock();
                         try
