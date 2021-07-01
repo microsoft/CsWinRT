@@ -458,7 +458,16 @@ namespace WinRT
         {
         }
 
-        override protected System.Delegate EventInvoke
+        protected override IObjectReference CreateMarshaler(System.EventHandler<T> del) =>
+            del is null ? null : ABI.System.EventHandler<T>.CreateMarshaler(del);
+
+        protected override void DisposeMarshaler(IObjectReference marshaler) =>
+            ABI.System.EventHandler<T>.DisposeMarshaler(marshaler);
+
+        protected override IntPtr GetAbi(IObjectReference marshaler) =>
+            marshaler is null ? IntPtr.Zero : ABI.System.EventHandler<T>.GetAbi(marshaler);
+
+        protected override System.Delegate EventInvoke
         {
             // This is synchronized from the base class
             get

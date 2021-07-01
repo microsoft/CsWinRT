@@ -120,6 +120,8 @@ namespace ABI.System.Windows.Input
 
     internal sealed unsafe class CanExecuteChangedEventSource : EventSource<global::System.EventHandler>
     {
+        private global::System.EventHandler handler;
+
         internal CanExecuteChangedEventSource(IObjectReference obj,
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
@@ -135,6 +137,24 @@ namespace ABI.System.Windows.Input
 
         protected override IntPtr GetAbi(IObjectReference marshaler) =>
             marshaler is null ? IntPtr.Zero : CanExecuteChangedEventHandler.GetAbi(marshaler);
+
+        protected override global::System.Delegate EventInvoke
+        {
+            // This is synchronized from the base class
+            get
+            {
+                if (handler == null)
+                {
+                    handler = (global::System.Object obj, global::System.EventArgs e) =>
+                    {
+                        var localDel = _event;
+                        if (localDel != null)
+                            localDel.Invoke(obj, e);
+                    };
+                }
+                return handler;
+            }
+        }
     }
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
