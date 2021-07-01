@@ -6463,7 +6463,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                 auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
                 auto invokeMethodSig = get_event_invoke_method(eventType);
                 w.write(R"(
-internal unsafe class %% : EventSource<%>
+internal sealed unsafe class %% : EventSource<%>
 {
 private % handler;
 
