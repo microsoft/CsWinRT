@@ -375,11 +375,14 @@ namespace WinRT
                 _state.del = (TDelegate)global::System.Delegate.Combine(_state.del, del);
                 if (registerHandler)
                 {
-                    var marshaler = CreateMarshaler((TDelegate)EventInvoke);
+                    var eventInvoke = (TDelegate)EventInvoke;
+                    var marshaler = CreateMarshaler(eventInvoke);
                     try
                     {
                         var nativeDelegate = GetAbi(marshaler);
                         ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out _state.token));
+
+                        Cache.AddStateCleaner(_obj.ThisPtr, eventInvoke, _index);
                     }
                     finally
                     {
@@ -437,8 +440,26 @@ namespace WinRT
             }
         }
 
+
         private class Cache
         {
+            private class CacheCleaner
+            {
+                private IntPtr objPtr;
+                private int indexToClean;
+
+                public CacheCleaner(IntPtr objPtr, int indexToClean)
+                {
+                    this.indexToClean = indexToClean;
+                    this.objPtr = objPtr;
+                }
+
+                ~CacheCleaner()
+                {
+                    Cache.Remove(objPtr, indexToClean);
+                }
+            }
+
             Cache(IWeakReference target, EventSource<TDelegate> source, int index)
             {
                 this.target = target;
@@ -447,9 +468,11 @@ namespace WinRT
 
             private IWeakReference target;
             private readonly ConcurrentDictionary<int, EventSource<TDelegate>.State> states = new ConcurrentDictionary<int, EventSource<TDelegate>.State>();
+            private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Delegate, CacheCleaner> stateCleaner = new System.Runtime.CompilerServices.ConditionalWeakTable<Delegate, CacheCleaner>();
 
             private static readonly ReaderWriterLockSlim cachesLock = new ReaderWriterLockSlim();
             private static readonly ConcurrentDictionary<IntPtr, Cache> caches = new ConcurrentDictionary<IntPtr, Cache>();
+            
 
             private Cache Update(IWeakReference target, EventSource<TDelegate> source, int index)
             {
@@ -478,6 +501,15 @@ namespace WinRT
                 {
                     source._state = new EventSource<TDelegate>.State();
                     states[index] = source._state;
+                    //eventInvokeToCleanerMap.Add()
+                }
+            }
+
+            public static void AddStateCleaner(IntPtr objPtr, Delegate eventInvoke, int index)
+            {
+                if (caches.TryGetValue(objPtr, out var cache) && !cache.stateCleaner.TryGetValue(eventInvoke, out var _))
+                {
+                    cache.stateCleaner.Add(eventInvoke, new CacheCleaner(objPtr, index));
                 }
             }
 
@@ -521,7 +553,8 @@ namespace WinRT
                 {
                     cache.states.TryRemove(index, out var _);
                     // using double-checked lock idiom
-                    if (cache.states.IsEmpty)
+                    using var resolvedTarget = cache.target.Resolve(typeof(IUnknownVftbl).GUID);
+                    if (cache.states.IsEmpty && resolvedTarget == null) 
                     {
                         cachesLock.EnterWriteLock();
                         try
@@ -562,7 +595,6 @@ namespace WinRT
 
     internal unsafe class EventSource__EventHandler<T> : EventSource<System.EventHandler<T>>
     {
-        private System.WeakReference<System.EventHandler<T>> handlerRef = new System.WeakReference<System.EventHandler<T>>(null);
 
         internal EventSource__EventHandler(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
@@ -576,17 +608,18 @@ namespace WinRT
             // This is synchronized from the base class
             get
             {
-                if (!handlerRef.TryGetTarget(out var handler) || handler == null)
+                if (_state.eventInvoke.TryGetTarget(out var handler) && handler != null)
                 {
-                    handler = (System.Object obj, T e) =>
-                    {
-                        var localDel = _state.del;
-                        if (localDel != null)
-                            localDel.Invoke(obj, e);
-                    };
-                    handlerRef.SetTarget(handler);
+                    return handler;
                 }
-                return handler;
+                System.EventHandler<T> newHandler = (System.Object obj, T e) =>
+                {
+                    var localDel = _state.del;
+                    if (localDel != null)
+                        localDel.Invoke(obj, e);
+                };
+                _state.eventInvoke.SetTarget(newHandler);
+                return newHandler;
             }
         }
     }

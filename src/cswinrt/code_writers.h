@@ -6483,42 +6483,40 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                 w.write(R"(
     internal unsafe class %% : EventSource<%>
     {
-        private System.WeakReference<%> handlerRef = new System.WeakReference<%>(null);
-
         internal %(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
             delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler, int index) : base(obj, addHandler, removeHandler, index)
         {
         }
 
-override protected System.Delegate EventInvoke
-{
-get
-{
-if (!handlerRef.TryGetTarget(out var handler) || handler == null)
-{
-handler = (%) =>
-{
-var localDel = _state.del;
-if (localDel == null)
-{%
-return %;
-}
-%localDel.Invoke(%);
-};
-handlerRef.SetTarget(handler);
-}
-return handler;
-}
-}
-}
+        override protected System.Delegate EventInvoke
+        {
+            get
+            {
+                if (_state.eventInvoke.TryGetTarget(out var cachedInvoke) && cachedInvoke != null)
+                {
+                    return cachedInvoke;
+                }
+                % invoke = (%) =>
+                {
+                    var localDel = _state.del;
+                    if (localDel == null)
+                    {%
+                        return %;
+                    }
+                    %localDel.Invoke(%);
+                };
+                _state.eventInvoke.SetTarget(invoke);
+                return invoke;
+            }
+        }
+    }
 )",
                     bind<write_event_source_type_name>(eventTypeSemantics),
                     bind<write_event_source_generic_args>(eventTypeSemantics),
                     eventTypeCode, 
-                    eventTypeCode,
-                    eventTypeCode,
                     bind<write_event_source_type_name>(eventTypeSemantics), 
+                    eventTypeCode,
                     bind<write_event_invoke_params>(invokeMethodSig),
                     bind<write_event_out_defaults>(invokeMethodSig),
                     bind<write_event_invoke_return_default>(invokeMethodSig),
