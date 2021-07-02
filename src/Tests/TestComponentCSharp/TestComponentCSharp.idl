@@ -138,6 +138,7 @@ namespace TestComponentCSharp
         , IProperties1
         , IProperties2
         , Microsoft.UI.Xaml.Data.INotifyDataErrorInfo
+        , Microsoft.UI.Xaml.Input.ICommand 
         //, Windows.Foundation.Collections.IVector<String>
         //, Windows.Foundation.Collections.IMap<Int32, String>
     {
@@ -390,6 +391,9 @@ namespace TestComponentCSharp
 
         // INotifyDataErrorInfo
         void RaiseDataErrorChanged();
+
+        // ICommand
+        void RaiseCanExecuteChanged();
 
         static Object BadRuntimeClassName{ get; };
     }
