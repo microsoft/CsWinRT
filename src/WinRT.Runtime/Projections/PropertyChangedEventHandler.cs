@@ -135,4 +135,43 @@ namespace ABI.System.ComponentModel
             return 0;
         }
     }
+
+    internal sealed unsafe class PropertyChangedEventSource : EventSource<global::System.ComponentModel.PropertyChangedEventHandler>
+    {
+        private global::System.ComponentModel.PropertyChangedEventHandler handler;
+
+        internal PropertyChangedEventSource(IObjectReference obj,
+            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
+            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
+            : base(obj, addHandler, removeHandler)
+        {
+        }
+
+        protected override IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventHandler del) =>
+            del is null ? null : PropertyChangedEventHandler.CreateMarshaler(del);
+
+        protected override void DisposeMarshaler(IObjectReference marshaler) =>
+            PropertyChangedEventHandler.DisposeMarshaler(marshaler);
+
+        protected override IntPtr GetAbi(IObjectReference marshaler) =>
+            marshaler is null ? IntPtr.Zero : PropertyChangedEventHandler.GetAbi(marshaler);
+
+        protected override global::System.Delegate EventInvoke
+        {
+            // This is synchronized from the base class
+            get
+            {
+                if (handler == null)
+                {
+                    handler = (global::System.Object obj, global::System.ComponentModel.PropertyChangedEventArgs e) =>
+                    {
+                        var localDel = _event;
+                        if (localDel != null)
+                            localDel.Invoke(obj, e);
+                    };
+                }
+                return handler;
+            }
+        }
+    }
 }

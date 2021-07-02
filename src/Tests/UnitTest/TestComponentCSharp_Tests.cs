@@ -702,6 +702,15 @@ namespace UnitTest
             TestObject.RaiseDataErrorChanged();
             Assert.Equal("name", propertyName);
 
+            bool eventCalled = false;
+            TestObject.CanExecuteChanged += (object sender, EventArgs e) =>
+            {
+                eventCalled = true;
+            };
+
+            TestObject.RaiseCanExecuteChanged();
+            Assert.True(eventCalled);
+
             // IXamlServiceProvider <-> IServiceProvider
             var serviceProvider = Class.ServiceProvider.As<IServiceProviderInterop>();
             IntPtr service;

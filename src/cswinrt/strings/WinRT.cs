@@ -334,7 +334,7 @@ namespace WinRT
 
 #pragma warning disable CA2002
 
-    internal unsafe class EventSource<TDelegate>
+    internal unsafe abstract class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
     {
         readonly IObjectReference _obj;
@@ -344,20 +344,11 @@ namespace WinRT
         private EventRegistrationToken _token;
         protected TDelegate _event;
 
-        protected virtual IObjectReference CreateMarshaler(TDelegate del)
-        {
-            return (IObjectReference)Marshaler<TDelegate>.CreateMarshaler((TDelegate)EventInvoke);
-        }
+        protected abstract IObjectReference CreateMarshaler(TDelegate del);
 
-        protected virtual IntPtr GetAbi(IObjectReference marshaler)
-        {
-            return (IntPtr)Marshaler<TDelegate>.GetAbi(marshaler);
-        }
+        protected abstract IntPtr GetAbi(IObjectReference marshaler);
 
-        protected virtual void DisposeMarshaler(IObjectReference marshaler)
-        {
-            Marshaler<TDelegate>.DisposeMarshaler(marshaler);
-        }
+        protected abstract void DisposeMarshaler(IObjectReference marshaler);
 
         public void Subscribe(TDelegate del)
         {
@@ -397,42 +388,9 @@ namespace WinRT
             }
         }
 
-        private System.Delegate _eventInvoke;
-        protected virtual System.Delegate EventInvoke
-        {
-            get
-            {
-                if (_eventInvoke is object)
-                {
-                    return _eventInvoke;
-                }
+        protected abstract System.Delegate EventInvoke { get; }
 
-                MethodInfo invoke = typeof(TDelegate).GetMethod("Invoke");
-                ParameterInfo[] invokeParameters = invoke.GetParameters();
-                ParameterExpression[] parameters = new ParameterExpression[invokeParameters.Length];
-                for (int i = 0; i < invokeParameters.Length; i++)
-                {
-                    parameters[i] = Expression.Parameter(invokeParameters[i].ParameterType, invokeParameters[i].Name);
-                }
-
-                ParameterExpression delegateLocal = Expression.Parameter(typeof(TDelegate), "event");
-
-                _eventInvoke = Expression.Lambda(typeof(TDelegate),
-                    Expression.Block(
-                        invoke.ReturnType,
-                        new[] { delegateLocal },
-                        Expression.Assign(delegateLocal, Expression.Field(Expression.Constant(this), typeof(EventSource<TDelegate>).GetField(nameof(_event), BindingFlags.Instance | BindingFlags.NonPublic))),
-                        Expression.Condition(
-                            Expression.ReferenceNotEqual(delegateLocal, Expression.Constant(null, typeof(TDelegate))),
-                            Expression.Call(delegateLocal, invoke, parameters),
-                            Expression.Default(invoke.ReturnType))),
-                    parameters).Compile();
-
-                return _eventInvoke;
-            }
-        }
-
-        internal EventSource(IObjectReference obj,
+        protected EventSource(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
             delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler)
         {
@@ -448,7 +406,7 @@ namespace WinRT
         }
     }
 
-    internal unsafe class EventSource__EventHandler<T> : EventSource<System.EventHandler<T>>
+    internal sealed unsafe class EventSource__EventHandler<T> : EventSource<System.EventHandler<T>>
     {
         private System.EventHandler<T> handler;
 
@@ -458,7 +416,16 @@ namespace WinRT
         {
         }
 
-        override protected System.Delegate EventInvoke
+        protected override IObjectReference CreateMarshaler(System.EventHandler<T> del) =>
+            del is null ? null : ABI.System.EventHandler<T>.CreateMarshaler(del);
+
+        protected override void DisposeMarshaler(IObjectReference marshaler) =>
+            ABI.System.EventHandler<T>.DisposeMarshaler(marshaler);
+
+        protected override IntPtr GetAbi(IObjectReference marshaler) =>
+            marshaler is null ? IntPtr.Zero : ABI.System.EventHandler<T>.GetAbi(marshaler);
+
+        protected override System.Delegate EventInvoke
         {
             // This is synchronized from the base class
             get

@@ -99,7 +99,7 @@ namespace ABI.System.ComponentModel
             _obj = obj;
 
             _PropertyChanged =
-                new EventSource<global::System.ComponentModel.PropertyChangedEventHandler>(_obj,
+                new PropertyChangedEventSource(_obj,
                 _obj.Vftbl.add_PropertyChanged_0,
                 _obj.Vftbl.remove_PropertyChanged_1);
         }
@@ -111,6 +111,6 @@ namespace ABI.System.ComponentModel
             remove => _PropertyChanged.Unsubscribe(value);
         }
 
-        private EventSource<global::System.ComponentModel.PropertyChangedEventHandler> _PropertyChanged;
+        private PropertyChangedEventSource _PropertyChanged;
     }
 }

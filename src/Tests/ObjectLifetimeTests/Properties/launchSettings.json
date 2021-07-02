@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ObjectLifetimeTests.Lifted": {
+      "commandName": "AppContainer",
+      "DebugEngine": "Mixed"
+    }
+  }
+}

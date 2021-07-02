@@ -6453,6 +6453,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
 
     void write_event_source_subclass(writer& w, cswinrt::type_semantics eventTypeSemantics)
     {
+        auto abiTypeName = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::ABI, true));
         for_typedef(w, eventTypeSemantics, [&](TypeDef const& eventType)
             {
                 if ((eventType.TypeNamespace() == "Windows.Foundation" || eventType.TypeNamespace() == "System") && eventType.TypeName() == "EventHandler`1")
@@ -6462,7 +6463,7 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                 auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
                 auto invokeMethodSig = get_event_invoke_method(eventType);
                 w.write(R"(
-internal unsafe class %% : EventSource<%>
+internal sealed unsafe class %% : EventSource<%>
 {
 private % handler;
 
@@ -6472,7 +6473,16 @@ delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> r
 {
 }
 
-override protected System.Delegate EventInvoke
+protected override IObjectReference CreateMarshaler(% del) =>
+del is null ? null : %.CreateMarshaler(del);
+
+protected override void DisposeMarshaler(IObjectReference marshaler) =>
+%.DisposeMarshaler(marshaler);
+
+protected override System.IntPtr GetAbi(IObjectReference marshaler) =>
+marshaler is null ? System.IntPtr.Zero : %.GetAbi(marshaler);
+
+protected override System.Delegate EventInvoke
 {
 get
 {
@@ -6498,6 +6508,10 @@ return handler;
                     eventTypeCode, 
                     eventTypeCode,
                     bind<write_event_source_type_name>(eventTypeSemantics), 
+                    eventTypeCode,
+                    abiTypeName,
+                    abiTypeName,
+                    abiTypeName,
                     bind<write_event_invoke_params>(invokeMethodSig),
                     bind<write_event_out_defaults>(invokeMethodSig),
                     bind<write_event_invoke_return_default>(invokeMethodSig),

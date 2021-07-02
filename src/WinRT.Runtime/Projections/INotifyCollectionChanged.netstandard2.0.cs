@@ -100,7 +100,7 @@ namespace ABI.System.Collections.Specialized
             _obj = obj;
 
             _CollectionChanged =
-                new EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>(_obj,
+                new NotifyCollectionChangedEventSource(_obj,
                 _obj.Vftbl.add_CollectionChanged_0,
                 _obj.Vftbl.remove_CollectionChanged_1);
         }
@@ -111,6 +111,6 @@ namespace ABI.System.Collections.Specialized
             remove => _CollectionChanged.Unsubscribe(value);
         }
 
-        private EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler> _CollectionChanged;
+        private NotifyCollectionChangedEventSource _CollectionChanged;
     }
 }
