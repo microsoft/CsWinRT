@@ -122,12 +122,12 @@ namespace ABI.System.ComponentModel
         }
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
-        private static EventSource<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>> _ErrorsChanged(IWinRTObject _this)
+        private static EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> _ErrorsChanged(IWinRTObject _this)
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)_this).GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
-            return (EventSource<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle,
-                () => new EventSource<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>(_obj,
+            return (EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Specialized.INotifyCollectionChanged).TypeHandle,
+                () => new EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>(_obj,
                     (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_obj.Vftbl.add_ErrorsChanged_1,
                     _obj.Vftbl.remove_ErrorsChanged_2));
         }

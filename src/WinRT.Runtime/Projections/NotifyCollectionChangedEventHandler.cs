@@ -134,4 +134,43 @@ namespace ABI.System.Collections.Specialized
             return 0;
         }
     }
+
+    internal sealed unsafe class NotifyCollectionChangedEventSource : EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
+    {
+        private global::System.Collections.Specialized.NotifyCollectionChangedEventHandler handler;
+
+        internal NotifyCollectionChangedEventSource(IObjectReference obj,
+            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
+            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
+            : base(obj, addHandler, removeHandler)
+        {
+        }
+
+        protected override IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler del) =>
+            del is null ? null : NotifyCollectionChangedEventHandler.CreateMarshaler(del);
+
+        protected override void DisposeMarshaler(IObjectReference marshaler) =>
+            NotifyCollectionChangedEventHandler.DisposeMarshaler(marshaler);
+
+        protected override IntPtr GetAbi(IObjectReference marshaler) =>
+            marshaler is null ? IntPtr.Zero : NotifyCollectionChangedEventHandler.GetAbi(marshaler);
+
+        protected override global::System.Delegate EventInvoke
+        {
+            // This is synchronized from the base class
+            get
+            {
+                if (handler == null)
+                {
+                    handler = (global::System.Object obj, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
+                    {
+                        var localDel = _event;
+                        if (localDel != null)
+                            localDel.Invoke(obj, e);
+                    };
+                }
+                return handler;
+            }
+        }
+    }
 }

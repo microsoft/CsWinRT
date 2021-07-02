@@ -1541,6 +1541,28 @@ namespace winrt::TestComponentCSharp::implementation
         _dataErrorsChanged(*this, args);
     }
 
+    // ICommand
+    winrt::event_token Class::CanExecuteChanged(winrt::Windows::Foundation::EventHandler<winrt::Windows::Foundation::IInspectable> const& handler)
+    {
+        return _canExecuteChanged.add(handler);
+    }
+    void Class::CanExecuteChanged(winrt::event_token const& token) noexcept
+    {
+        return _canExecuteChanged.remove(token);
+    }
+    bool Class::CanExecute(winrt::Windows::Foundation::IInspectable const& parameter)
+    {
+        return true;
+    }
+    void Class::Execute(winrt::Windows::Foundation::IInspectable const& parameter)
+    {
+    }
+    void Class::RaiseCanExecuteChanged()
+    {
+        _canExecuteChanged(*this, *this);
+    }
+
+
     WF::IInspectable Class::BadRuntimeClassName()
     {
         struct bad_runtime_classname : winrt::implements<bad_runtime_classname, WF::IInspectable>

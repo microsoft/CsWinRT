@@ -80,12 +80,12 @@ namespace ABI.System.ComponentModel
         }
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
-        private static EventSource<global::System.ComponentModel.PropertyChangedEventHandler> _PropertyChanged(IWinRTObject _this)
+        private static PropertyChangedEventSource _PropertyChanged(IWinRTObject _this)
         {
             var _obj = (ObjectReference<Vftbl>)_this.GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle);
             
-            return (EventSource<global::System.ComponentModel.PropertyChangedEventHandler>)_this.GetOrCreateTypeHelperData(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle,
-                () => new EventSource<global::System.ComponentModel.PropertyChangedEventHandler>(_obj, _obj.Vftbl.add_PropertyChanged_0, _obj.Vftbl.remove_PropertyChanged_1));
+            return (PropertyChangedEventSource)_this.GetOrCreateTypeHelperData(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle,
+                () => new PropertyChangedEventSource(_obj, _obj.Vftbl.add_PropertyChanged_0, _obj.Vftbl.remove_PropertyChanged_1));
         }
 
         event global::System.ComponentModel.PropertyChangedEventHandler global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged
