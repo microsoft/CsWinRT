@@ -73,6 +73,11 @@ namespace WinRT
 
         public static T CreateRcwForComObject<T>(IntPtr ptr)
         {
+            return CreateRcwForComObject<T>(ptr, true);
+        }
+
+        private static T CreateRcwForComObject<T>(IntPtr ptr, bool tryUseCache)
+        {
             if (ptr == IntPtr.Zero)
             {
                 return default;
@@ -83,7 +88,8 @@ namespace WinRT
             // ComWrappers API surface, so we are achieving it via a thread local.  We unset it after in case
             // there is other calls to it via other means.
             CreateRCWType.Value = typeof(T);
-            var rcw = ComWrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.TrackerObject);
+
+            var rcw = tryUseCache ? ComWrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.TrackerObject) : ComWrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.UniqueInstance);
             CreateRCWType.Value = null;
             // Because .NET will de-duplicate strings and WinRT doesn't,
             // our RCW factory returns a wrapper of our string instance.
@@ -99,12 +105,22 @@ namespace WinRT
                 winrtObj.Resurrect();
             }
 
-            return rcw switch
+            try
             {
-                ABI.System.Nullable<string> ns => (T)(object) ns.Value,
-                ABI.System.Nullable<Type> nt => (T)(object) nt.Value,
-                _ => (T) rcw
-            };
+                return rcw switch
+                {
+                    ABI.System.Nullable<string> ns => (T)(object)ns.Value,
+                    ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                    _ => (T)rcw
+                };
+            }
+            catch (InvalidCastException)
+            {
+                if (tryUseCache)
+                    return CreateRcwForComObject<T>(ptr, false);
+                throw;
+            }
+
         }
 
         public static bool TryUnwrapObject(object o, out IObjectReference objRef)
