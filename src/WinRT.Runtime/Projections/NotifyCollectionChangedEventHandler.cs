@@ -164,7 +164,7 @@ namespace ABI.System.Collections.Specialized
                 {
                     handler = (global::System.Object obj, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
                     {
-                        var localDel = _event;
+                        var localDel = _state.del;
                         if (localDel != null)
                             localDel.Invoke(obj, e);
                     };

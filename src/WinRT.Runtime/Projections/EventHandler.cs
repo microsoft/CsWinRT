@@ -300,7 +300,7 @@ namespace ABI.System
                 {
                     handler = (global::System.Object obj, global::System.EventArgs e) =>
                     {
-                        var localDel = _event;
+                        var localDel = _state.del;
                         if (localDel != null)
                             localDel.Invoke(obj, e);
                     };

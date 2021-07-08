@@ -6530,6 +6530,7 @@ marshaler is null ? System.IntPtr.Zero : %.GetAbi(marshaler);
                     abiTypeName,
                     abiTypeName,
                     abiTypeName,
+                    eventTypeCode,
                     bind<write_event_invoke_params>(invokeMethodSig),
                     bind<write_event_out_defaults>(invokeMethodSig),
                     bind<write_event_invoke_return_default>(invokeMethodSig),
