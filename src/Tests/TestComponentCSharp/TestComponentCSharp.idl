@@ -130,17 +130,6 @@ namespace TestComponentCSharp
         static Int32 NumObjects{ get; };
     }
 
-    interface ISingleton
-    {
-        Int32 IntProperty;
-        event Windows.Foundation.EventHandler<Int32> IntPropertyChanged;
-    }
-
-    static runtimeclass Singleton
-    {
-        static ISingleton Instance;
-    }
-
     [default_interface, gc_pressure(Windows.Foundation.Metadata.GCPressureAmount.High)]
     runtimeclass Class :
         Windows.Foundation.IStringable
@@ -149,6 +138,7 @@ namespace TestComponentCSharp
         , IProperties1
         , IProperties2
         , Microsoft.UI.Xaml.Data.INotifyDataErrorInfo
+        , Microsoft.UI.Xaml.Input.ICommand 
         //, Windows.Foundation.Collections.IVector<String>
         //, Windows.Foundation.Collections.IMap<Int32, String>
     {
@@ -401,9 +391,13 @@ namespace TestComponentCSharp
         // Interface projections
         static IProperties1 NativeProperties1{ get; };
         static Object ServiceProvider{ get; };
+        static Object ComInterop{ get; };
 
         // INotifyDataErrorInfo
         void RaiseDataErrorChanged();
+
+        // ICommand
+        void RaiseCanExecuteChanged();
 
         static Object BadRuntimeClassName{ get; };
     }
@@ -468,7 +462,7 @@ namespace TestComponentCSharp
             static event Windows.Foundation.EventHandler<Int32> WarningEvent;
         }
     }
-    
+
     [contract(Windows.Foundation.UniversalApiContract, 8)]
     interface IWarning1
     {
@@ -503,5 +497,49 @@ namespace TestComponentCSharp
             // see https://github.com/microsoft/cppwinrt/issues/782
             //overridable event Windows.Foundation.EventHandler<Int32> WarningOverridableEvent;
         }
+    }
+
+    [attributeusage(target_runtimeclass, target_interface, target_struct, target_enum, target_delegate, target_field, target_property, target_method, target_event)]
+    [attributename("attr_string")]
+    attribute MyStringAttribute
+    {
+        String Content;
+    }
+
+    [attr_string(
+"This is line one
+This is line two
+
+And this is another one"
+    )]
+    runtimeclass MultiLineStringAttributeTest
+    {
+      void f();
+    }
+
+    // Compile time test for sub windows namespace
+    namespace Windows
+    {
+        runtimeclass Class
+        {
+            Class();
+            static void StaticMethod();
+            void Method();
+            void Method2(Windows.Foundation.IStringable stringable);
+        }
+
+        [contract(Windows.Foundation.UniversalApiContract, 8)]
+        interface IWarning
+        {
+            Int32 WarningInterfacePropertySetter{ get; };
+            event Windows.Foundation.TypedEventHandler<Class, String> StringPropertyChanged;
+        }
+
+        [contract(Windows.Foundation.UniversalApiContract, 10)]
+        [attributeusage(target_all)]
+        [attributename("warning2")]
+        attribute Warning2Attribute
+        {
+        };
     }
 }

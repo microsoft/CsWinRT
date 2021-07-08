@@ -2,12 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <Platforms>x64</Platforms>
   </PropertyGroup>
 	
   <ItemGroup>
     <ProjectReference Include="..\SimpleMathComponent\SimpleMathComponent.vcxproj" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="1.0.1" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="1.2.6" />
   </ItemGroup>
 
   <!--CsWinRT properties-->
@@ -23,10 +24,5 @@
     <OutputPath>$(GeneratedNugetDir)</OutputPath>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
-
-  <!--Specify Windows SDK Metadata-->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.19041.1" />
-  </ItemGroup>
 
 </Project>

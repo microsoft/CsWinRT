@@ -2,7 +2,6 @@
 if /i "%cswinrt_echo%" == "on" @echo on
 
 set CsWinRTNet5SdkVersion=5.0.300
-
 set this_dir=%~dp0
 
 :dotnet
@@ -10,6 +9,8 @@ rem Install required .NET 5 SDK version and add to environment
 set DOTNET_ROOT=%LocalAppData%\Microsoft\dotnet
 set DOTNET_ROOT(86)=%LocalAppData%\Microsoft\dotnet\x86
 set path=%DOTNET_ROOT%;%path%
+
+
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
@@ -121,7 +122,10 @@ if not exist %nuget_dir%\nuget.exe powershell -Command "Invoke-WebRequest https:
 %nuget_dir%\nuget update -self
 rem Note: packages.config-based (vcxproj) projects do not support msbuild /t:restore
 call %this_dir%get_testwinrt.cmd
+set NUGET_RESTORE_MSBUILD_ARGS=/p:platform="%cswinrt_platform%"
 call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%cswinrt.sln
+rem: Calling nuget restore again on ObjectLifetimeTests.Lifted.csproj to prevent .props from \microsoft.testplatform.testhost\build\netcoreapp2.1 from being included. Nuget.exe erroneously imports props files. https://github.com/NuGet/Home/issues/9672
+call :exec %msbuild_path%msbuild.exe %this_dir%\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
 
 :build
 echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
@@ -137,7 +141,11 @@ if "%cswinrt_build_only%"=="true" goto :eof
 :unittest
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
 echo Running cswinrt unit tests for %cswinrt_platform% %cswinrt_configuration%
-set dotnet_exe="%DOTNET_ROOT%\dotnet.exe"
+if %cswinrt_platform%==x86 (
+  set dotnet_exe="%DOTNET_ROOT(86)%\dotnet.exe"
+) else (
+  set dotnet_exe="%DOTNET_ROOT%\dotnet.exe"
+)
 if not exist %dotnet_exe% (
   if %cswinrt_platform%==x86 (
     set dotnet_exe="%ProgramFiles(x86)%\dotnet\dotnet.exe"
@@ -145,6 +153,16 @@ if not exist %dotnet_exe% (
     set dotnet_exe="%ProgramFiles%\dotnet\dotnet.exe"
   )
 )
+
+:objectlifetimetests
+rem Running Object Lifetime Unit Tests
+pushd .
+cd %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_platform%\%cswinrt_configuration%\net5.0-windows10.0.19041.0\win10-%cswinrt_platform%
+sn -Vr Microsoft.Windows.SDK.NET.dll
+vstest.console.exe ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%USERPROFILE%\.nuget\packages\mstest.testadapter\2.2.4-preview-20210513-02\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx 
+popd
+
+
 
 rem WinUI NuGet package's Microsoft.WinUI.AppX.targets attempts to import a file that does not exist, even when
 rem executing "dotnet test --no-build ...", which evidently still needs to parse and load the entire project.
@@ -166,6 +184,7 @@ if ErrorLevel 1 (
   echo ERROR: Host test failed, skipping NuGet pack
   exit /b !ErrorLevel!
 )
+ 
 
 :authortest
 rem Run Authoring tests
@@ -187,7 +206,6 @@ set source_generator=%this_dir%Authoring\WinRT.SourceGenerator\bin\%cswinrt_conf
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
 set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net5.0\WinRT.Host.Shim.dll
 set guid_patch=%this_dir%Perf\IIDOptimizer\bin\%cswinrt_configuration%\net5.0\*.*
-
 echo Creating nuget package
 call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties cswinrt_exe=%cswinrt_exe%;interop_winmd=%interop_winmd%;netstandard2_runtime=%netstandard2_runtime%;net5_runtime=%net5_runtime%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_shim=%winrt_shim%;guid_patch=%guid_patch% -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
 goto :eof
@@ -201,3 +219,4 @@ echo.
 %*
 )
 goto :eof
+

@@ -142,8 +142,8 @@ namespace WinRT
 #if !NETSTANDARD2_0 && !NETCOREAPP2_0
             if (_moduleHandle == IntPtr.Zero)
             {
-                try
-                {
+                try 
+                {	        
                     // Allow runtime to find module in RID-specific relative subfolder
                     _moduleHandle = NativeLibrary.Load(fileName, Assembly.GetExecutingAssembly(), null);
                 }
@@ -334,49 +334,36 @@ namespace WinRT
 
 #pragma warning disable CA2002
 
-    internal unsafe class EventSource<TDelegate>
+    internal unsafe abstract class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
     {
         readonly IObjectReference _obj;
-        readonly int _index;
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
 
-        // Registration state, cached separately to survive EventSource garbage collection
-        protected class State
-        {
-            public EventRegistrationToken token;
-            public TDelegate del;
-            public System.Delegate eventInvoke;
-        }
-        protected State _state;
+        private EventRegistrationToken _token;
+        protected TDelegate _event;
 
-        protected virtual IObjectReference CreateMarshaler(TDelegate del)
-        {
-            return (IObjectReference)Marshaler<TDelegate>.CreateMarshaler((TDelegate)EventInvoke);
-        }
+        protected abstract IObjectReference CreateMarshaler(TDelegate del);
 
-        protected virtual IntPtr GetAbi(IObjectReference marshaler)
-        {
-            return (IntPtr)Marshaler<TDelegate>.GetAbi(marshaler);
-        }
+        protected abstract IntPtr GetAbi(IObjectReference marshaler);
 
-        protected virtual void DisposeMarshaler(IObjectReference marshaler)
-        {
-            Marshaler<TDelegate>.DisposeMarshaler(marshaler);
-        }
+        protected abstract void DisposeMarshaler(IObjectReference marshaler);
 
         public void Subscribe(TDelegate del)
         {
             lock (this)
             {
-                if (_state.del is null)
+                bool registerHandler = _event is null;
+                
+                _event = (TDelegate)global::System.Delegate.Combine(_event, del);
+                if (registerHandler)
                 {
                     var marshaler = CreateMarshaler((TDelegate)EventInvoke);
                     try
                     {
                         var nativeDelegate = GetAbi(marshaler);
-                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out _state.token));
+                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out _token));
                     }
                     finally
                     {
@@ -385,7 +372,6 @@ namespace WinRT
                         DisposeMarshaler(marshaler);
                     }
                 }
-                _state.del = (TDelegate)global::System.Delegate.Combine(_state.del, del);
             }
         }
 
@@ -393,184 +379,53 @@ namespace WinRT
         {
             lock (this)
             {
-                var oldEvent = _state.del;
-                _state.del = (TDelegate)global::System.Delegate.Remove(_state.del, del);
-                if (oldEvent is object && _state.del is null)
+                var oldEvent = _event;
+                _event = (TDelegate)global::System.Delegate.Remove(_event, del);
+                if (oldEvent is object && _event is null)
                 {
                     _UnsubscribeFromNative();
                 }
             }
         }
 
-        protected virtual System.Delegate EventInvoke
-        {
-            get
-            {
-                if (_state.eventInvoke is object)
-                {
-                    return _state.eventInvoke;
-                }
+        protected abstract System.Delegate EventInvoke { get; }
 
-                MethodInfo invoke = typeof(TDelegate).GetMethod("Invoke");
-                ParameterInfo[] invokeParameters = invoke.GetParameters();
-                ParameterExpression[] parameters = new ParameterExpression[invokeParameters.Length];
-                for (int i = 0; i < invokeParameters.Length; i++)
-                {
-                    parameters[i] = Expression.Parameter(invokeParameters[i].ParameterType, invokeParameters[i].Name);
-                }
-
-                ParameterExpression delegateLocal = Expression.Parameter(typeof(TDelegate), "event");
-
-                _state.eventInvoke = Expression.Lambda(typeof(TDelegate),
-                    Expression.Block(
-                        invoke.ReturnType,
-                        new[] { delegateLocal },
-                        Expression.Assign(delegateLocal, Expression.Field(Expression.Constant(_state), typeof(EventSource<TDelegate>.State).GetField(nameof(_state.del), BindingFlags.Instance | BindingFlags.Public))),
-                        Expression.Condition(
-                            Expression.ReferenceNotEqual(delegateLocal, Expression.Constant(null, typeof(TDelegate))),
-                            Expression.Call(delegateLocal, invoke, parameters),
-                            Expression.Default(invoke.ReturnType))),
-                    parameters).Compile();
-
-                return _state.eventInvoke;
-            }
-        }
-
-        private class Cache
-        {
-            Cache(IWeakReference target, EventSource<TDelegate> source, int index)
-            {
-                this.target = target;
-                SetState(source, index);
-            }
-
-            private IWeakReference target;
-            private ConcurrentDictionary<int, EventSource<TDelegate>.State> states = new ConcurrentDictionary<int, EventSource<TDelegate>.State>();
-
-            private static ReaderWriterLockSlim cachesLock = new ReaderWriterLockSlim();
-            private static ConcurrentDictionary<IntPtr, Cache> caches = new ConcurrentDictionary<IntPtr, Cache>();
-
-            private Cache Update(IWeakReference target, EventSource<TDelegate> source, int index)
-            {
-                // If target no longer exists, destroy cache
-                lock (this)
-                {
-                    using var resolved = this.target.Resolve(typeof(IUnknownVftbl).GUID);
-                    if (resolved == null)
-                    {
-                        this.target = target;
-                        states.Clear();
-                    }
-                }
-                SetState(source, index);
-                return this;
-            }
-
-            private void SetState(EventSource<TDelegate> source, int index)
-            {
-                // If cache exists, use it, else create new
-                if (states.ContainsKey(index))
-                {
-                    source._state = states[index];
-                }
-                else
-                {
-                    source._state = new EventSource<TDelegate>.State();
-                    states[index] = source._state;
-                }
-            }
-
-            public static void Create(IObjectReference obj, EventSource<TDelegate> source, int index)
-            {
-                // If event source implements weak reference support, track event registrations so that
-                // unsubscribes will work across garbage collections.  Note that most static/factory classes
-                // do not implement IWeakReferenceSource, so static codegen caching approach is also used.
-                IWeakReference target = null;
-                try
-                {
-#if NETSTANDARD2_0
-                    var weakRefSource = (IWeakReferenceSource)typeof(IWeakReferenceSource).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { obj });
-#else
-                    var weakRefSource = (IWeakReferenceSource)(object)new WinRT.IInspectable(obj);
-#endif
-                    target = weakRefSource.GetWeakReference();
-                }
-                catch (Exception)
-                {
-                    source._state = new EventSource<TDelegate>.State();
-                    return;
-                }
-
-                cachesLock.EnterReadLock();
-                try
-                {
-                    caches.AddOrUpdate(obj.ThisPtr,
-                        (IntPtr ThisPtr) => new Cache(target, source, index),
-                        (IntPtr ThisPtr, Cache cache) => cache.Update(target, source, index));
-                }
-                finally
-                {
-                    cachesLock.ExitReadLock();
-                }
-            }
-
-            public static void Remove(IntPtr thisPtr, int index)
-            {
-                if (caches.TryGetValue(thisPtr, out var cache))
-                {
-                    cache.states.TryRemove(index, out var _);
-                    // using double-checked lock idiom
-                    if (cache.states.IsEmpty)
-                    {
-                        cachesLock.EnterWriteLock();
-                        try
-                        {
-                            if (cache.states.IsEmpty)
-                            {
-                                caches.TryRemove(thisPtr, out var _);
-                            }
-                        }
-                        finally
-                        {
-                            cachesLock.ExitWriteLock();
-                        }
-                    }
-                }
-            }
-        }
-
-        internal EventSource(IObjectReference obj,
+        protected EventSource(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler,
-            int index = 0)
+            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler)
         {
-            Cache.Create(obj, this, index);
             _obj = obj;
-            _index = index;
             _addHandler = addHandler;
             _removeHandler = removeHandler;
         }
 
         void _UnsubscribeFromNative()
         {
-            Cache.Remove(_obj.ThisPtr, _index);
-            ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _state.token));
-            _state.token.Value = 0;
+            ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _token));
+            _token.Value = 0;
         }
     }
 
-    internal unsafe class EventSource__EventHandler<T> : EventSource<System.EventHandler<T>>
+    internal sealed unsafe class EventSource__EventHandler<T> : EventSource<System.EventHandler<T>>
     {
         private System.EventHandler<T> handler;
 
         internal EventSource__EventHandler(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler,
-            int index) : base(obj, addHandler, removeHandler, index)
+            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler) : base(obj, addHandler, removeHandler)
         {
         }
 
-        override protected System.Delegate EventInvoke
+        protected override IObjectReference CreateMarshaler(System.EventHandler<T> del) =>
+            del is null ? null : ABI.System.EventHandler<T>.CreateMarshaler(del);
+
+        protected override void DisposeMarshaler(IObjectReference marshaler) =>
+            ABI.System.EventHandler<T>.DisposeMarshaler(marshaler);
+
+        protected override IntPtr GetAbi(IObjectReference marshaler) =>
+            marshaler is null ? IntPtr.Zero : ABI.System.EventHandler<T>.GetAbi(marshaler);
+
+        protected override System.Delegate EventInvoke
         {
             // This is synchronized from the base class
             get
@@ -579,8 +434,9 @@ namespace WinRT
                 {
                     handler = (System.Object obj, T e) =>
                     {
-                        if (_state.del != null)
-                            _state.del.Invoke(obj, e);
+                        var localDel = _event;
+                        if (localDel != null)
+                            localDel.Invoke(obj, e);
                     };
                 }
                 return handler;
