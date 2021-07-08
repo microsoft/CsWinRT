@@ -112,7 +112,7 @@ namespace WinRT
                 ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
                 T castRcw => castRcw,
                 _ when tryUseCache => CreateRcwForComObject<T>(ptr, false),
-                _ => throw new InvalidCastException()
+                _ => throw new ArgumentException(string.Format("Unable to create rcw. The com object {0} has type {1} which cannot be assigned to type {2}", ptr, rcw.GetType(), typeof(T)))
             };
 
         }
