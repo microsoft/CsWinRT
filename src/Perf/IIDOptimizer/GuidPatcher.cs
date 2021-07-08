@@ -1,4 +1,5 @@
 ﻿using Mono.Cecil;
+using Mono.Cecil.Pdb;
 using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
@@ -42,7 +43,7 @@ namespace GuidPatch
             /*
              *  Initialize the logger with the OptimizerDir property 
              */
-            Logger = new Logger(OptimizerDir, "log.txt");
+            Logger = new Logger(OptimizerDir, "log_iidoptimizer.txt");
 
             var readerParameters = new ReaderParameters(ReadingMode.Deferred)
             {
@@ -149,7 +150,6 @@ namespace GuidPatch
         {
             var writerParameters = new WriterParameters
             {
-                // SymbolWriterProvider = new DefaultSymbolWriterProvider(),
                 WriteSymbols = true
             };
 
@@ -198,9 +198,9 @@ namespace GuidPatch
 
             guidImplementationDetailsType.Methods.Add(guidDataMethod);
 
-            var emitter = new SignatureEmitter(type, guidDataMethod, Logger);
+            var emitter = new SignatureEmitter(type, guidDataMethod, Logger); 
             VisitSignature(rootSignaturePart, emitter);
-
+        
             emitter.EmitGuidGetter(guidDataBlockType, guidImplementationDetailsType, readOnlySpanOfByte, readOnlySpanOfByteCtor, guidGeneratorType!);
 
             MethodReference guidDataMethodReference = guidDataMethod;
@@ -235,7 +235,7 @@ namespace GuidPatch
             {
                 case BasicSignaturePart basic:
                     {
-                        emitter.PushString(basic.Type switch
+                       emitter.PushString(basic.Type switch
                         {
                             SignatureType.@string => "string",
                             SignatureType.iinspectable => "cinterface(IInspectable)",
@@ -262,7 +262,6 @@ namespace GuidPatch
                     break;
                 case NonGenericDelegateSignature del:
                     {
-                        /// TODO test this path 
                         emitter.PushString($"delegate({del.DelegateIID:B}");
                     }
                     break;
@@ -273,7 +272,6 @@ namespace GuidPatch
                     break;
                 case CustomSignatureMethod custom:
                     {
-                        /// TODO test this path 
                         emitter.PushCustomSignature(custom.Method);
                     }
                     break;
@@ -374,6 +372,7 @@ namespace GuidPatch
                                 }
                                 catch (Exception ex)
                                 {
+                                    Logger.Log($"Exception thrown during patching {body.Method.FullName}: {ex}");
                                     Debug.WriteLine($"Exception thrown during patching {body.Method.FullName}: {ex}");
                                 }
                             }

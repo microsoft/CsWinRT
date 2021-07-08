@@ -1,46 +1,86 @@
 ﻿using Mono.Cecil;
 using System;
 using System.IO;
+using System.CommandLine;
+using System.CommandLine.Invocation;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace GuidPatch
 {
     class Program
     {
-        static int Main(string[] args)
+        static readonly Option _targetAssembly =
+            new Option
+            (
+                name: "--targetAssembly",
+                description: "The assembly to perform GUID optimizations on.",
+                argumentType: typeof(string), 
+                arity: ArgumentArity.ExactlyOne 
+            );
+
+        static readonly Option _runtimePath =
+            new Option
+            (
+                name: "--runtimePath",
+                description: "The path to the folder used to resolve WinRT.Runtime.dll assembly.",
+                argumentType: typeof(string), 
+                arity: ArgumentArity.ExactlyOne
+            );
+
+        static readonly Option _references =
+            new Option
+            (
+                name: "--references",
+                description: "Reference assemblies used when compiling the target assembly.",
+                argumentType: typeof(FileInfo[]), 
+                arity: ArgumentArity.ZeroOrMore
+            );
+
+
+        static async Task Main(string[] args)
         {
-            if (args.Length != 2)
+            var rootCommand = new RootCommand { };
+            // friendlier option names 
+            _targetAssembly.AddAlias("--target");
+            _runtimePath.AddAlias("--runtime");
+            _references.AddAlias("--refs");
+
+            rootCommand.AddOption(_targetAssembly);
+            rootCommand.AddOption(_runtimePath);
+            rootCommand.AddOption(_references);
+
+            rootCommand.Handler = CommandHandler.Create<string, string, IEnumerable<FileInfo>>(GuidPatch);
+            await rootCommand.InvokeAsync(args);            
+        }
+
+        private static int GuidPatch(string targetAssembly, string runtimePath, IEnumerable<FileInfo> references)
+        {
+            // pass targetAssembly here and update ReferenceAssemblyResolver to use it when resolving ==> can patch WinRT.Runtime itself 
+            var resolver = new ReferenceAssemblyResolver(references);
+            try 
             {
-                Console.WriteLine($"Expected to be given two arguments. Given {args.Length}");
-                return -1;
+                AssemblyDefinition winRTRuntimeAssembly = resolver.Resolve(new AssemblyNameReference("WinRT.Runtime", default));
+                    
+                Directory.CreateDirectory("obj\\IIDOptimizer"); 
+                
+                var guidPatcher = new GuidPatcher(
+                    targetAssembly, 
+                    resolver,
+                    winRTRuntimeAssembly);
+
+                int numPatches = guidPatcher.ProcessAssembly(); 
+
+                guidPatcher.SaveAssembly(guidPatcher.OptimizerDir); 
+
+                Console.WriteLine($"{numPatches} IID calculations/fetches patched"); 
+                return 0; 
             }
-            else
-            {
-                /* The first argument given is the .dll to patch 
-                   The second argument is the folder to look for winrt.runtime in */
-                var resolver = new DefaultAssemblyResolver();
-
-                try
-                {
-                    resolver.AddSearchDirectory(args[1]);
-                    AssemblyDefinition winRTRuntimeAssembly = resolver.Resolve(new AssemblyNameReference("WinRT.Runtime", default));
-
-                    Directory.CreateDirectory("obj\\IIDOptimizer");
-
-                    var guidPatcher = new GuidPatcher(
-                        args[0],
-                        resolver,
-                        winRTRuntimeAssembly);
-
-                    int numPatches = guidPatcher.ProcessAssembly();
-                    guidPatcher.SaveAssembly(guidPatcher.OptimizerDir);
-                    Console.WriteLine($"{numPatches} IID calculations/fetches patched");
-                    return 0;
-                }
-                catch (AssemblyResolutionException)
-                {
-                    Console.WriteLine("Failed to resolve an assembly, shutting down.");
-                    return -2;
-                }
+            catch (AssemblyResolutionException e)
+            { 
+                Console.WriteLine("Failed to resolve an assembly, shutting down."); 
+                Console.WriteLine($"\tAssembly : {e.AssemblyReference.Name}"); 
+                return -1; 
             }
         }
     }

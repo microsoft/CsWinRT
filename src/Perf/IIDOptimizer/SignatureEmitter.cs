@@ -42,10 +42,6 @@ namespace GuidPatch
         {
             this.describedType = describedType;
             this.guidDataGetterMethod = guidDataGetterMethod;
-
-            /*
-             *  Initialize the logger with the OptimizerDir property 
-             */
             Logger = logger;
         }
 
@@ -192,7 +188,7 @@ namespace GuidPatch
             getterIL.Emit(OpCodes.Ldsfld, new FieldReference(cacheField.Name, cacheField.FieldType, instantiatedCacheType));
             getterIL.Emit(OpCodes.Newobj, readOnlySpanOfByteArrayCtor);
             getterIL.Emit(OpCodes.Ret);
-
+            
             // In the static constructor, calculate the guid bytes.
             var il = staticCtor.Body.GetILProcessor();
             var signatureParts = new VariableDefinition[signatureSteps.Count];
@@ -269,7 +265,6 @@ namespace GuidPatch
                         break;
                     case RuntimeCustomSignatureStep(MethodReference customSignatureMethod):
                         {
-                            /// TODO test this pat h
                             // byte[] bytes = Encoding.UTF8.GetBytes(customSignatureMethod())
                             il.Emit(OpCodes.Call, utf8EncodingGetter);
                             il.Emit(OpCodes.Call, customSignatureMethod);
@@ -450,9 +445,15 @@ namespace GuidPatch
 
             // Fix endianness, bytes
             var memoryExtensions = CecilExtensions.FindTypeReference(module, "System", "MemoryExtensions", "System.Memory", false);
+
+            var reverseMethod_Generic = new MethodReference("Reverse", module.TypeSystem.Void, memoryExtensions)
+            {
+                HasThis = true,
+            };
+
             var reverseMethod = new MethodReference("Reverse", module.TypeSystem.Void, memoryExtensions)
             {
-                HasThis = false,
+                HasThis = true,
             };
             var reverseMethodGenericParam = new GenericParameter(reverseMethod);
             reverseMethod.GenericParameters.Add(reverseMethodGenericParam);
@@ -479,10 +480,10 @@ namespace GuidPatch
             il.Emit(OpCodes.Ldc_I4_2);
             il.Emit(OpCodes.Call, spanSliceStartLengthMethod);
             il.Emit(OpCodes.Call, reverseMethod);
-
+            
             // Encode rfc time/version/clock/reserved fields
             var getItemMethod = module.ImportReference(new MethodReference("get_Item", new ByReferenceType(span.Resolve().GenericParameters[0]), spanOfByte) { Parameters = { new ParameterDefinition(module.TypeSystem.Int32) } });
-
+            
             // t[7] = (byte) ((t[7] & 0x0f) | (5 << 4));
             il.Emit(OpCodes.Ldloca, destination);
             il.Emit(OpCodes.Ldc_I4_7);
@@ -515,6 +516,7 @@ namespace GuidPatch
             var spanTemp = new VariableDefinition(spanOfByte);
             staticCtor.Body.Variables.Add(spanTemp);
 
+            
             il.Emit(OpCodes.Ldloca, destination);
             il.Emit(OpCodes.Ldc_I4_0);
             il.Emit(OpCodes.Ldc_I4, 16);
