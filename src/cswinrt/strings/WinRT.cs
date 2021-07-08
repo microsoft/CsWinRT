@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
-using System.Numerics;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Linq.Expressions;
+using System.Diagnostics;
+using WinRT.Interop;
+using System.Runtime.CompilerServices;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
 #pragma warning disable 0649 // Field 'xxx' is never assigned to, and will always have its default value
@@ -18,9 +15,6 @@ using System.Linq.Expressions;
 
 namespace WinRT
 {
-    using System.Diagnostics;
-    using WinRT.Interop;
-
     internal static class DelegateExtensions
     {
         public static void DynamicInvokeAbi(this System.Delegate del, object[] invoke_params)
@@ -361,19 +355,23 @@ namespace WinRT
         {
             lock (this)
             {
-                bool registerHandler = _state.del is null;
-                
+                bool registerHandler = _state is null || !_state.eventInvoke.TryGetTarget(out var _);
+                if (registerHandler)
+                {
+                    Cache.Create(_obj, this, _index);
+                }
+
                 _state.del = (TDelegate)global::System.Delegate.Combine(_state.del, del);
                 if (registerHandler)
                 {
                     var eventInvoke = (TDelegate)EventInvoke;
+                    Cache.AddStateCleaner(_obj.ThisPtr, eventInvoke, _index, _state, this);
+
                     var marshaler = CreateMarshaler(eventInvoke);
                     try
                     {
                         var nativeDelegate = GetAbi(marshaler);
                         ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out _state.token));
-
-                        Cache.AddStateCleaner(_obj.ThisPtr, eventInvoke, _index);
                     }
                     finally
                     {
@@ -389,6 +387,11 @@ namespace WinRT
         {
             lock (this)
             {
+                if (_state is null)
+                {
+                    Cache.Create(_obj, this, _index);
+                }
+
                 var oldEvent = _state.del;
                 _state.del = (TDelegate)global::System.Delegate.Remove(_state.del, del);
                 if (oldEvent is object && _state.del is null)
@@ -404,18 +407,26 @@ namespace WinRT
         {
             private class CacheCleaner
             {
-                private IntPtr objPtr;
-                private int indexToClean;
+                private readonly IntPtr objPtr;
+                private readonly int indexToClean;
+                private readonly State stateToClean;
+                private readonly System.WeakReference<EventSource<TDelegate>> eventSourceToClean;
 
-                public CacheCleaner(IntPtr objPtr, int indexToClean)
+                public CacheCleaner(IntPtr objPtr, int indexToClean, State stateToClean, EventSource<TDelegate> eventSourceToClean)
                 {
-                    this.indexToClean = indexToClean;
                     this.objPtr = objPtr;
+                    this.indexToClean = indexToClean;
+                    this.stateToClean = stateToClean;
+                    this.eventSourceToClean = new System.WeakReference<EventSource<TDelegate>>(eventSourceToClean);
                 }
 
                 ~CacheCleaner()
                 {
-                    Cache.Remove(objPtr, indexToClean);
+                    Cache.Remove(objPtr, indexToClean, stateToClean);
+                    if (eventSourceToClean.TryGetTarget(out var strongEventSourceToClean))
+                    {
+                        strongEventSourceToClean._state = null;
+                    }
                 }
             }
 
@@ -452,7 +463,7 @@ namespace WinRT
             private void SetState(EventSource<TDelegate> source, int index)
             {
                 // If cache exists, use it, else create new
-                if (states.ContainsKey(index))
+                if (states.TryGetValue(index, out var state) && state.eventInvoke.TryGetTarget(out _))
                 {
                     source._state = states[index];
                 }
@@ -463,11 +474,11 @@ namespace WinRT
                 }
             }
 
-            public static void AddStateCleaner(IntPtr objPtr, Delegate eventInvoke, int index)
+            public static void AddStateCleaner(IntPtr objPtr, Delegate eventInvoke, int index, State state, EventSource<TDelegate> eventSourceToClean)
             {
                 if (caches.TryGetValue(objPtr, out var cache) && !cache.stateCleaner.TryGetValue(eventInvoke, out var _))
                 {
-                    cache.stateCleaner.Add(eventInvoke, new CacheCleaner(objPtr, index));
+                    cache.stateCleaner.Add(eventInvoke, new CacheCleaner(objPtr, index, state, eventSourceToClean));
                 }
             }
 
@@ -505,14 +516,18 @@ namespace WinRT
                 }
             }
 
-            public static void Remove(IntPtr thisPtr, int index)
+            public static void Remove(IntPtr thisPtr, int index, State state)
             {
                 if (caches.TryGetValue(thisPtr, out var cache))
                 {
-                    cache.states.TryRemove(index, out var _);
+#if NETSTANDARD2_0
+                    // https://devblogs.microsoft.com/pfxteam/little-known-gems-atomic-conditional-removals-from-concurrentdictionary/
+                    ((ICollection<KeyValuePair<int, State>>) cache.states).Remove(new KeyValuePair<int, State>(index, state));
+#else
+                    cache.states.TryRemove(new KeyValuePair<int, State>(index, state));
+#endif
                     // using double-checked lock idiom
-                    using var resolvedTarget = cache.target.Resolve(typeof(IUnknownVftbl).GUID);
-                    if (resolvedTarget == null) 
+                    if (cache.states.IsEmpty)
                     {
                         cachesLock.EnterWriteLock();
                         try
@@ -529,6 +544,7 @@ namespace WinRT
                     }
                 }
             }
+
         }
 
         protected EventSource(IObjectReference obj,
@@ -536,7 +552,6 @@ namespace WinRT
             delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler,
             int index = 0)
         {
-            Cache.Create(obj, this, index);
             _obj = obj;
             _index = index;
             _addHandler = addHandler;
@@ -545,9 +560,9 @@ namespace WinRT
 
         void _UnsubscribeFromNative()
         {
-            Cache.Remove(_obj.ThisPtr, _index);
+            Cache.Remove(_obj.ThisPtr, _index, _state);
             ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _state.token));
-            _state.token.Value = 0;
+            _state = null;
         }
     }
 
@@ -575,7 +590,7 @@ namespace WinRT
             // This is synchronized from the base class
             get
             {
-                if (_state.eventInvoke.TryGetTarget(out var handler) && handler != null)
+                if (_state.eventInvoke.TryGetTarget(out var handler))
                 {
                     return handler;
                 }
@@ -725,7 +740,6 @@ namespace System.Runtime.CompilerServices
 
 namespace WinRT
 {
-    using System.Runtime.CompilerServices;
     internal static class ProjectionInitializer
     {
 #pragma warning disable 0436

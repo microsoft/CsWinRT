@@ -6503,7 +6503,7 @@ marshaler is null ? System.IntPtr.Zero : %.GetAbi(marshaler);
         {
             get
             {
-                if (_state.eventInvoke.TryGetTarget(out var cachedInvoke) && cachedInvoke != null)
+                if (_state.eventInvoke.TryGetTarget(out var cachedInvoke))
                 {
                     return cachedInvoke;
                 }
