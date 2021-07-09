@@ -6512,7 +6512,7 @@ return cachedInvoke;
 var localDel = _state.del;
 if (localDel == null)
 {%
-    return %;
+return %;
 }
 %localDel.Invoke(%);
 };

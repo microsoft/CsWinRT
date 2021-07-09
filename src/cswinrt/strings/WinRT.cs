@@ -568,7 +568,6 @@ namespace WinRT
 
     internal unsafe class EventSource__EventHandler<T> : EventSource<System.EventHandler<T>>
     {
-
         internal EventSource__EventHandler(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
             delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler,
