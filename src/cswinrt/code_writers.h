@@ -6482,13 +6482,13 @@ bind<write_type_name>(type, typedef_name_type::CCW, true)
                 auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
                 auto invokeMethodSig = get_event_invoke_method(eventType);
                 w.write(R"(
-    internal sealed unsafe class %% : EventSource<%>
-    {
-        internal %(IObjectReference obj,
-            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler, int index) : base(obj, addHandler, removeHandler, index)
-        {
-        }
+internal sealed unsafe class %% : EventSource<%>
+{
+internal %(IObjectReference obj,
+delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler, int index) : base(obj, addHandler, removeHandler, index)
+{
+}
 
 protected override IObjectReference CreateMarshaler(% del) =>
 del is null ? null : %.CreateMarshaler(del);
@@ -6499,44 +6499,44 @@ protected override void DisposeMarshaler(IObjectReference marshaler) =>
 protected override System.IntPtr GetAbi(IObjectReference marshaler) =>
 marshaler is null ? System.IntPtr.Zero : %.GetAbi(marshaler);
 
-        protected override System.Delegate EventInvoke
-        {
-            get
-            {
-                if (_state.eventInvoke.TryGetTarget(out var cachedInvoke))
-                {
-                    return cachedInvoke;
-                }
-                % invoke = (%) =>
-                {
-                    var localDel = _state.del;
-                    if (localDel == null)
-                    {%
-                        return %;
-                    }
-                    %localDel.Invoke(%);
-                };
-                _state.eventInvoke.SetTarget(invoke);
-                return invoke;
-            }
-        }
-    }
+protected override System.Delegate EventInvoke
+{
+get
+{
+if (_state.eventInvoke.TryGetTarget(out var cachedInvoke))
+{
+return cachedInvoke;
+}
+% invoke = (%) =>
+{
+var localDel = _state.del;
+if (localDel == null)
+{%
+    return %;
+}
+%localDel.Invoke(%);
+};
+_state.eventInvoke.SetTarget(invoke);
+return invoke;
+}
+}
+}
 )",
-                    bind<write_event_source_type_name>(eventTypeSemantics),
-                    bind<write_event_source_generic_args>(eventTypeSemantics),
-                    eventTypeCode, 
-                    bind<write_event_source_type_name>(eventTypeSemantics), 
-                    eventTypeCode,
-                    abiTypeName,
-                    abiTypeName,
-                    abiTypeName,
-                    eventTypeCode,
-                    bind<write_event_invoke_params>(invokeMethodSig),
-                    bind<write_event_out_defaults>(invokeMethodSig),
-                    bind<write_event_invoke_return_default>(invokeMethodSig),
-                    bind<write_event_invoke_return>(invokeMethodSig),
-                    bind<write_event_invoke_args>(invokeMethodSig));
-                });
+bind<write_event_source_type_name>(eventTypeSemantics),
+bind<write_event_source_generic_args>(eventTypeSemantics),
+eventTypeCode, 
+bind<write_event_source_type_name>(eventTypeSemantics), 
+eventTypeCode,
+abiTypeName,
+abiTypeName,
+abiTypeName,
+eventTypeCode,
+bind<write_event_invoke_params>(invokeMethodSig),
+bind<write_event_out_defaults>(invokeMethodSig),
+bind<write_event_invoke_return_default>(invokeMethodSig),
+bind<write_event_invoke_return>(invokeMethodSig),
+bind<write_event_invoke_args>(invokeMethodSig));
+});
     }
 
     void write_temp_class_event_source_subclass(writer& w, TypeDef const& classType, concurrency::concurrent_unordered_map<std::string, std::string>& typeNameToDefinitionMap)

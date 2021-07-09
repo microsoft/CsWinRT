@@ -138,8 +138,6 @@ namespace ABI.System.ComponentModel
 
     internal sealed unsafe class PropertyChangedEventSource : EventSource<global::System.ComponentModel.PropertyChangedEventHandler>
     {
-        private global::System.ComponentModel.PropertyChangedEventHandler handler;
-
         internal PropertyChangedEventSource(IObjectReference obj,
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
@@ -161,15 +159,19 @@ namespace ABI.System.ComponentModel
             // This is synchronized from the base class
             get
             {
-                if (handler == null)
+                if (_state.eventInvoke.TryGetTarget(out var cachedInvoke))
                 {
-                    handler = (global::System.Object obj, global::System.ComponentModel.PropertyChangedEventArgs e) =>
-                    {
-                        var localDel = _state.del;
-                        if (localDel != null)
-                            localDel.Invoke(obj, e);
-                    };
+                    return cachedInvoke;
                 }
+
+                global::System.ComponentModel.PropertyChangedEventHandler handler = 
+                    (global::System.Object obj, global::System.ComponentModel.PropertyChangedEventArgs e) =>
+                {
+                    var localDel = _state.del;
+                    if (localDel != null)
+                        localDel.Invoke(obj, e);
+                };
+                _state.eventInvoke.SetTarget(handler);
                 return handler;
             }
         }

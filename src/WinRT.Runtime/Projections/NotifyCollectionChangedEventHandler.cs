@@ -137,8 +137,6 @@ namespace ABI.System.Collections.Specialized
 
     internal sealed unsafe class NotifyCollectionChangedEventSource : EventSource<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>
     {
-        private global::System.Collections.Specialized.NotifyCollectionChangedEventHandler handler;
-
         internal NotifyCollectionChangedEventSource(IObjectReference obj,
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
@@ -160,15 +158,19 @@ namespace ABI.System.Collections.Specialized
             // This is synchronized from the base class
             get
             {
-                if (handler == null)
+                if (_state.eventInvoke.TryGetTarget(out var cachedInvoke))
                 {
-                    handler = (global::System.Object obj, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
-                    {
-                        var localDel = _state.del;
-                        if (localDel != null)
-                            localDel.Invoke(obj, e);
-                    };
+                    return cachedInvoke;
                 }
+
+                global::System.Collections.Specialized.NotifyCollectionChangedEventHandler handler = 
+                    (global::System.Object obj, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
+                {
+                    var localDel = _state.del;
+                    if (localDel != null)
+                        localDel.Invoke(obj, e);
+                };
+                _state.eventInvoke.SetTarget(handler);
                 return handler;
             }
         }

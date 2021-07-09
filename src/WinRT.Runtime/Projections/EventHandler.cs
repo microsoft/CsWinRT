@@ -273,8 +273,6 @@ namespace ABI.System
 
     internal sealed unsafe class EventHandlerEventSource : EventSource<global::System.EventHandler>
     {
-        private global::System.EventHandler handler;
-
         internal EventHandlerEventSource(IObjectReference obj,
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
@@ -296,15 +294,18 @@ namespace ABI.System
             // This is synchronized from the base class
             get
             {
-                if (handler == null)
+                if (_state.eventInvoke.TryGetTarget(out var cachedInvoke))
                 {
-                    handler = (global::System.Object obj, global::System.EventArgs e) =>
-                    {
-                        var localDel = _state.del;
-                        if (localDel != null)
-                            localDel.Invoke(obj, e);
-                    };
+                    return cachedInvoke;
                 }
+
+                global::System.EventHandler handler = (global::System.Object obj, global::System.EventArgs e) =>
+                {
+                    var localDel = _state.del;
+                    if (localDel != null)
+                        localDel.Invoke(obj, e);
+                };
+                _state.eventInvoke.SetTarget(handler);
                 return handler;
             }
         }
