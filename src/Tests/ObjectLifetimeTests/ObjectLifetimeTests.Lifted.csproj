@@ -67,7 +67,7 @@
     
     <ItemGroup>
         <PackageReference Include="Microsoft.ProjectReunion.WinUI">
-            <Version>0.5.7</Version>
+            <Version>0.8.0</Version>
             <ExcludeAssets>compile</ExcludeAssets>
         </PackageReference>
     </ItemGroup>
