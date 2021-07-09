@@ -345,11 +345,24 @@ namespace WinRT
         }
         protected State _state;
 
+        protected EventSource(IObjectReference obj,
+            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler,
+            int index = 0)
+        {
+            _obj = obj;
+            _addHandler = addHandler;
+            _removeHandler = removeHandler;
+            _index = index;
+        }
+
         protected abstract IObjectReference CreateMarshaler(TDelegate del);
 
         protected abstract IntPtr GetAbi(IObjectReference marshaler);
 
         protected abstract void DisposeMarshaler(IObjectReference marshaler);
+
+        protected abstract System.Delegate EventInvoke { get; }
 
         public void Subscribe(TDelegate del)
         {
@@ -396,12 +409,17 @@ namespace WinRT
                 _state.del = (TDelegate)global::System.Delegate.Remove(_state.del, del);
                 if (oldEvent is object && _state.del is null)
                 {
-                    _UnsubscribeFromNative();
+                    UnsubscribeFromNative();
                 }
             }
         }
 
-        protected abstract System.Delegate EventInvoke { get; }
+        void UnsubscribeFromNative()
+        {
+            Cache.Remove(_obj.ThisPtr, _index, _state);
+            ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _state.token));
+            _state = null;
+        }
 
         private class Cache
         {
@@ -545,24 +563,6 @@ namespace WinRT
                 }
             }
 
-        }
-
-        protected EventSource(IObjectReference obj,
-            delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-            delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler,
-            int index = 0)
-        {
-            _obj = obj;
-            _index = index;
-            _addHandler = addHandler;
-            _removeHandler = removeHandler;
-        }
-
-        void _UnsubscribeFromNative()
-        {
-            Cache.Remove(_obj.ThisPtr, _index, _state);
-            ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _state.token));
-            _state = null;
         }
     }
 
