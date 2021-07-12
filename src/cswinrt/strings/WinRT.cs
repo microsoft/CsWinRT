@@ -331,19 +331,68 @@ namespace WinRT
     internal unsafe abstract class EventSource<TDelegate>
         where TDelegate : class, MulticastDelegate
     {
-        readonly IObjectReference _obj;
-        readonly int _index;
+        protected readonly IObjectReference _obj;
+        protected readonly int _index;
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
 
-        // Registration state, cached separately to survive EventSource garbage collection
-        protected class State
+        // Registration state and delegate cached separately to survive EventSource garbage collection
+        // and to prevent the generated event delegate from impacting the lifetime of the
+        // event source.
+        protected abstract class State : IDisposable
         {
             public EventRegistrationToken token;
             public TDelegate del;
-            public System.WeakReference<System.Delegate> eventInvoke = new System.WeakReference<System.Delegate>(null);
+            public System.Delegate eventInvoke;
+            private bool disposedValue;
+            private readonly IntPtr obj;
+            private readonly int index;
+            private readonly System.WeakReference<State> cacheEntry;
+
+            protected State(IntPtr obj, int index)
+            {
+                this.obj = obj;
+                this.index = index;
+                eventInvoke = GetEventInvoke();
+                cacheEntry = new System.WeakReference<State>(this);
+            }
+
+            // The lifetime of this object is managed by the delegate / eventInvoke
+            // through its target reference to it.  Once the delegate no longer has
+            // any references, this object will also no longer have any references.
+            ~State()
+            {
+                Dispose(false);
+            }
+
+            // Allows to retrieve a singleton like weak reference to use
+            // with the cache to allow for proper removal with comparision.
+            public System.WeakReference<State> GetWeakReferenceForCache()
+            {
+                return cacheEntry;
+            }
+
+            protected abstract System.Delegate GetEventInvoke();
+
+            protected virtual void Dispose(bool disposing)
+            {
+                // Uses the dispose pattern to ensure we only remove
+                // from the cache once: either via unsubscribe or via
+                // the finalizer.
+                if (!disposedValue)
+                {
+                    Cache.Remove(obj, index, cacheEntry);
+                    disposedValue = true;
+                }
+            }
+
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
         }
-        protected State _state;
+        protected System.WeakReference<State> _state;
 
         protected EventSource(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
@@ -354,6 +403,7 @@ namespace WinRT
             _addHandler = addHandler;
             _removeHandler = removeHandler;
             _index = index;
+            _state = Cache.GetState(obj, index);
         }
 
         protected abstract IObjectReference CreateMarshaler(TDelegate del);
@@ -362,29 +412,30 @@ namespace WinRT
 
         protected abstract void DisposeMarshaler(IObjectReference marshaler);
 
-        protected abstract System.Delegate EventInvoke { get; }
+        protected abstract State CreateEventState();
 
         public void Subscribe(TDelegate del)
         {
             lock (this)
             {
-                bool registerHandler = _state is null || !_state.eventInvoke.TryGetTarget(out var _);
+                State state = null;
+                bool registerHandler = _state is null || !_state.TryGetTarget(out state);
                 if (registerHandler)
                 {
-                    Cache.Create(_obj, this, _index);
+                    state = CreateEventState();
+                    _state = state.GetWeakReferenceForCache();
+                    Cache.Create(_obj, _index, _state);
                 }
 
-                _state.del = (TDelegate)global::System.Delegate.Combine(_state.del, del);
+                state.del = (TDelegate)global::System.Delegate.Combine(state.del, del);
                 if (registerHandler)
                 {
-                    var eventInvoke = (TDelegate)EventInvoke;
-                    Cache.AddStateCleaner(_obj.ThisPtr, eventInvoke, _index, _state, this);
-
+                    var eventInvoke = (TDelegate)state.eventInvoke;
                     var marshaler = CreateMarshaler(eventInvoke);
                     try
                     {
                         var nativeDelegate = GetAbi(marshaler);
-                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out _state.token));
+                        ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out state.token));
                     }
                     finally
                     {
@@ -398,71 +449,45 @@ namespace WinRT
 
         public void Unsubscribe(TDelegate del)
         {
+            if (_state is null || !_state.TryGetTarget(out var state))
+            {
+                return;
+            }
+
             lock (this)
             {
-                if (_state is null)
+                var oldEvent = state.del;
+                state.del = (TDelegate)global::System.Delegate.Remove(state.del, del);
+                if (oldEvent is object && state.del is null)
                 {
-                    Cache.Create(_obj, this, _index);
-                }
-
-                var oldEvent = _state.del;
-                _state.del = (TDelegate)global::System.Delegate.Remove(_state.del, del);
-                if (oldEvent is object && _state.del is null)
-                {
-                    UnsubscribeFromNative();
+                    UnsubscribeFromNative(state);
                 }
             }
         }
 
-        void UnsubscribeFromNative()
+        void UnsubscribeFromNative(State state)
         {
-            Cache.Remove(_obj.ThisPtr, _index, _state);
-            ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, _state.token));
+            ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, state.token));
+            state.Dispose();
             _state = null;
         }
 
         private class Cache
         {
-            private class CacheCleaner
-            {
-                private readonly IntPtr objPtr;
-                private readonly int indexToClean;
-                private readonly State stateToClean;
-                private readonly System.WeakReference<EventSource<TDelegate>> eventSourceToClean;
-
-                public CacheCleaner(IntPtr objPtr, int indexToClean, State stateToClean, EventSource<TDelegate> eventSourceToClean)
-                {
-                    this.objPtr = objPtr;
-                    this.indexToClean = indexToClean;
-                    this.stateToClean = stateToClean;
-                    this.eventSourceToClean = new System.WeakReference<EventSource<TDelegate>>(eventSourceToClean);
-                }
-
-                ~CacheCleaner()
-                {
-                    Cache.Remove(objPtr, indexToClean, stateToClean);
-                    if (eventSourceToClean.TryGetTarget(out var strongEventSourceToClean))
-                    {
-                        strongEventSourceToClean._state = null;
-                    }
-                }
-            }
-
-            Cache(IWeakReference target, EventSource<TDelegate> source, int index)
+            Cache(IWeakReference target, int index, System.WeakReference<State> state)
             {
                 this.target = target;
-                SetState(source, index);
+                SetState(index, state);
             }
 
             private IWeakReference target;
-            private readonly ConcurrentDictionary<int, EventSource<TDelegate>.State> states = new ConcurrentDictionary<int, EventSource<TDelegate>.State>();
-            private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Delegate, CacheCleaner> stateCleaner = new System.Runtime.CompilerServices.ConditionalWeakTable<Delegate, CacheCleaner>();
+            private readonly ConcurrentDictionary<int, System.WeakReference<State>> states = new ConcurrentDictionary<int, System.WeakReference<State>>();
 
             private static readonly ReaderWriterLockSlim cachesLock = new ReaderWriterLockSlim();
             private static readonly ConcurrentDictionary<IntPtr, Cache> caches = new ConcurrentDictionary<IntPtr, Cache>();
-            
 
-            private Cache Update(IWeakReference target, EventSource<TDelegate> source, int index)
+
+            private Cache Update(IWeakReference target, int index, System.WeakReference<State> state)
             {
                 // If target no longer exists, destroy cache
                 lock (this)
@@ -474,33 +499,35 @@ namespace WinRT
                         states.Clear();
                     }
                 }
-                SetState(source, index);
+                SetState(index, state);
                 return this;
             }
 
-            private void SetState(EventSource<TDelegate> source, int index)
+            private System.WeakReference<State> GetState(int index)
             {
-                // If cache exists, use it, else create new
-                if (states.TryGetValue(index, out var state) && state.eventInvoke.TryGetTarget(out _))
+                // If target no longer exists, destroy cache
+                lock (this)
                 {
-                    source._state = states[index];
+                    using var resolved = this.target.Resolve(typeof(IUnknownVftbl).GUID);
+                    if (resolved == null)
+                    {
+                        return null;
+                    }
                 }
-                else
+
+                if (states.TryGetValue(index, out var weakState))
                 {
-                    source._state = new EventSource<TDelegate>.State();
-                    states[index] = source._state;
+                    return weakState;
                 }
+                return null;
             }
 
-            public static void AddStateCleaner(IntPtr objPtr, Delegate eventInvoke, int index, State state, EventSource<TDelegate> eventSourceToClean)
+            private void SetState(int index, System.WeakReference<State> state)
             {
-                if (caches.TryGetValue(objPtr, out var cache) && !cache.stateCleaner.TryGetValue(eventInvoke, out var _))
-                {
-                    cache.stateCleaner.Add(eventInvoke, new CacheCleaner(objPtr, index, state, eventSourceToClean));
-                }
+                states[index] = state;
             }
 
-            public static void Create(IObjectReference obj, EventSource<TDelegate> source, int index)
+            public static void Create(IObjectReference obj, int index, System.WeakReference<State> state)
             {
                 // If event source implements weak reference support, track event registrations so that
                 // unsubscribes will work across garbage collections.  Note that most static/factory classes
@@ -517,7 +544,6 @@ namespace WinRT
                 }
                 catch (Exception)
                 {
-                    source._state = new EventSource<TDelegate>.State();
                     return;
                 }
 
@@ -525,8 +551,8 @@ namespace WinRT
                 try
                 {
                     caches.AddOrUpdate(obj.ThisPtr,
-                        (IntPtr ThisPtr) => new Cache(target, source, index),
-                        (IntPtr ThisPtr, Cache cache) => cache.Update(target, source, index));
+                        (IntPtr ThisPtr) => new Cache(target, index, state),
+                        (IntPtr ThisPtr, Cache cache) => cache.Update(target, index, state));
                 }
                 finally
                 {
@@ -534,15 +560,26 @@ namespace WinRT
                 }
             }
 
-            public static void Remove(IntPtr thisPtr, int index, State state)
+            public static System.WeakReference<State> GetState(IObjectReference obj, int index)
+            {
+                if (caches.TryGetValue(obj.ThisPtr, out var cache))
+                {
+                    return cache.GetState(index);
+                }
+
+                return null;
+            }
+
+            public static void Remove(IntPtr thisPtr, int index, System.WeakReference<State> state)
             {
                 if (caches.TryGetValue(thisPtr, out var cache))
                 {
 #if NETSTANDARD2_0
                     // https://devblogs.microsoft.com/pfxteam/little-known-gems-atomic-conditional-removals-from-concurrentdictionary/
-                    ((ICollection<KeyValuePair<int, State>>) cache.states).Remove(new KeyValuePair<int, State>(index, state));
+                    ((ICollection<KeyValuePair<int, System.WeakReference<State>>>)cache.states).Remove(
+                        new KeyValuePair<int, System.WeakReference<State>>(index, state));
 #else
-                    cache.states.TryRemove(new KeyValuePair<int, State>(index, state));
+                    cache.states.TryRemove(new KeyValuePair<int, System.WeakReference<State>>(index, state));
 #endif
                     // using double-checked lock idiom
                     if (cache.states.IsEmpty)
@@ -562,11 +599,10 @@ namespace WinRT
                     }
                 }
             }
-
         }
     }
 
-    internal unsafe class EventSource__EventHandler<T> : EventSource<System.EventHandler<T>>
+    internal unsafe sealed class EventSource__EventHandler<T> : EventSource<System.EventHandler<T>>
     {
         internal EventSource__EventHandler(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
@@ -584,23 +620,25 @@ namespace WinRT
         protected override IntPtr GetAbi(IObjectReference marshaler) =>
             marshaler is null ? IntPtr.Zero : ABI.System.EventHandler<T>.GetAbi(marshaler);
 
-        protected override System.Delegate EventInvoke
+        protected override State CreateEventState() =>
+            new EventState(_obj.ThisPtr, _index);
+
+        private sealed class EventState : State
         {
-            // This is synchronized from the base class
-            get
+            public EventState(IntPtr obj, int index)
+                : base(obj, index)
             {
-                if (_state.eventInvoke.TryGetTarget(out var handler))
+            }
+
+            protected override Delegate GetEventInvoke()
+            {
+                System.EventHandler<T> handler = (System.Object obj, T e) =>
                 {
-                    return handler;
-                }
-                System.EventHandler<T> newHandler = (System.Object obj, T e) =>
-                {
-                    var localDel = _state.del;
+                    var localDel = del;
                     if (localDel != null)
                         localDel.Invoke(obj, e);
                 };
-                _state.eventInvoke.SetTarget(newHandler);
-                return newHandler;
+                return handler;
             }
         }
     }

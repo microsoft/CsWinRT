@@ -154,24 +154,25 @@ namespace ABI.System.ComponentModel
         protected override IntPtr GetAbi(IObjectReference marshaler) =>
             marshaler is null ? IntPtr.Zero : PropertyChangedEventHandler.GetAbi(marshaler);
 
-        protected override global::System.Delegate EventInvoke
-        {
-            // This is synchronized from the base class
-            get
-            {
-                if (_state.eventInvoke.TryGetTarget(out var cachedInvoke))
-                {
-                    return cachedInvoke;
-                }
+        protected override State CreateEventState() =>
+            new EventState(_obj.ThisPtr, _index);
 
-                global::System.ComponentModel.PropertyChangedEventHandler handler = 
+        private sealed class EventState : State
+        {
+            public EventState(IntPtr obj, int index)
+                : base(obj, index)
+            {
+            }
+
+            protected override Delegate GetEventInvoke()
+            {
+                global::System.ComponentModel.PropertyChangedEventHandler handler =
                     (global::System.Object obj, global::System.ComponentModel.PropertyChangedEventArgs e) =>
-                {
-                    var localDel = _state.del;
-                    if (localDel != null)
-                        localDel.Invoke(obj, e);
-                };
-                _state.eventInvoke.SetTarget(handler);
+                    {
+                        var localDel = del;
+                        if (localDel != null)
+                            localDel.Invoke(obj, e);
+                    };
                 return handler;
             }
         }

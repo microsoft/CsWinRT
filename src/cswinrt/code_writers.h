@@ -6499,24 +6499,27 @@ protected override void DisposeMarshaler(IObjectReference marshaler) =>
 protected override System.IntPtr GetAbi(IObjectReference marshaler) =>
 marshaler is null ? System.IntPtr.Zero : %.GetAbi(marshaler);
 
-protected override System.Delegate EventInvoke
+protected override State CreateEventState() =>
+new EventState(_obj.ThisPtr, _index);
+
+private sealed class EventState : State
 {
-get
+public EventState(System.IntPtr obj, int index)
+: base(obj, index)
 {
-if (_state.eventInvoke.TryGetTarget(out var cachedInvoke))
-{
-return cachedInvoke;
 }
+
+protected override System.Delegate GetEventInvoke()
+{
 % invoke = (%) =>
 {
-var localDel = _state.del;
+var localDel = del;
 if (localDel == null)
 {%
 return %;
 }
 %localDel.Invoke(%);
 };
-_state.eventInvoke.SetTarget(invoke);
 return invoke;
 }
 }

@@ -2447,6 +2447,36 @@ namespace UnitTest
             Assert.True(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
         }
 
+        (System.WeakReference<Class>, System.WeakReference<EventHandlerClass>) TestEventDelegateCleanup()
+        {
+            // Both WinRT object and handler class alive.
+            var eventCalled = false;
+            var eventHandlerClass = new EventHandlerClass(() => eventCalled = true);
+            var classInstance = new Class();
+            classInstance.IntPropertyChanged += eventHandlerClass.IntPropertyChanged;
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            classInstance.IntProperty = 3;
+            Assert.True(eventCalled);
+
+            // No strong reference to handler class, but delegate is still registered on
+            // the WinRT object keeping it alive.
+            eventCalled = false;
+            var weakEventHandlerClass = new System.WeakReference<EventHandlerClass>(eventHandlerClass);
+            eventHandlerClass = null;
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            classInstance.IntProperty = 3;
+            Assert.True(eventCalled);
+            Assert.True(weakEventHandlerClass.TryGetTarget(out var _));
+
+            // No strong reference to WinRT object.  It should no longer be alive
+            // and should also cause for the event handler class to be no longer alive.
+            var weakClassInstance = new System.WeakReference<Class>(classInstance);
+            classInstance = null;
+            return (weakClassInstance, weakEventHandlerClass);
+        }
+
         // Ensure that event subscription state is properly cached to enable later unsubscribes
         [Fact]
         public void TestEventSourceCaching()
@@ -2483,6 +2513,30 @@ namespace UnitTest
             GC.WaitForPendingFinalizers();
             Assign(3);
             Assert.True(eventCalled);
+
+            // Test that event delegates don't leak when not unsubscribed.
+            // Test runs into a different function as the finalizer wasn't
+            // getting triggered otherwise with a weak reference.
+            (System.WeakReference<Class> weakClassInstance, System.WeakReference<EventHandlerClass> weakEventHandlerClass) =
+                TestEventDelegateCleanup();
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            Assert.False(weakClassInstance.TryGetTarget(out _));
+            Assert.False(weakEventHandlerClass.TryGetTarget(out _));
+        }
+
+        class EventHandlerClass
+        {
+            private readonly Action eventCalled;
+
+            public EventHandlerClass(Action eventCalled)
+            {
+                this.eventCalled = eventCalled;
+            }
+
+            public void IntPropertyChanged(object sender, int e) => eventCalled();
         }
 
 #if NET5_0
