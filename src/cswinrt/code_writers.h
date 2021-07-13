@@ -2580,8 +2580,13 @@ evt.Name());
         for (auto&& evt : type.EventList())
         {
             w.write(R"(
-private static global::System.Runtime.CompilerServices.ConditionalWeakTable<IWinRTObject, EventSource<%>> _% = new();)",
+private readonly static global::System.Lazy<global::System.Runtime.CompilerServices.ConditionalWeakTable<IWinRTObject, EventSource<%>>> _%Lazy = new();
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<IWinRTObject, EventSource<%>> _% => _%Lazy.Value;
+)",
                 bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+                evt.Name(),
+                bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+                evt.Name(),
                 evt.Name());
         }
     }
@@ -4490,12 +4495,17 @@ private static unsafe int Do_Abi_%%
         auto add_handler_event_token_name = add_signature.return_param_name();
         auto remove_handler_event_token_name = method_signature{ remove_method }.params().back().first.Name();
 
-        w.write("\nprivate static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_TokenTables = new global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>>();",
+        w.write(R"(
+private readonly static global::System.Lazy<global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>>> _%_TokenTablesLazy = new ();
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_TokenTables => _%_TokenTablesLazy.Value;
+)",
             type_name,
             bind<write_type_name>(semantics, typedef_name_type::Projected, false),
             evt.Name(),
             type_name,
-            bind<write_type_name>(semantics, typedef_name_type::Projected, false));
+            bind<write_type_name>(semantics, typedef_name_type::Projected, false),
+            evt.Name(),
+            evt.Name());
 
         w.write(
             R"(

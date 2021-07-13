@@ -90,8 +90,8 @@ namespace ABI.System.Windows.Input
                 return 0;
             }
 
-            private static ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>> _CanExecuteChanged_TokenTables = new ConditionalWeakTable<global::System.Windows.Input.ICommand, EventRegistrationTokenTable<global::System.EventHandler>>();
-
+            private readonly static Lazy<ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>>> _CanExecuteChanged_TokenTablesLazy = new();
+            private static ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>> _CanExecuteChanged_TokenTables => _CanExecuteChanged_TokenTablesLazy.Value;
 
             [UnmanagedCallersOnly]
 

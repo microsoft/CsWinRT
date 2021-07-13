@@ -82,7 +82,8 @@ namespace ABI.System.ComponentModel
                 }
                 return 0;
             }
-            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTables = new global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>>();
+            private readonly static Lazy<global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>>> _ErrorsChanged_TokenTablesLazy = new();
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTables => _ErrorsChanged_TokenTablesLazy.Value;
 
             [UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvStdcall)})]
             private static unsafe int Do_Abi_add_ErrorsChanged_1(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token)
