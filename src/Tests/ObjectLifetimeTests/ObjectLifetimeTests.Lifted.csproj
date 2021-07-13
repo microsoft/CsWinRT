@@ -12,7 +12,7 @@
         <PrepareMsixPackageDependsOn></PrepareMsixPackageDependsOn>
         <PublishReadyToRun>false</PublishReadyToRun>
         <ProjectReunionVerifyWinrtRuntimeVersion>false</ProjectReunionVerifyWinrtRuntimeVersion>
-        <WindowsPackageType>Desktop</WindowsPackageType>
+        <WindowsPackageType>MSIX</WindowsPackageType>
     </PropertyGroup>
     <ItemGroup>
         <None Remove="Images\LockScreenLogo.scale-200.png" />
