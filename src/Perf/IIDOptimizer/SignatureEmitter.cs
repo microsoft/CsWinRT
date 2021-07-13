@@ -151,16 +151,20 @@ namespace GuidPatch
             var readOnlySpanOfByteArrayCtor = module.ImportReference(
                 new MethodReference(".ctor", module.TypeSystem.Void, readOnlySpanOfByte)
                 {
-                    Parameters = { new ParameterDefinition(new ArrayType(readOnlySpanOfByte.Resolve().GenericParameters[0])) }
+                    Parameters = { new ParameterDefinition(new ArrayType(readOnlySpanOfByte.Resolve().GenericParameters[0])) },
+                    HasThis = true
                 },
                 readOnlySpanOfByte);
 
             // Create generic class with static array field to cache result.
             var cacheType = new TypeDefinition(null, $"<SignatureCache>{describedType.FullName}", TypeAttributes.NestedPrivate | TypeAttributes.Abstract | TypeAttributes.Sealed, module.ImportReference(module.TypeSystem.Object));
 
+            Dictionary<GenericParameter, GenericParameter> getterMethodGensToCacheTypeGens = new(); 
+
             for (int i = 0; i < guidDataGetterMethod.GenericParameters.Count; i++)
             {
                 cacheType.GenericParameters.Add(new GenericParameter(cacheType));
+                getterMethodGensToCacheTypeGens[guidDataGetterMethod.GenericParameters[i]] = cacheType.GenericParameters[i];
             }
 
             var instantiatedCacheType = new GenericInstanceType(cacheType);
@@ -209,7 +213,8 @@ namespace GuidPatch
             var encodingGetBytes = module.ImportReference(
                 new MethodReference("GetBytes", new ArrayType(module.TypeSystem.Byte), encodingType)
                 {
-                    Parameters = { new ParameterDefinition(module.TypeSystem.String) }
+                    Parameters = { new ParameterDefinition(module.TypeSystem.String) },
+                    HasThis = true
                 });
 
             var fullSignatureLength = new VariableDefinition(module.TypeSystem.Int32);
@@ -248,7 +253,7 @@ namespace GuidPatch
                         {
                             // byte[] bytes = Encoding.UTF8.GetBytes(GetSignature(typeof(localTypeParameter)))
                             il.Emit(OpCodes.Call, utf8EncodingGetter);
-                            il.Emit(OpCodes.Ldtoken, localTypeParameter);
+                            il.Emit(OpCodes.Ldtoken, getterMethodGensToCacheTypeGens[localTypeParameter]);
                             il.Emit(OpCodes.Call, getTypeFromHandleMethod);
                             il.Emit(OpCodes.Call, getSignatureMethod);
                             il.Emit(OpCodes.Callvirt, encodingGetBytes);
@@ -310,7 +315,8 @@ namespace GuidPatch
             var spanOfByteArrayCtor = module.ImportReference(
                 new MethodReference(".ctor", module.TypeSystem.Void, spanOfByte)
                 {
-                    Parameters = { new ParameterDefinition(new ArrayType(span.Resolve().GenericParameters[0])) }
+                    Parameters = { new ParameterDefinition(new ArrayType(span.Resolve().GenericParameters[0])) },
+                    HasThis = true
                 },
                 spanOfByte);
 
@@ -321,7 +327,8 @@ namespace GuidPatch
                     {
                         new ParameterDefinition(
                             module.ImportReference(new GenericInstanceType(span) { GenericArguments = { readOnlySpanOfByte.Resolve().GenericParameters[0] } }))
-                    }
+                    },
+                    HasThis = true
                 });
 
             var spanSliceStartMethod = module.ImportReference(
