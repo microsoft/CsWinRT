@@ -10,7 +10,7 @@
     <UseWinmd Condition="'$(TargetFramework)' == 'netcoreapp3.1' And $(BenchmarkWinmdSupport) == true">true</UseWinmd>
     <ApplicationManifest Condition="$(UseWinmd) == true">Benchmarks.manifest</ApplicationManifest>
     <BenchmarkTargetFramework>$(TargetFramework)</BenchmarkTargetFramework>
-    <BenchmarkTargetFramework Condition="'$(BenchmarkTargetFramework)' == 'netcoreapp2.0'">netstandard2.0</BenchmarkTargetFramework>
+    <BenchmarkTargetFramework Condition="'$(BenchmarkTargetFramework)' != 'net5.0'">netstandard2.0</BenchmarkTargetFramework>
     <IsDotnetBuild Condition="'$(IsDotnetBuild)' == ''">false</IsDotnetBuild>
     <LangVersion Condition="$(IsDotnetBuild) == true">9.0</LangVersion>
   </PropertyGroup>
@@ -22,7 +22,7 @@
   </ItemGroup>
     
   <ItemGroup>
-    <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Windows\bin\x64\Release\$(BenchmarkTargetFramework)\Windows.dll"></Reference>
+    <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Windows\bin\x64\Release\$(BenchmarkTargetFramework)\Microsoft.Windows.SDK.NET.dll"></Reference>
     <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Benchmark\bin\x64\Release\$(BenchmarkTargetFramework)\Benchmark.dll"></Reference>
     
     <ProjectReference Include="..\Projections\Windows\Windows.csproj" Condition="$(UseWinmd) == false And $(IsDotnetBuild) == false" />
