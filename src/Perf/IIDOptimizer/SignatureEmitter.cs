@@ -309,7 +309,8 @@ namespace GuidPatch
                 {
                     new ParameterDefinition(new PointerType(module.TypeSystem.Void)),
                     new ParameterDefinition(module.TypeSystem.Int32),
-                }
+                },
+                HasThis = true
             });
 
             var spanOfByteArrayCtor = module.ImportReference(
@@ -319,6 +320,7 @@ namespace GuidPatch
                     HasThis = true
                 },
                 spanOfByte);
+
 
             var copyToMethod = module.ImportReference(
                 new MethodReference("CopyTo", module.TypeSystem.Void, readOnlySpanOfByte)
@@ -331,15 +333,18 @@ namespace GuidPatch
                     HasThis = true
                 });
 
+            // import a Span<T> instead of Span<byte>
+            var spanOfSpanElement = new GenericInstanceType(span) { GenericArguments = { span.GenericParameters[0] } };
+            
             var spanSliceStartMethod = module.ImportReference(
-                new MethodReference("Slice", spanOfByte, spanOfByte)
+                new MethodReference("Slice", spanOfByte, spanOfSpanElement)
                 {
                     HasThis = true,
                     Parameters = { new ParameterDefinition(module.TypeSystem.Int32) }
                 });
 
             var spanSliceStartLengthMethod = module.ImportReference(
-                new MethodReference("Slice", spanOfByte, spanOfByte)
+                new MethodReference("Slice", spanOfByte, spanOfSpanElement)
                 {
                     HasThis = true,
                     Parameters = { new ParameterDefinition(module.TypeSystem.Int32), new ParameterDefinition(module.TypeSystem.Int32) }
