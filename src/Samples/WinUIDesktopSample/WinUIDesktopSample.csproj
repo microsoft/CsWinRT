@@ -13,6 +13,10 @@
     <Platforms>x86;x64</Platforms>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <CsWinRTEnabled>false</CsWinRTEnabled>
+    <!-- Updating reunion from 0.5 stable to 0.8 stable 
+        https://docs.microsoft.com/en-us/windows/apps/windows-app-sdk/update-existing-projects-to-the-latest-release#update-from-winui-3-preview-4-to-05-stable
+    -->
+    <UseWinUI>true</UseWinUI>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,16 +26,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.0" />
+    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.8.0" />
     <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
+    <ProjectReference Include="..\..\Projections\Reunion\Reunion.csproj" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
-    <ProjectReference Include="..\..\Projections\WinUI\WinUI.csproj" />
-    <!--
-      Exclude compile time assets so we don't pick up the interop assembly from the WinUI Nuget
-      since we are building our own in the WinUIProjection project
-    -->
-    <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
-      <ExcludeAssets>compile; runtime</ExcludeAssets>
-    </PackageReference>
   </ItemGroup>
 
   <!--

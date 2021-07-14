@@ -11,15 +11,15 @@
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
+    <ProjectReference Include="..\Reunion\Reunion.csproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
-    <ProjectReference Include="..\WinUI\WinUI.csproj" />
     <InternalsVisibleTo Include="UnitTest" />
   </ItemGroup>
 
   <PropertyGroup>
     <CsWinRTIncludes>TestComponent;TestComponentCSharp</CsWinRTIncludes>
     <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
-    <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
+    <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.projectreunion.winui', '$(MicrosoftWindowsAppSDKVersion)'))</PkgMicrosoft_WinUI>
   </PropertyGroup>
   <ItemGroup>
     <!--Explicitly reference WinUI winmds from TFM uap10.0-->
