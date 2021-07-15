@@ -9,11 +9,12 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <CsWinRTEnabled>false</CsWinRTEnabled>
+    <CsWinRTIIDOptimizerOptOut>true</CsWinRTIIDOptimizerOptOut>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Projections\Reunion\Reunion.csproj" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
+    <ProjectReference Include="..\..\Projections\WinUI\WinUI.csproj" />
     <ProjectReference Include="..\..\Projections\Test\Test.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
     <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />

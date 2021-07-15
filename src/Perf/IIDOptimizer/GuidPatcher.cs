@@ -1,5 +1,4 @@
 ﻿using Mono.Cecil;
-using Mono.Cecil.Pdb;
 using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
@@ -30,7 +29,6 @@ namespace GuidPatch
         private readonly TypeDefinition guidImplementationDetailsType;
         private readonly TypeDefinition guidDataBlockType;
         private SignatureGenerator signatureGenerator;
-        private Logger Logger { get; }
         
         // OptimizerDir is the path our current process should use to write logs and patched DLLs to
         public string OptimizerDir
@@ -40,11 +38,6 @@ namespace GuidPatch
 
         public GuidPatcher(string assemblyPath, IAssemblyResolver assemblyResolver, AssemblyDefinition winRTRuntime)
         {
-            /*
-             *  Initialize the logger with the OptimizerDir property 
-             */
-            Logger = new Logger(OptimizerDir, "log_iidoptimizer.txt");
-
             var readerParameters = new ReaderParameters(ReadingMode.Deferred)
             {
                 ReadWrite = true,
@@ -120,7 +113,7 @@ namespace GuidPatch
                 getHelperTypeMethod = typeExtensionsType.Methods.First(m => m.Name == "GetHelperType");
             }
 
-            signatureGenerator = new SignatureGenerator(assembly, guidAttributeType!, winRTRuntimeAssembly, Logger);
+            signatureGenerator = new SignatureGenerator(assembly, guidAttributeType!, winRTRuntimeAssembly);
         }
 
         public int ProcessAssembly()
@@ -142,7 +135,6 @@ namespace GuidPatch
                 numPatches += ProcessMethodBody(method.Body, getTypeFromHandleMethod, getIidMethod!, createIidMethod!);
             }
 
-            Logger.Close();
             return numPatches;
         }
 
@@ -198,7 +190,7 @@ namespace GuidPatch
 
             guidImplementationDetailsType.Methods.Add(guidDataMethod);
 
-            var emitter = new SignatureEmitter(type, guidDataMethod, Logger); 
+            var emitter = new SignatureEmitter(type, guidDataMethod); 
             VisitSignature(rootSignaturePart, emitter);
         
             emitter.EmitGuidGetter(guidDataBlockType, guidImplementationDetailsType, readOnlySpanOfByte, readOnlySpanOfByteCtor, guidGeneratorType!);
@@ -372,7 +364,6 @@ namespace GuidPatch
                                 }
                                 catch (Exception ex)
                                 {
-                                    Logger.Log($"Exception thrown during patching {body.Method.FullName}: {ex}");
                                     Debug.WriteLine($"Exception thrown during patching {body.Method.FullName}: {ex}");
                                 }
                             }

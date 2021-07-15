@@ -58,7 +58,7 @@ namespace GuidPatch
         private readonly TypeDefinition guidAttributeType;
         private readonly AssemblyDefinition winRTRuntimeAssembly;
 
-        public SignatureGenerator(AssemblyDefinition assembly, TypeDefinition guidAttributeType, AssemblyDefinition runtimeAssembly, Logger logger)
+        public SignatureGenerator(AssemblyDefinition assembly, TypeDefinition guidAttributeType, AssemblyDefinition runtimeAssembly)
         {
             this.assembly = assembly;
             this.guidAttributeType = guidAttributeType;

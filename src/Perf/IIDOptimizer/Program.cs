@@ -13,55 +13,42 @@ namespace GuidPatch
         static readonly Option _targetAssembly =
             new Option
             (
-                name: "--targetAssembly",
-                description: "The assembly to perform GUID optimizations on.",
+                alias: "--targetAssembly",
+                description: "The assembly to perform GUID lookup optimizations on.",
                 argumentType: typeof(string), 
                 arity: ArgumentArity.ExactlyOne 
             );
-
-        static readonly Option _runtimePath =
-            new Option
-            (
-                name: "--runtimePath",
-                description: "The path to the folder used to resolve WinRT.Runtime.dll assembly.",
-                argumentType: typeof(string), 
-                arity: ArgumentArity.ExactlyOne
-            );
-
+        
         static readonly Option _references =
             new Option
             (
-                name: "--references",
+                alias: "--references",
                 description: "Reference assemblies used when compiling the target assembly.",
                 argumentType: typeof(FileInfo[]), 
                 arity: ArgumentArity.ZeroOrMore
             );
-
 
         static async Task Main(string[] args)
         {
             var rootCommand = new RootCommand { };
             // friendlier option names 
             _targetAssembly.AddAlias("--target");
-            _runtimePath.AddAlias("--runtime");
             _references.AddAlias("--refs");
 
             rootCommand.AddOption(_targetAssembly);
-            rootCommand.AddOption(_runtimePath);
             rootCommand.AddOption(_references);
 
-            rootCommand.Handler = CommandHandler.Create<string, string, IEnumerable<FileInfo>>(GuidPatch);
+            rootCommand.Handler = CommandHandler.Create<string, IEnumerable<FileInfo>>(GuidPatch);
             await rootCommand.InvokeAsync(args);            
         }
 
-        private static int GuidPatch(string targetAssembly, string runtimePath, IEnumerable<FileInfo> references)
+        private static int GuidPatch(string targetAssembly, IEnumerable<FileInfo> references)
         {
-            // pass targetAssembly here and update ReferenceAssemblyResolver to use it when resolving ==> can patch WinRT.Runtime itself 
             var resolver = new ReferenceAssemblyResolver(references);
             try 
             {
                 AssemblyDefinition winRTRuntimeAssembly = resolver.Resolve(new AssemblyNameReference("WinRT.Runtime", default));
-                    
+                   
                 Directory.CreateDirectory("obj\\IIDOptimizer"); 
                 
                 var guidPatcher = new GuidPatcher(

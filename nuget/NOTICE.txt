@@ -17,7 +17,7 @@ required to debug changes to any libraries licensed under the GNU Lesser General
 
 ---------------------------------------------------------
 
-Mono.Cecil 0.11.3 - MIT
+Mono.Cecil 0.11.4 - MIT
 
 Copyright (c) 2008 - 2015 Jb Evain
 Copyright (c) 2008 - 2011 Novell, Inc.

@@ -12,7 +12,7 @@
         <PrepareMsixPackageDependsOn></PrepareMsixPackageDependsOn>
         <PublishReadyToRun>false</PublishReadyToRun>
         <ProjectReunionVerifyWinrtRuntimeVersion>false</ProjectReunionVerifyWinrtRuntimeVersion>
-        <WindowsPackageType>MSIX</WindowsPackageType>
+        <WindowsPackageType>Desktop</WindowsPackageType>
     </PropertyGroup>
     <ItemGroup>
         <None Remove="Images\LockScreenLogo.scale-200.png" />
@@ -67,7 +67,7 @@
     
     <ItemGroup>
         <PackageReference Include="Microsoft.ProjectReunion.WinUI">
-            <Version>0.8.0</Version>
+            <Version>0.5.7</Version>
             <ExcludeAssets>compile</ExcludeAssets>
         </PackageReference>
     </ItemGroup>

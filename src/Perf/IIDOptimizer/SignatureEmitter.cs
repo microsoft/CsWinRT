@@ -1,7 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -20,14 +19,12 @@ namespace GuidPatch
         private readonly Dictionary<GenericParameter, GenericParameter> getterParameterToOriginalGenericParameterMapping = new();
         private readonly TypeReference describedType;
         private readonly MethodDefinition guidDataGetterMethod;
-        private Logger Logger { get; set; }
 
         // OptimizerDir is the path our current process should use to write logs and patched DLLs to
         public string OptimizerDir
         {
             get { return "obj\\IIDOptimizer"; }
         }
-
         public IReadOnlyDictionary<GenericParameter, GenericParameter> GenericParameterMapping => getterParameterToOriginalGenericParameterMapping;
 
         record SignatureStep;
@@ -38,11 +35,10 @@ namespace GuidPatch
 
         sealed record RuntimeCustomSignatureStep(MethodReference method) : SignatureStep;
 
-        public SignatureEmitter(TypeReference describedType, MethodDefinition guidDataGetterMethod, Logger logger)
+        public SignatureEmitter(TypeReference describedType, MethodDefinition guidDataGetterMethod)
         {
             this.describedType = describedType;
             this.guidDataGetterMethod = guidDataGetterMethod;
-            Logger = logger;
         }
 
         public void PushString(string str)
@@ -159,7 +155,7 @@ namespace GuidPatch
             // Create generic class with static array field to cache result.
             var cacheType = new TypeDefinition(null, $"<SignatureCache>{describedType.FullName}", TypeAttributes.NestedPrivate | TypeAttributes.Abstract | TypeAttributes.Sealed, module.ImportReference(module.TypeSystem.Object));
 
-            Dictionary<GenericParameter, GenericParameter> getterMethodGensToCacheTypeGens = new(); 
+            Dictionary<GenericParameter, GenericParameter> getterMethodGensToCacheTypeGens = new();
 
             for (int i = 0; i < guidDataGetterMethod.GenericParameters.Count; i++)
             {
@@ -192,7 +188,7 @@ namespace GuidPatch
             getterIL.Emit(OpCodes.Ldsfld, new FieldReference(cacheField.Name, cacheField.FieldType, instantiatedCacheType));
             getterIL.Emit(OpCodes.Newobj, readOnlySpanOfByteArrayCtor);
             getterIL.Emit(OpCodes.Ret);
-            
+
             // In the static constructor, calculate the guid bytes.
             var il = staticCtor.Body.GetILProcessor();
             var signatureParts = new VariableDefinition[signatureSteps.Count];
@@ -333,24 +329,24 @@ namespace GuidPatch
                     HasThis = true
                 });
 
-            // import a Span<T> instead of Span<byte>
-            var spanOfSpanElement = new GenericInstanceType(span) { GenericArguments = { span.GenericParameters[0] } };
-            
+            // return a Span<T> instead of Span<byte>
+            var spanOfSpanElement = new GenericInstanceType(span) { GenericArguments = { span.Resolve().GenericParameters[0] } };
+
             var spanSliceStartMethod = module.ImportReference(
-                new MethodReference("Slice", spanOfByte, spanOfSpanElement)
+                new MethodReference("Slice", spanOfSpanElement, spanOfByte)
                 {
                     HasThis = true,
                     Parameters = { new ParameterDefinition(module.TypeSystem.Int32) }
                 });
 
             var spanSliceStartLengthMethod = module.ImportReference(
-                new MethodReference("Slice", spanOfByte, spanOfSpanElement)
+                new MethodReference("Slice", spanOfSpanElement, spanOfByte)
                 {
                     HasThis = true,
                     Parameters = { new ParameterDefinition(module.TypeSystem.Int32), new ParameterDefinition(module.TypeSystem.Int32) }
                 });
 
-            var readOnlySpanOfByteLength = module.ImportReference(new MethodReference("get_Length", module.TypeSystem.Int32, readOnlySpanOfByte));
+            var readOnlySpanOfByteLength = module.ImportReference(new MethodReference("get_Length", module.TypeSystem.Int32, readOnlySpanOfByte) { HasThis = true });
 
             var fullSignatureBuffer = new VariableDefinition(spanOfByte);
             staticCtor.Body.Variables.Add(fullSignatureBuffer);
@@ -454,19 +450,15 @@ namespace GuidPatch
             il.Emit(OpCodes.Call, spanToReadOnlySpan);
             il.Emit(OpCodes.Ldloc, destination);
             il.Emit(OpCodes.Call, hashDataMethod);
+            il.Emit(OpCodes.Pop);
 
             // Fix endianness, bytes
             var memoryExtensions = CecilExtensions.FindTypeReference(module, "System", "MemoryExtensions", "System.Memory", false);
 
-            var reverseMethod_Generic = new MethodReference("Reverse", module.TypeSystem.Void, memoryExtensions)
-            {
-                HasThis = true,
-            };
+            var reverseMethod_Generic = new MethodReference("Reverse", module.TypeSystem.Void, memoryExtensions) { };
 
-            var reverseMethod = new MethodReference("Reverse", module.TypeSystem.Void, memoryExtensions)
-            {
-                HasThis = true,
-            };
+            var reverseMethod = new MethodReference("Reverse", module.TypeSystem.Void, memoryExtensions) { };
+
             var reverseMethodGenericParam = new GenericParameter(reverseMethod);
             reverseMethod.GenericParameters.Add(reverseMethodGenericParam);
             reverseMethod.Parameters.Add(new ParameterDefinition(new GenericInstanceType(span) { GenericArguments = { reverseMethodGenericParam } }));
@@ -494,7 +486,12 @@ namespace GuidPatch
             il.Emit(OpCodes.Call, reverseMethod);
             
             // Encode rfc time/version/clock/reserved fields
-            var getItemMethod = module.ImportReference(new MethodReference("get_Item", new ByReferenceType(span.Resolve().GenericParameters[0]), spanOfByte) { Parameters = { new ParameterDefinition(module.TypeSystem.Int32) } });
+            var getItemMethod = module.ImportReference(
+                new MethodReference("get_Item", new ByReferenceType(span.Resolve().GenericParameters[0]), spanOfByte) 
+                { 
+                    Parameters = { new ParameterDefinition(module.TypeSystem.Int32) }, 
+                    HasThis = true 
+                });
             
             // t[7] = (byte) ((t[7] & 0x0f) | (5 << 4));
             il.Emit(OpCodes.Ldloca, destination);
@@ -524,7 +521,12 @@ namespace GuidPatch
 
             // cacheField = destination.Slice(0, 16).ToArray()
 
-            var toArrayMethod = module.ImportReference(new MethodReference("ToArray", new ArrayType(span.Resolve().GenericParameters[0]), spanOfByte));
+            var toArrayMethod = module.ImportReference(
+                new MethodReference("ToArray", new ArrayType(span.Resolve().GenericParameters[0]), spanOfByte) 
+                { 
+                    HasThis = true 
+                });
+
             var spanTemp = new VariableDefinition(spanOfByte);
             staticCtor.Body.Variables.Add(spanTemp);
 

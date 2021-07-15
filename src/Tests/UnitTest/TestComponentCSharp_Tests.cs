@@ -51,6 +51,20 @@ namespace UnitTest
             TestObject = new Class();
         }
 
+
+        // Test a fix for a bug in Mono.Cecil that was affecting the IIDOptimizer when it encountered long class names 
+        [Fact]
+        public void TestLongClassNameEventSource()
+        {
+            bool flag = false;
+            var long_class_name = new ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz();
+            long_class_name.EventForAVeryLongClassName +=
+                (ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz sender, ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz args)
+                => flag = true;
+            long_class_name.InvokeEvent();
+            Assert.True(flag);
+        }
+
         [Fact]
         public void TestEnums()
         {
