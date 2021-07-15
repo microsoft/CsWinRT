@@ -15,7 +15,7 @@ namespace GuidPatch
             (
                 alias: "--targetAssembly",
                 description: "The assembly to perform GUID lookup optimizations on.",
-                argumentType: typeof(string), 
+                argumentType: typeof(FileInfo), 
                 arity: ArgumentArity.ExactlyOne 
             );
         
@@ -38,13 +38,13 @@ namespace GuidPatch
             rootCommand.AddOption(_targetAssembly);
             rootCommand.AddOption(_references);
 
-            rootCommand.Handler = CommandHandler.Create<string, IEnumerable<FileInfo>>(GuidPatch);
+            rootCommand.Handler = CommandHandler.Create<FileInfo, IEnumerable<FileInfo>>(GuidPatch);
             await rootCommand.InvokeAsync(args);            
         }
 
-        private static int GuidPatch(string targetAssembly, IEnumerable<FileInfo> references)
+        private static int GuidPatch(FileInfo targetAssembly, IEnumerable<FileInfo> references)
         {
-            var resolver = new ReferenceAssemblyResolver(references);
+            var resolver = new ReferenceAssemblyResolver(targetAssembly, references);
             try 
             {
                 AssemblyDefinition winRTRuntimeAssembly = resolver.Resolve(new AssemblyNameReference("WinRT.Runtime", default));
@@ -52,7 +52,7 @@ namespace GuidPatch
                 Directory.CreateDirectory("obj\\IIDOptimizer"); 
                 
                 var guidPatcher = new GuidPatcher(
-                    targetAssembly, 
+                    targetAssembly.FullName, 
                     resolver,
                     winRTRuntimeAssembly);
 

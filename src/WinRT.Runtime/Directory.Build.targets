@@ -1,0 +1,70 @@
+﻿<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- For the IIDOptimizer to work, it needs to be given all the (reference) assemblies used during compilation 
+       This target consolidates them based on an item group output by the CoreCompile target,  
+       so they may be passed as an option to the IIDOptimizer in the target that invokes the tool -->
+  <Target Name="_GenerateIIDOptimizerResponseFile" AfterTargets="Compile" BeforeTargets="WinRTRuntimePatchIID"
+          Condition="'$(TargetFramework)' == 'net5.0'">
+
+    <PropertyGroup>
+      <!-- IIDOptimizerInterimDir is the folder used by the IIDOptimizer to save output files -->
+      <IIDOptimizerInterimDir>obj\IIDOptimizer\</IIDOptimizerInterimDir>
+      <!-- CsWinRTIIDOptimizerTargetAssembly: First argument to the IIDOptimizer. 
+           We are using the output's .dll from the *obj* folder. 
+           After linking, the output's .dll gets copied to the bin folder. These targets run before linking. -->
+      <_IIDOptimizerTargetAssembly>@(BuiltProjectOutputGroupKeyOutput->'%(Identity)')</_IIDOptimizerTargetAssembly>
+      <!-- GuidPatchTargetAssemblyReferences: Second argument to the IIDOptimizer. 
+           We use ReferencePathWithRefAssemblies as this is passed to Csc (C# Compile Task) for the TargetAssembly's References -->
+      <_TargetAssemblyReferences>@(ReferencePathWithRefAssemblies->'--refs &#x0d;&#x0a; %(Identity)', '&#x0d;&#x0a;')</_TargetAssemblyReferences>
+      <!-- GuidPatchParams: Used to write the response file (.rsp) when executing IIDOptimizer.
+        include the current dll, the folder to winrt.runtime, and the reference assemblies -->
+      <_GuidPatchParams>
+        --target
+        $(_IIDOptimizerTargetAssembly)
+        $(_TargetAssemblyReferences)
+      </_GuidPatchParams>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(IIDOptimizerInterimDir)"/>
+
+    <PropertyGroup>
+      <_IIDOptimizerResponseFile>$(IIDOptimizerInterimDir)cswinrt_iidoptimizer.rsp</_IIDOptimizerResponseFile>
+      <_IIDOptimizerCommand>"$(CsWinRTIIDOptimizerPath)IIDOptimizer.exe" %40"$(_IIDOptimizerResponseFile)"</_IIDOptimizerCommand>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="$(_IIDOptimizerResponseFile)" Lines="$(_GuidPatchParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+
+  <!--==================================================-->
+  <!-- Invoke the patcher--> 
+  <Target Name="WinRTRuntimePatchIID" AfterTargets="Compile" BeforeTargets="Link" DependsOnTargets="_GenerateIIDOptimizerResponseFile"
+          Condition="'$(TargetFramework)' == 'net5.0'">
+    <Message Text="$(_IIDOptimizerCommand)" Importance="$(CsWinRTMessageImportance)" />
+    <Exec Command="$(_IIDOptimizerCommand)" ConsoleToMsBuild="true" IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GuidPatchOutput" />
+      <Output TaskParameter="ExitCode" PropertyName="_GuidPatchExitCode"/>
+    </Exec>
+  </Target>
+
+  <!--==================================================-->
+  <!-- Replace the .dll -->
+  <Target Name="ReplaceForPatchedRuntime"
+          Condition="$(_GuidPatchExitCode) == 0"
+          AfterTargets="WinRTRuntimePatchIID"
+          BeforeTargets="Link">
+
+    <ItemGroup>
+      <_GuidPatchedFiles Include="$(MSBuildProjectDirectory)\$(IIDOptimizerInterimDir)*.dll" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <!-- Use the above .dll to find the directory we should copy to when we finish (usually "obj")-->
+      <_IIDOptimizerOutputDir>$([System.IO.Directory]::GetParent($(_IIDOptimizerTargetAssembly))) </_IIDOptimizerOutputDir>
+    </PropertyGroup>
+
+    <!--  Replace the .dll in the output folder with the optimized version we just made -->
+    <Copy SourceFiles="@(_GuidPatchedFiles)" DestinationFolder="$(_IIDOptimizerOutputDir)" />
+  </Target>
+
+</Project>
