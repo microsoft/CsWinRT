@@ -29,30 +29,10 @@ namespace GuidPatch
         private readonly TypeDefinition guidImplementationDetailsType;
         private readonly TypeDefinition guidDataBlockType;
         private SignatureGenerator signatureGenerator;
-        
-        // OptimizerDir is the path our current process should use to write logs and patched DLLs to
-        public string OptimizerDir
+       
+        public GuidPatcher(AssemblyDefinition winRTRuntime, AssemblyDefinition targetAssembly)
         {
-            get { return "obj\\IIDOptimizer"; }
-        }
-
-        public GuidPatcher(string assemblyPath, IAssemblyResolver assemblyResolver, AssemblyDefinition winRTRuntime)
-        {
-            var readerParameters = new ReaderParameters(ReadingMode.Deferred)
-            {
-                ReadWrite = true,
-                InMemory = true,
-                AssemblyResolver = assemblyResolver,
-                ThrowIfSymbolsAreNotMatching = false,
-                SymbolReaderProvider = new DefaultSymbolReaderProvider(false),
-                ApplyWindowsRuntimeProjections = false,
-                ReadSymbols = true
-            };
-
-            /*
-             *  Initialize readonly fields 
-             */            
-            assembly = AssemblyDefinition.ReadAssembly(assemblyPath, readerParameters);
+            assembly = targetAssembly;
 
             winRTRuntimeAssembly = winRTRuntime;
 
