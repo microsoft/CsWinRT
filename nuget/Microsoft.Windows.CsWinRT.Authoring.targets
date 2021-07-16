@@ -169,7 +169,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       </Content> 
 
       <!-- Custom targets that copy DLLs for consumers of the authored component. -->
-      <Content Include="$(CsWinRTPath)buildTransitive\Microsoft.Windows.CsWinRT.Authoring.Transitive.targets">
+      <Content Include="$(CsWinRTPath)build\Microsoft.Windows.CsWinRT.Authoring.Transitive.targets">
         <Pack>true</Pack>
         <PackagePath>buildTransitive\$(AssemblyName).targets;build\$(AssemblyName).targets</PackagePath>
       </Content>
