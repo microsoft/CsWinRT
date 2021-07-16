@@ -135,24 +135,27 @@ $(CsWinRTIncludeWinRTInterop)
   <Target Name="CsWinRTGenerateIIDOptimizerResponseFile" AfterTargets="Compile" BeforeTargets="CsWinRTInvokeGuidPatcher"
           Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'">
     
-    <PropertyGroup>
-      <!-- IIDOptimizerInterimDir is the folder used by the IIDOptimizer to save output files -->
-      <IIDOptimizerInterimDir>obj\IIDOptimizer\</IIDOptimizerInterimDir>
-      <!-- CsWinRTIIDOptimizerPath: If building in the CsWinRT Repo, then this is set already via Directory.Build.props  -->
+    <PropertyGroup> 
+      <!-- CsWinRTIIDOptimizerPath: If building in the CsWinRT Repo, then this is set already via Directory.Build.props  --> 
       <CsWinRTIIDOptimizerPath Condition="'$(CsWinRTIIDOptimizerPath)' == ''">$(CsWinRTPath)build\tools\IIDOptimizer\</CsWinRTIIDOptimizerPath>
       <!-- CsWinRTIIDOptimizerTargetAssembly: First argument to the IIDOptimizer. 
-           We are using the output's .dll from the *obj* folder. 
-           After linking, the output's .dll gets copied to the bin folder. These targets run before linking. -->
+            We are using the output's .dll from the *obj* folder. 
+            After linking, the output's .dll gets copied to the bin folder. These targets run before linking. --> 
       <CsWinRTIIDOptimizerTargetAssembly>@(BuiltProjectOutputGroupKeyOutput->'%(Identity)')</CsWinRTIIDOptimizerTargetAssembly>
-     <!-- GuidPatchTargetAssemblyReferences: Second argument to the IIDOptimizer. 
-           We use ReferencePathWithRefAssemblies as this is passed to Csc (C# Compile Task) for the TargetAssembly's References -->
+      <!-- IIDOptimizerInterimDir: Second argument to the IIDOptimizer.
+             The folder used by the IIDOptimizer to save output files --> 
+      <IIDOptimizerInterimDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'IIDOptimizer'))</IIDOptimizerInterimDir>
+      <!-- GuidPatchTargetAssemblyReferences: third argument to the IIDOptimizer. 
+            We use ReferencePathWithRefAssemblies as this is passed to Csc (C# Compile Task) for the TargetAssembly's References --> 
       <GuidPatchTargetAssemblyReferences>@(ReferencePathWithRefAssemblies->'--refs &#x0d;&#x0a; %(Identity)', '&#x0d;&#x0a;')</GuidPatchTargetAssemblyReferences>
       <!-- GuidPatchParams: Used to write the response file (.rsp) when executing IIDOptimizer.
-        include the current dll, the folder to winrt.runtime, and the reference assemblies -->
+            include the current dll, the folder to winrt.runtime, and the reference assemblies --> 
       <GuidPatchParams>
---target 
+--target
 $(CsWinRTIIDOptimizerTargetAssembly)
-$(GuidPatchTargetAssemblyReferences) 
+--outdir
+$(IIDOptimizerInterimDir)
+$(GuidPatchTargetAssemblyReferences)
       </GuidPatchParams>
     </PropertyGroup>
 
@@ -183,7 +186,7 @@ $(GuidPatchTargetAssemblyReferences)
           BeforeTargets="Link">
 
     <ItemGroup>
-      <CsWinRTGuidPatchedFiles Include="$(MSBuildProjectDirectory)\$(IIDOptimizerInterimDir)*.dll" />
+      <CsWinRTGuidPatchedFiles Include="$(IIDOptimizerInterimDir)*.dll;$(IIDOptimizerInterimDir)*.pdb" />
     </ItemGroup>
 
     <PropertyGroup>
