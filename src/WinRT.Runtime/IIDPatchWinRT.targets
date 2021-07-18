@@ -1,0 +1,83 @@
+﻿<!--
+***********************************************************************************************
+Copyright (C) Microsoft Corporation. All rights reserved.
+***********************************************************************************************
+-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <IIDOptimizerInterimDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'IIDOptimizer'))</IIDOptimizerInterimDir>
+    <LocalRuntimeCopy>$(IIDOptimizerInterimDir)runtimecopy</LocalRuntimeCopy>
+  </PropertyGroup> 
+
+  <!-- Target 1 - Make local directories -->
+  <Target Name="MakeRuntimeCopy" BeforeTargets="CsWinRTGenerateIIDOptimizerResponseFile">
+    <MakeDir Directories="$(IIDOptimizerInterimDir)"/>
+    <MakeDir Directories="$(LocalRuntimeCopy)"/>
+  </Target>
+  <!-- End Target 1 -->
+  
+  <!-- Target 2 - make copy of the obj/winrt.runtime and pass the directory we copied to as an option ("winrtCopy") to IIDOptimizer.exe
+        still writes the .rsp file for the .exe -->
+  <Target Name="CsWinRTGenerateIIDOptimizerResponseFile" AfterTargets="Compile" BeforeTargets="CsWinRTInvokeGuidPatcher">
+    <PropertyGroup>
+      <CsWinRTIIDOptimizerTargetAssembly>@(BuiltProjectOutputGroupKeyOutput->'%(Identity)')</CsWinRTIIDOptimizerTargetAssembly>
+      <GuidPatchTargetAssemblyReferences>@(ReferencePathWithRefAssemblies->'--refs &#x0d;&#x0a; %(Identity)', '&#x0d;&#x0a;')</GuidPatchTargetAssemblyReferences>
+    </PropertyGroup>
+      
+    <Copy SourceFiles="$(CsWinRTIIDOptimizerTargetAssembly)" DestinationFolder="$(LocalRuntimeCopy)" />
+
+    <PropertyGroup>
+      <GuidPatchParams>
+        --target
+        $(CsWinRTIIDOptimizerTargetAssembly)
+        --outdir
+        $(IIDOptimizerInterimDir)
+        $(GuidPatchTargetAssemblyReferences)
+        --winrtCopy
+        $(LocalRuntimeCopy)
+      </GuidPatchParams>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <CsWinRTIIDOptimizerResponseFile>$(IIDOptimizerInterimDir)cswinrt_iidoptimizer.rsp</CsWinRTIIDOptimizerResponseFile>
+      <CsWinRTIIDOptimizerCommand>"$(CsWinRTIIDOptimizerPath)IIDOptimizer.exe" %40"$(CsWinRTIIDOptimizerResponseFile)"</CsWinRTIIDOptimizerCommand>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="$(CsWinRTIIDOptimizerResponseFile)" Lines="$(GuidPatchParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+  <!-- End Target 2 -->
+
+  <!-- Target 3 -->
+  <Target Name="CsWinRTInvokeGuidPatcher" AfterTargets="Compile" BeforeTargets="Link" DependsOnTargets="CsWinRTGenerateIIDOptimizerResponseFile">
+    <Message Text="$(CsWinRTIIDOptimizerCommand)" Importance="$(CsWinRTMessageImportance)" />
+    <Exec Command="$(CsWinRTIIDOptimizerCommand)" ConsoleToMsBuild="true" IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="CsWinRTGuidPatchOutput" />
+      <Output TaskParameter="ExitCode" PropertyName="CsWinRTGuidPatchExitCode"/>
+    </Exec>
+  </Target>
+  <!-- End Target 3 -->
+
+  <!-- Target 4 -->
+  <Target Name="CsWinRTReplaceForPatchedRuntime"
+          Condition="$(CsWinRTGuidPatchExitCode) == 0"
+          AfterTargets="CsWinRTInvokeGuidPatcher"
+          BeforeTargets="Link">
+    <ItemGroup>
+      <CsWinRTGuidPatchedFiles Include="$(IIDOptimizerInterimDir)$(AssemblyName).dll;$(IIDOptimizerInterimDir)$(AssemblyName).pdb" />
+    </ItemGroup>
+    
+    <PropertyGroup>
+      <CsWinRTIIDOptimizerOutputDir>$([System.IO.Directory]::GetParent($(CsWinRTIIDOptimizerTargetAssembly))) </CsWinRTIIDOptimizerOutputDir>
+    </PropertyGroup>
+
+    <Copy SourceFiles="@(CsWinRTGuidPatchedFiles)" DestinationFolder="$(CsWinRTIIDOptimizerOutputDir)" />
+  </Target>
+  <!-- End Target 4 -->
+
+  <!-- Target 5 -->
+  <Target Name="CleanupRuntimeCopy" AfterTargets="CsWinRTInvokeGuidPatcher" BeforeTargets="Link">
+    <RemoveDir Directories="$(LocalRuntimeCopy)"/>
+  </Target>
+  <!-- End Target 5 -->
+</Project>

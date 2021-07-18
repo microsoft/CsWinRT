@@ -40,6 +40,17 @@ namespace GuidPatch
                 arity: ArgumentArity.ZeroOrMore
             );
 
+        static readonly Option _winrtLocalCopy =
+            new Option
+            (
+                alias: "--winrtCopy",
+                description: "Directory path containing copy of WinRT.Runtime.dll (created by build .targets).",
+                argumentType: typeof(DirectoryInfo), 
+                arity: ArgumentArity.ZeroOrOne
+            );
+
+
+
         static async Task Main(string[] args)
         {
             var rootCommand = new RootCommand { };
@@ -51,14 +62,15 @@ namespace GuidPatch
             rootCommand.AddOption(_targetAssembly);
             rootCommand.AddOption(_outputDir);
             rootCommand.AddOption(_references);
+            rootCommand.AddOption(_winrtLocalCopy);
 
-            rootCommand.Handler = CommandHandler.Create<string, string, IEnumerable<FileInfo>>(GuidPatch);
+            rootCommand.Handler = CommandHandler.Create<string, string, IEnumerable<FileInfo>, DirectoryInfo>(GuidPatch);
             await rootCommand.InvokeAsync(args);            
         }
 
-        private static int GuidPatch(string targetAssembly, string outputDirectory, IEnumerable<FileInfo> references)
+        private static int GuidPatch(string targetAssembly, string outputDirectory, IEnumerable<FileInfo> references, DirectoryInfo winrtCopy)
         {
-            var resolver = new ReferenceAssemblyResolver(references);
+            var resolver = new ReferenceAssemblyResolver(references, winrtCopy);
             try 
             {
                 AssemblyDefinition winRTRuntimeAssembly = resolver.Resolve(new AssemblyNameReference("WinRT.Runtime", default));
