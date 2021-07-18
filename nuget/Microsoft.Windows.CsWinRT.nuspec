@@ -26,7 +26,6 @@
     <file src="Microsoft.Windows.CsWinRT.Authoring.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.Prerelease*.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" target="build"/>
-    <file src="Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" target="buildTransitive"/>
     <file src="$interop_winmd$" target="metadata"/>
     <file src="readme.txt"/>
     <file src="$net5_runtime$" target="lib\net5.0\"/>
