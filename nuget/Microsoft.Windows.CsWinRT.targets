@@ -186,7 +186,7 @@ $(GuidPatchTargetAssemblyReferences)
           BeforeTargets="Link">
 
     <ItemGroup>
-      <CsWinRTGuidPatchedFiles Include="$(IIDOptimizerInterimDir)*.dll;$(IIDOptimizerInterimDir)*.pdb" />
+      <CsWinRTGuidPatchedFiles Include="$(IIDOptimizerInterimDir)$(AssemblyName).dll;$(IIDOptimizerInterimDir)$(AssemblyName).pdb" />
     </ItemGroup>
 
     <PropertyGroup>
