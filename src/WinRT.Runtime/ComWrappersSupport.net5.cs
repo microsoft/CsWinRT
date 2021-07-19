@@ -73,7 +73,8 @@ namespace WinRT
 
         public static T CreateRcwForComObject<T>(IntPtr ptr)
         {
-            return CreateRcwForComObject<T>(ptr, true);
+            var val = CreateRcwForComObject<T>(ptr, true);
+            return val;
         }
 
         private static T CreateRcwForComObject<T>(IntPtr ptr, bool tryUseCache)
@@ -89,8 +90,9 @@ namespace WinRT
             // there is other calls to it via other means.
             CreateRCWType.Value = typeof(T);
             
-            var flags = tryUseCache ? CreateObjectFlags.TrackerObject : CreateObjectFlags.TrackerObject | CreateObjectFlags.UniqueInstance;
+            var flags =  tryUseCache ? CreateObjectFlags.TrackerObject : CreateObjectFlags.TrackerObject | CreateObjectFlags.UniqueInstance;
             var rcw = ComWrappers.GetOrCreateObjectForComInstance(ptr, flags);
+            Windows.Foundation.Collections.DebugLog.logs.Add("rcw for " + ptr + " is " + rcw.GetType());
             CreateRCWType.Value = null;
             // Because .NET will de-duplicate strings and WinRT doesn't,
             // our RCW factory returns a wrapper of our string instance.
@@ -104,6 +106,11 @@ namespace WinRT
             if (rcw is IWinRTObject winrtObj)
             {
                 winrtObj.Resurrect();
+            }
+
+            if (typeof(T) == typeof(Object) && rcw is bool)
+            {
+                var x = 1;
             }
 
             return rcw switch
@@ -434,6 +441,7 @@ namespace WinRT
 
         private static object CreateObject(IObjectReference objRef)
         {
+            Windows.Foundation.Collections.DebugLog.logs.Add("Creating object for " + objRef.ThisPtr);
             if (objRef.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
             {
                 IInspectable inspectable = new IInspectable(inspectableRef);

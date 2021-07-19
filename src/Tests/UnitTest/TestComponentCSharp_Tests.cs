@@ -28,6 +28,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
 using System.Reflection;
+using Windows.Devices.Enumeration.Pnp;
 
 #if NET5_0
 using WeakRefNS = System;
@@ -2517,5 +2518,87 @@ namespace UnitTest
             WarningStatic.WarningEvent += (object s, Int32 v) => { }; // warning CA1416
         }
 #endif
+
+        [Fact]
+        private void TestPnpProperties()
+        {
+            TestPnpPropertiesAsync().Wait(100000);
+        }
+
+        private async Task TestPnpPropertiesAsync()
+        {
+            int x = 0;
+            while (!System.Diagnostics.Debugger.IsAttached)
+            {
+                Thread.Sleep(100);
+                if (x++ > 100) break;
+            }
+
+            var requestedDeviceProperties =
+                new List<string>()
+                {
+                    "System.Devices.ClassGuid",
+                    "System.Devices.ContainerId",
+                    "System.Devices.DeviceHasProblem",
+                    "System.Devices.DeviceInstanceId",
+                    "System.Devices.Parent",
+                    "System.Devices.Present",
+                    "System.ItemNameDisplay",
+                    "System.Devices.Children",
+                };
+
+            var devicefilter = "System.Devices.Present:System.StructuredQueryType.Boolean#True";
+
+            //If the wrapper makes a copy of the properties internally the value types are often NOT correct on .net 5 but are always correct in .net framework. 
+            var presentDevices = (await PnpObject.FindAllAsync(PnpObjectType.Device, requestedDeviceProperties, devicefilter).AsTask().ConfigureAwait(false)).Select(pnpObject => {
+                var prop = pnpObject.Properties;
+                foreach (var key in pnpObject.Properties.Keys)
+                {
+                    //if (!(key == "System.Devices.ContainerId" || key == "System.Devices.Parent")) continue;
+                    var val = prop[key];
+                    if (val is bool)
+                    {
+                        var x = 1;
+                    }
+                    var val2 = prop[key];
+                    if (val != null && val.GetType() != val2.GetType())
+                    {
+                        var val3 = pnpObject.Properties[key];
+                        throw new Exception("Incorrect value types");
+                    }
+                    if (key == "System.Devices.ContainerId" && val != null)
+                    {
+                        var val4 = pnpObject.Properties[key];
+                        if (val is not Guid || val4 is not Guid)
+                        {
+                            var ty = val.GetType();
+                            var x = 1;
+                            throw new Exception("Incorrect value type Guid");
+                        }
+                        else
+                        {
+                            var x = 2;
+                        }
+                    }
+                    if (key == "System.Devices.Parent" && val != null)
+                    {
+                        var val4 = pnpObject.Properties[key];
+                        if (val is not string || val4 is not string)
+                        {
+                            var ty = val.GetType();
+                            var x = 1;
+                            throw new Exception("Incorrect value type string");
+                        }
+                        else
+                        {
+                            var x = 2;
+                        }
+                    }
+
+                }
+                return pnpObject;
+            }).ToList();
+
+        }
     }
 }

@@ -9,7 +9,14 @@ namespace ABI.System
         byte value;
         public static bool CreateMarshaler(bool value) => value;
         public static Boolean GetAbi(bool value) => new Boolean() { value = (byte)(value ? 1 : 0) };
-        public static bool FromAbi(Boolean abi) => abi.value != 0;
+        public static bool FromAbi(Boolean abi)
+        {
+#if NET5_0
+            global::Windows.Foundation.Collections.DebugLog.logs.Add("Marshaling bool");
+#endif
+            //global::System.Diagnostics.Debugger.Break();
+            return abi.value != 0;
+        }
         public static unsafe void CopyAbi(bool value, IntPtr dest) => *(byte*)dest.ToPointer() = GetAbi(value).value;
         public static Boolean FromManaged(bool value) => GetAbi(value);
         public static unsafe void CopyManaged(bool arg, IntPtr dest) => *(byte*)dest.ToPointer() = FromManaged(arg).value;

@@ -23,6 +23,11 @@ namespace Windows.Foundation.Collections
         void Split(out IMapView<K, V> first, out IMapView<K, V> second);
         uint Size { get; }
     }
+
+    class DebugLog
+    {
+        public static readonly List<string> logs = new List<string>();
+    }
 }
 
 namespace ABI.System.Collections.Generic
@@ -241,7 +246,8 @@ namespace ABI.System.Collections.Generic
             {
                 try
                 {
-                    return _this.Lookup(key);
+                    var val = _this.Lookup(key);
+                    return val;
                 }
                 catch (Exception ex)
                 {
@@ -638,6 +644,9 @@ namespace ABI.System.Collections.Generic
                 () => new FromAbiHelper((global::Windows.Foundation.Collections.IMapView<K, V>)_this, _obj));
         }
 
+        private static Dictionary<IntPtr, V> previousValues = new Dictionary<IntPtr, V>();
+        private static Dictionary<IntPtr, K> previousKeys = new Dictionary<IntPtr, K>();
+
         unsafe V global::Windows.Foundation.Collections.IMapView<K, V>.Lookup(K key)
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>).TypeHandle));
@@ -650,7 +659,25 @@ namespace ABI.System.Collections.Generic
                 __key = Marshaler<K>.CreateMarshaler(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.Lookup_0.DynamicInvokeAbi(__params);
-                return Marshaler<V>.FromAbi(__params[2]);
+                var val = Marshaler<V>.FromAbi(__params[2]);
+                IntPtr ptr = (IntPtr)__params[2];
+                if (previousValues.ContainsKey(ptr))
+                {
+                    var previousVal = previousValues[ptr];
+                    var previousKey = previousKeys[ptr];
+                    if (key is string && previousKey is string && key as string != previousKey as string && val is bool && val.GetType() == previousVal.GetType())
+                    {
+                        //Debugger.Break();
+                        var x = global::Windows.Foundation.Collections.DebugLog.logs;
+                    }
+                        
+                }
+                else if (ptr != IntPtr.Zero)
+                {
+                    previousValues.Add(ptr, val);
+                    previousKeys.Add(ptr, key);
+                }
+                return val;
             }
             finally
             {
