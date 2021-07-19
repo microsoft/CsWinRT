@@ -19,6 +19,7 @@
   </metadata>
   <files>
     <file src="LICENSE"/>
+    <file src="NOTICE.txt"/>
     <file src="$cswinrt_exe$"/>
     <file src="Microsoft.Windows.CsWinRT.props" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.targets" target="build"/>
@@ -34,5 +35,6 @@
     <file src="$winrt_host_arm$" target ="runtimes\win-arm\native"/>
     <file src="$winrt_host_arm64$" target ="runtimes\win-arm64\native"/>
     <file src="$winrt_shim$" target ="lib\net5.0\"/>
+    <file src="$guid_patch$" target ="build\tools\IIDOptimizer"/>
   </files>
 </package>
