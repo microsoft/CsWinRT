@@ -358,7 +358,7 @@ namespace ObjectLifetimeTests
         AutoResetEvent unloadedSignal = new AutoResetEvent(false);
 
 
-        // Bug: _parentRef is still alive https://github.com/microsoft/CsWinRT/issues/897
+        [TestMethod]
         public void CycleTest1()
         {
             //Debugger.Launch();
@@ -420,9 +420,8 @@ namespace ObjectLifetimeTests
         // Cycle from StackPanel to custom element to delegate back to StackPanel.
         //
 
-
-        //[MethodImplAttribute(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        //Bug:_parentRef is still alive https://github.com/microsoft/CsWinRT/issues/897
+        [TestMethod]
+        [MethodImplAttribute(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void CycleTest1b()
         {
             _asyncQueue
@@ -482,9 +481,9 @@ namespace ObjectLifetimeTests
         // Cycle from StackPanel to built-in element to delegate on framework event back to StackPanel.
         //
 
-        
-        //[MethodImplAttribute(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        //Bug:_element1Ref is still alive https://github.com/microsoft/CsWinRT/issues/897
+
+        [TestMethod]
+        [MethodImplAttribute(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void CycleTest1c()
         {
             _asyncQueue

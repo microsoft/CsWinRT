@@ -37,15 +37,15 @@ namespace ABI.System
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
         public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler<T> managedDelegate) =>
-            managedDelegate is null ? null : ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(EventHandler<T>)));
+            managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(EventHandler<T>)));
 
         public static IntPtr GetAbi(IObjectReference value) =>
             value is null ? IntPtr.Zero : MarshalInterfaceHelper<global::System.EventHandler<T>>.GetAbi(value);
 
         public static unsafe global::System.EventHandler<T> FromAbi(IntPtr nativeDelegate)
         {
-            var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(nativeDelegate);
-            return (global::System.EventHandler<T>)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler<T>(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface(nativeDelegate)?.As<IDelegateVftbl>(GuidGenerator.GetIID(typeof(EventHandler<T>)));
+            return abiDelegate is null ? null : (global::System.EventHandler<T>)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler<T>(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -56,25 +56,10 @@ namespace ABI.System
 #endif
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
-#if NETSTANDARD2_0
-            private readonly AgileReference _agileReference = default;
-#endif
+
             public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
             {
                 _nativeDelegate = nativeDelegate;
-                if (_nativeDelegate.TryAs<ABI.WinRT.Interop.IAgileObject.Vftbl>(out var objRef) < 0)
-                {
-                    var agileReference = new AgileReference(_nativeDelegate);
-#if NETSTANDARD2_0
-                    _agileReference = agileReference;
-#else
-                    ((IWinRTObject)this).AdditionalTypeData.TryAdd(typeof(AgileReference).TypeHandle, agileReference);
-#endif
-                }
-                else
-                {
-                    objRef.Dispose();
-                }
             }
 
 #if !NETSTANDARD2_0
@@ -86,16 +71,8 @@ namespace ABI.System
 
             public void Invoke(object sender, T args)
             {
-#if NETSTANDARD2_0
-                var agileReference = _agileReference;
-#else
-                var agileReference = ((IWinRTObject)this).AdditionalTypeData.TryGetValue(typeof(AgileReference).TypeHandle, out var agileObj) ? 
-                    (AgileReference)agileObj : null;
-#endif
-                using var agileDelegate = agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(EventHandler<T>)));
-                var delegateToInvoke = agileDelegate ?? _nativeDelegate;
-                IntPtr ThisPtr = delegateToInvoke.ThisPtr;
-                var abiInvoke = Marshal.GetDelegateForFunctionPointer(delegateToInvoke.Vftbl.Invoke, Abi_Invoke_Type);
+                IntPtr ThisPtr = _nativeDelegate.ThisPtr;
+                var abiInvoke = Marshal.GetDelegateForFunctionPointer(_nativeDelegate.Vftbl.Invoke, Abi_Invoke_Type);
                 IObjectReference __sender = default;
                 object __args = default;
                 var __params = new object[] { ThisPtr, null, null };
@@ -165,15 +142,15 @@ namespace ABI.System
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
         public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler managedDelegate) =>
-            managedDelegate is null ? null : ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(EventHandler)));
+            managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(EventHandler)));
 
         public static IntPtr GetAbi(IObjectReference value) =>
             value is null ? IntPtr.Zero : MarshalInterfaceHelper<global::System.EventHandler<object>>.GetAbi(value);
 
         public static unsafe global::System.EventHandler FromAbi(IntPtr nativeDelegate)
         {
-            var abiDelegate = ObjectReference<IDelegateVftbl>.FromAbi(nativeDelegate);
-            return (global::System.EventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface(nativeDelegate)?.As<IDelegateVftbl>(GuidGenerator.GetIID(typeof(EventHandler)));
+            return abiDelegate is null ? null : (global::System.EventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -184,25 +161,10 @@ namespace ABI.System
 #endif
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
-#if NETSTANDARD2_0
-            private readonly AgileReference _agileReference = default;
-#endif
+
             public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftbl> nativeDelegate)
             {
                 _nativeDelegate = nativeDelegate;
-                if (_nativeDelegate.TryAs<ABI.WinRT.Interop.IAgileObject.Vftbl>(out var objRef) < 0)
-                {
-                    var agileReference = new AgileReference(_nativeDelegate);
-#if NETSTANDARD2_0
-                    _agileReference = agileReference;
-#else
-                    ((IWinRTObject)this).AdditionalTypeData.TryAdd(typeof(AgileReference).TypeHandle, agileReference);
-#endif
-                }
-                else
-                {
-                    objRef.Dispose();
-                }
             }
 
 #if !NETSTANDARD2_0
@@ -214,16 +176,8 @@ namespace ABI.System
 
             public void Invoke(object sender, EventArgs args)
             {
-#if NETSTANDARD2_0
-                var agileReference = _agileReference;
-#else
-                var agileReference = ((IWinRTObject)this).AdditionalTypeData.TryGetValue(typeof(AgileReference).TypeHandle, out var agileObj) ? 
-                    (AgileReference)agileObj : null;
-#endif
-                using var agileDelegate = agileReference?.Get()?.As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(EventHandler)));
-                var delegateToInvoke = agileDelegate ?? _nativeDelegate;
-                IntPtr ThisPtr = delegateToInvoke.ThisPtr;
-                var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(delegateToInvoke.Vftbl.Invoke);
+                IntPtr ThisPtr = _nativeDelegate.ThisPtr;
+                var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(_nativeDelegate.Vftbl.Invoke);
                 IObjectReference __sender = default;
                 IObjectReference __args = default;
                 var __params = new object[] { ThisPtr, null, null };
@@ -273,8 +227,6 @@ namespace ABI.System
 
     internal sealed unsafe class EventHandlerEventSource : EventSource<global::System.EventHandler>
     {
-        private global::System.EventHandler handler;
-
         internal EventHandlerEventSource(IObjectReference obj,
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
@@ -291,20 +243,24 @@ namespace ABI.System
         protected override IntPtr GetAbi(IObjectReference marshaler) =>
             marshaler is null ? IntPtr.Zero : EventHandler.GetAbi(marshaler);
 
-        protected override global::System.Delegate EventInvoke
+        protected override State CreateEventState() =>
+            new EventState(_obj.ThisPtr, _index);
+
+        private sealed class EventState : State
         {
-            // This is synchronized from the base class
-            get
+            public EventState(IntPtr obj, int index)
+                : base(obj, index)
             {
-                if (handler == null)
+            }
+
+            protected override Delegate GetEventInvoke()
+            {
+                global::System.EventHandler handler = (global::System.Object obj, global::System.EventArgs e) =>
                 {
-                    handler = (global::System.Object obj, global::System.EventArgs e) =>
-                    {
-                        var localDel = _event;
-                        if (localDel != null)
-                            localDel.Invoke(obj, e);
-                    };
-                }
+                    var localDel = del;
+                    if (localDel != null)
+                        localDel.Invoke(obj, e);
+                };
                 return handler;
             }
         }
