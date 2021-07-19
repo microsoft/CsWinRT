@@ -29,13 +29,13 @@ using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
 using System.Reflection;
 
-#if NET5_0
+#if NET
 using WeakRefNS = System;
 #else
 using WeakRefNS = WinRT;
 #endif
 
-#if NET5_0
+#if NET
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.18362.0")]
 #endif
@@ -389,7 +389,7 @@ namespace UnitTest
             Assert.True(LookupPorts().Wait(5000));
         }
 
-#if NET5_0
+#if NET
         async Task InvokeStreamWriteZeroBytes()
         {
             var random = new Random(42);
@@ -2469,7 +2469,7 @@ namespace UnitTest
             Assert.True(eventCalled);
         }
 
-#if NET5_0
+#if NET
         [TestComponentCSharp.Warning]  // NO warning CA1416
         class WarningManaged { };
 
