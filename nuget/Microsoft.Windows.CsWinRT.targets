@@ -68,7 +68,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="CsWinRTGenerateProjection" DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences" Condition="'$(CsWinRTGenerateProjection)' == 'true'">
     <PropertyGroup>
       <CsWinRTResponseFile>$(CsWinRTGeneratedFilesDir)cswinrt.rsp</CsWinRTResponseFile>
-      <CsWinRTCommand>"$(CsWinRTExe)" %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+      <!-- %40 is an MSBuild escape code for the @ character; 
+           https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2015/msbuild/msbuild-special-characters?view=vs-2015&redirectedfrom=MSDN 
+      -->
+	    <CsWinRTCommand>"$(CsWinRTExe)" %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
       <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadataInput Condition="'$(CsWinRTWindowsMetadata)' != ''">-input $(CsWinRTWindowsMetadata)</CsWinRTWindowsMetadataInput>
@@ -126,6 +129,75 @@ $(CsWinRTIncludeWinRTInterop)
     </ItemGroup>
   </Target>
 
+  <!-- For the IIDOptimizer to work, it needs to be given all the (reference) assemblies used during compilation 
+       This target consolidates them based on an item group output by the CoreCompile target,  
+       so they may be passed as an option to the IIDOptimizer in the target that invokes the tool -->
+  <Target Name="CsWinRTGenerateIIDOptimizerResponseFile" AfterTargets="Compile" BeforeTargets="CsWinRTInvokeGuidPatcher"
+          Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'">
+    
+    <PropertyGroup> 
+      <!-- CsWinRTIIDOptimizerPath: If building in the CsWinRT Repo, then this is set already via Directory.Build.props  --> 
+      <CsWinRTIIDOptimizerPath Condition="'$(CsWinRTIIDOptimizerPath)' == ''">$(CsWinRTPath)build\tools\IIDOptimizer\</CsWinRTIIDOptimizerPath>
+      <!-- CsWinRTIIDOptimizerTargetAssembly: First argument to the IIDOptimizer. 
+            We are using the output's .dll from the *obj* folder. 
+            After linking, the output's .dll gets copied to the bin folder. These targets run before linking. --> 
+      <CsWinRTIIDOptimizerTargetAssembly>@(BuiltProjectOutputGroupKeyOutput->'%(Identity)')</CsWinRTIIDOptimizerTargetAssembly>
+      <!-- IIDOptimizerInterimDir: Second argument to the IIDOptimizer.
+             The folder used by the IIDOptimizer to save output files --> 
+      <IIDOptimizerInterimDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'IIDOptimizer'))</IIDOptimizerInterimDir>
+      <!-- GuidPatchTargetAssemblyReferences: third argument to the IIDOptimizer. 
+            We use ReferencePathWithRefAssemblies as this is passed to Csc (C# Compile Task) for the TargetAssembly's References --> 
+      <GuidPatchTargetAssemblyReferences>@(ReferencePathWithRefAssemblies->'--refs &#x0d;&#x0a; %(Identity)', '&#x0d;&#x0a;')</GuidPatchTargetAssemblyReferences>
+      <!-- GuidPatchParams: Used to write the response file (.rsp) when executing IIDOptimizer.
+            include the current dll, the folder to winrt.runtime, and the reference assemblies --> 
+      <GuidPatchParams>
+--target
+$(CsWinRTIIDOptimizerTargetAssembly)
+--outdir
+$(IIDOptimizerInterimDir)
+$(GuidPatchTargetAssemblyReferences)
+      </GuidPatchParams>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(IIDOptimizerInterimDir)"/>
+
+    <PropertyGroup>
+      <CsWinRTIIDOptimizerResponseFile>$(IIDOptimizerInterimDir)cswinrt_iidoptimizer.rsp</CsWinRTIIDOptimizerResponseFile>
+	    <CsWinRTIIDOptimizerCommand>"$(CsWinRTIIDOptimizerPath)IIDOptimizer.exe" %40"$(CsWinRTIIDOptimizerResponseFile)"</CsWinRTIIDOptimizerCommand>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="$(CsWinRTIIDOptimizerResponseFile)" Lines="$(GuidPatchParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <!-- Run the IIDOptimizer on the projection .dll -->
+  <Target Name="CsWinRTInvokeGuidPatcher" AfterTargets="Compile" BeforeTargets="Link" DependsOnTargets="CsWinRTGenerateIIDOptimizerResponseFile"
+          Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'">  
+    <Message Text="$(CsWinRTIIDOptimizerCommand)" Importance="$(CsWinRTMessageImportance)" />
+    <Exec Command="$(CsWinRTIIDOptimizerCommand)" ConsoleToMsBuild="true" IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="CsWinRTGuidPatchOutput" />
+      <Output TaskParameter="ExitCode" PropertyName="CsWinRTGuidPatchExitCode"/>
+    </Exec>
+  </Target>
+
+  <!-- When the IIDOptimizer succeeds, replace the input .dll with the patched version -->
+  <Target Name="CsWinRTReplaceForPatchedRuntime" 
+          Condition="$(CsWinRTGuidPatchExitCode) == 0"
+          AfterTargets="CsWinRTInvokeGuidPatcher"
+          BeforeTargets="Link">
+
+    <ItemGroup>
+      <CsWinRTGuidPatchedFiles Include="$(IIDOptimizerInterimDir)$(AssemblyName).dll;$(IIDOptimizerInterimDir)$(AssemblyName).pdb" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <!-- Use the above .dll to find the directory we should copy to when we finish (usually "obj")-->
+      <CsWinRTIIDOptimizerOutputDir>$([System.IO.Directory]::GetParent($(CsWinRTIIDOptimizerTargetAssembly))) </CsWinRTIIDOptimizerOutputDir>
+    </PropertyGroup>
+
+    <!--  Replace the .dll in the output folder with the optimized version we just made -->
+    <Copy SourceFiles="@(CsWinRTGuidPatchedFiles)" DestinationFolder="$(CsWinRTIIDOptimizerOutputDir)" />
+  </Target>
+  
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
 

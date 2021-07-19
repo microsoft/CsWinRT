@@ -27,6 +27,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <CsWinRTIIDOptimizerPath>$(MSBuildThisFileDirectory)Perf\IIDOptimizer\bin\$(Configuration)\net5.0\</CsWinRTIIDOptimizerPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <VersionNumber Condition="'$(VersionNumber)'==''">0.0.0.0</VersionNumber>
     <VersionString Condition="'$(VersionString)'==''">0.0.0-private.0</VersionString>
     <BuildPlatform>$(Platform)</BuildPlatform>
