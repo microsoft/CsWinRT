@@ -34,7 +34,7 @@ namespace ABI.System.Collections.Specialized
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
         public static unsafe IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler managedDelegate) =>
-            managedDelegate is null ? null : ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(NotifyCollectionChangedEventHandler)));
+            managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(NotifyCollectionChangedEventHandler)));
 
         public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.GetAbi(value);
 
@@ -87,7 +87,7 @@ namespace ABI.System.Collections.Specialized
         }
 
         public static IntPtr FromManaged(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler managedDelegate) =>
-            managedDelegate is null ? IntPtr.Zero : CreateMarshaler(managedDelegate).GetRef();
+            CreateMarshaler(managedDelegate)?.GetRef() ?? IntPtr.Zero;
 
         public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.DisposeMarshaler(value);
 

@@ -37,7 +37,7 @@ namespace ABI.System
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
         public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler<T> managedDelegate) =>
-            managedDelegate is null ? null : ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(EventHandler<T>)));
+            managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(EventHandler<T>)));
 
         public static IntPtr GetAbi(IObjectReference value) =>
             value is null ? IntPtr.Zero : MarshalInterfaceHelper<global::System.EventHandler<T>>.GetAbi(value);
@@ -142,7 +142,7 @@ namespace ABI.System
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
         public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler managedDelegate) =>
-            managedDelegate is null ? null : ComWrappersSupport.CreateCCWForObject(managedDelegate).As<global::WinRT.Interop.IDelegateVftbl>(GuidGenerator.GetIID(typeof(EventHandler)));
+            managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(EventHandler)));
 
         public static IntPtr GetAbi(IObjectReference value) =>
             value is null ? IntPtr.Zero : MarshalInterfaceHelper<global::System.EventHandler<object>>.GetAbi(value);
