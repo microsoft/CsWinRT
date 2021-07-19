@@ -8,7 +8,7 @@ namespace System
     using global::System.Threading.Tasks;
     using global::Windows.Foundation;
 
-#if NET5_0
+#if NET
     [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
     public static class WindowsRuntimeSystemExtensions
@@ -232,7 +232,7 @@ namespace System
     /// using <code>VoidValueTypeParameter</code> offers better performance.</summary>
     internal class VoidReferenceTypeParameter { }
 
-#if NET5_0
+#if NET
     [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
     sealed class AsyncInfoToTaskBridge<TResult, TProgress> : TaskCompletionSource<TResult>

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!--Target .NET Core 2.0 to test .NET Standard 2.0 projection -->
-    <TargetFrameworks>netcoreapp2.0;net5.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.0;net5.0;net6.0</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
     <ProjectName>UnitTest</ProjectName>
     <NoWarn>1701;1702;0436;1658</NoWarn>
@@ -36,7 +36,7 @@
     <None Include="**/*.net5.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
+  <ItemGroup Condition="$(IsTargetFrameworkNet5OrGreater)">
     <Compile Remove="**/*.netcoreapp2.0.cs" />
     <None Include="**/*.netcoreapp2.0.cs" />
   </ItemGroup>

@@ -1,4 +1,4 @@
-﻿#if NET5_0
+﻿#if NET
 using System.Runtime.Versioning;
 [assembly: SupportedOSPlatform("Windows")]
 #endif
