@@ -11,6 +11,8 @@
     -->
     <XamlCodeGenerationControlFlags>DoNotGenerateOtherProviders</XamlCodeGenerationControlFlags>
     <Platforms>x86;x64</Platforms>
+    <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
+    <CsWinRTEnabled>false</CsWinRTEnabled>
   </PropertyGroup>
 
   <ItemGroup>

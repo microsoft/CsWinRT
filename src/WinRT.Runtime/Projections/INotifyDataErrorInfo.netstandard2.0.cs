@@ -160,7 +160,7 @@ namespace ABI.System.ComponentModel
             _obj = obj;
 
             _ErrorsChanged =
-                new EventSource<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>(_obj,
+                new EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>(_obj,
                 (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_obj.Vftbl.add_ErrorsChanged_1,
                 _obj.Vftbl.remove_ErrorsChanged_2);
         }
@@ -198,7 +198,7 @@ namespace ABI.System.ComponentModel
             remove => _ErrorsChanged.Unsubscribe(value);
         }
 
-        private EventSource<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>> _ErrorsChanged;
+        private EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs> _ErrorsChanged;
     }
     
     internal static class INotifyDataErrorInfo_Delegates

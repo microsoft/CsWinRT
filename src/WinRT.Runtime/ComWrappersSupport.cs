@@ -58,18 +58,53 @@ namespace WinRT
 
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)
         {
+            if (externalComObject == IntPtr.Zero)
+            {
+                return null;
+            }
+
             using var unknownRef = ObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
 
-            if (unknownRef.TryAs<IUnknownVftbl>(typeof(ABI.WinRT.Interop.IAgileObject.Vftbl).GUID, out var agileRef) >= 0)
+            if (IsFreeThreaded())
             {
-                agileRef.Dispose();
                 return unknownRef.As<IUnknownVftbl>();
             }
             else
             {
                 return new ObjectReferenceWithContext<IUnknownVftbl>(
                     unknownRef.GetRef(),
-                    Context.GetContextCallback());
+                    Context.GetContextCallback(),
+                    Context.GetContextToken());
+            }
+
+            // If we are free threaded, we do not need to keep track of context.
+            // This can either be if the object implements IAgileObject or the free threaded marshaler.
+            unsafe bool IsFreeThreaded()
+            {
+                if (unknownRef.TryAs<IUnknownVftbl>(typeof(ABI.WinRT.Interop.IAgileObject.Vftbl).GUID, out var agileRef) >= 0)
+                {
+                    agileRef.Dispose();
+                    return true;
+                }
+                else if (unknownRef.TryAs<ABI.WinRT.Interop.IMarshal.Vftbl>(out var marshalRef) >= 0)
+                {
+                    try
+                    {
+                        Guid iid_IUnknown = typeof(IUnknownVftbl).GUID;
+                        Guid iid_unmarshalClass;
+                        var marshaler = new ABI.WinRT.Interop.IMarshal(marshalRef);
+                        marshaler.GetUnmarshalClass(&iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass);
+                        if (iid_unmarshalClass == ABI.WinRT.Interop.IMarshal.IID_InProcFreeThreadedMarshaler.Value)
+                        {
+                            return true;
+                        }
+                    }
+                    finally 
+                    {
+                        marshalRef.Dispose();
+                    }
+                }
+                return false;
             }
         }
 
@@ -95,16 +130,23 @@ namespace WinRT
             var entries = new List<ComInterfaceEntry>();
             var objType = type.GetRuntimeClassCCWType() ?? type;
             var interfaces = objType.GetInterfaces();
+            bool hasCustomIMarshalInterface = false;
             foreach (var iface in interfaces)
             {
                 if (Projections.IsTypeWindowsRuntimeType(iface))
                 {
                     var ifaceAbiType = iface.FindHelperType();
+                    Guid iid = GuidGenerator.GetIID(ifaceAbiType);
                     entries.Add(new ComInterfaceEntry
                     {
-                        IID = GuidGenerator.GetIID(ifaceAbiType),
+                        IID = iid,
                         Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
                     });
+
+                    if(!hasCustomIMarshalInterface && iid == typeof(ABI.WinRT.Interop.IMarshal.Vftbl).GUID)
+                    {
+                        hasCustomIMarshalInterface = true;
+                    }
                 }
 
                 if (iface.IsConstructedGenericType
@@ -172,6 +214,17 @@ namespace WinRT
                 IID = typeof(ABI.WinRT.Interop.IWeakReferenceSource.Vftbl).GUID,
                 Vtable = ABI.WinRT.Interop.IWeakReferenceSource.Vftbl.AbiToProjectionVftablePtr
             });
+
+            // Add IMarhal implemented using the free threaded marshaler
+            // to all CCWs if it doesn't already have its own.
+            if (!hasCustomIMarshalInterface)
+            {
+                entries.Add(new ComInterfaceEntry
+                {
+                    IID = typeof(ABI.WinRT.Interop.IMarshal.Vftbl).GUID,
+                    Vtable = ABI.WinRT.Interop.IMarshal.Vftbl.AbiToProjectionVftablePtr
+                });
+            }
 
             // Add IAgileObject to all CCWs
             entries.Add(new ComInterfaceEntry
@@ -264,13 +317,8 @@ namespace WinRT
                 return (IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef);
             }
 
-            Type implementationType = null;
-
-            try
-            {
-                (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
-            }
-            catch (TypeLoadException)
+            Type implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
+            if(implementationType == null)
             {
                 // If we reach here, then we couldn't find a type that matches the runtime class name.
                 // Fall back to using IInspectable directly.
@@ -318,13 +366,7 @@ namespace WinRT
                 Type implementationType = null;
                 if (!string.IsNullOrEmpty(runtimeClassName))
                 {
-                    try
-                    {
-                        (implementationType, _) = TypeNameSupport.FindTypeByName(runtimeClassName.AsSpan());
-                    }
-                    catch (TypeLoadException)
-                    {
-                    }
+                    implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
                 }
 
                 if (!(implementationType != null &&

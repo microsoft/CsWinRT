@@ -1,5 +1,6 @@
 ﻿using BenchmarkComponent;
 using BenchmarkDotNet.Attributes;
+using System;
 
 namespace Benchmarks
 {
@@ -60,6 +61,22 @@ namespace Benchmarks
         public object ExecuteMarshalingForCustomObject()
         {
             return instance.NewWrappedClassObject;
+        }
+
+        [Benchmark]
+        public void IntEventSource()
+        {
+            ClassWithMarshalingRoutines instance = new ClassWithMarshalingRoutines();
+
+            int x = 0;
+            int y = 1;
+            int z;
+
+            instance.IntProperty = x;
+            instance.CallForInt(() => y);
+
+            instance.IntPropertyChanged += (object sender, int value) => z = value;
+            instance.RaiseIntChanged();
         }
     }
 }

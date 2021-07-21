@@ -27,6 +27,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <CsWinRTIIDOptimizerPath>$(MSBuildThisFileDirectory)Perf\IIDOptimizer\bin\$(Configuration)\net5.0\</CsWinRTIIDOptimizerPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <VersionNumber Condition="'$(VersionNumber)'==''">0.0.0.0</VersionNumber>
     <VersionString Condition="'$(VersionString)'==''">0.0.0-private.0</VersionString>
     <BuildPlatform>$(Platform)</BuildPlatform>
@@ -34,6 +38,7 @@
     <BuildOutDir Condition="'$(BuildOutDir)'==''">$([MSBuild]::NormalizeDirectory('$(SolutionDir)_build', '$(BuildPlatform)', '$(Configuration)'))</BuildOutDir>
     <CsWinRTPath>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', 'cswinrt', 'bin'))</CsWinRTPath>
     <CsWinRTPath Condition="'$(Platform)'=='ARM' or '$(Platform)'=='ARM64'">$([MSBuild]::NormalizeDirectory('$(SolutionDir)_build', 'x86', '$(Configuration)', 'cswinrt', 'bin'))</CsWinRTPath>
+    <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$(CsWinRTPath)WinRT.Interop.winmd</CsWinRTInteropMetadata>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.vcxproj' or '$(MSBuildProjectExtension)' == '.wapproj'">

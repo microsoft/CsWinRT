@@ -4,6 +4,8 @@
 #include <set>
 #include <filesystem>
 #include <iostream>
+#include <regex>
+#include <concurrent_unordered_map.h>
 
 namespace cswinrt
 {
@@ -62,7 +64,7 @@ namespace cswinrt
         return w.write_temp("%_%", method.Name(), get_vmethod_index(type, method));
     }
 
-    bool is_type_blittable(type_semantics const& semantics)
+    bool is_type_blittable(type_semantics const& semantics, bool for_array = false)
     {
         return call(semantics,
             [&](object_type)
@@ -74,7 +76,7 @@ namespace cswinrt
                 switch (get_category(type))
                 {
                     case category::enum_type:
-                        return true;
+                        return !for_array;
                     case category::struct_type:
                         if (auto mapping = get_mapped_type(type.TypeNamespace(), type.TypeName()))
                         {
@@ -451,6 +453,65 @@ namespace cswinrt
         w.write("% %",
             bind<write_projection_parameter_type>(param),
             bind<write_parameter_name>(param));
+    }
+
+    void write_event_source_type_name(writer& w, type_semantics const& eventTypeSemantics)
+    {
+        auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
+        std::string eventTypeName = "_EventSource_" + eventTypeCode;
+        std::regex re(R"-((\ |:|<|>|,|\.))-");
+        w.write("%", std::regex_replace(eventTypeName, re, "_"));
+    }
+
+    method_signature get_event_invoke_method(TypeDef const& eventType)
+    {
+        for (auto&& method : eventType.MethodList())
+        {
+            if (method.Name() == "Invoke")
+            {
+                return method_signature(method);
+            }
+        }
+        throw_invalid("Event type must have an Invoke method");
+    }
+
+    void write_event_invoke_params(writer& w, method_signature const& methodSig)
+    {
+        w.write("%", bind_list<write_projection_parameter>(", ", methodSig.params()));
+    }
+
+    void write_event_invoke_return(writer& w, method_signature const& methodSig)
+    {
+        if (methodSig.return_signature())
+        {
+            w.write("return ");
+        }
+    }
+
+    void write_event_invoke_return_default(writer& w, method_signature const& methodSig)
+    {
+        if (!methodSig.return_signature())
+        {
+            return;
+        }
+        auto&& semantics = get_type_semantics(methodSig.return_signature().Type());
+        w.write("default(%)", bind<write_projection_type>(semantics));
+    }
+
+    void write_event_out_defaults(writer& w, method_signature const& methodSig)
+    {
+        for (auto&& param : methodSig.params())
+        {
+            if (get_param_category(param) == param_category::out || get_param_category(param) == param_category::receive_array)
+            {
+                w.write("\n% = default(%);", bind<write_parameter_name>(param), bind<write_projection_type>(get_type_semantics(param.second->Type())));
+            }
+        }
+    }
+
+    void write_event_invoke_args(writer& w, method_signature const& methodSig)
+    {
+        w.write("%", bind_list<write_parameter_name_with_modifier>(", ", methodSig.params()));
     }
 
     void write_abi_type(writer& w, type_semantics const& semantics)
@@ -1248,7 +1309,7 @@ remove => %.% -= value;
                             }
                         }
                         w.write("%",
-                            bind_list([](writer& w, auto&& value) { w.write("AttributeTargets.%", value); },
+                            bind_list([](writer& w, auto&& value) { w.write("global::System.AttributeTargets.%", value); },
                                 " | ", values));
                     }
                     else for (auto field : enum_value.type.m_typedef.FieldList())
@@ -1265,7 +1326,7 @@ remove => %.% -= value;
                 },
                 [&](std::string_view type_name)
                 {
-                    w.write("\"%\"", type_name);
+                    w.write("^@\"%\"", type_name);
                 },
                 [&](auto&&)
                 {
@@ -1412,9 +1473,10 @@ remove => %.% -= value;
         {
             auto [attribute_namespace, attribute_name] = attribute.TypeNamespaceAndName();
             attribute_name = attribute_name.substr(0, attribute_name.length() - "Attribute"sv.length());
-            // GCPressure, Guid, Flags are handled separately
-            if (attribute_name == "GCPressure" || attribute_name == "Guid" || attribute_name == "Flags") continue;
-            auto attribute_full = (attribute_name == "AttributeUsage") ? "AttributeUsage" :
+            // GCPressure, Guid, Flags, ProjectionInternal are handled separately
+            if (attribute_name == "GCPressure" || attribute_name == "Guid" || 
+                attribute_name == "Flags" || attribute_name == "ProjectionInternal") continue;
+            auto attribute_full = (attribute_name == "AttributeUsage") ? "System.AttributeUsage" :
                 w.write_temp("%.%", attribute_namespace, attribute_name);
             auto signature = attribute.Value();
             auto params = write_custom_attribute_args(w, attribute, signature);
@@ -1424,7 +1486,7 @@ remove => %.% -= value;
                 auto platform = get_platform(w, signature, params);
                 if (!platform.empty())
                 {
-                    attributes["global::System.Runtime.Versioning.SupportedOSPlatform"].push_back(platform);
+                    attributes["System.Runtime.Versioning.SupportedOSPlatform"].push_back(platform);
                 }
             }
             // Skip metadata attributes without a projection
@@ -1442,18 +1504,14 @@ remove => %.% -= value;
             }
             attributes[attribute_full] = std::move(params);
         }
-        if (auto&& usage = attributes.find("AttributeUsage"); usage != attributes.end())
+        if (auto&& usage = attributes.find("System.AttributeUsage"); usage != attributes.end())
         {
             usage->second.push_back(w.write_temp("AllowMultiple = %", allow_multiple ? "true" : "false"));
         }
 
         for (auto&& attribute : attributes)
         {
-            w.write("[");
-            if (w._in_abi_impl_namespace)
-            {
-                w.write("global::");
-            }
+            w.write("[global::");
             w.write(attribute.first);
             if (!attribute.second.empty())
             {
@@ -2458,23 +2516,46 @@ db_path.stem().string());
 
     void write_static_class(writer& w, TypeDef const& type)
     {
-        w.write(R"(%public static class %
+        w.write(R"(%%public static class %
 {
 %})",
             bind<write_winrt_attribute>(type),
+            bind<write_type_custom_attributes>(type, true),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             bind<write_attributed_types>(type)
         );
     }
 
+    void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics);
+
     void write_event_source_ctor(writer& w, Event const& evt)
     {
+        if (for_typedef(w, get_type_semantics(evt.EventType()), [&](TypeDef const& eventType)
+            {
+                if ((eventType.TypeNamespace() == "Windows.Foundation" || eventType.TypeNamespace() == "System") && eventType.TypeName() == "EventHandler`1")
+                {
+                    auto [add, remove] = get_event_methods(evt);
+                    w.write(R"( new EventSource__EventHandler%(_obj,
+%,
+%))",
+bind<write_type_params>(eventType),
+get_invoke_info(w, add).first,
+get_invoke_info(w, remove).first);
+                    return true;
+                }
+                return false;
+            }))
+        {
+            return;
+        }
+
         auto [add, remove] = get_event_methods(evt);
         w.write(R"(
-    new EventSource<%>(_obj,
+    new %%(_obj,
     %,
     %))",
-            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+            bind<write_event_source_type_name>(get_type_semantics(evt.EventType())),
+            bind<write_event_source_generic_args>(get_type_semantics(evt.EventType())),
             get_invoke_info(w, add).first,
             get_invoke_info(w, remove).first);
     }
@@ -2866,7 +2947,7 @@ event % %;)",
         {
             if (m.is_array())
             {
-                m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
+                m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
                 m.marshaler_type += "<" + m.param_type + ">";
                 m.local_type = m.marshaler_type + ".MarshalerArray";
             }
@@ -2983,7 +3064,7 @@ event % %;)",
             }
             else
             {
-                m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
+                m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
                 m.marshaler_type += "<" + m.param_type + ">";
                 m.local_type = m.marshaler_type + ".MarshalerArray";
             }
@@ -4177,7 +4258,7 @@ remove => %.Unsubscribe(value);
             {
                 if (m.marshaler_type.empty())
                 {
-                    m.marshaler_type = is_type_blittable(semantics) ? "MarshalBlittable" : "MarshalNonBlittable";
+                    m.marshaler_type = is_type_blittable(semantics, true) ? "MarshalBlittable" : "MarshalNonBlittable";
                     m.marshaler_type += "<" + m.param_type + ">";
                 }
                 m.local_type = (m.local_type.empty() ? m.param_type : m.local_type) + "[]";
@@ -4815,7 +4896,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             bind<write_winrt_attribute>(type),
             bind<write_guid_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
-            is_exclusive_to(type) ? "internal" : "public",
+            is_exclusive_to(type) || is_projection_internal(type) ? "internal" : "public",
             type_name,
             bind<write_type_inheritance>(type, object_type{}, false, false),
             bind<write_interface_member_signatures>(type)
@@ -5036,13 +5117,9 @@ if (IsOverridableInterface(iid) || typeof(global::WinRT.IInspectable).GUID == ii
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
 
-if (%.TryAs<IUnknownVftbl>(iid, out ObjectReference<IUnknownVftbl> objRef) >= 0)
+if (%.TryAs(iid, out ppv) >= 0)
 {
-using (objRef)
-{
-ppv = objRef.GetRef();
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.Handled;
-}
 }
 
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
@@ -6255,13 +6332,13 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
             {
                 if (factory.activatable)
                 {
-                    w.write_each<write_factory_activatable_method>(factory.type.MethodList(), projected_type_name);
+                w.write_each<write_factory_activatable_method>(factory.type.MethodList(), projected_type_name);
                 }
                 else if (factory.statics)
                 {
-                    w.write_each<write_static_method>(factory.type.MethodList(), projected_type_name, true, ""sv);
-                    w.write_each<write_static_property>(factory.type.PropertyList(), projected_type_name, true, ""sv);
-                    w.write_each<write_static_event>(factory.type.EventList(), projected_type_name, true, ""sv);
+                w.write_each<write_static_method>(factory.type.MethodList(), projected_type_name, true, ""sv);
+                w.write_each<write_static_property>(factory.type.PropertyList(), projected_type_name, true, ""sv);
+                w.write_each<write_static_event>(factory.type.EventList(), projected_type_name, true, ""sv);
                 }
             }
         }
@@ -6272,7 +6349,7 @@ bind_list<write_parameter_name_with_modifier>(", ", signature.params())
     {
         auto factory_type_name = write_type_name_temp(w, type, "%ServerActivationFactory", typedef_name_type::CCW);
         auto base_class = (is_static(type) || !has_default_constructor(type)) ?
-            "ComponentActivationFactory" :  write_type_name_temp(w, type, "ActivatableComponentActivationFactory<%>", typedef_name_type::Projected);
+            "ComponentActivationFactory" : write_type_name_temp(w, type, "ActivatableComponentActivationFactory<%>", typedef_name_type::Projected);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::Projected);
 
         w.write(R"(
@@ -6328,8 +6405,8 @@ return IntPtr.Zero;
 }
 )",
 bind_each([](writer& w, TypeDef const& type)
-{
-    w.write(R"(
+    {
+        w.write(R"(
 
 if (runtimeClassId == "%.%")
 {
@@ -6340,8 +6417,132 @@ type.TypeNamespace(),
 type.TypeName(),
 bind<write_type_name>(type, typedef_name_type::CCW, true)
 );
-},
-types
-));
+    },
+    types
+        ));
+    }
+
+    void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics)
+    {
+        if (!std::holds_alternative<generic_type_instance>(eventTypeSemantics))
+        {
+            return;
+        }
+        for_typedef(w, eventTypeSemantics, [&](TypeDef const& eventType)
+            {
+                std::vector<std::string> genericArgs;
+                auto arg_count = std::get<generic_type_instance>(eventTypeSemantics).generic_args.size();
+                for (int i = 0; i < (int) arg_count; ++i )
+                {
+                    auto semantics = w.get_generic_arg_scope(i).first;
+                    if (std::holds_alternative<generic_type_param>(semantics))
+                    {
+                        genericArgs.push_back(w.write_temp("%", bind<write_generic_type_name>(i)));
+                    }
+                }                
+                if (genericArgs.size() == 0)
+                {
+                    return;
+                }
+                w.write("<%>", bind_list([](writer& w, auto&& value)
+                    {
+                        w.write(value);
+                    }, ", "sv, genericArgs));
+            });
+    }
+
+    void write_event_source_subclass(writer& w, cswinrt::type_semantics eventTypeSemantics)
+    {
+        auto abiTypeName = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::ABI, true));
+        for_typedef(w, eventTypeSemantics, [&](TypeDef const& eventType)
+            {
+                if ((eventType.TypeNamespace() == "Windows.Foundation" || eventType.TypeNamespace() == "System") && eventType.TypeName() == "EventHandler`1")
+                {
+                    return;
+                }
+                auto eventTypeCode = w.write_temp("%", bind<write_type_name>(eventType, typedef_name_type::Projected, false));
+                auto invokeMethodSig = get_event_invoke_method(eventType);
+                w.write(R"(
+internal sealed unsafe class %% : EventSource<%>
+{
+private % handler;
+
+internal %(IObjectReference obj,
+delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
+delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler) : base(obj, addHandler, removeHandler)
+{
+}
+
+protected override IObjectReference CreateMarshaler(% del) =>
+del is null ? null : %.CreateMarshaler(del);
+
+protected override void DisposeMarshaler(IObjectReference marshaler) =>
+%.DisposeMarshaler(marshaler);
+
+protected override System.IntPtr GetAbi(IObjectReference marshaler) =>
+marshaler is null ? System.IntPtr.Zero : %.GetAbi(marshaler);
+
+protected override System.Delegate EventInvoke
+{
+get
+{
+if (handler == null)
+{
+handler = (%) =>
+{
+var localDel = _event;
+if (localDel == null)
+{%
+return %;
+}
+%localDel.Invoke(%);
+};
+}
+return handler;
+}
+}
+}
+)",
+                    bind<write_event_source_type_name>(eventTypeSemantics),
+                    bind<write_event_source_generic_args>(eventTypeSemantics),
+                    eventTypeCode, 
+                    eventTypeCode,
+                    bind<write_event_source_type_name>(eventTypeSemantics), 
+                    eventTypeCode,
+                    abiTypeName,
+                    abiTypeName,
+                    abiTypeName,
+                    bind<write_event_invoke_params>(invokeMethodSig),
+                    bind<write_event_out_defaults>(invokeMethodSig),
+                    bind<write_event_invoke_return_default>(invokeMethodSig),
+                    bind<write_event_invoke_return>(invokeMethodSig),
+                    bind<write_event_invoke_args>(invokeMethodSig));
+                });
+    }
+
+    void write_temp_class_event_source_subclass(writer& w, TypeDef const& classType, concurrency::concurrent_unordered_map<std::string, std::string>& typeNameToDefinitionMap)
+    {
+        for (auto&& ii : classType.InterfaceImpl())
+        {
+            for_typedef(w, get_type_semantics(ii.Interface()), [&](TypeDef const& interfaceType)
+                {
+                    for (auto&& eventObj : interfaceType.EventList())
+                    {
+                        auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
+                        auto&& eventTypeCode = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
+                        typeNameToDefinitionMap[eventTypeCode] = w.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
+                    }
+                });
+        }
+    }
+
+    void write_temp_interface_event_source_subclass(writer& w, TypeDef const& interfaceType, concurrency::concurrent_unordered_map<std::string, std::string>& typeNameToDefinitionMap)
+    {
+        for (auto&& eventObj : interfaceType.EventList())
+        {
+            auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
+            auto&& eventTypeCode = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
+            typeNameToDefinitionMap[eventTypeCode] = w.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
+        }
     }
 }

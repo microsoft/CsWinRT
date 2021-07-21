@@ -386,6 +386,157 @@ namespace winrt::TestComponentCSharp::implementation
         _bool = provideBool();
         _boolChanged(*this, _bool);
     }
+
+    TestComponentCSharp::EnumValue Class::EnumProperty()
+    {
+        return _enumValue;
+    }
+    void Class::EnumProperty(TestComponentCSharp::EnumValue const& value)
+    {
+        _enumValue = value;
+    }
+    winrt::event_token Class::EnumPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::EnumValue> const& handler)
+    {
+        return _enumChanged.add(handler);
+    }
+    void Class::EnumPropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _enumChanged.remove(token);
+    }
+    void Class::RaiseEnumChanged()
+    {
+        _enumChanged(*this, _enumValue);
+    }
+    void Class::CallForEnum(TestComponentCSharp::ProvideEnum const& provide)
+    {
+        _enumValue = provide();
+        _enumChanged(*this, _enumValue);
+    }
+    TestComponentCSharp::EnumStruct Class::EnumStructProperty()
+    {
+        return _enumStruct;
+    }
+    void Class::EnumStructProperty(TestComponentCSharp::EnumStruct const& value)
+    {
+        _enumStruct = value;
+    }
+    winrt::event_token Class::EnumStructPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::EnumStruct> const& handler)
+    {
+        return _enumStructChanged.add(handler);
+    }
+    void Class::EnumStructPropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _enumStructChanged.remove(token);
+    }
+    void Class::RaiseEnumStructChanged()
+    {
+        _enumStructChanged(*this, _enumStruct);
+    }
+    void Class::CallForEnumStruct(TestComponentCSharp::ProvideEnumStruct const& provide)
+    {
+        _enumStruct = provide();
+        _enumStructChanged(*this, _enumStruct);
+    }
+    com_array<TestComponentCSharp::EnumValue> Class::EnumsProperty()
+    {
+        return { _enums.begin(), _enums.end() };
+    }
+    void Class::EnumsProperty(array_view<TestComponentCSharp::EnumValue const> value)
+    {
+        _enums.assign(value.begin(), value.end());
+    }
+    void Class::CallForEnums(TestComponentCSharp::ProvideEnums const& provide)
+    {
+        EnumsProperty(provide());
+    }
+    com_array<TestComponentCSharp::EnumStruct> Class::EnumStructsProperty()
+    {
+        return { _enumStructs.begin(), _enumStructs.end() };
+    }
+    void Class::EnumStructsProperty(array_view<TestComponentCSharp::EnumStruct const> value)
+    {
+        _enumStructs.assign(value.begin(), value.end());
+    }
+    void Class::CallForEnumStructs(TestComponentCSharp::ProvideEnumStructs const& provide)
+    {
+        EnumStructsProperty(provide());
+    }
+
+    TestComponentCSharp::FlagValue Class::FlagProperty()
+    {
+        return _flagValue;
+    }
+    void Class::FlagProperty(TestComponentCSharp::FlagValue const& value)
+    {
+        _flagValue = value;
+    }
+    winrt::event_token Class::FlagPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::FlagValue> const& handler)
+    {
+        return _flagChanged.add(handler);
+    }
+    void Class::FlagPropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _flagChanged.remove(token);
+    }
+    void Class::RaiseFlagChanged()
+    {
+        _flagChanged(*this, _flagValue);
+    }
+    void Class::CallForFlag(TestComponentCSharp::ProvideFlag const& provide)
+    {
+        _flagValue = provide();
+        _flagChanged(*this, _flagValue);
+    }
+    TestComponentCSharp::FlagStruct Class::FlagStructProperty()
+    {
+        return _flagStruct;
+    }
+    void Class::FlagStructProperty(TestComponentCSharp::FlagStruct const& value)
+    {
+        _flagStruct = value;
+    }
+    winrt::event_token Class::FlagStructPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::FlagStruct> const& handler)
+    {
+        return _flagStructChanged.add(handler);
+    }
+    void Class::FlagStructPropertyChanged(winrt::event_token const& token) noexcept
+    {
+        _flagStructChanged.remove(token);
+    }
+    void Class::RaiseFlagStructChanged()
+    {
+        _flagStructChanged(*this, _flagStruct);
+    }
+    void Class::CallForFlagStruct(TestComponentCSharp::ProvideFlagStruct const& provide)
+    {
+        _flagStruct = provide();
+        _flagStructChanged(*this, _flagStruct);
+    }
+    com_array<TestComponentCSharp::FlagValue> Class::FlagsProperty()
+    {
+        return { _flags.begin(), _flags.end() };
+    }
+    void Class::FlagsProperty(array_view<TestComponentCSharp::FlagValue const> value)
+    {
+        _flags.assign(value.begin(), value.end());
+    }
+    void Class::CallForFlags(TestComponentCSharp::ProvideFlags const& provide)
+    {
+        FlagsProperty(provide());
+    }
+    com_array<TestComponentCSharp::FlagStruct> Class::FlagStructsProperty()
+    {
+        return { _flagStructs.begin(), _flagStructs.end() };
+    }
+    void Class::FlagStructsProperty(array_view<TestComponentCSharp::FlagStruct const> value)
+    {
+        _flagStructs.assign(value.begin(), value.end());
+    }
+    void Class::CallForFlagStructs(TestComponentCSharp::ProvideFlagStructs const& provide)
+    {
+        FlagStructsProperty(provide());
+    }
+
     hstring Class::StringProperty()
     {
         return _string;
@@ -794,6 +945,21 @@ namespace winrt::TestComponentCSharp::implementation
     IVectorView<TestComponentCSharp::Class> Class::GetClassVector() noexcept
     {
         return winrt::single_threaded_vector_view(std::vector<TestComponentCSharp::Class>{ *this, *this, *this });
+    }
+    
+    // Test IIDOptimizer
+    IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> Class::GetEventArgsVector()
+    {
+        auto mock = make<data_errors_changed_event_args>(L"name");
+        DataErrorsChangedEventArgs args(detach_abi(mock), take_ownership_from_abi_t());
+        return winrt::single_threaded_vector_view(std::vector<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs>{ args });
+    }
+
+    // Test IIDOptimizer
+    IVectorView<TestComponentCSharp::ProvideUri> Class::GetNonGenericDelegateVector()
+    {
+        TestComponentCSharp::ProvideUri handler = [] { return Windows::Foundation::Uri(L"http://microsoft.com"); };
+        return winrt::single_threaded_vector_view(std::vector<ProvideUri>{ handler });
     }
 
     void Class::CompleteAsync()
@@ -1329,6 +1495,43 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::make<service_provider>();
     }
 
+    struct __declspec(uuid("15651B9F-6C6B-4CC0-944C-C7D7B0F36F81")) IComInterop : ::IUnknown
+    {
+        virtual HRESULT __stdcall ReturnWindowHandle(HWND window, guid riid, int64_t* value) noexcept = 0;
+    };
+
+    struct __declspec(uuid("5AD8CBA7-4C01-4DAC-9074-827894292D63")) IDragDropManagerInterop : ::IInspectable
+    {
+        virtual HRESULT __stdcall GetForWindow(HWND window, guid const& riid, void** value) noexcept = 0;
+    };
+
+    WF::IInspectable Class::ComInterop()
+    {
+        struct com_interop : winrt::implements<com_interop, WF::IInspectable, IComInterop, IDragDropManagerInterop>
+        {
+            HRESULT __stdcall ReturnWindowHandle(HWND window, guid riid, int64_t* value) noexcept override
+            {
+                *value = riid == winrt::guid_of<IComInterop>() ? (int64_t)window : 0;
+                return 0;
+            }
+
+            HRESULT __stdcall GetForWindow(HWND window, guid const& riid, void** value) noexcept override
+            {
+                static const guid ICoreDragDropManager("7D56D344-8464-4FAF-AA49-37EA6E2D7BD1");
+                if (riid == ICoreDragDropManager)
+                {
+                    auto dummy = winrt::make<com_interop>();
+                    *value = winrt::detach_abi(dummy);
+                    return 0;
+                }
+                *value = 0;
+                return 0x80070057; // E_INVALIDARG
+            }
+        };
+
+        return winrt::make<com_interop>();
+    }
+
     // INotifyDataErrorInfo
     bool Class::HasErrors()
     {
@@ -1352,6 +1555,28 @@ namespace winrt::TestComponentCSharp::implementation
         DataErrorsChangedEventArgs args(detach_abi(mock), take_ownership_from_abi_t());
         _dataErrorsChanged(*this, args);
     }
+
+    // ICommand
+    winrt::event_token Class::CanExecuteChanged(winrt::Windows::Foundation::EventHandler<winrt::Windows::Foundation::IInspectable> const& handler)
+    {
+        return _canExecuteChanged.add(handler);
+    }
+    void Class::CanExecuteChanged(winrt::event_token const& token) noexcept
+    {
+        return _canExecuteChanged.remove(token);
+    }
+    bool Class::CanExecute(winrt::Windows::Foundation::IInspectable const& parameter)
+    {
+        return true;
+    }
+    void Class::Execute(winrt::Windows::Foundation::IInspectable const& parameter)
+    {
+    }
+    void Class::RaiseCanExecuteChanged()
+    {
+        _canExecuteChanged(*this, *this);
+    }
+
 
     WF::IInspectable Class::BadRuntimeClassName()
     {

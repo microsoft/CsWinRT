@@ -30,6 +30,18 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event<Windows::Foundation::EventHandler<int32_t>> _intChanged;
         bool _bool = false;
         winrt::event<Windows::Foundation::EventHandler<bool>> _boolChanged;
+        EnumValue _enumValue;
+        winrt::event<Windows::Foundation::EventHandler<EnumValue>> _enumChanged;
+        std::vector<EnumValue> _enums{ EnumValue::One, EnumValue::Two };
+        EnumStruct _enumStruct;
+        winrt::event<Windows::Foundation::EventHandler<EnumStruct>> _enumStructChanged;
+        std::vector<EnumStruct> _enumStructs{ EnumStruct{EnumValue::One}, EnumStruct{EnumValue::Two} };
+        FlagValue _flagValue;
+        winrt::event<Windows::Foundation::EventHandler<FlagValue>> _flagChanged;
+        std::vector<FlagValue> _flags{ FlagValue::One, FlagValue::All };
+        FlagStruct _flagStruct;
+        winrt::event<Windows::Foundation::EventHandler<FlagStruct>> _flagStructChanged;
+        std::vector<FlagStruct> _flagStructs{ FlagStruct{FlagValue::One}, FlagStruct{FlagValue::All} };
         winrt::hstring _string;
         winrt::hstring _string2;
         winrt::event<Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, hstring>> _stringChanged;
@@ -133,6 +145,42 @@ namespace winrt::TestComponentCSharp::implementation
         void BoolPropertyChanged(winrt::event_token const& token) noexcept;
         void RaiseBoolChanged();
         void CallForBool(TestComponentCSharp::ProvideBool const& provideBool);
+        TestComponentCSharp::EnumValue EnumProperty();
+        void EnumProperty(TestComponentCSharp::EnumValue const& value);
+        winrt::event_token EnumPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::EnumValue> const& handler);
+        void EnumPropertyChanged(winrt::event_token const& token) noexcept;
+        void RaiseEnumChanged();
+        void CallForEnum(TestComponentCSharp::ProvideEnum const& provide);
+        TestComponentCSharp::EnumStruct EnumStructProperty();
+        void EnumStructProperty(TestComponentCSharp::EnumStruct const& value);
+        winrt::event_token EnumStructPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::EnumStruct> const& handler);
+        void EnumStructPropertyChanged(winrt::event_token const& token) noexcept;
+        void RaiseEnumStructChanged();
+        void CallForEnumStruct(TestComponentCSharp::ProvideEnumStruct const& provide);
+        com_array<TestComponentCSharp::EnumValue> EnumsProperty();
+        void EnumsProperty(array_view<TestComponentCSharp::EnumValue const> value);
+        void CallForEnums(TestComponentCSharp::ProvideEnums const& provide);
+        com_array<TestComponentCSharp::EnumStruct> EnumStructsProperty();
+        void EnumStructsProperty(array_view<TestComponentCSharp::EnumStruct const> value);
+        void CallForEnumStructs(TestComponentCSharp::ProvideEnumStructs const& provide);
+        TestComponentCSharp::FlagValue FlagProperty();
+        void FlagProperty(TestComponentCSharp::FlagValue const& value);
+        winrt::event_token FlagPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::FlagValue> const& handler);
+        void FlagPropertyChanged(winrt::event_token const& token) noexcept;
+        void RaiseFlagChanged();
+        void CallForFlag(TestComponentCSharp::ProvideFlag const& provide);
+        TestComponentCSharp::FlagStruct FlagStructProperty();
+        void FlagStructProperty(TestComponentCSharp::FlagStruct const& value);
+        winrt::event_token FlagStructPropertyChanged(Windows::Foundation::EventHandler<TestComponentCSharp::FlagStruct> const& handler);
+        void FlagStructPropertyChanged(winrt::event_token const& token) noexcept;
+        void RaiseFlagStructChanged();
+        void CallForFlagStruct(TestComponentCSharp::ProvideFlagStruct const& provide);
+        com_array<TestComponentCSharp::FlagValue> FlagsProperty();
+        void FlagsProperty(array_view<TestComponentCSharp::FlagValue const> value);
+        void CallForFlags(TestComponentCSharp::ProvideFlags const& provide);
+        com_array<TestComponentCSharp::FlagStruct> FlagStructsProperty();
+        void FlagStructsProperty(array_view<TestComponentCSharp::FlagStruct const> value);
+        void CallForFlagStructs(TestComponentCSharp::ProvideFlagStructs const& provide);
         hstring StringProperty();
         void StringProperty(hstring const& value);
         winrt::event_token StringPropertyChanged(Windows::Foundation::TypedEventHandler<TestComponentCSharp::Class, hstring> const& handler);
@@ -218,6 +266,10 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IVectorView<Windows::Foundation::IInspectable> GetObjectVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::IProperties1> GetInterfaceVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::Class> GetClassVector() noexcept;
+       
+        // Test IIDOptimizer -- testing the windows projection covers most code paths, and these two types exercise the rest.
+        Windows::Foundation::Collections::IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> GetEventArgsVector();
+        Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ProvideUri> GetNonGenericDelegateVector();
 
         Windows::Foundation::Collections::IIterable<int32_t> GetIntIterable();
         void SetIntIterable(Windows::Foundation::Collections::IIterable<int32_t> const& value);
@@ -319,6 +371,7 @@ namespace winrt::TestComponentCSharp::implementation
 
         static IProperties1 NativeProperties1();
         static Windows::Foundation::IInspectable ServiceProvider();
+        static winrt::Windows::Foundation::IInspectable ComInterop();
 
         // IStringable
         hstring ToString();
@@ -342,6 +395,13 @@ namespace winrt::TestComponentCSharp::implementation
         void ErrorsChanged(winrt::event_token const& token) noexcept;
         Windows::Foundation::Collections::IIterable<Windows::Foundation::IInspectable> GetErrors(hstring const& propertyName);
         void RaiseDataErrorChanged();
+
+        winrt::event<Windows::Foundation::EventHandler<Windows::Foundation::IInspectable>> _canExecuteChanged;
+        winrt::event_token CanExecuteChanged(Windows::Foundation::EventHandler<Windows::Foundation::IInspectable> const& handler);
+        void CanExecuteChanged(winrt::event_token const& token) noexcept;
+        bool CanExecute(Windows::Foundation::IInspectable const& parameter);
+        void Execute(Windows::Foundation::IInspectable const& parameter);
+        void RaiseCanExecuteChanged();
 
         static Windows::Foundation::IInspectable BadRuntimeClassName();
     };

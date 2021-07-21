@@ -73,6 +73,11 @@ namespace WinRT
 
         public static T CreateRcwForComObject<T>(IntPtr ptr)
         {
+            return CreateRcwForComObject<T>(ptr, true);
+        }
+
+        private static T CreateRcwForComObject<T>(IntPtr ptr, bool tryUseCache)
+        {
             if (ptr == IntPtr.Zero)
             {
                 return default;
@@ -83,7 +88,9 @@ namespace WinRT
             // ComWrappers API surface, so we are achieving it via a thread local.  We unset it after in case
             // there is other calls to it via other means.
             CreateRCWType.Value = typeof(T);
-            var rcw = ComWrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.TrackerObject);
+            
+            var flags = tryUseCache ? CreateObjectFlags.TrackerObject : CreateObjectFlags.TrackerObject | CreateObjectFlags.UniqueInstance;
+            var rcw = ComWrappers.GetOrCreateObjectForComInstance(ptr, flags);
             CreateRCWType.Value = null;
             // Because .NET will de-duplicate strings and WinRT doesn't,
             // our RCW factory returns a wrapper of our string instance.
@@ -101,10 +108,13 @@ namespace WinRT
 
             return rcw switch
             {
-                ABI.System.Nullable<string> ns => (T)(object) ns.Value,
-                ABI.System.Nullable<Type> nt => (T)(object) nt.Value,
-                _ => (T) rcw
+                ABI.System.Nullable<string> ns => (T)(object)ns.Value,
+                ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                T castRcw => castRcw,
+                _ when tryUseCache => CreateRcwForComObject<T>(ptr, false),
+                _ => throw new ArgumentException(string.Format("Unable to create a wrapper object. The WinRT object {0} has type {1} which cannot be assigned to type {2}", ptr, rcw.GetType(), typeof(T)))
             };
+
         }
 
         public static bool TryUnwrapObject(object o, out IObjectReference objRef)

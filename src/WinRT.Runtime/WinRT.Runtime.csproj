@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
     <RootNamespace>WinRT</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>8</LangVersion>
+    <LangVersion>9</LangVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <Authors>Microsoft Corporation</Authors>
@@ -24,7 +24,7 @@
   </PropertyGroup>
     
   <ItemGroup>
-    <Compile Include="../cswinrt/strings/*.cs" Link="cswinrt/%(FileName)%(Extension)" />
+    <Compile Include="../cswinrt/strings/WinRT*.cs" Link="cswinrt/%(FileName)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">

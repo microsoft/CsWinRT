@@ -170,5 +170,12 @@
     </None>
     <None Include="Directory.Build.targets" />
     <None Include="PreviousPlatforms.linq" />
+    <None Include="Directory.Build.props" />
+    <None Include="strings\ComInteropHelpers.cs">
+      <Filter>strings</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="WinRT.Interop.idl" />
   </ItemGroup>
 </Project>

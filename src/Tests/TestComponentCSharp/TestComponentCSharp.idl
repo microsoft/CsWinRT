@@ -13,6 +13,29 @@ namespace TestComponentCSharp
     delegate void EventHandlerCollection(Class sender, Windows.Foundation.Collections.IVector<Int32> arg0, Windows.Foundation.Collections.IMap<Int32, String> arg1);
     delegate Int32 EventWithReturn(Int32 arg);
 
+    [flags]
+    enum FlagValue
+    {
+        One = 0x00000001,
+        All = 0xFFFFFFFF,
+    };
+
+    struct FlagStruct
+    {
+        FlagValue value;
+    };
+
+    enum EnumValue
+    {
+        One,
+        Two,
+    };
+
+    struct EnumStruct
+    {
+        EnumValue value;
+    };
+
     struct BlittableStruct
     {
         Int32 i32;
@@ -54,6 +77,14 @@ namespace TestComponentCSharp
     delegate Boolean ProvideBool();
     delegate String ProvideString();
     delegate Object ProvideObject();
+    delegate EnumValue ProvideEnum();
+    delegate EnumValue[] ProvideEnums();
+    delegate FlagValue ProvideFlag();
+    delegate FlagValue[] ProvideFlags();
+    delegate EnumStruct ProvideEnumStruct();
+    delegate EnumStruct[] ProvideEnumStructs();
+    delegate FlagStruct ProvideFlagStruct();
+    delegate FlagStruct[] ProvideFlagStructs();
     delegate Windows.Foundation.Collections.IIterable<Object> ProvideObjectIterable();
     delegate Windows.Foundation.Uri ProvideUri();
     delegate Windows.Foundation.Collections.IKeyValuePair<String, String> ProvideStringPair();
@@ -107,6 +138,7 @@ namespace TestComponentCSharp
         , IProperties1
         , IProperties2
         , Microsoft.UI.Xaml.Data.INotifyDataErrorInfo
+        , Microsoft.UI.Xaml.Input.ICommand 
         //, Windows.Foundation.Collections.IVector<String>
         //, Windows.Foundation.Collections.IMap<Int32, String>
     {
@@ -159,6 +191,32 @@ namespace TestComponentCSharp
         void RaiseBoolChanged();
         void CallForBool(ProvideBool provideBool);
 
+        // Enums (oddly, arrays are not blittable - but all other structurings are)
+        EnumValue EnumProperty;
+        event Windows.Foundation.EventHandler<EnumValue> EnumPropertyChanged;
+        void RaiseEnumChanged();
+        void CallForEnum(ProvideEnum provide);
+        EnumStruct EnumStructProperty;
+        event Windows.Foundation.EventHandler<EnumStruct> EnumStructPropertyChanged;
+        void RaiseEnumStructChanged();
+        void CallForEnumStruct(ProvideEnumStruct provide);
+        EnumValue[] EnumsProperty;
+        void CallForEnums(ProvideEnums provide);
+        EnumStruct[] EnumStructsProperty;
+        void CallForEnumStructs(ProvideEnumStructs provide);
+        FlagValue FlagProperty;
+        event Windows.Foundation.EventHandler<FlagValue> FlagPropertyChanged;
+        void RaiseFlagChanged();
+        void CallForFlag(ProvideFlag provide);
+        FlagStruct FlagStructProperty;
+        event Windows.Foundation.EventHandler<FlagStruct> FlagStructPropertyChanged;
+        void RaiseFlagStructChanged();
+        void CallForFlagStruct(ProvideFlagStruct provide);
+        FlagValue[] FlagsProperty;
+        void CallForFlags(ProvideFlags provide);
+        FlagStruct[] FlagStructsProperty;
+        void CallForFlagStructs(ProvideFlagStructs provide);
+
         String StringProperty;
         event Windows.Foundation.TypedEventHandler<Class, String> StringPropertyChanged;
         void RaiseStringChanged();
@@ -182,7 +240,7 @@ namespace TestComponentCSharp
         Windows.Foundation.Uri UriProperty;
         void RaiseUriChanged();
         void CallForUri(ProvideUri provideUri);
-        event Windows.Foundation.EventHandler<Windows.Foundation.Uri > UriPropertyChanged;
+        event Windows.Foundation.EventHandler<Windows.Foundation.Uri> UriPropertyChanged;
 
         Windows.Foundation.Collections.IKeyValuePair<String, String> StringPairProperty;
         void RaiseStringPairChanged();
@@ -241,6 +299,10 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IVectorView<IProperties1> GetInterfaceVector();
         [noexcept] Windows.Foundation.Collections.IVectorView<Class> GetClassVector();
 
+        // Test IIDOptimizer
+        Windows.Foundation.Collections.IVectorView<Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs> GetEventArgsVector();
+        Windows.Foundation.Collections.IVectorView<ProvideUri> GetNonGenericDelegateVector();
+        
         Windows.Foundation.Collections.IIterable<Int32> GetIntIterable();
         void SetIntIterable(Windows.Foundation.Collections.IIterable<Int32> value);
 
@@ -329,11 +391,24 @@ namespace TestComponentCSharp
         // Interface projections
         static IProperties1 NativeProperties1{ get; };
         static Object ServiceProvider{ get; };
+        static Object ComInterop{ get; };
 
         // INotifyDataErrorInfo
         void RaiseDataErrorChanged();
 
+        // ICommand
+        void RaiseCanExecuteChanged();
+
         static Object BadRuntimeClassName{ get; };
+    }
+
+    runtimeclass ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+    {
+        ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz();
+        
+        event Windows.Foundation.TypedEventHandler<ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz, ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz> EventForAVeryLongClassName;
+        
+        void InvokeEvent();
     }
 
     [threading(sta), marshaling_behavior(standard)]
@@ -355,13 +430,6 @@ namespace TestComponentCSharp
         CustomDisposableTest();
     }
     
-    // IInspectable-based interop interface
-    [uuid(39E050C3-4E74-441A-8DC0-B81104DF949C)]
-    interface IUserConsentVerifierInterop
-    {
-        Object RequestVerificationForWindowAsync(UInt64 appWindow, String message, GUID riid);
-    }
-
     [default_interface]
     runtimeclass CustomBindableVectorTest : Microsoft.UI.Xaml.Interop.IBindableVector
     {
@@ -438,5 +506,49 @@ namespace TestComponentCSharp
             // see https://github.com/microsoft/cppwinrt/issues/782
             //overridable event Windows.Foundation.EventHandler<Int32> WarningOverridableEvent;
         }
+    }
+
+    [attributeusage(target_runtimeclass, target_interface, target_struct, target_enum, target_delegate, target_field, target_property, target_method, target_event)]
+    [attributename("attr_string")]
+    attribute MyStringAttribute
+    {
+        String Content;
+    }
+
+    [attr_string(
+"This is line one
+This is line two
+
+And this is another one"
+    )]
+    runtimeclass MultiLineStringAttributeTest
+    {
+      void f();
+    }
+
+    // Compile time test for sub windows namespace
+    namespace Windows
+    {
+        runtimeclass Class
+        {
+            Class();
+            static void StaticMethod();
+            void Method();
+            void Method2(Windows.Foundation.IStringable stringable);
+        }
+
+        [contract(Windows.Foundation.UniversalApiContract, 8)]
+        interface IWarning
+        {
+            Int32 WarningInterfacePropertySetter{ get; };
+            event Windows.Foundation.TypedEventHandler<Class, String> StringPropertyChanged;
+        }
+
+        [contract(Windows.Foundation.UniversalApiContract, 10)]
+        [attributeusage(target_all)]
+        [attributename("warning2")]
+        attribute Warning2Attribute
+        {
+        };
     }
 }
