@@ -90,8 +90,8 @@ set prerelease_targets=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.Prerelease.t
 rem Create default %prerelease_targets%
 echo ^<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="CsWinRTVerifyPrerelease"^> > %prerelease_targets%
 echo   ^<Target Name="CsWinRTVerifyPrerelease" >> %prerelease_targets%
-echo     Condition="'$(NetCoreSdkVersion)' ^!= '%CsWinRTBuildNetSDKVersion%' and '$(Net5SdkVersion)' ^!= '%CsWinRTBuildNetSDKVersion%'"^> >> %prerelease_targets%
-echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK %CsWinRTBuildNetSDKVersion%. Other prereleases may be incompatible due to breaking changes." /^> >> %prerelease_targets%
+echo     Condition="'$(NetCoreSdkVersion)' ^!= '%CsWinRTNet5SdkVersion%' and '$(Net5SdkVersion)' ^!= '%CsWinRTNet5SdkVersion%'"^> >> %prerelease_targets%
+echo     ^<Warning Text="This C#/WinRT prerelease is designed for .Net SDK %CsWinRTNet5SdkVersion%. Other prereleases may be incompatible due to breaking changes." /^> >> %prerelease_targets%
 echo   ^</Target^> >> %prerelease_targets%
 echo ^</Project^> >> %prerelease_targets%
 
