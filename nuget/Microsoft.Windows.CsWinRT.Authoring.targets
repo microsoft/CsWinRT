@@ -114,6 +114,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Update the project to only output the assembly's .winmd -->
   <Target Name="GetTargetPath" DependsOnTargets="CsWinRTAuthoring_OutputManagedDll" Returns="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup>
+      <CsWinRTComponent_ManagedImplementation Include="@(TargetPathWithTargetPlatformMoniker)">
+        <TargetPath>%(FullPath)</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> 
+      </CsWinRTComponent_ManagedImplementation>
+    </ItemGroup>
+
+    <ItemGroup>
       <!-- Clear the .dll -->
       <TargetPathWithTargetPlatformMoniker Remove="@(TargetPathWithTargetPlatformMoniker)" />
       <!-- Add the .winmd -->
@@ -122,7 +129,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <Implementation>WinRT.Host.dll</Implementation>
         <!-- show to c++ compiler (native case) and dotnet sdk (managed case) -->
         <ResolveableAssembly>true</ResolveableAssembly>
-        <ManagedImplementation>$(AssemblyName).dll</ManagedImplementation>
+        <!-- Use in dotnet sdk to add this as a reference assembly -->
+        <ManagedImplementation>%(CsWinRTComponent_ManagedImplementation.TargetPath)</ManagedImplementation>
         <FileType>winmd</FileType>
         <WinMDFile>true</WinMDFile>
         <BuildReference>true</BuildReference>
@@ -150,7 +158,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <ItemGroup>
       <!-- Local item group to store the SDK.NET.dll -->
       <CsWinRTSDKRefDll Include="@(RuntimePackAsset)" Condition="'%(RuntimePackAsset.DestinationSubPath)' == 'Microsoft.Windows.SDK.NET.dll'" />
-      <!-- Use the below item group to package up managed DLLs from one source -->
+      <!-- the target "CsWinRTIncludeHostDlls" uses the item group CsWinRTAuthoringDependencyDlls
+            as a source for all managed DLLS that need to be packaged -->
       <CsWinRTAuthoringDependencyDlls Include="@(CsWinRTSDKRefDll)" />
       <!-- Make sure it is copied out -->
       <_ThisProjectItemstoCopyToOutputDirectory Include="@(CsWinRTSDKRefDll)">
