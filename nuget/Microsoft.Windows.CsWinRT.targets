@@ -182,7 +182,7 @@ $(GuidPatchTargetAssemblyReferences)
   <!-- When the IIDOptimizer succeeds, replace the input .dll with the patched version -->
   <Target Name="CsWinRTReplaceForPatchedRuntime" 
           Condition="$(CsWinRTGuidPatchExitCode) == 0"
-          AfterTargets="CsWinRTInvokeGuidPatcher"
+          DependsOnTargets="CsWinRTInvokeGuidPatcher"
           BeforeTargets="Link">
 
     <ItemGroup>
