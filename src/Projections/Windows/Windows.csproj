@@ -13,10 +13,6 @@
     <InternalsVisibleTo Include="UnitTest" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Generated Files\" />
-  </ItemGroup>
-
   <PropertyGroup>
     <CsWinRTFilters>
 -include Windows
