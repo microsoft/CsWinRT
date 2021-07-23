@@ -32,20 +32,14 @@
     <ItemGroup>
       <!-- Managed, WinRT and SDK.NET dlls --> 
       <ReferenceCopyLocalPaths Include="$(HostingSupport-Net5Dir)\*.dll" />
-
       <!-- Managed DLLs from packages the component depends on --> 
       <ReferenceCopyLocalPaths Include="$(HostingSupport-DependenciesDir)\*.dll" />
-
       <!-- Add the runtimeconfig.json -->
       <ReferenceCopyLocalPaths Include="$(HostingSupport-DependenciesDir)\WinRT.Host.runtimeconfig.json" />
-
       <!-- Get the proper WinRT.Host.dll -->
-      <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\win-$(Platform)\native\WinRT.Host.dll"
-                               Condition="'$(Platform)' == 'x64' OR '$(Platform)' == 'x86' OR '$(HostingSupport-IsArmArch)' == 'true'" />
-
+      <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\win-$(Platform)\native\WinRT.Host.dll" Condition="'$(Platform)' == 'x64' OR '$(Platform)' == 'x86' OR '$(HostingSupport-IsArmArch)' == 'true'" />
       <!-- Treat Win32 platform as win-x86 architecture -->
-      <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\win-x86\native\WinRT.Host.dll" 
-                               Condition="'$(Platform)' == 'Win32'"/> 
+      <ReferenceCopyLocalPaths Include="$(HostingSupport-RuntimesDir)\win-x86\native\WinRT.Host.dll" Condition="'$(Platform)' == 'Win32'"/> 
     </ItemGroup> 
   </Target>
 
