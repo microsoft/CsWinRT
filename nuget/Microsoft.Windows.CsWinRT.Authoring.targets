@@ -155,11 +155,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <!-- Make the target take an input targets file and just write on that -->
   <Target Name="CsWinRTGenerateTransitiveTargets" BeforeTargets="CsWinRTIncludeHostDlls"> 
-  
-    <!-- Have to set all the spots that need to be abstracted/uniquely assigned -->
+
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" DestinationFolder="$(CsWinRTGeneratedFilesDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+
     <PropertyGroup>
 
-      <AuthoringTransitiveTargets>$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.Transitive.targets</AuthoringTransitiveTargets>
+      <AuthoringTransitiveTargets>$(CsWinRTGeneratedFilesDir)\Microsoft.Windows.CsWinRT.Authoring.Transitive.targets</AuthoringTransitiveTargets>
       
       <PeekQuery_Depends1>Project/PropertyGroup/ResolveReferencesDependsOn/text()</PeekQuery_Depends1>
       <PokeQuery_Depends1>Project/PropertyGroup/ResolveReferencesDependsOn</PokeQuery_Depends1>
