@@ -183,6 +183,7 @@ $(GuidPatchTargetAssemblyReferences)
   <Target Name="CsWinRTReplaceForPatchedRuntime" 
           Condition="$(CsWinRTGuidPatchExitCode) == 0"
           AfterTargets="CsWinRTInvokeGuidPatcher"
+          DependsOnTargets="CsWinRTInvokeGuidPatcher"
           BeforeTargets="Link">
 
     <ItemGroup>
