@@ -1,3 +1,3 @@
-﻿#if NET5_0
+﻿#if NET
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.10240.0")]
 #endif
