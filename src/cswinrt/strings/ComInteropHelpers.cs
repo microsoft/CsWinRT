@@ -190,16 +190,16 @@ namespace Windows.Security.Authentication.Web.Core
     {
         private static IWebAuthenticationCoreManagerInterop webAuthenticationCoreManagerInterop = WebAuthenticationCoreManager.As<IWebAuthenticationCoreManagerInterop>();
 
-        public static IAsyncInfo RequestTokenForWindowAsync(IntPtr appWindow, WebTokenRequest request)
+        public static IAsyncOperation<WebTokenRequestResult> RequestTokenForWindowAsync(IntPtr appWindow, WebTokenRequest request)
         {
             var iid = GuidGenerator.CreateIID(typeof(IAsyncOperation<WebTokenRequestResult>));
-            return (IAsyncInfo)webAuthenticationCoreManagerInterop.RequestTokenForWindowAsync(appWindow, request, iid);
+            return (IAsyncOperation<WebTokenRequestResult>)webAuthenticationCoreManagerInterop.RequestTokenForWindowAsync(appWindow, request, iid);
         }
 
-        public static IAsyncInfo RequestTokenWithWebAccountForWindowAsync(IntPtr appWindow, WebTokenRequest request, WebAccount webAccount)
+        public static IAsyncOperation<WebTokenRequestResult> RequestTokenWithWebAccountForWindowAsync(IntPtr appWindow, WebTokenRequest request, WebAccount webAccount)
         {
             var iid = GuidGenerator.CreateIID(typeof(IAsyncOperation<WebTokenRequestResult>));
-            return (IAsyncInfo)webAuthenticationCoreManagerInterop.RequestTokenWithWebAccountForWindowAsync(appWindow, request, webAccount, iid);
+            return (IAsyncOperation<WebTokenRequestResult>)webAuthenticationCoreManagerInterop.RequestTokenWithWebAccountForWindowAsync(appWindow, request, webAccount, iid);
         }
     }
 #endif
