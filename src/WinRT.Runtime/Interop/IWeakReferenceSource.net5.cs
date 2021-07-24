@@ -172,7 +172,14 @@ namespace ABI.WinRT.Interop
             var ThisPtr = _obj.ThisPtr;
 
             ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Resolve(ThisPtr, ref riid, out IntPtr objRef));
-            return ComWrappersSupport.GetObjectReferenceForInterface(objRef);
+            try
+            {
+                return ComWrappersSupport.GetObjectReferenceForInterface(objRef);
+            }
+            finally
+            {
+                MarshalInspectable<object>.DisposeAbi(objRef);
+            }
         }
     }
 }
