@@ -6536,7 +6536,8 @@ bind<write_event_invoke_args>(invokeMethodSig));
                     {
                         auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
                         auto&& eventTypeCode = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
-                        typeNameToDefinitionMap[eventTypeCode] = w.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
+                        auto&& eventClass = w.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
+                        typeNameToDefinitionMap[eventTypeCode] = eventClass;
                     }
                 });
         }
@@ -6548,7 +6549,8 @@ bind<write_event_invoke_args>(invokeMethodSig));
         {
             auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
             auto&& eventTypeCode = w.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
-            typeNameToDefinitionMap[eventTypeCode] = w.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
+            auto&& eventClass = w.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics));
+            typeNameToDefinitionMap[eventTypeCode] = eventClass;
         }
     }
 }
