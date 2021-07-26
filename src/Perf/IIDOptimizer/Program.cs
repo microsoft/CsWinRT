@@ -61,8 +61,6 @@ namespace GuidPatch
             var resolver = new ReferenceAssemblyResolver(references);
             try 
             {
-                AssemblyDefinition winRTRuntimeAssembly = resolver.Resolve(new AssemblyNameReference("WinRT.Runtime", default));
-                   
                 var readerParameters = new ReaderParameters(ReadingMode.Deferred)
                 {
                     ReadWrite = true,
@@ -76,13 +74,34 @@ namespace GuidPatch
 
                 var targetAssemblyDefinition = AssemblyDefinition.ReadAssembly(targetAssembly, readerParameters);
 
+                /// Set WinRT.Runtime.dll -- either we are patching it, or it is in the references 
+                AssemblyDefinition? winRTRuntimeAssembly = null;
+
+                if (targetAssemblyDefinition.Name.Name == "WinRT.Runtime")
+                {
+                    winRTRuntimeAssembly = targetAssemblyDefinition;
+                }
+                else
+                {
+                    foreach (var referenceAssembly in targetAssemblyDefinition.MainModule.AssemblyReferences)
+                    {
+                        if (referenceAssembly.Name == "WinRT.Runtime")
+                        { 
+                            winRTRuntimeAssembly = resolver.Resolve(referenceAssembly);
+                        }
+                    }
+
+                }
+                /// 
+
+                /// Don't patch twice 
                 if (targetAssemblyDefinition.MainModule.Types.Any(typeDef => typeDef.Name == "<GuidPatcherImplementationDetails>"))
                 {
                     Console.WriteLine("Target assembly has already been patched. Exiting early as there is no work to do.");
                     return -2;
                 }
 
-                var guidPatcher = new GuidPatcher(winRTRuntimeAssembly, targetAssemblyDefinition);
+                var guidPatcher = new GuidPatcher(winRTRuntimeAssembly!, targetAssemblyDefinition);
 
                 int numPatches = guidPatcher.ProcessAssembly(); 
 
