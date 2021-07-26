@@ -78,15 +78,16 @@ namespace GuidPatch
                 guidGeneratorType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => typeDef.Name == "GuidGenerator").First(); 
                 typeExtensionsType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => typeDef.Name == "TypeExtensions").First();
             }
-            else
-            { 
-                guidGeneratorType = new TypeReference("WinRT", "GuidGenerator", assembly.MainModule, assembly.Name).Resolve();
-                typeExtensionsType = new TypeReference("WinRT", "TypeExtensions", assembly.MainModule, assembly.Name).Resolve();
-            }
 
             foreach (var asm in assembly.MainModule.AssemblyReferences)
             {
-                if (asm.Name == "System.Runtime.InteropServices")
+                if (asm.Name == "WinRT.Runtime")
+                {
+                    guidGeneratorType =
+                        new TypeReference("WinRT", "GuidGenerator", assembly.MainModule, asm).Resolve();
+                    typeExtensionsType = new TypeReference("WinRT", "TypeExtensions", assembly.MainModule, asm).Resolve();
+                }
+                else if (asm.Name == "System.Runtime.InteropServices")
                 {
                     guidAttributeType = new TypeReference("System.Runtime.InteropServices", "GuidAttribute", assembly.MainModule, asm).Resolve();
                 }
