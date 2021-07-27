@@ -282,8 +282,7 @@ namespace WinRT
                     Expression.Call(parms[0],
                         typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
 
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.Convert(Expression.Property(createInterfaceInstanceExpression, "Value"), typeof(object)), parms).Compile();
+            return Expression.Lambda<Func<IInspectable, object>>(createInterfaceInstanceExpression, parms).Compile();
         }
 
         private static Func<IInspectable, object> CreateArrayFactory(Type implementationType)
@@ -296,8 +295,7 @@ namespace WinRT
                     Expression.Call(parms[0],
                         typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
 
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.Property(createInterfaceInstanceExpression, "Value"), parms).Compile();
+            return Expression.Lambda<Func<IInspectable, object>>(createInterfaceInstanceExpression, parms).Compile();
         }
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
