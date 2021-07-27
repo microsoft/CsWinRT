@@ -136,7 +136,7 @@ namespace WinRT
                 return false;
             }
 
-            var getActivationFactory = Platform.GetProcAddress(_moduleHandle, nameof(DllGetActivationFactory));
+            var getActivationFactory = Platform.GetProcAddress(moduleHandle, nameof(DllGetActivationFactory));
             if (getActivationFactory == IntPtr.Zero)
             {
                 module = null;
