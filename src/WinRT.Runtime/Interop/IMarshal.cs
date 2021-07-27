@@ -133,11 +133,6 @@ namespace ABI.WinRT.Interop
                 return iid_unmarshalClass;
             }
 
-            public Vftbl(IntPtr ptr)
-            {
-                this = Marshal.PtrToStructure<Vftbl>(ptr);
-            }
-
 #if !NETSTANDARD2_0
             [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
 #endif
