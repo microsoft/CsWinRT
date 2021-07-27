@@ -106,10 +106,13 @@ namespace WinRT
                 winrtObj.Resurrect();
             }
 
+            if (rcw.GetType().FullName.StartsWith("ABI.System.Nullable`1") || rcw.GetType().FullName.StartsWith("ABI.Windows.Foundation.IReferenceArray`1"))
+            {
+                return (T) rcw.GetType().GetProperty("Value").GetGetMethod().Invoke(rcw, null);
+            }
+
             return rcw switch
             {
-                ABI.System.Nullable<string> ns => (T)(object)ns.Value,
-                ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
                 T castRcw => castRcw,
                 _ when tryUseCache => CreateRcwForComObject<T>(ptr, false),
                 _ => throw new ArgumentException(string.Format("Unable to create a wrapper object. The WinRT object {0} has type {1} which cannot be assigned to type {2}", ptr, rcw.GetType(), typeof(T)))
