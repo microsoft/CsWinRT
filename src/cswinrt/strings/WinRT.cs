@@ -47,16 +47,6 @@ namespace WinRT
         [DllImport("kernel32.dll", SetLastError = true, BestFitMapping = false)]
         internal static extern IntPtr GetProcAddress(IntPtr moduleHandle, [MarshalAs(UnmanagedType.LPStr)] string functionName);
 
-        internal static T GetProcAddress<T>(IntPtr moduleHandle)
-        {
-            IntPtr functionPtr = Platform.GetProcAddress(moduleHandle, typeof(T).Name);
-            if (functionPtr == IntPtr.Zero)
-            {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-            }
-            return Marshal.GetDelegateForFunctionPointer<T>(functionPtr);
-        }
-
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern IntPtr LoadLibraryExW([MarshalAs(UnmanagedType.LPWStr)] string fileName, IntPtr fileHandle, uint flags);
 
@@ -112,46 +102,61 @@ namespace WinRT
 
         static Dictionary<string, DllModule> _cache = new System.Collections.Generic.Dictionary<string, DllModule>();
 
-        public static DllModule Load(string fileName)
+        public static bool TryLoad(string fileName, out DllModule module)
         {
             lock (_cache)
             {
-                DllModule module;
-                if (!_cache.TryGetValue(fileName, out module))
+                if (_cache.TryGetValue(fileName, out module))
                 {
-                    module = new DllModule(fileName);
-                    _cache[fileName] = module;
+                    return true;
                 }
-                return module;
+                else if (TryCreate(fileName, out module))
+                {
+                    _cache[fileName] = module;
+                    return true;
+                }
+                return false;
             }
         }
 
-        DllModule(string fileName)
+        static bool TryCreate(string fileName, out DllModule module)
         {
-            _fileName = fileName;
-
             // Explicitly look for module in the same directory as this one, and
             // use altered search path to ensure any dependencies in the same directory are found.
-            _moduleHandle = Platform.LoadLibraryExW(System.IO.Path.Combine(_currentModuleDirectory, fileName), IntPtr.Zero, /* LOAD_WITH_ALTERED_SEARCH_PATH */ 8);
+            var moduleHandle = Platform.LoadLibraryExW(System.IO.Path.Combine(_currentModuleDirectory, fileName), IntPtr.Zero, /* LOAD_WITH_ALTERED_SEARCH_PATH */ 8);
 #if !NETSTANDARD2_0 && !NETCOREAPP2_0
-            if (_moduleHandle == IntPtr.Zero)
+            if (moduleHandle == IntPtr.Zero)
             {
-                try
-                {
-                    // Allow runtime to find module in RID-specific relative subfolder
-                    _moduleHandle = NativeLibrary.Load(fileName, Assembly.GetExecutingAssembly(), null);
-                }
-                catch (Exception) { }
+                NativeLibrary.TryLoad(fileName, Assembly.GetExecutingAssembly(), null, out moduleHandle);
             }
 #endif
-            if (_moduleHandle == IntPtr.Zero)
+            if (moduleHandle == IntPtr.Zero)
             {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                module = null;
+                return false;
             }
 
-            _GetActivationFactory = Platform.GetProcAddress<DllGetActivationFactory>(_moduleHandle);
+            var getActivationFactory = Platform.GetProcAddress(_moduleHandle, nameof(DllGetActivationFactory));
+            if (getActivationFactory == IntPtr.Zero)
+            {
+                module = null;
+                return false;
+            }
+            
+            module = new DllModule(
+                fileName, 
+                moduleHandle, 
+                Marshal.GetDelegateForFunctionPointer<DllGetActivationFactory>(getActivationFactory));
+            return true;
+        }
 
-            var canUnloadNow = Platform.GetProcAddress(_moduleHandle, "DllCanUnloadNow");
+        DllModule(string fileName, IntPtr moduleHandle, DllGetActivationFactory getActivationFactory)
+        {
+            _fileName = fileName;
+            _moduleHandle = moduleHandle;
+            _GetActivationFactory = getActivationFactory;
+
+            var canUnloadNow = Platform.GetProcAddress(_moduleHandle, nameof(DllCanUnloadNow));
             if (canUnloadNow != IntPtr.Zero)
             {
                 _CanUnloadNow = Marshal.GetDelegateForFunctionPointer<DllCanUnloadNow>(canUnloadNow);
@@ -264,12 +269,12 @@ namespace WinRT
             var moduleName = typeNamespace;
             while (true)
             {
-                try
+                DllModule module = null;
+                if (DllModule.TryLoad(moduleName + ".dll", out module))
                 {
-                    (_IActivationFactory, _) = DllModule.Load(moduleName + ".dll").GetActivationFactory(typeFullName);
+                    (_IActivationFactory, _) = module.GetActivationFactory(typeFullName);
                     if (_IActivationFactory != null) { return; }
                 }
-                catch (Exception) { }
 
                 var lastSegment = moduleName.LastIndexOf(".");
                 if (lastSegment <= 0)
