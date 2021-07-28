@@ -46,6 +46,15 @@ namespace WinRT
 
         [DllImport("kernel32.dll", SetLastError = true, BestFitMapping = false)]
         internal static extern IntPtr GetProcAddress(IntPtr moduleHandle, [MarshalAs(UnmanagedType.LPStr)] string functionName);
+        internal static T GetProcAddress<T>(IntPtr moduleHandle)
+        {
+            IntPtr functionPtr = Platform.GetProcAddress(moduleHandle, typeof(T).Name);
+            if (functionPtr == IntPtr.Zero)
+            {
+                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+            }
+            return Marshal.GetDelegateForFunctionPointer<T>(functionPtr);
+        }
 
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern IntPtr LoadLibraryExW([MarshalAs(UnmanagedType.LPWStr)] string fileName, IntPtr fileHandle, uint flags);
