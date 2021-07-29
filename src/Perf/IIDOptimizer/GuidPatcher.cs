@@ -68,9 +68,16 @@ namespace GuidPatch
 
             getTypeFromHandleMethod = systemType.Methods.First(m => m.Name == "GetTypeFromHandle");
 
-            guidGeneratorType = null;
+            guidGeneratorType = null; 
 
-            TypeDefinition? typeExtensionsType = null;
+            TypeDefinition? typeExtensionsType = null; 
+
+            // Use the type definition if we are patching WinRT.Runtime, otherwise lookup the types as references 
+            if (assembly.Name.Name == "WinRT.Runtime")
+            {
+                guidGeneratorType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => typeDef.Name == "GuidGenerator").First(); 
+                typeExtensionsType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => typeDef.Name == "TypeExtensions").First();
+            }
 
             foreach (var asm in assembly.MainModule.AssemblyReferences)
             {
