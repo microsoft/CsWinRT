@@ -36,6 +36,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestComponent", "TestWinRT\
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinRT.Runtime", "WinRT.Runtime\WinRT.Runtime.csproj", "{25244CED-966E-45F2-9711-1F51E951FF89}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AE3B0611-2FBB-42AB-A245-B4E79868A5F9} = {AE3B0611-2FBB-42AB-A245-B4E79868A5F9}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinUIDesktopSample", "Samples\WinUIDesktopSample\WinUIDesktopSample.csproj", "{8E6FBCB2-B0C1-4E92-8AEB-2A11564E6E0D}"
 EndProject
@@ -53,6 +56,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nuget", "Nuget", "{967889B0-4C40-4EA2-8F11-26ECB88205FF}"
 	ProjectSection(SolutionItems) = preProject
 		..\nuget\LICENSE = ..\nuget\LICENSE
+		..\nuget\Microsoft.Windows.CsWinRT.IIDOptimizer.targets = ..\nuget\Microsoft.Windows.CsWinRT.IIDOptimizer.targets
 		..\nuget\Microsoft.Windows.CsWinRT.nuspec = ..\nuget\Microsoft.Windows.CsWinRT.nuspec
 		..\nuget\Microsoft.Windows.CsWinRT.props = ..\nuget\Microsoft.Windows.CsWinRT.props
 		..\nuget\Microsoft.Windows.CsWinRT.targets = ..\nuget\Microsoft.Windows.CsWinRT.targets
@@ -108,9 +112,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Perf", "Perf", "{539DBDEF-3B49-4503-9BD3-7EB83C2179CB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IIDOptimizer", "Perf\IIDOptimizer\IIDOptimizer.csproj", "{AE3B0611-2FBB-42AB-A245-B4E79868A5F9}"
-	ProjectSection(ProjectDependencies) = postProject
-		{25244CED-966E-45F2-9711-1F51E951FF89} = {25244CED-966E-45F2-9711-1F51E951FF89}
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reunion", "Projections\Reunion\Reunion.csproj", "{B6312AD1-A59E-4F3B-AA39-20B780FE9E15}"
 EndProject
