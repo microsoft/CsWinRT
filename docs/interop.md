@@ -95,7 +95,28 @@ SetString(MarshalString.GetAbi(marshalStr));
 ```
 
 #### Interop Interfaces
-The CLR still supports marshaling COM (IUnknown), but not WinRT (IInspectable), interop interfaces.  The Windows SDK projection provides definitions for several COM interop interfaces, including ***Windows.Storage.Streams.IBufferByteAccess***, ***WinRT.Interop.IWindowNative***, and ***WinRT.Interop.IInitializeWithWindow***. The Windows SDK projection also provides wrappers for all WinRT interop interfaces included in the Universal API Contract, such as ***Windows.Security.Credentials.UI.UserConsentVerifierInterop***. For custom or extension SDK interop interfaces, C#/WinRT supports two marshaling techniques.
+The CLR still supports marshaling COM (IUnknown), but not WinRT (IInspectable), interop interfaces.  The Windows SDK projection provides several interop interface helpers for common scenarios. For custom or extension SDK interop interfaces, C#/WinRT supports two marshaling techniques.
+
+##### Windows SDK
+
+The Windows SDK projection provides wrappers for common COM interop interfaces, such as ***Windows.Storage.Streams.IBufferByteAccess***, ***WinRT.Interop.IWindowNative***, and ***WinRT.Interop.IInitializeWithWindow***. 
+
+The following sample demonstrates creating a folder picker with an owning window:
+
+```csharp
+var window = new Microsoft.UI.Xaml.Window();
+// ...
+var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+var folderPicker = new Windows.Storage.Pickers.FolderPicker();
+folderPicker.FileTypeFilter.Add("*");
+WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, hwnd);
+var folder = await folderPicker.PickSingleFolderAsync();
+```
+
+The Windows SDK projection also provides wrappers for all WinRT interop interfaces included in the Universal API Contract, such as ***Windows.Security.Credentials.UI.UserConsentVerifierInterop***
+
+For more info, see:
+[Call WinRT COM interop interfaces from .NET 5+ apps](https://docs.microsoft.com/en-us/windows/apps/desktop/modernize/winrt-com-interop-csharp)
 
 ##### Projected
 If possible, the interop interface should be defined in IDL and a C#/WinRT projection produced for it. This automatically generates all marshaling logic so that calling code can pass and receive projected types. This definition of `IUserConsentVerifierInterop` from one of our test components is an example of this: 
