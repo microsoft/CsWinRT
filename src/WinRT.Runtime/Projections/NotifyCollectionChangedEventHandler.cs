@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using WinRT;
@@ -13,18 +14,23 @@ namespace ABI.System.Collections.Specialized
     [Guid("8B0909DC-2005-5D93-BF8A-725F017BAA8D")]
     public static class NotifyCollectionChangedEventHandler
     {
+#if NETSTANDARD2_0
         private unsafe delegate int Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr e);
+#endif
 
         private static readonly global::WinRT.Interop.IDelegateVftbl AbiToProjectionVftable;
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
-        static NotifyCollectionChangedEventHandler()
+        static unsafe NotifyCollectionChangedEventHandler()
         {
-            AbiInvokeDelegate = new Abi_Invoke(Do_Abi_Invoke);
             AbiToProjectionVftable = new global::WinRT.Interop.IDelegateVftbl
             {
                 IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-                Invoke = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate)
+#if NETSTANDARD2_0
+                Invoke = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate = (Abi_Invoke)Do_Abi_Invoke)
+#else
+                Invoke = (IntPtr)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)&Do_Abi_Invoke
+#endif
             };
             var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(NotifyCollectionChangedEventHandler), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
             Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
@@ -65,10 +71,14 @@ namespace ABI.System.Collections.Specialized
             ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData { get; } = new();
 #endif
 
-            public void Invoke(object sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+            public unsafe void Invoke(object sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
             {
                 IntPtr ThisPtr = _nativeDelegate.ThisPtr;
+#if NETSTANDARD2_0
                 var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(_nativeDelegate.Vftbl.Invoke);
+#else
+                var abiInvoke = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)(_nativeDelegate.Vftbl.Invoke);
+#endif
                 IObjectReference __sender = default;
                 IObjectReference __e = default;
                 try
@@ -93,6 +103,9 @@ namespace ABI.System.Collections.Specialized
 
         public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.DisposeAbi(abi);
 
+#if !NETSTANDARD2_0
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
         private static unsafe int Do_Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr e)
         {
             try
