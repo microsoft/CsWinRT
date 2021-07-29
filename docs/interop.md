@@ -115,6 +115,9 @@ var folder = await folderPicker.PickSingleFolderAsync();
 
 The Windows SDK projection also provides wrappers for all WinRT interop interfaces included in the Universal API Contract, such as ***Windows.Security.Credentials.UI.UserConsentVerifierInterop***
 
+For more info, see:
+[Call WinRT COM interop interfaces from .NET 5+ apps](https://docs.microsoft.com/en-us/windows/apps/desktop/modernize/winrt-com-interop-csharp)
+
 ##### Projected
 If possible, the interop interface should be defined in IDL and a C#/WinRT projection produced for it. This automatically generates all marshaling logic so that calling code can pass and receive projected types. This definition of `IUserConsentVerifierInterop` from one of our test components is an example of this: 
 

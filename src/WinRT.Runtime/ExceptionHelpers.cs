@@ -158,8 +158,8 @@ namespace WinRT
                     case ERROR_INVALID_WINDOW_HANDLE:
                         ex = new System.Runtime.InteropServices.COMException(
 @"Invalid window handle. (0x80070578)
-Consider IWindowNative, IInitializeWithWindow
-See also https://aka.ms/cswinrt/interop#windows-sdk", 
+Consider WindowNative, InitializeWithWindow
+See https://aka.ms/cswinrt/interop#windows-sdk", 
                             ERROR_INVALID_WINDOW_HANDLE);
                         break;
                     default:
