@@ -125,6 +125,19 @@ namespace Generator
 
                     // check types -- todo: check for !valid types
                     CheckMethods(publicMethods, classId);
+
+                    // validate that the class correctly implements all its interfaces
+                    foreach (var iface in classSymbol.AllInterfaces)
+                    {
+                        foreach (var member in iface.GetMembers())
+                        {
+                            var impl = classSymbol.FindImplementationForInterfaceMember(member);
+                            if (impl == null)
+                            {
+                                Report(WinRTRules.UnimplementedInterface, @class.GetLocation(), classId.ToFullString(), iface.ToDisplayString(), member.ToDisplayString());
+                            }
+                        }
+                    }
                 }
                 else if (declaration is InterfaceDeclarationSyntax @interface)
                 {

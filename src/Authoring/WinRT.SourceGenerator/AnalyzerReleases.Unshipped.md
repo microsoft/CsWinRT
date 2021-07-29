@@ -30,3 +30,4 @@ CsWinRT1023 | Usage | Error | Array parameters should not be marked both `ReadOn
 CsWinRT1024 | Usage | Error | Array parameter marked `out` should not be declared `ReadOnlyArrayAttribute`
 CsWinRT1025 | Usage | Error | Array parameter should be marked either `ReadOnlyArrayAttribute` or `WriteOnlyArrayAttribute`
 CsWinRT1026 | Usage | Error | Non-array parameter should not be marked `ReadOnlyArrayAttribute` or `WriteOnlyArrayAttribute`
+CsWinRT1027 | Usage | Error | Class incorrectly implements an interface

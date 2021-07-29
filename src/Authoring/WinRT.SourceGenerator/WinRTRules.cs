@@ -22,10 +22,10 @@ namespace WinRT.SourceGenerator
         }
 
         public static DiagnosticDescriptor PrivateGetterRule = MakeRule(
-            "CsWinRT1000", 
+            "CsWinRT1000",
             "Property must have public getter",
             "Property '{0}' does not have a public getter method. Windows Runtime does not support setter-only properties.");
-        
+
         public static DiagnosticDescriptor DisjointNamespaceRule = MakeRule(
             "CsWinRT1001",
             "Namespace is disjoint from main (winmd) namespace",
@@ -56,15 +56,15 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor UnsupportedTypeRule = MakeRule(
             "CsWinRT1006",
             "Exposing unsupported type",
-            "The member '{0}' has the type '{1}' in its signature. The type '{1}' is not a valid Windows Runtime type. "  
-            + "Yet, the type (or its generic parameters) implement interfaces that are valid Windows Runtime types. " 
+            "The member '{0}' has the type '{1}' in its signature. The type '{1}' is not a valid Windows Runtime type. "
+            + "Yet, the type (or its generic parameters) implement interfaces that are valid Windows Runtime types. "
             + "Consider changing the type '{1} in the member signature to one of the following types from System.Collections.Generic: {2}.");
-        
+
         public static DiagnosticDescriptor StructWithNoFieldsRule = MakeRule(
             "CsWinRT1007",
             "Empty struct rule",
             "Structure {0} contains no public fields. Windows Runtime structures must contain at least one public field.");
- 
+
         public static DiagnosticDescriptor NonWinRTInterface = MakeRule(
             "CsWinRT1008",
             "Invalid Interface Inherited",
@@ -96,7 +96,7 @@ namespace WinRT.SourceGenerator
             "Invalid field in struct",
             "Structure {0} has field of type {1}; {1} is not a valid Windows Runtime field type. Each field "
             + "in a Windows Runtime structure can only be UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum, or itself a structure.");
- 
+
         public static DiagnosticDescriptor OperatorOverloadedRule = MakeRule(
             "CsWinRT1014",
             "Operator overload exposed",
@@ -104,14 +104,14 @@ namespace WinRT.SourceGenerator
 
         public static DiagnosticDescriptor MultipleDefaultOverloadAttribute = MakeRule(
             "CsWinRT1015",
-            "Only one overload should be designated default", 
+            "Only one overload should be designated default",
             "In class {2}: Multiple {0}-parameter overloads of '{1}' are decorated with Windows.Foundation.Metadata.DefaultOverloadAttribute. "
             + "The attribute may only be applied to one overload of the method.");
 
         public static DiagnosticDescriptor NeedDefaultOverloadAttribute = MakeRule(
             "CsWinRT1016",
             "Multiple overloads seen, one needs a default", // todo better msg
-            "In class {2}: The {0}-parameter overloads of {1} must have exactly one method specified as the default " 
+            "In class {2}: The {0}-parameter overloads of {1} must have exactly one method specified as the default "
             + "overload by decorating it with Windows.Foundation.Metadata.DefaultOverloadAttribute");
 
         public static DiagnosticDescriptor JaggedArrayRule = MakeRule(
@@ -173,5 +173,10 @@ namespace WinRT.SourceGenerator
             "Method '{0}' has parameter '{1}' which is not an array, and which has either a "
             + "ReadOnlyArray attribute or a WriteOnlyArray attribute. Windows Runtime does "
             + "not support marking non-array parameters with ReadOnlyArray or WriteOnlyArray.");
-    } 
+
+        public static DiagnosticDescriptor UnimplementedInterface = MakeRule(
+            "CsWinRT1027",
+            "Class incorrectly implements an interface",
+            "Class '{0}' does not correctly implement interface '{1}' because member '{2}' is missing or non-public.");
+    }
 } 
