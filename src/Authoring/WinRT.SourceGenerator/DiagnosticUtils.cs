@@ -134,7 +134,7 @@ namespace Generator
                             var impl = classSymbol.FindImplementationForInterfaceMember(member);
                             if (impl == null)
                             {
-                                Report(WinRTRules.UnimplementedInterface, @class.GetLocation(), classId.ToFullString(), iface.ToDisplayString(), member.ToDisplayString());
+                                Report(WinRTRules.UnimplementedInterface, @class.GetLocation(), classId.Text, iface.ToDisplayString(), member.ToDisplayString());
                             }
                         }
                     }
