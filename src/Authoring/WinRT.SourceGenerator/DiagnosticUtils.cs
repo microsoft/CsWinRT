@@ -82,9 +82,9 @@ namespace Generator
 
         private void CheckDeclarations()
         {
-            WinRTSyntaxReciever syntaxReciever = (WinRTSyntaxReciever)_context.SyntaxReceiver;
+            WinRTSyntaxReciever syntaxReceiver = (WinRTSyntaxReciever)_context.SyntaxReceiver;
 
-            foreach (var declaration in syntaxReciever.Declarations)
+            foreach (var declaration in syntaxReceiver.Declarations)
             {
                 var model = _context.Compilation.GetSemanticModel(declaration.SyntaxTree);
 
