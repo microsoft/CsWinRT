@@ -114,7 +114,7 @@ For CsWinRT NuGet prereleases between any .NET servicing or feature releases, *\
 
 2. **[Diamond Dependency]**: An application is built using multiple components, for example WinUI and a library named *SimpleMath*. The WinUI library is built with .NET 5.0.100 while the *SimpleMath* library is built with .NET 5.0.200. In this scenario, there is an `AssemblyVersion` update in .NET 5.0.200. The application developer must upgrade to the latest version of the .NET SDK for any of its dependencies, in this case .NET 5.0.200. The warnings and errors encountered are manifested in the same manner as in Scenario #1.
 
-3. **[Framework Reference Preview Override]**: An application developer runs into a blocking bug with the Windows SDK projections in the latest CsWinRT release. To address this issue, Microsoft releases a preview Windows SDK projection package that the developer can use by adding an override in their project file, for example as follows. This would be a temporary workaround for the developer that should be removed when there is a .NET SDK update.
+3. **[Windows SDK package override]**: An application developer runs into a blocking bug with the Windows SDK projections in the latest CsWinRT release. To address this issue, Microsoft releases a preview Windows SDK projection package that the developer can use by adding an override in their project file, for example as follows. This would be a temporary workaround for the developer that should be removed when there is a .NET SDK update.
 
     ```xml
     <ItemGroup>
@@ -122,6 +122,13 @@ For CsWinRT NuGet prereleases between any .NET servicing or feature releases, *\
         <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" TargetingPackVersion="10.0.18362.11-preview" />
    </ItemGroup>
     ```
+    
+    **Note**: `FrameworkReference` is no longer supported starting in .NET SDK 5.0.302 and .NET SDK 5.0.205. This has been replaced by `WindowsSDKPackageVersion`:
+    ```xml
+    <PropertyGroup>
+       <WindowsSdkPackageVersion>10.0.19041.18</WindowsSdkPackageVersion>
+    </PropertyGroup>
+      
 
 4. **[Long-term Servicing Release]**: An application developer builds with .NET 5.0.102 and references a component built with .NET 5.0.103, which is a typical servicing update. Since `AssemblyVersion` is unchanged for servicing releases and only `AssemblyFileVersion` has been updated, the developer does not have to update anything and is unaffected.
 
