@@ -74,6 +74,7 @@ namespace WinRT
             {
                 ABI.System.Nullable<string> ns => (T)(object)ns.Value,
                 ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                ValueTypeWrapper vt => (T)vt.Value,
                 _ => (T)rcw
             };
         }
