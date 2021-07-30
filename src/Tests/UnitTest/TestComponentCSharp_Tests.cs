@@ -2604,11 +2604,6 @@ namespace UnitTest
 #endif
 
         [Fact]
-        private void TestPnpProperties()
-        {
-            TestPnpPropertiesAsync().Wait(10000);
-        }
-
         private async Task TestPnpPropertiesAsync()
         {
             var requestedDeviceProperties = new List<string>()

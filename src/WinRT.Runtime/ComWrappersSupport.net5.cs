@@ -92,6 +92,13 @@ namespace WinRT
             var flags = tryUseCache ? CreateObjectFlags.TrackerObject : CreateObjectFlags.TrackerObject | CreateObjectFlags.UniqueInstance;
             var rcw = ComWrappers.GetOrCreateObjectForComInstance(ptr, flags);
             CreateRCWType.Value = null;
+            
+            // Resurrect IWinRTObject's disposed IObjectReferences, if necessary
+            if (rcw is IWinRTObject winrtObj)
+            {
+                winrtObj.Resurrect();
+            }
+
             // Because .NET will de-duplicate strings and WinRT doesn't,
             // our RCW factory returns a wrapper of our string instance.
             // This ensures that ComWrappers never sees the same managed object for two different
@@ -99,20 +106,11 @@ namespace WinRT
             // and consumers get a string object for a Windows.Foundation.IReference<String>.
             // We need to do the same thing for System.Type because there can be multiple WUX.Interop.TypeName's
             // for a single System.Type.
-
-            // Resurrect IWinRTObject's disposed IObjectReferences, if necessary
-            if (rcw is IWinRTObject winrtObj)
-            {
-                winrtObj.Resurrect();
-            }
-
-            if (rcw.GetType().FullName.StartsWith("ABI.System.Nullable`1") || rcw.GetType().FullName.StartsWith("ABI.Windows.Foundation.IReferenceArray`1"))
-            {
-                return (T) rcw.GetType().GetProperty("Value").GetGetMethod().Invoke(rcw, null);
-            }
-
             return rcw switch
             {
+                ABI.System.Nullable<string> ns => (T)(object)ns.Value,
+                ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                ValueTypeWrapper vt => (T) vt.Value,
                 T castRcw => castRcw,
                 _ when tryUseCache => CreateRcwForComObject<T>(ptr, false),
                 _ => throw new ArgumentException(string.Format("Unable to create a wrapper object. The WinRT object {0} has type {1} which cannot be assigned to type {2}", ptr, rcw.GetType(), typeof(T)))

@@ -282,7 +282,9 @@ namespace WinRT
                     Expression.Call(parms[0],
                         typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
 
-            return Expression.Lambda<Func<IInspectable, object>>(createInterfaceInstanceExpression, parms).Compile();
+            var getValueExpression = Expression.Convert(Expression.Property(createInterfaceInstanceExpression, "Value"), typeof(object));
+            var setValueInWrapperexpression = Expression.New(typeof(ValueTypeWrapper).GetConstructor(new[] { typeof(object) }), getValueExpression);
+            return Expression.Lambda<Func<IInspectable, object>>(setValueInWrapperexpression, parms).Compile();
         }
 
         private static Func<IInspectable, object> CreateArrayFactory(Type implementationType)
@@ -295,7 +297,9 @@ namespace WinRT
                     Expression.Call(parms[0],
                         typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
 
-            return Expression.Lambda<Func<IInspectable, object>>(createInterfaceInstanceExpression, parms).Compile();
+            var getValueExpression = Expression.Property(createInterfaceInstanceExpression, "Value");
+            var setValueInWrapperexpression = Expression.New(typeof(ValueTypeWrapper).GetConstructor(new[] { typeof(object) }), getValueExpression);
+            return Expression.Lambda<Func<IInspectable, object>>(setValueInWrapperexpression, parms).Compile();
         }
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
@@ -723,6 +727,21 @@ namespace WinRT
                 IIDs = iids;
             }
 
+        }
+
+        internal class ValueTypeWrapper
+        {
+            private readonly object value;
+
+            public ValueTypeWrapper(object value)
+            {
+                this.value = value;
+            }
+
+            public object Value
+            {
+                get => this.value;
+            }
         }
     }
 }

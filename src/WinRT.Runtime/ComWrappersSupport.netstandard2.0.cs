@@ -70,11 +70,13 @@ namespace WinRT
             // and consumers get a string object for a Windows.Foundation.IReference<String>.
             // We need to do the same thing for System.Type because there can be multiple MUX.Interop.TypeName's
             // for a single System.Type.
-            if (rcw.GetType().FullName.StartsWith("ABI.System.Nullable`1") || rcw.GetType().FullName.StartsWith("ABI.Windows.Foundation.IReferenceArray`1"))
+            return rcw switch
             {
-                return (T) rcw.GetType().GetProperty("Value").GetGetMethod().Invoke(rcw, null);
-            }
-            return (T) rcw;
+                ABI.System.Nullable<string> ns => (T)(object)ns.Value,
+                ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                ValueTypeWrapper vt => (T)vt.Value,
+                _ => (T)rcw
+            };
         }
 
         public static bool TryUnwrapObject(object o, out IObjectReference objRef)
