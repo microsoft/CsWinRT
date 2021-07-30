@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using WinRT;
@@ -121,25 +122,32 @@ namespace ABI.System
     [Guid("c50898f6-c536-5f47-8583-8b2c2438a13b")]
     internal static class EventHandler
     {
+#if NETSTANDARD2_0
         private delegate int Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr args);
+#endif
 
         private static readonly global::WinRT.Interop.IDelegateVftbl AbiToProjectionVftable;
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
-        static EventHandler()
+        static unsafe EventHandler()
         {
-            AbiInvokeDelegate = (Abi_Invoke)Do_Abi_Invoke;
             AbiToProjectionVftable = new global::WinRT.Interop.IDelegateVftbl
             {
                 IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-                Invoke = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate)
+#if NETSTANDARD2_0
+                Invoke = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate = (Abi_Invoke)Do_Abi_Invoke)
+#else
+                Invoke = (IntPtr)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)&Do_Abi_Invoke
+#endif
             };
             var nativeVftbl = ComWrappersSupport.AllocateVtableMemory(typeof(EventHandler), Marshal.SizeOf<global::WinRT.Interop.IDelegateVftbl>());
             Marshal.StructureToPtr(AbiToProjectionVftable, nativeVftbl, false);
             AbiToProjectionVftablePtr = nativeVftbl;
         }
 
+#if NETSTANDARD2_0
         public static global::System.Delegate AbiInvokeDelegate { get; }
+#endif
 
         public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(EventHandler)));
@@ -174,27 +182,30 @@ namespace ABI.System
             ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData { get; } = new();
 #endif
 
-            public void Invoke(object sender, EventArgs args)
+            public unsafe void Invoke(object sender, EventArgs args)
             {
                 IntPtr ThisPtr = _nativeDelegate.ThisPtr;
+#if NETSTANDARD2_0
                 var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(_nativeDelegate.Vftbl.Invoke);
+#else
+                var abiInvoke = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)(_nativeDelegate.Vftbl.Invoke);
+#endif
                 IObjectReference __sender = default;
                 IObjectReference __args = default;
-                var __params = new object[] { ThisPtr, null, null };
                 try
                 {
                     __sender = MarshalInspectable<object>.CreateMarshaler(sender);
-                    __params[1] = MarshalInspectable<object>.GetAbi(__sender);
                     __args = MarshalInspectable<EventArgs>.CreateMarshaler(args);
-                    __params[2] = MarshalInspectable<EventArgs>.GetAbi(__args);
-                    abiInvoke.DynamicInvokeAbi(__params);
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(
+                        ThisPtr,
+                        MarshalInspectable<object>.GetAbi(__sender),
+                        MarshalInspectable<EventArgs>.GetAbi(__args)));
                 }
                 finally
                 {
                     MarshalInspectable<object>.DisposeMarshaler(__sender);
                     MarshalInspectable<EventArgs>.DisposeMarshaler(__args);
                 }
-
             }
         }
 
@@ -205,6 +216,9 @@ namespace ABI.System
 
         public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<global::System.EventHandler<object>>.DisposeAbi(abi);
 
+#if !NETSTANDARD2_0
+        [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
         private static unsafe int Do_Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr args)
         {
             try

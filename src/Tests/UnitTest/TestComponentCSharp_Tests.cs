@@ -67,6 +67,32 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestEventArgsVector()
+        { 
+            var eventArgsVector = TestObject.GetEventArgsVector();
+            Assert.Equal(1, eventArgsVector.Count);
+            foreach (var dataErrorChangedEventArgs in eventArgsVector)
+            {
+                var propName  = dataErrorChangedEventArgs.PropertyName;
+                Assert.Equal("name", propName);
+            }
+        }
+
+        [Fact]
+        public void TestNonGenericDelegateVector()
+        {
+            var provideUriVector = TestObject.GetNonGenericDelegateVector();
+
+            Assert.Equal(1, provideUriVector.Count);
+            
+            foreach (var provideUri in provideUriVector)
+            {
+                Uri delegateTarget = provideUri.Invoke();
+                Assert.Equal("http://microsoft.com", delegateTarget.OriginalString);
+            }
+        }
+
+        [Fact]
         public void TestEnums()
         {
             // Enums

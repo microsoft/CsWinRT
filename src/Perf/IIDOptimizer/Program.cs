@@ -56,14 +56,9 @@ namespace GuidPatch
             await rootCommand.InvokeAsync(args);            
         }
 
-        private static int GuidPatch(string targetAssembly, string outputDirectory, IEnumerable<FileInfo> references)
-        {
-            var resolver = new ReferenceAssemblyResolver(references);
-            try 
-            {
-                AssemblyDefinition winRTRuntimeAssembly = resolver.Resolve(new AssemblyNameReference("WinRT.Runtime", default));
-                   
-                var readerParameters = new ReaderParameters(ReadingMode.Deferred)
+        private static ReaderParameters MakeReaderParams(ReferenceAssemblyResolver resolver)
+        { 
+            return new ReaderParameters(ReadingMode.Deferred) 
                 {
                     ReadWrite = true,
                     InMemory = true,
@@ -73,13 +68,53 @@ namespace GuidPatch
                     ApplyWindowsRuntimeProjections = false,
                     ReadSymbols = true
                 };
+        }
+
+
+        // Set WinRT.Runtime.dll -- either we are patching it, or it is in the references 
+        private static AssemblyDefinition ResolveWinRTRuntime(AssemblyDefinition targetAssemblyDefinition, ReferenceAssemblyResolver resolver)
+        { 
+            AssemblyDefinition? winRTRuntimeAssembly = null;
+            
+            if (targetAssemblyDefinition.Name.Name == "WinRT.Runtime")
+            {
+                winRTRuntimeAssembly = targetAssemblyDefinition;
+            }
+            else
+            { 
+                var winrtAssembly = targetAssemblyDefinition
+                                    .MainModule
+                                    .AssemblyReferences
+                                    .Where(refAssembly => refAssembly.Name == "WinRT.Runtime")
+                                    .First();
+ 
+                winRTRuntimeAssembly = resolver.Resolve(winrtAssembly); 
+            }
+
+            return winRTRuntimeAssembly;
+        }
+        
+        private static int GuidPatch(string targetAssembly, string outputDirectory, IEnumerable<FileInfo> references)
+        {
+            var resolver = new ReferenceAssemblyResolver(references);
+            try 
+            {
+                var readerParameters = MakeReaderParams(resolver);
 
                 var targetAssemblyDefinition = AssemblyDefinition.ReadAssembly(targetAssembly, readerParameters);
 
+                /// Don't patch twice 
                 if (targetAssemblyDefinition.MainModule.Types.Any(typeDef => typeDef.Name == "<GuidPatcherImplementationDetails>"))
                 {
                     Console.WriteLine("Target assembly has already been patched. Exiting early as there is no work to do.");
                     return -2;
+                }
+
+                var winRTRuntimeAssembly = ResolveWinRTRuntime(targetAssemblyDefinition, resolver);
+                if (winRTRuntimeAssembly is null)
+                {
+                    Console.WriteLine("Failed to resolve WinRT.Runtime.dll.");
+                    return -1;
                 }
 
                 var guidPatcher = new GuidPatcher(winRTRuntimeAssembly, targetAssemblyDefinition);
