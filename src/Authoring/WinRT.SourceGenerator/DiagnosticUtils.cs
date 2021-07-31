@@ -126,10 +126,15 @@ namespace Generator
                     // check types -- todo: check for !valid types
                     CheckMethods(publicMethods, classId);
 
+                    var iWinRTObject = model.Compilation.GetTypeByMetadataName("WinRT.IWinRTObject");
                     // validate that the class correctly implements all its interfaces
                     foreach (var iface in classSymbol.AllInterfaces)
                     {
-                        foreach (var member in iface.GetMembers())
+                        if (SymbolEqualityComparer.Default.Equals(iface, iWinRTObject))
+                        {
+                            continue;
+                        }
+                        foreach (var member in iface.GetMembers().OfType<IMethodSymbol>())
                         {
                             var impl = classSymbol.FindImplementationForInterfaceMember(member);
                             if (impl == null)
