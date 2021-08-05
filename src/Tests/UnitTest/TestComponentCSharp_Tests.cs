@@ -28,6 +28,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
 using System.Reflection;
+using Windows.Devices.Enumeration.Pnp;
 
 #if NET
 using WeakRefNS = System;
@@ -63,6 +64,32 @@ namespace UnitTest
                 => flag = true;
             long_class_name.InvokeEvent();
             Assert.True(flag);
+        }
+
+        [Fact]
+        public void TestEventArgsVector()
+        { 
+            var eventArgsVector = TestObject.GetEventArgsVector();
+            Assert.Equal(1, eventArgsVector.Count);
+            foreach (var dataErrorChangedEventArgs in eventArgsVector)
+            {
+                var propName  = dataErrorChangedEventArgs.PropertyName;
+                Assert.Equal("name", propName);
+            }
+        }
+
+        [Fact]
+        public void TestNonGenericDelegateVector()
+        {
+            var provideUriVector = TestObject.GetNonGenericDelegateVector();
+
+            Assert.Equal(1, provideUriVector.Count);
+            
+            foreach (var provideUri in provideUriVector)
+            {
+                Uri delegateTarget = provideUri.Invoke();
+                Assert.Equal("http://microsoft.com", delegateTarget.OriginalString);
+            }
         }
 
         [Fact]
@@ -2461,15 +2488,44 @@ namespace UnitTest
             Assert.True(TestObject.IterableOfObjectIterablesProperty.SequenceEqual(listOfListOfUris));
         }
 
+        (System.WeakReference<Class>, System.WeakReference<EventHandlerClass>) TestEventDelegateCleanup()
+        {
+            // Both WinRT object and handler class alive.
+            var eventCalled = false;
+            var eventHandlerClass = new EventHandlerClass(() => eventCalled = true);
+            var classInstance = new Class();
+            classInstance.IntPropertyChanged += eventHandlerClass.IntPropertyChanged;
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            classInstance.IntProperty = 3;
+            Assert.True(eventCalled);
+
+            // No strong reference to handler class, but delegate is still registered on
+            // the WinRT object keeping it alive.
+            eventCalled = false;
+            var weakEventHandlerClass = new System.WeakReference<EventHandlerClass>(eventHandlerClass);
+            eventHandlerClass = null;
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            classInstance.IntProperty = 3;
+            Assert.True(eventCalled);
+            Assert.True(weakEventHandlerClass.TryGetTarget(out var _));
+
+            // No strong reference to WinRT object.  It should no longer be alive
+            // and should also cause for the event handler class to be no longer alive.
+            var weakClassInstance = new System.WeakReference<Class>(classInstance);
+            classInstance = null;
+            return (weakClassInstance, weakEventHandlerClass);
+        }
+
+        // Ensure that event subscription state is properly cached to enable later unsubscribes
         [Fact]
-        public void TestStaticEventWithGC()
+        public void TestEventSourceCaching()
         {
             bool eventCalled = false;
-            void Class_StaticIntPropertyChanged(object sender, int e)
-            {
-                eventCalled = (e == 3);
-            }
+            void Class_StaticIntPropertyChanged(object sender, int e) => eventCalled = (e == 3);
 
+            // Test static codegen-based EventSource caching
             Class.StaticIntPropertyChanged += Class_StaticIntPropertyChanged;
             GC.Collect(2, GCCollectionMode.Forced, true);
             GC.WaitForPendingFinalizers();
@@ -2481,6 +2537,47 @@ namespace UnitTest
             GC.WaitForPendingFinalizers();
             Class.StaticIntProperty = 3;
             Assert.True(eventCalled);
+
+            // Test dynamic WeakRef-based EventSource caching
+            eventCalled = false;
+            static void Subscribe(EventHandler<int> handler) => Singleton.Instance.IntPropertyChanged += handler;
+            static void Unsubscribe(EventHandler<int> handler) => Singleton.Instance.IntPropertyChanged -= handler;
+            static void Assign(int value) => Singleton.Instance.IntProperty = value;
+            Subscribe(Class_StaticIntPropertyChanged);
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            Unsubscribe(Class_StaticIntPropertyChanged);
+            Assign(3);
+            Assert.False(eventCalled);
+            Subscribe(Class_StaticIntPropertyChanged);
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            Assign(3);
+            Assert.True(eventCalled);
+
+            // Test that event delegates don't leak when not unsubscribed.
+            // Test runs into a different function as the finalizer wasn't
+            // getting triggered otherwise with a weak reference.
+            (System.WeakReference<Class> weakClassInstance, System.WeakReference<EventHandlerClass> weakEventHandlerClass) =
+                TestEventDelegateCleanup();
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            Assert.False(weakClassInstance.TryGetTarget(out _));
+            Assert.False(weakEventHandlerClass.TryGetTarget(out _));
+        }
+
+        class EventHandlerClass
+        {
+            private readonly Action eventCalled;
+
+            public EventHandlerClass(Action eventCalled)
+            {
+                this.eventCalled = eventCalled;
+            }
+
+            public void IntPropertyChanged(object sender, int e) => eventCalled();
         }
 
 #if NET
@@ -2531,5 +2628,49 @@ namespace UnitTest
             WarningStatic.WarningEvent += (object s, Int32 v) => { }; // warning CA1416
         }
 #endif
+
+        [Fact]
+        private async Task TestPnpPropertiesAsync()
+        {
+            var requestedDeviceProperties = new List<string>()
+                {
+                    "System.Devices.ClassGuid",
+                    "System.Devices.ContainerId",
+                    "System.Devices.DeviceHasProblem",
+                    "System.Devices.DeviceInstanceId",
+                    "System.Devices.Parent",
+                    "System.Devices.Present",
+                    "System.ItemNameDisplay",
+                    "System.Devices.Children",
+                };
+            var devicefilter = "System.Devices.Present:System.StructuredQueryType.Boolean#True";
+            var presentDevices = (await PnpObject.FindAllAsync(PnpObjectType.Device, requestedDeviceProperties, devicefilter).AsTask().ConfigureAwait(false)).Select(pnpObject => {
+                var prop = pnpObject.Properties;
+                // Iterating through each key is necessary for this test even though we do not use each key directly
+                // This makes it more probable for a native pointer to get repeated and a value type to be cached and seen again.
+                foreach (var key in prop.Keys)
+                {
+                    var val = prop[key];
+                    if (key == "System.Devices.ContainerId" && val != null)
+                    {
+                        var val4 = pnpObject.Properties[key];
+                        if (val is not Guid || val4 is not Guid)
+                        {
+                            throw new Exception("Incorrect value type Guid");
+                        }
+                    }
+                    if (key == "System.Devices.Parent" && val != null)
+                    {
+                        var val4 = pnpObject.Properties[key];
+                        if (val is not string || val4 is not string)
+                        {
+                            throw new Exception("Incorrect value type string");
+                        }
+                    }
+
+                }
+                return pnpObject;
+            }).ToList();
+        }
     }
 }

@@ -104,7 +104,8 @@ namespace ABI.System.ComponentModel
                 }
                 return 0;
             }
-            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTables = new global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>>();
+            private readonly static Lazy<global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>>> _ErrorsChanged_TokenTablesLazy = new();
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTables => _ErrorsChanged_TokenTablesLazy.Value;
 
 #if !NETSTANDARD2_0
             [UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvStdcall)})]
@@ -162,7 +163,8 @@ namespace ABI.System.ComponentModel
             _ErrorsChanged =
                 new EventSource__EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>(_obj,
                 (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, out global::WinRT.EventRegistrationToken, int>)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, global::WinRT.EventRegistrationToken*, int>)_obj.Vftbl.add_ErrorsChanged_1,
-                _obj.Vftbl.remove_ErrorsChanged_2);
+                _obj.Vftbl.remove_ErrorsChanged_2,
+                0);
         }
 
         public unsafe global::System.Collections.IEnumerable GetErrors(string propertyName)

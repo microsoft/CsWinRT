@@ -9,13 +9,13 @@ namespace Com
     [Guid("00000003-0000-0000-c000-000000000046")]
     internal interface IMarshal
     {
-        void GetUnmarshalClass(ref Guid riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlFlags, out Guid pCid);
+        unsafe void GetUnmarshalClass(Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlFlags, Guid* pCid);
 
-        void GetMarshalSizeMax(ref Guid riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags, out uint pSize);
+        unsafe void GetMarshalSizeMax(Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags, uint* pSize);
 
-        void MarshalInterface(IntPtr pStm, ref Guid riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags);
+        unsafe void MarshalInterface(IntPtr pStm, Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags);
 
-        void UnmarshalInterface(IntPtr pStm, ref Guid riid, out IntPtr ppv);
+        unsafe void UnmarshalInterface(IntPtr pStm, Guid* riid, IntPtr* ppv);
 
         void ReleaseMarshalData(IntPtr pStm);
 
@@ -26,60 +26,83 @@ namespace Com
 namespace ABI.Com
 {
     using global::System;
+    using global::System.Runtime.CompilerServices;
     using global::System.Runtime.InteropServices;
 
     [Guid("00000003-0000-0000-c000-000000000046")]
     internal class IMarshal : global::Com.IMarshal
     {
         [Guid("00000003-0000-0000-c000-000000000046")]
-        public struct Vftbl
+        public unsafe struct Vftbl
         {
-            public delegate int _GetUnmarshalClass_0(IntPtr thisPtr, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlFlags, out Guid pCid);
-            public delegate int _GetMarshalSizeMax_1(IntPtr thisPtr, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags, out uint pSize);
-            public delegate int _MarshalInterface_2(IntPtr thisPtr, IntPtr pStm, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags);
-            public delegate int _UnmarshalInterface_3(IntPtr thisPtr, IntPtr pStm, ref Guid riid, out IntPtr ppv);
-            public delegate int _ReleaseMarshalData_4(IntPtr thisPtr, IntPtr pStm);
-            public delegate int _DisconnectObject_5(IntPtr thisPtr, uint dwReserved);
-
             internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            public _GetUnmarshalClass_0 GetUnmarshalClass_0;
-            public _GetMarshalSizeMax_1 GetMarshalSizeMax_1;
-            public _MarshalInterface_2 MarshalInterface_2;
-            public _UnmarshalInterface_3 UnmarshalInterface_3;
-            public _ReleaseMarshalData_4 ReleaseMarshalData_4;
-            public _DisconnectObject_5 DisconnectObject_5;
 
+#if NETSTANDARD2_0
+            private void* _GetUnmarshalClass_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr, global::Com.MSHCTX, IntPtr, global::Com.MSHLFLAGS, Guid*, int> GetUnmarshalClass_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr, global::Com.MSHCTX, IntPtr, global::Com.MSHLFLAGS, Guid*, int>)_GetUnmarshalClass_0; set => _GetUnmarshalClass_0 = value; }
+            private void* _GetMarshalSizeMax_1;
+            public delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr, global::Com.MSHCTX, IntPtr, global::Com.MSHLFLAGS, uint*, int> GetMarshalSizeMax_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr, global::Com.MSHCTX, IntPtr, global::Com.MSHLFLAGS, uint*, int>)_GetMarshalSizeMax_1; set => _GetMarshalSizeMax_1 = value; }
+            private void* _MarshalInterface_2;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr, global::Com.MSHCTX, IntPtr, global::Com.MSHLFLAGS, int> MarshalInterface_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr, global::Com.MSHCTX, IntPtr, global::Com.MSHLFLAGS, int>)_MarshalInterface_2; set => _MarshalInterface_2 = value; }
+            private void* _UnmarshalInterface_3;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int> UnmarshalInterface_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int>)_UnmarshalInterface_3; set => _UnmarshalInterface_3 = value; }
+            private void* _ReleaseMarshalData_4;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int> ReleaseMarshalData_4 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int>)_ReleaseMarshalData_4; set => _ReleaseMarshalData_4 = value; }
+            private void* _DisconnectObject_5;
+            public delegate* unmanaged[Stdcall]<IntPtr, uint, int> DisconnectObject_5 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, int>)_DisconnectObject_5; set => _DisconnectObject_5 = value; }
 
+            private static readonly Delegate[] DelegateCache = new Delegate[6];
             public static readonly Vftbl AbiToProjectionVftable;
+#else
+            public delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr, global::Com.MSHCTX, IntPtr, global::Com.MSHLFLAGS, Guid*, int> GetUnmarshalClass_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr, global::Com.MSHCTX, IntPtr, global::Com.MSHLFLAGS, uint*, int> GetMarshalSizeMax_1;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr, global::Com.MSHCTX, IntPtr, global::Com.MSHLFLAGS, int> MarshalInterface_2;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, Guid*, IntPtr*, int> UnmarshalInterface_3;
+            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr, int> ReleaseMarshalData_4;
+            public delegate* unmanaged[Stdcall]<IntPtr, uint, int> DisconnectObject_5;
+#endif
+
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
             static Vftbl()
             {
+#if NETSTANDARD2_0
                 AbiToProjectionVftable = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-                    GetUnmarshalClass_0 = Do_Abi_GetUnmarshalClass_0,
-                    GetMarshalSizeMax_1 = Do_Abi_GetMarshalSizeMax_1,
-                    MarshalInterface_2 = Do_Abi_MarshalInterface_2,
-                    UnmarshalInterface_3 = Do_Abi_UnmarshalInterface_3,
-                    ReleaseMarshalData_4 = Do_Abi_ReleaseMarshalData_4,
-                    DisconnectObject_5 = Do_Abi_DisconnectObject_5
+                    _GetUnmarshalClass_0 = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new IMarshal_Delegates.GetUnmarshalClass_0(Do_Abi_GetUnmarshalClass_0)).ToPointer(),
+                    _GetMarshalSizeMax_1 = Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IMarshal_Delegates.GetMarshalSizeMax_1(Do_Abi_GetMarshalSizeMax_1)).ToPointer(),
+                    _MarshalInterface_2 = Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new IMarshal_Delegates.MarshalInterface_2(Do_Abi_MarshalInterface_2)).ToPointer(),
+                    _UnmarshalInterface_3 = Marshal.GetFunctionPointerForDelegate(DelegateCache[3] = new IMarshal_Delegates.UnmarshalInterface_3(Do_Abi_UnmarshalInterface_3)).ToPointer(),
+                    _ReleaseMarshalData_4 = Marshal.GetFunctionPointerForDelegate(DelegateCache[4] = new IMarshal_Delegates.ReleaseMarshalData_4(Do_Abi_ReleaseMarshalData_4)).ToPointer(),
+                    _DisconnectObject_5 = Marshal.GetFunctionPointerForDelegate(DelegateCache[5] = new IMarshal_Delegates.DisconnectObject_5(Do_Abi_DisconnectObject_5)).ToPointer(),
                 };
                 AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
                 Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
+#else
+                AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.Interop.IUnknownVftbl>() + sizeof(IntPtr) * 6);
+                (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
+                {
+                    IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
+                    GetUnmarshalClass_0 = &Do_Abi_GetUnmarshalClass_0,
+                    GetMarshalSizeMax_1 = &Do_Abi_GetMarshalSizeMax_1,
+                    MarshalInterface_2 = &Do_Abi_MarshalInterface_2,
+                    UnmarshalInterface_3 = &Do_Abi_UnmarshalInterface_3,
+                    ReleaseMarshalData_4 = &Do_Abi_ReleaseMarshalData_4,
+                    DisconnectObject_5 = &Do_Abi_DisconnectObject_5
+                };
+#endif
             }
 
-            public Vftbl(IntPtr ptr)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
+            private static int Do_Abi_GetUnmarshalClass_0(IntPtr thisPtr, Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlFlags, Guid* pCid)
             {
-                this = Marshal.PtrToStructure<Vftbl>(ptr);
-            }
-
-            private static int Do_Abi_GetUnmarshalClass_0(IntPtr thisPtr, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlFlags, out Guid pCid)
-            {
-                pCid = default;
+                *pCid = default;
                 try
                 {
-                    ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).GetUnmarshalClass(ref riid, pv, dwDestContext, pvDestContext, mshlFlags, out pCid);
+                    ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid);
                 }
                 catch (Exception ex)
                 {
@@ -88,12 +111,15 @@ namespace ABI.Com
                 return 0;
             }
 
-            private static int Do_Abi_GetMarshalSizeMax_1(IntPtr thisPtr, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags, out uint pSize)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
+            private static int Do_Abi_GetMarshalSizeMax_1(IntPtr thisPtr, Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags, uint* pSize)
             {
-                pSize = default;
+                *pSize = default;
                 try
                 {
-                    ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).GetMarshalSizeMax(ref riid, pv, dwDestContext, pvDestContext, mshlflags, out pSize);
+                    ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).GetMarshalSizeMax(riid, pv, dwDestContext, pvDestContext, mshlflags, pSize);
                 }
                 catch (Exception ex)
                 {
@@ -102,11 +128,14 @@ namespace ABI.Com
                 return 0;
             }
 
-            private static int Do_Abi_MarshalInterface_2(IntPtr thisPtr, IntPtr pStm, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
+            private static int Do_Abi_MarshalInterface_2(IntPtr thisPtr, IntPtr pStm, Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags)
             {
                 try
                 {
-                    ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).MarshalInterface(pStm, ref riid, pv, dwDestContext, pvDestContext, mshlflags);
+                    ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).MarshalInterface(pStm, riid, pv, dwDestContext, pvDestContext, mshlflags);
                 }
                 catch (Exception ex)
                 {
@@ -115,12 +144,15 @@ namespace ABI.Com
                 return 0;
             }
 
-            private static int Do_Abi_UnmarshalInterface_3(IntPtr thisPtr, IntPtr pStm, ref Guid riid, out IntPtr ppv)
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
+            private static int Do_Abi_UnmarshalInterface_3(IntPtr thisPtr, IntPtr pStm, Guid* riid, IntPtr* ppv)
             {
-                ppv = default;
+                *ppv = default;
                 try
                 {
-                    ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).UnmarshalInterface(pStm, ref riid, out ppv);
+                    ComWrappersSupport.FindObject<global::Com.IMarshal>(thisPtr).UnmarshalInterface(pStm, riid, ppv);
                 }
                 catch (Exception ex)
                 {
@@ -129,6 +161,9 @@ namespace ABI.Com
                 return 0;
             }
 
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
             private static int Do_Abi_ReleaseMarshalData_4(IntPtr thisPtr, IntPtr pStm)
             {
                 try
@@ -142,6 +177,9 @@ namespace ABI.Com
                 return 0;
             }
 
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
+#endif
             private static int Do_Abi_DisconnectObject_5(IntPtr thisPtr, uint dwReserved)
             {
                 try
@@ -169,34 +207,44 @@ namespace ABI.Com
             _obj = obj;
         }
 
-        public void GetUnmarshalClass(ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlFlags, out Guid pCid)
+        public unsafe void GetUnmarshalClass(Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlFlags, Guid* pCid)
         {
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.GetUnmarshalClass_0(ThisPtr, ref riid, pv, dwDestContext, pvDestContext, mshlFlags, out pCid));
+            Marshal.ThrowExceptionForHR(_obj.Vftbl.GetUnmarshalClass_0(ThisPtr, riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid));
         }
 
-        public void GetMarshalSizeMax(ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags, out uint pSize)
+        public unsafe void GetMarshalSizeMax(Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags, uint* pSize)
         {
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.GetMarshalSizeMax_1(ThisPtr, ref riid, pv, dwDestContext, pvDestContext, mshlflags, out pSize));
+            Marshal.ThrowExceptionForHR(_obj.Vftbl.GetMarshalSizeMax_1(ThisPtr, riid, pv, dwDestContext, pvDestContext, mshlflags, pSize));
         }
 
-        public void MarshalInterface(IntPtr pStm, ref Guid riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags)
+        public unsafe void MarshalInterface(IntPtr pStm, Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags)
         {
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.MarshalInterface_2(ThisPtr, pStm, ref riid, pv, dwDestContext, pvDestContext, mshlflags));
+            Marshal.ThrowExceptionForHR(_obj.Vftbl.MarshalInterface_2(ThisPtr, pStm, riid, pv, dwDestContext, pvDestContext, mshlflags));
         }
 
-        public void UnmarshalInterface(IntPtr pStm, ref Guid riid, out IntPtr ppv)
+        public unsafe void UnmarshalInterface(IntPtr pStm, Guid* riid, IntPtr* ppv)
         {
-            Marshal.ThrowExceptionForHR(_obj.Vftbl.UnmarshalInterface_3(ThisPtr, pStm, ref riid, out ppv));
+            Marshal.ThrowExceptionForHR(_obj.Vftbl.UnmarshalInterface_3(ThisPtr, pStm, riid, ppv));
         }
 
-        public void ReleaseMarshalData(IntPtr pStm)
+        public unsafe void ReleaseMarshalData(IntPtr pStm)
         {
             Marshal.ThrowExceptionForHR(_obj.Vftbl.ReleaseMarshalData_4(ThisPtr, pStm));
         }
 
-        public void DisconnectObject(uint dwReserved)
+        public unsafe void DisconnectObject(uint dwReserved)
         {
             Marshal.ThrowExceptionForHR(_obj.Vftbl.DisconnectObject_5(ThisPtr, dwReserved));
         }
+    }
+
+    internal static unsafe class IMarshal_Delegates
+    {
+        public delegate int GetUnmarshalClass_0(IntPtr thisPtr, Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlFlags, Guid* pCid);
+        public delegate int GetMarshalSizeMax_1(IntPtr thisPtr, Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags, uint* pSize);
+        public delegate int MarshalInterface_2(IntPtr thisPtr, IntPtr pStm, Guid* riid, IntPtr pv, global::Com.MSHCTX dwDestContext, IntPtr pvDestContext, global::Com.MSHLFLAGS mshlflags);
+        public delegate int UnmarshalInterface_3(IntPtr thisPtr, IntPtr pStm, Guid* riid, IntPtr* ppv);
+        public delegate int ReleaseMarshalData_4(IntPtr thisPtr, IntPtr pStm);
+        public delegate int DisconnectObject_5(IntPtr thisPtr, uint dwReserved);
     }
 }
