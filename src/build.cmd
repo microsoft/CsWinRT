@@ -149,6 +149,10 @@ if ErrorLevel 1 (
 )
 if "%cswinrt_build_only%"=="true" goto :eof
 
+rem Tests are not yet enabled for ARM builds (not supported by Project Reunion)
+if %cswinrt_platform%==arm goto :eof
+if %cswinrt_platform%==arm64 goto :eof
+
 :test
 :unittest
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
@@ -174,8 +178,6 @@ sn -Vr Microsoft.Windows.SDK.NET.dll
 vstest.console.exe ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%USERPROFILE%\.nuget\packages\mstest.testadapter\2.2.4-preview-20210513-02\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx 
 popd
 
-
-
 rem WinUI NuGet package's Microsoft.WinUI.AppX.targets attempts to import a file that does not exist, even when
 rem executing "dotnet test --no-build ...", which evidently still needs to parse and load the entire project.
 rem Work around by using a dummy targets file and assigning it to the MsAppxPackageTargets property.
@@ -197,7 +199,6 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
  
-
 :authortest
 rem Run Authoring tests
 echo Running cswinrt authoring tests for %cswinrt_platform% %cswinrt_configuration%
