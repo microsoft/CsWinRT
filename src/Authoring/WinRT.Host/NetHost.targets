@@ -12,6 +12,8 @@
     <PropertyGroup>
       <NETCoreSdkRuntimeIdentifier>win-x86</NETCoreSdkRuntimeIdentifier>
       <NETCoreSdkRuntimeIdentifier Condition="'$(Platform)'=='x64'">win-x64</NETCoreSdkRuntimeIdentifier>
+      <NETCoreSdkRuntimeIdentifier Condition="'$(Platform)'=='arm'">win-arm</NETCoreSdkRuntimeIdentifier>
+      <NETCoreSdkRuntimeIdentifier Condition="'$(Platform)'=='arm64'">win-arm64</NETCoreSdkRuntimeIdentifier>
     </PropertyGroup>
     <MSBuild Projects="NetHostDir.csproj" Targets="GetNetHostDir" Properties="NETCoreSdkRuntimeIdentifier=$(NETCoreSdkRuntimeIdentifier)">
       <Output TaskParameter="TargetOutputs" ItemName="NetHostDir" />
