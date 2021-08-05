@@ -96,8 +96,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   
   </Target>
 
-  <!-- MSBuild only sees WinRT component's .winmd as an output, the managed implementation
-       is handled by target CsWinRTAuthoring_AddRuntimeDependenciesToContent -->
   <Target Name="GetTargetPath" Returns="@(TargetPathWithTargetPlatformMoniker)">
     
     <ItemGroup>
@@ -153,13 +151,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   
   </Target>
 
-  <!-- Make the target take an input targets file and just write on that -->
   <Target Name="CsWinRTGenerateTransitiveTargets" BeforeTargets="CsWinRTIncludeHostDlls"> 
 
-    <Copy SourceFiles="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" DestinationFolder="$(CsWinRTGeneratedFilesDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+    <!-- Use the Authoring.Transitive targets as a template to rewrite for the authoring component -->
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" 
+          DestinationFolder="$(CsWinRTGeneratedFilesDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
 
     <PropertyGroup>
-
       <AuthoringTransitiveTargets>$(CsWinRTGeneratedFilesDir)\Microsoft.Windows.CsWinRT.Authoring.Transitive.targets</AuthoringTransitiveTargets>
       
       <PeekQuery_Depends1>Project/PropertyGroup/ResolveReferencesDependsOn/text()</PeekQuery_Depends1>
@@ -173,7 +171,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
       <PeekQuery_Target2>Project/Target[@Name='CsWinRTCopyAuthoringDlls']/@Name</PeekQuery_Target2>
       <PokeQuery_Target2>Project/Target[@Name='CsWinRTCopyAuthoringDlls']/@Name</PokeQuery_Target2>
-
     </PropertyGroup>
 
     <!-- Peeks -->
@@ -194,8 +191,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <Output TaskParameter="Result" ItemName="Peeked_Target2" />
     </XmlPeek>
 
-    <!-- Flatten the outputs might be able to skip this by just inligning -->
-
     <PropertyGroup>
       <Flat_Peeked_Depends1>@(Peeked_Depends1)</Flat_Peeked_Depends1>      
       <Flat_Peeked_Depends2>@(Peeked_Depends2)</Flat_Peeked_Depends2>      
@@ -204,7 +199,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
 
     <!-- Transform the fetched xml nodes -->
-
     <PropertyGroup>      
       <Transformed1>$([System.String]::Copy('$(Flat_Peeked_Depends1)').Replace('CsWinRT','$(AssemblyName)'))</Transformed1>
       <Transformed2>$([System.String]::Copy('$(Flat_Peeked_Depends2)').Replace('CsWinRT','$(AssemblyName)'))</Transformed2>
