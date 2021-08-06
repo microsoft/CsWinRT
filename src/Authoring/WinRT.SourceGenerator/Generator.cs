@@ -203,7 +203,8 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     {
         public void Execute(GeneratorExecutionContext context)
         {
-            if (!context.IsCsWinRTComponent())
+            var isTest = Process.GetCurrentProcess().ProcessName == "testhost";
+            if (!isTest && !context.IsCsWinRTComponent())
             {
                 return;
             }
