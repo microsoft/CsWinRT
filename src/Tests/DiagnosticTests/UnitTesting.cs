@@ -1,22 +1,91 @@
-using NUnit.Framework;
 using Microsoft.CodeAnalysis;
-using WinRT.SourceGenerator;
-using System.Collections.Immutable;
+using Microsoft.CodeAnalysis.CSharp.Testing;
+using Microsoft.CodeAnalysis.Testing;
+using Microsoft.CodeAnalysis.Testing.Verifiers;
+using Microsoft.CodeAnalysis.Text;
+using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using WinRT.SourceGenerator;
 
 namespace DiagnosticTests
 {
+
+    using VerifyCS = DiagnosticVerifier<Generator.SourceGenerator>;
+
+    public static class DiagnosticVerifier<TSourceGenerator>
+        where TSourceGenerator : ISourceGenerator, new()
+    {
+        public class Test : CSharpSourceGeneratorTest<TSourceGenerator, NUnitVerifier>
+        {
+            public Test() { }
+
+            /*
+            protected override CompilationOptions CreateCompilationOptions()
+            {
+                var options = base.CreateCompilationOptions();
+                return options.
+
+            }
+            */
+        }
+    }
+
+
     [TestFixture]
     public sealed partial class UnitTesting
     {
+
+        private static IEnumerable<TestCaseData> Experiment 
+        {
+            get 
+            { 
+                yield return new TestCaseData(UnsealedClass, WinRTRules.UnsealedClassRule).SetName("Unsealed class public field");
+            }
+        }
+
+        [Test, TestCaseSource(nameof(Experiment))]
+        public async Task Foo(string source)
+        {
+            var editorConfig = @"
+CsWinRTComponent = true 
+";
+
+            await new VerifyCS.Test
+            {
+                TestState =
+                {
+                    Sources = { source }, // UnsealedClass, 
+                    ExpectedDiagnostics = { new DiagnosticResult(WinRTRules.UnsealedClassRule) },
+                    AnalyzerConfigFiles =
+                    {
+                        ("/.editorconfig", SourceText.From(editorConfig, Encoding.UTF8)),
+                    },
+                    MarkupHandling = Microsoft.CodeAnalysis.Testing.MarkupMode.None
+                }
+            }.RunAsync();;
+
+            // test.TestState.
+            /*
+            await new VerifyCS.Test
+            {
+                TestState = { Sources = { source }, }
+            }.RunAsync();
+            */
+        }
+
+
+
         /// <summary>
         /// CheckNoDiagnostic asserts that no diagnostics are raised on the compilation produced 
         /// from the cswinrt source generator based on the given source code</summary>
         /// <param name="source"></param>
         [Test, TestCaseSource(nameof(ValidCases))] 
         public void CheckNoDiagnostic(string source)
-        { 
+        {
+
             Compilation compilation = CreateCompilation(source);
             RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator());
             

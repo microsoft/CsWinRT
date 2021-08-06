@@ -4,9 +4,9 @@ using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
+// using Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.NUnit;
 namespace DiagnosticTests
-{
+{ 
     public sealed partial class UnitTesting
     {
         /// <summary>
