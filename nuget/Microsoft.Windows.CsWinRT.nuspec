@@ -24,6 +24,7 @@
     <file src="Microsoft.Windows.CsWinRT.props" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.Authoring.targets" target="build"/>
+    <file src="Microsoft.Windows.CsWinRT.IIDOptimizer.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.Prerelease*.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" target="build"/>
     <file src="$interop_winmd$" target="metadata"/>

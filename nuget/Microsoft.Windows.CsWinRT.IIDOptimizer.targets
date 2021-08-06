@@ -9,8 +9,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- For the IIDOptimizer to work, it needs to be given all the (reference) assemblies used during compilation 
        This target consolidates them based on an item group output by the CoreCompile target,  
        so they may be passed as an option to the IIDOptimizer in the target that invokes the tool -->
-  <Target Name="CsWinRTGenerateIIDOptimizerResponseFile" AfterTargets="Compile" BeforeTargets="CsWinRTInvokeGuidPatcher"
-          Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'">
+  <Target Name="CsWinRTGenerateIIDOptimizerResponseFile" 
+          AfterTargets="Compile" 
+          BeforeTargets="CsWinRTInvokeGuidPatcher"
+          Condition="'$(DesignTimeBuild)' == ''">
     
     <PropertyGroup> 
       <!-- CsWinRTIIDOptimizerPath: If building in the CsWinRT Repo, then this is set already via Directory.Build.props  --> 
@@ -47,20 +49,27 @@ $(GuidPatchTargetAssemblyReferences)
   </Target>
 
   <!-- Run the IIDOptimizer on the projection .dll -->
-  <Target Name="CsWinRTInvokeGuidPatcher" AfterTargets="Compile" BeforeTargets="Link" DependsOnTargets="CsWinRTGenerateIIDOptimizerResponseFile"
-          Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'">  
+  <Target Name="CsWinRTInvokeGuidPatcher" 
+          Condition="'$(DesignTimeBuild)' == ''"
+          AfterTargets="Compile" 
+          BeforeTargets="Link" 
+          DependsOnTargets="CsWinRTGenerateIIDOptimizerResponseFile">  
+    
     <Message Text="$(CsWinRTIIDOptimizerCommand)" Importance="$(CsWinRTMessageImportance)" />
-    <Exec Command="$(CsWinRTIIDOptimizerCommand)" ConsoleToMsBuild="true" IgnoreExitCode="true">
+ 
+   <Exec Command="$(CsWinRTIIDOptimizerCommand)" ConsoleToMsBuild="true" IgnoreExitCode="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="CsWinRTGuidPatchOutput" />
       <Output TaskParameter="ExitCode" PropertyName="CsWinRTGuidPatchExitCode"/>
     </Exec>
+  
   </Target>
 
   <!-- When the IIDOptimizer succeeds, replace the input .dll with the patched version -->
   <Target Name="CsWinRTReplaceForPatchedRuntime" 
           Condition="$(CsWinRTGuidPatchExitCode) == 0"
           AfterTargets="CsWinRTInvokeGuidPatcher"
-          BeforeTargets="Link">
+          BeforeTargets="Link"
+          DependsOnTargets="CsWinRTInvokeGuidPatcher">
 
     <ItemGroup>
       <CsWinRTGuidPatchedFiles Include="$(IIDOptimizerInterimDir)$(AssemblyName).dll;$(IIDOptimizerInterimDir)$(AssemblyName).pdb" />

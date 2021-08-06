@@ -20,6 +20,7 @@ namespace WinRT
         internal const int E_LAYOUTCYCLE = unchecked((int)0x802B0014);
         internal const int E_ELEMENTNOTENABLED = unchecked((int)0x802B001E);
         internal const int E_ELEMENTNOTAVAILABLE = unchecked((int)0x802B001F);
+        internal const int ERROR_INVALID_WINDOW_HANDLE = unchecked((int)0x80070578);
 
         [DllImport("oleaut32.dll")]
         private static extern int SetErrorInfo(uint dwReserved, IntPtr perrinfo);
@@ -153,6 +154,13 @@ namespace WinRT
                         break;
                     case E_ELEMENTNOTENABLED:
                         ex = new Microsoft.UI.Xaml.Automation.ElementNotEnabledException();
+                        break;
+                    case ERROR_INVALID_WINDOW_HANDLE:
+                        ex = new System.Runtime.InteropServices.COMException(
+@"Invalid window handle. (0x80070578)
+Consider WindowNative, InitializeWithWindow
+See https://aka.ms/cswinrt/interop#windows-sdk", 
+                            ERROR_INVALID_WINDOW_HANDLE);
                         break;
                     default:
                         ex = Marshal.GetExceptionForHR(hr, iErrorInfo?.ThisPtr ?? (IntPtr)(-1));
