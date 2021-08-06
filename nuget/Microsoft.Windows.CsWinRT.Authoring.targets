@@ -44,13 +44,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CsWinRTAuthoringWinMDs Include="@(CsWinRTInputs)" />
       <CsWinRTAuthoringDistinctWinMDs Include="@(CsWinRTAuthoringWinMDs->Distinct())" />
     </ItemGroup>
+    
     <PropertyGroup>
       <CsWinRTAuthoringInputs>$(CsWinRTAuthoringInputs) @(CsWinRTAuthoringDistinctWinMDs->'"%(FullPath)"', ' ') </CsWinRTAuthoringInputs>
     </PropertyGroup>
+    
   </Target>
 
   <!-- For Project Reference consumers, copy the necessary WinRT DLLs to output directory --> 
   <ItemGroup> 
+
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll" />
     <CsWinRTAuthoringDependencyDlls Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll" />
     
@@ -69,13 +72,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <TargetPath>WinRT.Host.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  
   </ItemGroup>
 
   <!-- Add the RuntimeConfig to output of project reference consumers -->
   <Target Name="CsWinRTAuthoring_AddRuntimeDependenciesToContent" 
           AfterTargets="GenerateBuildRuntimeConfigurationFiles" 
           BeforeTargets="GetCopyToOutputDirectoryItems;_GetCopyToOutputDirectoryItemsFromThisProject">
+
     <ItemGroup>
+
       <AllItemsFullPathWithTargetPath Include="$(ProjectRuntimeConfigFilePath)">
         <TargetPath>$([System.IO.Path]::GetFileName($(ProjectRuntimeConfigFilePath)))</TargetPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -85,20 +91,15 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <TargetPath>$([System.IO.Path]::GetFileName($(ProjectRuntimeConfigFilePath)))</TargetPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </AllPublishItemsFullPathWithTargetPath>
+    
     </ItemGroup>
+  
   </Target>
 
-  <!-- Update the project's output to include the generated WinMD.
- 
-       ResolveableAssembly metadata decides who we can support:
-          if it is not present, we support C++, but not C# 
-            => solution: sdk1130 error becomes a warning
-
-          if it is present (as 'false'), we support C#, but not C++
-            => solution: C++/WinRT targets need to use _ResolvedNativeProjectReferencePaths
-  -->
   <Target Name="GetTargetPath" Returns="@(TargetPathWithTargetPlatformMoniker)">
+    
     <ItemGroup>
+    
       <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)$(AssemblyName).winmd">
         <BuildReference>true</BuildReference>
         <WinMDFile>true</WinMDFile>
@@ -107,13 +108,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <FileType>winmd</FileType>
         <Primary>true</Primary>
       </TargetPathWithTargetPlatformMoniker>
+    
     </ItemGroup>
+    
   </Target>
 
   <!-- Prevent C++ apps from thinking there is a framework mismatch by setting our target framework to blank.
        Note, this does prevent C#/WinRT apps from cross-platform targeting, but a netcore3.1 app wouldn't use C#/WinRT anyway -->
   <Target Name="GetTargetFrameworks" Returns="@(_ThisProjectBuildMetadata)">
+    
     <ItemGroup>
+    
       <_ThisProjectBuildMetadata Include="$(MSBuildProjectFullPath)">
         <TargetFrameworks></TargetFrameworks>
         <TargetFrameworkMonikers></TargetFrameworkMonikers>
@@ -121,12 +126,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <HasSingleTargetFramework>true</HasSingleTargetFramework>
         <IsRidAgnostic>true</IsRidAgnostic>
       </_ThisProjectBuildMetadata>
+    
     </ItemGroup>
+
   </Target>
 
   <!-- For project references, we need to copy the SDK.NET.dll to the output directory -->
   <Target Name="CsWinRTCopySDKRefDllToOutDir" AfterTargets="ResolveRuntimePackAssets">
+
     <ItemGroup>
+
       <!-- Local item group to store the SDK.NET.dll -->
       <CsWinRTSDKRefDll Include="@(RuntimePackAsset)" Condition="'%(RuntimePackAsset.DestinationSubPath)' == 'Microsoft.Windows.SDK.NET.dll'" />
       <!-- Use the below item group to package up managed DLLs from one source -->
@@ -137,13 +146,80 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <TargetPath>Microsoft.Windows.SDK.NET.dll</TargetPath>
       </_ThisProjectItemstoCopyToOutputDirectory>
+    
     </ItemGroup>
+  
+  </Target>
+
+  <Target Name="CsWinRTGenerateTransitiveTargets" BeforeTargets="CsWinRTIncludeHostDlls"> 
+
+    <!-- Use the Authoring.Transitive targets as a template to rewrite for the authoring component -->
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.Transitive.targets" 
+          DestinationFolder="$(CsWinRTGeneratedFilesDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+
+    <PropertyGroup>
+      <AuthoringTransitiveTargets>$(CsWinRTGeneratedFilesDir)\Microsoft.Windows.CsWinRT.Authoring.Transitive.targets</AuthoringTransitiveTargets>
+      
+      <PeekQuery_Depends1>Project/PropertyGroup/ResolveReferencesDependsOn/text()</PeekQuery_Depends1>
+      <PokeQuery_Depends1>Project/PropertyGroup/ResolveReferencesDependsOn</PokeQuery_Depends1>
+      
+      <PeekQuery_Depends2>Project/PropertyGroup/BuildDependsOn/text()</PeekQuery_Depends2>
+      <PokeQuery_Depends2>Project/PropertyGroup/BuildDependsOn</PokeQuery_Depends2>
+      
+      <PeekQuery_Target1>Project/Target[@Name='CsWinRTAddAuthoredWinMDReference']/@Name</PeekQuery_Target1>
+      <PokeQuery_Target1>Project/Target[@Name='CsWinRTAddAuthoredWinMDReference']/@Name</PokeQuery_Target1>
+
+      <PeekQuery_Target2>Project/Target[@Name='CsWinRTCopyAuthoringDlls']/@Name</PeekQuery_Target2>
+      <PokeQuery_Target2>Project/Target[@Name='CsWinRTCopyAuthoringDlls']/@Name</PokeQuery_Target2>
+    </PropertyGroup>
+
+    <!-- Peeks -->
+
+    <XmlPeek XmlInputPath="$(AuthoringTransitiveTargets)" Query="$(PeekQuery_Depends1)">
+      <Output TaskParameter="Result" ItemName="Peeked_Depends1" />
+    </XmlPeek>
+
+    <XmlPeek XmlInputPath="$(AuthoringTransitiveTargets)" Query="$(PeekQuery_Depends2)">
+      <Output TaskParameter="Result" ItemName="Peeked_Depends2" />
+    </XmlPeek>
+
+    <XmlPeek XmlInputPath="$(AuthoringTransitiveTargets)" Query="$(PeekQuery_Target1)">
+      <Output TaskParameter="Result" ItemName="Peeked_Target1" />
+    </XmlPeek>
+
+    <XmlPeek XmlInputPath="$(AuthoringTransitiveTargets)" Query="$(PeekQuery_Target2)">
+      <Output TaskParameter="Result" ItemName="Peeked_Target2" />
+    </XmlPeek>
+
+    <PropertyGroup>
+      <Flat_Peeked_Depends1>@(Peeked_Depends1)</Flat_Peeked_Depends1>      
+      <Flat_Peeked_Depends2>@(Peeked_Depends2)</Flat_Peeked_Depends2>      
+      <Flat_Peeked_Target1>@(Peeked_Target1)</Flat_Peeked_Target1>
+      <Flat_Peeked_Target2>@(Peeked_Target2)</Flat_Peeked_Target2>
+    </PropertyGroup>
+
+    <!-- Transform the fetched xml nodes -->
+    <PropertyGroup>      
+      <Transformed1>$([System.String]::Copy('$(Flat_Peeked_Depends1)').Replace('CsWinRT','$(AssemblyName)'))</Transformed1>
+      <Transformed2>$([System.String]::Copy('$(Flat_Peeked_Depends2)').Replace('CsWinRT','$(AssemblyName)'))</Transformed2>
+      <Transformed3>$([System.String]::Copy('$(Flat_Peeked_Target1)').Replace('CsWinRT','$(AssemblyName)'))</Transformed3>
+      <Transformed4>$([System.String]::Copy('$(Flat_Peeked_Target2)').Replace('CsWinRT','$(AssemblyName)'))</Transformed4>
+    </PropertyGroup>
+
+    <!-- Change the target names -->
+    <XmlPoke XmlInputPath="$(AuthoringTransitiveTargets)" Query="$(PokeQuery_Depends1)" Value="$(Transformed1)"/>
+    <XmlPoke XmlInputPath="$(AuthoringTransitiveTargets)" Query="$(PokeQuery_Depends2)" Value="$(Transformed2)"/>
+    <XmlPoke XmlInputPath="$(AuthoringTransitiveTargets)" Query="$(PokeQuery_Target1)" Value="$(Transformed3)"/>
+    <XmlPoke XmlInputPath="$(AuthoringTransitiveTargets)" Query="$(PokeQuery_Target2)" Value="$(Transformed4)"/>
+
   </Target>
 
   <!-- When an authored component makes a nupkg, add the necessary hosting assets to the package -->
-  <Target Name="CsWinRTIncludeHostDlls" BeforeTargets="AfterBuild" Outputs="@(Content)">
+  <Target Name="CsWinRTIncludeHostDlls" DependsOnTargets="CsWinRTGenerateTransitiveTargets" BeforeTargets="AfterBuild" Outputs="@(Content)">
+    
     <!-- When packing, include all necessary DLLs and the targets file for DLL copying on the native side -->
     <ItemGroup>
+    
       <!-- We must pack any managed DLLs the component depends on, because a native consumer won't restore them -->
       <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime'">
         <Pack>true</Pack>
@@ -168,8 +244,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <PackagePath>lib\$(TargetFramework)\winmd</PackagePath>
       </Content> 
 
-      <!-- Custom targets that copy DLLs for consumers of the authored component. -->
-      <Content Include="$(CsWinRTPath)build\Microsoft.Windows.CsWinRT.Authoring.Transitive.targets">
+      <!-- Use a targets file generated for the component -->
+      <Content Include="$(AuthoringTransitiveTargets)">
         <Pack>true</Pack>
         <PackagePath>buildTransitive\$(AssemblyName).targets;build\$(AssemblyName).targets</PackagePath>
       </Content>
@@ -196,11 +272,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <PackagePath>runtimes\win-arm64\native</PackagePath>
       </Content>
    </ItemGroup>
+
   </Target>
 
   <!-- Copy Authored winmd to output folder -->
   <Target Name="CsWinRTPlaceWinMDInOutputFolder" BeforeTargets="AfterBuild">
+    
     <Copy SourceFiles="$(CsWinRTGeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
+    
   </Target>
 
 </Project>
