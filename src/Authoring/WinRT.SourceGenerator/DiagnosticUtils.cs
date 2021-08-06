@@ -128,6 +128,7 @@ namespace Generator
 
                     var iWinRTObject = model.Compilation.GetTypeByMetadataName("WinRT.IWinRTObject");
                     // validate that the class correctly implements all its interfaces
+                    var methods = classSymbol.GetMembers().OfType<IMethodSymbol>().ToList();
                     foreach (var iface in classSymbol.AllInterfaces)
                     {
                         if (SymbolEqualityComparer.Default.Equals(iface, iWinRTObject))
@@ -139,7 +140,11 @@ namespace Generator
                             var impl = classSymbol.FindImplementationForInterfaceMember(member);
                             if (impl == null)
                             {
-                                Report(WinRTRules.UnimplementedInterface, @class.GetLocation(), classId.Text, iface.ToDisplayString(), member.ToDisplayString());
+                                var explicitIfaceImpl = methods.Where(m => IsMethodImpl(m, member));
+                                if (!explicitIfaceImpl.Any())
+                                {
+                                    Report(WinRTRules.UnimplementedInterface, @class.GetLocation(), classId.Text, iface.ToDisplayString(), member.ToDisplayString());
+                                }
                             }
                         }
                     }
@@ -169,6 +174,25 @@ namespace Generator
                     CheckStructFields(@struct);
                 }
             }
+        }
+
+        private bool IsMethodImpl(IMethodSymbol m, IMethodSymbol interfaceMethod)
+        {
+            if (m.Name != interfaceMethod.Name)
+            {
+                return false;
+            }
+            if (!m.Parameters.SequenceEqual(interfaceMethod.Parameters))
+            {
+                return false;
+            }
+
+            // the return type can be covariant with the interface method's return type (i.e. a sub-type)
+            if (m.ReturnType != interfaceMethod.ReturnType && !m.ReturnType.AllInterfaces.Contains(interfaceMethod.ReturnType))
+            {
+                return false;
+            }
+            return true;
         }
 
         private void IgnoreCustomTypeMappings(INamedTypeSymbol typeSymbol,

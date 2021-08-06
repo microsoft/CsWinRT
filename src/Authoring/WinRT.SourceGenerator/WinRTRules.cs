@@ -177,6 +177,6 @@ namespace WinRT.SourceGenerator
         public static DiagnosticDescriptor UnimplementedInterface = MakeRule(
             "CsWinRT1027",
             "Class incorrectly implements an interface",
-            "Class '{0}' does not correctly implement interface '{1}' because member '{2}' is missing or non-public.");
+            "Class '{0}' does not correctly implement interface '{1}' because member '{2}' is missing or non-public");
     }
 } 
