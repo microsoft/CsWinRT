@@ -126,28 +126,7 @@ namespace Generator
                     // check types -- todo: check for !valid types
                     CheckMethods(publicMethods, classId);
 
-                    var iWinRTObject = model.Compilation.GetTypeByMetadataName("WinRT.IWinRTObject");
-                    // validate that the class correctly implements all its interfaces
-                    var methods = classSymbol.GetMembers().OfType<IMethodSymbol>().ToList();
-                    foreach (var iface in classSymbol.AllInterfaces)
-                    {
-                        if (SymbolEqualityComparer.Default.Equals(iface, iWinRTObject))
-                        {
-                            continue;
-                        }
-                        foreach (var member in iface.GetMembers().OfType<IMethodSymbol>())
-                        {
-                            var impl = classSymbol.FindImplementationForInterfaceMember(member);
-                            if (impl == null)
-                            {
-                                var explicitIfaceImpl = methods.Where(m => IsMethodImpl(m, member));
-                                if (!explicitIfaceImpl.Any())
-                                {
-                                    Report(WinRTRules.UnimplementedInterface, @class.GetLocation(), classId.Text, iface.ToDisplayString(), member.ToDisplayString());
-                                }
-                            }
-                        }
-                    }
+                    CheckInterfaces(model, @class);
                 }
                 else if (declaration is InterfaceDeclarationSyntax @interface)
                 {
@@ -172,6 +151,35 @@ namespace Generator
                 else if (declaration is StructDeclarationSyntax @struct)
                 {
                     CheckStructFields(@struct);
+                }
+            }
+        }
+
+        private void CheckInterfaces(SemanticModel model, ClassDeclarationSyntax @class)
+        {
+            var classId = @class.Identifier;
+            var classSymbol = model.GetDeclaredSymbol(@class);
+
+            var iWinRTObject = model.Compilation.GetTypeByMetadataName("WinRT.IWinRTObject");
+            // validate that the class correctly implements all its interfaces
+            var methods = classSymbol.GetMembers().OfType<IMethodSymbol>().ToList();
+            foreach (var iface in classSymbol.AllInterfaces)
+            {
+                if (SymbolEqualityComparer.Default.Equals(iface, iWinRTObject))
+                {
+                    continue;
+                }
+                foreach (var member in iface.GetMembers().OfType<IMethodSymbol>())
+                {
+                    var impl = classSymbol.FindImplementationForInterfaceMember(member);
+                    if (impl == null)
+                    {
+                        var explicitIfaceImpl = methods.Where(m => IsMethodImpl(m, member));
+                        if (!explicitIfaceImpl.Any())
+                        {
+                            Report(WinRTRules.UnimplementedInterface, @class.GetLocation(), classId.Text, iface.ToDisplayString(), member.ToDisplayString());
+                        }
+                    }
                 }
             }
         }
