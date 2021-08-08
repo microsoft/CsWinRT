@@ -11,6 +11,9 @@ namespace cswinrt
     using namespace std::literals;
     using namespace std::experimental::filesystem;
     using namespace winmd::reader;
+    
+    int result;
+    writer w;
 
     inline auto get_start_time()
     {
@@ -39,20 +42,21 @@ namespace cswinrt
         { "?", 0, option::no_max, {}, {} },
     };
 
-    static void print_usage(writer& w)
+    static void print_usage()
     {
-        static auto printColumns = [](writer& w, std::string_view const& col1, std::string_view const& col2)
+        result = 1;
+        static auto printColumns = [](std::string_view const& col1, std::string_view const& col2)
         {
             w.write_printf("  %-35s%s\n", col1.data(), col2.data());
         };
 
-        static auto printOption = [](writer& w, option const& opt)
+        static auto printOption = [](option const& opt)
         {
             if(opt.desc.empty())
             {
                 return;
             }
-            printColumns(w, w.write_temp("-% %", opt.name, opt.arg), opt.desc);
+            printColumns(w.write_temp("-% %", opt.name, opt.arg), opt.desc);
         };
 
         auto format = R"(
@@ -81,14 +85,16 @@ Where <spec> is one or more of:
 
         if (!args || args.exists("help") || args.exists("?"))
         {
-            throw usage_exception{};
+            print_usage();
+            return;
         }
 
         settings.verbose = args.exists("verbose");
         auto target = args.value("target");
         if (!target.empty() && target != "netstandard2.0" && !starts_with(target, "net5.0") && !starts_with(target, "net6.0"))
         {
-            throw usage_exception();
+            print_usage();
+            return;
         }
         settings.netstandard_compat = target == "netstandard2.0";
         settings.component = args.exists("component");
@@ -117,14 +123,16 @@ Where <spec> is one or more of:
 
     int run(int const argc, char** argv)
     {
-        int result{};
-        writer w;
 
         /* Special case the usage exceptions to print CLI options */
         try
         {
             auto start = get_start_time();
             process_args(argc, argv);
+            if (result) {
+                w.flush_to_console();
+                return 1;
+            }
             cache c{ get_files_to_cache() };
             settings.filter = { settings.include, settings.exclude };
 
@@ -383,11 +391,6 @@ Where <spec> is one or more of:
             {
                 w.write("time: %ms\n", get_elapsed_time(start));
             }
-        }
-        catch (usage_exception const&)
-        {
-            result = 1;
-            print_usage(w);
         }
         catch (std::exception const& e)
         {
