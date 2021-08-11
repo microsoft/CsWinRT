@@ -40,7 +40,7 @@ namespace GuidPatch
                 arity: ArgumentArity.ZeroOrMore
             );
 
-        static async Task Main(string[] args)
+        static int Main(string[] args)
         {
             var rootCommand = new RootCommand { };
             // friendlier option names 
@@ -53,7 +53,8 @@ namespace GuidPatch
             rootCommand.AddOption(_references);
 
             rootCommand.Handler = CommandHandler.Create<string, string, IEnumerable<FileInfo>>(GuidPatch);
-            await rootCommand.InvokeAsync(args);            
+            Task<int> retVal = rootCommand.InvokeAsync(args);
+            return retVal.Result;
         }
 
         private static ReaderParameters MakeReaderParams(ReferenceAssemblyResolver resolver)
@@ -72,7 +73,7 @@ namespace GuidPatch
 
 
         // Set WinRT.Runtime.dll -- either we are patching it, or it is in the references 
-        private static AssemblyDefinition ResolveWinRTRuntime(AssemblyDefinition targetAssemblyDefinition, ReferenceAssemblyResolver resolver)
+        private static AssemblyDefinition? ResolveWinRTRuntime(AssemblyDefinition targetAssemblyDefinition, ReferenceAssemblyResolver resolver)
         { 
             AssemblyDefinition? winRTRuntimeAssembly = null;
             
@@ -81,14 +82,21 @@ namespace GuidPatch
                 winRTRuntimeAssembly = targetAssemblyDefinition;
             }
             else
-            { 
+            {
                 var winrtAssembly = targetAssemblyDefinition
                                     .MainModule
                                     .AssemblyReferences
                                     .Where(refAssembly => refAssembly.Name == "WinRT.Runtime")
-                                    .First();
- 
-                winRTRuntimeAssembly = resolver.Resolve(winrtAssembly); 
+                                    .FirstOrDefault();
+
+                if (winrtAssembly == default(AssemblyNameReference))
+                {
+                    winRTRuntimeAssembly = null;
+                } 
+                else
+                { 
+                    winRTRuntimeAssembly = resolver.Resolve(winrtAssembly); 
+                }
             }
 
             return winRTRuntimeAssembly;
