@@ -32,7 +32,7 @@ namespace cswinrt
         { "output", 0, 1, "<path>", "Location of generated projection" },
         { "include", 0, option::no_max, "<prefix>", "One or more prefixes to include in projection" },
         { "exclude", 0, option::no_max, "<prefix>", "One or more prefixes to exclude from projection" },
-        { "target", 0, 1, "<net5.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with newest TFM (net5.0)." },
+        { "target", 0, 1, "<net6.0|net5.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with newest TFM (net5.0)." },
         { "component", 0, 0, {}, "Generate component projection." },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
         { "help", 0, option::no_max, {}, "Show detailed help" },
@@ -86,7 +86,7 @@ Where <spec> is one or more of:
 
         settings.verbose = args.exists("verbose");
         auto target = args.value("target");
-        if (!target.empty() && target != "netstandard2.0" && !starts_with(target, "net5.0"))
+        if (!target.empty() && target != "netstandard2.0" && !starts_with(target, "net5.0") && !starts_with(target, "net6.0"))
         {
             throw usage_exception();
         }
@@ -386,6 +386,7 @@ Where <spec> is one or more of:
         }
         catch (usage_exception const&)
         {
+            result = 1;
             print_usage(w);
         }
         catch (std::exception const& e)

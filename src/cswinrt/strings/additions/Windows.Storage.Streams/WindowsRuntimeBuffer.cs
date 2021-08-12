@@ -267,24 +267,24 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        void IMarshal.GetMarshalSizeMax(ref Guid riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags, out uint pSize)
+        unsafe void IMarshal.GetMarshalSizeMax(Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags, uint* pSize)
         {
             EnsureHasMarshalProxy();
-            t_winRtMarshalProxy!.GetMarshalSizeMax(ref riid, pv, dwDestContext, pvDestContext, mshlflags, out pSize);
+            t_winRtMarshalProxy!.GetMarshalSizeMax(riid, pv, dwDestContext, pvDestContext, mshlflags, pSize);
         }
 
 
-        void IMarshal.GetUnmarshalClass(ref Guid riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlFlags, out Guid pCid)
+        unsafe void IMarshal.GetUnmarshalClass(Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlFlags, Guid* pCid)
         {
             EnsureHasMarshalProxy();
-            t_winRtMarshalProxy!.GetUnmarshalClass(ref riid, pv, dwDestContext, pvDestContext, mshlFlags, out pCid);
+            t_winRtMarshalProxy!.GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext, mshlFlags, pCid);
         }
 
 
-        void IMarshal.MarshalInterface(IntPtr pStm, ref Guid riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags)
+        unsafe void IMarshal.MarshalInterface(IntPtr pStm, Guid* riid, IntPtr pv, MSHCTX dwDestContext, IntPtr pvDestContext, MSHLFLAGS mshlflags)
         {
             EnsureHasMarshalProxy();
-            t_winRtMarshalProxy!.MarshalInterface(pStm, ref riid, pv, dwDestContext, pvDestContext, mshlflags);
+            t_winRtMarshalProxy!.MarshalInterface(pStm, riid, pv, dwDestContext, pvDestContext, mshlflags);
         }
 
 
@@ -295,10 +295,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         }
 
 
-        void IMarshal.UnmarshalInterface(IntPtr pStm, ref Guid riid, out IntPtr ppv)
+        unsafe void IMarshal.UnmarshalInterface(IntPtr pStm, Guid* riid, IntPtr* ppv)
         {
             EnsureHasMarshalProxy();
-            t_winRtMarshalProxy!.UnmarshalInterface(pStm, ref riid, out ppv);
+            t_winRtMarshalProxy!.UnmarshalInterface(pStm, riid, ppv);
         }
         #endregion Implementation of IMarshal
     }  // class WindowsRuntimeBuffer

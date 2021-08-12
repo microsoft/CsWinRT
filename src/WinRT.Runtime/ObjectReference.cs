@@ -517,11 +517,11 @@ namespace WinRT
                 using var referenceInContext = agileReference.Get();
                 if (_iid == Guid.Empty)
                 {
-                    return referenceInContext.As<T>();
+                    return referenceInContext.TryAs<T>(out var objRef) >= 0 ? objRef : null;
                 }
                 else
                 {
-                    return referenceInContext.As<T>(_iid);
+                    return referenceInContext.TryAs<T>(_iid, out var objRef) >= 0 ? objRef : null;
                 }
             }
         }

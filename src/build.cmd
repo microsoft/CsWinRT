@@ -1,16 +1,17 @@
 @echo off
 if /i "%cswinrt_echo%" == "on" @echo on
 
-set CsWinRTNet5SdkVersion=5.0.300
+set CsWinRTBuildNetSDKVersion=6.0.100-preview.6.21355.2
+set CsWinRTNet5SdkVersion=5.0.302
 set this_dir=%~dp0
 
 :dotnet
-rem Install required .NET 5 SDK version and add to environment
+rem Install required .NET SDK version and add to environment
 set DOTNET_ROOT=%LocalAppData%\Microsoft\dotnet
 set DOTNET_ROOT(86)=%LocalAppData%\Microsoft\dotnet\x86
 set path=%DOTNET_ROOT%;%path%
 
-
+rem Install .net5 to run our projects  targeting it
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
@@ -21,13 +22,24 @@ powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
 -Version '%CsWinRTNet5SdkVersion%' -InstallDir '%DOTNET_ROOT(86)%' -Architecture 'x86' ^
 -AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
+rem Install .NET Version used to build projection
+powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
+&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
+-Version '%CsWinRTBuildNetSDKVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' ^
+-AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
+powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
+&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
+-Version '%CsWinRTBuildNetSDKVersion%' -InstallDir '%DOTNET_ROOT(86)%' -Architecture 'x86' ^
+-AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 
 :globaljson
 rem Create global.json for current .NET SDK, and with allowPrerelease=true
 set global_json=%this_dir%global.json
 echo { > %global_json%
 echo   "sdk": { >> %global_json%
-echo     "version": "%CsWinRTNet5SdkVersion%", >> %global_json%
+echo     "version": "%CsWinRTBuildNetSDKVersion%", >> %global_json%
 echo     "allowPrerelease": true >> %global_json%
 echo   } >> %global_json%
 echo } >> %global_json%
@@ -137,6 +149,10 @@ if ErrorLevel 1 (
 )
 if "%cswinrt_build_only%"=="true" goto :eof
 
+rem Tests are not yet enabled for ARM builds (not supported by Project Reunion)
+if %cswinrt_platform%==arm goto :eof
+if %cswinrt_platform%==arm64 goto :eof
+
 :test
 :unittest
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
@@ -162,8 +178,6 @@ sn -Vr Microsoft.Windows.SDK.NET.dll
 vstest.console.exe ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%USERPROFILE%\.nuget\packages\mstest.testadapter\2.2.4-preview-20210513-02\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx 
 popd
 
-
-
 rem WinUI NuGet package's Microsoft.WinUI.AppX.targets attempts to import a file that does not exist, even when
 rem executing "dotnet test --no-build ...", which evidently still needs to parse and load the entire project.
 rem Work around by using a dummy targets file and assigning it to the MsAppxPackageTargets property.
@@ -185,7 +199,6 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
  
-
 :authortest
 rem Run Authoring tests
 echo Running cswinrt authoring tests for %cswinrt_platform% %cswinrt_configuration%
