@@ -141,6 +141,12 @@ namespace GuidPatch
                 Console.WriteLine($"\tAssembly : {e.AssemblyReference.Name}"); 
                 return -1; 
             }
+            catch (Exception e)
+            {
+                Console.WriteLine("Application failed with unexpected exception.");
+                Console.WriteLine($"{e}");
+                return -1; 
+            }
         }
     }
 }
