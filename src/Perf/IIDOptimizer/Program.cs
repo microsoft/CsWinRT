@@ -143,7 +143,7 @@ namespace GuidPatch
             }
             catch (Exception e)
             {
-                Console.WriteLine("Application failed with unexpected exception.");
+                Console.WriteLine("Failed with unexpected exception.");
                 Console.WriteLine($"{e}");
                 return -1; 
             }
