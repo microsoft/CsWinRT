@@ -6074,7 +6074,7 @@ public override int GetHashCode() => %;
         }) != marshalers.end();
 
         w.write(R"(
-internal struct Marshaler
+public struct Marshaler
 {
 %public % __abi;
 )",
@@ -6101,7 +6101,7 @@ internal struct Marshaler
         w.write("}\n");
 
         w.write(R"(
-internal static Marshaler CreateMarshaler(% arg)
+public static Marshaler CreateMarshaler(% arg)
 {
 var m = new Marshaler();)",
             projected_type);
@@ -6171,7 +6171,7 @@ return default;
         w.write("}\n");
 
         w.write(R"(
-internal static % GetAbi(Marshaler m) => m.__abi;
+public static % GetAbi(Marshaler m) => m.__abi;
 )",
             abi_type);
 
@@ -6262,7 +6262,7 @@ return new %()
             });
 
         w.write(R"(
-internal static unsafe void CopyAbi(Marshaler arg, IntPtr dest) => 
+public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) => 
     *(%*)dest.ToPointer() = GetAbi(arg);
 )",
             abi_type);
@@ -6275,7 +6275,7 @@ public static unsafe void CopyManaged(% arg, IntPtr dest) =>
             abi_type);
     
       w.write(R"(
-internal static void DisposeMarshaler(Marshaler m) %
+public static void DisposeMarshaler(Marshaler m) %
 )",
             have_disposers ? "=> m.Dispose();" : "{}");
 
