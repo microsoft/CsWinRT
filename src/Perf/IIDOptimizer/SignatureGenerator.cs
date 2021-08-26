@@ -74,7 +74,8 @@ namespace GuidPatch
 
             var typeDef = type.Resolve();
 
-            var helperType = new TypeReference($"ABI.{typeDef.Namespace}", typeDef.Name, assembly.MainModule, typeDef.Module);
+            // var helperType = new TypeReference($"ABI.{typeDef.Namespace}", typeDef.Name, assembly.MainModule, typeDef.Module);
+            var helperType = new TypeReference($"ABI.{typeDef.Namespace}", typeDef.Name, typeDef.Module, assembly.MainModule);
 
             if (helperType.Resolve() is not null)
             {
