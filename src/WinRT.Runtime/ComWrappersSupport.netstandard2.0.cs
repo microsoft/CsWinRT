@@ -19,6 +19,10 @@ namespace WinRT
 
         internal static InspectableInfo GetInspectableInfo(IntPtr pThis) => UnmanagedObject.FindObject<ComCallableWrapper>(pThis).InspectableInfo;
 
+        // This is used to hold the reference to the native value type object (IReference) until the actual value in it (boxed as an object) gets cleaned up by GC
+        // This is done to avoid pointer reuse until GC cleans up the boxed object
+        private static ConditionalWeakTable<object, IObjectReference> valueTypeRefHolder = new ConditionalWeakTable<object, IObjectReference>();
+
         public static T CreateRcwForComObject<T>(IntPtr ptr)
         {
             if (ptr == IntPtr.Zero)
@@ -38,6 +42,11 @@ namespace WinRT
                     var inspectable = new IInspectable(identity);
                     string runtimeClassName = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
                     runtimeWrapper = string.IsNullOrEmpty(runtimeClassName) ? inspectable : TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
+                    var type = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
+                    if (type != null && (type.IsValueType || runtimeClassName.StartsWith("Windows.Foundation.IReferenceArray`1")))
+                    {
+                        valueTypeRefHolder.Add(runtimeWrapper, identity);
+                    }
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
                 {
