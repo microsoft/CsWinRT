@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.System;
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
-using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
+using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ObjectLifetimeTests
 {
@@ -35,7 +29,7 @@ namespace ObjectLifetimeTests
         public ObjectLifetimeTestsRunner()
         {
             mainCanvas = ((ObjectLifetimeTests.Lifted.App)Microsoft.UI.Xaml.Application.Current).m_window.LifeTimePage.Root;
-            _asyncQueue = new AsyncQueue(((ObjectLifetimeTests.Lifted.App)Microsoft.UI.Xaml.Application.Current).m_window.DispatcherQueue);
+            _asyncQueue = new AsyncQueue(((ObjectLifetimeTests.Lifted.App)Application.Current).m_window.DispatcherQueue);
         }
         [MethodImplAttribute(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void GC_ForceCollect(int cnt = 1)

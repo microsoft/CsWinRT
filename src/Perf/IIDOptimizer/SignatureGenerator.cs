@@ -30,8 +30,7 @@ namespace GuidPatch
     record BasicSignaturePart(SignatureType Type) : SignaturePart;
 
     sealed record GuidSignature(Guid IID) : SignaturePart;
-
-
+    
     sealed record CustomSignatureMethod(MethodReference Method) : SignaturePart;
 
     sealed record NonGenericDelegateSignature(Guid DelegateIID) : SignaturePart;
@@ -74,7 +73,6 @@ namespace GuidPatch
 
             var typeDef = type.Resolve();
 
-            // var helperType = new TypeReference($"ABI.{typeDef.Namespace}", typeDef.Name, assembly.MainModule, typeDef.Module);
             var helperType = new TypeReference($"ABI.{typeDef.Namespace}", typeDef.Name, typeDef.Module, assembly.MainModule);
 
             if (helperType.Resolve() is not null)
@@ -184,7 +182,7 @@ namespace GuidPatch
 
         private TypeReference CreateAuthoringMetadataTypeReference(TypeReference type)
         {
-            return new TypeReference($"ABI.Impl.{type.Name}", type.Name, assembly.MainModule, type.Module);
+            return new TypeReference($"ABI.Impl.{type.Name}", type.Name, type.Module, assembly.MainModule);
         }
 
         bool TryGetDefaultInterfaceTypeForRuntimeClassType(TypeReference runtimeClassTypeMaybe, [NotNullWhen(true)] out TypeReference? defaultInterface)
