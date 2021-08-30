@@ -3,5 +3,5 @@
     <PropertyGroup>    
         <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     </PropertyGroup> 
-    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />   
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../../../'))" />   
 </Project>
