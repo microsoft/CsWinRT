@@ -2580,6 +2580,58 @@ namespace UnitTest
             public void IntPropertyChanged(object sender, int e) => eventCalled();
         }
 
+        [Fact]
+        private async Task TestPnpPropertiesInLoop()
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                await TestPnpPropertiesAsync();
+            }
+        }
+
+        private async Task TestPnpPropertiesAsync()
+        {
+            var requestedDeviceProperties = new List<string>()
+                {
+                    "System.Devices.ClassGuid",
+                    "System.Devices.ContainerId",
+                    "System.Devices.DeviceHasProblem",
+                    "System.Devices.DeviceInstanceId",
+                    "System.Devices.Parent",
+                    "System.Devices.Present",
+                    "System.ItemNameDisplay",
+                    "System.Devices.Children",
+                };
+            var devicefilter = "System.Devices.Present:System.StructuredQueryType.Boolean#True";
+            var presentDevices = (await PnpObject.FindAllAsync(PnpObjectType.Device, requestedDeviceProperties, devicefilter).AsTask().ConfigureAwait(false)).Select(pnpObject => {
+                var prop = pnpObject.Properties;
+                // Iterating through each key is necessary for this test even though we do not use each key directly
+                // This makes it more probable for a native pointer to get repeated and a value type to be cached and seen again.
+                foreach (var key in prop.Keys)
+                {
+                    var val = prop[key];
+                    if (key == "System.Devices.ContainerId" && val != null)
+                    {
+                        var val4 = pnpObject.Properties[key];
+                        if (val is not Guid || val4 is not Guid)
+                        {
+                            throw new Exception("Incorrect value type Guid. Actual type: " + val.GetType() + "  " + val4.GetType());
+                        }
+                    }
+                    if (key == "System.Devices.Parent" && val != null)
+                    {
+                        var val4 = pnpObject.Properties[key];
+                        if (val is not string || val4 is not string)
+                        {
+                            throw new Exception("Incorrect value type string Actual type: " + val.GetType() + "  " + val4.GetType());
+                        }
+                    }
+
+                }
+                return pnpObject;
+            }).ToList();
+        }
+
 #if NET
         [TestComponentCSharp.Warning]  // NO warning CA1416
         class WarningManaged { };
@@ -2628,49 +2680,5 @@ namespace UnitTest
             WarningStatic.WarningEvent += (object s, Int32 v) => { }; // warning CA1416
         }
 #endif
-
-        [Fact]
-        private async Task TestPnpPropertiesAsync()
-        {
-            var requestedDeviceProperties = new List<string>()
-                {
-                    "System.Devices.ClassGuid",
-                    "System.Devices.ContainerId",
-                    "System.Devices.DeviceHasProblem",
-                    "System.Devices.DeviceInstanceId",
-                    "System.Devices.Parent",
-                    "System.Devices.Present",
-                    "System.ItemNameDisplay",
-                    "System.Devices.Children",
-                };
-            var devicefilter = "System.Devices.Present:System.StructuredQueryType.Boolean#True";
-            var presentDevices = (await PnpObject.FindAllAsync(PnpObjectType.Device, requestedDeviceProperties, devicefilter).AsTask().ConfigureAwait(false)).Select(pnpObject => {
-                var prop = pnpObject.Properties;
-                // Iterating through each key is necessary for this test even though we do not use each key directly
-                // This makes it more probable for a native pointer to get repeated and a value type to be cached and seen again.
-                foreach (var key in prop.Keys)
-                {
-                    var val = prop[key];
-                    if (key == "System.Devices.ContainerId" && val != null)
-                    {
-                        var val4 = pnpObject.Properties[key];
-                        if (val is not Guid || val4 is not Guid)
-                        {
-                            throw new Exception("Incorrect value type Guid");
-                        }
-                    }
-                    if (key == "System.Devices.Parent" && val != null)
-                    {
-                        var val4 = pnpObject.Properties[key];
-                        if (val is not string || val4 is not string)
-                        {
-                            throw new Exception("Incorrect value type string");
-                        }
-                    }
-
-                }
-                return pnpObject;
-            }).ToList();
-        }
     }
 }
