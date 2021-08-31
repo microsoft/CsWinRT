@@ -432,10 +432,6 @@ namespace WinRT
             return isRcw;
         }
 
-        // This is used to hold the reference to the native value type object (IReference) until the actual value in it (boxed as an object) gets cleaned up by GC
-        // This is done to avoid pointer reuse until GC cleans up the boxed object
-        private static ConditionalWeakTable<object, IObjectReference> valueTypeRefHolder = new ConditionalWeakTable<object, IObjectReference>();
-
         private static object CreateObject(IObjectReference objRef)
         {
             if (objRef.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
@@ -450,13 +446,7 @@ namespace WinRT
                     return inspectable;
                 }
 
-                var obj = ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
-                var type = obj.GetType();
-                if (type != null && (type.IsValueType || type.IsArray))
-                {
-                    valueTypeRefHolder.Add(obj, objRef);
-                }
-                return obj;
+                return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
             }
             else if (objRef.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
             {

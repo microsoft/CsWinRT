@@ -300,6 +300,20 @@ namespace WinRT
                 Expression.Property(createInterfaceInstanceExpression, "Value"), parms).Compile();
         }
 
+        // This is used to hold the reference to the native value type object (IReference) until the actual value in it (boxed as an object) gets cleaned up by GC
+        // This is done to avoid pointer reuse until GC cleans up the boxed object
+        private static ConditionalWeakTable<object, IInspectable> _boxedValueReferenceCache = new();
+
+        private static Func<IInspectable, object> CreateReferenceCachingFactory(Func<IInspectable, object> internalFactory)
+        {
+            return inspectable =>
+            {
+                object resultingObject = internalFactory(inspectable);
+                _boxedValueReferenceCache.Add(resultingObject, inspectable);
+                return resultingObject;
+            };
+        }
+
         internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
         {
             // If runtime class name is empty or "Object", then just use IInspectable.
@@ -327,23 +341,23 @@ namespace WinRT
 
             if (implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
-                return CreateKeyValuePairFactory(implementationType);
+                return CreateReferenceCachingFactory(CreateKeyValuePairFactory(implementationType));
             }
 
             if (implementationType.IsValueType)
             {
                 if (IsNullableT(implementationType))
                 {
-                    return CreateNullableTFactory(implementationType);
+                    return CreateReferenceCachingFactory(CreateNullableTFactory(implementationType));
                 }
                 else
                 {
-                    return CreateNullableTFactory(typeof(System.Nullable<>).MakeGenericType(implementationType));
+                    return CreateReferenceCachingFactory(CreateNullableTFactory(typeof(System.Nullable<>).MakeGenericType(implementationType)));
                 }
             }
             else if (IsIReferenceArray(implementationType))
             {
-                return CreateArrayFactory(implementationType);
+                return CreateReferenceCachingFactory(CreateArrayFactory(implementationType));
             }
 
             return CreateFactoryForImplementationType(runtimeClassName, implementationType);
