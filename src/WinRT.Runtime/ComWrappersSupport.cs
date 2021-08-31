@@ -324,11 +324,11 @@ namespace WinRT
             // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
             if (runtimeClassName == "Windows.Foundation.IReference`1<String>")
             {
-                return (IInspectable obj) => new ABI.System.Nullable<String>(obj.ObjRef);
+                return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<String>(obj.ObjRef));
             }
             else if (runtimeClassName == "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>")
             {
-                return (IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef);
+                return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef));
             }
 
             Type implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
