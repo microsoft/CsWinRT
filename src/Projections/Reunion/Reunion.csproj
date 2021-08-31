@@ -12,13 +12,13 @@
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
-    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.2" GeneratePathProperty="true">
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.5.7" GeneratePathProperty="true">
       <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
     </PackageReference>
-      <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.8.2" GeneratePathProperty="true">
+      <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.5.7" GeneratePathProperty="true">
       <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
     </PackageReference>
-      <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.8.2" GeneratePathProperty="true">
+      <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.5.7" GeneratePathProperty="true">
       <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
     </PackageReference>
     <Manifest Include="$(ApplicationManifest)" />
@@ -45,8 +45,8 @@
 -include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute      
     </CsWinRTFilters>
     <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
-    <PkgMicrosoft_ReunionWinUI>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.projectreunion.winui', '0.8.2'))</PkgMicrosoft_ReunionWinUI>    
-    <PkgMicrosoft_ReunionFoundation>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.projectreunion.foundation', '0.8.2'))</PkgMicrosoft_ReunionFoundation>    
+    <PkgMicrosoft_ReunionWinUI>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.projectreunion.winui', '0.5.7'))</PkgMicrosoft_ReunionWinUI>    
+    <PkgMicrosoft_ReunionFoundation>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.projectreunion.foundation', '0.5.7'))</PkgMicrosoft_ReunionFoundation>    
     <SignAssembly>true</SignAssembly>    
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>

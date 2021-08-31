@@ -1,8 +1,8 @@
 using System;
 using System.Threading;
-using Microsoft.UI.Dispatching;
+using Microsoft.System;
 
-namespace Microsoft.UI.Dispatching
+namespace Microsoft.System
 {
     /// <summary>
     /// DispatcherQueueSyncContext allows developers to await calls and get back onto the

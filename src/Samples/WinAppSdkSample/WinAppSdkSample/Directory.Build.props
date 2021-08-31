@@ -1,7 +1,0 @@
-<Project>
-<!-- Created to prevent unnecessary files from being inherited -->
-    <PropertyGroup>    
-        <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
-    </PropertyGroup> 
-    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../../../'))" />   
-</Project>
