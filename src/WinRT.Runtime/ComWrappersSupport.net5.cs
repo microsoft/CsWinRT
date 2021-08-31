@@ -438,7 +438,6 @@ namespace WinRT
 
         private static object CreateObject(IObjectReference objRef)
         {
-            Console.WriteLine("Creating object");
             if (objRef.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
             {
                 IInspectable inspectable = new IInspectable(inspectableRef);
@@ -452,8 +451,8 @@ namespace WinRT
                 }
 
                 var obj = ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
-                var type = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
-                if (type != null && (type.IsValueType || runtimeClassName.StartsWith("Windows.Foundation.IReferenceArray`1")))
+                var type = obj.GetType();
+                if (type != null && (type.IsValueType || type.IsArray))
                 {
                     valueTypeRefHolder.Add(obj, objRef);
                 }
