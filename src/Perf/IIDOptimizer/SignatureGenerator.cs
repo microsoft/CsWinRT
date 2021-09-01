@@ -182,7 +182,7 @@ namespace GuidPatch
 
         private TypeReference CreateAuthoringMetadataTypeReference(TypeReference type)
         {
-            return new TypeReference($"ABI.Impl.{type.Name}", type.Name, type.Module, assembly.MainModule);
+            return new TypeReference($"ABI.Impl.{type.Namespace}", type.Name, type.Module, assembly.MainModule);
         }
 
         bool TryGetDefaultInterfaceTypeForRuntimeClassType(TypeReference runtimeClassTypeMaybe, [NotNullWhen(true)] out TypeReference? defaultInterface)
