@@ -562,4 +562,13 @@ And this is another one"
         {
         };
     }
+
+    namespace AnotherAssembly
+    {
+        [default_interface]
+        runtimeclass SetPropertyClass : TestComponentCSharp.IProperties1
+        {
+            Int32 ReadWriteProperty{ set; };
+        }
+    }
 }
