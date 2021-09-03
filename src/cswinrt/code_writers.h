@@ -2496,7 +2496,7 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
 db_path.stem().string());
     }
 
-    auto get_invoke_info(writer& w, MethodDef const& method)
+    auto get_invoke_info(writer& w, MethodDef const& method, uint32_t const& method_start_index = 6)
     {
         TypeDef const& type = method.Parent();
         if (!settings.netstandard_compat && distance(type.GenericParam()) == 0)
@@ -2504,7 +2504,7 @@ db_path.stem().string());
             return std::pair{
                 w.write_temp("(*(delegate* unmanaged[Stdcall]<%, int>**)ThisPtr)[%]",
                     bind<write_abi_parameter_types>(method_signature { method }),
-                    get_vmethod_index(type, method) + 6 /* number of methods in IInspectable */),
+                    get_vmethod_index(type, method) + method_start_index /* number of methods in IInspectable + previous methods if fastabi*/),
                 false
             };
         }
@@ -3380,8 +3380,9 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
     }
 
 
-    void write_interface_members(writer& w, TypeDef const& type)
+    int write_interface_members(writer& w, TypeDef const& type, uint32_t const& invoke_start_index = 6)
     {
+        int totalMembers = 0;
         bool generic_type = distance(type.GenericParam()) > 0;
 
         auto init_call_variables = [&](writer& w)
@@ -3402,7 +3403,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
                 continue;
             }
             method_signature signature{ method };
-            auto [invoke_target, is_generic] = get_invoke_info(w, method);
+            auto [invoke_target, is_generic] = get_invoke_info(w, method, invoke_start_index);
             w.write(R"(
 %unsafe %% %%(%)
 {%%}
@@ -3421,6 +3422,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
                 bind_list<write_projection_parameter>(", ", signature.params()),
                 bind(init_call_variables),
                 bind<write_abi_method_call>(signature, invoke_target, is_generic, false, is_noexcept(method)));
+            totalMembers++;
         }
 
         for (auto&& prop : type.PropertyList())
@@ -3472,6 +3474,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
                     bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers, is_noexcept(prop)));
             }
             w.write("}\n");
+            totalMembers++;
         }
 
         int index = 0;
@@ -3518,7 +3521,9 @@ return %;
                 event_source,
                 event_source);
             index++;
+            totalMembers++;
         }
+        return totalMembers;
     }
 
     struct required_interface
@@ -4907,8 +4912,102 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             });
     }
 
+    /*struct FastAbiInterface
+    {
+        TypeDef iface;
+
+        FastAbiInterface(TypeDef interfaceType) : iface(interfaceType)
+        {
+        }
+
+        bool operator < (TypeDef const& otherIface)
+        {
+
+            return iface.TypeNamespace() == otherIface.TypeNamespace() ? iface.TypeName() < otherIface.TypeName() : iface.TypeNamespace() < otherIface.TypeNamespace();
+        }
+
+    };*/
+
+    template <typename T>
+    auto get_attribute_value(CustomAttribute const& attribute, uint32_t const arg)
+    {
+        return std::get<T>(std::get<ElemSig>(attribute.Value().FixedArgs()[arg].value).value);
+    }
+
+    auto get_contract_version(TypeDef& iface)
+    {
+        auto version_attribute = get_attribute(iface, "Windows.Foundation.Metadata"sv, "ContractVersionAttribute"sv);
+        if (version_attribute)
+        {
+
+        }
+    }
+
+    std::optional<TypeDef> get_execlusive_to_class_if_default(TypeDef const& iface)
+    {
+        auto exclusiveToAttribute = get_attribute(iface, "Windows.Foundation.Metadata"sv, "ExclusiveToAttribute"sv);
+        if (exclusiveToAttribute)
+        {
+            auto sys_type = std::get<ElemSig::SystemType>(std::get<ElemSig>(exclusiveToAttribute.Value().FixedArgs()[0].value).value);
+            TypeDef exclusiveToClass = iface.get_cache().find_required(sys_type.name);
+            for (auto&& ifaceImpl : exclusiveToClass.InterfaceImpl())
+            {
+                if (has_attribute(ifaceImpl, "Windows.Foundation.Metadata", "DefaultAttribute"))
+                {
+                    auto&& sem = get_type_semantics(ifaceImpl.Interface());
+                    if (!std::holds_alternative<type_definition>(sem))
+                    {
+                        return {};
+                    }
+                    if (std::get<type_definition>(sem).TypeNamespace() == iface.TypeNamespace() && std::get<type_definition>(sem).TypeName() == iface.TypeName())
+                    {
+                        return exclusiveToClass;
+                    }
+                    return {};
+                }
+            }
+        }
+        return {};
+    }
+
+    std::vector<TypeDef> get_all_exclusive_interfaces(TypeDef const& classType)
+    {
+        std::vector<TypeDef> exclusive_interfaces;
+        for (auto&& ifaceImpl : classType.InterfaceImpl())
+        {
+            auto&& sem = get_type_semantics(ifaceImpl.Interface());
+            if (std::holds_alternative<type_definition>(sem))
+            {
+                if (has_attribute(std::get<type_definition>(sem), "Windows.Foundation.Metadata"sv, "ExclusiveToAttribute"sv))
+                {
+                    exclusive_interfaces.push_back(std::get<type_definition>(sem));
+                }
+            }   
+        }
+        return exclusive_interfaces;
+    }
+
+    std::optional<std::vector<TypeDef>> get_fast_abi_ifaces(TypeDef const& iface)
+    {
+        auto exclusive_to_class = get_execlusive_to_class_if_default(iface);
+        std::vector<TypeDef> fast_abi_ifaces;
+        if (exclusive_to_class.has_value() && has_attribute(exclusive_to_class.value(), "Windows.Foundation.Metadata"sv, "FastAbiAttribute"sv))
+        {
+            fast_abi_ifaces = get_all_exclusive_interfaces(exclusive_to_class.value());
+            std::sort(fast_abi_ifaces.begin(), fast_abi_ifaces.end(), [](TypeDef const& iface, TypeDef const& otherIface)
+                {
+                    return iface.TypeNamespace() == otherIface.TypeNamespace() ? iface.TypeName() < otherIface.TypeName() : iface.TypeNamespace() < otherIface.TypeNamespace();
+                });
+            return fast_abi_ifaces;
+        }
+        return {};
+    }
+
     void write_interface(writer& w, TypeDef const& type)
     {
+        auto&& fast_abi_ifaces = get_fast_abi_ifaces(type);
+        auto&& is_fast_abi_enabled = fast_abi_ifaces.has_value();
+
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
 
@@ -4925,7 +5024,20 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             is_exclusive_to(type) || is_projection_internal(type) ? "internal" : "public",
             type_name,
             bind<write_type_inheritance>(type, object_type{}, false, false),
-            bind<write_interface_member_signatures>(type)
+            [&](writer& w)
+            {
+                if (!is_fast_abi_enabled)
+                {
+                    write_interface_member_signatures(w, type);
+                }
+                else
+                {
+                    for (auto&& fast_abi_iface : fast_abi_ifaces.value())
+                    {
+                        write_interface_member_signatures(w, fast_abi_iface);
+                    }
+                }
+            }
         );
     }
 
@@ -5016,7 +5128,7 @@ public static Guid PIID = Vftbl.PIID;
                         required_interface.second.adapter);
                 }
             },
-            bind<write_interface_members>(type),
+            bind<write_interface_members>(type, 6),
             bind<write_event_sources>(type),
             [&](writer& w) {
                 for (auto required_interface : required_interfaces)
@@ -5043,6 +5155,9 @@ public static class %
 
     bool write_abi_interface(writer& w, TypeDef const& type)
     {
+        auto fast_abi_ifaces = get_fast_abi_ifaces(type);
+        auto is_fast_abi_enabled = fast_abi_ifaces.has_value();
+
         bool is_generic = distance(type.GenericParam()) > 0;
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
@@ -5105,7 +5220,18 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
                     bind_each<write_event_abi_invoke>(type.EventList()));
                 }
             }),
-            bind<write_interface_members>(type),
+            [&](writer& w) {
+                if (!is_fast_abi_enabled)
+                {
+                    write_interface_members(w, type, 6);
+                    return;
+                }
+                auto member_start_index = 6;
+                for (auto fast_abi_iface : fast_abi_ifaces.value())
+                {
+                    member_start_index += write_interface_members(w, fast_abi_iface, member_start_index);
+                }
+            },
             bind<write_event_source_tables>(type),
             [&](writer& w) {
                 for (auto required_interface : required_interfaces)

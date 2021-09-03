@@ -47,7 +47,7 @@
       <AdditionalDependencies>kernel32.lib;user32.lib;%(AdditionalDependencies);windowsapp.lib;advapi32.lib;shlwapi.lib</AdditionalDependencies>
     </Link>
     <ClCompile>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

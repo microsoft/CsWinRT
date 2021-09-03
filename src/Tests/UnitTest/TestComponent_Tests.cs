@@ -845,6 +845,13 @@ namespace UnitTest
             Assert.True(composableObjects.GetRange(1, 3).SequenceEqual(interfaceSubset));
         }
 
+#if NET5_0
+        [Fact]
+        public void FastAbi()
+        {
+            new Test.TestClass().Main();
+        }
+#endif
         // Nota Bene: this test case must always remain the final one
         [Fact]
         public void Z_Check_Coverage()
@@ -852,5 +859,6 @@ namespace UnitTest
             Tests.Simple();
             //Assert.Equal((double)Tests.Percentage, (double)100);
         }
+
     }
 }
