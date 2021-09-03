@@ -174,6 +174,10 @@ namespace WinRT
                 return null;
             }
             var abi = ((int length, IntPtr data))box;
+            if (abi.data == IntPtr.Zero)
+            {
+                return null;
+            }
             string[] array = new string[abi.length];
             var data = (IntPtr*)abi.data.ToPointer();
             for (int i = 0; i < abi.length; i++)
@@ -277,7 +281,7 @@ namespace WinRT
     {
         public struct MarshalerArray
         {
-            public MarshalerArray(Array array) => _gchandle = GCHandle.Alloc(array, GCHandleType.Pinned);
+            public MarshalerArray(Array array) => _gchandle = array is null ? default : GCHandle.Alloc(array, GCHandleType.Pinned);
             public void Dispose() => _gchandle.Dispose();
 
             public GCHandle _gchandle;
@@ -288,7 +292,7 @@ namespace WinRT
         public static (int length, IntPtr data) GetAbiArray(object box)
         {
             var m = (MarshalerArray)box;
-            return (((Array)m._gchandle.Target).Length, m._gchandle.AddrOfPinnedObject());
+            return m._gchandle.IsAllocated ? (((Array)m._gchandle.Target).Length, m._gchandle.AddrOfPinnedObject()) : (0, IntPtr.Zero);
         }
 
         public static unsafe T[] FromAbiArray(object box)
@@ -298,6 +302,10 @@ namespace WinRT
                 return null;
             }
             var abi = ((int length, IntPtr data))box;
+            if (abi.data == IntPtr.Zero)
+            {
+                return null;
+            }
             var abiSpan = new ReadOnlySpan<T>(abi.data.ToPointer(), abi.length);
             return abiSpan.ToArray();
         }
@@ -583,6 +591,10 @@ namespace WinRT
                 return null;
             }
             var abi = ((int length, IntPtr data))box;
+            if (abi.data == IntPtr.Zero)
+            {
+                return null;
+            }
             var array = new T[abi.length];
             var data = (byte*)abi.data.ToPointer();
             var abi_element_size = Marshal.SizeOf(AbiType);
@@ -763,6 +775,10 @@ namespace WinRT
                 return null;
             }
             var abi = ((int length, IntPtr data))box;
+            if (abi.data == IntPtr.Zero)
+            {
+                return null;
+            }
             var array = new T[abi.length];
             var data = (IntPtr*)abi.data.ToPointer();
             for (int i = 0; i < abi.length; i++)
