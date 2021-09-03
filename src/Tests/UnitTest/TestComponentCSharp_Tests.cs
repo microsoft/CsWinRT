@@ -2434,6 +2434,17 @@ namespace UnitTest
             Assert.Equal(TestObject.ReadWriteProperty, nativeProperties.ReadWriteProperty);
         }
 
+        [Fact]
+        public void TestSetPropertyAcrossProjections()
+        {
+            var setPropertyClass = new TestComponentCSharp.AnotherAssembly.SetPropertyClass();
+            setPropertyClass.ReadWriteProperty = 4;
+            Assert.Equal(4, setPropertyClass.ReadWriteProperty);
+
+            IProperties1 property = setPropertyClass;
+            Assert.Equal(4, property.ReadWriteProperty);
+        }
+
         // Test scenario where type reported by runtimeclass name is not a valid type (i.e. internal type).
         [Fact]
         public void TestNonProjectedRuntimeClass()
