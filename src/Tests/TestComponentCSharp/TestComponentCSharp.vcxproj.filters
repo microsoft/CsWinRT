@@ -18,6 +18,7 @@
     <ClCompile Include="Singleton.cpp" />
     <ClCompile Include="Windows.Class.cpp" />
     <ClCompile Include="ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.cpp" />
+    <ClCompile Include="AnotherAssembly.SetPropertyClass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -29,6 +30,7 @@
     <ClInclude Include="Singleton.h" />
     <ClInclude Include="Windows.Class.h" />
     <ClInclude Include="ABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVQXYZabcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.h" />
+    <ClInclude Include="AnotherAssembly.SetPropertyClass.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />

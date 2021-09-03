@@ -3457,7 +3457,9 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
                 if (!getter)
                 {
                     auto getter_interface = write_type_name_temp(w, 
-                        find_property_interface(w, type, prop.Name()).first, "%", typedef_name_type::ABI);
+                        find_property_interface(w, type, prop.Name()).first, 
+                        "%", 
+                        settings.netstandard_compat ? typedef_name_type::ABI : typedef_name_type::CCW);
                     auto getter_cast = settings.netstandard_compat ? "As<%>()"s : "((%)(IWinRTObject)this)"s;
                     w.write("get{ return " + getter_cast + ".%; }\n", getter_interface, prop.Name());
                 }
