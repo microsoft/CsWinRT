@@ -13,3 +13,9 @@ namespace winrt::TestComponentCSharp::AnotherAssembly::implementation
         int32_t readWriteValue;
     };
 }
+namespace winrt::TestComponentCSharp::AnotherAssembly::factory_implementation
+{
+    struct SetPropertyClass : SetPropertyClassT<SetPropertyClass, implementation::SetPropertyClass>
+    {
+    };
+}

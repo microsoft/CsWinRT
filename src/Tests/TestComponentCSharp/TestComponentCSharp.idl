@@ -568,6 +568,7 @@ And this is another one"
         [default_interface]
         runtimeclass SetPropertyClass : TestComponentCSharp.IProperties1
         {
+            SetPropertyClass();
             Int32 ReadWriteProperty{ set; };
         }
     }
