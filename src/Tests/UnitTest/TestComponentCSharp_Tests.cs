@@ -120,11 +120,17 @@ namespace UnitTest
             TestObject.CallForEnums(() => expectedEnums);
             Assert.Equal(expectedEnums, TestObject.EnumsProperty);
 
+            TestObject.EnumsProperty = null;
+            Assert.Equal(null, TestObject.EnumsProperty);
+
             var expectedEnumStructs = new EnumStruct[] { new EnumStruct(EnumValue.One), new EnumStruct(EnumValue.Two) };
             TestObject.EnumStructsProperty = expectedEnumStructs;
             Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
             TestObject.CallForEnumStructs(() => expectedEnumStructs);
             Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
+
+            TestObject.EnumStructsProperty = null;
+            Assert.Equal(null, TestObject.EnumStructsProperty);
 
             // Flags
             var expectedFlag = FlagValue.All;
@@ -1167,6 +1173,17 @@ namespace UnitTest
             Assert.True(val.bools.x);
             Assert.False(val.bools.y);
             Assert.True(val.bools.z);
+        }
+
+        [Fact]
+        public void TestBlittableArrays()
+        {
+            int[] arr = new[] { 2, 4, 6, 8 };
+            TestObject.SetInts(arr);
+            Assert.True(TestObject.GetInts().SequenceEqual(arr));
+
+            TestObject.SetInts(null);
+            Assert.Null(TestObject.GetInts());
         }
 
 #if NETCOREAPP2_0
