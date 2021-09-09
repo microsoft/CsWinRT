@@ -122,6 +122,7 @@ namespace Windows.UI
     }
 }
 
+#if !EXCLUDE_ABI_NAMESPACE
 namespace ABI.Windows.UI
 {
     public static class Color
@@ -132,3 +133,4 @@ namespace ABI.Windows.UI
         }
     }
 }
+#endif

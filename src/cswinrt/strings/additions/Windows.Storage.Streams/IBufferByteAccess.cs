@@ -10,6 +10,7 @@ namespace Windows.Storage.Streams
     }
 }
 
+#if !EXCLUDE_ABI_NAMESPACE
 namespace ABI.Windows.Storage.Streams
 {
     using global::System;
@@ -139,3 +140,4 @@ namespace ABI.Windows.Storage.Streams
     }
 #endif
 }
+#endif

@@ -128,7 +128,51 @@ $(CsWinRTIncludeWinRTInterop)
       <Compile Include="$(CsWinRTGeneratedFilesDir)*.cs" Exclude="@(Compile)" />
     </ItemGroup>
   </Target>
-  
+
+  <Target Name="CsWinRTProduceRefAssembly"
+        Condition="'$(DesignTimeBuild)' == '' and $(CsWinRTEnabled) and '$(TargetFramework)' != 'netstandard2.0' and '$(CsWinRTComponent)' != 'true'"
+        AfterTargets="Compile"
+        BeforeTargets="Link"
+        DependsOnTargets="CsWinRTGenerateProjection">
+
+    <Message Text="Producing CsWinRT reference assembly $(ProduceReferenceAssembly)" Importance="$(CsWinRTMessageImportance)" />
+
+    <PropertyGroup>
+      <TargetDir Condition="'$(OutDir)' != ''">$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(OutDir)'))</TargetDir>
+      <TargetRefPath Condition=" '$(TargetRefPath)' == ''">$([MSBuild]::NormalizePath($(TargetDir), 'ref', $(TargetFileName)))</TargetRefPath>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <IntermediateRefAssembly Include="$(IntermediateOutputPath)ref\$(TargetName)$(TargetExt)" Condition="'@(IntermediateRefAssembly)' == ''" />
+      <CreateDirectory Include="@(IntermediateRefAssembly->'%(RootDir)%(Directory)')" />
+      <CreateDirectory Include="$(OutDir)ref" />
+    </ItemGroup>
+
+    <Csc Sources="@(Compile)"
+         References="@(ReferencePathWithRefAssemblies)"
+         RefOnly="true"
+         AllowUnsafeBlocks="$(AllowUnsafeBlocks)"
+         DefineConstants="$(DefineConstants);EXCLUDE_ABI_NAMESPACE;"
+         DisabledWarnings="$(NoWarn)"
+         ModuleAssemblyName="$(ModuleAssemblyName)"
+         Optimize="$(Optimize)"
+         Deterministic="$(Deterministic)"
+         OutputAssembly="@(IntermediateRefAssembly)"
+         TargetType="$(OutputType)"
+         ToolExe="$(CscToolExe)"
+         ToolPath="$(CscToolPath)" />
+
+    <CopyRefAssembly
+      SourcePath="@(IntermediateRefAssembly)"
+      DestinationPath="$(TargetRefPath)">
+
+      <Output TaskParameter="DestinationPath" ItemName="ReferenceAssembly"/>
+      <Output TaskParameter="DestinationPath" ItemName="FileWrites"/>
+
+    </CopyRefAssembly>
+
+  </Target>
+
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'"/>

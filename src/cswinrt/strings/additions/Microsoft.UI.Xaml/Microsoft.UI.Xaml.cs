@@ -667,6 +667,7 @@ namespace Microsoft.UI.Xaml
     }
 }
 
+#if !EXCLUDE_ABI_NAMESPACE
 namespace ABI.Microsoft.UI.Xaml
 {
     public static class CornerRadius
@@ -708,3 +709,4 @@ namespace ABI.Microsoft.UI.Xaml
         public static string GetGuidSignature() => $"struct(Microsoft.UI.Xaml.Thickness;f8;f8;f8;f8)";
     }
 }
+#endif

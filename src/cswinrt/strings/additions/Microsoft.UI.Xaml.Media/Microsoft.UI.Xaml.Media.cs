@@ -243,6 +243,7 @@ namespace Microsoft.UI.Xaml.Media
     }
 }
 
+#if !EXCLUDE_ABI_NAMESPACE
 namespace ABI.Microsoft.UI.Xaml.Media
 {
     public static class Matrix
@@ -250,3 +251,4 @@ namespace ABI.Microsoft.UI.Xaml.Media
         public static string GetGuidSignature() => $"struct(Microsoft.UI.Xaml.Media.Matrix;f8;f8;f8;f8;f8;f8)";
     }
 }
+#endif

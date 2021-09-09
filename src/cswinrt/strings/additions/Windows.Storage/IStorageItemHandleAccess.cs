@@ -17,6 +17,7 @@ namespace Windows.Storage
     }
 }
 
+#if !EXCLUDE_ABI_NAMESPACE
 namespace ABI.Windows.Storage
 {
     using global::Microsoft.Win32.SafeHandles;
@@ -107,3 +108,4 @@ namespace ABI.Windows.Storage
     }
 #endif
 }
+#endif

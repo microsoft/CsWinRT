@@ -690,6 +690,7 @@ namespace Microsoft.UI.Xaml.Media.Media3D
     }
 }
 
+#if !EXCLUDE_ABI_NAMESPACE
 namespace ABI.Microsoft.UI.Xaml.Media.Media3D
 {
     public static class Matrix3D
@@ -698,3 +699,4 @@ namespace ABI.Microsoft.UI.Xaml.Media.Media3D
             $"struct(Microsoft.UI.Xaml.Media.Media3D.Matrix3D;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8)";
     }
 }
+#endif

@@ -267,6 +267,7 @@ namespace Microsoft.UI.Xaml.Media.Animation
     }
 }
 
+#if !EXCLUDE_ABI_NAMESPACE
 namespace ABI.Microsoft.UI.Xaml.Media.Animation
 {
     public static class KeyTime
@@ -292,3 +293,4 @@ namespace ABI.Microsoft.UI.Xaml.Media.Animation
         public static string GetGuidSignature() => "enum(Microsoft.UI.Xaml.Media.Animation.RepeatBehaviorType;i4)";
     }
 }
+#endif

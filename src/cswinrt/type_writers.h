@@ -76,6 +76,7 @@ namespace %%
             {
                 write("\n#pragma warning disable CA1416");
             }
+            write("\n#if !EXCLUDE_ABI_NAMESPACE");
             write("\nnamespace ABI.%\n{\n", _current_namespace);
             _in_abi_namespace = true;
         }
@@ -83,6 +84,7 @@ namespace %%
         void write_end_abi()
         {
             write("}\n");
+            write("#endif\n");
             if (!settings.netstandard_compat)
             {
                 write("#pragma warning restore CA1416\n");

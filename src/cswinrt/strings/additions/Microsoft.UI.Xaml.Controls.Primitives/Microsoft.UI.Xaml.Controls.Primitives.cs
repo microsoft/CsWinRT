@@ -53,6 +53,7 @@ namespace Microsoft.UI.Xaml.Controls.Primitives
     }
 }
 
+#if !EXCLUDE_ABI_NAMESPACE
 namespace ABI.Microsoft.UI.Xaml.Controls.Primitives
 {
     public static class GeneratorPosition
@@ -60,3 +61,4 @@ namespace ABI.Microsoft.UI.Xaml.Controls.Primitives
         public static string GetGuidSignature() => $"struct(Microsoft.UI.Xaml.Controls.Primitives.GeneratorPosition;i4;i4)";
     }
 }
+#endif

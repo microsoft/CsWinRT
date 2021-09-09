@@ -23,6 +23,7 @@ namespace Com
     }
 }
 
+#if !EXCLUDE_ABI_NAMESPACE
 namespace ABI.Com
 {
     using global::System;
@@ -248,3 +249,4 @@ namespace ABI.Com
         public delegate int DisconnectObject_5(IntPtr thisPtr, uint dwReserved);
     }
 }
+#endif
