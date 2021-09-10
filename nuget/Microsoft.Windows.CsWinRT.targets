@@ -144,9 +144,9 @@ $(CsWinRTIncludeWinRTInterop)
     
     <ItemGroup>
       <IntermediateRefAssembly Include="$(IntermediateOutputPath)ref\$(TargetName)$(TargetExt)" Condition="'@(IntermediateRefAssembly)' == ''" />
-      <CreateDirectory Include="@(IntermediateRefAssembly->'%(RootDir)%(Directory)')" />
-      <CreateDirectory Include="$(OutDir)ref" />
     </ItemGroup>
+
+    <MakeDir Directories="$(OutDir)ref;@(IntermediateRefAssembly->'%(RootDir)%(Directory)')" ContinueOnError="True"/>
 
     <Csc Sources="@(Compile)"
          References="@(ReferencePathWithRefAssemblies)"
