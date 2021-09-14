@@ -3457,7 +3457,9 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
                 if (!getter)
                 {
                     auto getter_interface = write_type_name_temp(w, 
-                        find_property_interface(w, type, prop.Name()).first, "%", typedef_name_type::ABI);
+                        find_property_interface(w, type, prop.Name()).first, 
+                        "%", 
+                        settings.netstandard_compat ? typedef_name_type::ABI : typedef_name_type::CCW);
                     auto getter_cast = settings.netstandard_compat ? "As<%>()"s : "((%)(IWinRTObject)this)"s;
                     w.write("get{ return " + getter_cast + ".%; }\n", getter_interface, prop.Name());
                 }
@@ -6074,7 +6076,7 @@ public override int GetHashCode() => %;
         }) != marshalers.end();
 
         w.write(R"(
-internal struct Marshaler
+public struct Marshaler
 {
 %public % __abi;
 )",
@@ -6101,7 +6103,7 @@ internal struct Marshaler
         w.write("}\n");
 
         w.write(R"(
-internal static Marshaler CreateMarshaler(% arg)
+public static Marshaler CreateMarshaler(% arg)
 {
 var m = new Marshaler();)",
             projected_type);
@@ -6171,7 +6173,7 @@ return default;
         w.write("}\n");
 
         w.write(R"(
-internal static % GetAbi(Marshaler m) => m.__abi;
+public static % GetAbi(Marshaler m) => m.__abi;
 )",
             abi_type);
 
@@ -6262,7 +6264,7 @@ return new %()
             });
 
         w.write(R"(
-internal static unsafe void CopyAbi(Marshaler arg, IntPtr dest) => 
+public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) => 
     *(%*)dest.ToPointer() = GetAbi(arg);
 )",
             abi_type);
@@ -6275,7 +6277,7 @@ public static unsafe void CopyManaged(% arg, IntPtr dest) =>
             abi_type);
     
       w.write(R"(
-internal static void DisposeMarshaler(Marshaler m) %
+public static void DisposeMarshaler(Marshaler m) %
 )",
             have_disposers ? "=> m.Dispose();" : "{}");
 

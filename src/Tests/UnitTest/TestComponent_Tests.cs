@@ -377,6 +377,17 @@ namespace UnitTest
         }
 
         [Fact]
+        public void Array_NullStringArray()
+        {
+            string[] a = null;
+            string[] b = null;
+            string[] c;
+            string[] d = Tests.Array12(a, b, out c);
+            Assert.Null(c);
+            Assert.Null(d);
+        }
+
+        [Fact]
         public void Array_Blittable()
         {
             Blittable[] a = new Blittable[] {
@@ -435,6 +446,17 @@ namespace UnitTest
             IStringable[] c;
             IStringable[] d = Tests.Array16(a, b, out c);
             Assert.True(AllEqual(a, b, c, d));
+        }
+
+        [Fact]
+        public void Array_NullInterfaces()
+        {
+            IStringable[] a = null;
+            IStringable[] b = null;
+            IStringable[] c;
+            IStringable[] d = Tests.Array16(a, b, out c);
+            Assert.Null(c);
+            Assert.Null(d);
         }
 
         private T[] Array_Call<T>(T[] a, T[] b, out T[] c)
