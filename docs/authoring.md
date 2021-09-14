@@ -2,10 +2,8 @@
 
 ## Overview
 
-**Note: Authoring Support is still in preview**
 
-
-**Update: C++ customers who use project references to CsWinRT components can now use just a single project reference with .NET 6.0 RC1 -- https://dotnet.microsoft.com/download/dotnet/6.0**
+**Note**: C#/WinRT authoring and hosting project reference support is available with [.NET 6 RC1](https://dotnet.microsoft.com/download/dotnet/6.0) and later. This means the following scenario is **not supported in .NET 5**: C# app with a project reference to a C#/WinRT Component.
 
 C#/WinRT provides support for authoring Windows Runtime components. You can write a library in C#, and specify that it is a `CsWinRTComponent` for C#/WinRT to produce a WinMD that any WinRT compatible language can use. For example, a library written in C# can be used by a C++ program, via C#/WinRT and C++/WinRT.
 Managed apps only need a project or package reference to the authored component, and native apps will need some extra steps that we cover in this documentation.
@@ -28,9 +26,11 @@ To author your component, first create a project using the C# **Class Library (.
       - **net5.0-windows10.0.17763.0**
       - **net5.0-windows10.0.18362.0**
       - **net5.0-windows10.0.19041.0**
+      - **net5.0-windows10.0.20348.0**
       - **net6.0-windows10.0.17763.0**
       - **net6.0-windows10.0.18362.0**
       - **net6.0-windows10.0.19041.0**
+      - **net6.0-windows10.0.20348.0**
 
 2. Install the latest version of the [Microsoft.Windows.CsWinRT](https://www.nuget.org/packages/Microsoft.Windows.CsWinRT) NuGet package.
 
@@ -112,9 +112,7 @@ Consuming a C#/WinRT component from a C++/WinRT desktop application is supported
 
 - For package references, simply right-click on the native project node and click **Manage NuGet packages** to find and install the component package.
 
-- For project references, you also currently need a reference to the component's generated WinMD. The WinMD can be found in the output directory of the authored component's project. To add both the project and WinMD references, right-click on the native project node, and click **Add** -> **Reference**. Select the C#/WinRT component project under the **Projects** node and the generated WinMD file from the **Browse** node.
-
-- **Note: The above instructions are not needed if you use .NET 6.0 RC1 as that release includes support for using a single project reference. No need for an additional reference to a .winmd.**
+- For project references, if your authored component is built with .NET 5, you also need a WinMD reference along with the typical project reference. The WinMD can be found in the output directory of the authored component's project. To add both the project and WinMD references, right-click on the native project node, and click **Add** -> **Reference**. Select the C#/WinRT component project under the **Projects** node and the generated WinMD file from the **Browse** node.
 
 For native consumption of C#/WinRT components, you also need to create a manifest file named `YourNativeApp.exe.manifest`. If your app is packaged with MSIX, then you don't need to include the manifest file. In the case that you do make a manifest, you need to add activatable class registrations for the public types in your component. We provide an [authoring sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo/CppConsoleApp) with an example manifest file. To create the manifest file:
 
