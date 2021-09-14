@@ -124,7 +124,9 @@ For native consumption of C#/WinRT components, you also need to create a manifes
 
 ### Consuming from C# applications
 
-Consuming a C#/WinRT component from C#/.NET 5 is supported by both package reference or project reference. This scenario is equivalent to consuming any ordinary C# class library and does not involve WinRT activation in most cases.
+**Note** Starting with C#/WinRT 1.3.5, this requires .NET 6.
+
+Consuming a C#/WinRT component from C#/.NET apps is supported by both package reference or project reference. This scenario is equivalent to consuming any ordinary C# class library and does not involve WinRT activation in most cases.
 
 ### Consuming an out of process component
 
