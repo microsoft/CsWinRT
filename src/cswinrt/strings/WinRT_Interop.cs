@@ -30,4 +30,17 @@ namespace WinRT.Interop
         public IUnknownVftbl IUnknownVftbl;
         public IntPtr Invoke;
     }
+
+    [Guid("64BD43F8-bFEE-4EC4-B7EB-2935158DAE21")]
+    internal unsafe struct IReferenceTrackerTargetVftbl
+    {
+        public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
+        private void* _AddRefFromReferenceTracker;
+        public delegate* unmanaged[Stdcall]<IntPtr, uint> AddRefFromReferenceTracker => (delegate* unmanaged[Stdcall]<IntPtr, uint>)_AddRefFromReferenceTracker;
+        private void* _ReleaseFromReferenceTracker;
+        public delegate* unmanaged[Stdcall]<IntPtr, uint> ReleaseFromReferenceTracker => (delegate* unmanaged[Stdcall]<IntPtr, uint>)_ReleaseFromReferenceTracker;
+        private void* _Peg;
+        private void* _Unpeg;
+    }
+
 }
