@@ -112,7 +112,7 @@ Consuming a C#/WinRT component from a C++/WinRT desktop application is supported
 
 - For package references, simply right-click on the native project node and click **Manage NuGet packages** to find and install the component package.
 
-- For project references, if your authored component is built with .NET 5, you also need a WinMD reference along with the typical project reference. The WinMD can be found in the output directory of the authored component's project. To add both the project and WinMD references, right-click on the native project node, and click **Add** -> **Reference**. Select the C#/WinRT component project under the **Projects** node and the generated WinMD file from the **Browse** node.
+- For project references, if your authored component is built with C#/WinRT version 1.3.3 or earlier, you also need a WinMD reference along with the typical project reference. The WinMD can be found in the output directory of the authored component's project. To add both the project and WinMD references, right-click on the native project node, and click **Add** -> **Reference**. Select the C#/WinRT component project under the **Projects** node and the generated WinMD file from the **Browse** node.
 
 For native consumption of C#/WinRT components, you also need to create a manifest file named `YourNativeApp.exe.manifest`. If your app is packaged with MSIX, then you don't need to include the manifest file. In the case that you do make a manifest, you need to add activatable class registrations for the public types in your component. We provide an [authoring sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo/CppConsoleApp) with an example manifest file. To create the manifest file:
 
@@ -124,7 +124,7 @@ For native consumption of C#/WinRT components, you also need to create a manifes
 
 ### Consuming from C# applications
 
-**Note** Starting with C#/WinRT 1.3.5, this requires .NET 6.
+**Note** Starting with C#/WinRT 1.3.5, project references require .NET 6.
 
 Consuming a C#/WinRT component from C#/.NET apps is supported by both package reference or project reference. This scenario is equivalent to consuming any ordinary C# class library and does not involve WinRT activation in most cases.
 
