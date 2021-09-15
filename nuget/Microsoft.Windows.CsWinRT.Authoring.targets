@@ -101,10 +101,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   
   </Target>
 
-  <!-- in VS rebuild scenarios, it will only call gettargetpath, 
-       so we might need to have GetTargetPath depend on a target 
-       that makes sure the managed implementation gets copied to the output directory -->
+  <!-- Because we remove this .dll during GetTargetPath, we have to make sure it gets placed in the output directory -->
   <Target Name="CsWinRTAuthoring_OutputManagedDll" DependsOnTargets="GetTargetPathWithTargetPlatformMoniker" BeforeTargets="GetTargetPath">
+    
     <ItemGroup> 
       <AllItemsFullPathWithTargetPath Include="@(TargetPathWithTargetPlatformMoniker)">
         <TargetPath>%(Filename)%(Extension)</TargetPath>
@@ -116,6 +115,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> 
       </AllPublishItemsFullPathWithTargetPath>
     </ItemGroup>
+
   </Target>
 
   <!-- Update the project to only output the assembly's .winmd -->
@@ -136,7 +136,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <Implementation>WinRT.Host.dll</Implementation>
         <!-- show to c++ compiler (native case) and dotnet sdk (managed case) -->
         <ResolveableAssembly>true</ResolveableAssembly>
-        <!-- Use in dotnet sdk to add this as a reference assembly -->
+        <!-- Used by the dotnet sdk -->
         <ManagedImplementation>%(CsWinRTComponent_ManagedImplementation.TargetPath)</ManagedImplementation>
         <FileType>winmd</FileType>
         <WinMDFile>true</WinMDFile>
