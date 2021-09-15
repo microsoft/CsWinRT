@@ -2,8 +2,8 @@
 
 ## Overview
 
-
-**Note**: C#/WinRT authoring and hosting project reference support is available with [.NET 6 RC1](https://dotnet.microsoft.com/download/dotnet/6.0) and later. This means the following scenario is **not supported in .NET 5**: C# app with a project reference to a C#/WinRT Component.
+**Note**: Authoring support is still in preview. 
+**Note**: C#/WinRT authoring and hosting project reference support is available with [.NET 6 RC1](https://dotnet.microsoft.com/download/dotnet/6.0) and later. This means the following scenario is **not supported in .NET 5**: C# app with a project reference to a C#/WinRT authored component.
 
 C#/WinRT provides support for authoring Windows Runtime components. You can write a library in C#, and specify that it is a `CsWinRTComponent` for C#/WinRT to produce a WinMD that any WinRT compatible language can use. For example, a library written in C# can be used by a C++ program, via C#/WinRT and C++/WinRT.
 Managed apps only need a project or package reference to the authored component, and native apps will need some extra steps that we cover in this documentation.
