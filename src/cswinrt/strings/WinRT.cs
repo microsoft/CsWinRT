@@ -604,8 +604,12 @@ namespace WinRT
 #if NETSTANDARD2_0
                     var weakRefSource = (IWeakReferenceSource)typeof(IWeakReferenceSource).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { obj });
 #else
-                    var weakRefSource = (IWeakReferenceSource)(object)new WinRT.IInspectable(obj);
+                    var weakRefSource = ((object)new WinRT.IInspectable(obj)) as IWeakReferenceSource;
 #endif
+                    if (weakRefSource == null)
+                    {
+                        return;
+                    }
                     target = weakRefSource.GetWeakReference();
                 }
                 catch (Exception)
