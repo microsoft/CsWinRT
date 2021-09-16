@@ -2672,5 +2672,11 @@ namespace UnitTest
                 return pnpObject;
             }).ToList();
         }
+
+        [Fact]
+        private void TestFastAbi()
+        {
+            
+        }
     }
 }

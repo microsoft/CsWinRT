@@ -994,4 +994,148 @@ namespace cswinrt
             return "Unknown";
         }
     }
+
+    template <typename T>
+    int get_number_of_attributes(T const& row, std::string_view const& type_namespace, std::string_view const& type_name)
+    {
+        auto count = 0;
+        for (auto&& attribute : row.CustomAttribute())
+        {
+            auto pair = attribute.TypeNamespaceAndName();
+
+            if (pair.first == type_namespace && pair.second == type_name)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    template <typename T>
+    auto get_attribute_value(CustomAttribute const& attribute, uint32_t const arg)
+    {
+        return std::get<T>(std::get<ElemSig>(attribute.Value().FixedArgs()[arg].value).value);
+    }
+
+    /*std::optional<std::vector<std::string>> get_contract_version_history(TypeDef const& iface)
+    {
+        auto version_attribute = get_attribute(iface, "Windows.Foundation.Metadata"sv, "ContractVersionAttribute"sv);
+        if (version_attribute)
+        {
+            auto currentContractName = get_attribute_value<ElemSig::SystemType>(version_attribute, 0);
+            currentContractName.name
+            auto x = 1;
+        }
+        return {};
+    }*/
+
+    std::optional<int> get_contract_version(TypeDef const& type)
+    {
+        if (!has_attribute(type, "Windows.Foundation.Metadata", "ContractVersionAttribute"))
+        {
+            return {};
+        }
+        return get_attribute_value<uint32_t>(get_attribute(type, "Windows.Foundation.Metadata"sv, "ContractVersionAttribute"sv), 1);
+    }
+
+    std::optional<int> get_version(TypeDef const& type)
+    {
+        if (!has_attribute(type, "Windows.Foundation.Metadata", "VersionAttribute"))
+        {
+            return {};
+        }
+        return get_attribute_value<uint32_t>(get_attribute(type, "Windows.Foundation.Metadata"sv, "VersionAttribute"sv), 0);
+    }
+
+    std::optional<TypeDef> get_fast_abi_class_for_default_interface(TypeDef const& iface)
+    {
+        auto exclusiveToAttribute = get_attribute(iface, "Windows.Foundation.Metadata"sv, "ExclusiveToAttribute"sv);
+        if (exclusiveToAttribute)
+        {
+            auto sys_type = get_attribute_value<ElemSig::SystemType>(exclusiveToAttribute, 0);
+            TypeDef exclusiveToClass = iface.get_cache().find_required(sys_type.name);
+            if (!has_attribute(exclusiveToClass, "Windows.Foundation.Metadata"sv, "FastAbiAttribute"sv))
+            {
+                return {};
+            }
+            for (auto&& ifaceImpl : exclusiveToClass.InterfaceImpl())
+            {
+                if (has_attribute(ifaceImpl, "Windows.Foundation.Metadata", "DefaultAttribute"))
+                {
+                    auto&& sem = get_type_semantics(ifaceImpl.Interface());
+                    if (std::holds_alternative<type_definition>(sem) && std::get<type_definition>(sem).TypeNamespace() == iface.TypeNamespace() && std::get<type_definition>(sem).TypeName() == iface.TypeName())
+                    {
+                        return exclusiveToClass;
+                    }
+                    return {};
+                }
+            }
+        }
+        return {};
+    }
+
+    std::vector<TypeDef> get_exclusive_interfaces_except_default(TypeDef const& classType)
+    {
+        std::vector<TypeDef> exclusive_interfaces;
+        for (auto&& ifaceImpl : classType.InterfaceImpl())
+        {
+            if (has_attribute(ifaceImpl, "Windows.Foundation.Metadata", "DefaultAttribute"))
+            {
+                continue;
+            }
+            auto&& sem = get_type_semantics(ifaceImpl.Interface());
+            if (std::holds_alternative<type_definition>(sem))
+            {
+                if (has_attribute(std::get<type_definition>(sem), "Windows.Foundation.Metadata"sv, "ExclusiveToAttribute"sv))
+                {
+                    exclusive_interfaces.push_back(std::get<type_definition>(sem));
+                }
+            }
+        }
+        return exclusive_interfaces;
+    }
+
+    int get_class_hierarchy_index(TypeDef const& classType)
+    {
+        auto sem = get_type_semantics(classType.Extends());
+        if (std::holds_alternative<type_definition>(sem))
+        {
+            return get_class_hierarchy_index(std::get<type_definition>(sem)) + 1;
+        }
+        return 0;
+    }
+
+    std::optional<std::vector<TypeDef>> get_fast_abi_ifaces_except_default(TypeDef const& classType)
+    {
+        std::vector<TypeDef> fast_abi_ifaces;
+        if (has_attribute(classType, "Windows.Foundation.Metadata"sv, "FastAbiAttribute"sv))
+        {
+            fast_abi_ifaces = get_exclusive_interfaces_except_default(classType);
+            std::sort(fast_abi_ifaces.begin(), fast_abi_ifaces.end(), [](TypeDef const& iface, TypeDef const& otherIface)
+                {
+                    // compare relative contracts
+                    auto relativeContractValueIface = -1 * get_number_of_attributes(iface, "Windows.Foundation.Metadata"sv, "PreviousContractVersionAttribute"sv);
+                    auto relativeContractValueOtherIface = -1 * get_number_of_attributes(otherIface, "Windows.Foundation.Metadata"sv, "PreviousContractVersionAttribute"sv);
+                    if (relativeContractValueIface != relativeContractValueOtherIface)
+                        return relativeContractValueIface < relativeContractValueOtherIface;
+
+                    //compare contract versions if they exist
+                    auto contractVersionIface = get_contract_version(iface);
+                    auto contractVersionOtherIface = get_contract_version(iface);
+                    if (contractVersionIface.has_value() && contractVersionOtherIface.has_value() && contractVersionIface.value() != contractVersionOtherIface.value())
+                        return contractVersionIface.value() < contractVersionOtherIface.value();
+
+                    //compare versions
+                    auto versionIface = get_version(iface);
+                    auto versionOtherIface = get_version(iface);
+                    if (versionIface.has_value() && versionOtherIface.has_value() && versionIface.value() != versionOtherIface.value())
+                        return versionIface.value() < versionOtherIface.value();
+
+                    //compare strings
+                    return iface.TypeNamespace() == otherIface.TypeNamespace() ? iface.TypeName() < otherIface.TypeName() : iface.TypeNamespace() < otherIface.TypeNamespace();
+                });
+            return fast_abi_ifaces;
+        }
+        return {};
+    }
 }

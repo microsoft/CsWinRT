@@ -170,12 +170,22 @@ namespace WinRT
             return hr;
         }
 
-        // Used only as part of the GetInterface implementation where the
-        // result is an reference passed across the ABI and doesn't need to
-        // be tracked as an internal reference.  This is separate to handle
-        // tear off aggregate scenario where releasing an reference can end up
-        // deleting the tear off interface.
-        public virtual unsafe int TryAs(Guid iid, out IntPtr ppv)
+        public virtual unsafe ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
+        {
+            AddRefFromTrackerSource();
+            var objRef = ObjectReference<IUnknownVftbl>.Attach(ref ptr);
+            objRef.IsAggregated = IsAggregated;
+            objRef.PreventReleaseOnDispose = IsAggregated;
+            objRef.ReferenceTrackerPtr = ReferenceTrackerPtr;
+            return objRef;
+        }
+
+    // Used only as part of the GetInterface implementation where the
+    // result is an reference passed across the ABI and doesn't need to
+    // be tracked as an internal reference.  This is separate to handle
+    // tear off aggregate scenario where releasing an reference can end up
+    // deleting the tear off interface.
+    public virtual unsafe int TryAs(Guid iid, out IntPtr ppv)
         {
             ppv = IntPtr.Zero;
             ThrowIfDisposed();
