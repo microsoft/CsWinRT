@@ -894,8 +894,10 @@ namespace WinRT
         public static void DisposeAbi(IntPtr ptr)
         {
             if (ptr == IntPtr.Zero) return;
-            // TODO: this should be a direct v-table call when function pointers are a thing
-            ObjectReference<WinRT.Interop.IUnknownVftbl>.Attach(ref ptr).Dispose();
+            unsafe
+            {
+                (**(IUnknownVftbl**)ptr).Release(ptr);
+            }
         }
     }
 
