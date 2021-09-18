@@ -484,7 +484,8 @@ namespace WinRT
                 bool registerHandler =
                     _state is null ||
                     !_state.TryGetTarget(out state) ||
-                    !state.HasComReferences(); // We have a wrapper delegate we created, but no longer has any references from any event source.
+                    // We have a wrapper delegate, but no longer has any references from any event source.
+                    !state.HasComReferences();
                 if (registerHandler)
                 {
                     state = CreateEventState();
