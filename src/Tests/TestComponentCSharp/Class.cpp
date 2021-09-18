@@ -346,7 +346,9 @@ namespace winrt::TestComponentCSharp::implementation
     }
     winrt::event_token Class::IntPropertyChanged(EventHandler<int32_t> const& handler)
     {
-        return _intChanged.add(handler);
+        auto eventToken = _intChanged.add(handler);
+        _lastIntChangedEventToken = eventToken;
+        return eventToken;
     }
     void Class::IntPropertyChanged(winrt::event_token const& token) noexcept
     {
@@ -355,6 +357,10 @@ namespace winrt::TestComponentCSharp::implementation
     void Class::RaiseIntChanged()
     {
         _intChanged(*this, _int);
+    }
+    void Class::RemoveLastIntPropertyChangedHandler()
+    {
+        _intChanged.remove(_lastIntChangedEventToken);
     }
     void Class::CallForInt(TestComponentCSharp::ProvideInt const& provideInt)
     {
