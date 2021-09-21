@@ -12,9 +12,14 @@ namespace WinRT
         private Type _type;
         private IObjectReference _obj;
 
-        public SingleInterfaceOptimizedObject(Type type, IObjectReference objRef)
+        public SingleInterfaceOptimizedObject(Type type, IObjectReference objRef, bool isTypedObjRef = false)
         {
             _type = type;
+            if (isTypedObjRef)
+            {
+                _obj = objRef;
+                return;
+            }
             Type helperType = type.FindHelperType();
             var vftblType = helperType.FindVftblType();
             if (vftblType is null)

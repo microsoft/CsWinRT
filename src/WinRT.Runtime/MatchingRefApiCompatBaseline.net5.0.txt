@@ -5,6 +5,7 @@ MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterObjectFo
 MembersMustExist : Member 'protected void WinRT.IObjectReference.AddRef(System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> WinRT.IObjectReference.AsKnownPtr(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Int32 WinRT.IObjectReference.TryAs(System.Guid, System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.SingleInterfaceOptimizedObject..ctor(System.Type, WinRT.IObjectReference, System.Boolean)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 8
+Total Issues: 9

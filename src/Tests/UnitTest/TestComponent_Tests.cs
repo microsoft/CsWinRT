@@ -847,9 +847,35 @@ namespace UnitTest
 
 #if NET5_0
         [Fact]
-        public void FastAbi()
+        public void Fast_Abi_Simple()
         {
-            new Test.TestClass().Main();
+            var simple = new test_component_fast.Simple();
+            Assert.Equal("Method1", simple.Method1());
+            Assert.Equal("Method2", simple.Method2());
+            Assert.Equal("Method3", simple.Method3());
+            simple.Property1 = "Property1";
+            simple.Property3 = "Property3";
+            Assert.Equal("Property1", simple.Property1);
+            Assert.Equal("Property2", simple.Property2);
+            Assert.Equal("Property3", simple.Property3);
+            var ev = "";
+            simple.Event0 += () =>
+            {
+                ev = "Hello";
+            };
+            simple.InvokeEvent0();
+            Assert.Equal("Hello", ev);
+        }
+
+        [Fact]
+        public void Fast_Abi_Composition()
+        {
+            var compositor = new test_component_fast.Composition.Compositor();
+            var sv = compositor.CreateSpriteVisual();
+            sv.Offset = 10;
+            sv.StartAnimationGroup();
+            Assert.Equal(10, sv.Offset);
+            Assert.Equal(10, sv.Pad);
         }
 #endif
         // Nota Bene: this test case must always remain the final one

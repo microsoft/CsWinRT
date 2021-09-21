@@ -172,7 +172,7 @@ namespace WinRT
 
         public virtual unsafe ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
         {
-            AddRefFromTrackerSource();
+            AddRef(true);
             var objRef = ObjectReference<IUnknownVftbl>.Attach(ref ptr);
             objRef.IsAggregated = IsAggregated;
             objRef.PreventReleaseOnDispose = IsAggregated;

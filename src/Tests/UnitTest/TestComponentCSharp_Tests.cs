@@ -2673,10 +2673,5 @@ namespace UnitTest
             }).ToList();
         }
 
-        [Fact]
-        private void TestFastAbi()
-        {
-            
-        }
     }
 }
