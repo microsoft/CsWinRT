@@ -1,4 +1,8 @@
 Compat issues with assembly WinRT.Runtime:
+CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.CompilerGeneratedAttribute' exists on 'WinRT.IInspectable.WinRT.IWinRTObject.get_AdditionalTypeData()' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.CompilerGeneratedAttribute' exists on 'WinRT.IInspectable.WinRT.IWinRTObject.get_QueryInterfaceCache()' in the contract but not the implementation.
 MembersMustExist : Member 'public WinRT.MarshalString.HStringHeader WinRT.MarshalString.HStringHeader WinRT.MarshalString._header' does not exist in the implementation but it does exist in the contract.
 TypesMustExist : Type 'WinRT.MarshalString.HStringHeader' does not exist in the implementation but it does exist in the contract.
-Total Issues: 2
+CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.CompilerGeneratedAttribute' exists on 'WinRT.SingleInterfaceOptimizedObject.WinRT.IWinRTObject.get_AdditionalTypeData()' in the contract but not the implementation.
+CannotRemoveAttribute : Attribute 'System.Runtime.CompilerServices.CompilerGeneratedAttribute' exists on 'WinRT.SingleInterfaceOptimizedObject.WinRT.IWinRTObject.get_QueryInterfaceCache()' in the contract but not the implementation.
+Total Issues: 6

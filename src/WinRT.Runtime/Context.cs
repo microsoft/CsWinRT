@@ -58,9 +58,10 @@ namespace WinRT
             }
         }
 
-        public static void DisposeContextCallback(IntPtr contextCallbackPtr)
+        public unsafe static void DisposeContextCallback(IntPtr contextCallbackPtr)
         {
-            using var contextcallback = ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.Attach(ref contextCallbackPtr);
+            if (contextCallbackPtr == IntPtr.Zero) return;
+            (**(IUnknownVftbl**)contextCallbackPtr).Release(contextCallbackPtr);
         }
     }
 }
