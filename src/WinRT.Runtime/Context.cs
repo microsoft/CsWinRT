@@ -58,10 +58,9 @@ namespace WinRT
             }
         }
 
-        public unsafe static void DisposeContextCallback(IntPtr contextCallbackPtr)
+        public static void DisposeContextCallback(IntPtr contextCallbackPtr)
         {
-            if (contextCallbackPtr == IntPtr.Zero) return;
-            (**(IUnknownVftbl**)contextCallbackPtr).Release(contextCallbackPtr);
+            MarshalInspectable<object>.DisposeAbi(contextCallbackPtr);
         }
     }
 }
