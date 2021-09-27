@@ -176,8 +176,15 @@ namespace WinRT
         {
             IntPtr instancePtr;
             var hstrRuntimeClassId = MarshalString.CreateMarshaler(runtimeClassId);
-            int hr = _GetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), out instancePtr);
-            return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
+            try
+            {
+                int hr = _GetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), out instancePtr);
+                return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
+            }
+            finally
+            {
+                hstrRuntimeClassId.Dispose();
+            }
         }
 
         ~DllModule()
