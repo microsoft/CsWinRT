@@ -1656,10 +1656,7 @@ remove => %.% -= value;
                 cache_type_name);
         auto cache_interface =
             w.write_temp(
-                R"((new BaseActivationFactory("%", "%.%"))._As<%>)",
-                class_type.TypeNamespace(),
-                class_type.TypeNamespace(),
-                class_type.TypeName(),
+                R"(_factory._As<%>)",
                 cache_vftbl_type);
             w.write(R"(
 internal class _% : ABI.%.%
@@ -1686,7 +1683,7 @@ internal class _% : IWinRTObject
 private IObjectReference _obj;
 public _%()
 {
-_obj = (new BaseActivationFactory("%", "%.%"))._As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
+_obj = _factory._As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
 }
 
 %
@@ -1702,9 +1699,6 @@ global::System.Collections.Concurrent.ConcurrentDictionary<global::System.Runtim
 )",
                 cache_type_name,
                 cache_type_name,
-                class_type.TypeNamespace(),
-                class_type.TypeNamespace(),
-                class_type.TypeName(),
                 class_type.TypeNamespace(),
                 cache_type_name,
                 instance,
