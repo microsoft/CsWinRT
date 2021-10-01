@@ -38,7 +38,7 @@ namespace Generator
     {
         public bool Equals(AttributeData x, AttributeData y)
         {
-            return x.ToString() == y.ToString();
+            return string.CompareOrdinal(x.ToString(), y.ToString()) == 0;
         }
 
         public int GetHashCode(AttributeData obj)
