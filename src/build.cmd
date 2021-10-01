@@ -157,7 +157,6 @@ if %cswinrt_platform%==arm64 goto :eof
 :test
 :unittest
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
-echo Running cswinrt unit tests for %cswinrt_platform% %cswinrt_configuration%
 if %cswinrt_platform%==x86 (
   set dotnet_exe="%DOTNET_ROOT(86)%\dotnet.exe"
 ) else (
@@ -173,15 +172,19 @@ if not exist %dotnet_exe% (
 
 :objectlifetimetests
 rem Running Object Lifetime Unit Tests
-pushd .
-cd %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_platform%\%cswinrt_configuration%\net5.0-windows10.0.19041.0\win10-%cswinrt_platform%
-sn -Vr Microsoft.Windows.SDK.NET.dll
-vstest.console.exe ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%USERPROFILE%\.nuget\packages\mstest.testadapter\2.2.4-preview-20210513-02\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx 
-popd
+echo Running object lifetime tests for %cswinrt_platform% %cswinrt_configuration%
+if '%NUGET_PACKAGES%'=='' set NUGET_PACKAGES=%USERPROFILE%\.nuget\packages
+call :exec vstest.console.exe %this_dir%\Tests\ObjectLifetimeTests\bin\%cswinrt_platform%\%cswinrt_configuration%\net5.0-windows10.0.19041.0\win10-%cswinrt_platform%\ObjectLifetimeTests.Lifted.build.appxrecipe /TestAdapterPath:"%NUGET_PACKAGES%\mstest.testadapter\2.2.4-preview-20210513-02\build\_common" /framework:FrameworkUap10 /logger:trx;LogFileName=%this_dir%\VsTestResults.trx 
+if ErrorLevel 1 (
+  echo.
+  echo ERROR: Lifetime test failed, skipping NuGet pack
+  exit /b !ErrorLevel!
+)
 
 rem WinUI NuGet package's Microsoft.WinUI.AppX.targets attempts to import a file that does not exist, even when
 rem executing "dotnet test --no-build ...", which evidently still needs to parse and load the entire project.
 rem Work around by using a dummy targets file and assigning it to the MsAppxPackageTargets property.
+echo Running cswinrt unit tests for %cswinrt_platform% %cswinrt_configuration%
 echo ^<Project/^> > %temp%\EmptyMsAppxPackage.Targets
 call :exec %dotnet_exe% test --verbosity normal --no-build --logger xunit;LogFilePath=%~dp0unittest_%cswinrt_version_string%.xml %this_dir%Tests/unittest/UnitTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;MsAppxPackageTargets=%temp%\EmptyMsAppxPackage.Targets 
 if ErrorLevel 1 (
