@@ -358,25 +358,7 @@ namespace WinRT
         protected static readonly Type MarshalerType = typeof(T).GetMarshalerType();
         internal static readonly Type MarshalerArrayType = typeof(T).GetMarshalerArrayType();
 
-        static MarshalGeneric()
-        {
-            CreateMarshaler = (T value) => CreateMarshalerLazy.Value(value);
-            GetAbi = (object objRef) => GetAbiLazy.Value(objRef);
-            FromAbi = (object box) => FromAbiLazy.Value(box);
-            CopyAbi = (object box, IntPtr dest) => CopyAbiLazy.Value(box, dest);
-            FromManaged = (T value) => FromManagedLazy.Value(value);
-            CopyManaged = (T value, IntPtr dest) => CopyManagedLazy.Value(value, dest);
-            DisposeMarshaler = (object objRef) => DisposeMarshalerLazy.Value(objRef);
-            DisposeAbi = (object box) => DisposeAbiLazy.Value(box);
-            CreateMarshalerArray = (T[] array) => CreateMarshalerArrayLazy.Value(array);
-            GetAbiArray = (object box) => GetAbiArrayLazy.Value(box);
-            FromAbiArray = (object box) => FromAbiArrayLazy.Value(box);
-            FromManagedArray = (T[] array) => FromManagedArrayLazy.Value(array);
-            DisposeMarshalerArray = (object box) => DisposeMarshalerArrayLazy.Value(box);
-            DisposeAbiArray = (object box) => DisposeAbiArrayLazy.Value(box);
-        }
-
-        public static readonly Func<T, object> CreateMarshaler;
+        public static readonly Func<T, object> CreateMarshaler = (T value) => CreateMarshalerLazy.Value(value);
         private static readonly Lazy<Func<T, object>> CreateMarshalerLazy = new(BindCreateMarshaler);
         private static Func<T, object> BindCreateMarshaler()
         {
@@ -386,7 +368,7 @@ namespace WinRT
                     typeof(object)), parms).Compile();
         }
 
-        public static readonly Func<object, object> GetAbi;
+        public static readonly Func<object, object> GetAbi = (object objRef) => GetAbiLazy.Value(objRef);
         private static readonly Lazy<Func<object, object>> GetAbiLazy = new(BindGetAbi);
         private static Func<object, object> BindGetAbi()
         {
@@ -397,7 +379,7 @@ namespace WinRT
                         typeof(object)), parms).Compile();
         }
 
-        public static readonly Action<object, IntPtr> CopyAbi;
+        public static readonly Action<object, IntPtr> CopyAbi = (object box, IntPtr dest) => CopyAbiLazy.Value(box, dest);
         private static readonly Lazy<Action<object, IntPtr>> CopyAbiLazy = new(BindCopyAbi);
         private static Action<object, IntPtr> BindCopyAbi()
         {
@@ -409,7 +391,7 @@ namespace WinRT
                     new Expression[] { Expression.Convert(parms[0], MarshalerType), parms[1] }), parms).Compile();
         }
 
-        public static readonly Func<object, T> FromAbi;
+        public static readonly Func<object, T> FromAbi = (object box) => FromAbiLazy.Value(box);
         private static readonly Lazy<Func<object, T>> FromAbiLazy = new(BindFromAbi);
         private static Func<object, T> BindFromAbi()
         {
@@ -419,7 +401,7 @@ namespace WinRT
                     new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
         }
 
-        public static readonly Func<T, object> FromManaged;
+        public static readonly Func<T, object> FromManaged = (T value) => FromManagedLazy.Value(value);
         private static readonly Lazy<Func<T, object>> FromManagedLazy = new(BindFromManaged);
         private static Func<T, object> BindFromManaged()
         {
@@ -429,7 +411,7 @@ namespace WinRT
                     typeof(object)), parms).Compile();
         }
 
-        public static readonly Action<T, IntPtr> CopyManaged;
+        public static readonly Action<T, IntPtr> CopyManaged = (T value, IntPtr dest) => CopyManagedLazy.Value(value, dest);
         private static readonly Lazy<Action<T, IntPtr>> CopyManagedLazy = new(BindCopyManaged);
         private static Action<T, IntPtr> BindCopyManaged()
         {
@@ -440,7 +422,7 @@ namespace WinRT
                 Expression.Call(copyManaged, parms), parms).Compile();
         }
 
-        public static readonly Action<object> DisposeMarshaler;
+        public static readonly Action<object> DisposeMarshaler = (object objRef) => DisposeMarshalerLazy.Value(objRef);
         private static readonly Lazy<Action<object>> DisposeMarshalerLazy = new(BindDisposeMarshaler);
         private static Action<object> BindDisposeMarshaler()
         {
@@ -450,7 +432,7 @@ namespace WinRT
                     new[] { Expression.Convert(parms[0], MarshalerType) }), parms).Compile();
         }
 
-        internal static readonly Action<object> DisposeAbi;
+        internal static readonly Action<object> DisposeAbi = (object box) => DisposeAbiLazy.Value(box);
         private static readonly Lazy<Action<object>> DisposeAbiLazy = new(BindDisposeAbi);
         private static Action<object> BindDisposeAbi()
         {
@@ -461,7 +443,7 @@ namespace WinRT
                 Expression.Call(disposeAbi, new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
         }
 
-        internal static readonly Func<T[], object> CreateMarshalerArray;
+        internal static readonly Func<T[], object> CreateMarshalerArray = (T[] array) => CreateMarshalerArrayLazy.Value(array);
         private static readonly Lazy<Func<T[], object>> CreateMarshalerArrayLazy = new(BindCreateMarshalerArray);
         private static Func<T[], object> BindCreateMarshalerArray()
         {
@@ -472,7 +454,7 @@ namespace WinRT
                 Expression.Convert(Expression.Call(createMarshalerArray, parms), typeof(object)), parms).Compile();
         }
 
-        internal static readonly Func<object, (int, IntPtr)> GetAbiArray;
+        internal static readonly Func<object, (int, IntPtr)> GetAbiArray = (object box) => GetAbiArrayLazy.Value(box);
         private static readonly Lazy<Func<object, (int, IntPtr)>> GetAbiArrayLazy = new(BindGetAbiArray);
         private static Func<object, (int, IntPtr)> BindGetAbiArray()
         {
@@ -483,7 +465,7 @@ namespace WinRT
                 Expression.Convert(Expression.Call(getAbiArray, parms), typeof((int, IntPtr))), parms).Compile();
         }
 
-        internal static readonly Func<object, T[]> FromAbiArray;
+        internal static readonly Func<object, T[]> FromAbiArray = (object box) => FromAbiArrayLazy.Value(box);
         private static readonly Lazy<Func<object, T[]>> FromAbiArrayLazy = new(BindFromAbiArray);
         private static Func<object, T[]> BindFromAbiArray()
         {
@@ -494,7 +476,7 @@ namespace WinRT
                 Expression.Call(fromAbiArray, parms), parms).Compile();
         }
 
-        internal static readonly Func<T[], (int, IntPtr)> FromManagedArray;
+        internal static readonly Func<T[], (int, IntPtr)> FromManagedArray = (T[] array) => FromManagedArrayLazy.Value(array);
         private static readonly Lazy<Func<T[], (int, IntPtr)>> FromManagedArrayLazy = new(BindFromManagedArray);
         private static Func<T[], (int, IntPtr)> BindFromManagedArray()
         {
@@ -505,7 +487,7 @@ namespace WinRT
                 Expression.Convert(Expression.Call(fromManagedArray, parms), typeof((int, IntPtr))), parms).Compile();
         }
 
-        internal static readonly Action<object> DisposeMarshalerArray;
+        internal static readonly Action<object> DisposeMarshalerArray = (object box) => DisposeMarshalerArrayLazy.Value(box);
         private static readonly Lazy<Action<object>> DisposeMarshalerArrayLazy = new(BindDisposeMarshalerArray);
         private static Action<object> BindDisposeMarshalerArray()
         {
@@ -516,7 +498,7 @@ namespace WinRT
                 Expression.Call(disposeMarshalerArray, Expression.Convert(parms[0], MarshalerArrayType)), parms).Compile();
         }
 
-        internal static readonly Action<object> DisposeAbiArray;
+        internal static readonly Action<object> DisposeAbiArray = (object box) => DisposeAbiArrayLazy.Value(box);
         private static readonly Lazy<Action<object>> DisposeAbiArrayLazy = new(BindDisposeAbiArray);
         private static Action<object> BindDisposeAbiArray()
         {
