@@ -369,6 +369,8 @@ namespace WinRT
             private readonly IntPtr obj;
             private readonly int index;
             private readonly System.WeakReference<State> cacheEntry;
+            private IntPtr eventInvokePtr;
+            private IntPtr referenceTrackerTargetPtr;
 
             protected State(IntPtr obj, int index)
             {
@@ -412,6 +414,52 @@ namespace WinRT
                 Dispose(true);
                 GC.SuppressFinalize(this);
             }
+
+            public void InitalizeReferenceTracking(IntPtr ptr)
+            {
+                eventInvokePtr = ptr;
+                Guid iid = typeof(IReferenceTrackerTargetVftbl).GUID;
+                int hr = Marshal.QueryInterface(ptr, ref iid, out referenceTrackerTargetPtr);
+                if (hr != 0)
+                {
+                    referenceTrackerTargetPtr = default;
+                }
+                else
+                {
+                    // We don't want to keep ourselves alive and as long as this object
+                    // is alive, the CCW still exists.
+                    Marshal.Release(referenceTrackerTargetPtr);
+                }
+            }
+
+            public bool HasComReferences()
+            {
+                if (eventInvokePtr != default)
+                {
+                    IUnknownVftbl vftblIUnknown = **(IUnknownVftbl**)eventInvokePtr;
+                    vftblIUnknown.AddRef(eventInvokePtr);
+                    uint comRefCount = vftblIUnknown.Release(eventInvokePtr);
+                    if (comRefCount != 0)
+                    {
+                        return true;
+                    }
+                }
+
+                if (referenceTrackerTargetPtr != default)
+                {
+                    IReferenceTrackerTargetVftbl vftblReferenceTracker = **(IReferenceTrackerTargetVftbl**)referenceTrackerTargetPtr;
+                    vftblReferenceTracker.AddRefFromReferenceTracker(referenceTrackerTargetPtr);
+                    uint refTrackerCount = vftblReferenceTracker.ReleaseFromReferenceTracker(referenceTrackerTargetPtr);
+                    if (refTrackerCount != 0)
+                    {
+                        // Note we can't tell if the reference tracker ref is pegged or not, so this is best effort where if there
+                        // are any reference tracker references, we assume the event has references.
+                        return true;
+                    }
+                }
+
+                return false;
+            }
         }
         protected System.WeakReference<State> _state;
 
@@ -440,7 +488,11 @@ namespace WinRT
             lock (this)
             {
                 State state = null;
-                bool registerHandler = _state is null || !_state.TryGetTarget(out state);
+                bool registerHandler =
+                    _state is null ||
+                    !_state.TryGetTarget(out state) ||
+                    // We have a wrapper delegate, but no longer has any references from any event source.
+                    !state.HasComReferences();
                 if (registerHandler)
                 {
                     state = CreateEventState();
@@ -456,6 +508,7 @@ namespace WinRT
                     try
                     {
                         var nativeDelegate = GetAbi(marshaler);
+                        state.InitalizeReferenceTracking(nativeDelegate);
                         ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out state.token));
                     }
                     finally
@@ -559,8 +612,12 @@ namespace WinRT
 #if NETSTANDARD2_0
                     var weakRefSource = (IWeakReferenceSource)typeof(IWeakReferenceSource).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { obj });
 #else
-                    var weakRefSource = (IWeakReferenceSource)(object)new WinRT.IInspectable(obj);
+                    var weakRefSource = ((object)new WinRT.IInspectable(obj)) as IWeakReferenceSource;
 #endif
+                    if (weakRefSource == null)
+                    {
+                        return;
+                    }
                     target = weakRefSource.GetWeakReference();
                 }
                 catch (Exception)

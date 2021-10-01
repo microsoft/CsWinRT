@@ -28,6 +28,7 @@ namespace winrt::TestComponentCSharp::implementation
 
         int32_t _int = 0;
         winrt::event<Windows::Foundation::EventHandler<int32_t>> _intChanged;
+        winrt::event_token _lastIntChangedEventToken;
         bool _bool = false;
         winrt::event<Windows::Foundation::EventHandler<bool>> _boolChanged;
         EnumValue _enumValue;
@@ -138,6 +139,7 @@ namespace winrt::TestComponentCSharp::implementation
         winrt::event_token IntPropertyChanged(Windows::Foundation::EventHandler<int32_t> const& handler);
         void IntPropertyChanged(winrt::event_token const& token) noexcept;
         void RaiseIntChanged();
+        void RemoveLastIntPropertyChangedHandler();
         void CallForInt(TestComponentCSharp::ProvideInt const& provideInt);
         bool BoolProperty();
         void BoolProperty(bool value);
