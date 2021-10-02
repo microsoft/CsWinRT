@@ -16,14 +16,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
+    <PackageReference Include="BenchmarkDotNet.Diagnostics.Windows" Version="0.13.1" />
     <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.18362.2005" Condition="$(UseWinmd) == true"/>
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" Condition="$(UseWinmd) == false"/>
   </ItemGroup>
     
   <ItemGroup>
-    <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Windows\bin\x64\Release\$(BenchmarkTargetFramework)\Microsoft.Windows.SDK.NET.dll"></Reference>
-    <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Benchmark\bin\x64\Release\$(BenchmarkTargetFramework)\Benchmark.dll"></Reference>
+    <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Windows\bin\x64\Release\$(BenchmarkTargetFramework)\Microsoft.Windows.SDK.NET.dll" Condition="$(UseWinmd) == false"></Reference>
+    <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Benchmark\bin\x64\Release\$(BenchmarkTargetFramework)\Benchmark.dll" Condition="$(UseWinmd) == false"></Reference>
     
     <ProjectReference Include="..\Projections\Windows\Windows.csproj" Condition="$(UseWinmd) == false And $(IsDotnetBuild) == false" />
     <ProjectReference Include="..\Projections\Benchmark\Benchmark.csproj" Condition="$(UseWinmd) == false And $(IsDotnetBuild) == false" />

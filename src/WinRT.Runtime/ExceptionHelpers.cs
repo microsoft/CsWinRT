@@ -60,6 +60,14 @@ namespace WinRT
 
         public static void ThrowExceptionForHR(int hr)
         {
+            if (hr < 0)
+            {
+                ThrowExceptionForHRInternal(hr);
+            }
+        }
+
+        private static void ThrowExceptionForHRInternal(int hr)
+        {
             Exception ex = GetExceptionForHR(hr, useGlobalErrorState: true, out bool restoredExceptionFromGlobalState);
             if (restoredExceptionFromGlobalState)
             {
@@ -71,15 +79,11 @@ namespace WinRT
             }
         }
 
-        public static Exception GetExceptionForHR(int hr) => GetExceptionForHR(hr, false, out _);
+        public static Exception GetExceptionForHR(int hr) => hr >= 0 ? null : GetExceptionForHR(hr, false, out _);
 
         private static Exception GetExceptionForHR(int hr, bool useGlobalErrorState, out bool restoredExceptionFromGlobalState)
         {
             restoredExceptionFromGlobalState = false;
-            if (hr >= 0)
-            {
-                return null;
-            }
 
             ObjectReference<ABI.WinRT.Interop.IErrorInfo.Vftbl> iErrorInfo = null;
             IObjectReference restrictedErrorInfoToSave = null;
