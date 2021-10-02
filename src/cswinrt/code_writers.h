@@ -263,7 +263,7 @@ namespace cswinrt
             (name_type_to_write == typedef_name_type::CCW && !authoredType && (w._in_abi_namespace || w._in_abi_impl_namespace)))
         {
             w.write("global::");
-            if (name_type_to_write == typedef_name_type::ABI)
+            if (name_type_to_write == typedef_name_type::ABI || name_type_to_write == typedef_name_type::StaticAbiClass)
             {
                 w.write("ABI.");
             }
@@ -278,6 +278,10 @@ namespace cswinrt
         if (use_exclusive_to_type)
         {
             w.write("@", exclusive_to_type.TypeName());
+        }
+        else if (name_type_to_write == typedef_name_type::StaticAbiClass)
+        {
+            w.write("@%", typeName, "Methods");
         }
         else
         {
@@ -2581,20 +2585,17 @@ evt.Name());
         }
     }
 
-    void write_event_source_tables(writer& w, TypeDef const& type)
+    void write_event_source_table(writer& w, Event const& evt)
     {
-        for (auto&& evt : type.EventList())
-        {
-            w.write(R"(
+        w.write(R"(
 private readonly static global::System.Lazy<global::System.Runtime.CompilerServices.ConditionalWeakTable<IWinRTObject, EventSource<%>>> _%Lazy = new();
 private static global::System.Runtime.CompilerServices.ConditionalWeakTable<IWinRTObject, EventSource<%>> _% => _%Lazy.Value;
 )",
-                bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
-                evt.Name(),
-                bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
-                evt.Name(),
-                evt.Name());
-        }
+            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+            evt.Name(),
+            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+            evt.Name(),
+            evt.Name());
     }
 
     void write_interface_member_signatures(writer& w, TypeDef const& type)
@@ -3387,7 +3388,6 @@ global::System.Collections.Concurrent.ConcurrentDictionary<global::System.Runtim
         return w.write_temp("_%.Instance", cache_type_name);
     }
 
-
     void write_interface_members(writer& w, TypeDef const& type)
     {
         bool generic_type = distance(type.GenericParam()) > 0;
@@ -3415,20 +3415,20 @@ global::System.Collections.Concurrent.ConcurrentDictionary<global::System.Runtim
 %unsafe %% %%(%)
 {%%}
 )",
-                settings.netstandard_compat ? "public " : "",
-                (settings.netstandard_compat && method.Name() == "ToString"sv) ? "override " : "",
-                bind<write_projection_return_type>(signature),
-                bind([&](writer& w)
-                {
-                    if (!settings.netstandard_compat)
-                    {
-                        w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
-                    }
-                }),
+settings.netstandard_compat ? "public " : "",
+(settings.netstandard_compat && method.Name() == "ToString"sv) ? "override " : "",
+bind<write_projection_return_type>(signature),
+bind([&](writer& w)
+    {
+        if (!settings.netstandard_compat)
+        {
+            w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
+        }
+    }),
                 method.Name(),
-                bind_list<write_projection_parameter>(", ", signature.params()),
-                bind(init_call_variables),
-                bind<write_abi_method_call>(signature, invoke_target, is_generic, false, is_noexcept(method)));
+        bind_list<write_projection_parameter>(", ", signature.params()),
+        bind(init_call_variables),
+        bind<write_abi_method_call>(signature, invoke_target, is_generic, false, is_noexcept(method)));
         }
 
         for (auto&& prop : type.PropertyList())
@@ -3438,15 +3438,15 @@ global::System.Collections.Concurrent.ConcurrentDictionary<global::System.Runtim
 %unsafe % %%
 {
 )",
-                settings.netstandard_compat ? "public " : "",
-                write_prop_type(w, prop),
-                bind([&](writer& w)
-                {
-                    if (!settings.netstandard_compat)
-                    {
-                        w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
-                    }
-                }),
+settings.netstandard_compat ? "public " : "",
+write_prop_type(w, prop),
+bind([&](writer& w)
+    {
+        if (!settings.netstandard_compat)
+        {
+            w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
+        }
+    }),
                 prop.Name());
 
             if (getter)
@@ -3457,16 +3457,16 @@ global::System.Collections.Concurrent.ConcurrentDictionary<global::System.Runtim
                 w.write(R"(get
 {%%}
 )",
-                    bind(init_call_variables),
-                    bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers, is_noexcept(prop)));
+bind(init_call_variables),
+bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers, is_noexcept(prop)));
             }
             if (setter)
             {
                 if (!getter)
                 {
-                    auto getter_interface = write_type_name_temp(w, 
-                        find_property_interface(w, type, prop.Name()).first, 
-                        "%", 
+                    auto getter_interface = write_type_name_temp(w,
+                        find_property_interface(w, type, prop.Name()).first,
+                        "%",
                         settings.netstandard_compat ? typedef_name_type::ABI : typedef_name_type::CCW);
                     auto getter_cast = settings.netstandard_compat ? "As<%>()"s : "((%)(IWinRTObject)this)"s;
                     w.write("get{ return " + getter_cast + ".%; }\n", getter_interface, prop.Name());
@@ -3478,8 +3478,8 @@ global::System.Collections.Concurrent.ConcurrentDictionary<global::System.Runtim
                 w.write(R"(set
 {%%}
 )",
-                    bind(init_call_variables),
-                    bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers, is_noexcept(prop)));
+bind(init_call_variables),
+bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers, is_noexcept(prop)));
             }
             w.write("}\n");
         }
@@ -3496,11 +3496,11 @@ add => %.Subscribe(value);
 remove => %.Unsubscribe(value);
 }
 )",
-                bind([&](writer& w)
-                {
-                    if(settings.netstandard_compat)
-                        return;
-                    w.write(R"(private EventSource<%> Get_%()
+bind([&](writer& w)
+    {
+        if (settings.netstandard_compat)
+            return;
+        w.write(R"(private EventSource<%> Get_%()
 {
 return _%.GetValue((IWinRTObject)this, (key) =>
 {
@@ -3509,24 +3509,288 @@ return %;
 });
 }
 )",
-                        bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
-                        evt.Name(),
-                        evt.Name(),
-                        bind(init_call_variables),
-                        bind<write_event_source_ctor>(evt, index));
-                }),
+bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+evt.Name(),
+evt.Name(),
+bind(init_call_variables),
+bind<write_event_source_ctor>(evt, index));
+    }),
+                settings.netstandard_compat ? "public " : "",
+        bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+        bind([&](writer& w)
+            {
+                if (!settings.netstandard_compat)
+                {
+                    w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
+                }
+            }),
+        evt.Name(),
+                event_source,
+                event_source);
+            index++;
+        }
+    }
+
+    void write_interface_members_calling_static_methods(writer& w, TypeDef const& type)
+    {
+        bool generic_type = distance(type.GenericParam()) > 0;
+
+        auto init_call_variables = [&](writer& w)
+        {
+            if (!settings.netstandard_compat)
+            {
+                w.write("\nvar _obj = ((%)((IWinRTObject)this).GetObjectReferenceForType(typeof(%).TypeHandle));",
+                    generic_type ? "ObjectReference<Vftbl>" : "IObjectReference",
+                    bind<write_type_name>(type, typedef_name_type::CCW, false));
+            }
+        };
+
+        for (auto&& method : type.MethodList())
+        {
+            if (is_special(method))
+            {
+                continue;
+            }
+            method_signature signature{ method };
+            auto [invoke_target, is_generic] = get_invoke_info(w, method);
+            w.write(R"(
+%unsafe %% %%(%)
+{%
+% %.%(_obj%);
+}
+)",
+                settings.netstandard_compat ? "public " : "",
+                (settings.netstandard_compat && method.Name() == "ToString"sv) ? "override " : "",
+                bind<write_projection_return_type>(signature),
+                bind([&](writer& w)
+                    {
+                        if (!settings.netstandard_compat)
+                        {
+                            w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
+                        }
+                    }),
+                method.Name(),
+                bind_list<write_projection_parameter>(", ", signature.params()),
+                bind(init_call_variables),
+                signature.return_signature() ? "return" : "",
+                bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                method.Name(),
+                bind([&](writer& w)
+                    {
+                        for (auto&& param : signature.params())
+                        {
+                            w.write(", %%", 
+                                get_param_category(param) == param_category::out || get_param_category(param) == param_category::receive_array ? "out " : "",
+                                bind<write_parameter_name>(param)
+                            );
+                        }
+                    })
+            );
+        }
+
+        for (auto&& prop : type.PropertyList())
+        {
+            auto [getter, setter] = get_property_methods(prop);
+            w.write(R"(
+%unsafe % %%
+{
+)",
+settings.netstandard_compat ? "public " : "",
+write_prop_type(w, prop),
+bind([&](writer& w)
+    {
+        if (!settings.netstandard_compat)
+        {
+            w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
+        }
+    }),
+                prop.Name());
+
+            if (getter)
+            {
+                auto [invoke_target, is_generic] = get_invoke_info(w, getter);
+                auto signature = method_signature(getter);
+                auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
+                w.write(R"(get
+{%
+return %.get_%(_obj);
+}
+)",
+                    bind(init_call_variables),
+                    bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                    prop.Name()
+                );
+            }
+            if (setter)
+            {
+                if (!getter)
+                {
+                    auto getter_interface = write_type_name_temp(w,
+                        find_property_interface(w, type, prop.Name()).first,
+                        "%",
+                        settings.netstandard_compat ? typedef_name_type::ABI : typedef_name_type::CCW);
+                    auto getter_cast = settings.netstandard_compat ? "As<%>()"s : "((%)(IWinRTObject)this)"s;
+                    w.write("get{ return " + getter_cast + ".%; }\n", getter_interface, prop.Name());
+                }
+                auto [invoke_target, is_generic] = get_invoke_info(w, setter);
+                auto signature = method_signature(setter);
+                auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
+                marshalers[0].param_name = "value";
+                w.write(R"(set
+{%
+%.set_%(_obj, value);
+}
+)",
+                    bind(init_call_variables),
+                    bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                    prop.Name()
+                );
+            }
+            w.write("}\n");
+        }
+
+        int index = 0;
+        for (auto&& evt : type.EventList())
+        {
+            auto semantics = get_type_semantics(evt.EventType());
+            auto event_source = w.write_temp(settings.netstandard_compat ? "_%" : "Get_%()", evt.Name());
+            w.write(R"(
+%event % %%
+{
+add 
+{%
+%.Get_%(_obj, (IWinRTObject)this).Item1(value);
+}
+remove
+{%
+%.Get_%(_obj, (IWinRTObject)this).Item2(value);
+}
+}
+)",
+
                 settings.netstandard_compat ? "public " : "",
                 bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+                bind([&](writer& w)
+                    {
+                        if (!settings.netstandard_compat)
+                        {
+                            w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
+                        }
+                    }),
+                evt.Name(),
+                bind(init_call_variables),
+                bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                evt.Name(),
+                bind(init_call_variables),
+                bind<write_type_name>(type, typedef_name_type::StaticAbiClass, false),
+                evt.Name());
+            index++;
+        }
+    }
+
+    void write_abi_calls_as_static_methods(writer& w, TypeDef const& iface)
+    {
+        bool generic_type = distance(iface.GenericParam()) > 0;
+
+        auto init_call_variables = [&](writer& w)
+        {
+            if (generic_type)
+            {
+                w.write("\nvar _obj = (ObjectReference<%.Vftbl>)_genericObj;", bind<write_type_name>(iface, typedef_name_type::ABI, false));
+            }
+            w.write("\nvar ThisPtr = _obj.ThisPtr;\n");   
+        };
+
+        for (auto&& method : iface.MethodList())
+        {
+            if (is_special(method))
+            {
+                continue;
+            }
+            method_signature signature{ method };
+            auto [invoke_target, is_generic] = get_invoke_info(w, method);
+            w.write(R"(
+public static unsafe %% %%(IObjectReference %%%)
+{%%}
+)",
+                (settings.netstandard_compat && method.Name() == "ToString"sv) ? "override " : "",
+                bind<write_projection_return_type>(signature),
                 bind([&](writer& w)
                 {
                     if (!settings.netstandard_compat)
                     {
-                        w.write("%.", bind<write_type_name>(type, typedef_name_type::CCW, false));
+                        //w.write("%.", bind<write_type_name>(iface, typedef_name_type::CCW, false));
                     }
-                }),
-                evt.Name(),
-                event_source,
-                event_source);
+                    }),
+                method.Name(),
+                generic_type ? "_genericObj" : "_obj",
+                signature.has_params() ? ", " : "",
+                bind_list<write_projection_parameter>(", ", signature.params()),
+                bind(init_call_variables),
+                bind<write_abi_method_call>(signature, invoke_target, is_generic, false, is_noexcept(method)));
+        }
+
+        for (auto&& prop : iface.PropertyList())
+        {
+            auto [getter, setter] = get_property_methods(prop);
+
+            if (getter)
+            {
+                auto [invoke_target, is_generic] = get_invoke_info(w, getter);
+                auto signature = method_signature(getter);
+                auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
+                w.write(R"(public static unsafe % get_%(IObjectReference %)
+{%%}
+)",
+                    write_prop_type(w, prop),
+                    prop.Name(),
+                    generic_type ? "_genericObj" : "_obj",
+                    bind(init_call_variables),
+                    bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers, is_noexcept(prop)));
+            }
+            if (setter)
+            {
+                auto [invoke_target, is_generic] = get_invoke_info(w, setter);
+                auto signature = method_signature(setter);
+                auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
+                marshalers[0].param_name = "value";
+                w.write(R"(public static unsafe void set_%(IObjectReference %, % value)
+{%%}
+)",                 
+                    prop.Name(),
+                    generic_type ? "_genericObj" : "_obj",
+                    write_prop_type(w, prop),
+                    bind(init_call_variables),
+                    bind<write_abi_method_call_marshalers>(invoke_target, is_generic, marshalers, is_noexcept(prop)));
+            }
+            w.write("\n");
+        }
+
+        int index = 0;
+        for (auto&& evt : iface.EventList())
+        {
+                    w.write(R"(%
+public static unsafe Tuple<Action<%>, Action<%>> Get_%(IObjectReference %, IWinRTObject _thisObj)
+{
+var eventSource = _%.GetValue(_thisObj, (key) =>
+{
+%
+return %;
+});
+return new Tuple<Action<%>, Action<%>>(eventSource.Subscribe, eventSource.Unsubscribe);
+}
+)",
+                        bind<write_event_source_table>(evt),
+                        bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+                        bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+                        evt.Name(),
+                        generic_type ? "_genericObj" : "_obj",
+                        evt.Name(),
+                        bind(init_call_variables),
+                        bind<write_event_source_ctor>(evt, index),
+                        bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+                        bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false)
+                    );
             index++;
         }
     }
@@ -5051,6 +5315,15 @@ public static class %
         return true;
     }
 
+    void write_abi_calls_in_static_class(writer& w, TypeDef const& iface)
+    {
+        w.write(R"(public static class %
+{
+%
+}
+)", bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false), bind<write_abi_calls_as_static_methods>(iface));
+    }
+
     bool write_abi_interface(writer& w, TypeDef const& type)
     {
         bool is_generic = distance(type.GenericParam()) > 0;
@@ -5115,8 +5388,8 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
                     bind_each<write_event_abi_invoke>(type.EventList()));
                 }
             }),
-            bind<write_interface_members>(type),
-            bind<write_event_source_tables>(type),
+            bind<write_interface_members_calling_static_methods>(type),
+            "",
             [&](writer& w) {
                 for (auto required_interface : required_interfaces)
                 {
