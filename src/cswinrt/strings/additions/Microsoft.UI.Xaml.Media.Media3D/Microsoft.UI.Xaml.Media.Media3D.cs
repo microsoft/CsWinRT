@@ -5,7 +5,12 @@ namespace Microsoft.UI.Xaml.Media.Media3D
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Matrix3D : IFormattable
+#if EMBED
+    internal
+#else
+    public
+#endif
+    struct Matrix3D : IFormattable
     {
         // Assuming this matrix has fourth column of 0,0,0,1 and isn't identity this function:
         // Returns false if HasInverse is false, otherwise inverts the matrix.
@@ -692,7 +697,12 @@ namespace Microsoft.UI.Xaml.Media.Media3D
 
 namespace ABI.Microsoft.UI.Xaml.Media.Media3D
 {
-    public static class Matrix3D
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class Matrix3D
     {
         public static string GetGuidSignature() => 
             $"struct(Microsoft.UI.Xaml.Media.Media3D.Matrix3D;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8;f8)";

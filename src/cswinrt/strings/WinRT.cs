@@ -609,7 +609,7 @@ namespace WinRT
                 IWeakReference target = null;
                 try
                 {
-#if NETSTANDARD2_0
+#if !NET
                     var weakRefSource = (IWeakReferenceSource)typeof(IWeakReferenceSource).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { obj });
 #else
                     var weakRefSource = ((object)new WinRT.IInspectable(obj)) as IWeakReferenceSource;
@@ -652,7 +652,7 @@ namespace WinRT
             {
                 if (caches.TryGetValue(thisPtr, out var cache))
                 {
-#if NETSTANDARD2_0
+#if !NET
                     // https://devblogs.microsoft.com/pfxteam/little-known-gems-atomic-conditional-removals-from-concurrentdictionary/
                     ((ICollection<KeyValuePair<int, System.WeakReference<State>>>)cache.states).Remove(
                         new KeyValuePair<int, System.WeakReference<State>>(index, state));
@@ -862,7 +862,9 @@ namespace WinRT
 #pragma warning restore 0436
         internal static void InitalizeProjection()
         {
+#if !EMBED
             ComWrappersSupport.RegisterProjectionAssembly(typeof(ProjectionInitializer).Assembly);
+#endif
         }
     }
 }

@@ -64,6 +64,11 @@ namespace cswinrt
         return w.write_temp("%_%", method.Name(), get_vmethod_index(type, method));
     }
 
+    std::string internal_if_embedded() 
+    {
+        return (settings.embedded) ? "internal" : "public";
+    }
+
     bool is_type_blittable(type_semantics const& semantics, bool for_array = false)
     {
         return call(semantics,
@@ -2521,12 +2526,13 @@ db_path.stem().string());
     };
 
     void write_static_class(writer& w, TypeDef const& type)
-    {
-        w.write(R"(%%public static class %
+    { // maybe 
+        w.write(R"(%%% static class %
 {
 %})",
             bind<write_winrt_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
+            internal_if_embedded(),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             bind<write_attributed_types>(type)
         );
@@ -4890,12 +4896,13 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
     {
         auto type_name = write_type_name_temp(w, type);
 
-        w.write(R"(%%public sealed class %: Attribute
+        w.write(R"(%%% sealed class %: Attribute
 {
 %}
 )",
             bind<write_winrt_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
+            internal_if_embedded(),
             type_name,
             [&](writer& w)
             {
@@ -4932,7 +4939,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             bind<write_winrt_attribute>(type),
             bind<write_guid_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
-            is_exclusive_to(type) || is_projection_internal(type) ? "internal" : "public",
+            is_exclusive_to(type) || (is_projection_internal(type) || settings.embedded) ? "internal" : "public", // 
             type_name,
             bind<write_type_inheritance>(type, object_type{}, false, false),
             bind<write_interface_member_signatures>(type)
@@ -4952,7 +4959,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
         w.write(R"([global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
 %
-public unsafe class % : %
+% unsafe class % : %
 {
 %
 internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr)%
@@ -4971,6 +4978,7 @@ _obj = obj;%
 )",
             // Interface abi implementation
             bind<write_guid_attribute>(type),
+            internal_if_embedded(),
             type_name,
             bind<write_type_name>(type, typedef_name_type::CCW, false),
             // Vftbl
@@ -5039,10 +5047,11 @@ public static Guid PIID = Vftbl.PIID;
         if (!nongeneric_delegates.empty())
         {
             w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-public static class %
+% static class %
 {
 %}
 )",
+                internal_if_embedded(),
                 nongenerics_class,
                 bind_each(nongeneric_delegates));
         }
@@ -5128,10 +5137,11 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
         if (!nongeneric_delegates.empty())
         {
             w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-public static class %
+% static class %
 {
 %}
 )",
+internal_if_embedded(),
 nongenerics_class,
 bind_each(nongeneric_delegates));
         }
@@ -5290,7 +5300,7 @@ private readonly % _comp;
         }
 
         w.write(R"(%[global::WinRT.ProjectedRuntimeClass(nameof(_default))]
-%public %class %%, IEquatable<%>
+%% %class %%, IEquatable<%>
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
 
@@ -5328,6 +5338,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 )",
             bind<write_winrt_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
+            internal_if_embedded(),
             bind<write_class_modifiers>(type),
             type_name,
             bind<write_type_inheritance>(type, base_semantics, true, false),
@@ -5435,7 +5446,7 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
         w.write(R"(%
 [global::WinRT.ProjectedRuntimeClass(nameof(_default))]
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
-%public %class %%, IWinRTObject, IEquatable<%>
+%% %class %%, IWinRTObject, IEquatable<%>
 {
 private IntPtr ThisPtr => _inner == null ? (((IWinRTObject)this).NativeObject).ThisPtr : _inner.ThisPtr;
 
@@ -5473,6 +5484,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 )",
             bind<write_winrt_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
+            internal_if_embedded(),
             bind<write_class_modifiers>(type),
             type_name,
             bind<write_type_inheritance>(type, base_semantics, true, false),
@@ -5556,7 +5568,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<global::System.Runtim
         auto default_interface_abi_name = get_default_interface_name(w, type, true);
 
         w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-public struct %
+% struct %
 {
 %
 public static IntPtr GetAbi(IObjectReference value) => value is null ? IntPtr.Zero : MarshalInterfaceHelper<object>.GetAbi(value);
@@ -5572,6 +5584,7 @@ public static void DisposeAbi(IntPtr abi) => MarshalInspectable<object>.DisposeA
 public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
 }
 )",
+            internal_if_embedded(),
             abi_type_name,
             bind([&](writer& w)
             {
@@ -5632,10 +5645,11 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<obje
         }
 
         method_signature signature{ get_delegate_invoke(type) };
-        w.write(R"(%%public delegate % %(%);
+        w.write(R"(%%% delegate % %(%);
 )",
             bind<write_winrt_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
+            internal_if_embedded(),
             bind<write_projection_return_type>(signature),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             bind_list<write_projection_parameter>(", ", signature.params()));
@@ -5654,7 +5668,7 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<obje
 
         w.write(R"([global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
 %
-public static class @%
+% static class @%
 {%
 %
 private static readonly global::WinRT.Interop.IDelegateVftbl AbiToProjectionVftable;
@@ -5684,7 +5698,7 @@ return abiDelegate is null ? null : (%)ComWrappersSupport.TryRegisterObjectForIn
 }
 
 [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
-#if NETSTANDARD2_0
+#if !NET
 private class NativeDelegateWrapper
 #else
 private class NativeDelegateWrapper : IWinRTObject
@@ -5697,7 +5711,7 @@ public NativeDelegateWrapper(ObjectReference<global::WinRT.Interop.IDelegateVftb
 _nativeDelegate = nativeDelegate;
 }
 
-#if !NETSTANDARD2_0
+#if NET
 IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
 bool IWinRTObject.HasUnwrappableNativeObject => true;
 private Lazy<global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference>> _lazyQueryInterfaceCache = new();
@@ -5727,6 +5741,7 @@ private static unsafe int Do_Abi_Invoke%
 
 )",
             bind<write_guid_attribute>(type),
+            internal_if_embedded(),
             type.TypeName(),
             type_params,
             [&](writer& w) {
@@ -5936,11 +5951,12 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
 
         auto enum_underlying_type = is_flags_enum(type) ? "uint" : "int";
 
-        w.write(R"(%%public enum % : %
+        w.write(R"(%%% enum % : %
 {
 )", 
         bind<write_winrt_attribute>(type),
         bind<write_type_custom_attributes>(type, true),
+        internal_if_embedded(),
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
         {
             for (auto&& field : type.FieldList())
@@ -5990,7 +6006,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             fields.emplace_back(field_info);
         }
 
-        w.write(R"(%%public struct %: IEquatable<%>
+        w.write(R"(%%% struct %: IEquatable<%>
 {
 %
 public %(%)
@@ -6008,6 +6024,7 @@ public override int GetHashCode() => %;
             // struct
             bind<write_winrt_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
+            internal_if_embedded(),
             name,
             name,
             bind_each([](writer& w, auto&& field)
@@ -6052,7 +6069,10 @@ public override int GetHashCode() => %;
             return;
         }
 
-        w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\npublic struct %\n{\n", bind<write_type_name>(type, typedef_name_type::ABI, false));
+        w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\n% struct %\n{\n", 
+            internal_if_embedded(),
+            bind<write_type_name>(type, typedef_name_type::ABI, false));
+
         for (auto&& field : type.FieldList())
         {
             w.write("public ");
@@ -6404,7 +6424,7 @@ bind<write_factory_class_members>(type)
 using System;
 namespace WinRT
 {
-public static class Module
+% static class Module
 {
 public static unsafe IntPtr GetActivationFactory(String runtimeClassId)
 {%
@@ -6413,6 +6433,7 @@ return IntPtr.Zero;
 }
 }
 )",
+    internal_if_embedded(),
 bind_each([](writer& w, TypeDef const& type)
     {
         w.write(R"(

@@ -13,9 +13,14 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     /// <summary>
     /// Contains extension methods that expose operations on WinRT <code>Windows.Foundation.IBuffer</code>.
     /// </summary>
-    public static class WindowsRuntimeBufferExtensions
+#if EMBED
+    internal
+#else
+    public 
+#endif 
+    static class WindowsRuntimeBufferExtensions
     {
-        #region (Byte []).AsBuffer extensions
+#region (Byte []).AsBuffer extensions
 
         public static IBuffer AsBuffer(this byte[] source)
         {
@@ -49,10 +54,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             return new WindowsRuntimeBuffer(source, offset, length, capacity);
         }
 
-        #endregion (Byte []).AsBuffer extensions
+#endregion (Byte []).AsBuffer extensions
 
 
-        #region (Byte []).CopyTo extensions for copying to an (IBuffer)
+#region (Byte []).CopyTo extensions for copying to an (IBuffer)
 
         /// <summary>
         /// Copies the contents of <code>source</code> to <code>destination</code> starting at offset 0.
@@ -104,10 +109,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Marshal.Copy(source, sourceIndex, destPtr, count);
         }
 
-        #endregion (Byte []).CopyTo extensions for copying to an (IBuffer)
+#endregion (Byte []).CopyTo extensions for copying to an (IBuffer)
 
 
-        #region (IBuffer).ToArray extensions for copying to a new (Byte [])
+#region (IBuffer).ToArray extensions for copying to a new (Byte [])
 
         public static byte[] ToArray(this IBuffer source)
         {
@@ -132,10 +137,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             return destination;
         }
 
-        #endregion (IBuffer).ToArray extensions for copying to a new (Byte [])
+#endregion (IBuffer).ToArray extensions for copying to a new (Byte [])
 
 
-        #region (IBuffer).CopyTo extensions for copying to a (Byte [])
+#region (IBuffer).CopyTo extensions for copying to a (Byte [])
 
         public static void CopyTo(this IBuffer source, byte[] destination)
         {
@@ -171,10 +176,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Marshal.Copy(srcPtr, destination, destinationIndex, count);
         }
 
-        #endregion (IBuffer).CopyTo extensions for copying to a (Byte [])
+#endregion (IBuffer).CopyTo extensions for copying to a (Byte [])
 
 
-        #region (IBuffer).CopyTo extensions for copying to an (IBuffer)
+#region (IBuffer).CopyTo extensions for copying to an (IBuffer)
 
         public static void CopyTo(this IBuffer source, IBuffer destination)
         {
@@ -239,10 +244,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             MemCopy(srcPtr, destPtr, count);
         }
 
-        #endregion (IBuffer).CopyTo extensions for copying to an (IBuffer)
+#endregion (IBuffer).CopyTo extensions for copying to an (IBuffer)
 
 
-        #region Access to underlying array optimised for IBuffers backed by managed arrays (to avoid pinning)
+#region Access to underlying array optimised for IBuffers backed by managed arrays (to avoid pinning)
 
         /// <summary>
         /// If the specified <code>IBuffer</code> is backed by a managed array, this method will return <code>true</code> and
@@ -317,10 +322,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
         }
 
-        #endregion Access to underlying array optimised for IBuffers backed by managed arrays (to avoid pinning)
+#endregion Access to underlying array optimised for IBuffers backed by managed arrays (to avoid pinning)
 
 
-        #region Extensions for co-operation with memory streams (share mem stream data; expose data as managed/unmanaged mem stream)
+#region Extensions for co-operation with memory streams (share mem stream data; expose data as managed/unmanaged mem stream)
         /// <summary>
         /// Creates a new <code>IBuffer</code> instance backed by the same memory as is backing the specified <code>MemoryStream</code>.
         /// The <code>MemoryStream</code> may re-sized in future, as a result the stream will be backed by a different memory region.
@@ -416,10 +421,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
         }
 
-        #endregion Extensions for co-operation with memory streams (share mem stream data; expose data as managed/unmanaged mem stream)
+#endregion Extensions for co-operation with memory streams (share mem stream data; expose data as managed/unmanaged mem stream)
 
 
-        #region Extensions for direct by-offset access to buffer data elements
+#region Extensions for direct by-offset access to buffer data elements
 
         public static byte GetByte(this IBuffer source, uint byteOffset)
         {
@@ -442,10 +447,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             }
         }
 
-        #endregion Extensions for direct by-offset access to buffer data elements
+#endregion Extensions for direct by-offset access to buffer data elements
 
 
-        #region Private plumbing
+#region Private plumbing
 
         private class WindowsRuntimeBufferUnmanagedMemoryStream : UnmanagedMemoryStream
         {
@@ -496,7 +501,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             Marshal.Copy(tmp, 0, dst, bCount);
             return;
         }
-        #endregion Private plumbing
+#endregion Private plumbing
     }  // class WindowsRuntimeBufferExtensions
 }  // namespace
 

@@ -11,7 +11,12 @@ namespace System
 #if NET
     [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
-    public static class WindowsRuntimeSystemExtensions
+#if EMBED
+    internal
+#else 
+    public 
+#endif 
+    static class WindowsRuntimeSystemExtensions
     {
         public static Task AsTask(this IAsyncAction source, CancellationToken cancellationToken)
         {

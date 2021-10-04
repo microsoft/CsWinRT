@@ -5,7 +5,12 @@ namespace Microsoft.UI.Xaml.Media.Animation
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
     [StructLayout(LayoutKind.Sequential)]
-    public struct KeyTime
+#if EMBED
+    internal
+#else
+    public
+#endif
+    struct KeyTime
     {
         private TimeSpan _timeSpan;
 
@@ -73,7 +78,12 @@ namespace Microsoft.UI.Xaml.Media.Animation
     }
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
-    public enum RepeatBehaviorType
+#if EMBED
+    internal
+#else
+    public
+#endif
+    enum RepeatBehaviorType
     {
         Count,
         Duration,
@@ -82,7 +92,12 @@ namespace Microsoft.UI.Xaml.Media.Animation
 
     [global::WinRT.WindowsRuntimeType("Microsoft.UI")]
     [StructLayout(LayoutKind.Sequential)]
-    public struct RepeatBehavior : IFormattable
+#if EMBED
+    internal
+#else
+    public
+#endif
+    struct RepeatBehavior : IFormattable
     {
         private double _Count;
         private TimeSpan _Duration;
@@ -269,7 +284,12 @@ namespace Microsoft.UI.Xaml.Media.Animation
 
 namespace ABI.Microsoft.UI.Xaml.Media.Animation
 {
-    public static class KeyTime
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class KeyTime
     {
         public static string GetGuidSignature()
         {
@@ -278,7 +298,12 @@ namespace ABI.Microsoft.UI.Xaml.Media.Animation
         }
     }
 
-    public static class RepeatBehavior
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class RepeatBehavior
     {
         public static string GetGuidSignature()
         {
@@ -287,7 +312,12 @@ namespace ABI.Microsoft.UI.Xaml.Media.Animation
         }
     }
 
-    public static class RepeatBehaviorType
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class RepeatBehaviorType
     {
         public static string GetGuidSignature() => "enum(Microsoft.UI.Xaml.Media.Animation.RepeatBehaviorType;i4)";
     }
