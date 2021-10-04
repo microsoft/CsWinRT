@@ -66,28 +66,28 @@ namespace GuidPatch
 
             guidCtor = assembly.MainModule.ImportReference(guidType.Methods.First(m => m.IsConstructor && m.Parameters.Count == 1 && m.Parameters[0].ParameterType.Resolve() == readOnlySpanOfByte.Resolve()));
 
-            getTypeFromHandleMethod = systemType.Methods.First(m => m.Name == "GetTypeFromHandle");
+            getTypeFromHandleMethod = systemType.Methods.First(m => string.CompareOrdinal(m.Name, "GetTypeFromHandle") == 0);
 
             guidGeneratorType = null; 
 
             TypeDefinition? typeExtensionsType = null; 
 
             // Use the type definition if we are patching WinRT.Runtime, otherwise lookup the types as references 
-            if (assembly.Name.Name == "WinRT.Runtime")
+            if (string.CompareOrdinal(assembly.Name.Name, "WinRT.Runtime") == 0)
             {
-                guidGeneratorType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => typeDef.Name == "GuidGenerator").First(); 
-                typeExtensionsType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => typeDef.Name == "TypeExtensions").First();
+                guidGeneratorType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => string.CompareOrdinal(typeDef.Name, "GuidGenerator") == 0).First(); 
+                typeExtensionsType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => string.CompareOrdinal(typeDef.Name, "TypeExtensions") == 0).First();
             }
 
             foreach (var asm in assembly.MainModule.AssemblyReferences)
             {
-                if (asm.Name == "WinRT.Runtime")
+                if (string.CompareOrdinal(asm.Name, "WinRT.Runtime") == 0)
                 {
                     guidGeneratorType =
                         new TypeReference("WinRT", "GuidGenerator", assembly.MainModule, asm).Resolve();
                     typeExtensionsType = new TypeReference("WinRT", "TypeExtensions", assembly.MainModule, asm).Resolve();
                 }
-                else if (asm.Name == "System.Runtime.InteropServices")
+                else if (string.CompareOrdinal(asm.Name, "System.Runtime.InteropServices") == 0)
                 {
                     guidAttributeType = new TypeReference("System.Runtime.InteropServices", "GuidAttribute", assembly.MainModule, asm).Resolve();
                 }
@@ -95,9 +95,9 @@ namespace GuidPatch
 
             if (guidGeneratorType is not null && typeExtensionsType is not null)
             {
-                getIidMethod = guidGeneratorType.Methods.First(m => m.Name == "GetIID");
-                createIidMethod = guidGeneratorType.Methods.First(m => m.Name == "CreateIID");
-                getHelperTypeMethod = typeExtensionsType.Methods.First(m => m.Name == "GetHelperType");
+                getIidMethod = guidGeneratorType.Methods.First(m => String.CompareOrdinal(m.Name, "GetIID") == 0);
+                createIidMethod = guidGeneratorType.Methods.First(m => String.CompareOrdinal(m.Name, "CreateIID") == 0);
+                getHelperTypeMethod = typeExtensionsType.Methods.First(m => String.CompareOrdinal(m.Name, "GetHelperType") == 0);
             }
 
             signatureGenerator = new SignatureGenerator(assembly, guidAttributeType!, winRTRuntimeAssembly);

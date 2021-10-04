@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation.Collections;
 
@@ -18,7 +19,7 @@ namespace ObjectLifetimeTests
             public string Key { get; private set; }
         }
 
-        private Dictionary<string, object> _dictionary = new Dictionary<string, object>();
+        private Dictionary<string, object> _dictionary = new Dictionary<string, object>(StringComparer.Ordinal);
         public event MapChangedEventHandler<string, object> MapChanged;
 
         private void InvokeMapChanged(CollectionChange change, string key)

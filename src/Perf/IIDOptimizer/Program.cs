@@ -77,7 +77,7 @@ namespace GuidPatch
         { 
             AssemblyDefinition? winRTRuntimeAssembly = null;
             
-            if (targetAssemblyDefinition.Name.Name == "WinRT.Runtime")
+            if (string.CompareOrdinal(targetAssemblyDefinition.Name.Name, "WinRT.Runtime") == 0)
             {
                 winRTRuntimeAssembly = targetAssemblyDefinition;
             }
@@ -86,7 +86,7 @@ namespace GuidPatch
                 var winrtAssembly = targetAssemblyDefinition
                                     .MainModule
                                     .AssemblyReferences
-                                    .Where(refAssembly => refAssembly.Name == "WinRT.Runtime")
+                                    .Where(refAssembly => string.CompareOrdinal(refAssembly.Name, "WinRT.Runtime") == 0)
                                     .FirstOrDefault();
 
                 if (winrtAssembly == default(AssemblyNameReference))
@@ -112,7 +112,7 @@ namespace GuidPatch
                 var targetAssemblyDefinition = AssemblyDefinition.ReadAssembly(targetAssembly, readerParameters);
 
                 /// Don't patch twice 
-                if (targetAssemblyDefinition.MainModule.Types.Any(typeDef => typeDef.Name == "<GuidPatcherImplementationDetails>"))
+                if (targetAssemblyDefinition.MainModule.Types.Any(typeDef => string.CompareOrdinal(typeDef.Name, "<GuidPatcherImplementationDetails>") == 0))
                 {
                     Console.WriteLine("Target assembly has already been patched. Exiting early as there is no work to do.");
                     return -2;
