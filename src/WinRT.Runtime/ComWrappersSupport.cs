@@ -396,9 +396,10 @@ namespace WinRT
             return runtimeClassName;
         }
 
-        private static bool ShouldProvideIReference(Type type)
+        private readonly static ConcurrentDictionary<Type, bool> IsIReferenceTypeCache = new ConcurrentDictionary<Type, bool>();
+        private static bool IsIReferenceType(Type type)
         {
-            static bool IsWindowsRuntimeType(Type type)
+            static bool IsIReferenceTypeHelper(Type type)
             {
                 if ((type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object) ||
                     WinRT.Projections.IsTypeWindowsRuntimeType(type))
@@ -413,14 +414,19 @@ namespace WinRT
                 return false;
             }
 
-            if (type == typeof(string) || type.IsTypeOfType())
-                return true;
-            if (type.IsDelegate())
-                return IsWindowsRuntimeType(type);
-            if (!type.IsValueType)
-                return false;
-            return type.IsPrimitive || IsWindowsRuntimeType(type);
+            return IsIReferenceTypeCache.GetOrAdd(type, (type) =>
+            {
+                if (type == typeof(string) || type.IsTypeOfType())
+                    return true;
+                if (type.IsDelegate())
+                    return IsIReferenceTypeHelper(type);
+                if (!type.IsValueType)
+                    return false;
+                return type.IsPrimitive || IsIReferenceTypeHelper(type);
+            });
         }
+
+        private static bool ShouldProvideIReference(Type type) => IsIReferenceType(type);
 
         private static ComInterfaceEntry IPropertyValueEntry =>
             new ComInterfaceEntry

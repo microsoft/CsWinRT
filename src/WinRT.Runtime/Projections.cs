@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -172,14 +173,18 @@ namespace WinRT
             }
         }
 
+        private readonly static ConcurrentDictionary<Type, bool> IsTypeWindowsRuntimeTypeCache = new ConcurrentDictionary<Type, bool>();
         public static bool IsTypeWindowsRuntimeType(Type type)
         {
-            Type typeToTest = type;
-            if (typeToTest.IsArray)
+            return IsTypeWindowsRuntimeTypeCache.GetOrAdd(type, (type) =>
             {
-                typeToTest = typeToTest.GetElementType();
-            }
-            return IsTypeWindowsRuntimeTypeNoArray(typeToTest);
+                Type typeToTest = type;
+                if (typeToTest.IsArray)
+                {
+                    typeToTest = typeToTest.GetElementType();
+                }
+                return IsTypeWindowsRuntimeTypeNoArray(typeToTest);
+            });
         }
 
         private static bool IsTypeWindowsRuntimeTypeNoArray(Type type)
