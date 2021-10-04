@@ -506,7 +506,7 @@ namespace AuthoringTest
 
         public CustomDictionary()
         {
-            _dictionary = new Dictionary<string, BasicStruct>();
+            _dictionary = new Dictionary<string, BasicStruct>(StringComparer.Ordinal);
         }
 
         public BasicStruct this[string key]
