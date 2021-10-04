@@ -1,0 +1,45 @@
+<!--
+***********************************************************************************************
+Copyright (C) Microsoft Corporation. All rights reserved.
+***********************************************************************************************
+-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"> 
+  
+  <PropertyGroup> 
+    
+    <TFMNet5OrGreater Condition="'$(TargetFramework)' == 'net5.0' Or '$(TargetFramework)' == 'net6.0'">true</TFMNet5OrGreater> 
+    <TFMNet3OrLower Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'netcoreapp3.1'">true</TFMNet3OrLower> 
+<!-- Activate the internal version of the runtime layer --> 
+    <DefineConstants>$(DefineConstants);EMBED</DefineConstants>
+<!-- Path to runtime sources, must update if their location changes in the .nuspec --> 
+    <CsWinRTEmbeddedSources>$(CsWinRTPath)contentFiles\cs\any\</CsWinRTEmbeddedSources>
+
+  </PropertyGroup>
+
+<!-- we have to manually include the files from any\, in contrast to how 
+     files under a TFM specific folder (e.g. net5.0\) get brought in automatically     --> 
+  <ItemGroup>
+<!-- one downside of this is that we get a lot of Solution Explorer noise when we add this
+the other files are nicely tucked in a WinRT.Runtime folder in Solution Explorer, but these are not -->
+    <Compile Include="$(CsWinRTEmbeddedSources)**\*.cs" />
+  </ItemGroup>
+
+<!-- Prevent collisions of WinRT.Runtime types -->  
+  <Target Name="RemoveWinRTRuntimeReference" Inputs="@(RuntimeCopyLocalItems)" AfterTargets="ResolvePackageAssets" Outputs="@(RuntimeCopyLocalItems)">
+
+    <ItemGroup>
+
+      <RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="'%(DestinationSubPath)' == 'WinRT.Runtime.dll'"/>
+      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" Condition="'%(HintPath)' == '$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll'"/>
+
+    </ItemGroup>
+
+  </Target>
+
+<!-- Update sources for netstandard, and download necessary NuGet packages -->
+  <ItemGroup Condition="'$(TFMNet3OrLower)' == 'true'">     
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="System.Runtime.Extensions" Version="4.1.1" />
+  </ItemGroup>
+
+</Project>
