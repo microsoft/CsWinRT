@@ -137,7 +137,7 @@ namespace ABI.System.ComponentModel
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
-        public static void DisposeAbi(IntPtr abi) { using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref abi); }
+        public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
 
         public static string GetGuidSignature()
         {

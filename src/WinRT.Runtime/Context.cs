@@ -63,7 +63,7 @@ namespace WinRT
 
         public static void DisposeContextCallback(IntPtr contextCallbackPtr)
         {
-            using var contextcallback = ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.Attach(ref contextCallbackPtr);
+            MarshalInspectable<object>.DisposeAbi(contextCallbackPtr);
         }
     }
 }

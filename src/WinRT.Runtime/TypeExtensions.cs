@@ -29,7 +29,7 @@ namespace WinRT
 
                 string fullTypeName = type.FullName;
                 string ccwTypePrefix = "ABI.Impl.";
-                if (fullTypeName.StartsWith(ccwTypePrefix))
+                if (fullTypeName.StartsWith(ccwTypePrefix, StringComparison.Ordinal))
                 {
                     fullTypeName = fullTypeName.Substring(ccwTypePrefix.Length);
                 }

@@ -71,8 +71,10 @@ namespace ABI.System.ComponentModel
 #if NET
             IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
             bool IWinRTObject.HasUnwrappableNativeObject => true;
-            ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
-            ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData { get; } = new();
+            private Lazy<ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>> _lazyQueryInterfaceCache = new();
+            ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _lazyQueryInterfaceCache.Value;
+            private Lazy<ConcurrentDictionary<RuntimeTypeHandle, object>> _lazyAdditionalTypeData = new();
+            ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _lazyAdditionalTypeData.Value;
 #endif
 
             public unsafe void Invoke(object sender, global::System.ComponentModel.PropertyChangedEventArgs e)
