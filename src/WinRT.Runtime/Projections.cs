@@ -6,7 +6,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using System.Threading;
 using System.Windows.Input;
 using Windows.Foundation.Collections;
 
@@ -14,7 +13,6 @@ namespace WinRT
 {
     public static class Projections
     {
-        private static readonly ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
         private static readonly Dictionary<Type, Type> CustomTypeToHelperTypeMappings = new Dictionary<Type, Type>();
         private static readonly Dictionary<Type, Type> CustomAbiTypeToTypeMappings = new Dictionary<Type, Type>();
         private static readonly Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>();
@@ -77,17 +75,10 @@ namespace WinRT
             CustomTypeToAbiTypeNameMappings.Add(typeof(System.Type), "Windows.UI.Xaml.Interop.TypeName");
         }
 
+        // Deprecated
         public static void RegisterCustomAbiTypeMapping(Type publicType, Type abiType, string winrtTypeName, bool isRuntimeClass = false)
         {
-            rwlock.EnterWriteLock();
-            try
-            {
-                RegisterCustomAbiTypeMappingNoLock(publicType, abiType, winrtTypeName, isRuntimeClass);
-            }
-            finally
-            {
-                rwlock.ExitWriteLock();
-            }
+            RegisterCustomAbiTypeMappingNoLock(publicType, abiType, winrtTypeName, isRuntimeClass);
         }
 
         private static void RegisterCustomAbiTypeMappingNoLock(Type publicType, Type abiType, string winrtTypeName, bool isRuntimeClass = false)
@@ -105,71 +96,39 @@ namespace WinRT
 
         public static Type FindCustomHelperTypeMapping(Type publicType, bool filterToRuntimeClass = false)
         {
-            rwlock.EnterReadLock();
-            try
+            if(filterToRuntimeClass && !ProjectedCustomTypeRuntimeClasses.Contains(publicType))
             {
-                if(filterToRuntimeClass && !ProjectedCustomTypeRuntimeClasses.Contains(publicType))
-                {
-                    return null;
-                }
+                return null;
+            }
 
-                if (publicType.IsGenericType)
-                {
-                    return CustomTypeToHelperTypeMappings.TryGetValue(publicType.GetGenericTypeDefinition(), out Type abiTypeDefinition)
-                        ? abiTypeDefinition.MakeGenericType(publicType.GetGenericArguments())
-                        : null;
-                }
-                return CustomTypeToHelperTypeMappings.TryGetValue(publicType, out Type abiType) ? abiType : null;
-            }
-            finally
+            if (publicType.IsGenericType)
             {
-                rwlock.ExitReadLock();
+                return CustomTypeToHelperTypeMappings.TryGetValue(publicType.GetGenericTypeDefinition(), out Type abiTypeDefinition)
+                    ? abiTypeDefinition.MakeGenericType(publicType.GetGenericArguments())
+                    : null;
             }
+            return CustomTypeToHelperTypeMappings.TryGetValue(publicType, out Type abiType) ? abiType : null;
         }
 
         public static Type FindCustomPublicTypeForAbiType(Type abiType)
         {
-            rwlock.EnterReadLock();
-            try
+            if (abiType.IsGenericType)
             {
-                if (abiType.IsGenericType)
-                {
-                    return CustomAbiTypeToTypeMappings.TryGetValue(abiType.GetGenericTypeDefinition(), out Type publicTypeDefinition)
-                        ? publicTypeDefinition.MakeGenericType(abiType.GetGenericArguments())
-                        : null;
-                }
-                return CustomAbiTypeToTypeMappings.TryGetValue(abiType, out Type publicType) ? publicType : null;
+                return CustomAbiTypeToTypeMappings.TryGetValue(abiType.GetGenericTypeDefinition(), out Type publicTypeDefinition)
+                    ? publicTypeDefinition.MakeGenericType(abiType.GetGenericArguments())
+                    : null;
             }
-            finally
-            {
-                rwlock.ExitReadLock();
-            }
+            return CustomAbiTypeToTypeMappings.TryGetValue(abiType, out Type publicType) ? publicType : null;
         }
 
         public static Type FindCustomTypeForAbiTypeName(string abiTypeName)
         {
-            rwlock.EnterReadLock();
-            try
-            {
-                return CustomAbiTypeNameToTypeMappings.TryGetValue(abiTypeName, out Type type) ? type : null;
-            }
-            finally
-            {
-                rwlock.ExitReadLock();
-            }
+            return CustomAbiTypeNameToTypeMappings.TryGetValue(abiTypeName, out Type type) ? type : null;
         }
 
         public static string FindCustomAbiTypeNameForType(Type type)
         {
-            rwlock.EnterReadLock();
-            try
-            {
-                return CustomTypeToAbiTypeNameMappings.TryGetValue(type, out string typeName) ? typeName : null;
-            }
-            finally
-            {
-                rwlock.ExitReadLock();
-            }
+            return CustomTypeToAbiTypeNameMappings.TryGetValue(type, out string typeName) ? typeName : null;
         }
 
         public static bool IsTypeWindowsRuntimeType(Type type)
@@ -399,8 +358,7 @@ namespace WinRT
             {
                 if (objectReference.TryAs<IInspectable.Vftbl>(out var inspectablePtr) == 0)
                 {
-                    rwlock.EnterReadLock();
-                    try
+                    using (inspectablePtr)
                     {
                         IInspectable inspectable = inspectablePtr;
                         string runtimeClassName = inspectable.GetRuntimeClassName(true);
@@ -412,11 +370,6 @@ namespace WinRT
                                 return true;
                             }
                         }
-                    }
-                    finally
-                    {
-                        inspectablePtr.Dispose();
-                        rwlock.ExitReadLock();
                     }
                 }
             }
