@@ -142,7 +142,7 @@ namespace GuidPatch
                         {
                             if (typeDef.IsEnum)
                             {
-                                var isFlags = typeDef.CustomAttributes.Any(cad => cad.AttributeType.Name == "FlagsAttribute");
+                                var isFlags = typeDef.CustomAttributes.Any(cad => string.CompareOrdinal(cad.AttributeType.Name, "FlagsAttribute") == 0);
                                 return new EnumSignature(type, isFlags);
                             }
                             if (!type.IsPrimitive)
@@ -173,7 +173,7 @@ namespace GuidPatch
                 throw new InvalidOperationException($"Unable to read IID attribute value for {type.FullName}.");
             }
 
-            if (typeDef.BaseType?.Name == "MulticastDelegate")
+            if (string.CompareOrdinal(typeDef.BaseType?.Name, "MulticastDelegate") == 0)
             {
                 return new NonGenericDelegateSignature(guidAttributeValue.Value);
             }
@@ -192,7 +192,9 @@ namespace GuidPatch
             TypeDefinition rcDef = runtimeClassTypeMaybe.Resolve();
             rcDef = CreateAuthoringMetadataTypeReference(rcDef).Resolve() ?? rcDef;
 
-            CustomAttribute? runtimeClassAttribute = rcDef.CustomAttributes.FirstOrDefault(ca => ca.AttributeType.Namespace == "WinRT" && ca.AttributeType.Name == "ProjectedRuntimeClassAttribute");
+            CustomAttribute? runtimeClassAttribute = rcDef.CustomAttributes.FirstOrDefault(ca =>
+                string.CompareOrdinal(ca.AttributeType.Namespace, "WinRT") == 0 && 
+                string.CompareOrdinal(ca.AttributeType.Name, "ProjectedRuntimeClassAttribute") == 0);
 
             if (runtimeClassAttribute is null)
             {

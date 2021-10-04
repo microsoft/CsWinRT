@@ -67,8 +67,9 @@ namespace Generator
             bool AsyncActionCase(INamedTypeSymbol sym)
             {
                 // are we using Windows.Foundation.IAsyncAction ?
-                bool isWindowsFoundation = sym.ContainingNamespace.IsGlobalNamespace || sym.ContainingNamespace.Name == "Windows.Foundation";
-                bool isAsyncAction = sym.MetadataName == "IAsyncAction";
+                bool isWindowsFoundation = sym.ContainingNamespace.IsGlobalNamespace ||
+                    string.CompareOrdinal(sym.ContainingNamespace.Name, "Windows.Foundation") == 0;
+                bool isAsyncAction = string.CompareOrdinal(sym.MetadataName, "IAsyncAction") == 0;
                 return isWindowsFoundation && isAsyncAction;
             }
 
@@ -159,7 +160,7 @@ namespace Generator
                 foreach (var attr in attrList.Attributes)
                 {
                     // no declared symbol for AttributeSyntax...
-                    if (attr.Name.ToString() == attrName)
+                    if (string.CompareOrdinal(attr.Name.ToString(), attrName) == 0)
                     {
                         return true;
                     }

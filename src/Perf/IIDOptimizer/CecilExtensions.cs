@@ -89,7 +89,7 @@ namespace GuidPatch
         {
             foreach (var asm in module.AssemblyReferences)
             {
-                if (asm.Name == basicAssemblyName || asm.Name.StartsWith($"{basicAssemblyName},"))
+                if (asm.Name == basicAssemblyName || asm.Name.StartsWith($"{basicAssemblyName},", StringComparison.Ordinal))
                 {
                     TypeReference typeRef = new TypeReference(ns, name, module, asm, isValueType);
                     if (typeRef.Resolve() != null)

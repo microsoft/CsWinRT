@@ -2692,7 +2692,7 @@ namespace UnitTest
                 foreach (var key in prop.Keys)
                 {
                     var val = prop[key];
-                    if (key == "System.Devices.ContainerId" && val != null)
+                    if (string.CompareOrdinal(key, "System.Devices.ContainerId") == 0 && val != null)
                     {
                         var val4 = pnpObject.Properties[key];
                         if (val is not Guid || val4 is not Guid)
@@ -2700,7 +2700,7 @@ namespace UnitTest
                             throw new Exception("Incorrect value type Guid. Actual type: " + val.GetType() + "  " + val4.GetType());
                         }
                     }
-                    if (key == "System.Devices.Parent" && val != null)
+                    if (string.CompareOrdinal(key, "System.Devices.Parent") == 0 && val != null)
                     {
                         var val4 = pnpObject.Properties[key];
                         if (val is not string || val4 is not string)
