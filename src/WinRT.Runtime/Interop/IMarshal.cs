@@ -44,7 +44,7 @@ namespace ABI.WinRT.Interop
         {
             internal global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
 
-#if NETSTANDARD2_0
+#if !NET
             private void* _GetUnmarshalClass_0;
             public delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr, global::WinRT.Interop.MSHCTX, IntPtr, global::WinRT.Interop.MSHLFLAGS, Guid*, int> GetUnmarshalClass_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr, global::WinRT.Interop.MSHCTX, IntPtr, global::WinRT.Interop.MSHLFLAGS, Guid*, int>)_GetUnmarshalClass_0; set => _GetUnmarshalClass_0 = value; }
             private void* _GetMarshalSizeMax_1;
@@ -73,7 +73,7 @@ namespace ABI.WinRT.Interop
 
             static Vftbl()
             {
-#if NETSTANDARD2_0
+#if !NET
                 AbiToProjectionVftable = new Vftbl
                 {
                     IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
@@ -133,7 +133,7 @@ namespace ABI.WinRT.Interop
                 return iid_unmarshalClass;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
 #endif
             private static int Do_Abi_GetUnmarshalClass_0(IntPtr thisPtr, Guid* riid, IntPtr pv, global::WinRT.Interop.MSHCTX dwDestContext, IntPtr pvDestContext, global::WinRT.Interop.MSHLFLAGS mshlFlags, Guid* pCid)
@@ -151,7 +151,7 @@ namespace ABI.WinRT.Interop
                 return 0;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
 #endif
             private static int Do_Abi_GetMarshalSizeMax_1(IntPtr thisPtr, Guid* riid, IntPtr pv, global::WinRT.Interop.MSHCTX dwDestContext, IntPtr pvDestContext, global::WinRT.Interop.MSHLFLAGS mshlflags, uint* pSize)
@@ -169,7 +169,7 @@ namespace ABI.WinRT.Interop
                 return 0;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
 #endif
             private static int Do_Abi_MarshalInterface_2(IntPtr thisPtr, IntPtr pStm, Guid* riid, IntPtr pv, global::WinRT.Interop.MSHCTX dwDestContext, IntPtr pvDestContext, global::WinRT.Interop.MSHLFLAGS mshlflags)
@@ -186,7 +186,7 @@ namespace ABI.WinRT.Interop
                 return 0;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
 #endif
             private static int Do_Abi_UnmarshalInterface_3(IntPtr thisPtr, IntPtr pStm, Guid* riid, IntPtr* ppv)
@@ -204,7 +204,7 @@ namespace ABI.WinRT.Interop
                 return 0;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
 #endif
             private static int Do_Abi_ReleaseMarshalData_4(IntPtr thisPtr, IntPtr pStm)
@@ -221,7 +221,7 @@ namespace ABI.WinRT.Interop
                 return 0;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
 #endif
             private static int Do_Abi_DisconnectObject_5(IntPtr thisPtr, uint dwReserved)

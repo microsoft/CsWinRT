@@ -55,7 +55,12 @@ namespace ABI.System
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
-    public class Nullable<T>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class Nullable<T>
     {
         public static IObjectReference CreateMarshaler(object value)
         {
@@ -95,7 +100,7 @@ namespace ABI.System
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
-        public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
+        public static void DisposeAbi(IntPtr abi) { using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref abi); }
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(Nullable<T>));
 

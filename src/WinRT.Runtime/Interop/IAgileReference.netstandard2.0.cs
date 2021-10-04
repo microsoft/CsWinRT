@@ -14,7 +14,12 @@ namespace WinRT.Interop
 
     [WindowsRuntimeType]
     [Guid("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90")]
-    public interface IAgileObject
+#if EMBED
+    internal
+#else
+    public
+#endif 
+    interface IAgileObject
     {
     }
 
@@ -112,7 +117,12 @@ namespace ABI.WinRT.Interop
     }
 
     [Guid("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90")]
-    public class IAgileObject : global::WinRT.Interop.IAgileObject
+#if EMBED
+    internal
+#else
+    public 
+#endif 
+    class IAgileObject : global::WinRT.Interop.IAgileObject
     {
         [Guid("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90")]
         public struct Vftbl

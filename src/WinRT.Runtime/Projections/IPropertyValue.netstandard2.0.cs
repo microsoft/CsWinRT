@@ -1131,15 +1131,15 @@ namespace ABI.Windows.Foundation
                 {
                     value = global::Windows.Foundation.PropertyType.Guid;
                 }
-                else if (string.CompareOrdinal(managedType.FullName, "Windows.Foundation.Point") == 0)
+                else if (managedType.FullName == "Windows.Foundation.Point")
                 {
                     value = global::Windows.Foundation.PropertyType.Point;
                 }
-                else if (string.CompareOrdinal(managedType.FullName, "Windows.Foundation.Rect") == 0)
+                else if (managedType.FullName == "Windows.Foundation.Rect")
                 {
                     value = global::Windows.Foundation.PropertyType.Rect;
                 }
-                else if (string.CompareOrdinal(managedType.FullName, "Windows.Foundation.Size") == 0)
+                else if (managedType.FullName == "Windows.Foundation.Size")
                 {
                     value = global::Windows.Foundation.PropertyType.Size;
                 }

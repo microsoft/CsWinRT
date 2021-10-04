@@ -19,13 +19,18 @@ namespace ABI.WinRT.Interop
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("00000035-0000-0000-C000-000000000046")]
-    public unsafe class IActivationFactory : global::WinRT.Interop.IActivationFactory
+#if EMBED 
+    internal
+#else
+    public 
+#endif
+    unsafe class IActivationFactory : global::WinRT.Interop.IActivationFactory
     {
         [Guid("00000035-0000-0000-C000-000000000046")]
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-#if NETSTANDARD2_0
+#if !NET
             private delegate int ActivateInstance_Delegate(IntPtr thisPtr, IntPtr* pobj);
             private void* _ActivateInstance_0;
             public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> ActivateInstance_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_ActivateInstance_0; set => _ActivateInstance_0 = value; }
@@ -34,7 +39,7 @@ namespace ABI.WinRT.Interop
 #endif
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private static readonly Delegate[] DelegateCache = new Delegate[1];
 #endif
             static unsafe Vftbl()
@@ -43,7 +48,7 @@ namespace ABI.WinRT.Interop
                 (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _ActivateInstance_0 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ActivateInstance_Delegate(Do_Abi_ActivateInstance_0))
 #else
                     ActivateInstance_0 = &Do_Abi_ActivateInstance_0
@@ -51,7 +56,7 @@ namespace ABI.WinRT.Interop
                 };
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly(CallConvs = new [] { typeof(CallConvStdcall) })]
 #endif
             private static unsafe int Do_Abi_ActivateInstance_0(IntPtr thisPtr, IntPtr* result)

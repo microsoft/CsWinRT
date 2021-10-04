@@ -12,14 +12,19 @@ using Windows.Foundation.Collections;
 
 namespace WinRT
 {
-    public static class Projections
+#if EMBED
+    internal
+#else 
+    public
+#endif
+    static class Projections
     {
         private static readonly ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
         private static readonly Dictionary<Type, Type> CustomTypeToHelperTypeMappings = new Dictionary<Type, Type>();
         private static readonly Dictionary<Type, Type> CustomAbiTypeToTypeMappings = new Dictionary<Type, Type>();
-        private static readonly Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>(StringComparer.Ordinal);
+        private static readonly Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>();
         private static readonly Dictionary<Type, string> CustomTypeToAbiTypeNameMappings = new Dictionary<Type, string>();
-        private static readonly HashSet<string> ProjectedRuntimeClassNames = new HashSet<string>(StringComparer.Ordinal);
+        private static readonly HashSet<string> ProjectedRuntimeClassNames = new HashSet<string>();
         private static readonly HashSet<Type> ProjectedCustomTypeRuntimeClasses = new HashSet<Type>();
 
         static Projections()

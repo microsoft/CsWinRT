@@ -7,14 +7,24 @@ namespace WinRT.Interop
 {
     [WindowsRuntimeType]
     [Guid("00000038-0000-0000-C000-000000000046")]
-    public interface IWeakReferenceSource
+#if EMBED
+    internal
+#else
+    public
+#endif 
+    interface IWeakReferenceSource
     {
         IWeakReference GetWeakReference();
     }
 
     [WindowsRuntimeType]
     [Guid("00000037-0000-0000-C000-000000000046")]
-    public interface IWeakReference
+#if EMBED
+    internal
+#else
+    public
+#endif
+    interface IWeakReference
     {
         IObjectReference Resolve(Guid riid);
     }

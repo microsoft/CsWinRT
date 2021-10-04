@@ -189,7 +189,12 @@ namespace ABI.System.Collections.Generic
     }
 
     [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
-    public class IEnumerator<T> : global::System.Collections.Generic.IEnumerator<T>, global::Windows.Foundation.Collections.IIterator<T>
+#if EMBED
+    internal
+#else
+    public
+#endif 
+    class IEnumerator<T> : global::System.Collections.Generic.IEnumerator<T>, global::Windows.Foundation.Collections.IIterator<T>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IEnumerator<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IEnumerator<T>)));

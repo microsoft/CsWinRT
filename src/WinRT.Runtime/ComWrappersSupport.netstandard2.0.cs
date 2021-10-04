@@ -10,7 +10,12 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    public static partial class ComWrappersSupport
+#if EMBED 
+    internal 
+#else
+    public 
+#endif     
+    static partial class ComWrappersSupport
     {
         private static ConditionalWeakTable<object, ComCallableWrapper> ComWrapperCache = new ConditionalWeakTable<object, ComCallableWrapper>();
 
@@ -268,12 +273,18 @@ namespace WinRT
 
     }
 
+#if EMBED
+    internal
+#endif
     struct ComInterfaceEntry
     {
         public IntPtr Vtable;
         public Guid IID;
     }
 
+#if EMBED
+    internal
+#endif
     struct UnmanagedObject
     {
         public IntPtr _vftblPtr;

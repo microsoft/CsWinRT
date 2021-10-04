@@ -6,7 +6,12 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    public static class ExceptionHelpers
+#if EMBED
+    internal
+#else 
+    public
+#endif
+    static class ExceptionHelpers
     {
         private const int COR_E_OBJECTDISPOSED = unchecked((int)0x80131622);
         private const int RO_E_CLOSED = unchecked((int)0x80000013);
@@ -366,7 +371,12 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
         }
     }
 
-    public static class ExceptionExtensions
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class ExceptionExtensions
     {
         public static void SetHResult(this Exception ex, int value)
         {
@@ -421,7 +431,13 @@ namespace Microsoft.UI.Xaml
     namespace Automation
     {
         [Serializable]
-        public class ElementNotAvailableException : Exception
+#if EMBED
+        internal
+#else
+        public
+#endif
+
+        class ElementNotAvailableException : Exception
         {
             public ElementNotAvailableException()
                 : base("The element is not available.")
@@ -447,7 +463,12 @@ namespace Microsoft.UI.Xaml
             }
         }
 
-        public class ElementNotEnabledException : Exception
+#if EMBED
+        internal
+#else
+        public
+#endif
+        class ElementNotEnabledException : Exception
         {
             public ElementNotEnabledException()
                 : base("The element is not enabled.")
@@ -470,7 +491,13 @@ namespace Microsoft.UI.Xaml
     }
     namespace Markup
     {
-        public class XamlParseException : Exception
+
+#if EMBED
+        internal
+#else 
+        public
+#endif
+        class XamlParseException : Exception
         {
             public XamlParseException()
                 : base("XAML parsing failed.")
@@ -492,7 +519,12 @@ namespace Microsoft.UI.Xaml
         }
     }
     [Serializable]
-    public class LayoutCycleException : Exception
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class LayoutCycleException : Exception
     {
         public LayoutCycleException()
             : base("A cycle occurred while laying out the GUI.")

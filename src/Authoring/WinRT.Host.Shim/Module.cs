@@ -5,7 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Reflection;
 
-#if !NETSTANDARD2_0
+#if NET
 using System.Runtime.Loader;
 [assembly: global::System.Runtime.Versioning.SupportedOSPlatform("Windows")]
 #endif
@@ -56,7 +56,7 @@ namespace WinRT.Host
             }
         }
 
-#if NETSTANDARD2_0
+#if !NET
         private static class ActivationLoader
         {
             public static Assembly LoadAssembly(string targetAssembly) => Assembly.LoadFrom(targetAssembly);
@@ -64,7 +64,7 @@ namespace WinRT.Host
 #else
         private class ActivationLoader : AssemblyLoadContext
         {
-            private static readonly ConcurrentDictionary<string, ActivationLoader> ALCMapping = new ConcurrentDictionary<string, ActivationLoader>(StringComparer.Ordinal);
+            private static readonly ConcurrentDictionary<string, ActivationLoader> ALCMapping = new ConcurrentDictionary<string, ActivationLoader>();
             private AssemblyDependencyResolver _resolver;
 
             public static Assembly LoadAssembly(string targetAssembly)
@@ -79,7 +79,7 @@ namespace WinRT.Host
                 AssemblyLoadContext.Default.Resolving += (AssemblyLoadContext assemblyLoadContext, AssemblyName assemblyName) =>
                 {
                     // Consolidate all WinRT.Runtime loads to the default ALC, or failing that, the first shim ALC 
-                    if (string.CompareOrdinal(assemblyName.Name, "WinRT.Runtime") == 0)
+                    if (assemblyName.Name == "WinRT.Runtime")
                     {
                         string assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
                         if (assemblyPath != null)
@@ -93,7 +93,7 @@ namespace WinRT.Host
 
             protected override Assembly Load(AssemblyName assemblyName)
             {
-                if (string.CompareOrdinal(assemblyName.Name, "WinRT.Runtime") != 0)
+                if (assemblyName.Name != "WinRT.Runtime")
                 {
                     string assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
                     if (assemblyPath != null)

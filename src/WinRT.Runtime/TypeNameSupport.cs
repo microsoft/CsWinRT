@@ -10,6 +10,9 @@ using System.Threading;
 namespace WinRT
 {
     [Flags]
+#if EMBED
+    internal
+#endif
     enum TypeNameGenerationFlags
     {
         None = 0,
@@ -23,10 +26,13 @@ namespace WinRT
         NoCustomTypeName = 0x2
     }
 
+#if EMBED
+    internal
+#endif
     static class TypeNameSupport
     {
         private static List<Assembly> projectionAssemblies = new List<Assembly>();
-        private static ConcurrentDictionary<string, Type> typeNameCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal) { ["TrackerCollection<T>"] = null };
+        private static ConcurrentDictionary<string, Type> typeNameCache = new ConcurrentDictionary<string, Type>() { ["TrackerCollection<T>"] = null };
 
         public static void RegisterProjectionAssembly(Assembly assembly)
         {
@@ -63,7 +69,7 @@ namespace WinRT
         {
             // Assume that anonymous types are expando objects, whether declared 'dynamic' or not.
             // It may be necessary to detect otherwise and return System.Object.
-            if(runtimeClassName.StartsWith("<>f__AnonymousType".AsSpan(), StringComparison.Ordinal))
+            if(runtimeClassName.StartsWith("<>f__AnonymousType".AsSpan()))
             {
                 return (typeof(System.Dynamic.ExpandoObject), 0);
             }
@@ -163,7 +169,7 @@ namespace WinRT
         /// <returns>Returns a tuple containing the simple type name of the type, and generic type parameters if they exist, and the index of the end of the type name in the span.</returns>
         private static (string genericTypeName, Type[] genericTypes, int remaining) ParseGenericTypeName(ReadOnlySpan<char> partialTypeName)
         {
-            int possibleEndOfSimpleTypeName = partialTypeName.IndexOfAny(',', '>');
+            int possibleEndOfSimpleTypeName = partialTypeName.IndexOfAny(new[] { ',', '>' });
             int endOfSimpleTypeName = partialTypeName.Length;
             if (possibleEndOfSimpleTypeName != -1)
             {
@@ -342,7 +348,7 @@ namespace WinRT
 
         private static bool TryAppendTypeName(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
         {
-#if NETSTANDARD2_0
+#if !NET
             // We can't easily determine from just the type
             // if the array is an "single dimension index from zero"-array in .NET Standard 2.0,
             // so just approximate it.

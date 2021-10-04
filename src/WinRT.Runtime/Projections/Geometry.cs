@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Windows.Foundation
 {
-    internal class SR
+    internal class GSR
     {
         public static string ArgumentOutOfRange_NeedNonNegNum = "Non-negative number required.";
     }
@@ -118,9 +118,9 @@ namespace Windows.Foundation
                     float height)
         {
             if (width < 0)
-                throw new ArgumentOutOfRangeException(nameof(width), SR.ArgumentOutOfRange_NeedNonNegNum);
+                throw new ArgumentOutOfRangeException(nameof(width), GSR.ArgumentOutOfRange_NeedNonNegNum);
             if (height < 0)
-                throw new ArgumentOutOfRangeException(nameof(height), SR.ArgumentOutOfRange_NeedNonNegNum);
+                throw new ArgumentOutOfRangeException(nameof(height), GSR.ArgumentOutOfRange_NeedNonNegNum);
 
             _x = x;
             _y = y;
@@ -176,7 +176,7 @@ namespace Windows.Foundation
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(Width), SR.ArgumentOutOfRange_NeedNonNegNum);
+                    throw new ArgumentOutOfRangeException(nameof(Width), GSR.ArgumentOutOfRange_NeedNonNegNum);
 
                 _width = (float)value;
             }
@@ -188,7 +188,7 @@ namespace Windows.Foundation
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(Height), SR.ArgumentOutOfRange_NeedNonNegNum);
+                    throw new ArgumentOutOfRangeException(nameof(Height), GSR.ArgumentOutOfRange_NeedNonNegNum);
 
                 _height = (float)value;
             }
@@ -427,9 +427,9 @@ namespace Windows.Foundation
         public Size(float width, float height)
         {
             if (width < 0)
-                throw new ArgumentOutOfRangeException(nameof(width), SR.ArgumentOutOfRange_NeedNonNegNum);
+                throw new ArgumentOutOfRangeException(nameof(width), GSR.ArgumentOutOfRange_NeedNonNegNum);
             if (height < 0)
-                throw new ArgumentOutOfRangeException(nameof(height), SR.ArgumentOutOfRange_NeedNonNegNum);
+                throw new ArgumentOutOfRangeException(nameof(height), GSR.ArgumentOutOfRange_NeedNonNegNum);
             _width = width;
             _height = height;
         }
@@ -442,7 +442,7 @@ namespace Windows.Foundation
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(Width), SR.ArgumentOutOfRange_NeedNonNegNum);
+                    throw new ArgumentOutOfRangeException(nameof(Width), GSR.ArgumentOutOfRange_NeedNonNegNum);
 
                 _width = (float)value;
             }
@@ -454,7 +454,7 @@ namespace Windows.Foundation
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(Height), SR.ArgumentOutOfRange_NeedNonNegNum);
+                    throw new ArgumentOutOfRangeException(nameof(Height), GSR.ArgumentOutOfRange_NeedNonNegNum);
 
                 _height = (float)value;
             }

@@ -165,7 +165,12 @@ namespace ABI.System.Collections.Specialized
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     [StructLayout(LayoutKind.Sequential)]
-    public struct NotifyCollectionChangedEventArgs
+#if EMBED
+    internal
+#else
+    public
+#endif
+    struct NotifyCollectionChangedEventArgs
     {
         private static WeakLazy<ActivationFactory> _propertyChangedArgsFactory = new WeakLazy<ActivationFactory>();
 
@@ -232,7 +237,7 @@ namespace ABI.System.Collections.Specialized
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
-        public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
+        public static void DisposeAbi(IntPtr abi) { using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref abi); }
 
         public static string GetGuidSignature()
         {

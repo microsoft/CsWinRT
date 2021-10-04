@@ -4,6 +4,9 @@ using WinRT.Interop;
 
 namespace WinRT
 {
+#if EMBED
+    internal
+#endif
     static class Context
     {
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
@@ -60,7 +63,7 @@ namespace WinRT
 
         public static void DisposeContextCallback(IntPtr contextCallbackPtr)
         {
-            MarshalInspectable<object>.DisposeAbi(contextCallbackPtr);
+            using var contextcallback = ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.Attach(ref contextCallbackPtr);
         }
     }
 }

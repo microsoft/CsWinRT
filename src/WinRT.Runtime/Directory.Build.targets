@@ -8,4 +8,5 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 <!--  Disabling til issue https://github.com/microsoft/CsWinRT/issues/978 is resolved
   <Import Project="$(MSBuildThisFileDirectory)../../nuget/Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(TargetFramework)' != 'netstandard2.0'"/> 
 -->
+  <Import Project="$(MSBuildThisFileDirectory)../../nuget/Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/> 
 </Project>

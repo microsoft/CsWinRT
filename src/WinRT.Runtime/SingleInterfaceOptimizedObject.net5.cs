@@ -5,7 +5,12 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    public class SingleInterfaceOptimizedObject : IWinRTObject, IDynamicInterfaceCastable
+#if EMBED
+    internal
+#else 
+    public
+#endif
+    class SingleInterfaceOptimizedObject : IWinRTObject, IDynamicInterfaceCastable
     {
         private Type _type;
         private IObjectReference _obj;
@@ -28,10 +33,8 @@ namespace WinRT
         IObjectReference IWinRTObject.NativeObject => _obj;
         bool IWinRTObject.HasUnwrappableNativeObject => false;
 
-        private Lazy<ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>> _lazyQueryInterfaceCache = new();
-        ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _lazyQueryInterfaceCache.Value;
-        private Lazy<ConcurrentDictionary<RuntimeTypeHandle, object>> _lazyAdditionalTypeData = new();
-        ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _lazyAdditionalTypeData.Value;
+        ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
+        ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData { get; } = new();
 
         bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
         {

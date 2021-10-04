@@ -73,7 +73,12 @@ namespace ABI.System.ComponentModel
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct PropertyChangedEventArgs
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe struct PropertyChangedEventArgs
     {
         private static WeakLazy<ActivationFactory> _propertyChangedArgsFactory = new WeakLazy<ActivationFactory>();
 
@@ -133,7 +138,7 @@ namespace ABI.System.ComponentModel
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
-        public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
+        public static void DisposeAbi(IntPtr abi) { using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref abi); }
 
         public static string GetGuidSignature()
         {

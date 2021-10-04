@@ -1,21 +1,15 @@
+using ABI.Microsoft.UI.Xaml.Data;
+using ABI.Windows.Foundation;
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Numerics;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
-using System.Linq.Expressions;
 using WinRT.Interop;
-using ABI.Windows.Foundation;
-using ABI.Microsoft.UI.Xaml.Data;
 
-#if !NETSTANDARD2_0
+#if NET
 using ComInterfaceEntry = System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry;
 #endif
 
@@ -24,9 +18,14 @@ using ComInterfaceEntry = System.Runtime.InteropServices.ComWrappers.ComInterfac
 
 namespace WinRT
 {
-    public static partial class ComWrappersSupport
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    static partial class ComWrappersSupport
     {
-        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
+        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
@@ -244,7 +243,7 @@ namespace WinRT
                 iids[i] = interfaceTableEntries[i].IID;
             }
 
-            if (type.FullName.StartsWith("ABI.", StringComparison.Ordinal))
+            if (type.FullName.StartsWith("ABI."))
             {
                 type = Projections.FindCustomPublicTypeForAbiType(type) ?? type.Assembly.GetType(type.FullName.Substring("ABI.".Length)) ?? type;
             }
@@ -261,7 +260,7 @@ namespace WinRT
 
         private static bool IsIReferenceArray(Type implementationType)
         {
-            return implementationType.FullName.StartsWith("Windows.Foundation.IReferenceArray`1", StringComparison.Ordinal);
+            return implementationType.FullName.StartsWith("Windows.Foundation.IReferenceArray`1");
         }
 
         private static Func<IInspectable, object> CreateKeyValuePairFactory(Type type)
@@ -317,17 +316,16 @@ namespace WinRT
         internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
         {
             // If runtime class name is empty or "Object", then just use IInspectable.
-            if (string.IsNullOrEmpty(runtimeClassName) || 
-                string.CompareOrdinal(runtimeClassName, "Object") == 0)
+            if (string.IsNullOrEmpty(runtimeClassName) || runtimeClassName == "Object")
             {
                 return (IInspectable obj) => obj;
             }
             // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
-            if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<String>") == 0)
+            if (runtimeClassName == "Windows.Foundation.IReference`1<String>")
             {
                 return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<String>(obj.ObjRef));
             }
-            else if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>") == 0)
+            else if (runtimeClassName == "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>")
             {
                 return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef));
             }

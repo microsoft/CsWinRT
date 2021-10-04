@@ -4,8 +4,12 @@ using System.Reflection;
 
 namespace WinRT
 {
-
-    public static class TypeExtensions
+#if EMBED
+    internal
+#else 
+    public
+#endif
+    static class TypeExtensions
     {
         private readonly static ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
 
@@ -25,7 +29,7 @@ namespace WinRT
 
                 string fullTypeName = type.FullName;
                 string ccwTypePrefix = "ABI.Impl.";
-                if (fullTypeName.StartsWith(ccwTypePrefix, StringComparison.Ordinal))
+                if (fullTypeName.StartsWith(ccwTypePrefix))
                 {
                     fullTypeName = fullTypeName.Substring(ccwTypePrefix.Length);
                 }

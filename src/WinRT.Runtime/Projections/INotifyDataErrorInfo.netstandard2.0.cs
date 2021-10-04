@@ -11,13 +11,18 @@ namespace ABI.System.ComponentModel
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
-    public unsafe class INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe class INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
     {
         [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
         public struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-#if NETSTANDARD2_0
+#if !NET
             private void* _get_HasErrors_0;
             public delegate* unmanaged[Stdcall]<IntPtr, byte*, int> get_HasErrors_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, byte*, int>)_get_HasErrors_0; set => _get_HasErrors_0 = (void*)value; }
             private void* _add_ErrorsChanged_1;
@@ -35,7 +40,7 @@ namespace ABI.System.ComponentModel
 
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private static Delegate[] DelegateCache = new Delegate[4];
 #endif
 
@@ -45,7 +50,7 @@ namespace ABI.System.ComponentModel
                 (*(Vftbl*)AbiToProjectionVftablePtr) = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _get_HasErrors_0 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new INotifyDataErrorInfo_Delegates.get_HasErrors_0(Do_Abi_get_HasErrors_0)).ToPointer(),
                     _add_ErrorsChanged_1 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new INotifyDataErrorInfo_Delegates.add_ErrorsChanged_1(Do_Abi_add_ErrorsChanged_1)).ToPointer(),
                     _remove_ErrorsChanged_2 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new INotifyDataErrorInfo_Delegates.remove_ErrorsChanged_2(Do_Abi_remove_ErrorsChanged_2)).ToPointer(),
@@ -59,7 +64,7 @@ namespace ABI.System.ComponentModel
                 };
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_GetErrors_3(IntPtr thisPtr, IntPtr propertyName, IntPtr* result)
@@ -82,7 +87,7 @@ namespace ABI.System.ComponentModel
                 return 0;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_HasErrors_0(IntPtr thisPtr, byte* value)
@@ -107,7 +112,7 @@ namespace ABI.System.ComponentModel
             private readonly static Lazy<global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>>> _ErrorsChanged_TokenTablesLazy = new();
             private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTables => _ErrorsChanged_TokenTablesLazy.Value;
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvStdcall)})]
 #endif
             private static unsafe int Do_Abi_add_ErrorsChanged_1(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token)
@@ -127,7 +132,7 @@ namespace ABI.System.ComponentModel
                 }
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvStdcall)})]
 #endif
             private static unsafe int Do_Abi_remove_ErrorsChanged_2(IntPtr thisPtr, global::WinRT.EventRegistrationToken token)
