@@ -14,13 +14,11 @@
     <ClCompile Include="Beta.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
     <ClCompile Include="QIAgent.cpp" />
-    <ClCompile Include="Class.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="QIAgent.h" />
     <ClInclude Include="Beta.h" />
-    <ClInclude Include="Class.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Beta.idl" />

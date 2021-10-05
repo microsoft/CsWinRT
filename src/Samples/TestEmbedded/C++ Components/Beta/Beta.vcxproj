@@ -119,7 +119,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Class.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Beta.h">
       <DependentUpon>Beta.idl</DependentUpon>
@@ -127,7 +126,6 @@
     <ClInclude Include="QIAgent.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Class.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

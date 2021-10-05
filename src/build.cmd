@@ -150,6 +150,16 @@ if ErrorLevel 1 (
 )
 if "%cswinrt_build_only%"=="true" goto :eof
 
+:buildembedded
+echo Building embedded sample
+call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%Samples\TestEmbedded\TestEmbedded.sln
+call :exec %msbuild_path%msbuild.exe %this_dir%\Samples\TestEmbedded\TestEmbedded.sln /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
+if ErrorLevel 1 (
+  echo.
+  echo ERROR: Embedded build failed
+  exit /b !ErrorLevel!
+)
+
 rem Tests are not yet enabled for ARM builds (not supported by Project Reunion)
 if %cswinrt_platform%==arm goto :eof
 if %cswinrt_platform%==arm64 goto :eof
@@ -168,6 +178,15 @@ if not exist %dotnet_exe% (
   ) else (
     set dotnet_exe="%ProgramFiles%\dotnet\dotnet.exe"
   )
+)
+
+:embeddedtests
+:: build the embedded sample and run the unittest 
+call :exec %dotnet_exe% test --verbosity normal --no-build --logger xunit;LogFilePath=%~dp0embedunittest_%cswinrt_version_string%.xml %this_dir%Samples/TestEmbedded/UnitTestEmbedded/UnitTestEmbedded.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
+if ErrorLevel 1 (
+  echo.
+  echo ERROR: Embedded unit test failed, skipping NuGet pack
+  exit /b !ErrorLevel!
 )
 
 :objectlifetimetests
@@ -209,7 +228,7 @@ echo Running cswinrt authoring tests for %cswinrt_platform% %cswinrt_configurati
 call :exec %this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:%this_dir%hosttest_%cswinrt_version_string%.xml 
 if ErrorLevel 1 (
   echo.
-  echo ERROR: Authoring test failed, skipping NuGet pack
+  echo ERROR: Authoring test failed, skipping NuGet pac
   exit /b !ErrorLevel!
 )
 
