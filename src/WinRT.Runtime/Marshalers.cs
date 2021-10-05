@@ -1038,7 +1038,7 @@ namespace WinRT
 
             if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
             {
-                return objRef.As<IInspectable.Vftbl>();
+                return objRef.As<IInspectable.Vftbl>(IInspectable.IID);
             }
             var publicType = o.GetType();
             Type helperType = Projections.FindCustomHelperTypeMapping(publicType, true);
@@ -1052,7 +1052,7 @@ namespace WinRT
             }
             using (var ccw = ComWrappersSupport.CreateCCWForObject(o))
             {
-                return ccw.As<IInspectable.Vftbl>();
+                return ccw.As<IInspectable.Vftbl>(IInspectable.IID);
             }
         }
 
@@ -1066,7 +1066,7 @@ namespace WinRT
                 return default;
             }
             using var objRef = ObjectReference<IUnknownVftbl>.FromAbi(ptr);
-            using var unknownObjRef = objRef.As<IUnknownVftbl>();
+            using var unknownObjRef = objRef.As<IUnknownVftbl>(IUnknownVftbl.IID);
             if (unknownObjRef.IsReferenceToManagedObject)
             {
                 return (T) ComWrappersSupport.FindObject<object>(unknownObjRef.ThisPtr);

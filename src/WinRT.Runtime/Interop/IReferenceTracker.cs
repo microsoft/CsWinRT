@@ -16,5 +16,7 @@ namespace WinRT.Interop
         private void* _ReleaseFromTrackerSource_5;
         public delegate* unmanaged[Stdcall]<IntPtr, int> ReleaseFromTrackerSource { get => (delegate* unmanaged[Stdcall]<IntPtr, int>)_ReleaseFromTrackerSource_5; set => _ReleaseFromTrackerSource_5 = (void*)value; }
         private void* _PegFromTrackerSource_6;
+
+        internal static readonly Guid IID = Guid.Parse("11D3B13A-180E-4789-A8BE-7712882893E6");
     }
 }
