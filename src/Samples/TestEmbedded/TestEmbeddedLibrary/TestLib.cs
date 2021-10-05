@@ -27,6 +27,7 @@ namespace TestEmbeddedLibrary
         Geolocator g;
         public TestLib()
         {
+            WinRT.ComWrappersSupport.RegisterProjectionAssembly(typeof(TestLib).Assembly);
             g = new();
         }
 

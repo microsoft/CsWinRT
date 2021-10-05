@@ -2,7 +2,6 @@
 
 <!-- This target shadows the one from the `src` folder of cswinrt.sln  
      which throws an error unrealted to this sample  -->
-
-	<Target Name="CsWinRTCheckDependencies"/>
+  <Target Name="CsWinRTCheckDependencies"/>
 
 </Project>
