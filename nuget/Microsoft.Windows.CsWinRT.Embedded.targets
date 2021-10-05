@@ -36,10 +36,4 @@ the other files are nicely tucked in a WinRT.Runtime folder in Solution Explorer
 
   </Target>
 
-<!-- Update sources for netstandard, and download necessary NuGet packages -->
-  <ItemGroup Condition="'$(TFMNet3OrLower)' == 'true'">     
-    <PackageReference Include="System.Memory" Version="4.5.4" />
-    <PackageReference Include="System.Runtime.Extensions" Version="4.1.1" />
-  </ItemGroup>
-
 </Project>

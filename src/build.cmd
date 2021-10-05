@@ -151,9 +151,10 @@ if ErrorLevel 1 (
 if "%cswinrt_build_only%"=="true" goto :eof
 
 :buildembedded
-echo Building embedded sample
+echo Building embedded sample for %cswinrt_platform% %cswinrt_configuration%
 call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%Samples\TestEmbedded\TestEmbedded.sln
 call :exec %msbuild_path%msbuild.exe %this_dir%\Samples\TestEmbedded\TestEmbedded.sln /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
+call :exec %msbuild_path%msbuild.exe %this_dir%\Samples\TestEmbedded\TestEmbedded.sln /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration% /bl:embeddedsample.binlog
 if ErrorLevel 1 (
   echo.
   echo ERROR: Embedded build failed
@@ -165,7 +166,6 @@ if %cswinrt_platform%==arm goto :eof
 if %cswinrt_platform%==arm64 goto :eof
 
 :test
-:unittest
 rem Build/Run xUnit tests, generating xml output report for Azure Devops reporting, via XunitXml.TestLogger NuGet
 if %cswinrt_platform%==x86 (
   set dotnet_exe="%DOTNET_ROOT(86)%\dotnet.exe"
@@ -200,6 +200,7 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
+:unittest
 rem WinUI NuGet package's Microsoft.WinUI.AppX.targets attempts to import a file that does not exist, even when
 rem executing "dotnet test --no-build ...", which evidently still needs to parse and load the entire project.
 rem Work around by using a dummy targets file and assigning it to the MsAppxPackageTargets property.
