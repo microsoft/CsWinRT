@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "UseTestLib": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

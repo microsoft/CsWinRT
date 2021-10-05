@@ -73,7 +73,7 @@
   <PropertyGroup Label="Configuration">
     <DesktopCompatible>true</DesktopCompatible>
   </PropertyGroup>
- <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
@@ -119,6 +119,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Class.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Beta.h">
       <DependentUpon>Beta.idl</DependentUpon>
@@ -126,6 +127,7 @@
     <ClInclude Include="QIAgent.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Class.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

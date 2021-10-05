@@ -12,9 +12,9 @@
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Beta.cpp" />
-    <ClCompile Include="Class.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
     <ClCompile Include="QIAgent.cpp" />
+    <ClCompile Include="Class.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
