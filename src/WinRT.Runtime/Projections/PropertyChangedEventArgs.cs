@@ -20,7 +20,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("7C0C27A8-0B41-5070-B160-FC9AE960A36C")]
-    internal unsafe class WinRTPropertyChangedEventArgsRuntimeClassFactory
+    internal unsafe sealed class WinRTPropertyChangedEventArgsRuntimeClassFactory
     {
         [Guid("7C0C27A8-0B41-5070-B160-FC9AE960A36C")]
         [StructLayout(LayoutKind.Sequential)]
@@ -75,13 +75,13 @@ namespace ABI.System.ComponentModel
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct PropertyChangedEventArgs
     {
-        private static WeakLazy<ActivationFactory> _propertyChangedArgsFactory = new WeakLazy<ActivationFactory>();
-
-        private class ActivationFactory : BaseActivationFactory
+        private sealed class ActivationFactory : BaseActivationFactory
         {
             public ActivationFactory() : base("Microsoft.UI.Xaml.Data", "Microsoft.UI.Xaml.Data.PropertyChangedEventArgs")
             {
             }
+
+            internal static ActivationFactory Instance = new ActivationFactory();
         }
 
         public static IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventArgs value)
@@ -91,7 +91,7 @@ namespace ABI.System.ComponentModel
                 return null;
             }
 
-            ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory factory = _propertyChangedArgsFactory.Value._As<ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory.Vftbl>();
+            ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory factory = ActivationFactory.Instance._As<ABI.Microsoft.UI.Xaml.Data.WinRTPropertyChangedEventArgsRuntimeClassFactory.Vftbl>();
             return factory.CreateInstance(value.PropertyName, null, out _);
         }
 
