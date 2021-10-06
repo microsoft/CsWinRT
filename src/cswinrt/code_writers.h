@@ -905,12 +905,22 @@ namespace cswinrt
             targetObjRef);
     }
 
-    void write_abi_event_source_static_method_call(writer& w, type_semantics const& iface, Event const& evt, bool isSubscribeCall, std::string const& targetObjRef)
+    void write_abi_event_source_static_method_call(writer& w, type_semantics const& iface, Event const& evt, bool isSubscribeCall, std::string const& targetObjRef, bool is_static_event = false)
     {
-        w.write("%.Get_%(%, (IWinRTObject)this).%(value)",
+        w.write("%.Get_%(%, %).%(value)",
             bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, true),
             evt.Name(),
             targetObjRef,
+            bind([&](writer& w) {
+                    if (is_static_event)
+                    {
+                        w.write("(IWinRTObject)_%.Instance", bind<write_type_name>(iface, typedef_name_type::Projected, false));
+                    }
+                    else
+                    {
+                        w.write("(IWinRTObject)this");
+                    }
+                }),
             isSubscribeCall ? "Item1" : "Item2");
     }
 
@@ -1123,15 +1133,24 @@ namespace cswinrt
         if (setter_target.empty())
         {
             w.write(R"(
-%%%% % => %.%;
+%%%% % => %;
 )",
                 getter_platform,
                 access_spec,
                 method_spec,
                 prop_type,
                 external_prop_name,
-                getter_target,
-                prop_name);
+                bind([&](writer& w) {
+                    if (params_for_static_getter.has_value())
+                    {
+                        w.write("%", bind<write_abi_get_property_static_method_call>(params_for_static_getter.value().first, params_for_static_getter.value().second,
+                            w.write_temp("%.Value", bind<write_objref_type_name>(params_for_static_getter.value().first))));
+                    }
+                    else
+                    {
+                        w.write("%.%", getter_target, prop_name);
+                    }
+                    }));
             return;
         }
 
@@ -1265,7 +1284,7 @@ _lazyInterfaces = new Dictionary<Type, object>(%)
 
     void write_event(writer& w, std::string_view external_event_name, Event const& event, std::string_view event_target,
         std::string_view access_spec = ""sv, std::string_view method_spec = ""sv, std::string_view platform_attribute = ""sv,
-        std::optional<std::pair<type_semantics, Event>> paramsForStaticMethodCall = {})
+        std::optional<std::tuple<type_semantics, Event, bool>> paramsForStaticMethodCall = {})
     {
         auto event_type = w.write_temp("%", bind<write_type_name>(get_type_semantics(event.EventType()), typedef_name_type::Projected, false));
 
@@ -1275,7 +1294,6 @@ _lazyInterfaces = new Dictionary<Type, object>(%)
         {
             event_type = "global::System.EventHandler";
         }
-
         w.write(R"(
 %%%event % %
 {
@@ -1291,8 +1309,9 @@ remove => %;
             bind([&](writer& w) {
                     if (paramsForStaticMethodCall.has_value())
                     {
-                        w.write("%", bind<write_abi_event_source_static_method_call>(paramsForStaticMethodCall.value().first, event, true,
-                            w.write_temp("%.Value", bind<write_objref_type_name>(paramsForStaticMethodCall.value().first))));
+                        auto&& [iface_type_semantics, event, is_static] = paramsForStaticMethodCall.value();
+                        w.write("%", bind<write_abi_event_source_static_method_call>(iface_type_semantics, event, true,
+                            w.write_temp("%.Value", bind<write_objref_type_name>(iface_type_semantics)), is_static));
                     }
                     else
                     {
@@ -1302,8 +1321,9 @@ remove => %;
             bind([&](writer& w) {
                     if (paramsForStaticMethodCall.has_value())
                     {
-                        w.write("%", bind<write_abi_event_source_static_method_call>(paramsForStaticMethodCall.value().first, event, false,
-                            w.write_temp("%.Value", bind<write_objref_type_name>(paramsForStaticMethodCall.value().first))));
+                        auto&& [iface_type_semantics, event, is_static] = paramsForStaticMethodCall.value();
+                        w.write("%", bind<write_abi_event_source_static_method_call>(iface_type_semantics, event, false,
+                            w.write_temp("%.Value", bind<write_objref_type_name>(iface_type_semantics)), is_static));
                     }
                     else
                     {
@@ -1335,7 +1355,7 @@ remove => %;
         bool is_private = is_implemented_as_private_method(w, class_type, add);
         if (!is_private)
         {
-            write_event(w, event.Name(), event, interface_member, visibility, ""sv, platform_attribute, call_static_method.has_value() ? std::optional(std::pair(call_static_method.value(), event)) : std::nullopt);
+            write_event(w, event.Name(), event, interface_member, visibility, ""sv, platform_attribute, call_static_method.has_value() ? std::optional(std::tuple(call_static_method.value(), event, false)) : std::nullopt);
         }
 
         if (is_overridable || !is_exclusive_to(event.Parent()))
@@ -2049,7 +2069,7 @@ Marshal.Release(inner);
         auto return_type = w.write_temp("%", [&](writer& w) {
             write_projection_return_type(w, signature);
         });
-        write_method(w, signature, method.Name(), return_type, method_target, "public "sv, factory_class ? ""sv : "static "sv, platform_attribute);
+        write_method(w, signature, method.Name(), return_type, method_target, "public "sv, factory_class ? ""sv : "static "sv, platform_attribute, settings.netstandard_compat || factory_class ? std::nullopt : std::optional(std::pair(method.Parent(), method)));
     }
 
     void write_static_property(writer& w, Property const& prop, std::string_view prop_target, bool factory_class = false, std::string_view platform_attribute = ""sv)
@@ -2058,12 +2078,15 @@ Marshal.Release(inner);
         auto getter_target = getter ? prop_target : "";
         auto setter_target = setter ? prop_target : "";
         write_property(w, prop.Name(), prop.Name(), write_prop_type(w, prop),
-            getter_target, setter_target, "public "sv, factory_class ? ""sv : "static "sv, platform_attribute, platform_attribute);
+            getter_target, setter_target, "public "sv, factory_class ? ""sv : "static "sv, platform_attribute, platform_attribute, 
+            settings.netstandard_compat || factory_class ? std::nullopt : std::optional(std::pair(prop.Parent(), prop)), 
+            settings.netstandard_compat || factory_class ? std::nullopt : std::optional(std::pair(prop.Parent(), prop)));
     }
 
     void write_static_event(writer& w, Event const& event, std::string_view event_target, bool factory_class = false, std::string_view platform_attribute = ""sv)
     {
-        write_event(w, event.Name(), event, event_target, "public "sv, factory_class ? ""sv : "static "sv, platform_attribute);
+        write_event(w, event.Name(), event, event_target, "public "sv, factory_class ? ""sv : "static "sv, platform_attribute,
+            settings.netstandard_compat || factory_class ? std::nullopt : std::optional(std::tuple(event.Parent(), event, true)));
     }
 
     void write_static_members(writer& w, TypeDef const& static_type, TypeDef const& class_type)
@@ -3866,9 +3889,9 @@ remove
                     }),
                 evt.Name(),
                 bind(init_call_variables),
-                bind<write_abi_event_source_static_method_call>(type, evt, true, "_obj"),
+                bind<write_abi_event_source_static_method_call>(type, evt, true, "_obj", false),
                 bind(init_call_variables),
-                bind<write_abi_event_source_static_method_call>(type, evt, false, "_obj"));
+                bind<write_abi_event_source_static_method_call>(type, evt, false, "_obj", false));
             index++;
         }
     }
