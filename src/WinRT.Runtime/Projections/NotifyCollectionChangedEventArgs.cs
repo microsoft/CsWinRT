@@ -11,7 +11,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
-    internal unsafe class INotifyCollectionChangedEventArgs
+    internal unsafe sealed class INotifyCollectionChangedEventArgs
     {
         [Guid("DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
         [StructLayout(LayoutKind.Sequential)]
@@ -110,7 +110,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("5108EBA4-4892-5A20-8374-A96815E0FD27")]
-    internal unsafe class WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory
+    internal unsafe sealed class WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory
     {
         [Guid("5108EBA4-4892-5A20-8374-A96815E0FD27")]
         [StructLayout(LayoutKind.Sequential)]
@@ -167,13 +167,13 @@ namespace ABI.System.Collections.Specialized
     [StructLayout(LayoutKind.Sequential)]
     public struct NotifyCollectionChangedEventArgs
     {
-        private static WeakLazy<ActivationFactory> _propertyChangedArgsFactory = new WeakLazy<ActivationFactory>();
-
-        private class ActivationFactory : BaseActivationFactory
+        private sealed class ActivationFactory : BaseActivationFactory
         {
             public ActivationFactory() : base("Microsoft.UI.Xaml.Interop", "Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs")
             {
             }
+
+            internal static ActivationFactory Instance = new ActivationFactory();
         }
 
         public static IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs value)
@@ -183,7 +183,7 @@ namespace ABI.System.Collections.Specialized
                 return null;
             }
 
-            WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory factory = _propertyChangedArgsFactory.Value._As<WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory.Vftbl>();
+            WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory factory = ActivationFactory.Instance._As<WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory.Vftbl>();
             return factory.CreateInstanceWithAllParameters(value.Action, value.NewItems, value.OldItems, value.NewStartingIndex, value.OldStartingIndex, null, out _);
         }
 
