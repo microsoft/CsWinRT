@@ -85,8 +85,14 @@ namespace ABI.System.Windows.Input
                 return 0;
             }
 
-            private readonly static Lazy<ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>>> _CanExecuteChanged_TokenTablesLazy = new();
-            private static ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>> _CanExecuteChanged_TokenTables => _CanExecuteChanged_TokenTablesLazy.Value;
+            private volatile static ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>> _CanExecuteChanged_TokenTablesLazy = null;
+            private static ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>> MakeConditionalWeakTable()
+            {
+                global::System.Threading.Interlocked.CompareExchange(ref _CanExecuteChanged_TokenTablesLazy, new(), null);
+                return _CanExecuteChanged_TokenTablesLazy;
+            }
+
+            private static ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>> _CanExecuteChanged_TokenTables => _CanExecuteChanged_TokenTablesLazy ?? MakeConditionalWeakTable();
 
             private static unsafe int Do_Abi_add_CanExecuteChanged_0(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token)
             {

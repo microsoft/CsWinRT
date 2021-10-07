@@ -735,14 +735,15 @@ namespace WinRT
 
         internal class InspectableInfo
         {
-            private readonly Lazy<string> runtimeClassName;
+
+            private readonly string runtimeClassName = null;
 
             public Guid[] IIDs { get; }
-            public string RuntimeClassName => runtimeClassName.Value;
+            public string RuntimeClassName => runtimeClassName;
 
             internal InspectableInfo(Type type, Guid[] iids)
             {
-                runtimeClassName = new Lazy<string>(() => TypeNameSupport.GetNameForType(type, TypeNameGenerationFlags.GenerateBoxedName | TypeNameGenerationFlags.NoCustomTypeName));
+                runtimeClassName = TypeNameSupport.GetNameForType(type, TypeNameGenerationFlags.GenerateBoxedName | TypeNameGenerationFlags.NoCustomTypeName);
                 IIDs = iids;
             }
 
