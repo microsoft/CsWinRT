@@ -5296,7 +5296,7 @@ public %IntPtr ThisPtr => _default.ThisPtr;
 
 private IObjectReference _inner = null;
 private volatile % _defaultLazy = null;
-private %  Make_DefaultLazy()
+private % Make_DefaultLazy()
 {
     global::System.Threading.Interlocked.CompareExchange(ref _defaultLazy, new(), null);
     return _defaultLazy;
@@ -5350,7 +5350,6 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             type_name,
             default_interface_abi_name,
             bind<write_base_constructor_dispatch_netstandard>(base_semantics),
-            default_interface_abi_name,
             bind<write_lazy_interface_initialization>(type),
             [&](writer& w)
             {
