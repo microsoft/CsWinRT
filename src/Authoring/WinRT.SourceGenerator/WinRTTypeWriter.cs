@@ -48,7 +48,7 @@ namespace Generator
             // Set out parameter attribute if write only array.
             bool isWriteOnlyArray = parameterSymbol.Type is IArrayTypeSymbol &&
                 parameterSymbol.GetAttributes().Where(
-                    attr => attr.AttributeClass.ToString() == "System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray"
+                    attr => string.CompareOrdinal(attr.AttributeClass.ToString(), "System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArray") == 0
                 ).Count() != 0;
 
             Type = new Symbol(parameterSymbol.Type);
@@ -137,7 +137,7 @@ namespace Generator
         public Dictionary<ISymbol, PropertyDefinitionHandle> PropertyDefinitions = new Dictionary<ISymbol, PropertyDefinitionHandle>();
         public Dictionary<ISymbol, EventDefinitionHandle> EventDefinitions = new Dictionary<ISymbol, EventDefinitionHandle>();
         public Dictionary<ISymbol, InterfaceImplementationHandle> InterfaceImplDefinitions = new Dictionary<ISymbol, InterfaceImplementationHandle>();
-        public Dictionary<string, List<ISymbol>> MethodsByName = new Dictionary<string, List<ISymbol>>();
+        public Dictionary<string, List<ISymbol>> MethodsByName = new Dictionary<string, List<ISymbol>>(StringComparer.Ordinal);
         public Dictionary<ISymbol, string> OverloadedMethods = new Dictionary<ISymbol, string>();
         public List<ISymbol> CustomMappedSymbols = new List<ISymbol>();
         public HashSet<ISymbol> SymbolsWithAttributes = new HashSet<ISymbol>();
@@ -257,7 +257,7 @@ namespace Generator
                 this.@namespace = @namespace;
                 this.name = name;
                 this.assembly = assembly;
-                isSystemType = this.assembly == "mscorlib";
+                isSystemType = string.CompareOrdinal(this.assembly, "mscorlib") == 0;
                 this.isValueType = isValueType;
                 multipleMappingFunc = null;
             }
@@ -280,7 +280,7 @@ namespace Generator
         }
 
         // This should be in sync with the reverse mapping from WinRT.Runtime/Projections.cs and cswinrt/helpers.h.
-        internal static readonly Dictionary<string, MappedType> MappedCSharpTypes = new Dictionary<string, MappedType>()
+        internal static readonly Dictionary<string, MappedType> MappedCSharpTypes = new Dictionary<string, MappedType>(StringComparer.Ordinal)
         {
             { "System.DateTimeOffset", new MappedType("Windows.Foundation", "DateTime", "Windows.Foundation.FoundationContract", true) },
             { "System.Exception", new MappedType("Windows.Foundation", "HResult", "Windows.Foundation.FoundationContract", true) },
@@ -361,9 +361,9 @@ namespace Generator
             this.version = version;
             this.metadataBuilder = metadataBuilder;
             Logger = logger;
-            typeReferenceMapping = new Dictionary<string, TypeReferenceHandle>();
-            assemblyReferenceMapping = new Dictionary<string, EntityHandle>();
-            typeDefinitionMapping = new Dictionary<string, TypeDeclaration>();
+            typeReferenceMapping = new Dictionary<string, TypeReferenceHandle>(StringComparer.Ordinal);
+            assemblyReferenceMapping = new Dictionary<string, EntityHandle>(StringComparer.Ordinal);
+            typeDefinitionMapping = new Dictionary<string, TypeDeclaration>(StringComparer.Ordinal);
 
             CreteAssembly();
         }
@@ -457,7 +457,7 @@ namespace Generator
 
         private BlobHandle GetStrongNameKey(string assembly)
         {
-            if (assembly == "mscorlib")
+            if (string.CompareOrdinal(assembly, "mscorlib") == 0)
             {
                 byte[] mscorlibStrongName = { 0xb7, 0x7a, 0x5c, 0x56, 0x19, 0x34, 0xe0, 0x89 };
                 return metadataBuilder.GetOrAddBlob(mscorlibStrongName);
@@ -481,7 +481,7 @@ namespace Generator
                     new Version(0xff, 0xff, 0xff, 0xff),
                     default,
                     GetStrongNameKey(assembly),
-                    assembly == "mscorlib" ? default : AssemblyFlags.WindowsRuntime,
+                    string.CompareOrdinal(assembly, "mscorlib") == 0 ? default : AssemblyFlags.WindowsRuntime,
                     default);
                 assemblyReferenceMapping[assembly] = assemblyReference;
             }
@@ -497,14 +497,14 @@ namespace Generator
         public bool IsWinRTType(ISymbol type)
         {
             bool isProjectedType = type.GetAttributes().
-                Any(attribute => attribute.AttributeClass.Name == "WindowsRuntimeTypeAttribute");
+                Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0);
             return isProjectedType;
         }
 
         public string GetAssemblyForWinRTType(ISymbol type)
         {
             var winrtTypeAttribute = type.GetAttributes().
-                Where(attribute => attribute.AttributeClass.Name == "WindowsRuntimeTypeAttribute");
+                Where(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0);
             if (winrtTypeAttribute.Any())
             {
                 return (string)winrtTypeAttribute.First().ConstructorArguments[0].Value;
@@ -699,7 +699,7 @@ namespace Generator
                 methodImplAttributes |= MethodImplAttributes.Runtime;
             }
 
-            if (isSpecialMethod && name == ".ctor")
+            if (isSpecialMethod && string.CompareOrdinal(name, ".ctor") == 0)
             {
                 methodAttributes |= MethodAttributes.RTSpecialName;
             }
@@ -888,7 +888,8 @@ namespace Generator
         internal static (string, string, string, bool, bool) GetSystemTypeCustomMapping(ISymbol containingSymbol)
         {
             bool isDefinedInAttribute =
-                containingSymbol != null && (containingSymbol as INamedTypeSymbol).BaseType?.ToString() == "System.Attribute";
+                containingSymbol != null && 
+                    string.CompareOrdinal((containingSymbol as INamedTypeSymbol).BaseType?.ToString(), "System.Attribute") == 0;
             return isDefinedInAttribute ?
                 ("System", "Type", "mscorlib", true, false) :
                 ("Windows.UI.Xaml.Interop", "TypeName", "Windows.Foundation.UniversalApiContract", false, true);
@@ -960,7 +961,8 @@ namespace Generator
                     return string.Format("{0}<{1}>", qualifiedName, string.Join(", ", namedType.TypeArguments.Select(type => GetMappedQualifiedTypeName(type))));
                 }
             }
-            else if ((symbol.ContainingNamespace.ToString() == "System" && symbol.IsValueType) || qualifiedName == "System.String")
+            else if ((string.CompareOrdinal(symbol.ContainingNamespace.ToString(), "System") == 0 &&
+                symbol.IsValueType) || string.CompareOrdinal(qualifiedName, "System.String") == 0)
             {
                 // WinRT fundamental types
                 return symbol.Name;
@@ -1042,15 +1044,15 @@ namespace Generator
                 }
             }
 
-            if (mappedTypeName == "IClosable")
+            if (string.CompareOrdinal(mappedTypeName, "IClosable") == 0)
             {
                 AddMethod("Close", null, null);
             }
-            else if (mappedTypeName == "IIterable`1")
+            else if (string.CompareOrdinal(mappedTypeName, "IIterable`1") == 0)
             {
                 AddMethod("First", null, GetType("System.Collections.Generic.IEnumerator`1", true));
             }
-            else if (mappedTypeName == "IMap`2")
+            else if (string.CompareOrdinal(mappedTypeName, "IMap`2") == 0)
             {
                 AddMethod("Clear", null, null);
                 AddMethod("GetView", null, GetType("System.Collections.Generic.IReadOnlyDictionary`2", true));
@@ -1079,7 +1081,7 @@ namespace Generator
                 );
                 AddProperty("Size", GetType("System.UInt32"), false);
             }
-            else if (mappedTypeName == "IMapView`2")
+            else if (string.CompareOrdinal(mappedTypeName, "IMapView`2") == 0)
             {
                 AddMethod(
                     "HasKey",
@@ -1101,7 +1103,7 @@ namespace Generator
                 );
                 AddProperty("Size", GetType("System.UInt32"), false);
             }
-            else if (mappedTypeName == "IIterator`1")
+            else if (string.CompareOrdinal(mappedTypeName, "IIterator`1") == 0)
             {
                 // make array
                 AddMethod(
@@ -1117,7 +1119,7 @@ namespace Generator
                 AddProperty("Current", GetType(null, true, 0), false);
                 AddProperty("HasCurrent", GetType("System.Boolean"), false);
             }
-            else if (mappedTypeName == "IVector`1")
+            else if (string.CompareOrdinal(mappedTypeName, "IVector`1") == 0)
             {
                 AddMethod(
                     "Append",
@@ -1178,7 +1180,7 @@ namespace Generator
                 );
                 AddProperty("Size", GetType("System.UInt32"), false);
             }
-            else if (mappedTypeName == "IVectorView`1")
+            else if (string.CompareOrdinal(mappedTypeName, "IVectorView`1") == 0)
             {
                 AddMethod(
                     "GetAt",
@@ -1203,7 +1205,7 @@ namespace Generator
                 );
                 AddProperty("Size", GetType("System.UInt32"), false);
             }
-            else if (mappedTypeName == "IXamlServiceProvider")
+            else if (string.CompareOrdinal(mappedTypeName, "IXamlServiceProvider") == 0)
             {
                 AddMethod(
                     "GetService",
@@ -1211,7 +1213,7 @@ namespace Generator
                     GetType("System.Object")
                 );
             }
-            else if (mappedTypeName == "INotifyDataErrorInfo")
+            else if (string.CompareOrdinal(mappedTypeName, "INotifyDataErrorInfo") == 0)
             {
                 AddProperty("HasErrors", GetType("System.Boolean"), false);
                 AddEvent(
@@ -1223,11 +1225,11 @@ namespace Generator
                     GetType("System.Collections.Generic.IEnumerable`1", true, -1, false, new[] { GetType("System.Object").Type })
                 );
             }
-            else if (mappedTypeName == "INotifyPropertyChanged")
+            else if (string.CompareOrdinal(mappedTypeName, "INotifyPropertyChanged") == 0)
             {
                 AddEvent("PropertyChanged", GetType("System.ComponentModel.PropertyChangedEventHandler"));
             }
-            else if (mappedTypeName == "ICommand")
+            else if (string.CompareOrdinal(mappedTypeName, "ICommand") == 0)
             {
                 AddEvent(
                     "CanExecuteChanged",
@@ -1243,11 +1245,11 @@ namespace Generator
                     null
                 );
             }
-            else if (mappedTypeName == "IBindableIterable")
+            else if (string.CompareOrdinal(mappedTypeName, "IBindableIterable") == 0)
             {
                 AddMethod("First", null, GetType("Microsoft.UI.Xaml.Interop.IBindableIterator"));
             }
-            else if (mappedTypeName == "IBindableVector")
+            else if (string.CompareOrdinal(mappedTypeName, "IBindableVector") == 0)
             {
                 AddMethod(
                     "Append",
@@ -1293,7 +1295,7 @@ namespace Generator
                 );
                 AddProperty("Size", GetType("System.UInt32"), false);
             }
-            else if (mappedTypeName == "INotifyCollectionChanged")
+            else if (string.CompareOrdinal(mappedTypeName, "INotifyCollectionChanged") == 0)
             {
                 AddEvent("CollectionChanged", GetType("System.Collections.Specialized.NotifyCollectionChangedEventHandler"));
             }
@@ -1323,7 +1325,7 @@ namespace Generator
             // If the generic enumerable is implemented, don't implement the non generic one to prevent issues
             // with the interface members being implemented multiple times.
             if (!includeInterfacesWithoutMappings &&
-                interfaces.Any(@interface => QualifiedName(@interface) == "System.Collections.Generic.IEnumerable`1"))
+                interfaces.Any(@interface => string.CompareOrdinal(QualifiedName(@interface), "System.Collections.Generic.IEnumerable`1") == 0))
             {
                 interfaces.Remove(GetTypeByMetadataName("System.Collections.IEnumerable"));
             }
@@ -2484,7 +2486,7 @@ namespace Generator
         private int GetVersion(INamedTypeSymbol type, bool setDefaultIfNotSet = false)
         {
             var versionAttribute = type.GetAttributes().
-                Where(attribute => attribute.AttributeClass.Name == "VersionAttribute");
+                Where(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "VersionAttribute") == 0);
             if (!versionAttribute.Any())
             {
                 return setDefaultIfNotSet ? Version.Parse(this.version).Major : -1;
@@ -2498,7 +2500,7 @@ namespace Generator
         {
             Logger.Log("add type: " + type.ToString());
             bool isProjectedType = type.GetAttributes().
-                Any(attribute => attribute.AttributeClass.Name == "WindowsRuntimeTypeAttribute");
+                Any(attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WindowsRuntimeTypeAttribute") == 0);
             var qualifiedName = QualifiedName(type);
             if (isProjectedType)
             {

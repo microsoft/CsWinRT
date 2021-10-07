@@ -114,7 +114,7 @@ namespace WinRT
     {
         public static unsafe IntPtr GetActivationFactory(String runtimeClassId)
         {
-            if (runtimeClassId == "TestHost.ProbeByHost")
+            if (string.CompareOrdinal(runtimeClassId, "TestHost.ProbeByHost") == 0)
             {
                 var type = Type.GetType(runtimeClassId);
                 if (type != null)

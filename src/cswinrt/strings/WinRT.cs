@@ -109,7 +109,7 @@ namespace WinRT
 
         static readonly string _currentModuleDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
-        static Dictionary<string, DllModule> _cache = new System.Collections.Generic.Dictionary<string, DllModule>();
+        static Dictionary<string, DllModule> _cache = new System.Collections.Generic.Dictionary<string, DllModule>(StringComparer.Ordinal);
 
         public static bool TryLoad(string fileName, out DllModule module)
         {
@@ -292,7 +292,7 @@ namespace WinRT
                     if (_IActivationFactory != null) { return; }
                 }
 
-                var lastSegment = moduleName.LastIndexOf(".");
+                var lastSegment = moduleName.LastIndexOf(".", StringComparison.Ordinal);
                 if (lastSegment <= 0)
                 {
                     Marshal.ThrowExceptionForHR(hr);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -17,9 +18,9 @@ namespace WinRT
         private static readonly ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
         private static readonly Dictionary<Type, Type> CustomTypeToHelperTypeMappings = new Dictionary<Type, Type>();
         private static readonly Dictionary<Type, Type> CustomAbiTypeToTypeMappings = new Dictionary<Type, Type>();
-        private static readonly Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>();
+        private static readonly Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>(StringComparer.Ordinal);
         private static readonly Dictionary<Type, string> CustomTypeToAbiTypeNameMappings = new Dictionary<Type, string>();
-        private static readonly HashSet<string> ProjectedRuntimeClassNames = new HashSet<string>();
+        private static readonly HashSet<string> ProjectedRuntimeClassNames = new HashSet<string>(StringComparer.Ordinal);
         private static readonly HashSet<Type> ProjectedCustomTypeRuntimeClasses = new HashSet<Type>();
 
         static Projections()
@@ -172,14 +173,18 @@ namespace WinRT
             }
         }
 
+        private readonly static ConcurrentDictionary<Type, bool> IsTypeWindowsRuntimeTypeCache = new ConcurrentDictionary<Type, bool>();
         public static bool IsTypeWindowsRuntimeType(Type type)
         {
-            Type typeToTest = type;
-            if (typeToTest.IsArray)
+            return IsTypeWindowsRuntimeTypeCache.GetOrAdd(type, (type) =>
             {
-                typeToTest = typeToTest.GetElementType();
-            }
-            return IsTypeWindowsRuntimeTypeNoArray(typeToTest);
+                Type typeToTest = type;
+                if (typeToTest.IsArray)
+                {
+                    typeToTest = typeToTest.GetElementType();
+                }
+                return IsTypeWindowsRuntimeTypeNoArray(typeToTest);
+            });
         }
 
         private static bool IsTypeWindowsRuntimeTypeNoArray(Type type)
