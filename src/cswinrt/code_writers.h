@@ -5295,16 +5295,11 @@ private readonly % _comp;
 public %IntPtr ThisPtr => _default.ThisPtr;
 
 private IObjectReference _inner = null;
-private volatile % _defaultLazy = null;
-private % Make_DefaultLazy()
-{
-    global::System.Threading.Interlocked.CompareExchange(ref _defaultLazy, new(), null);
-    return _defaultLazy;
-}
+private readonly % _defaultLazy = null;
 
 private readonly Dictionary<Type, object> _lazyInterfaces;
 
-private % _default => _defaultLazy ?? Make_DefaultLazy();
+private % _default => _defaultLazy;
 %
 public static %% FromAbi(IntPtr thisPtr)
 {
