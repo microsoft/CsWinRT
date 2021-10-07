@@ -110,7 +110,7 @@ namespace ABI.System.ComponentModel
                 global::System.Threading.Interlocked.CompareExchange(ref _ErrorsChanged_TokenTablesLazy, new(), null);
                 return _ErrorsChanged_TokenTablesLazy;
             }
-            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTables => _ErrorsChanged_TokenTablesLazy.Value;
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTables => _ErrorsChanged_TokenTablesLazy ?? MakeConditionalWeakTable();
 
 #if !NETSTANDARD2_0
             [UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvStdcall)})]

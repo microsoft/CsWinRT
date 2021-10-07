@@ -5298,8 +5298,8 @@ private IObjectReference _inner = null;
 private volatile % _defaultLazy = null;
 private %  Make_DefaultLazy()
 {
-    System.Threading.Interlocked.CompareExchange(ref _defaultLazy, new %(), null);
-    return _default;
+    global::System.Threading.Interlocked.CompareExchange(ref _defaultLazy, new(), null);
+    return _defaultLazy;
 }
 
 private readonly Dictionary<Type, object> _lazyInterfaces;
@@ -5314,7 +5314,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 
 % %(% ifc)%
 {
-_defaultLazy = new Lazy<%>(() => ifc);
+_defaultLazy = ifc;
 %
 %}
 %
@@ -5339,7 +5339,6 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             bind<write_type_inheritance>(type, base_semantics, true, false),
             type_name,
             derived_new,
-            default_interface_abi_name,
             default_interface_abi_name,
             default_interface_abi_name,
             default_interface_abi_name,
