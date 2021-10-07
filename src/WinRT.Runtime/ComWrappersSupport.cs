@@ -63,45 +63,44 @@ namespace WinRT
                 return null;
             }
 
-            using var unknownRef = ObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
+            var unknownRef = ObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
 
-            if (IsFreeThreaded())
+            if (IsFreeThreaded(unknownRef))
             {
-                return unknownRef.As<IUnknownVftbl>();
+                return unknownRef;
             }
             else
             {
-                return new ObjectReferenceWithContext<IUnknownVftbl>(
-                    unknownRef.GetRef(),
-                    Context.GetContextCallback(),
-                    Context.GetContextToken());
+                using (unknownRef)
+                {
+                    return new ObjectReferenceWithContext<IUnknownVftbl>(
+                        unknownRef.GetRef(),
+                        Context.GetContextCallback(),
+                        Context.GetContextToken());
+                }
             }
 
             // If we are free threaded, we do not need to keep track of context.
             // This can either be if the object implements IAgileObject or the free threaded marshaler.
-            unsafe bool IsFreeThreaded()
+            unsafe static bool IsFreeThreaded(IObjectReference unknownRef)
             {
-                if (unknownRef.TryAs<IUnknownVftbl>(typeof(ABI.WinRT.Interop.IAgileObject.Vftbl).GUID, out var agileRef) >= 0)
+                if (unknownRef.TryAs(ABI.WinRT.Interop.IAgileObject.IID, out var agilePtr) >= 0)
                 {
-                    agileRef.Dispose();
+                    Marshal.Release(agilePtr);
                     return true;
                 }
-                else if (unknownRef.TryAs<ABI.WinRT.Interop.IMarshal.Vftbl>(out var marshalRef) >= 0)
+                else if (unknownRef.TryAs<ABI.WinRT.Interop.IMarshal.Vftbl>(ABI.WinRT.Interop.IMarshal.IID, out var marshalRef) >= 0)
                 {
-                    try
+                    using (marshalRef)
                     {
-                        Guid iid_IUnknown = typeof(IUnknownVftbl).GUID;
+                        Guid iid_IUnknown = IUnknownVftbl.IID;
                         Guid iid_unmarshalClass;
-                        var marshaler = new ABI.WinRT.Interop.IMarshal(marshalRef);
-                        marshaler.GetUnmarshalClass(&iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass);
+                        Marshal.ThrowExceptionForHR(marshalRef.Vftbl.GetUnmarshalClass_0(
+                            marshalRef.ThisPtr, &iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass));
                         if (iid_unmarshalClass == ABI.WinRT.Interop.IMarshal.IID_InProcFreeThreadedMarshaler.Value)
                         {
                             return true;
                         }
-                    }
-                    finally 
-                    {
-                        marshalRef.Dispose();
                     }
                 }
                 return false;

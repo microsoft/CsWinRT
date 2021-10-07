@@ -48,7 +48,8 @@ namespace WinRT
             if (value == null) return null;
 
             var m = new MarshalString();
-            Func<bool> dispose = () => { m.Dispose(); return false; };
+
+            static bool dispose(MarshalString m) { m.Dispose(); return false; }
             try
             {
                 m._gchandle = GCHandle.Alloc(value, GCHandleType.Pinned);
@@ -60,7 +61,7 @@ namespace WinRT
                 };
                 return m;
             }
-            catch (Exception) when (dispose())
+            catch (Exception) when (dispose(m))
             {
                 // Will never execute
                 return default;
@@ -140,7 +141,8 @@ namespace WinRT
             {
                 return m;
             }
-            Func<bool> dispose = () => { m.Dispose(); return false; };
+
+            bool dispose() { m.Dispose(); return false; }
             try
             {
                 var length = array.Length;
@@ -205,13 +207,13 @@ namespace WinRT
             }
             IntPtr data = IntPtr.Zero;
             int i = 0;
-            Func<bool> dispose = () =>
+            bool dispose()
             {
                 DisposeAbiArray((i, data));
                 i = 0;
                 data = IntPtr.Zero;
                 return false;
-            };
+            }
             try
             {
                 var length = array.Length;
@@ -238,7 +240,7 @@ namespace WinRT
             }
             DisposeAbiArrayElements((array.Length, data));
             int i = 0;
-            Func<bool> dispose = () => { DisposeAbiArrayElements((i, data)); return false; };
+            bool dispose() { DisposeAbiArrayElements((i, data)); return false; }
             try
             {
                 var length = array.Length;
@@ -550,7 +552,8 @@ namespace WinRT
             {
                 return m;
             }
-            Func<bool> dispose = () => { m.Dispose(); return false; };
+
+            bool dispose() { m.Dispose(); return false; }
             try
             {
                 int length = array.Length;
@@ -628,13 +631,13 @@ namespace WinRT
             }
             IntPtr data = IntPtr.Zero;
             int i = 0;
-            Func<bool> dispose = () =>
+            bool dispose()
             {
                 DisposeAbiArray((i, data));
                 i = 0;
                 data = IntPtr.Zero;
                 return false;
-            };
+            }
             try
             {
                 int length = array.Length;
@@ -664,7 +667,7 @@ namespace WinRT
             }
             DisposeAbiArrayElements((array.Length, data));
             int i = 0;
-            Func<bool> dispose = () => { DisposeAbiArrayElements((i, data)); return false; };
+            bool dispose() { DisposeAbiArrayElements((i, data)); return false; }
             try
             {
                 int length = array.Length;
@@ -736,7 +739,8 @@ namespace WinRT
             {
                 return m;
             }
-            Func<bool> dispose = () => { m.Dispose(); return false; };
+
+            bool dispose() { m.Dispose(); return false; }
             try
             {
                 int length = array.Length;
@@ -806,13 +810,13 @@ namespace WinRT
             }
             IntPtr data = IntPtr.Zero;
             int i = 0;
-            Func<bool> dispose = () =>
+            bool dispose()
             {
                 DisposeAbiArray((i, data));
                 i = 0;
                 data = IntPtr.Zero;
                 return false;
-            };
+            }
             try
             {
                 int length = array.Length;
@@ -840,7 +844,7 @@ namespace WinRT
             }
             DisposeAbiArrayElements((array.Length, data));
             int i = 0;
-            Func<bool> dispose = () => { DisposeAbiArrayElements((i, data)); return false; };
+            bool dispose() { DisposeAbiArrayElements((i, data)); return false; }
             try
             {
                 int length = array.Length;
@@ -1034,7 +1038,7 @@ namespace WinRT
 
             if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
             {
-                return objRef.As<IInspectable.Vftbl>();
+                return objRef.As<IInspectable.Vftbl>(IInspectable.IID);
             }
             var publicType = o.GetType();
             Type helperType = Projections.FindCustomHelperTypeMapping(publicType, true);
@@ -1048,7 +1052,7 @@ namespace WinRT
             }
             using (var ccw = ComWrappersSupport.CreateCCWForObject(o))
             {
-                return ccw.As<IInspectable.Vftbl>();
+                return ccw.As<IInspectable.Vftbl>(IInspectable.IID);
             }
         }
 
@@ -1062,7 +1066,7 @@ namespace WinRT
                 return default;
             }
             using var objRef = ObjectReference<IUnknownVftbl>.FromAbi(ptr);
-            using var unknownObjRef = objRef.As<IUnknownVftbl>();
+            using var unknownObjRef = objRef.As<IUnknownVftbl>(IUnknownVftbl.IID);
             if (unknownObjRef.IsReferenceToManagedObject)
             {
                 return (T) ComWrappersSupport.FindObject<object>(unknownObjRef.ThisPtr);
