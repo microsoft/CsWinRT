@@ -5295,10 +5295,16 @@ private readonly % _comp;
 public %IntPtr ThisPtr => _default.ThisPtr;
 
 private IObjectReference _inner = null;
-private readonly Lazy<%> _defaultLazy;
+private volatile % _defaultLazy = null;
+private %  Make_DefaultLazy()
+{
+    System.Threading.Interlocked.CompareExchange(ref _defaultLazy, new %(), null);
+    return _default;
+}
+
 private readonly Dictionary<Type, object> _lazyInterfaces;
 
-private % _default => _defaultLazy.Value;
+private % _default => _defaultLazy ?? Make_DefaultLazy();
 %
 public static %% FromAbi(IntPtr thisPtr)
 {
@@ -5333,6 +5339,8 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             bind<write_type_inheritance>(type, base_semantics, true, false),
             type_name,
             derived_new,
+            default_interface_abi_name,
+            default_interface_abi_name,
             default_interface_abi_name,
             default_interface_abi_name,
             bind<write_attributed_types>(type),
