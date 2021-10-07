@@ -278,7 +278,7 @@ Where <spec> is one or more of:
                                         }
                                         else
                                         {   
-                                            write_abi_calls_in_static_class(w, type);
+                                            write_static_abi_classes(w, type);
                                             write_abi_interface(w, type);
                                         }
                                         break;
