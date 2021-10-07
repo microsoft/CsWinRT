@@ -70,7 +70,7 @@ namespace ABI.System.Collections.Specialized
             private volatile ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _QueryInterfaceCache = null;
             private ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
             {
-                System.Threading.Interlocked.CompareExchange(ref _QueryInterfaceCache, new ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null);
+                global::System.Threading.Interlocked.CompareExchange(ref _QueryInterfaceCache, new ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null);
                 return _QueryInterfaceCache;
             }
             ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _QueryInterfaceCache ?? MakeQueryInterfaceCache();
@@ -78,7 +78,7 @@ namespace ABI.System.Collections.Specialized
             private volatile ConcurrentDictionary<RuntimeTypeHandle, object> _AdditionalTypeData = null;
             private ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
             {
-                System.Threading.Interlocked.CompareExchange(ref _AdditionalTypeData, new ConcurrentDictionary<RuntimeTypeHandle, object>(), null);
+                global::System.Threading.Interlocked.CompareExchange(ref _AdditionalTypeData, new ConcurrentDictionary<RuntimeTypeHandle, object>(), null);
                 return _AdditionalTypeData;
             }
             ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _AdditionalTypeData ?? MakeAdditionalTypeData();
