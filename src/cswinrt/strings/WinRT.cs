@@ -228,7 +228,7 @@ namespace WinRT
         volatile static WinrtModule _instance;
         private static WinrtModule MakeWinRTModule()
         {
-            System.Threading.Interlocked.CompareExchange(ref _instance, new WinrtModule(), null);
+            global::System.Threading.Interlocked.CompareExchange(ref _instance, new WinrtModule(), null);
             return _instance;
         }
         public static WinrtModule Instance => _instance ?? MakeWinRTModule();
