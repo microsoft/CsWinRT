@@ -358,9 +358,6 @@ namespace WinRT
         protected static readonly Type MarshalerType = typeof(T).GetMarshalerType();
         internal static readonly Type MarshalerArrayType = typeof(T).GetMarshalerArrayType();
 
-        /// <summary>
-        /// 
-        /// </summary>
         public static readonly Func<T, object> CreateMarshaler = (T value) => CreateMarshalerLazy.Value(value);
         private static readonly Lazy<Func<T, object>> CreateMarshalerLazy = new(BindCreateMarshaler);
         private static Func<T, object> BindCreateMarshaler()
