@@ -1809,20 +1809,20 @@ internal static % Instance => (%)%;
 
 IObjectReference IWinRTObject.NativeObject => _obj;
 bool IWinRTObject.HasUnwrappableNativeObject => false;
-private volatile ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
-private ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
 {
-    System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
+    global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
     return _queryInterfaceCache;
 }
-ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
-private volatile ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
-private ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
 {
-    System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
+    global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
     return _additionalTypeData;
 }
-ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
 }
 )",
                 cache_type_name,
@@ -2832,21 +2832,22 @@ evt.Name());
     void write_event_source_table(writer& w, Event const& evt)
     {
         w.write(R"(
-private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> _%_;
-private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> MakeTable()
+private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> _%_; // A, B
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> Make%Table() // C, D
 {
-    global::System.Threading.Interlocked.CompareExchange(ref _%_, new(), null);
-    return _%_;
+    global::System.Threading.Interlocked.CompareExchange(ref _%_, new(), null); // E
+    return _%_; // F
 }
-private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> _% => _%_ ?? MakeTable();
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> _% => _%_ ?? Make%Table(); // G, H, I
 )",
-            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
-            evt.Name(),
-            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
-            evt.Name(),
-            evt.Name(),
-            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
-            evt.Name(),
+            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false), // A
+            evt.Name(), // B
+            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false), // C
+            evt.Name(), // D
+            evt.Name(), // E
+            evt.Name(), // F
+            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false), // G
+            evt.Name(), // H
             evt.Name(),
             evt.Name());
     }
@@ -3619,20 +3620,20 @@ internal static _% Instance => _instance.Value;
 
 IObjectReference IWinRTObject.NativeObject => _obj;
 bool IWinRTObject.HasUnwrappableNativeObject => false;
-private volatile ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
-private ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
 {
-    System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
+    global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
     return _queryInterfaceCache;
 }
-ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
-private volatile ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
-private ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
 {
-    System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
+    global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
     return _additionalTypeData;
 }
-ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
 
 %
 }
@@ -4978,12 +4979,12 @@ private static unsafe int Do_Abi_%%
 
         w.write(R"(
 private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_tokenTables;
-private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> MakeTable()
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> Make%Table()
 {
     global::System.Threading.Interlocked.CompareExchange(ref _%_tokenTables, new(), null);
     return _%_tokenTables;
 }
-private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_TokenTables => _%_tokenTables ?? MakeTable();
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_TokenTables => _%_tokenTables ?? Make%Table();
 )",
             type_name,
             bind<write_type_name>(semantics, typedef_name_type::Projected, false),
@@ -4992,8 +4993,10 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, g
             bind<write_type_name>(semantics, typedef_name_type::Projected, false),
             evt.Name(),
             evt.Name(),
+            evt.Name(),
             type_name,
             bind<write_type_name>(semantics, typedef_name_type::Projected, false),
+            evt.Name(),
             evt.Name(),
             evt.Name());
 
@@ -6047,20 +6050,20 @@ IObjectReference IWinRTObject.NativeObject => _inner;)");
                 if (!has_base_type)
                 { 
                 w.write(R"(
-private volatile ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
-private ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
 {
-    System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
+    global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
     return _queryInterfaceCache;
 }
-ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
-private volatile ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
-private ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
 {
-    System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
+    global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
     return _additionalTypeData;
 }
-ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();)");
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();)");
                 }
             }),
             bind([&](writer& w) 
@@ -6231,20 +6234,20 @@ _nativeDelegate = nativeDelegate;
 #if !NETSTANDARD2_0
 IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
 bool IWinRTObject.HasUnwrappableNativeObject => true;
-private volatile ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
-private ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
 {
-    System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
+    global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
     return _queryInterfaceCache;
 }
-ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
-private volatile ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
-private ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
 {
-    System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
+    global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
     return _additionalTypeData;
 }
-ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
 #endif
 
 public unsafe % Invoke(%)
