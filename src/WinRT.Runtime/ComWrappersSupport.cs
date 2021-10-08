@@ -735,7 +735,6 @@ namespace WinRT
 
         internal class InspectableInfo
         {
-
             private readonly Lazy<string> runtimeClassName;
 
             public Guid[] IIDs { get; }

@@ -225,7 +225,7 @@ namespace WinRT
     internal class WinrtModule
     {
         readonly IntPtr _mtaCookie;
-        volatile static WinrtModule _instance = null;
+        volatile static WinrtModule _instance;
         private static WinrtModule MakeWinRTModule()
         {
             System.Threading.Interlocked.CompareExchange(ref _instance, new WinrtModule(), null);
