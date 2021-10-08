@@ -5295,11 +5295,10 @@ private readonly % _comp;
 public %IntPtr ThisPtr => _default.ThisPtr;
 
 private IObjectReference _inner = null;
-private readonly % _defaultLazy = null;
-
+private readonly Lazy<%> _defaultLazy;
 private readonly Dictionary<Type, object> _lazyInterfaces;
 
-private % _default => _defaultLazy;
+private % _default => _defaultLazy.Value;
 %
 public static %% FromAbi(IntPtr thisPtr)
 {
@@ -5309,7 +5308,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 
 % %(% ifc)%
 {
-_defaultLazy = ifc;
+_defaultLazy = new Lazy<%>(() => ifc);
 %
 %}
 %
@@ -5336,7 +5335,6 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             derived_new,
             default_interface_abi_name,
             default_interface_abi_name,
-            default_interface_abi_name,
             bind<write_attributed_types>(type),
             derived_new,
             type_name,
@@ -5345,6 +5343,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
             type_name,
             default_interface_abi_name,
             bind<write_base_constructor_dispatch_netstandard>(base_semantics),
+            default_interface_abi_name,
             bind<write_lazy_interface_initialization>(type),
             [&](writer& w)
             {
