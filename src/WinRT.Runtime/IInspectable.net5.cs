@@ -8,15 +8,14 @@ namespace WinRT
         IObjectReference IWinRTObject.NativeObject => _obj;
         bool IWinRTObject.HasUnwrappableNativeObject => true;
        
-        private volatile ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache = null;
+        private volatile ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
         private ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
         {
             System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
             return _queryInterfaceCache;
         }
         ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
-
-        private volatile ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData = null;
+        private volatile ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
         private ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
         {
             System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 

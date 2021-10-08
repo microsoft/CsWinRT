@@ -66,7 +66,7 @@ namespace ABI.System
 #if !NETSTANDARD2_0
             IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
             bool IWinRTObject.HasUnwrappableNativeObject => true;
-            private volatile ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache = null;
+            private volatile ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
             private ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
             {
                 global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null);
@@ -74,7 +74,7 @@ namespace ABI.System
             }
             ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
 
-            private volatile ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData = null;
+            private volatile ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
             private ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
             {
                 global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new ConcurrentDictionary<RuntimeTypeHandle, object>(), null);
