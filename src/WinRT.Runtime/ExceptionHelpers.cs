@@ -62,20 +62,20 @@ namespace WinRT
         {
             if (hr < 0)
             {
-                ThrowExceptionForHRInternal(hr);
+                Throw(hr);
             }
-        }
 
-        private static void ThrowExceptionForHRInternal(int hr)
-        {
-            Exception ex = GetExceptionForHR(hr, useGlobalErrorState: true, out bool restoredExceptionFromGlobalState);
-            if (restoredExceptionFromGlobalState)
+            static void Throw(int hr)
             {
-                ExceptionDispatchInfo.Capture(ex).Throw();
-            }
-            else if (ex is object)
-            {
-                throw ex;
+                Exception ex = GetExceptionForHR(hr, useGlobalErrorState: true, out bool restoredExceptionFromGlobalState);
+                if (restoredExceptionFromGlobalState)
+                {
+                    ExceptionDispatchInfo.Capture(ex).Throw();
+                }
+                else
+                {
+                    throw ex;
+                }
             }
         }
 
