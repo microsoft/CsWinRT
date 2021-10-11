@@ -6,7 +6,7 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    public static class ExceptionHelpers
+    public static unsafe class ExceptionHelpers
     {
         private const int COR_E_OBJECTDISPOSED = unchecked((int)0x80131622);
         private const int RO_E_CLOSED = unchecked((int)0x80000013);
@@ -25,37 +25,33 @@ namespace WinRT
         [DllImport("oleaut32.dll")]
         private static extern int SetErrorInfo(uint dwReserved, IntPtr perrinfo);
 
-        internal delegate int GetRestrictedErrorInfo(out IntPtr ppRestrictedErrorInfo);
-        private static GetRestrictedErrorInfo getRestrictedErrorInfo;
+        private static delegate* unmanaged[Stdcall]<out IntPtr, int> getRestrictedErrorInfo;
+        private static delegate* unmanaged[Stdcall]<IntPtr, int> setRestrictedErrorInfo;
+        private static delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int> roOriginateLanguageException;
+        private static delegate* unmanaged[Stdcall]<IntPtr, int> roReportUnhandledError;
 
-        internal delegate int SetRestrictedErrorInfo(IntPtr pRestrictedErrorInfo);
-        private static SetRestrictedErrorInfo setRestrictedErrorInfo;
+        private static readonly bool initialized =  Initialize();
 
-        internal delegate int RoOriginateLanguageException(int error, IntPtr message, IntPtr langaugeException);
-        private static RoOriginateLanguageException roOriginateLanguageException;
-
-        internal delegate int RoReportUnhandledError(IntPtr pRestrictedErrorInfo);
-        private static RoReportUnhandledError roReportUnhandledError;
-
-        static ExceptionHelpers()
+        private static bool Initialize()
         {
             IntPtr winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
             if (winRTErrorModule != IntPtr.Zero)
             {
-                getRestrictedErrorInfo = Platform.GetProcAddress<GetRestrictedErrorInfo>(winRTErrorModule);
-                setRestrictedErrorInfo = Platform.GetProcAddress<SetRestrictedErrorInfo>(winRTErrorModule);
-                roOriginateLanguageException = Platform.GetProcAddress<RoOriginateLanguageException>(winRTErrorModule);
-                roReportUnhandledError = Platform.GetProcAddress<RoReportUnhandledError>(winRTErrorModule);
+                roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoOriginateLanguageException");
+                roReportUnhandledError = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoReportUnhandledError");
             }
             else
             {
                 winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-0.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
-                if (winRTErrorModule != IntPtr.Zero)
-                {
-                    getRestrictedErrorInfo = Platform.GetProcAddress<GetRestrictedErrorInfo>(winRTErrorModule);
-                    setRestrictedErrorInfo = Platform.GetProcAddress<SetRestrictedErrorInfo>(winRTErrorModule);
-                }
             }
+
+            if (winRTErrorModule != IntPtr.Zero)
+            {
+                getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<out IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "GetRestrictedErrorInfo");
+                setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "SetRestrictedErrorInfo");
+            }
+
+            return true;
         }
 
         public static void ThrowExceptionForHR(int hr)
