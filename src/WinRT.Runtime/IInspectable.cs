@@ -18,7 +18,7 @@ namespace WinRT
     [Guid("AF86E2E0-B12D-4c6a-9C5A-D7AA65101E90")]
     public partial class IInspectable
     {
-        internal static readonly Guid IID = Guid.Parse("AF86E2E0-B12D-4c6a-9C5A-D7AA65101E90");
+        internal static readonly Guid IID = new(0xAF86E2E0, 0xB12D, 0x4c6a, 0x9C, 0x5A, 0xD7, 0xAA, 0x65, 0x10, 0x1E, 0x90);
 
         [Guid("AF86E2E0-B12D-4c6a-9C5A-D7AA65101E90")]
         public unsafe struct Vftbl

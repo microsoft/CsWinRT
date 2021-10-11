@@ -18,6 +18,6 @@ namespace WinRT.Interop
         public static IUnknownVftbl AbiToProjectionVftbl => ComWrappersSupport.IUnknownVftbl;
         public static IntPtr AbiToProjectionVftblPtr => ComWrappersSupport.IUnknownVftblPtr;
 
-        internal static readonly Guid IID = Guid.Parse("00000000-0000-0000-C000-000000000046");
+        internal static readonly Guid IID = new(0, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
     }
 }
