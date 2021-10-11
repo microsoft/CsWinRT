@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 namespace WinRT.Interop
 {
     [Guid("11D3B13A-180E-4789-A8BE-7712882893E6")]
+    [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct IReferenceTrackerVftbl
     {
         public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
