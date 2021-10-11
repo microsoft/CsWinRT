@@ -4922,7 +4922,6 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
 
-        uint32_t const vtable_base = type.MethodList().first.index();
         w.write(R"(%%
 %% interface %%
 {%
