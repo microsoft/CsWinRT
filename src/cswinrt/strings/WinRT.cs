@@ -41,7 +41,7 @@ namespace WinRT
         internal static unsafe extern void* TryGetProcAddress(IntPtr moduleHandle, [MarshalAs(UnmanagedType.LPStr)] string functionName);
         internal static unsafe void* GetProcAddress(IntPtr moduleHandle, string functionName)
         {
-            void* functionPtr = Platform.GetProcAddress(moduleHandle, functionName);
+            void* functionPtr = Platform.TryGetProcAddress(moduleHandle, functionName);
             if (functionPtr == null)
             {
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
@@ -130,7 +130,7 @@ namespace WinRT
                 return false;
             }
 
-            var getActivationFactory = Platform.GetProcAddress(moduleHandle, "DllGetActivationFactory");
+            var getActivationFactory = Platform.TryGetProcAddress(moduleHandle, "DllGetActivationFactory");
             if (getActivationFactory == null)
             {
                 module = null;
@@ -150,7 +150,7 @@ namespace WinRT
             _moduleHandle = moduleHandle;
             _GetActivationFactory = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)getActivationFactory;
 
-            var canUnloadNow = Platform.GetProcAddress(_moduleHandle, "DllCanUnloadNow");
+            var canUnloadNow = Platform.TryGetProcAddress(_moduleHandle, "DllCanUnloadNow");
             if (canUnloadNow != null)
             {
                 _CanUnloadNow = (delegate* unmanaged[Stdcall]<int>)canUnloadNow;
