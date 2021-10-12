@@ -436,7 +436,7 @@ namespace WinRT
     {
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;
-        private volatile ConcurrentDictionary<IntPtr, ObjectReference<T>> _cachedContextCache = null;
+        private volatile ConcurrentDictionary<IntPtr, ObjectReference<T>> _cachedContextCache;
         private ConcurrentDictionary<IntPtr, ObjectReference<T>> MakeContextCache()
         {
             System.Threading.Interlocked.CompareExchange(ref _cachedContextCache, new ConcurrentDictionary<IntPtr, ObjectReference<T>>(), null);
@@ -533,9 +533,9 @@ namespace WinRT
 
         protected override unsafe void Release()
         {
-            if (_cachedContext != null)
+            if (_cachedContextCache != null)
             {
-                _cachedContext.Clear();
+                _cachedContextCache.Clear();
             }
 
             Context.CallInContext(_contextCallbackPtr, _contextToken, base.Release, ReleaseWithoutContext);
