@@ -15,9 +15,6 @@ using System.Diagnostics;
 namespace Windows.Foundation.Collections
 {
     [Guid("3C2925FE-8519-45C1-AA79-197B6718C1C1")]
-#if EMBED
-    internal
-#endif
     interface IMap<K, V> : IIterable<IKeyValuePair<K, V>>
     {
         V Lookup(K key);

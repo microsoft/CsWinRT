@@ -273,18 +273,12 @@ namespace WinRT
 
     }
 
-#if EMBED
-    internal
-#endif
     struct ComInterfaceEntry
     {
         public IntPtr Vtable;
         public Guid IID;
     }
 
-#if EMBED
-    internal
-#endif
     struct UnmanagedObject
     {
         public IntPtr _vftblPtr;

@@ -11,7 +11,12 @@ namespace Windows.Foundation
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Point : IFormattable
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    struct Point : IFormattable
     {
         public float _x;
         public float _y;
@@ -98,7 +103,12 @@ namespace Windows.Foundation
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Rect : IFormattable
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    struct Rect : IFormattable
     {
         public float _x;
         public float _y;
@@ -417,7 +427,12 @@ namespace Windows.Foundation
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Size
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    struct Size
     {
         public float _width;
         public float _height;
@@ -540,7 +555,12 @@ namespace Windows.Foundation
         }
     }
 
-    public static class TokenizerHelper
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    static class TokenizerHelper
     {
         public static char GetNumericListSeparator(IFormatProvider provider)
         {
@@ -565,7 +585,12 @@ namespace Windows.Foundation
 
 namespace ABI.Windows.Foundation
 {
-    public static class Point
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    static class Point
     {
         public static string GetGuidSignature()
         {
@@ -573,7 +598,12 @@ namespace ABI.Windows.Foundation
         }
     }
 
-    public static class Rect
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    static class Rect
     {
         public static string GetGuidSignature()
         {
@@ -581,7 +611,12 @@ namespace ABI.Windows.Foundation
         }
     }
 
-    public static class Size
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    static class Size
     {
         public static string GetGuidSignature()
         {
@@ -592,7 +627,12 @@ namespace ABI.Windows.Foundation
 
 namespace System.Numerics
 {
-    public static class VectorExtensions
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    static class VectorExtensions
     {
         public static global::Windows.Foundation.Point ToPoint(this Vector2 vector)
         {

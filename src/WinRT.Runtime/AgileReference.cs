@@ -17,12 +17,7 @@ namespace WinRT
         private readonly IntPtr _cookie;
         private bool disposed;
 
- #if EMBED
-        internal 
-#else
-        public 
-#endif 
-        unsafe AgileReference(IObjectReference instance) 
+        public unsafe AgileReference(IObjectReference instance) 
         {
             if(instance?.ThisPtr == null)
             {
@@ -53,13 +48,7 @@ namespace WinRT
                 MarshalInterface<IAgileReference>.DisposeAbi(agileReference);
             }
         }
-
-#if EMBED
-        internal 
-#else
-        public
-#endif
-        IObjectReference Get() => _cookie == IntPtr.Zero ? _agileReference?.Resolve(typeof(IUnknownVftbl).GUID) : Git.Value?.GetInterfaceFromGlobal(_cookie, typeof(IUnknownVftbl).GUID);
+        public IObjectReference Get() => _cookie == IntPtr.Zero ? _agileReference?.Resolve(typeof(IUnknownVftbl).GUID) : Git.Value?.GetInterfaceFromGlobal(_cookie, typeof(IUnknownVftbl).GUID);
 
         protected virtual void Dispose(bool disposing)
         {
@@ -122,23 +111,12 @@ namespace WinRT
     sealed class AgileReference<T> : AgileReference
         where T : class
     {
-
-#if EMBED
-        internal 
-#else
-        public
-#endif
-        unsafe AgileReference(IObjectReference instance)
+        public unsafe AgileReference(IObjectReference instance)
             : base(instance)
         {
         }
 
-#if EMBED
-        internal
-#else
-        public
-#endif
-        new T Get() 
+        public new T Get() 
         {
             using var objRef = base.Get();
             return ComWrappersSupport.CreateRcwForComObject<T>(objRef?.ThisPtr ?? IntPtr.Zero);
