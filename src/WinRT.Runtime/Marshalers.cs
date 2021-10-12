@@ -46,7 +46,8 @@ namespace WinRT
             if (value == null) return null;
 
             var m = new MarshalString();
-            Func<bool> dispose = () => { m.Dispose(); return false; };
+
+            bool success = false;
             try
             {
                 m._gchandle = GCHandle.Alloc(value, GCHandleType.Pinned);
@@ -56,12 +57,15 @@ namespace WinRT
                     Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
                         (char*)chars, value.Length, (IntPtr*)m._header, (IntPtr*)handle));
                 };
+                success = true;
                 return m;
             }
-            catch (Exception) when (dispose())
+            finally
             {
-                // Will never execute
-                return default;
+                if (!success)
+                {
+                    m.Dispose();
+                }
             }
         }
 
@@ -138,7 +142,8 @@ namespace WinRT
             {
                 return m;
             }
-            Func<bool> dispose = () => { m.Dispose(); return false; };
+
+            bool success = false;
             try
             {
                 var length = array.Length;
@@ -150,12 +155,15 @@ namespace WinRT
                     m._marshalers[i] = MarshalString.CreateMarshaler(array[i]);
                     elements[i] = MarshalString.GetAbi(m._marshalers[i]);
                 };
+                success = true;
                 return m;
             }
-            catch (Exception) when (dispose())
+            finally
             {
-                // Will never execute
-                return default;
+                if (!success)
+                {
+                    m.Dispose();
+                }
             }
         }
 
@@ -203,13 +211,7 @@ namespace WinRT
             }
             IntPtr data = IntPtr.Zero;
             int i = 0;
-            Func<bool> dispose = () =>
-            {
-                DisposeAbiArray((i, data));
-                i = 0;
-                data = IntPtr.Zero;
-                return false;
-            };
+            bool success = false;
             try
             {
                 var length = array.Length;
@@ -218,14 +220,17 @@ namespace WinRT
                 for (i = 0; i < length; i++)
                 {
                     elements[i] = MarshalString.FromManaged(array[i]);
-                };
+                }
+                success = true;
+                return (i, data);
             }
-            catch (Exception) when (dispose())
+            finally
             {
-                // Will never execute
-                return default;
+                if (!success)
+                {
+                    DisposeAbiArray((i, data));
+                }
             }
-            return (i, data);
         }
 
         public static unsafe void CopyManagedArray(string[] array, IntPtr data)
@@ -236,7 +241,7 @@ namespace WinRT
             }
             DisposeAbiArrayElements((array.Length, data));
             int i = 0;
-            Func<bool> dispose = () => { DisposeAbiArrayElements((i, data)); return false; };
+            bool success = false;
             try
             {
                 var length = array.Length;
@@ -245,9 +250,14 @@ namespace WinRT
                 {
                     elements[i] = MarshalString.FromManaged(array[i]);
                 };
+                success = true;
             }
-            catch (Exception) when (dispose())
+            finally 
             {
+                if (!success)
+                {
+                    DisposeAbiArrayElements((i, data));
+                }
             }
         }
 
@@ -563,7 +573,8 @@ namespace WinRT
             {
                 return m;
             }
-            Func<bool> dispose = () => { m.Dispose(); return false; };
+
+            bool success = false;
             try
             {
                 int length = array.Length;
@@ -578,12 +589,15 @@ namespace WinRT
                     Marshaler<T>.CopyAbi(m._marshalers[i], (IntPtr)element);
                     element += abi_element_size;
                 }
+                success = true;
                 return m;
             }
-            catch (Exception) when (dispose())
+            finally
             {
-                // Will never execute
-                return default;
+                if (!success)
+                {
+                    m.Dispose();
+                }
             }
         }
 
@@ -641,13 +655,7 @@ namespace WinRT
             }
             IntPtr data = IntPtr.Zero;
             int i = 0;
-            Func<bool> dispose = () =>
-            {
-                DisposeAbiArray((i, data));
-                i = 0;
-                data = IntPtr.Zero;
-                return false;
-            };
+            bool success = false;
             try
             {
                 int length = array.Length;
@@ -660,13 +668,16 @@ namespace WinRT
                     Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
                     bytes += abi_element_size;
                 }
+                success = true;
+                return (i, data);
             }
-            catch (Exception) when (dispose())
+            finally
             {
-                // Will never execute
-                return default;
+                if (!success)
+                {
+                    DisposeAbiArray((i, data));
+                }
             }
-            return (i, data);
         }
 
         public static new unsafe void CopyManagedArray(T[] array, IntPtr data)
@@ -677,7 +688,7 @@ namespace WinRT
             }
             DisposeAbiArrayElements((array.Length, data));
             int i = 0;
-            Func<bool> dispose = () => { DisposeAbiArrayElements((i, data)); return false; };
+            bool success = false;
             try
             {
                 int length = array.Length;
@@ -689,9 +700,14 @@ namespace WinRT
                     Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
                     bytes += abi_element_size;
                 }
+                success = true;
             }
-            catch (Exception) when (dispose())
+            finally
             {
+                if (!success)
+                {
+                    DisposeAbiArrayElements((i, data));
+                }
             }
         }
 
@@ -754,7 +770,8 @@ namespace WinRT
             {
                 return m;
             }
-            Func<bool> dispose = () => { m.Dispose(); return false; };
+
+            bool success = false;
             try
             {
                 int length = array.Length;
@@ -767,12 +784,15 @@ namespace WinRT
                     m._marshalers[i] = createMarshaler(array[i]);
                     element[i] = GetAbi(m._marshalers[i]);
                 }
+                success = true;
                 return m;
             }
-            catch (Exception) when (dispose())
+            finally
             {
-                // Will never execute
-                return default;
+                if (!success)
+                {
+                    m.Dispose();
+                }
             }
         }
 
@@ -824,13 +844,7 @@ namespace WinRT
             }
             IntPtr data = IntPtr.Zero;
             int i = 0;
-            Func<bool> dispose = () =>
-            {
-                DisposeAbiArray((i, data));
-                i = 0;
-                data = IntPtr.Zero;
-                return false;
-            };
+            bool success = false;
             try
             {
                 int length = array.Length;
@@ -841,13 +855,16 @@ namespace WinRT
                 {
                     native[i] = fromManaged(array[i]);
                 }
+                success = true;
+                return (i, data);
             }
-            catch (Exception) when (dispose())
+            finally
             {
-                // Will never execute
-                return default;
+                if (!success)
+                {
+                    DisposeAbiArray((i, data));
+                }
             }
-            return (i, data);
         }
 
         public static unsafe void CopyManagedArray(T[] array, IntPtr data, Action<T, IntPtr> copyManaged)
@@ -858,7 +875,7 @@ namespace WinRT
             }
             DisposeAbiArrayElements((array.Length, data));
             int i = 0;
-            Func<bool> dispose = () => { DisposeAbiArrayElements((i, data)); return false; };
+            bool success = false;
             try
             {
                 int length = array.Length;
@@ -869,9 +886,14 @@ namespace WinRT
                     copyManaged(array[i], (IntPtr)bytes);
                     bytes += IntPtr.Size;
                 }
+                success = true;
             }
-            catch (Exception) when (dispose())
+            finally
             {
+                if (!success)
+                {
+                    DisposeAbiArrayElements((i, data));
+                }
             }
         }
 
@@ -1062,7 +1084,7 @@ namespace WinRT
 
             if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
             {
-                return objRef.As<IInspectable.Vftbl>();
+                return objRef.As<IInspectable.Vftbl>(IInspectable.IID);
             }
             var publicType = o.GetType();
             Type helperType = Projections.FindCustomHelperTypeMapping(publicType, true);
@@ -1076,7 +1098,7 @@ namespace WinRT
             }
             using (var ccw = ComWrappersSupport.CreateCCWForObject(o))
             {
-                return ccw.As<IInspectable.Vftbl>();
+                return ccw.As<IInspectable.Vftbl>(IInspectable.IID);
             }
         }
 
@@ -1090,7 +1112,7 @@ namespace WinRT
                 return default;
             }
             using var objRef = ObjectReference<IUnknownVftbl>.FromAbi(ptr);
-            using var unknownObjRef = objRef.As<IUnknownVftbl>();
+            using var unknownObjRef = objRef.As<IUnknownVftbl>(IUnknownVftbl.IID);
             if (unknownObjRef.IsReferenceToManagedObject)
             {
                 return (T) ComWrappersSupport.FindObject<object>(unknownObjRef.ThisPtr);

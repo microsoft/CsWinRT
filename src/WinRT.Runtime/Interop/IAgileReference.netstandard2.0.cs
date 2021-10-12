@@ -124,6 +124,8 @@ namespace ABI.WinRT.Interop
 #endif 
     class IAgileObject : global::WinRT.Interop.IAgileObject
     {
+        internal static readonly Guid IID = new(0x94ea2b94, 0xe9cc, 0x49e0, 0xc0, 0xff, 0xee, 0x64, 0xca, 0x8f, 0x5b, 0x90);
+
         [Guid("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90")]
         public struct Vftbl
         {

@@ -11,7 +11,7 @@ namespace WinRT
 #endif 
     class AgileReference : IDisposable
     {
-        private readonly static Guid CLSID_StdGlobalInterfaceTable = Guid.Parse("00000323-0000-0000-c000-000000000046");
+        private readonly static Guid CLSID_StdGlobalInterfaceTable = new(0x00000323, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
         private readonly static Lazy<IGlobalInterfaceTable> Git = new Lazy<IGlobalInterfaceTable>(() => GetGitTable());
         private readonly IAgileReference _agileReference;
         private readonly IntPtr _cookie;

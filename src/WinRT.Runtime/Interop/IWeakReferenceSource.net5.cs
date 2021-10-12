@@ -128,6 +128,8 @@ namespace ABI.WinRT.Interop
     [Guid("00000037-0000-0000-C000-000000000046")]
     internal unsafe interface IWeakReference : global::WinRT.Interop.IWeakReference
     {
+        internal static readonly Guid IID = new(0x00000037, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+
         [Guid("00000037-0000-0000-C000-000000000046")]
         public struct Vftbl
         {

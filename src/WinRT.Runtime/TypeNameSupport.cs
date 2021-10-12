@@ -256,7 +256,7 @@ namespace WinRT
                     {
                         return false;
                     }
-                    builder.Append(">");
+                    builder.Append('>');
                     return true;
                 }
                 if (type == typeof(byte))
@@ -361,7 +361,7 @@ namespace WinRT
                 builder.Append("Windows.Foundation.IReferenceArray`1<");
                 if (TryAppendTypeName(type.GetElementType(), builder, flags & ~TypeNameGenerationFlags.GenerateBoxedName))
                 {
-                    builder.Append(">");
+                    builder.Append('>');
                     return true;
                 }
                 return true;

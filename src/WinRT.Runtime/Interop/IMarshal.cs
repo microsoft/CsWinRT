@@ -32,6 +32,8 @@ namespace ABI.WinRT.Interop
     [Guid("00000003-0000-0000-c000-000000000046")]
     internal class IMarshal
     {
+        internal static readonly Guid IID = new(0x00000003, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
+
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         private static extern int CoCreateFreeThreadedMarshaler(IntPtr outer, out IntPtr marshalerPtr);
 
