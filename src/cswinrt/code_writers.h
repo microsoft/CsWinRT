@@ -2832,22 +2832,22 @@ evt.Name());
     void write_event_source_table(writer& w, Event const& evt)
     {
         w.write(R"(
-private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> _%_; // A, B
-private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> Make%Table() // C, D
+private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> _%_;
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> Make%Table()
 {
-    global::System.Threading.Interlocked.CompareExchange(ref _%_, new(), null); // E
-    return _%_; // F
+    global::System.Threading.Interlocked.CompareExchange(ref _%_, new(), null);
+    return _%_;
 }
-private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> _% => _%_ ?? Make%Table(); // G, H, I
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> _% => _%_ ?? Make%Table();
 )",
-            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false), // A
-            evt.Name(), // B
-            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false), // C
-            evt.Name(), // D
-            evt.Name(), // E
-            evt.Name(), // F
-            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false), // G
-            evt.Name(), // H
+            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+            evt.Name(),
+            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+            evt.Name(),
+            evt.Name(),
+            evt.Name(),
+            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+            evt.Name(),
             evt.Name(),
             evt.Name());
     }

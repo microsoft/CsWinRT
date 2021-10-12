@@ -436,13 +436,13 @@ namespace WinRT
     {
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;
-        private volatile global::System.Collections.Concurrent.ConcurrentDictionary<IntPtr, ObjectReference<T>> _cachedContextCache = null;
-        private global::System.Collections.Concurrent.ConcurrentDictionary<IntPtr, ObjectReference<T>> MakeContextCache()
+        private volatile ConcurrentDictionary<IntPtr, ObjectReference<T>> _cachedContextCache = null;
+        private ConcurrentDictionary<IntPtr, ObjectReference<T>> MakeContextCache()
         {
-            global::System.Threading.Interlocked.CompareExchange(ref _cachedContextCache, new global::System.Collections.Concurrent.ConcurrentDictionary<IntPtr, ObjectReference<T>>(), null);
+            System.Threading.Interlocked.CompareExchange(ref _cachedContextCache, new ConcurrentDictionary<IntPtr, ObjectReference<T>>(), null);
             return _cachedContextCache;
         }
-        private global::System.Collections.Concurrent.ConcurrentDictionary<IntPtr, ObjectReference<T>> _cachedContext => _cachedContextCache ?? MakeContextCache();
+        private ConcurrentDictionary<IntPtr, ObjectReference<T>> _cachedContext => _cachedContextCache ?? MakeContextCache();
         
         private readonly Lazy<AgileReference> _agileReference;
         private readonly Guid _iid;
