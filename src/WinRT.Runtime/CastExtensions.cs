@@ -23,12 +23,7 @@ namespace WinRT
         /// Otherwise, creates a new wrapper of the underlying WinRT object that implements <typeparamref name="TInterface"/>.
         /// </returns>
         /// <exception cref="ArgumentException">Thrown if the runtime type of <paramref name="value"/> is not a projected type (if the object is a managed object).</exception>
-#if EMBED
-        internal
-#else
-        public
-#endif
-        static TInterface As<TInterface>(this object value)
+        public static TInterface As<TInterface>(this object value)
         {
             if (typeof(TInterface) == typeof(object))
             {
@@ -63,12 +58,7 @@ namespace WinRT
         /// Otherwise, returns null.
         /// </returns>
         /// <exception cref="InvalidOperationException">Thrown if the runtime type of <paramref name="value"/> is not a projected type.</exception>
-#if EMBED
-        internal 
-#else
-        public
-#endif
-        static AgileReference<T> AsAgile<T>(this T value) where T : class
+        public static AgileReference<T> AsAgile<T>(this T value) where T : class
         {
             if(value == null)
             {
