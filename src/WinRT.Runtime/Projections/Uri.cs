@@ -89,7 +89,8 @@ namespace ABI.System
             {
             }
 
-            internal static ActivationFactory Instance = new ActivationFactory();
+            internal static WinRTUriRuntimeClassFactory Instance = 
+                new ActivationFactory()._As<WinRTUriRuntimeClassFactory.Vftbl>();
         }
 
         public static IObjectReference CreateMarshaler(global::System.Uri value)
@@ -99,8 +100,7 @@ namespace ABI.System
                 return null;
             }
 
-            WinRTUriRuntimeClassFactory factory = ActivationFactory.Instance._As<WinRTUriRuntimeClassFactory.Vftbl>();
-            return factory.CreateUri(value.OriginalString);
+            return ActivationFactory.Instance.CreateUri(value.OriginalString);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
@@ -137,7 +137,8 @@ namespace ABI.System
             {
                 return IntPtr.Zero;
             }
-            return CreateMarshaler(value).GetRef();
+            using var objRef = CreateMarshaler(value);
+            return objRef.GetRef();
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }

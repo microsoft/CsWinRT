@@ -11,7 +11,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
-    internal unsafe sealed class INotifyCollectionChangedEventArgs
+    internal sealed unsafe class INotifyCollectionChangedEventArgs
     {
         [Guid("DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F")]
         [StructLayout(LayoutKind.Sequential)]
@@ -173,7 +173,8 @@ namespace ABI.System.Collections.Specialized
             {
             }
 
-            internal static ActivationFactory Instance = new ActivationFactory();
+            internal static WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory Instance = 
+                new ActivationFactory()._As<WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory.Vftbl>();
         }
 
         public static IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs value)
@@ -183,8 +184,7 @@ namespace ABI.System.Collections.Specialized
                 return null;
             }
 
-            WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory factory = ActivationFactory.Instance._As<WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory.Vftbl>();
-            return factory.CreateInstanceWithAllParameters(value.Action, value.NewItems, value.OldItems, value.NewStartingIndex, value.OldStartingIndex, null, out _);
+            return ActivationFactory.Instance.CreateInstanceWithAllParameters(value.Action, value.NewItems, value.OldItems, value.NewStartingIndex, value.OldStartingIndex, null, out _);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
@@ -228,7 +228,8 @@ namespace ABI.System.Collections.Specialized
             {
                 return IntPtr.Zero;
             }
-            return CreateMarshaler(value).GetRef();
+            using var objRef = CreateMarshaler(value);
+            return objRef.GetRef();
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }

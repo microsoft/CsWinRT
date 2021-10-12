@@ -1633,6 +1633,19 @@ remove => %.% -= value;
                 "private static readonly _% _instance = new _%();",
                 cache_type_name,
                 cache_type_name);
+        auto factoryAs = w.write_temp("%",
+            bind([&](writer& w)
+            {
+                if (is_static(class_type))
+                {
+                    w.write("_factory._As");
+                }
+                else
+                {
+                    w.write("ActivationFactory<%>.As", class_type.TypeName());
+                }
+            })
+        );
 
         if (settings.netstandard_compat)
         {            
@@ -1641,7 +1654,8 @@ remove => %.% -= value;
                 cache_type_name);
         auto cache_interface =
             w.write_temp(
-                R"(_factory._As<%>)",
+                R"(%<%>)",
+                factoryAs,
                 cache_vftbl_type);
             w.write(R"(
 internal class _% : ABI.%.%
@@ -1667,7 +1681,7 @@ internal class _% : IWinRTObject
 private IObjectReference _obj;
 public _%()
 {
-_obj = _factory._As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
+_obj = %(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
 }
 
 %
@@ -1683,6 +1697,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<global::System.Runtim
 )",
                 cache_type_name,
                 cache_type_name,
+                factoryAs,
                 class_type.TypeNamespace(),
                 cache_type_name,
                 instance,
@@ -1921,15 +1936,26 @@ Marshal.Release(inner);
                         });
                     }
 
-                    w.write(R"(
+                    if (is_static(type))
+                    {
+                        w.write(R"(
 internal static %BaseActivationFactory _factory = new BaseActivationFactory("%", "%.%");
 public static %I As<I>() => _factory.AsInterface<I>();
 )",
-                        has_base_factory ? "new " : "",
-                        type.TypeNamespace(),
-                        type.TypeNamespace(),
-                        type.TypeName(),
-                        has_base_factory ? "new " : "");
+                            has_base_factory ? "new " : "",
+                            type.TypeNamespace(),
+                            type.TypeNamespace(),
+                            type.TypeName(),
+                            has_base_factory ? "new " : "");
+                    }
+                    else
+                    {
+                        w.write(R"(
+public static %I As<I>() => ActivationFactory<%>.AsInterface<I>();
+)",
+                            has_base_factory ? "new " : "",
+                            type.TypeName());
+                    }
                 }
 
                 write_static_members(w, factory.type, type);
