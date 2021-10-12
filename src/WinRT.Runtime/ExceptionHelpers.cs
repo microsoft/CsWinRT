@@ -436,7 +436,6 @@ namespace Microsoft.UI.Xaml
 #else
         public
 #endif
-
         class ElementNotAvailableException : Exception
         {
             public ElementNotAvailableException()

@@ -214,6 +214,7 @@ namespace WinRT
                 parms).Compile();
         }
     }
+
 #if EMBED
     internal 
 #else
@@ -367,6 +368,7 @@ namespace WinRT
             }
         }
     }
+
 #if EMBED
     internal 
 #else

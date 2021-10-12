@@ -183,7 +183,12 @@ namespace ABI.System.Collections.Generic
         global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator() => _FromIterable((IWinRTObject)this).GetEnumerator();
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
-    public static class IEnumerable_Delegates
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IEnumerable_Delegates
     {
         public unsafe delegate int First_0(IntPtr thisPtr, out IntPtr __return_value__);
     }
@@ -643,7 +648,13 @@ namespace ABI.System.Collections.Generic
         public T Current => _FromIterator.Current;
         object IEnumerator.Current => Current;
     }
-    public static class IEnumerator_Delegates
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IEnumerator_Delegates
     {
         public unsafe delegate int MoveNext_2(IntPtr thisPtr, out byte __return_value__);
         public unsafe delegate int GetMany_3(IntPtr thisPtr, int __itemsSize, IntPtr items, out uint __return_value__);

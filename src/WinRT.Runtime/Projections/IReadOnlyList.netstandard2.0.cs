@@ -15,9 +15,6 @@ using System.Diagnostics;
 namespace Windows.Foundation.Collections
 {
     [Guid("BBE1FA4C-B0E3-4583-BAEF-1F1B2E483E56")]
-#if EMBED
-    internal
-#endif
     interface IVectorView<T> : IIterable<T>
     {
         T GetAt(uint index);
@@ -443,6 +440,7 @@ namespace ABI.System.Collections.Generic
 
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
+
 #if EMBED
     internal
 #else

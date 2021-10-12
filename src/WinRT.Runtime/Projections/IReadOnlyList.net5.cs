@@ -434,7 +434,12 @@ namespace ABI.System.Collections.Generic
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    public static class IReadOnlyList_Delegates
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IReadOnlyList_Delegates
     {
         public unsafe delegate int GetMany_3(IntPtr thisPtr, uint startIndex, int __itemsSize, IntPtr items, out uint __return_value__);
     }
