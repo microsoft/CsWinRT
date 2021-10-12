@@ -5818,7 +5818,7 @@ private struct InterfaceTag<I>{};
 private % AsInternal(InterfaceTag<%> _) => _default;
 %%
 }
-)", // capture factory method and stash it, then use as second param to compareexchange
+)",
             bind<write_winrt_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
             bind<write_class_modifiers>(type),
