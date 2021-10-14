@@ -211,7 +211,7 @@ namespace WinRT
         public static unsafe (IntPtr instancePtr, int hr) GetActivationFactory(IntPtr hstrRuntimeClassId)
         {
             var module = Instance; // Ensure COM is initialized
-            Guid iid = typeof(IActivationFactoryVftbl).GUID;
+            Guid iid = IActivationFactoryVftbl.IID;
             IntPtr instancePtr;
             int hr = Platform.RoGetActivationFactory(hstrRuntimeClassId, ref iid, &instancePtr);
             return (hr == 0 ? instancePtr : IntPtr.Zero, hr);

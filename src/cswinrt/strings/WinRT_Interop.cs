@@ -22,6 +22,8 @@ namespace WinRT.Interop
         public IInspectable.Vftbl IInspectableVftbl;
         private void* _ActivateInstance;
         public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> ActivateInstance => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_ActivateInstance;
+
+        internal static readonly Guid IID = new(0x00000035, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
     }
 
     // IDelegate
