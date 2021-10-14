@@ -400,7 +400,7 @@ namespace WinRT
             public void InitalizeReferenceTracking(IntPtr ptr)
             {
                 eventInvokePtr = ptr;
-                Guid iid = typeof(IReferenceTrackerTargetVftbl).GUID;
+                Guid iid = IReferenceTrackerTargetVftbl.IID;
                 int hr = Marshal.QueryInterface(ptr, ref iid, out referenceTrackerTargetPtr);
                 if (hr != 0)
                 {
@@ -589,23 +589,29 @@ namespace WinRT
                 // unsubscribes will work across garbage collections.  Note that most static/factory classes
                 // do not implement IWeakReferenceSource, so static codegen caching approach is also used.
                 IWeakReference target = null;
+#if !NET
                 try
                 {
-#if NETSTANDARD2_0
                     var weakRefSource = (IWeakReferenceSource)typeof(IWeakReferenceSource).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { obj });
-#else
-                    var weakRefSource = ((object)new WinRT.IInspectable(obj)) as IWeakReferenceSource;
-#endif
                     if (weakRefSource == null)
                     {
                         return;
                     }
                     target = weakRefSource.GetWeakReference();
                 }
-                catch (Exception)
+                catch(Exception)
                 {
                     return;
                 }
+#else
+                int hr = obj.TryAs<IUnknownVftbl>(typeof(IWeakReferenceSource).GUID, out var weakRefSource);
+                if (hr != 0)
+                {
+                    return;
+                }
+
+                target = ABI.WinRT.Interop.IWeakReferenceSourceMethods.GetWeakReference(weakRefSource);
+#endif
 
                 cachesLock.EnterReadLock();
                 try
