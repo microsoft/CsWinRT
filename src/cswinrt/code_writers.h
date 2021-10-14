@@ -1093,16 +1093,17 @@ namespace cswinrt
         }
 
         bool is_private = is_implemented_as_private_method(w, class_type, method);
+        auto static_method_params = call_static_method.has_value() ? std::optional(std::pair(call_static_method.value(), method)) : std::nullopt;
         if (!is_private)
         {
             write_method(w, signature, method.Name(), return_type, interface_member, access_spec, method_spec, platform_attribute, 
-                call_static_method.has_value() ? std::optional(std::pair(call_static_method.value(), method)) : std::nullopt);
+                static_method_params);
         }
 
         if (is_overridable || !is_exclusive_to(method.Parent()))
         {
             w.write(R"(
-%% %.%(%) => %(%);)",
+%% %.%(%) => %;)",
                 platform_attribute,
                 bind<write_projection_return_type>(signature),
                 bind<write_type_name>(method.Parent(), typedef_name_type::CCW, false),
@@ -1112,15 +1113,23 @@ namespace cswinrt
                 {
                     if (is_private)
                     {
-                        w.write("%.%", interface_member, method.Name());
+                        if (static_method_params.has_value())
+                        {
+                            w.write("%", bind<write_abi_static_method_call>(static_method_params.value().first, static_method_params.value().second,
+                                w.write_temp("%.Value", bind<write_objref_type_name>(static_method_params.value().first))));
+                        }
+                        else
+                        {
+                            w.write("%.%", interface_member, method.Name());
+                            w.write("(%)", bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
+                        }
                     }
                     else
                     {
                         w.write(method.Name());
+                        w.write("(%)", bind_list<write_parameter_name_with_modifier>(", ", signature.params()));
                     }
-                }),
-                bind_list<write_parameter_name_with_modifier>(", ", signature.params())
-            );
+                }));
         }
     }
 
