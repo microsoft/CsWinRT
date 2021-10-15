@@ -703,24 +703,24 @@ namespace ABI.System.Collections.Generic
             var ThisPtr = _obj.ThisPtr;
             object __key = default;
             var __params = new object[] { ThisPtr, null, null };
-            var __hasCachedRcw = _FromMap((IWinRTObject)this)._lookupCache.TryGetValue(key, out var cachedRcw);
+            var __lookupCache = _FromMap((IWinRTObject)this)._lookupCache;
+            var __hasCachedRcw = __lookupCache.TryGetValue(key, out var __cachedRcw);
             try
             {
                 __key = Marshaler<K>.CreateMarshaler(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.Lookup_0.DynamicInvokeAbi(__params);
 
-                if (__hasCachedRcw && cachedRcw.Item1 == (IntPtr)__params[2])
+                if (__hasCachedRcw && __cachedRcw.Item1 == (IntPtr)__params[2])
                 {
-                    return cachedRcw.Item2;
+                    return __cachedRcw.Item2;
                 }
                 else
                 {
                     var value = Marshaler<V>.FromAbi(__params[2]);
-                    _FromMap((IWinRTObject)this)._lookupCache.Add(key, ((IntPtr)__params[2], value));
+                    __lookupCache[key] = ((IntPtr)__params[2], value);
                     return value;
                 }
-                
             }
             finally
             {
