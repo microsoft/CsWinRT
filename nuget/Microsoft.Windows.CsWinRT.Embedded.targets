@@ -5,27 +5,54 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"> 
   
-  <PropertyGroup> 
+<!-- We expose three properties with embedded support for users 
+      CsWinRTEmbedded : the whole thing, embed the projection (cswinrt.exe) and sources
+      CsWinRTEmbedRuntime : just embed WinRT.Runtime, no WinRT.Runtime.dll by including the sources (*.cs) 
+      CsWinRTEmbedProjection : generate projection sources that are EMBED enambed. 
+-->
+  <PropertyGroup>
+<!-- User sets CsWinRTEmbedRuntime to true if they just want the embedded sources (no winrt.runtime.dll)-->
+    <CsWinRT_EmbedRuntime>$(CsWinRTEmbedRuntime)</CsWinRT_EmbedRuntime>
+<!-- User sets CsWinRTEmbedProjection to true if they just want the embedded projection -->
+    <CsWinRT_EmbedProjection>$(CsWinRTEmbedProjection)</CsWinRT_EmbedProjection>
+<!-- Used to include the sources, remove the DLL and define the EMBED constant used by the sources -->
+    <CsWinRT_NoRuntimeDll Condition="'$(CsWinRT_EmbedRuntime)' == 'true'  Or '$(CsWinRTEmbedded)' == 'true'">true</CsWinRT_NoRuntimeDll>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(CsWinRT_EmbedProjection)' == 'true' Or '$(CsWinRT_NoRuntimeDll)' == 'true'"> 
+
 <!-- Activate the internal version of the runtime layer --> 
     <DefineConstants>$(DefineConstants);EMBED</DefineConstants>
+  
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(CsWinRT_NoRuntimeDll)' == 'true'">
+
 <!-- Path to runtime sources, must update if their location changes in the .nuspec --> 
     <CsWinRTEmbeddedSources>$(CsWinRTPath)contentFiles\cs\any\</CsWinRTEmbeddedSources>
-
+  
   </PropertyGroup>
 
 <!-- we have to manually include the files from any\, in contrast to how 
      files under a TFM specific folder (e.g. net5.0\) get brought in automatically     --> 
-  <ItemGroup>
+  <ItemGroup Condition="'$(CsWinRT_NoRuntimeDll)' == 'true'">
+
 <!-- one downside of this is that we get a lot of Solution Explorer noise when we add this
 the other files are nicely tucked in a WinRT.Runtime folder in Solution Explorer, but these are not -->
     <Compile Include="$(CsWinRTEmbeddedSources)**\*.cs" />
+
   </ItemGroup>
 
 <!-- Prevent collisions of WinRT.Runtime types -->  
-  <Target Name="RemoveWinRTRuntimeReference" Inputs="@(RuntimeCopyLocalItems)" AfterTargets="ResolvePackageAssets" Outputs="@(RuntimeCopyLocalItems)">
+<!-- We expose a property here -->
+  <Target Name="RemoveWinRTRuntimeReference" 
+          Condition="'$(CsWinRT_NoRuntimeDll)' == 'true'"
+          Inputs="@(RuntimeCopyLocalItems)" 
+          AfterTargets="ResolvePackageAssets" 
+          Outputs="@(RuntimeCopyLocalItems)">
 
     <ItemGroup>
-
+<!-- do we need to remove Microsoft.Windows.SDK.NET.dll ? -->
       <RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)" Condition="'%(DestinationSubPath)' == 'WinRT.Runtime.dll'"/>
       <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" Condition="'%(HintPath)' == '$(CsWinRTPath)lib\net5.0\WinRT.Runtime.dll'"/>
 
