@@ -453,7 +453,7 @@ namespace WinRT
                 // IWeakReference is IUnknown-based, so implementations of it may not (and likely won't) implement
                 // IInspectable. As a result, we need to check for them explicitly.
 
-                return new SingleInterfaceOptimizedObject(typeof(IWeakReference), weakRef);
+                return new SingleInterfaceOptimizedObject(typeof(IWeakReference), weakRef, false);
             }
 
             // If the external COM object isn't IInspectable or IWeakReference, we can't handle it.
