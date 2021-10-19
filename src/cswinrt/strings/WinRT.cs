@@ -22,7 +22,7 @@ namespace WinRT
         }
     }
 
-    internal class Platform
+    internal sealed class Platform
     {
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         internal static extern unsafe int CoCreateInstance(ref Guid clsid, IntPtr outer, uint clsContext, ref Guid iid, IntPtr* instance);
@@ -85,7 +85,7 @@ namespace WinRT
         public IntPtr Vftbl;
     }
 
-    internal unsafe class DllModule
+    internal unsafe sealed class DllModule
     {
         readonly string _fileName;
         readonly IntPtr _moduleHandle;
@@ -113,7 +113,7 @@ namespace WinRT
             }
         }
 
-        static unsafe bool TryCreate(string fileName, out DllModule module)
+        private static unsafe bool TryCreate(string fileName, out DllModule module)
         {
             // Explicitly look for module in the same directory as this one, and
             // use altered search path to ensure any dependencies in the same directory are found.
@@ -144,7 +144,7 @@ namespace WinRT
             return true;
         }
 
-        DllModule(string fileName, IntPtr moduleHandle, void* getActivationFactory)
+        private DllModule(string fileName, IntPtr moduleHandle, void* getActivationFactory)
         {
             _fileName = fileName;
             _moduleHandle = moduleHandle;
@@ -195,7 +195,7 @@ namespace WinRT
         }
     }
 
-    internal class WinrtModule
+    internal sealed class WinrtModule
     {
         readonly IntPtr _mtaCookie;
         static Lazy<WinrtModule> _instance = new Lazy<WinrtModule>();
@@ -436,9 +436,9 @@ namespace WinRT
         }
     }
 
-    internal class Cache
+    internal sealed class Cache
     {
-        Cache(IWeakReference target, int index, System.WeakReference<State> state)
+        private Cache(IWeakReference target, int index, System.WeakReference<State> state)
         {
             this.target = target;
             SetState(index, state);
@@ -449,7 +449,6 @@ namespace WinRT
 
         private static readonly ReaderWriterLockSlim cachesLock = new ReaderWriterLockSlim();
         private static readonly ConcurrentDictionary<IntPtr, Cache> caches = new ConcurrentDictionary<IntPtr, Cache>();
-
 
         private Cache Update(IWeakReference target, int index, System.WeakReference<State> state)
         {
@@ -660,7 +659,7 @@ namespace WinRT
             }
         }
 
-        void UnsubscribeFromNative(State state)
+        private void UnsubscribeFromNative(State state)
         {
             ExceptionHelpers.ThrowExceptionForHR(_removeHandler(_obj.ThisPtr, state.token));
             state.Dispose();
@@ -838,7 +837,7 @@ namespace WinRT
 namespace System.Runtime.CompilerServices
 {
     [AttributeUsage(AttributeTargets.Method)]
-    internal class ModuleInitializerAttribute : Attribute { }
+    internal sealed class ModuleInitializerAttribute : Attribute { }
 }
 
 namespace WinRT
