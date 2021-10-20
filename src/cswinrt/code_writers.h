@@ -1323,7 +1323,7 @@ remove => %;
             bind([&](writer& w) {
                     if (paramsForStaticMethodCall.has_value())
                     {
-                        auto&& [iface_type_semantics, event, is_static] = paramsForStaticMethodCall.value();
+                        auto&& [iface_type_semantics, _, is_static] = paramsForStaticMethodCall.value();
                         w.write("%", bind<write_abi_event_source_static_method_call>(iface_type_semantics, event, true,
                             w.write_temp("%.Value", bind<write_objref_type_name>(iface_type_semantics)), is_static));
                     }
@@ -1335,7 +1335,7 @@ remove => %;
             bind([&](writer& w) {
                     if (paramsForStaticMethodCall.has_value())
                     {
-                        auto&& [iface_type_semantics, event, is_static] = paramsForStaticMethodCall.value();
+                        auto&& [iface_type_semantics, _, is_static] = paramsForStaticMethodCall.value();
                         w.write("%", bind<write_abi_event_source_static_method_call>(iface_type_semantics, event, false,
                             w.write_temp("%.Value", bind<write_objref_type_name>(iface_type_semantics)), is_static));
                     }
@@ -2687,7 +2687,6 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
                         is_public |= !is_overridable_interface && !is_protected_interface;
                         XLANG_ASSERT(!getter_target.empty() || !setter_target.empty());
                     }
-                    bool call_static_method = !(settings.netstandard_compat || wrapper_type || is_manually_generated_iface(interface_type));
                     // If this interface is overridable then we need to emit an explicit implementation of the property for that interface.
                     if (is_overridable_interface || !is_exclusive_to(interface_type))
                     {
@@ -3653,8 +3652,6 @@ global::System.Collections.Concurrent.ConcurrentDictionary<global::System.Runtim
 
     void write_interface_members_netstandard(writer& w, TypeDef const& type)
     {
-        bool generic_type = distance(type.GenericParam()) > 0;
-
         for (auto&& method : type.MethodList())
         {
             if (is_special(method))
@@ -3977,14 +3974,14 @@ public static unsafe %% %(IObjectReference %%%)
         for (auto&& evt : iface.EventList())
         {
                     w.write(R"(%
-public static unsafe Tuple<Action<%>, Action<%>> Get_%(IObjectReference %, object _thisObj)
+public static unsafe (Action<%>, Action<%>) Get_%(IObjectReference %, object _thisObj)
 {
 var eventSource = _%.GetValue(_thisObj, (key) =>
 {
 %
 return %;
 });
-return new Tuple<Action<%>, Action<%>>(eventSource.Subscribe, eventSource.Unsubscribe);
+return (eventSource.Subscribe, eventSource.Unsubscribe);
 }
 )",
                         bind<write_event_source_table>(evt),
@@ -3994,9 +3991,7 @@ return new Tuple<Action<%>, Action<%>>(eventSource.Subscribe, eventSource.Unsubs
                         generic_type ? "_genericObj" : "_obj",
                         evt.Name(),
                         bind(init_call_variables),
-                        bind<write_event_source_ctor>(evt, index),
-                        bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
-                        bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false)
+                        bind<write_event_source_ctor>(evt, index)
                     );
             index++;
         }
