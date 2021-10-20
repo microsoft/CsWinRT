@@ -37,7 +37,7 @@ namespace ABI.System
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("44A9796F-723E-4FDF-A218-033E75B0C084")]
-    internal class WinRTUriRuntimeClassFactory
+    internal sealed class WinRTUriRuntimeClassFactory
     {
         [Guid("44A9796F-723E-4FDF-A218-033E75B0C084")]
         [StructLayout(LayoutKind.Sequential)]
@@ -83,13 +83,14 @@ namespace ABI.System
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct Uri
     {
-        private static WeakLazy<ActivationFactory> _uriActivationFactory = new WeakLazy<ActivationFactory>();
-
-        private class ActivationFactory : BaseActivationFactory
+        private sealed class ActivationFactory : BaseActivationFactory
         {
             public ActivationFactory() : base("Windows.Foundation", "Windows.Foundation.Uri")
             {
             }
+
+            internal static WinRTUriRuntimeClassFactory Instance = 
+                new ActivationFactory()._As<WinRTUriRuntimeClassFactory.Vftbl>();
         }
 
         public static IObjectReference CreateMarshaler(global::System.Uri value)
@@ -99,8 +100,7 @@ namespace ABI.System
                 return null;
             }
 
-            WinRTUriRuntimeClassFactory factory = _uriActivationFactory.Value._As<WinRTUriRuntimeClassFactory.Vftbl>();
-            return factory.CreateUri(value.OriginalString);
+            return ActivationFactory.Instance.CreateUri(value.OriginalString);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
@@ -137,7 +137,8 @@ namespace ABI.System
             {
                 return IntPtr.Zero;
             }
-            return CreateMarshaler(value).GetRef();
+            using var objRef = CreateMarshaler(value);
+            return objRef.GetRef();
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }

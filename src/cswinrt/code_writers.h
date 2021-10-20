@@ -1755,26 +1755,24 @@ remove => %;
 
     std::string write_static_cache_object(writer& w, std::string_view cache_type_name, TypeDef const& class_type)
     {
-        bool hasStaticEvent = false;
-        for (auto&& evt : class_type.EventList())
-        {
-            auto [add, _] = get_event_methods(evt);
-            if (add.Flags().Static())
-            {
-                hasStaticEvent = true;
-                break;
-            }
-        }
-
-        auto instance = hasStaticEvent ?
+        auto instance =
             w.write_temp(
                 "private static readonly _% _instance = new _%();",
                 cache_type_name,
-                cache_type_name) :
-            w.write_temp(
-                "private static readonly WeakLazy<_%> _instance = new WeakLazy<_%>();",
-                cache_type_name,
                 cache_type_name);
+        auto factoryAs = w.write_temp("%",
+            bind([&](writer& w)
+            {
+                if (is_static(class_type))
+                {
+                    w.write("_factory._As");
+                }
+                else
+                {
+                    w.write("ActivationFactory<%>.As", class_type.TypeName());
+                }
+            })
+        );
 
         if (settings.netstandard_compat)
         {            
@@ -1783,14 +1781,15 @@ remove => %;
                 cache_type_name);
         auto cache_interface =
             w.write_temp(
-                R"(_factory._As<%>)",
+                R"(%<%>)",
+                factoryAs,
                 cache_vftbl_type);
             w.write(R"(
 internal class _% : ABI.%.%
 {
 public _%() : base(%()) { }
 %
-internal static % Instance => %;
+internal static % Instance => _instance;
 }
 )",
                 cache_type_name,
@@ -1799,8 +1798,7 @@ internal static % Instance => %;
                 cache_type_name,
                 cache_interface,
                 instance,
-                cache_type_name,
-                hasStaticEvent ? "_instance" : "_instance.Value");
+                cache_type_name);
         }
         else
         {
@@ -1810,11 +1808,11 @@ internal class _% : IWinRTObject
 private IObjectReference _obj;
 public _%()
 {
-_obj = _factory._As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
+_obj = %(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
 }
 
 %
-internal static % Instance => (%)%;
+internal static % Instance => (%)_instance;
 
 IObjectReference IWinRTObject.NativeObject => _obj;
 bool IWinRTObject.HasUnwrappableNativeObject => false;
@@ -1826,12 +1824,12 @@ global::System.Collections.Concurrent.ConcurrentDictionary<global::System.Runtim
 )",
                 cache_type_name,
                 cache_type_name,
+                factoryAs,
                 class_type.TypeNamespace(),
                 cache_type_name,
                 instance,
                 cache_type_name,
-                cache_type_name,
-                hasStaticEvent ? "_instance" : "_instance.Value");
+                cache_type_name);
         }
 
         return w.write_temp("_%.Instance", cache_type_name);
@@ -1930,14 +1928,15 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
         }
     }
 
-    void write_class_static_objrefs_declaration(writer& w, TypeDef const& classType)
+    void write_class_static_objrefs_declaration(writer& w, std::string const& target, TypeDef const& classType)
     {
         for (auto&& [interface_name, factory] : get_attributed_types(w, classType))
         {
             if (factory.statics)
             {
-                w.write("private static readonly Lazy<IObjectReference> % = new Lazy<IObjectReference>(() => _factory._As(GuidGenerator.GetIID(typeof(%).GetHelperType())));\n",
+                w.write("private static readonly Lazy<IObjectReference> % = new Lazy<IObjectReference>(() => %As(GuidGenerator.GetIID(typeof(%).GetHelperType())));\n",
                     bind<write_objref_type_name>(factory.type),
+                    target,
                     bind<write_type_name>(factory.type, typedef_name_type::Projected, false));
             }
         }
@@ -2160,23 +2159,44 @@ Marshal.Release(inner);
                         });
                     }
 
-                    w.write(R"(
+                    if (is_static(type))
+                    {
+                        w.write(R"(
 internal static %BaseActivationFactory _factory = new BaseActivationFactory("%", "%.%");
 public static %I As<I>() => _factory.AsInterface<I>();
 %
 )",
-                        has_base_factory ? "new " : "",
-                        type.TypeNamespace(),
-                        type.TypeNamespace(),
-                        type.TypeName(),
-                        has_base_factory ? "new " : "",
-                        bind([&](writer& w)
-                            {
-                                if (!settings.netstandard_compat)
+                            has_base_factory ? "new " : "",
+                            type.TypeNamespace(),
+                            type.TypeNamespace(),
+                            type.TypeName(),
+                            has_base_factory ? "new " : "",
+                            bind([&](writer& w)
                                 {
-                                    write_class_static_objrefs_declaration(w, type);
-                                }
-                            }));
+                                    if (!settings.netstandard_compat)
+                                    {
+                                        write_class_static_objrefs_declaration(w, "_factory._", type);
+                                    }
+                                }));
+                    }
+                    else
+                    {
+                        w.write(R"(
+public static %I As<I>() => ActivationFactory<%>.AsInterface<I>();
+%
+)",
+                            has_base_factory ? "new " : "",
+                            type.TypeName(),
+                            bind([&](writer& w)
+                                {
+                                    if (!settings.netstandard_compat)
+                                    {
+                                        write_class_static_objrefs_declaration(w, 
+                                            w.write_temp("ActivationFactory<%>.", type.TypeName()), 
+                                            type);
+                                    }
+                                }));
+                    }
                 }
 
                 write_static_members(w, factory.type, type);
@@ -3576,8 +3596,8 @@ public unsafe % %(%)
 internal class _% : ABI.%.%
 {
 public _%() : base(%()) { }
-private static WeakLazy<_%> _instance = new WeakLazy<_%>();
-internal static _% Instance => _instance.Value;
+private static _% _instance = new _%();
+internal static _% Instance => _instance;
 %
 }
 )",
@@ -3604,8 +3624,8 @@ public _%()
 _obj = ActivationFactory<%>.As(GuidGenerator.GetIID(typeof(%.%).GetHelperType()));
 }
 
-private static WeakLazy<_%> _instance = new WeakLazy<_%>();
-internal static _% Instance => _instance.Value;
+private static _% _instance = new _%();
+internal static _% Instance => _instance;
 
 IObjectReference IWinRTObject.NativeObject => _obj;
 bool IWinRTObject.HasUnwrappableNativeObject => false;
@@ -5373,7 +5393,6 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
 
-        uint32_t const vtable_base = type.MethodList().first.index();
         w.write(R"(%%
 %% interface %%
 {%
