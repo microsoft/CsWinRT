@@ -402,7 +402,7 @@ namespace WinRT
             Type projectedType = typeof(T);
             if (projectedType == typeof(object))
             {
-                if (objectReference.TryAs<IInspectable.Vftbl>(out var inspectablePtr) == 0)
+                if (objectReference.TryAs<IInspectable.Vftbl>(IInspectable.IID, out var inspectablePtr) == 0)
                 {
                     rwlock.EnterReadLock();
                     try
