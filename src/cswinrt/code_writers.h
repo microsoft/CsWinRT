@@ -1966,7 +1966,7 @@ private IObjectReference % => __% ?? Make__%();
 private static volatile IObjectReference __%;
 private static IObjectReference Make__%()
 {
-    global::System.Threading.Interlocked.CompareExchange(ref __%, _factory._As(GuidGenerator.GetIID(typeof(%).GetHelperType())), null);
+    global::System.Threading.Interlocked.CompareExchange(ref __%, %As(GuidGenerator.GetIID(typeof(%).GetHelperType())), null);
     return __%;
 }
 private static IObjectReference % => __% ?? Make__%();
@@ -1974,6 +1974,7 @@ private static IObjectReference % => __% ?? Make__%();
                     bind<write_objref_type_name>(factory.type),
                     bind<write_objref_type_name>(factory.type),
                     bind<write_objref_type_name>(factory.type),
+                    target,
                     bind<write_type_name>(factory.type, typedef_name_type::Projected, false),
                     bind<write_objref_type_name>(factory.type),
                     bind<write_objref_type_name>(factory.type),
