@@ -139,7 +139,8 @@ namespace ABI.System.Windows.Input
             _CanExecuteChanged =
                 new EventHandlerEventSource(_obj,
                 _obj.Vftbl.add_CanExecuteChanged_0,
-                _obj.Vftbl.remove_CanExecuteChanged_1);
+                _obj.Vftbl.remove_CanExecuteChanged_1,
+                this);
         }
 
 

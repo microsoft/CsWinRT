@@ -86,7 +86,7 @@ namespace ABI.System.ComponentModel
             var _obj = (ObjectReference<Vftbl>)_this.GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle);
             
             return (PropertyChangedEventSource)_this.GetOrCreateTypeHelperData(typeof(global::System.ComponentModel.INotifyPropertyChanged).TypeHandle,
-                () => new PropertyChangedEventSource(_obj, _obj.Vftbl.add_PropertyChanged_0, _obj.Vftbl.remove_PropertyChanged_1));
+                () => new PropertyChangedEventSource(_obj, _obj.Vftbl.add_PropertyChanged_0, _obj.Vftbl.remove_PropertyChanged_1, _this));
         }
 
         event global::System.ComponentModel.PropertyChangedEventHandler global::System.ComponentModel.INotifyPropertyChanged.PropertyChanged

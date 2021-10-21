@@ -129,8 +129,9 @@ namespace ABI.System.ComponentModel
     {
         internal PropertyChangedEventSource(IObjectReference obj,
             delegate* unmanaged[Stdcall]<global::System.IntPtr, global::System.IntPtr, out global::WinRT.EventRegistrationToken, int> addHandler,
-            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler)
-            : base(obj, addHandler, removeHandler)
+            delegate* unmanaged[Stdcall]<global::System.IntPtr, global::WinRT.EventRegistrationToken, int> removeHandler,
+            object rcw)
+            : base(obj, addHandler, removeHandler, rcw)
         {
         }
 

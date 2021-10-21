@@ -2810,10 +2810,11 @@ db_path.stem().string());
                     w.write(R"( new EventSource__EventHandler%(_obj,
 %,
 %,
-%))",
+%, %))",
 bind<write_type_params>(eventType),
 get_invoke_info(w, add).first,
 get_invoke_info(w, remove).first,
+settings.netstandard_compat ? "this" : "_thisObj",
 index);
                     return true;
                 }
@@ -2828,11 +2829,12 @@ index);
 new %%(_obj,
 %,
 %,
-%))",
+%, %))",
             bind<write_event_source_type_name>(get_type_semantics(evt.EventType())),
             bind<write_event_source_generic_args>(get_type_semantics(evt.EventType())),
             get_invoke_info(w, add).first,
             get_invoke_info(w, remove).first,
+            settings.netstandard_compat ? "this" : "_thisObj",
             index);
     }
 
@@ -6982,7 +6984,7 @@ internal sealed unsafe class %% : EventSource<%>
 {
 internal %(IObjectReference obj,
 delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
-delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler, int index) : base(obj, addHandler, removeHandler, index)
+delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler, object rcw, int index) : base(obj, addHandler, removeHandler, rcw, index)
 {
 }
 

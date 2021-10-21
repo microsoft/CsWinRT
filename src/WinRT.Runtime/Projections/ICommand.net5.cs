@@ -139,7 +139,7 @@ namespace ABI.System.Windows.Input
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)_this).GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle));
 
             return (EventHandlerEventSource)_this.GetOrCreateTypeHelperData(typeof(global::System.Windows.Input.ICommand).TypeHandle,
-                () => new EventHandlerEventSource(_obj, _obj.Vftbl.add_CanExecuteChanged_0, _obj.Vftbl.remove_CanExecuteChanged_1));
+                () => new EventHandlerEventSource(_obj, _obj.Vftbl.add_CanExecuteChanged_0, _obj.Vftbl.remove_CanExecuteChanged_1, _this));
         }
 
         unsafe bool global::System.Windows.Input.ICommand.CanExecute(object parameter)

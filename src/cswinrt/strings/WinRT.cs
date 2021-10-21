@@ -438,25 +438,24 @@ namespace WinRT
 
     internal sealed class Cache
     {
-        private Cache(IWeakReference target, int index, System.WeakReference<State> state)
+        private Cache(WeakReference<object> target, int index, System.WeakReference<State> state)
         {
             this.target = target;
             SetState(index, state);
         }
 
-        private IWeakReference target;
+        private WeakReference<object> target;
         private readonly ConcurrentDictionary<int, System.WeakReference<State>> states = new ConcurrentDictionary<int, System.WeakReference<State>>();
 
         private static readonly ReaderWriterLockSlim cachesLock = new ReaderWriterLockSlim();
         private static readonly ConcurrentDictionary<IntPtr, Cache> caches = new ConcurrentDictionary<IntPtr, Cache>();
 
-        private Cache Update(IWeakReference target, int index, System.WeakReference<State> state)
+        private Cache Update(WeakReference<object> target, int index, System.WeakReference<State> state)
         {
             // If target no longer exists, destroy cache
             lock (this)
             {
-                using var resolved = this.target.Resolve(typeof(IUnknownVftbl).GUID);
-                if (resolved == null)
+                if (!this.target.TryGetTarget(out var _))
                 {
                     this.target = target;
                     states.Clear();
@@ -471,8 +470,7 @@ namespace WinRT
             // If target no longer exists, destroy cache
             lock (this)
             {
-                using var resolved = this.target.Resolve(typeof(IUnknownVftbl).GUID);
-                if (resolved == null)
+                if (!this.target.TryGetTarget(out var _))
                 {
                     return null;
                 }
@@ -490,12 +488,12 @@ namespace WinRT
             states[index] = state;
         }
 
-        public static void Create(IObjectReference obj, int index, System.WeakReference<State> state)
+        public static void Create(IObjectReference obj, WeakReference<object> rcw, int index, System.WeakReference<State> state)
         {
             // If event source implements weak reference support, track event registrations so that
             // unsubscribes will work across garbage collections.  Note that most static/factory classes
             // do not implement IWeakReferenceSource, so static codegen caching approach is also used.
-            IWeakReference target = null;
+  //          IWeakReference target = null;
 #if !NET
                 try
                 {
@@ -504,7 +502,7 @@ namespace WinRT
                     {
                         return;
                     }
-                    target = weakRefSource.GetWeakReference();
+//                    target = weakRefSource.GetWeakReference();
                 }
                 catch(Exception)
                 {
@@ -517,15 +515,15 @@ namespace WinRT
                 return;
             }
 
-            target = ABI.WinRT.Interop.IWeakReferenceSourceMethods.GetWeakReference(weakRefSource);
+//            target = ABI.WinRT.Interop.IWeakReferenceSourceMethods.GetWeakReference(weakRefSource);
 #endif
 
             cachesLock.EnterReadLock();
             try
             {
                 caches.AddOrUpdate(obj.ThisPtr,
-                    (IntPtr ThisPtr) => new Cache(target, index, state),
-                    (IntPtr ThisPtr, Cache cache) => cache.Update(target, index, state));
+                    (IntPtr ThisPtr) => new Cache(rcw, index, state),
+                    (IntPtr ThisPtr, Cache cache) => cache.Update(rcw, index, state));
             }
             finally
             {
@@ -582,16 +580,19 @@ namespace WinRT
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
         protected System.WeakReference<State> _state;
+        protected WeakReference<object> _weakRcw;
 
         protected EventSource(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
             delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler,
+            object rcw,
             int index = 0)
         {
             _obj = obj;
             _addHandler = addHandler;
             _removeHandler = removeHandler;
             _index = index;
+            _weakRcw = new WeakReference<object>(rcw);
             _state = Cache.GetState(obj, index);
         }
 
@@ -617,7 +618,7 @@ namespace WinRT
                 {
                     state = CreateEventState();
                     _state = state.GetWeakReferenceForCache();
-                    Cache.Create(_obj, _index, _state);
+                    Cache.Create(_obj, _weakRcw, _index, _state);
                 }
 
                 state.del = (TDelegate)global::System.Delegate.Combine(state.del, del);
@@ -672,7 +673,8 @@ namespace WinRT
         internal EventSource__EventHandler(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
             delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> removeHandler,
-            int index) : base(obj, addHandler, removeHandler, index)
+            object rcw,
+            int index) : base(obj, addHandler, removeHandler, rcw, index)
         {
         }
 

@@ -103,7 +103,8 @@ namespace ABI.System.Collections.Specialized
             _CollectionChanged =
                 new NotifyCollectionChangedEventSource(_obj,
                 _obj.Vftbl.add_CollectionChanged_0,
-                _obj.Vftbl.remove_CollectionChanged_1);
+                _obj.Vftbl.remove_CollectionChanged_1,
+                this);
         }
 
         public event global::System.Collections.Specialized.NotifyCollectionChangedEventHandler CollectionChanged
