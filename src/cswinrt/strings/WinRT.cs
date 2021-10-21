@@ -159,15 +159,24 @@ namespace WinRT
 
         public unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
-            IntPtr instancePtr;
+            IntPtr instancePtr = IntPtr.Zero;
             var hstrRuntimeClassId = MarshalString.CreateMarshaler(runtimeClassId);
             try
             {
                 int hr = _GetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), &instancePtr);
-                return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
+                if (hr == 0)
+                {
+                    using var objRef = ComWrappersSupport.GetObjectReferenceForInterface(instancePtr);
+                    return (objRef.As<IActivationFactoryVftbl>(), hr);
+                }
+                else
+                {
+                    return (null, hr);
+                }
             }
             finally
             {
+                MarshalInspectable<object>.DisposeAbi(instancePtr);
                 hstrRuntimeClassId.Dispose();
             }
         }
@@ -182,27 +191,6 @@ namespace WinRT
             if ((_moduleHandle != IntPtr.Zero) && !Platform.FreeLibrary(_moduleHandle))
             {
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-            }
-        }
-    }
-
-    internal class WeakLazy<T> where T : class, new()
-    {
-        WeakReference<T> _instance = new WeakReference<T>(null);
-        public T Value
-        {
-            get
-            {
-                lock (_instance)
-                {
-                    T value;
-                    if (!_instance.TryGetTarget(out value))
-                    {
-                        value = new T();
-                        _instance.SetTarget(value);
-                    }
-                    return value;
-                }
             }
         }
     }
@@ -233,15 +221,24 @@ namespace WinRT
         {
             // TODO: "using var" with ref struct and remove the try/catch below
             var m = MarshalString.CreateMarshaler(runtimeClassId);
+            IntPtr instancePtr = IntPtr.Zero;
             try
             {
-                IntPtr instancePtr;
                 int hr;
                 (instancePtr, hr) = GetActivationFactory(MarshalString.GetAbi(m));
-                return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
+                if (hr == 0)
+                {
+                    using var objRef = ComWrappersSupport.GetObjectReferenceForInterface(instancePtr);
+                    return (objRef.As<IActivationFactoryVftbl>(), hr);
+                }
+                else
+                {
+                    return (null, hr);
+                }
             }
             finally
             {
+                MarshalInspectable<object>.DisposeAbi(instancePtr);
                 m.Dispose();
             }
         }
@@ -254,7 +251,7 @@ namespace WinRT
 
     internal class BaseActivationFactory
     {
-        private ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
+        private readonly ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
 
         public ObjectReference<IActivationFactoryVftbl> Value { get => _IActivationFactory; }
 
@@ -304,15 +301,15 @@ namespace WinRT
         public IObjectReference _As(Guid iid) => _IActivationFactory.As<WinRT.Interop.IUnknownVftbl>(iid);
     }
 
-    internal class ActivationFactory<T> : BaseActivationFactory
+    internal sealed class ActivationFactory<T> : BaseActivationFactory
     {
         public ActivationFactory() : base(typeof(T).Namespace, typeof(T).FullName) { }
 
-        static WeakLazy<ActivationFactory<T>> _factory = new WeakLazy<ActivationFactory<T>>();
-        public new static I AsInterface<I>() => _factory.Value.Value.AsInterface<I>();
-        public static ObjectReference<I> As<I>() => _factory.Value._As<I>();
-        public static IObjectReference As(Guid iid) => _factory.Value._As(iid);
-        public static ObjectReference<I> ActivateInstance<I>() => _factory.Value._ActivateInstance<I>();
+        static readonly ActivationFactory<T> _factory = new ActivationFactory<T>();
+        public static new I AsInterface<I>() => _factory.Value.AsInterface<I>();
+        public static ObjectReference<I> As<I>() => _factory._As<I>();
+        public static IObjectReference As(Guid iid) => _factory._As(iid);
+        public static ObjectReference<I> ActivateInstance<I>() => _factory._ActivateInstance<I>();
     }
 
     internal class ComponentActivationFactory : global::WinRT.Interop.IActivationFactory
