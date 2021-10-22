@@ -12,7 +12,7 @@ namespace WinRT
 #else 
     public
 #endif
-    static class ExceptionHelpers
+    static unsafe class ExceptionHelpers
     {
         private const int COR_E_OBJECTDISPOSED = unchecked((int)0x80131622);
         private const int RO_E_CLOSED = unchecked((int)0x80000013);
