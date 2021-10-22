@@ -58,7 +58,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </ItemGroup>
   </Target>
 
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'"/>
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" />
 
   <Target Name="CsWinRTPrepareProjection" DependsOnTargets="$(CsWinRTPrepareProjectionDependsOn)" Outputs="$(CsWinRTGeneratedFilesDir)">
     <PropertyGroup>
@@ -101,7 +101,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -input $(CsWinRTInteropMetadata)
 -include WinRT.Interop
       </CsWinRTIncludeWinRTInterop>
-      <CsWinRTEmbeddedParam Condition="'$(CsWinRTEmbedded)' == 'true'">-embedded</CsWinRTEmbeddedParam>
+      <CsWinRTEmbeddedParam Condition="'$(CsWinRTEmbedded)' == 'true' Or '$(CsWinRTEmbedProjection)' =='true'">-embedded</CsWinRTEmbeddedParam>
       <CsWinRTExeTFM Condition="'$(TargetFramework)' == 'netcoreapp3.1'">netstandard2.0</CsWinRTExeTFM>
       <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">$(TargetFramework)</CsWinRTExeTFM>
       <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
