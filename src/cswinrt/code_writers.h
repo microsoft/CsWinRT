@@ -5531,7 +5531,10 @@ public static Guid PIID = Vftbl.PIID;
 {
 %
 }
-)", is_exclusive_to(iface) ? "internal" : "public", bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false), bind<write_static_abi_class_members>(iface));
+)", 
+        is_exclusive_to(iface) ? "internal" : internal_if_embedded(), 
+        bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false), 
+        bind<write_static_abi_class_members>(iface));
     }
 
     bool write_abi_interface(writer& w, TypeDef const& type)
