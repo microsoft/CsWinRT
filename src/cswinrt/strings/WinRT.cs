@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Linq.Expressions;
@@ -21,12 +22,6 @@ namespace WinRT
         {
             Marshal.ThrowExceptionForHR((int)del.DynamicInvoke(invoke_params));
         }
-
-        public static T AsDelegate<T>(this MulticastDelegate del)
-        {
-            return Marshal.GetDelegateForFunctionPointer<T>(
-                Marshal.GetFunctionPointerForDelegate(del));
-        }
     }
 
     internal class Platform
@@ -44,16 +39,16 @@ namespace WinRT
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool FreeLibrary(IntPtr moduleHandle);
 
-        [DllImport("kernel32.dll", SetLastError = true, BestFitMapping = false)]
-        internal static extern IntPtr GetProcAddress(IntPtr moduleHandle, [MarshalAs(UnmanagedType.LPStr)] string functionName);
-        internal static T GetProcAddress<T>(IntPtr moduleHandle)
+        [DllImport("kernel32.dll", EntryPoint = "GetProcAddress", SetLastError = true, BestFitMapping = false)]
+        internal static unsafe extern void* TryGetProcAddress(IntPtr moduleHandle, [MarshalAs(UnmanagedType.LPStr)] string functionName);
+        internal static unsafe void* GetProcAddress(IntPtr moduleHandle, string functionName)
         {
-            IntPtr functionPtr = Platform.GetProcAddress(moduleHandle, typeof(T).Name);
-            if (functionPtr == IntPtr.Zero)
+            void* functionPtr = Platform.TryGetProcAddress(moduleHandle, functionName);
+            if (functionPtr == null)
             {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error(), new IntPtr(-1));
             }
-            return Marshal.GetDelegateForFunctionPointer<T>(functionPtr);
+            return functionPtr;
         }
 
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -92,20 +87,12 @@ namespace WinRT
         public IntPtr Vftbl;
     }
 
-    internal class DllModule
+    internal unsafe class DllModule
     {
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public unsafe delegate int DllGetActivationFactory(
-            IntPtr activatableClassId,
-            out IntPtr activationFactory);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public unsafe delegate int DllCanUnloadNow();
-
         readonly string _fileName;
         readonly IntPtr _moduleHandle;
-        readonly DllGetActivationFactory _GetActivationFactory;
-        readonly DllCanUnloadNow _CanUnloadNow; // TODO: Eventually periodically call
+        readonly delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> _GetActivationFactory;
+        readonly delegate* unmanaged[Stdcall]<int> _CanUnloadNow; // TODO: Eventually periodically call
 
         static readonly string _currentModuleDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
@@ -128,7 +115,7 @@ namespace WinRT
             }
         }
 
-        static bool TryCreate(string fileName, out DllModule module)
+        static unsafe bool TryCreate(string fileName, out DllModule module)
         {
             // Explicitly look for module in the same directory as this one, and
             // use altered search path to ensure any dependencies in the same directory are found.
@@ -145,8 +132,8 @@ namespace WinRT
                 return false;
             }
 
-            var getActivationFactory = Platform.GetProcAddress(moduleHandle, nameof(DllGetActivationFactory));
-            if (getActivationFactory == IntPtr.Zero)
+            var getActivationFactory = Platform.TryGetProcAddress(moduleHandle, "DllGetActivationFactory");
+            if (getActivationFactory == null)
             {
                 module = null;
                 return false;
@@ -155,34 +142,43 @@ namespace WinRT
             module = new DllModule(
                 fileName, 
                 moduleHandle, 
-                Marshal.GetDelegateForFunctionPointer<DllGetActivationFactory>(getActivationFactory));
+                getActivationFactory);
             return true;
         }
 
-        DllModule(string fileName, IntPtr moduleHandle, DllGetActivationFactory getActivationFactory)
+        DllModule(string fileName, IntPtr moduleHandle, void* getActivationFactory)
         {
             _fileName = fileName;
             _moduleHandle = moduleHandle;
-            _GetActivationFactory = getActivationFactory;
+            _GetActivationFactory = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)getActivationFactory;
 
-            var canUnloadNow = Platform.GetProcAddress(_moduleHandle, nameof(DllCanUnloadNow));
-            if (canUnloadNow != IntPtr.Zero)
+            var canUnloadNow = Platform.TryGetProcAddress(_moduleHandle, "DllCanUnloadNow");
+            if (canUnloadNow != null)
             {
-                _CanUnloadNow = Marshal.GetDelegateForFunctionPointer<DllCanUnloadNow>(canUnloadNow);
+                _CanUnloadNow = (delegate* unmanaged[Stdcall]<int>)canUnloadNow;
             }
         }
 
         public unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
-            IntPtr instancePtr;
+            IntPtr instancePtr = IntPtr.Zero;
             var hstrRuntimeClassId = MarshalString.CreateMarshaler(runtimeClassId);
             try
             {
-                int hr = _GetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), out instancePtr);
-                return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
+                int hr = _GetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), &instancePtr);
+                if (hr == 0)
+                {
+                    using var objRef = ComWrappersSupport.GetObjectReferenceForInterface(instancePtr);
+                    return (objRef.As<IActivationFactoryVftbl>(), hr);
+                }
+                else
+                {
+                    return (null, hr);
+                }
             }
             finally
             {
+                MarshalInspectable<object>.DisposeAbi(instancePtr);
                 hstrRuntimeClassId.Dispose();
             }
         }
@@ -197,27 +193,6 @@ namespace WinRT
             if ((_moduleHandle != IntPtr.Zero) && !Platform.FreeLibrary(_moduleHandle))
             {
                 Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-            }
-        }
-    }
-
-    internal class WeakLazy<T> where T : class, new()
-    {
-        WeakReference<T> _instance = new WeakReference<T>(null);
-        public T Value
-        {
-            get
-            {
-                lock (_instance)
-                {
-                    T value;
-                    if (!_instance.TryGetTarget(out value))
-                    {
-                        value = new T();
-                        _instance.SetTarget(value);
-                    }
-                    return value;
-                }
             }
         }
     }
@@ -248,15 +223,24 @@ namespace WinRT
         {
             // TODO: "using var" with ref struct and remove the try/catch below
             var m = MarshalString.CreateMarshaler(runtimeClassId);
+            IntPtr instancePtr = IntPtr.Zero;
             try
             {
-                IntPtr instancePtr;
                 int hr;
                 (instancePtr, hr) = GetActivationFactory(MarshalString.GetAbi(m));
-                return (hr == 0 ? ObjectReference<IActivationFactoryVftbl>.Attach(ref instancePtr) : null, hr);
+                if (hr == 0)
+                {
+                    using var objRef = ComWrappersSupport.GetObjectReferenceForInterface(instancePtr);
+                    return (objRef.As<IActivationFactoryVftbl>(), hr);
+                }
+                else
+                {
+                    return (null, hr);
+                }
             }
             finally
             {
+                MarshalInspectable<object>.DisposeAbi(instancePtr);
                 m.Dispose();
             }
         }
@@ -269,7 +253,7 @@ namespace WinRT
 
     internal class BaseActivationFactory
     {
-        private ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
+        private readonly ObjectReference<IActivationFactoryVftbl> _IActivationFactory;
 
         public ObjectReference<IActivationFactoryVftbl> Value { get => _IActivationFactory; }
 
@@ -319,15 +303,15 @@ namespace WinRT
         public IObjectReference _As(Guid iid) => _IActivationFactory.As<WinRT.Interop.IUnknownVftbl>(iid);
     }
 
-    internal class ActivationFactory<T> : BaseActivationFactory
+    internal sealed class ActivationFactory<T> : BaseActivationFactory
     {
         public ActivationFactory() : base(typeof(T).Namespace, typeof(T).FullName) { }
 
-        static WeakLazy<ActivationFactory<T>> _factory = new WeakLazy<ActivationFactory<T>>();
-        public new static I AsInterface<I>() => _factory.Value.Value.AsInterface<I>();
-        public static ObjectReference<I> As<I>() => _factory.Value._As<I>();
-        public static IObjectReference As(Guid iid) => _factory.Value._As(iid);
-        public static ObjectReference<I> ActivateInstance<I>() => _factory.Value._ActivateInstance<I>();
+        static readonly ActivationFactory<T> _factory = new ActivationFactory<T>();
+        public static new I AsInterface<I>() => _factory.Value.AsInterface<I>();
+        public static ObjectReference<I> As<I>() => _factory._As<I>();
+        public static IObjectReference As(Guid iid) => _factory._As(iid);
+        public static ObjectReference<I> ActivateInstance<I>() => _factory._ActivateInstance<I>();
     }
 
     internal class ComponentActivationFactory : global::WinRT.Interop.IActivationFactory
