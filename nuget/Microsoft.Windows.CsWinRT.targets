@@ -128,8 +128,9 @@ $(CsWinRTEmbeddedParam)
       <UpToDateCheckBuilt Include="$(CsWinRTGeneratedFilesDir)WinRT.cs" Original="@(CsWinRTInputs)" />
     </ItemGroup>
   </Target>
-  
-  <Target Name="CsWinRTIncludeProjection" BeforeTargets="BeforeCompile" DependsOnTargets="CsWinRTGenerateProjection" Condition="$(CsWinRTEnabled)">
+
+  <!-- Note: GenerateTargetFrameworkMonikerAttribute is conditional upon @(Compile) not being empty -->
+  <Target Name="CsWinRTIncludeProjection" BeforeTargets="BeforeCompile;GenerateTargetFrameworkMonikerAttribute" DependsOnTargets="CsWinRTGenerateProjection" Condition="$(CsWinRTEnabled)">
     <ItemGroup>
       <Compile Include="$(CsWinRTGeneratedFilesDir)*.cs" Exclude="@(Compile)" />
     </ItemGroup>

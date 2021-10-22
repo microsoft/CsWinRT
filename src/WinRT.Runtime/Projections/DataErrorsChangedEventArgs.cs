@@ -25,7 +25,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("62D0BD1E-B85F-5FCC-842A-7CB0DDA37FE5")]
-    internal unsafe class WinRTDataErrorsChangedEventArgsRuntimeClassFactory
+    internal unsafe sealed class WinRTDataErrorsChangedEventArgsRuntimeClassFactory
     {
         [Guid("62D0BD1E-B85F-5FCC-842A-7CB0DDA37FE5")]
         [StructLayout(LayoutKind.Sequential)]
@@ -74,13 +74,14 @@ namespace ABI.System.ComponentModel
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct DataErrorsChangedEventArgs
     {
-        private static WeakLazy<ActivationFactory> _factory = new WeakLazy<ActivationFactory>();
-
-        private class ActivationFactory : BaseActivationFactory
+        private sealed class ActivationFactory : BaseActivationFactory
         {
             public ActivationFactory() : base("Microsoft.UI.Xaml.Data", "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs")
             {
             }
+
+            internal static ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory Instance =
+                new ActivationFactory()._As<ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory.Vftbl>();
         }
 
         public static IObjectReference CreateMarshaler(global::System.ComponentModel.DataErrorsChangedEventArgs value)
@@ -90,8 +91,7 @@ namespace ABI.System.ComponentModel
                 return null;
             }
 
-            ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory factory = _factory.Value._As<ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory.Vftbl>();
-            return factory.CreateInstance(value.PropertyName);
+            return ActivationFactory.Instance.CreateInstance(value.PropertyName);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
@@ -128,7 +128,8 @@ namespace ABI.System.ComponentModel
             {
                 return IntPtr.Zero;
             }
-            return CreateMarshaler(value).GetRef();
+            using var objRef = CreateMarshaler(value);
+            return objRef.GetRef();
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }

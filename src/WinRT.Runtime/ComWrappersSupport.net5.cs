@@ -229,7 +229,7 @@ namespace WinRT
                 // otherwise the new instance will be used. Since the inner was composed
                 // it should answer immediately without going through the outer. Either way
                 // the reference count will go to the new instance.
-                Guid iid = typeof(IReferenceTrackerVftbl).GUID;
+                Guid iid = IReferenceTrackerVftbl.IID;
                 int hr = Marshal.QueryInterface(objRef.ThisPtr, ref iid, out referenceTracker);
                 if (hr != 0)
                 {
@@ -330,7 +330,7 @@ namespace WinRT
         {
             if (objRef.ReferenceTrackerPtr == IntPtr.Zero)
             {
-                Guid iid = typeof(IReferenceTrackerVftbl).GUID;
+                Guid iid = IReferenceTrackerVftbl.IID;
                 int hr = Marshal.QueryInterface(objRef.ThisPtr, ref iid, out var referenceTracker);
                 if (hr == 0)
                 {
@@ -434,7 +434,7 @@ namespace WinRT
 
         private static object CreateObject(IObjectReference objRef)
         {
-            if (objRef.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
+            if (objRef.TryAs<IInspectable.Vftbl>(IInspectable.IID, out var inspectableRef) == 0)
             {
                 IInspectable inspectable = new IInspectable(inspectableRef);
 
@@ -448,7 +448,7 @@ namespace WinRT
 
                 return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
             }
-            else if (objRef.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
+            else if (objRef.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(ABI.WinRT.Interop.IWeakReference.IID, out var weakRef) == 0)
             {
                 // IWeakReference is IUnknown-based, so implementations of it may not (and likely won't) implement
                 // IInspectable. As a result, we need to check for them explicitly.
