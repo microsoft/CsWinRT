@@ -1933,6 +1933,9 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
                     {
                         return;
                     }
+    
+                    auto objrefname = bind<write_objref_type_name>(semantics);
+
                     w.write(R"(
 private Func<IObjectReference> Create__%;
 private volatile IObjectReference __%;
@@ -1943,15 +1946,15 @@ private IObjectReference Make__%()
 }
 private IObjectReference % => __% ?? Make__%();
 )",
-                        bind<write_objref_type_name>(semantics), 
-                        bind<write_objref_type_name>(semantics), 
-                        bind<write_objref_type_name>(semantics),
-                        bind<write_objref_type_name>(semantics),
-                        bind<write_objref_type_name>(semantics),
-                        bind<write_objref_type_name>(semantics),
-                        bind<write_objref_type_name>(semantics),
-                        bind<write_objref_type_name>(semantics),
-                        bind<write_objref_type_name>(semantics));
+                        objrefname, 
+                        objrefname, 
+                        objrefname,
+                        objrefname,
+                        objrefname,
+                        objrefname,
+                        objrefname,
+                        objrefname,
+                        objrefname);
                 });
         }
     }
@@ -1962,6 +1965,7 @@ private IObjectReference % => __% ?? Make__%();
         {
             if (factory.statics)
             {
+                auto objrefname = bind<write_objref_type_name>(factory.type);
                 w.write(R"(
 private static volatile IObjectReference __%;
 private static IObjectReference Make__%()
@@ -1971,15 +1975,15 @@ private static IObjectReference Make__%()
 }
 private static IObjectReference % => __% ?? Make__%();
 )",
-                    bind<write_objref_type_name>(factory.type),
-                    bind<write_objref_type_name>(factory.type),
-                    bind<write_objref_type_name>(factory.type),
+                    objrefname,
+                    objrefname,
+                    objrefname,
                     target,
                     bind<write_type_name>(factory.type, typedef_name_type::Projected, false),
-                    bind<write_objref_type_name>(factory.type),
-                    bind<write_objref_type_name>(factory.type),
-                    bind<write_objref_type_name>(factory.type),
-                    bind<write_objref_type_name>(factory.type));
+                    objrefname,
+                    objrefname,
+                    objrefname,
+                    objrefname);
             }
         }
     }
