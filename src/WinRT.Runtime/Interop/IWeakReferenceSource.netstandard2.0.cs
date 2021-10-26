@@ -90,6 +90,8 @@ namespace ABI.WinRT.Interop
             }
         }
 
+        internal static readonly Guid IID = new(0x00000038, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+        public static IntPtr AbiToProjectionVftablePtr => Vftbl.AbiToProjectionVftablePtr;
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
         public static implicit operator IWeakReferenceSource(IObjectReference obj) => (obj != null) ? new IWeakReferenceSource(obj) : null;
