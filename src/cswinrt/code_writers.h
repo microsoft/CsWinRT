@@ -1937,20 +1937,18 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
                     auto objrefname = bind<write_objref_type_name>(semantics);
 
                     w.write(R"(
-private Func<IObjectReference> Create__%;
 private volatile IObjectReference __%;
 private IObjectReference Make__%()
 {
-    global::System.Threading.Interlocked.CompareExchange(ref __%, Create__%(), null);
+    global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).FindHelperType())), null);
     return __%;
 }
 private IObjectReference % => __% ?? Make__%();
 )",
                         objrefname, 
-                        objrefname, 
                         objrefname,
                         objrefname,
-                        objrefname,
+                        bind<write_type_name>(semantics, typedef_name_type::Projected, false),
                         objrefname,
                         objrefname,
                         objrefname,
@@ -2093,7 +2091,6 @@ try
 ComWrappersHelper.Init(isAggregation, this, composed, inner, out _inner);
 %
 %
-%
 }
 finally
 {
@@ -2118,8 +2115,7 @@ Marshal.Release(inner);
                                 w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
                             }
                         }),
-                    bind<write_lazy_interface_initialization>(class_type),
-                    bind<write_class_objrefs_definition>(class_type, "_inner", false));
+                    bind<write_lazy_interface_initialization>(class_type));
             }
         }
     }
@@ -6013,7 +6009,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 _inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 %
 %
-%}
+}
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
 public static bool operator !=(% x, % y) => !(x == y);
@@ -6063,7 +6059,6 @@ private struct InterfaceTag<I>{};
                     }
                 }),
             bind<write_lazy_interface_initialization>(type),
-            bind<write_class_objrefs_definition>(type, "objRef", true),
             // Equality operators
             type_name,
             type_name,
@@ -6081,7 +6076,6 @@ protected %(global::WinRT.DerivedComposed _)%
 {
 %
 %
-%
 })",
                         type.TypeName(),
                         has_base_type ? ":base(_)" : "",
@@ -6092,8 +6086,7 @@ protected %(global::WinRT.DerivedComposed _)%
                                     w.write("_defaultLazy = new Lazy<%>(() => (%)new IInspectable(((IWinRTObject)this).NativeObject));", default_interface_name, default_interface_name);
                                 }
                             }),
-                        bind<write_lazy_interface_initialization>(type),
-                        bind<write_class_objrefs_definition>(type, "((IWinRTObject)this).NativeObject", false));
+                        bind<write_lazy_interface_initialization>(type));
                     w.write(R"(
 bool IWinRTObject.HasUnwrappableNativeObject => this.GetType() == typeof(%);)",
                         type.TypeName());
