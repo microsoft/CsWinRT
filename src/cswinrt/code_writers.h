@@ -7009,7 +7009,7 @@ protected override System.Delegate GetEventInvoke()
 {
 % invoke = (%) =>
 {
-var localDel = del;
+var localDel = (%) del;
 if (localDel == null)
 {%
 return %;
@@ -7031,6 +7031,7 @@ abiTypeName,
 abiTypeName,
 eventTypeCode,
 bind<write_event_invoke_params>(invokeMethodSig),
+eventTypeCode,
 bind<write_event_out_defaults>(invokeMethodSig),
 bind<write_event_invoke_return_default>(invokeMethodSig),
 bind<write_event_invoke_return>(invokeMethodSig),

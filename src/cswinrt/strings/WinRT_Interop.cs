@@ -22,6 +22,8 @@ namespace WinRT.Interop
         public IInspectable.Vftbl IInspectableVftbl;
         private void* _ActivateInstance;
         public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> ActivateInstance => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_ActivateInstance;
+
+        internal static readonly Guid IID = new(0x00000035, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
     }
 
     // IDelegate
@@ -41,6 +43,8 @@ namespace WinRT.Interop
         public delegate* unmanaged[Stdcall]<IntPtr, uint> ReleaseFromReferenceTracker => (delegate* unmanaged[Stdcall]<IntPtr, uint>)_ReleaseFromReferenceTracker;
         private void* _Peg;
         private void* _Unpeg;
+
+        internal static readonly Guid IID = new(0x64BD43F8, 0xbFEE, 0x4EC4, 0xB7, 0xEB, 0x29, 0x35, 0x15, 0x8D, 0xAE, 0x21);
     }
 
 }
