@@ -436,7 +436,14 @@ namespace WinRT
     {
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;
-        private readonly Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>> _cachedContext;
+        private volatile ConcurrentDictionary<IntPtr, ObjectReference<T>> _cachedContextCache;
+        private ConcurrentDictionary<IntPtr, ObjectReference<T>> MakeContextCache()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _cachedContextCache, new ConcurrentDictionary<IntPtr, ObjectReference<T>>(), null);
+            return _cachedContextCache;
+        }
+        private ConcurrentDictionary<IntPtr, ObjectReference<T>> _cachedContext => _cachedContextCache ?? MakeContextCache();
+        
         private readonly Lazy<AgileReference> _agileReference;
         private readonly Guid _iid;
 
@@ -445,7 +452,6 @@ namespace WinRT
         {
             _contextCallbackPtr = contextCallbackPtr;
             _contextToken = contextToken;
-            _cachedContext = new Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>>();
             _agileReference = new Lazy<AgileReference>(() => {
                 AgileReference agileReference = null;
                 Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
@@ -463,7 +469,6 @@ namespace WinRT
         {
             _contextCallbackPtr = contextCallbackPtr;
             _contextToken = contextToken;
-            _cachedContext = new Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>>();
             _agileReference = agileReference;
             _iid = iid;
         }
@@ -502,7 +507,7 @@ namespace WinRT
                 return null;
             }
 
-            return _cachedContext.Value.GetOrAdd(currentContext, CreateForCurrentContext);
+            return _cachedContext.GetOrAdd(currentContext, CreateForCurrentContext);
 
             ObjectReference<T> CreateForCurrentContext(IntPtr _)
             {
@@ -528,9 +533,9 @@ namespace WinRT
 
         protected override unsafe void Release()
         {
-            if (_cachedContext.IsValueCreated)
+            if (_cachedContextCache != null)
             {
-                _cachedContext.Value.Clear();
+                _cachedContextCache.Clear();
             }
 
             Context.CallInContext(_contextCallbackPtr, _contextToken, base.Release, ReleaseWithoutContext);
