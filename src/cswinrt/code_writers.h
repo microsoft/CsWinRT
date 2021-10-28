@@ -943,7 +943,7 @@ namespace cswinrt
                     if (paramsForStaticMethodCall.has_value())
                     {
                         w.write("%", bind<write_abi_static_method_call>(paramsForStaticMethodCall.value().first, paramsForStaticMethodCall.value().second,
-                            w.write_temp("%.Value", bind<write_objref_type_name>(paramsForStaticMethodCall.value().first))));
+                            w.write_temp("%", bind<write_objref_type_name>(paramsForStaticMethodCall.value().first))));
                     }
                     else
                     {
@@ -1116,7 +1116,7 @@ namespace cswinrt
                         if (static_method_params.has_value())
                         {
                             w.write("%", bind<write_abi_static_method_call>(static_method_params.value().first, static_method_params.value().second,
-                                w.write_temp("%.Value", bind<write_objref_type_name>(static_method_params.value().first))));
+                                w.write_temp("%", bind<write_objref_type_name>(static_method_params.value().first))));
                         }
                         else
                         {
@@ -1153,7 +1153,7 @@ namespace cswinrt
                     if (params_for_static_getter.has_value())
                     {
                         w.write("%", bind<write_abi_get_property_static_method_call>(params_for_static_getter.value().first, params_for_static_getter.value().second,
-                            w.write_temp("%.Value", bind<write_objref_type_name>(params_for_static_getter.value().first))));
+                            w.write_temp("%", bind<write_objref_type_name>(params_for_static_getter.value().first))));
                     }
                     else
                     {
@@ -1188,7 +1188,7 @@ namespace cswinrt
                 if (params_for_static_getter.has_value())
                 {
                     w.write("%", bind<write_abi_get_property_static_method_call>(params_for_static_getter.value().first, params_for_static_getter.value().second,
-                        w.write_temp("%.Value", bind<write_objref_type_name>(params_for_static_getter.value().first))));
+                        w.write_temp("%", bind<write_objref_type_name>(params_for_static_getter.value().first))));
                 }
                 else
                 {
@@ -1200,7 +1200,7 @@ namespace cswinrt
                 if (params_for_static_setter.has_value())
                 {
                     w.write("%", bind<write_abi_set_property_static_method_call>(params_for_static_setter.value().first, params_for_static_setter.value().second,
-                        w.write_temp("%.Value", bind<write_objref_type_name>(params_for_static_setter.value().first))));
+                        w.write_temp("%", bind<write_objref_type_name>(params_for_static_setter.value().first))));
                 }
                 else
                 {
@@ -1325,7 +1325,7 @@ remove => %;
                     {
                         auto&& [iface_type_semantics, _, is_static] = paramsForStaticMethodCall.value();
                         w.write("%", bind<write_abi_event_source_static_method_call>(iface_type_semantics, event, true,
-                            w.write_temp("%.Value", bind<write_objref_type_name>(iface_type_semantics)), is_static));
+                            w.write_temp("%", bind<write_objref_type_name>(iface_type_semantics)), is_static));
                     }
                     else
                     {
@@ -1337,7 +1337,7 @@ remove => %;
                     {
                         auto&& [iface_type_semantics, _, is_static] = paramsForStaticMethodCall.value();
                         w.write("%", bind<write_abi_event_source_static_method_call>(iface_type_semantics, event, false,
-                            w.write_temp("%.Value", bind<write_objref_type_name>(iface_type_semantics)), is_static));
+                            w.write_temp("%", bind<write_objref_type_name>(iface_type_semantics)), is_static));
                     }
                     else
                     {
@@ -1816,10 +1816,20 @@ internal static % Instance => (%)_instance;
 
 IObjectReference IWinRTObject.NativeObject => _obj;
 bool IWinRTObject.HasUnwrappableNativeObject => false;
-private Lazy<global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference>> _lazyQueryInterfaceCache = new();
-global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _lazyQueryInterfaceCache.Value;
-private Lazy<global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, object>> _lazyAdditionalTypeData = new();
-global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _lazyAdditionalTypeData.Value;
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+{
+    global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
+    return _queryInterfaceCache;
+}
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+{
+    global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
+    return _additionalTypeData;
+}
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
 }
 )",
                 cache_type_name,
@@ -1912,7 +1922,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
         w.write("%", std::regex_replace(objRefTypeName, re, "_"));
     }
 
-    void write_class_objrefs_declaration(writer& w, TypeDef const& classType)
+    void write_class_objrefs_definition(writer& w, TypeDef const& classType, bool replaceDefaultByInner)
     {
         for (auto&& ii : classType.InterfaceImpl())
         {
@@ -1923,60 +1933,77 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
                     {
                         return;
                     }
-                    w.write("private readonly Lazy<IObjectReference> %;\n", bind<write_objref_type_name>(semantics));
+    
+                    auto objrefname = bind<write_objref_type_name>(semantics);
+
+                    w.write(R"(
+private volatile IObjectReference __%;
+private IObjectReference Make__%()
+{
+)",
+                        objrefname,
+                        objrefname);
+                   
+                    if (replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0)
+                    {
+                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, _inner, null);)", objrefname);
+                    }
+                    else if (distance(ifaceType.GenericParam()) == 0)
+                    {
+
+                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).FindHelperType())), null);)", 
+                            objrefname,
+                            bind<write_type_name>(semantics, typedef_name_type::Projected, false)
+                            ); 
+                    }
+                    else
+                    {
+                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(typeof(%).FindHelperType().FindVftblType()).Invoke(((IWinRTObject)this).NativeObject, null), null);)",
+                            objrefname,
+                            bind<write_type_name>(semantics, typedef_name_type::Projected, false));
+                    }
+
+                     w.write(R"(
+    return __%;
+}
+private IObjectReference % => __% ?? Make__%();
+
+)",
+                        objrefname,
+                        objrefname,
+                        objrefname,
+                        objrefname);
                 });
         }
     }
 
-    void write_class_static_objrefs_declaration(writer& w, std::string const& target, TypeDef const& classType)
+    void write_class_static_objrefs_definition(writer& w, std::string const& target, TypeDef const& classType)
     {
         for (auto&& [interface_name, factory] : get_attributed_types(w, classType))
         {
             if (factory.statics)
             {
-                w.write("private static readonly Lazy<IObjectReference> % = new Lazy<IObjectReference>(() => %As(GuidGenerator.GetIID(typeof(%).GetHelperType())));\n",
-                    bind<write_objref_type_name>(factory.type),
+                auto objrefname = bind<write_objref_type_name>(factory.type);
+                w.write(R"(
+private static volatile IObjectReference __%;
+private static IObjectReference Make__%()
+{
+    global::System.Threading.Interlocked.CompareExchange(ref __%, %As(GuidGenerator.GetIID(typeof(%).GetHelperType())), null);
+    return __%;
+}
+private static IObjectReference % => __% ?? Make__%();
+
+)",
+                    objrefname,
+                    objrefname,
+                    objrefname,
                     target,
-                    bind<write_type_name>(factory.type, typedef_name_type::Projected, false));
+                    bind<write_type_name>(factory.type, typedef_name_type::Projected, false),
+                    objrefname,
+                    objrefname,
+                    objrefname,
+                    objrefname);
             }
-        }
-    }
-
-    void write_class_objrefs_definition(writer& w, TypeDef const& classType, std::string const& objRefNameToQI, bool replaceDefaultByInner)
-    {
-        for (auto&& ii : classType.InterfaceImpl())
-        {
-            auto ifaceSemantics = get_type_semantics(ii.Interface());
-            for_typedef(w, ifaceSemantics, [&](TypeDef ifaceType)
-                {
-                    if (is_manually_generated_iface(ifaceType))
-                    {
-                        return;
-                    }
-                    if (replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0)
-                    {
-                        w.write(R"(% = new Lazy<IObjectReference>(() => _inner);
-)",
-bind<write_objref_type_name>(ifaceSemantics));
-                    }
-                    else if (distance(ifaceType.GenericParam()) == 0)
-                    {
-                        w.write(R"(% = new Lazy<IObjectReference>(() => %.As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).FindHelperType())));
-)",
-bind<write_objref_type_name>(ifaceSemantics),
-objRefNameToQI,
-bind<write_type_name>(ifaceSemantics, typedef_name_type::Projected, false));
-                    }
-                    else
-                    {
-                        w.write(R"(% = new Lazy<IObjectReference>(() => (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(typeof(%).FindHelperType().FindVftblType()).Invoke(%, null));
-)",
-bind<write_objref_type_name>(ifaceSemantics),
-bind<write_type_name>(ifaceSemantics, typedef_name_type::Projected, false),
-objRefNameToQI);
-                    }
-                });
-
         }
     }
 
@@ -2047,7 +2074,6 @@ try
 ComWrappersHelper.Init(isAggregation, this, composed, inner, out _inner);
 %
 %
-%
 }
 finally
 {
@@ -2072,8 +2098,7 @@ Marshal.Release(inner);
                                 w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
                             }
                         }),
-                    bind<write_lazy_interface_initialization>(class_type),
-                    bind<write_class_objrefs_definition>(class_type, "_inner", false));
+                    bind<write_lazy_interface_initialization>(class_type));
             }
         }
     }
@@ -2175,7 +2200,7 @@ public static %I As<I>() => _factory.AsInterface<I>();
                                 {
                                     if (!settings.netstandard_compat)
                                     {
-                                        write_class_static_objrefs_declaration(w, "_factory._", type);
+                                        write_class_static_objrefs_definition(w, "_factory._", type);
                                     }
                                 }));
                     }
@@ -2191,7 +2216,7 @@ public static %I As<I>() => ActivationFactory<%>.AsInterface<I>();
                                 {
                                     if (!settings.netstandard_compat)
                                     {
-                                        write_class_static_objrefs_declaration(w, 
+                                        write_class_static_objrefs_definition(w, 
                                             w.write_temp("ActivationFactory<%>.", type.TypeName()), 
                                             type);
                                     }
@@ -2715,7 +2740,7 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
                                             {
                                                 auto iface = base_getter ? getter_property_iface : prop.Parent();
                                                 w.write("%", bind<write_abi_get_property_static_method_call>(iface, prop,
-                                                    w.write_temp("%.Value", bind<write_objref_type_name>(iface))));
+                                                    w.write_temp("%", bind<write_objref_type_name>(iface))));
                                             }
                                             else
                                             {
@@ -2732,7 +2757,7 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
                                             if (call_static_method)
                                             {
                                                 w.write("%", bind<write_abi_set_property_static_method_call>(prop.Parent(), prop,
-                                                    w.write_temp("%.Value", bind<write_objref_type_name>(prop.Parent()))));
+                                                    w.write_temp("%", bind<write_objref_type_name>(prop.Parent()))));
                                             }
                                             else
                                             {
@@ -2850,12 +2875,22 @@ evt.Name());
     void write_event_source_table(writer& w, Event const& evt)
     {
         w.write(R"(
-private readonly static global::System.Lazy<global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>>> _%Lazy = new();
-private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> _% => _%Lazy.Value;
+private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> _%_;
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> Make%Table()
+{
+    global::System.Threading.Interlocked.CompareExchange(ref _%_, new(), null);
+    return _%_;
+}
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<object, EventSource<%>> _% => _%_ ?? Make%Table();
 )",
             bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
             evt.Name(),
             bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+            evt.Name(),
+            evt.Name(),
+            evt.Name(),
+            bind<write_type_name>(get_type_semantics(evt.EventType()), typedef_name_type::Projected, false),
+            evt.Name(),
             evt.Name(),
             evt.Name());
     }
@@ -3628,10 +3663,20 @@ internal static _% Instance => _instance;
 
 IObjectReference IWinRTObject.NativeObject => _obj;
 bool IWinRTObject.HasUnwrappableNativeObject => false;
-private Lazy<global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference>> _lazyQueryInterfaceCache = new();
-global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _lazyQueryInterfaceCache.Value;
-private Lazy<global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, object>> _lazyAdditionalTypeData = new();
-global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _lazyAdditionalTypeData.Value;
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+{
+    global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
+    return _queryInterfaceCache;
+}
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+{
+    global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
+    return _additionalTypeData;
+}
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
 
 %
 }
@@ -4972,14 +5017,25 @@ private static unsafe int Do_Abi_%%
         auto remove_handler_event_token_name = method_signature{ remove_method }.params().back().first.Name();
 
         w.write(R"(
-private readonly static global::System.Lazy<global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>>> _%_TokenTablesLazy = new ();
-private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_TokenTables => _%_TokenTablesLazy.Value;
+private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_tokenTables;
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> Make%Table()
+{
+    global::System.Threading.Interlocked.CompareExchange(ref _%_tokenTables, new(), null);
+    return _%_tokenTables;
+}
+private static global::System.Runtime.CompilerServices.ConditionalWeakTable<%, global::WinRT.EventRegistrationTokenTable<%>> _%_TokenTables => _%_tokenTables ?? Make%Table();
 )",
             type_name,
             bind<write_type_name>(semantics, typedef_name_type::Projected, false),
             evt.Name(),
             type_name,
             bind<write_type_name>(semantics, typedef_name_type::Projected, false),
+            evt.Name(),
+            evt.Name(),
+            evt.Name(),
+            type_name,
+            bind<write_type_name>(semantics, typedef_name_type::Projected, false),
+            evt.Name(),
             evt.Name(),
             evt.Name());
 
@@ -5936,7 +5992,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 _inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 %
 %
-%}
+}
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
 public static bool operator !=(% x, % y) => !(x == y);
@@ -5963,7 +6019,7 @@ private struct InterfaceTag<I>{};
                         w.write("private readonly Lazy<%> _defaultLazy;", default_interface_name);
                     }
                 }),
-            bind<write_class_objrefs_declaration>(type),
+            bind<write_class_objrefs_definition>(type, type.Flags().Sealed()),
             bind([&](writer& w)
                 {
                     w.write("private % _default => %;", default_interface_name, is_manually_gen_default_interface ? "_defaultLazy.Value" : "null");
@@ -5986,7 +6042,6 @@ private struct InterfaceTag<I>{};
                     }
                 }),
             bind<write_lazy_interface_initialization>(type),
-            bind<write_class_objrefs_definition>(type, "objRef", true),
             // Equality operators
             type_name,
             type_name,
@@ -6004,7 +6059,6 @@ protected %(global::WinRT.DerivedComposed _)%
 {
 %
 %
-%
 })",
                         type.TypeName(),
                         has_base_type ? ":base(_)" : "",
@@ -6015,8 +6069,7 @@ protected %(global::WinRT.DerivedComposed _)%
                                     w.write("_defaultLazy = new Lazy<%>(() => (%)new IInspectable(((IWinRTObject)this).NativeObject));", default_interface_name, default_interface_name);
                                 }
                             }),
-                        bind<write_lazy_interface_initialization>(type),
-                        bind<write_class_objrefs_definition>(type, "((IWinRTObject)this).NativeObject", false));
+                        bind<write_lazy_interface_initialization>(type));
                     w.write(R"(
 bool IWinRTObject.HasUnwrappableNativeObject => this.GetType() == typeof(%);)",
                         type.TypeName());
@@ -6032,10 +6085,20 @@ IObjectReference IWinRTObject.NativeObject => _inner;)");
                 if (!has_base_type)
                 { 
                 w.write(R"(
-private Lazy<global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference>> _lazyQueryInterfaceCache = new();
-global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _lazyQueryInterfaceCache.Value;
-private Lazy<global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, object>> _lazyAdditionalTypeData = new();
-global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _lazyAdditionalTypeData.Value;)");
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+{
+    global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
+    return _queryInterfaceCache;
+}
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+{
+    global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
+    return _additionalTypeData;
+}
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();)");
                 }
             }),
             bind([&](writer& w) 
@@ -6206,10 +6269,20 @@ _nativeDelegate = nativeDelegate;
 #if !NETSTANDARD2_0
 IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
 bool IWinRTObject.HasUnwrappableNativeObject => true;
-private Lazy<global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference>> _lazyQueryInterfaceCache = new();
-global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _lazyQueryInterfaceCache.Value;
-private Lazy<global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, object>> _lazyAdditionalTypeData = new();
-global::System.Collections.Concurrent.ConcurrentDictionary<global::System.RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _lazyAdditionalTypeData.Value;
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+{
+    global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null); 
+    return _queryInterfaceCache;
+}
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+{
+    global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null); 
+    return _additionalTypeData;
+}
+global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
 #endif
 
 public unsafe % Invoke(%)
