@@ -73,7 +73,12 @@ namespace ABI.System.ComponentModel
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct PropertyChangedEventArgs
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe struct PropertyChangedEventArgs
     {
         private sealed class ActivationFactory : BaseActivationFactory
         {

@@ -30,7 +30,12 @@ namespace ABI.System.Collections.Generic
     using global::System.Runtime.CompilerServices;
 
     [Guid("BBE1FA4C-B0E3-4583-BAEF-1F1B2E483E56")]
-    public class IReadOnlyList<T> : global::System.Collections.Generic.IReadOnlyList<T>
+#if EMBED
+    internal
+#else
+    public
+#endif 
+    class IReadOnlyList<T> : global::System.Collections.Generic.IReadOnlyList<T>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IReadOnlyList<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IReadOnlyList<T>)));
@@ -435,7 +440,13 @@ namespace ABI.System.Collections.Generic
 
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
-    public static class IReadOnlyList_Delegates
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IReadOnlyList_Delegates
     {
         public unsafe delegate int GetMany_3(IntPtr thisPtr, uint startIndex, int __itemsSize, IntPtr items, out uint __return_value__);
     }

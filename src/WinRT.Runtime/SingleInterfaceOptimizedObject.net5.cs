@@ -5,23 +5,40 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    public class SingleInterfaceOptimizedObject : IWinRTObject, IDynamicInterfaceCastable
+#if EMBED
+    internal
+#else 
+    public
+#endif
+    class SingleInterfaceOptimizedObject : IWinRTObject, IDynamicInterfaceCastable
     {
         private Type _type;
         private IObjectReference _obj;
 
         public SingleInterfaceOptimizedObject(Type type, IObjectReference objRef)
+            : this(type, objRef, true)
+        {
+        }
+
+        internal SingleInterfaceOptimizedObject(Type type, IObjectReference objRef, bool requireQI)
         {
             _type = type;
-            Type helperType = type.FindHelperType();
-            var vftblType = helperType.FindVftblType();
-            if (vftblType is null)
+            if (requireQI)
             {
-                _obj = objRef.As<IUnknownVftbl>(GuidGenerator.GetIID(helperType));
+                Type helperType = type.FindHelperType();
+                var vftblType = helperType.FindVftblType();
+                if (vftblType is null)
+                {
+                    _obj = objRef.As<IUnknownVftbl>(GuidGenerator.GetIID(helperType));
+                }
+                else
+                {
+                    _obj = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
+                }
             }
-            else
+            else 
             {
-                _obj = (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(vftblType).Invoke(objRef, null);
+                _obj = objRef;
             }
         }
 

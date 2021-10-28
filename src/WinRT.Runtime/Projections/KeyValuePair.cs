@@ -28,7 +28,12 @@ namespace ABI.System.Collections.Generic
     using global::System;
 
     [Guid("02B51929-C1C4-4A7E-8940-0312B5C18500")]
-    public class KeyValuePair<K, V> : global::Windows.Foundation.Collections.IKeyValuePair<K, V>
+#if EMBED
+    internal
+#else
+    public
+#endif 
+    class KeyValuePair<K, V> : global::Windows.Foundation.Collections.IKeyValuePair<K, V>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.KeyValuePair<K, V> obj) =>
             MarshalInterface<global::System.Collections.Generic.KeyValuePair<K, V>>.CreateMarshaler(obj);

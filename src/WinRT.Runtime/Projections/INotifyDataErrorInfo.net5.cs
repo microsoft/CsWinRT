@@ -12,7 +12,12 @@ namespace ABI.System.ComponentModel
     [DynamicInterfaceCastableImplementation]
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
-    public unsafe interface INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
+#if EMBED
+    internal
+#else
+    public 
+#endif 
+    unsafe interface INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
     {
         [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
         public struct Vftbl

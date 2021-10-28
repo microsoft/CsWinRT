@@ -843,7 +843,12 @@ namespace ABI.System.Collections.Generic
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    public static class IDictionary_Delegates
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IDictionary_Delegates
     {
         public unsafe delegate int GetView_3(IntPtr thisPtr, out IntPtr __return_value__);
         public unsafe delegate int Clear_6(IntPtr thisPtr);
