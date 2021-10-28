@@ -200,8 +200,13 @@ namespace WinRT
     internal sealed class WinrtModule
     {
         readonly IntPtr _mtaCookie;
-        static Lazy<WinrtModule> _instance = new Lazy<WinrtModule>();
-        public static WinrtModule Instance => _instance.Value;
+        volatile static WinrtModule _instance;
+        private static WinrtModule MakeWinRTModule()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _instance, new WinrtModule(), null);
+            return _instance;
+        }
+        public static WinrtModule Instance => _instance ?? MakeWinRTModule();
 
         public unsafe WinrtModule()
         {
