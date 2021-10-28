@@ -1,6 +1,7 @@
 ﻿using BenchmarkComponent;
 using BenchmarkDotNet.Attributes;
 using System;
+using System.Collections.Generic;
 
 namespace Benchmarks
 {
@@ -8,11 +9,13 @@ namespace Benchmarks
     public class ReflectionPerf
     {
         ClassWithMarshalingRoutines instance;
+        IDictionary<String, WrappedClass> instanceDictionary;
 
         [GlobalSetup]
         public void Setup()
         {
             instance = new ClassWithMarshalingRoutines();
+            instanceDictionary = instance.ExistingDictionary;
         }
 
         [Benchmark]
@@ -77,6 +80,46 @@ namespace Benchmarks
 
             instance.IntPropertyChanged += (object sender, int value) => z = value;
             instance.RaiseIntChanged();
+        }
+
+        [Benchmark]
+        public int ExistingDictionaryLookup()
+        {
+            var dict = instance.ExistingDictionary;
+            var count = 0;
+            for (int i = 0; i < 100; i++)
+            {
+                if (dict["a"] != null)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+        
+        [Benchmark]
+        public object ExistingDictionaryLookupCached()
+        {
+            var dict = instance.ExistingDictionary;
+            WrappedClass cache = null;
+            for (int i = 0; i < 1000; i++)
+            {
+                cache = dict["a"];
+            }
+            return cache;
+        }
+
+        [Benchmark]
+        public object ExistingDictionaryLookup2()
+        {
+            return instanceDictionary["a"];
+        }
+
+        [Benchmark]
+        public object ExistingDictionaryLookup3()
+        {
+            var dict = instance.ExistingDictionary;
+            return dict["a"];
         }
     }
 }
