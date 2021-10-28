@@ -1922,7 +1922,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
         w.write("%", std::regex_replace(objRefTypeName, re, "_"));
     }
 
-    void write_class_objrefs_declaration(writer& w, TypeDef const& classType, bool replaceDefaultByInner)
+    void write_class_objrefs_definition(writer& w, TypeDef const& classType, bool replaceDefaultByInner)
     {
         for (auto&& ii : classType.InterfaceImpl())
         {
@@ -1943,9 +1943,7 @@ private IObjectReference Make__%()
 )",
                         objrefname,
                         objrefname);
-
                    
-
                     if (replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0)
                     {
                         w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, _inner, null);)", objrefname);
@@ -1979,7 +1977,7 @@ private IObjectReference % => __% ?? Make__%();
         }
     }
 
-    void write_class_static_objrefs_declaration(writer& w, std::string const& target, TypeDef const& classType)
+    void write_class_static_objrefs_definition(writer& w, std::string const& target, TypeDef const& classType)
     {
         for (auto&& [interface_name, factory] : get_attributed_types(w, classType))
         {
@@ -2202,7 +2200,7 @@ public static %I As<I>() => _factory.AsInterface<I>();
                                 {
                                     if (!settings.netstandard_compat)
                                     {
-                                        write_class_static_objrefs_declaration(w, "_factory._", type);
+                                        write_class_static_objrefs_definition(w, "_factory._", type);
                                     }
                                 }));
                     }
@@ -2218,7 +2216,7 @@ public static %I As<I>() => ActivationFactory<%>.AsInterface<I>();
                                 {
                                     if (!settings.netstandard_compat)
                                     {
-                                        write_class_static_objrefs_declaration(w, 
+                                        write_class_static_objrefs_definition(w, 
                                             w.write_temp("ActivationFactory<%>.", type.TypeName()), 
                                             type);
                                     }
@@ -6021,7 +6019,7 @@ private struct InterfaceTag<I>{};
                         w.write("private readonly Lazy<%> _defaultLazy;", default_interface_name);
                     }
                 }),
-            bind<write_class_objrefs_declaration>(type, type.Flags().Sealed()),
+            bind<write_class_objrefs_definition>(type, type.Flags().Sealed()),
             bind([&](writer& w)
                 {
                     w.write("private % _default => %;", default_interface_name, is_manually_gen_default_interface ? "_defaultLazy.Value" : "null");
