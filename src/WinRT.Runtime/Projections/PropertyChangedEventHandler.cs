@@ -163,7 +163,7 @@ namespace ABI.System.ComponentModel
                 global::System.ComponentModel.PropertyChangedEventHandler handler =
                     (global::System.Object obj, global::System.ComponentModel.PropertyChangedEventArgs e) =>
                     {
-                        var localDel = del;
+                        var localDel = (global::System.ComponentModel.PropertyChangedEventHandler) del;
                         if (localDel != null)
                             localDel.Invoke(obj, e);
                     };

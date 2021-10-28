@@ -467,12 +467,12 @@ namespace WinRT
 
                 return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
             }
-            else if (objRef.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(ABI.WinRT.Interop.IWeakReference.IID, out var weakRef) == 0)
+            else if (objRef.TryAs<IUnknownVftbl>(ABI.WinRT.Interop.IWeakReference.IID, out var weakRef) == 0)
             {
                 // IWeakReference is IUnknown-based, so implementations of it may not (and likely won't) implement
                 // IInspectable. As a result, we need to check for them explicitly.
 
-                return new SingleInterfaceOptimizedObject(typeof(IWeakReference), weakRef);
+                return new SingleInterfaceOptimizedObject(typeof(IWeakReference), weakRef, false);
             }
 
             // If the external COM object isn't IInspectable or IWeakReference, we can't handle it.

@@ -32,7 +32,9 @@ namespace WinRT
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate
         {
+#if !NET
             using (new Mono.ThreadContext())
+#endif
             {
                 var target_invoke = FindObject<TDelegate>(thisPtr);
                 if (target_invoke != null)
@@ -46,7 +48,9 @@ namespace WinRT
         public static void MarshalDelegateInvoke<T>(IntPtr thisPtr, Action<T> invoke)
             where T : class, Delegate
         {
+#if !NET
             using (new Mono.ThreadContext())
+#endif
             {
                 var target_invoke = FindObject<T>(thisPtr);
                 if (target_invoke != null)
@@ -210,8 +214,8 @@ namespace WinRT
 
             entries.Add(new ComInterfaceEntry
             {
-                IID = typeof(ABI.WinRT.Interop.IWeakReferenceSource.Vftbl).GUID,
-                Vtable = ABI.WinRT.Interop.IWeakReferenceSource.Vftbl.AbiToProjectionVftablePtr
+                IID = ABI.WinRT.Interop.IWeakReferenceSource.IID,
+                Vtable = ABI.WinRT.Interop.IWeakReferenceSource.AbiToProjectionVftablePtr
             });
 
             // Add IMarhal implemented using the free threaded marshaler
