@@ -38,14 +38,14 @@ namespace ABI.System
         public static global::System.Delegate AbiInvokeDelegate { get; }
 
         public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler<T> managedDelegate) =>
-            managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(EventHandler<T>)));
+            managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, PIID);
 
         public static IntPtr GetAbi(IObjectReference value) =>
             value is null ? IntPtr.Zero : MarshalInterfaceHelper<global::System.EventHandler<T>>.GetAbi(value);
 
         public static unsafe global::System.EventHandler<T> FromAbi(IntPtr nativeDelegate)
         {
-            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface(nativeDelegate)?.As<IDelegateVftbl>(GuidGenerator.GetIID(typeof(EventHandler<T>)));
+            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface(nativeDelegate)?.As<IDelegateVftbl>(PIID);
             return abiDelegate is null ? null : (global::System.EventHandler<T>)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler<T>(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
         }
 
@@ -297,7 +297,7 @@ namespace ABI.System
             {
                 global::System.EventHandler handler = (global::System.Object obj, global::System.EventArgs e) =>
                 {
-                    var localDel = del;
+                    var localDel = (global::System.EventHandler) del;
                     if (localDel != null)
                         localDel.Invoke(obj, e);
                 };

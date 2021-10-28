@@ -119,7 +119,9 @@ $(CsWinRTIncludeWinRTInterop)
     winmds to cs files.-->
     <Touch Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)WinRT.cs')" Files="$(CsWinRTGeneratedFilesDir)WinRT.cs" Time="%(CsWinRTInputs.ModifiedTime)"/>
     <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)WinRT.cs')">
-      <UpToDateCheckBuilt Include="$(CsWinRTGeneratedFilesDir)WinRT.cs" Original="@(CsWinRTInputs)" />
+      <UpToDateCheckInput Include="$(CsWinRTGeneratedFilesDir)WinRT.cs" />
+      <UpToDateCheckInput Include="@(CsWinRTInputs)" Set="WinMDs" />
+      <UpToDateCheckBuilt Include="$(CsWinRTGeneratedFilesDir)WinRT.cs" Set="WinMDs" />
     </ItemGroup>
   </Target>
 
