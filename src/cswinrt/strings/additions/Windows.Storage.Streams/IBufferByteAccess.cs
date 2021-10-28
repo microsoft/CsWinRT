@@ -17,7 +17,7 @@ namespace ABI.Windows.Storage.Streams
     using global::System.Runtime.InteropServices;
     using global::System.ComponentModel;
 
-#if NETSTANDARD2_0
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("905a0fef-bc53-11df-8c49-001e4fc686da")]
     internal unsafe class IBufferByteAccess : global::Windows.Storage.Streams.IBufferByteAccess

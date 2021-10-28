@@ -1,14 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
 using WinRT.Interop;
 
 namespace WinRT
 {
-    public static class CastExtensions
+#if EMBED
+    internal 
+#else
+    public
+#endif 
+    static class CastExtensions
     {
         /// <summary>
         /// Cast a WinRT object to an interface type it implements in its implementation
@@ -103,7 +104,7 @@ namespace WinRT
 
         private static bool TryGetComposedRefForQI(object value, out IObjectReference objRef)
         {
-#if NETSTANDARD2_0
+#if !NET
             var getReferenceMethod = value.GetType().GetMethod("GetDefaultReference", BindingFlags.NonPublic | BindingFlags.Instance).MakeGenericMethod(typeof(IUnknownVftbl));
             if (getReferenceMethod is null)
             {

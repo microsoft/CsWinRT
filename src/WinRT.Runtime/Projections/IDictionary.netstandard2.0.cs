@@ -33,7 +33,12 @@ namespace ABI.System.Collections.Generic
     using global::System.Runtime.CompilerServices;
 
     [Guid("3C2925FE-8519-45C1-AA79-197B6718C1C1")]
-    public class IDictionary<K, V> : global::System.Collections.Generic.IDictionary<K, V>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class IDictionary<K, V> : global::System.Collections.Generic.IDictionary<K, V>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IDictionary<K, V> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IDictionary<K, V>)));
@@ -833,7 +838,12 @@ namespace ABI.System.Collections.Generic
         public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator() => _FromMap.GetEnumerator();
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
-    public static class IDictionary_Delegates
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IDictionary_Delegates
     {
         public unsafe delegate int GetView_3(IntPtr thisPtr, out IntPtr __return_value__);
         public unsafe delegate int Clear_6(IntPtr thisPtr);

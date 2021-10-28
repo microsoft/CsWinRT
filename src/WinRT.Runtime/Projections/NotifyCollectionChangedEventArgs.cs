@@ -165,7 +165,12 @@ namespace ABI.System.Collections.Specialized
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     [StructLayout(LayoutKind.Sequential)]
-    public struct NotifyCollectionChangedEventArgs
+#if EMBED
+    internal
+#else
+    public
+#endif
+    struct NotifyCollectionChangedEventArgs
     {
         private sealed class ActivationFactory : BaseActivationFactory
         {

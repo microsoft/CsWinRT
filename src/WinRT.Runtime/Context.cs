@@ -4,6 +4,9 @@ using WinRT.Interop;
 
 namespace WinRT
 {
+#if EMBED
+    internal
+#endif
     static class Context
     {
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]

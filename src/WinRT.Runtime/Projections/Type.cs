@@ -13,7 +13,12 @@ namespace ABI.System
         Custom
     }
 
-    public struct Type
+#if EMBED
+    internal
+#else
+    public
+#endif
+    struct Type
     {
         private IntPtr Name;
         private TypeKind Kind;

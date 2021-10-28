@@ -926,7 +926,13 @@ namespace ABI.System.Collections.Generic
         global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator() => _FromVector((IWinRTObject)this).GetEnumerator();
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
-    public static class IList_Delegates
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IList_Delegates
     {
         public unsafe delegate int GetView_2(IntPtr thisPtr, out IntPtr __return_value__);
         public unsafe delegate int RemoveAt_6(IntPtr thisPtr, uint index);

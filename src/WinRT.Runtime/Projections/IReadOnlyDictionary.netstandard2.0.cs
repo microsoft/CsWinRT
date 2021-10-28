@@ -15,6 +15,9 @@ using System.Diagnostics;
 namespace Windows.Foundation.Collections
 {
     [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
+#if EMBED
+    internal
+#endif
     interface IMapView<K, V> : IIterable<IKeyValuePair<K, V>>
     {
         V Lookup(K key);
@@ -30,7 +33,12 @@ namespace ABI.System.Collections.Generic
     using global::System.Runtime.CompilerServices;
 
     [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
-    public class IReadOnlyDictionary<K, V> : global::System.Collections.Generic.IReadOnlyDictionary<K, V>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class IReadOnlyDictionary<K, V> : global::System.Collections.Generic.IReadOnlyDictionary<K, V>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IReadOnlyDictionary<K, V> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IReadOnlyDictionary<K, V>)));
@@ -723,7 +731,13 @@ namespace ABI.System.Collections.Generic
         public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator() => _FromMapView.GetEnumerator();
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
-    public static class IReadOnlyDictionary_Delegates
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IReadOnlyDictionary_Delegates
     {
         public unsafe delegate int Split_3(IntPtr thisPtr, out IntPtr first, out IntPtr second);
     }

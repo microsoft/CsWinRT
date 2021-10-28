@@ -10,6 +10,9 @@ using System.Threading;
 namespace WinRT
 {
     [Flags]
+#if EMBED
+    internal
+#endif
     enum TypeNameGenerationFlags
     {
         None = 0,
@@ -23,6 +26,9 @@ namespace WinRT
         NoCustomTypeName = 0x2
     }
 
+#if EMBED
+    internal
+#endif
     static class TypeNameSupport
     {
         private static List<Assembly> projectionAssemblies = new List<Assembly>();
@@ -342,7 +348,7 @@ namespace WinRT
 
         private static bool TryAppendTypeName(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
         {
-#if NETSTANDARD2_0
+#if !NET
             // We can't easily determine from just the type
             // if the array is an "single dimension index from zero"-array in .NET Standard 2.0,
             // so just approximate it.
