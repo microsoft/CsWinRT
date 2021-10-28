@@ -1922,7 +1922,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
         w.write("%", std::regex_replace(objRefTypeName, re, "_"));
     }
 
-    void write_class_objrefs_declaration(writer& w, TypeDef const& classType)
+    void write_class_objrefs_declaration(writer& w, TypeDef const& classType, bool replaceDefaultByInner)
     {
         for (auto&& ii : classType.InterfaceImpl())
         {
@@ -1940,15 +1940,37 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 private volatile IObjectReference __%;
 private IObjectReference Make__%()
 {
-    global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).FindHelperType())), null);
+)",
+                        objrefname,
+                        objrefname);
+
+                   
+
+                    if (replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0)
+                    {
+                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, _inner, null);)", objrefname);
+                    }
+                    else if (distance(ifaceType.GenericParam()) == 0)
+                    {
+
+                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).FindHelperType())), null);)", 
+                            objrefname,
+                            bind<write_type_name>(semantics, typedef_name_type::Projected, false)
+                            ); 
+                    }
+                    else
+                    {
+                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(typeof(%).FindHelperType().FindVftblType()).Invoke(((IWinRTObject)this).NativeObject, null), null);)",
+                            objrefname,
+                            bind<write_type_name>(semantics, typedef_name_type::Projected, false));
+                    }
+
+                     w.write(R"(
     return __%;
 }
 private IObjectReference % => __% ?? Make__%();
+
 )",
-                        objrefname, 
-                        objrefname,
-                        objrefname,
-                        bind<write_type_name>(semantics, typedef_name_type::Projected, false),
                         objrefname,
                         objrefname,
                         objrefname,
@@ -1972,6 +1994,7 @@ private static IObjectReference Make__%()
     return __%;
 }
 private static IObjectReference % => __% ?? Make__%();
+
 )",
                     objrefname,
                     objrefname,
@@ -1983,44 +2006,6 @@ private static IObjectReference % => __% ?? Make__%();
                     objrefname,
                     objrefname);
             }
-        }
-    }
-
-    void write_class_objrefs_definition(writer& w, TypeDef const& classType, std::string const& objRefNameToQI, bool replaceDefaultByInner)
-    {
-        for (auto&& ii : classType.InterfaceImpl())
-        {
-            auto ifaceSemantics = get_type_semantics(ii.Interface());
-            for_typedef(w, ifaceSemantics, [&](TypeDef ifaceType)
-                {
-                    if (is_manually_generated_iface(ifaceType))
-                    {
-                        return;
-                    }
-                    if (replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0)
-                    {
-                        w.write(R"(Create__% = () => { return _inner; };
-)",
-                            bind<write_objref_type_name>(ifaceSemantics));
-                    }
-                    else if (distance(ifaceType.GenericParam()) == 0)
-                    {
-                        w.write(R"(Create__% = () => { return %.As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).FindHelperType())); };
-)",
-                            bind<write_objref_type_name>(ifaceSemantics), 
-                            objRefNameToQI,
-                            bind<write_type_name>(ifaceSemantics, typedef_name_type::Projected, false));
-                    }
-                    else
-                    {
-                        w.write(R"(Create__% = () => { return (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(typeof(%).FindHelperType().FindVftblType()).Invoke(%, null); };
-)", 
-                            bind<write_objref_type_name>(ifaceSemantics),
-                            bind<write_type_name>(ifaceSemantics, typedef_name_type::Projected, false),
-                            objRefNameToQI);
-                    }
-                });
-
         }
     }
 
@@ -6036,7 +6021,7 @@ private struct InterfaceTag<I>{};
                         w.write("private readonly Lazy<%> _defaultLazy;", default_interface_name);
                     }
                 }),
-            bind<write_class_objrefs_declaration>(type),
+            bind<write_class_objrefs_declaration>(type, type.Flags().Sealed()),
             bind([&](writer& w)
                 {
                     w.write("private % _default => %;", default_interface_name, is_manually_gen_default_interface ? "_defaultLazy.Value" : "null");
