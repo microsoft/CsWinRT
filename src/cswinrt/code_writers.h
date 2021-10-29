@@ -2913,6 +2913,7 @@ event % %;)",
         std::string local_type;
         std::string marshaler_type;
         bool is_value_type;
+        bool is_pinnable;
 
         bool is_out() const
         {
@@ -2963,6 +2964,9 @@ event % %;)",
 
         void write_locals(writer& w) const
         {
+            if (is_pinnable)
+                return;
+
             if (is_generic())
             {
                 if (!is_out() && !marshaler_type.empty())
@@ -3004,7 +3008,7 @@ event % %;)",
 
         void write_assignments(writer& w) const
         {
-            if (is_object_in() || is_out() || local_type.empty())
+            if (is_pinnable || is_object_in() || is_out() || local_type.empty())
                 return;
 
             w.write("% = %.CreateMarshaler%(%);\n",
@@ -3021,6 +3025,27 @@ event % %;)",
                     is_array() ? "Array" : "",
                     get_marshaler_local(w));
             }
+        }
+
+        bool write_pinnable(writer& w) const
+        {
+            if (!is_pinnable)
+                return false;
+            w.write("%.Pinnable __% = new(%);\n", marshaler_type, param_name,
+                bind<write_escaped_identifier>(param_name));
+            return true;
+        }
+
+        void write_fixed_expression(writer& w, bool& write_delimiter) const
+        {
+            if (!is_pinnable)
+                return;
+            if (write_delimiter)
+            {
+                w.write(", ");
+            }
+            w.write("___% = __%", param_name, param_name);
+            write_delimiter = true;
         }
 
         void write_marshal_to_abi(writer& w, std::string_view source = "") const
@@ -3176,7 +3201,7 @@ event % %;)",
 
         void write_dispose(writer& w) const
         {
-            if (is_object_in() || local_type.empty())
+            if (is_pinnable || is_object_in() || local_type.empty())
                 return;
 
             if (marshaler_type.empty())
@@ -3323,6 +3348,7 @@ event % %;)",
                     {
                         m.marshaler_type = "MarshalString";
                         m.local_type = m.is_out() ? "IntPtr" : "MarshalString";
+                        m.is_pinnable = (m.category == param_category::in);
                     }
                 }
             },
@@ -3395,6 +3421,21 @@ event % %;)",
     {
         auto write_abi_invoke = [&](writer& w)
         {
+            bool have_pinnables{};
+            w.write("%",
+                bind_each([&](writer& w, abi_marshaler const& m)
+                {
+                    have_pinnables |= m.write_pinnable(w);
+                }, marshalers));
+            if (have_pinnables)
+            {
+                bool write_delimiter{};
+                w.write("fixed(void* %)\n{\n",
+                    bind_each([&](writer& w, abi_marshaler const& m)
+                    {
+                        m.write_fixed_expression(w, write_delimiter);
+                    }, marshalers));
+            }
             if (is_generic)
             {
                 w.write("%.DynamicInvokeAbi(__params);\n", invoke_target);
@@ -3422,6 +3463,10 @@ event % %;)",
             {
                 m.write_marshal_from_abi(w);
             }
+            if (have_pinnables)
+            {
+                w.write("}\n");
+            }
         };
 
         w.write("\n");
@@ -3444,7 +3489,7 @@ event % %;)",
 
         bool have_disposers = std::find_if(marshalers.begin(), marshalers.end(), [](abi_marshaler const& m)
         {
-            return !m.marshaler_type.empty();
+            return !m.marshaler_type.empty() && !m.is_pinnable;
         }) != marshalers.end();
 
         if (!have_disposers)
