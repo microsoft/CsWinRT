@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text;
+﻿using System.ComponentModel;
 
 namespace WinRT
 {
@@ -10,7 +7,12 @@ namespace WinRT
     /// as a base class of another composable object.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class DerivedComposed
+#if EMBED
+    internal
+#else
+    public
+#endif 
+    class DerivedComposed
     {
         public static readonly DerivedComposed Instance = new DerivedComposed();
 

@@ -3,7 +3,12 @@ using System.Collections.Concurrent;
 
 namespace WinRT
 {
-    public partial class IInspectable : IWinRTObject
+#if EMBED
+    internal
+#else
+    public
+#endif
+    partial class IInspectable : IWinRTObject
     {
         IObjectReference IWinRTObject.NativeObject => _obj;
         bool IWinRTObject.HasUnwrappableNativeObject => true;

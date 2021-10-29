@@ -1,21 +1,16 @@
+using ABI.Microsoft.UI.Xaml.Data;
+using ABI.Windows.Foundation;
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Numerics;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
-using System.Linq.Expressions;
 using WinRT.Interop;
-using ABI.Windows.Foundation;
-using ABI.Microsoft.UI.Xaml.Data;
 
-#if !NETSTANDARD2_0
+#if NET
 using ComInterfaceEntry = System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry;
 #endif
 
@@ -24,7 +19,12 @@ using ComInterfaceEntry = System.Runtime.InteropServices.ComWrappers.ComInterfac
 
 namespace WinRT
 {
-    public static partial class ComWrappersSupport
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    static partial class ComWrappersSupport
     {
         private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();

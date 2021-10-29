@@ -13,7 +13,12 @@ namespace ABI.System.Windows.Input
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
-    public unsafe class ICommand : global::System.Windows.Input.ICommand
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe class ICommand : global::System.Windows.Input.ICommand
     {
         [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
         public struct Vftbl
@@ -195,7 +200,12 @@ namespace ABI.System.Windows.Input
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public static class ICommand_Delegates
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class ICommand_Delegates
     {
         public unsafe delegate int add_CanExecuteChanged_0(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token);
         public unsafe delegate int CanExecute_2(IntPtr thisPtr, IntPtr parameter, byte* result);

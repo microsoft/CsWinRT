@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using WinRT.Interop;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
@@ -12,7 +10,13 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    public abstract class IObjectReference : IDisposable
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    abstract class IObjectReference : IDisposable
     {
         protected bool disposed;
         private readonly IntPtr _thisPtr;
@@ -140,7 +144,7 @@ namespace WinRT
                 }
             }
 
-#if NETSTANDARD2_0
+#if !NET
             return (TInterface)typeof(TInterface).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { this });
 #else
             return (TInterface)(object)new WinRT.IInspectable(this);
@@ -345,7 +349,12 @@ namespace WinRT
         }
     }
 
-    public class ObjectReference<T> : IObjectReference
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class ObjectReference<T> : IObjectReference
     {
         private readonly T _vftbl;
         public T Vftbl
@@ -411,7 +420,7 @@ namespace WinRT
             // Since it is a JIT time constant, this function will be branchless on .NET 5.
             // On .NET Standard 2.0, the IsReferenceOrContainsReferences method does not exist,
             // so we instead fall back to typeof(T).IsGenericType, which sadly is not a JIT-time constant.
-#if NETSTANDARD2_0
+#if !NET
             if (typeof(T).IsGenericType)
 #else
             if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
@@ -436,14 +445,7 @@ namespace WinRT
     {
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;
-        private volatile ConcurrentDictionary<IntPtr, ObjectReference<T>> _cachedContextCache;
-        private ConcurrentDictionary<IntPtr, ObjectReference<T>> MakeContextCache()
-        {
-            System.Threading.Interlocked.CompareExchange(ref _cachedContextCache, new ConcurrentDictionary<IntPtr, ObjectReference<T>>(), null);
-            return _cachedContextCache;
-        }
-        private ConcurrentDictionary<IntPtr, ObjectReference<T>> _cachedContext => _cachedContextCache ?? MakeContextCache();
-        
+        private readonly Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>> _cachedContext;
         private readonly Lazy<AgileReference> _agileReference;
         private readonly Guid _iid;
 
@@ -452,6 +454,7 @@ namespace WinRT
         {
             _contextCallbackPtr = contextCallbackPtr;
             _contextToken = contextToken;
+            _cachedContext = new Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>>();
             _agileReference = new Lazy<AgileReference>(() => {
                 AgileReference agileReference = null;
                 Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
@@ -469,6 +472,7 @@ namespace WinRT
         {
             _contextCallbackPtr = contextCallbackPtr;
             _contextToken = contextToken;
+            _cachedContext = new Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>>();
             _agileReference = agileReference;
             _iid = iid;
         }
@@ -507,7 +511,7 @@ namespace WinRT
                 return null;
             }
 
-            return _cachedContext.GetOrAdd(currentContext, CreateForCurrentContext);
+            return _cachedContext.Value.GetOrAdd(currentContext, CreateForCurrentContext);
 
             ObjectReference<T> CreateForCurrentContext(IntPtr _)
             {
@@ -533,9 +537,9 @@ namespace WinRT
 
         protected override unsafe void Release()
         {
-            if (_cachedContextCache != null)
+            if (_cachedContext.IsValueCreated)
             {
-                _cachedContextCache.Clear();
+                _cachedContext.Value.Clear();
             }
 
             Context.CallInContext(_contextCallbackPtr, _contextToken, base.Release, ReleaseWithoutContext);

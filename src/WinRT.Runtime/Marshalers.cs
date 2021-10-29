@@ -1,14 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Numerics;
-using System.Security.Cryptography;
-using System.Text;
-using System.Linq.Expressions;
-using System.Collections.Concurrent;
 using WinRT.Interop;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
@@ -30,7 +23,12 @@ namespace WinRT
     // TODO: minimize heap allocations for marshalers by eliminating explicit try/finally
     // and adopting ref structs with non-IDisposable Dispose and 'using var ...' pattern,
     // as well as passing marshalers to FromAbi by ref so they can be conditionally disposed.
-    public class MarshalString
+#if EMBED
+    internal
+#else 
+    public
+#endif
+    class MarshalString
     {
         private IntPtr _header;
         public GCHandle _gchandle;
@@ -287,7 +285,12 @@ namespace WinRT
         }
     }
 
-    public struct MarshalBlittable<T>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    struct MarshalBlittable<T>
     {
         public struct MarshalerArray
         {
@@ -361,7 +364,12 @@ namespace WinRT
         }
     }
 
-    public class MarshalGeneric<T>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class MarshalGeneric<T>
     {
         protected static readonly Type HelperType = typeof(T).GetHelperType();
         protected static readonly Type AbiType = typeof(T).GetAbiType();
@@ -528,7 +536,12 @@ namespace WinRT
         internal static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, CopyManagedLazy.Value ?? CopyManagedFallback);
     }
 
-    public class MarshalNonBlittable<T> : MarshalGeneric<T>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class MarshalNonBlittable<T> : MarshalGeneric<T>
     {
         private static readonly new Type AbiType = typeof(T).IsEnum ? Enum.GetUnderlyingType(typeof(T)) : MarshalGeneric<T>.AbiType;
 
@@ -722,7 +735,12 @@ namespace WinRT
         }
     }
 
-    public class MarshalInterfaceHelper<T>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class MarshalInterfaceHelper<T>
     {
         public struct MarshalerArray
         {
@@ -919,7 +937,12 @@ namespace WinRT
         }
     }
 
-    public struct MarshalInterface<T>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    struct MarshalInterface<T>
     {
         private static readonly Type HelperType = typeof(T).GetHelperType();
         private static Func<T, IObjectReference> _ToAbi;
@@ -1045,7 +1068,12 @@ namespace WinRT
         }
     }
 
-    static public class MarshalInspectable<T>
+#if EMBED
+    internal
+#else 
+    public
+#endif
+    static class MarshalInspectable<T>
     {
         public static IObjectReference CreateMarshaler(T o, bool unwrapObject = true)
         {
@@ -1143,7 +1171,12 @@ namespace WinRT
 
     }
 
-    static public class MarshalDelegate
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class MarshalDelegate
     {
         public static IObjectReference CreateMarshaler(object o, Guid delegateIID, bool unwrapObject = true)
         {
@@ -1163,7 +1196,12 @@ namespace WinRT
         }
     }
 
-    public class Marshaler<T>
+#if EMBED
+    internal
+#else 
+    public
+#endif
+    class Marshaler<T>
     {
         static Marshaler()
         {

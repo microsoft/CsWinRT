@@ -11,7 +11,12 @@ using static System.Runtime.InteropServices.ComWrappers;
 
 namespace WinRT
 {
-    public static partial class ComWrappersSupport
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static partial class ComWrappersSupport
     {
         // Instance field and property for Singleton pattern: ComWrappers `set` method should be idempotent 
         private static DefaultComWrappers _instance;
@@ -43,7 +48,9 @@ namespace WinRT
                         if (_comWrappers is null)
                         {
                             var comWrappersToSet = DefaultComWrappersInstance;
+#if !EMBED 
                             ComWrappers.RegisterForTrackerSupport(comWrappersToSet);
+#endif
                             _comWrappers = comWrappersToSet;
                         }
                     }
@@ -59,7 +66,9 @@ namespace WinRT
                         return;
                     }
                     var comWrappersToSet = value ?? DefaultComWrappersInstance; 
+#if !EMBED 
                     ComWrappers.RegisterForTrackerSupport(comWrappersToSet);
+#endif
                     _comWrappers = comWrappersToSet; 
                 }
             }
@@ -206,7 +215,12 @@ namespace WinRT
         }
     }
 
-    public class ComWrappersHelper
+#if EMBED
+    internal 
+#else
+    public
+#endif     
+    class ComWrappersHelper
     {
         public unsafe static void Init(
             bool isAggregation,
@@ -355,7 +369,12 @@ namespace WinRT
         }
     }
 
-    public class DefaultComWrappers : ComWrappers
+#if EMBED
+    internal 
+#else
+    public 
+#endif     
+    class DefaultComWrappers : ComWrappers
     {
         private static readonly ConditionalWeakTable<Type, VtableEntries> TypeVtableEntryTable = new ConditionalWeakTable<Type, VtableEntries>();
         public static unsafe IUnknownVftbl IUnknownVftbl => Unsafe.AsRef<IUnknownVftbl>(IUnknownVftblPtr.ToPointer());

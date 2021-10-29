@@ -5,7 +5,12 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    public class SingleInterfaceOptimizedObject : IWinRTObject, IDynamicInterfaceCastable
+#if EMBED
+    internal
+#else 
+    public
+#endif
+    class SingleInterfaceOptimizedObject : IWinRTObject, IDynamicInterfaceCastable
     {
         private Type _type;
         private IObjectReference _obj;

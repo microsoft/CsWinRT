@@ -10,7 +10,12 @@ namespace ABI.System.Collections.Specialized
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
-    public unsafe class INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe class INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
     {
         [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
         public struct Vftbl

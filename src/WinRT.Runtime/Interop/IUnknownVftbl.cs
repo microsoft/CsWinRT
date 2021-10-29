@@ -6,7 +6,12 @@ using System.Text;
 namespace WinRT.Interop
 {
     [Guid("00000000-0000-0000-C000-000000000046")]
-    public unsafe struct IUnknownVftbl
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe struct IUnknownVftbl
     {
         private void* _QueryInterface;
         public delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int> QueryInterface { get => (delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int>)_QueryInterface; set => _QueryInterface = (void*)value; }

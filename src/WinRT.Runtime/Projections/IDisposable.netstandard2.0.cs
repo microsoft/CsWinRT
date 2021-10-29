@@ -8,7 +8,12 @@ namespace ABI.System
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E")]
-    public unsafe class IDisposable : global::System.IDisposable
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe class IDisposable : global::System.IDisposable
     {
         [Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E")]
         public struct Vftbl
