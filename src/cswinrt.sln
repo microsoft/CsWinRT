@@ -21,6 +21,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{96495AB4-2D86-47D1-A174-27D0B436DC98}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		benchmark.cmd = benchmark.cmd
 		build.cmd = build.cmd
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
