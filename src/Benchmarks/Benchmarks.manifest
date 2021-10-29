@@ -11,6 +11,10 @@
         name="BenchmarkComponent.ClassWithMarshalingRoutines"
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
+	<activatableClass
+        name="BenchmarkComponent.HierarchyA"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
   </file>
 
 </assembly>
