@@ -26,6 +26,9 @@ namespace WinRT
         NoCustomTypeName = 0x2
     }
 
+#if EMBED
+    internal
+#endif
     static class TypeNameSupport
     {
         private static List<Assembly> projectionAssemblies = new List<Assembly>();

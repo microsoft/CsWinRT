@@ -26,7 +26,7 @@ namespace ABI.Windows.Storage
     using global::System;
     using global::System.ComponentModel;
 
-#if NETSTANDARD2_0
+#if !NET
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("DF19938F-5462-48A0-BE65-D2A3271A08D6")]
     internal unsafe class IStorageFolderHandleAccess : global::Windows.Storage.IStorageFolderHandleAccess

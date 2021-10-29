@@ -6,7 +6,12 @@ namespace Windows.UI
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.UniversalApiContract")]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Color : IFormattable
+#if EMBED
+    internal
+#else
+    public
+#endif
+    struct Color : IFormattable
     {
         private byte _A;
         private byte _R;
@@ -124,7 +129,12 @@ namespace Windows.UI
 
 namespace ABI.Windows.UI
 {
-    public static class Color
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class Color
     {
         public static string GetGuidSignature()
         {
