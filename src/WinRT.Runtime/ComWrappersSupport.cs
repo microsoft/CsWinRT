@@ -444,8 +444,8 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<int>)),
-                    Vtable = BoxedValueIReferenceImpl<int>.AbiToProjectionVftablePtr
+                    IID = typeof(ABI.System.Nullable_int).GUID,
+                    Vtable = ABI.System.Nullable_int.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(string))

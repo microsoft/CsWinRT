@@ -147,4 +147,90 @@ namespace ABI.System
             }
         }
     }
+
+    [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
+    [Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4")]
+    internal class Nullable_int
+    {
+        public static string GetGuidSignature() => "pinterface({61c17706-2d65-11e0-9ae8-d48564015472};i4)";
+
+        [Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4")]
+        public unsafe struct Vftbl
+        {
+            internal IInspectable.Vftbl IInspectableVftbl;
+            private void* _Get_Value_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, int*, int> Get_Value_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, int*, int>)_Get_Value_0; set => _Get_Value_0 = value; }
+//            public static Guid PIID = Guid.Parse("548cefbd-bc8a-5fa0-8df2-957440fc8bf4");
+
+            private static readonly Vftbl AbiToProjectionVftable;
+            public static readonly IntPtr AbiToProjectionVftablePtr;
+
+#if NETSTANDARD2_0
+            private unsafe delegate int GetValueDelegate(IntPtr thisPtr, int* value);
+            private static readonly GetValueDelegate delegateCache;
+#endif
+
+            static Vftbl()
+            {
+                AbiToProjectionVftable = new Vftbl
+                {
+                    IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
+#if NETSTANDARD2_0
+                    _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
+#else
+                    _Get_Value_0 = (delegate* unmanaged<IntPtr, int*, int>)&Do_Abi_get_Value_0
+#endif
+                };
+                var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
+                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
+            }
+
+#if !NETSTANDARD2_0
+            [UnmanagedCallersOnly]
+#endif
+            private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, int* __return_value__)
+            {
+                int ____return_value__ = default;
+
+                *__return_value__ = default;
+
+                try
+                {
+                    ____return_value__ = (int)global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr);
+                    *__return_value__ = ____return_value__;
+                }
+                catch (global::System.Exception __exception__)
+                {
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
+                }
+                return 0;
+            }
+        }
+
+//        public static Guid PIID = Vftbl.PIID;
+
+        public static implicit operator Nullable_int(IObjectReference obj) => (obj != null) ? new Nullable_int(obj) : null;
+        public static implicit operator Nullable_int(ObjectReference<Vftbl> obj) => (obj != null) ? new Nullable_int(obj) : null;
+        protected readonly ObjectReference<Vftbl> _obj;
+        public IntPtr ThisPtr => _obj.ThisPtr;
+        public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
+        public A As<A>() => _obj.AsType<A>();
+        public Nullable_int(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public Nullable_int(ObjectReference<Vftbl> obj)
+        {
+            _obj = obj;
+        }
+
+        public unsafe int Value
+        {
+            get
+            {
+                int __retval = default;
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Get_Value_0(ThisPtr, &__retval));
+                return __retval;
+            }
+        }
+    }
 }
