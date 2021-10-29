@@ -60,6 +60,7 @@ namespace ABI.System.Collections.Generic
         public class FromAbiHelper : global::System.Collections.Generic.IDictionary<K, V>
         {
             private readonly global::Windows.Foundation.Collections.IMap<K, V> _map;
+            internal readonly Dictionary<K, (IntPtr, V)> _lookupCache = new();
 
             public FromAbiHelper(global::Windows.Foundation.Collections.IMap<K, V> map)
             {
@@ -702,12 +703,24 @@ namespace ABI.System.Collections.Generic
             var ThisPtr = _obj.ThisPtr;
             object __key = default;
             var __params = new object[] { ThisPtr, null, null };
+            var __lookupCache = _FromMap((IWinRTObject)this)._lookupCache;
+            var __hasCachedRcw = __lookupCache.TryGetValue(key, out var __cachedRcw);
             try
             {
                 __key = Marshaler<K>.CreateMarshaler(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.Lookup_0.DynamicInvokeAbi(__params);
-                return Marshaler<V>.FromAbi(__params[2]);
+
+                if (__hasCachedRcw && __cachedRcw.Item1 == (IntPtr)__params[2])
+                {
+                    return __cachedRcw.Item2;
+                }
+                else
+                {
+                    var value = Marshaler<V>.FromAbi(__params[2]);
+                    __lookupCache[key] = ((IntPtr)__params[2], value);
+                    return value;
+                }
             }
             finally
             {
@@ -758,6 +771,7 @@ namespace ABI.System.Collections.Generic
             object __key = default;
             object __value = default;
             var __params = new object[] { ThisPtr, null, null, null };
+            _FromMap((IWinRTObject)this)._lookupCache.Remove(key);
             try
             {
                 __key = Marshaler<K>.CreateMarshaler(key);
@@ -780,6 +794,7 @@ namespace ABI.System.Collections.Generic
             var ThisPtr = _obj.ThisPtr;
             object __key = default;
             var __params = new object[] { ThisPtr, null };
+            _FromMap((IWinRTObject)this)._lookupCache.Remove(key);
             try
             {
                 __key = Marshaler<K>.CreateMarshaler(key);
@@ -804,6 +819,7 @@ namespace ABI.System.Collections.Generic
 
         private unsafe void _ClearHelper()
         {
+            _FromMap((IWinRTObject)this)._lookupCache.Clear();
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
             global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Clear_6(ThisPtr));
