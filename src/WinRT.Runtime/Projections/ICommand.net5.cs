@@ -15,7 +15,12 @@ namespace ABI.System.Windows.Input
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
     [DynamicInterfaceCastableImplementation]
-    public unsafe interface ICommand : global::System.Windows.Input.ICommand
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe interface ICommand : global::System.Windows.Input.ICommand
     {
         [Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
         public struct Vftbl
@@ -90,8 +95,13 @@ namespace ABI.System.Windows.Input
                 return 0;
             }
 
-            private readonly static Lazy<ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>>> _CanExecuteChanged_TokenTablesLazy = new();
-            private static ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>> _CanExecuteChanged_TokenTables => _CanExecuteChanged_TokenTablesLazy.Value;
+            private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>> _canExecuteChanged_TokenTables;
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>> MakeConditionalWeakTable()
+            {
+                global::System.Threading.Interlocked.CompareExchange(ref _canExecuteChanged_TokenTables, new(), null);
+                return _canExecuteChanged_TokenTables;
+            }
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.Windows.Input.ICommand, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler>> _CanExecuteChanged_TokenTables => _canExecuteChanged_TokenTables ?? MakeConditionalWeakTable();
 
             [UnmanagedCallersOnly]
 
@@ -190,7 +200,12 @@ namespace ABI.System.Windows.Input
     }
 
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public static class ICommand_Delegates
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class ICommand_Delegates
     {
         public unsafe delegate int add_CanExecuteChanged_0(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token);
         public unsafe delegate int CanExecute_2(IntPtr thisPtr, IntPtr parameter, byte* result);

@@ -10,7 +10,12 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    public static partial class ComWrappersSupport
+#if EMBED 
+    internal 
+#else
+    public 
+#endif     
+    static partial class ComWrappersSupport
     {
         private static ConditionalWeakTable<object, ComCallableWrapper> ComWrapperCache = new ConditionalWeakTable<object, ComCallableWrapper>();
 

@@ -409,7 +409,12 @@ namespace ABI.System.Collections
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F")]
-    public unsafe class IEnumerable : global::System.Collections.IEnumerable, IBindableIterable
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe class IEnumerable : global::System.Collections.IEnumerable, IBindableIterable
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable));
 
@@ -551,14 +556,24 @@ namespace ABI.System.Collections
         public IEnumerator GetEnumerator() => _FromIterable.GetEnumerator();
     }
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    public static class IEnumerable_Delegates
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IEnumerable_Delegates
     {
         public unsafe delegate int First_0(IntPtr thisPtr, IntPtr* result);
     }
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93")]
-    public unsafe class IList : global::System.Collections.IList
+#if EMBED
+    internal
+#else
+    public
+#endif 
+    unsafe class IList : global::System.Collections.IList
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IList));
 

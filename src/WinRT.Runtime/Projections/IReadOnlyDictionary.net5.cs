@@ -721,7 +721,13 @@ namespace ABI.System.Collections.Generic
         global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>.GetEnumerator() => _FromMapView((IWinRTObject)this).GetEnumerator();
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
-    public static class IReadOnlyDictionary_Delegates
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IReadOnlyDictionary_Delegates
     {
         public unsafe delegate int Split_3(IntPtr thisPtr, out IntPtr first, out IntPtr second);
     }

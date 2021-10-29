@@ -12,7 +12,12 @@ namespace ABI.System.ComponentModel
     [DynamicInterfaceCastableImplementation]
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
-    public unsafe interface INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
+#if EMBED
+    internal
+#else
+    public 
+#endif 
+    unsafe interface INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
     {
         [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
         public struct Vftbl
@@ -82,8 +87,16 @@ namespace ABI.System.ComponentModel
                 }
                 return 0;
             }
-            private readonly static Lazy<global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>>> _ErrorsChanged_TokenTablesLazy = new();
-            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTables => _ErrorsChanged_TokenTablesLazy.Value;
+            
+            private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTablesLazy = null;
+            
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> MakeConditionalWeakTable()
+            {
+                global::System.Threading.Interlocked.CompareExchange(ref _ErrorsChanged_TokenTablesLazy, new(), null);
+                return _ErrorsChanged_TokenTablesLazy;
+            }
+            
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTables => _ErrorsChanged_TokenTablesLazy ?? MakeConditionalWeakTable();
 
             [UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvStdcall)})]
             private static unsafe int Do_Abi_add_ErrorsChanged_1(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token)

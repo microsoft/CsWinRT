@@ -21,7 +21,7 @@ namespace Windows.Storage.Streams
     /// Moreover, knowledge about the actual runtime type of the <c>IBuffer</c> can also help choosing the optimal
     /// implementation. This type provides static methods that encapsulate the performance logic and can be used
     /// by <c>NetFxToWinRtStreamAdapter</c>.</summary>
-#if !NETSTANDARD2_0
+#if NET
     [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
     internal static class StreamOperationsImplementation

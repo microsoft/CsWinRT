@@ -1,13 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
 
 namespace WinRT
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    public sealed class ProjectedRuntimeClassAttribute : Attribute
+#if EMBED
+    internal
+#else
+    public        
+#endif
+    sealed class ProjectedRuntimeClassAttribute : Attribute
     {
         public ProjectedRuntimeClassAttribute(string defaultInterfaceProp)
         {
@@ -25,7 +28,12 @@ namespace WinRT
 
     [EditorBrowsable(EditorBrowsableState.Never)]
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    public sealed class ObjectReferenceWrapperAttribute : Attribute
+#if EMBED
+    internal
+#else
+    public        
+#endif
+    sealed class ObjectReferenceWrapperAttribute : Attribute
     {
         public ObjectReferenceWrapperAttribute(string objectReferenceField)
         {
@@ -40,7 +48,12 @@ namespace WinRT
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Delegate | AttributeTargets.Struct | AttributeTargets.Enum, Inherited = false, AllowMultiple = false)]
-    public sealed class WindowsRuntimeTypeAttribute : Attribute
+#if EMBED
+    internal
+#else
+    public        
+#endif 
+    sealed class WindowsRuntimeTypeAttribute : Attribute
     {
         public WindowsRuntimeTypeAttribute(string sourceMetadata = null)
         {

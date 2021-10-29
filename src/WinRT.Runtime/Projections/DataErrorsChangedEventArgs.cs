@@ -72,7 +72,12 @@ namespace ABI.System.ComponentModel
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct DataErrorsChangedEventArgs
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe struct DataErrorsChangedEventArgs
     {
         private sealed class ActivationFactory : BaseActivationFactory
         {

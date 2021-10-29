@@ -16,6 +16,9 @@ namespace Windows.Foundation.Collections
 {
 
     [Guid("913337E9-11A1-4345-A3A2-4E7F956E222D")]
+#if EMBED
+    internal
+#endif
     interface IVector<T> : IIterable<T>
     {
         T GetAt(uint index);
@@ -39,7 +42,12 @@ namespace ABI.System.Collections.Generic
     using global::System.Runtime.CompilerServices;
 
     [Guid("913337E9-11A1-4345-A3A2-4E7F956E222D")]
-    public class IList<T> : global::System.Collections.Generic.IList<T>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class IList<T> : global::System.Collections.Generic.IList<T>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IList<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IList<T>)));
@@ -921,7 +929,13 @@ namespace ABI.System.Collections.Generic
         public global::System.Collections.Generic.IEnumerator<T> GetEnumerator() => _FromVector.GetEnumerator();
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
-    public static class IList_Delegates
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IList_Delegates
     {
         public unsafe delegate int GetView_2(IntPtr thisPtr, out IntPtr __return_value__);
         public unsafe delegate int RemoveAt_6(IntPtr thisPtr, uint index);

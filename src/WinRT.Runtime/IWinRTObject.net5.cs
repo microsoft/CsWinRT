@@ -6,7 +6,12 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    public interface IWinRTObject : IDynamicInterfaceCastable
+#if EMBED
+    internal
+#else
+    public
+#endif
+    interface IWinRTObject : IDynamicInterfaceCastable
     {
         bool IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, bool throwIfNotImplemented)
         {

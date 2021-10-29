@@ -81,7 +81,12 @@ namespace ABI.System
 
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Uri
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe struct Uri
     {
         private sealed class ActivationFactory : BaseActivationFactory
         {

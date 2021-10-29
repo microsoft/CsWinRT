@@ -183,13 +183,23 @@ namespace ABI.System.Collections.Generic
         global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator() => _FromIterable((IWinRTObject)this).GetEnumerator();
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
-    public static class IEnumerable_Delegates
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IEnumerable_Delegates
     {
         public unsafe delegate int First_0(IntPtr thisPtr, out IntPtr __return_value__);
     }
 
     [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
-    public class IEnumerator<T> : global::System.Collections.Generic.IEnumerator<T>, global::Windows.Foundation.Collections.IIterator<T>
+#if EMBED
+    internal
+#else
+    public
+#endif 
+    class IEnumerator<T> : global::System.Collections.Generic.IEnumerator<T>, global::Windows.Foundation.Collections.IIterator<T>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IEnumerator<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IEnumerator<T>)));
@@ -638,7 +648,13 @@ namespace ABI.System.Collections.Generic
         public T Current => _FromIterator.Current;
         object IEnumerator.Current => Current;
     }
-    public static class IEnumerator_Delegates
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IEnumerator_Delegates
     {
         public unsafe delegate int MoveNext_2(IntPtr thisPtr, out byte __return_value__);
         public unsafe delegate int GetMany_3(IntPtr thisPtr, int __itemsSize, IntPtr items, out uint __return_value__);

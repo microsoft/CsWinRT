@@ -1,10 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace WinRT
 {
-    public struct EventRegistrationToken : IEquatable<EventRegistrationToken>
+#if EMBED
+    internal
+#else 
+    public
+#endif
+    struct EventRegistrationToken : IEquatable<EventRegistrationToken>
     {
         public long Value;
 

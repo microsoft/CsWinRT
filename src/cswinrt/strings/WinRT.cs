@@ -1,12 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Linq.Expressions;
 using System.Diagnostics;
 using WinRT.Interop;
+using System.Runtime.CompilerServices;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
 #pragma warning disable 0649 // Field 'xxx' is never assigned to, and will always have its default value
@@ -198,8 +200,13 @@ namespace WinRT
     internal sealed class WinrtModule
     {
         readonly IntPtr _mtaCookie;
-        static Lazy<WinrtModule> _instance = new Lazy<WinrtModule>();
-        public static WinrtModule Instance => _instance.Value;
+        volatile static WinrtModule _instance;
+        private static WinrtModule MakeWinRTModule()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _instance, new WinrtModule(), null);
+            return _instance;
+        }
+        public static WinrtModule Instance => _instance ?? MakeWinRTModule();
 
         public unsafe WinrtModule()
         {

@@ -55,7 +55,12 @@ namespace ABI.System
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("61C17706-2D65-11E0-9AE8-D48564015472")]
-    public class Nullable<T>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class Nullable<T>
     {
         public static IObjectReference CreateMarshaler(object value)
         {
