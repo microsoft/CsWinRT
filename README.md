@@ -39,7 +39,12 @@ The C#/WinRT runtime assembly, `WinRT.Runtime.dll`, is required by all C#/WinRT 
 
 ## Contributing
 
-File a [new issue!](https://github.com/microsoft/CsWinRT/issues/new/choose) This project welcomes contributions and suggestions of all types.
+The C#/WinRT team welcomes feedback and contributions! There are several ways to contribute to the project:
+
+- **[File a new issue](https://github.com/microsoft/CsWinRT/issues/new/choose)**<br>
+- **[Ask a question](https://github.com/microsoft/CsWinRT/discussions/categories/q-a)**<br>
+- **[Start a discussion](https://github.com/microsoft/CsWinRT/discussions)**<br>
+- **[Make a feature request](https://github.com/microsoft/CsWinRT/issues/new?assignees=&labels=enhancement&template=feature_request.md&title=)**<br>
 
 We ask that **before you start work on a feature that you would like to contribute**, please read our [Contributor's Guide](CONTRIBUTING.md), which also includes steps on building the C#/WinRT repo.
 
