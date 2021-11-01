@@ -104,7 +104,7 @@ namespace WinRT
         public MarshalString(string value)
         {
             _gchandle = GCHandle.Alloc(value, GCHandleType.Pinned);
-            _header = Marshal.AllocHGlobal(Unsafe.SizeOf<HSTRING_HEADER>());
+            _header = IntPtr.Zero;
         }
 
         public void Dispose()
@@ -121,26 +121,14 @@ namespace WinRT
 
         public unsafe IntPtr GetAbi()
         {
-            bool success = false;
-            try
-            {
-                var value = (string)_gchandle.Target;
-                fixed (char* chars = value)
-                { 
-                    IntPtr hstring;
-                    Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
-                        chars, value.Length, (IntPtr*)_header, &hstring));
-                    success = true;
-                    return hstring;
-                }
-                success = true;
-            }
-            finally
-            {
-                if (!success)
-                {
-                    Dispose();
-                }
+            var value = (string)_gchandle.Target;
+            fixed (char* chars = value)
+            { 
+                IntPtr hstring;
+                _header = Marshal.AllocHGlobal(Unsafe.SizeOf<HSTRING_HEADER>());
+                Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
+                    chars, value.Length, (IntPtr*)_header, &hstring));
+                return hstring;
             }
         }
 
