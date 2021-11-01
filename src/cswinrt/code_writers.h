@@ -3147,9 +3147,10 @@ event % %;)",
                 return;
             }
 
-            w.write("%.GetAbi%(%)",
+            w.write("%.GetAbi%(%%)",
                 marshaler_type,
                 is_array() ? "Array" : "",
+                is_pinnable ? "ref " : "",
                 get_marshaler_local(w));
         }
 

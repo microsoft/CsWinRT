@@ -162,24 +162,26 @@ namespace WinRT
         public unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
             IntPtr instancePtr = IntPtr.Zero;
-            var hstrRuntimeClassId = MarshalString.CreateMarshaler(runtimeClassId);
             try
             {
-                int hr = _GetActivationFactory(MarshalString.GetAbi(hstrRuntimeClassId), &instancePtr);
-                if (hr == 0)
+                MarshalString.Pinnable __runtimeClassId = new(runtimeClassId);
+                fixed (void* ___runtimeClassId = __runtimeClassId)
                 {
-                    using var objRef = ComWrappersSupport.GetObjectReferenceForInterface(instancePtr);
-                    return (objRef.As<IActivationFactoryVftbl>(), hr);
-                }
-                else
-                {
-                    return (null, hr);
+                    int hr = _GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &instancePtr);
+                    if (hr == 0)
+                    {
+                        using var objRef = ComWrappersSupport.GetObjectReferenceForInterface(instancePtr);
+                        return (objRef.As<IActivationFactoryVftbl>(), hr);
+                    }
+                    else
+                    {
+                        return (null, hr);
+                    }
                 }
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(instancePtr);
-                hstrRuntimeClassId.Dispose();
             }
         }
 
@@ -226,27 +228,28 @@ namespace WinRT
 
         public static unsafe (ObjectReference<IActivationFactoryVftbl> obj, int hr) GetActivationFactory(string runtimeClassId)
         {
-            // TODO: "using var" with ref struct and remove the try/catch below
-            var m = MarshalString.CreateMarshaler(runtimeClassId);
             IntPtr instancePtr = IntPtr.Zero;
             try
             {
-                int hr;
-                (instancePtr, hr) = GetActivationFactory(MarshalString.GetAbi(m));
-                if (hr == 0)
+                MarshalString.Pinnable __runtimeClassId = new(runtimeClassId);
+                fixed (void* ___runtimeClassId = __runtimeClassId)
                 {
-                    using var objRef = ComWrappersSupport.GetObjectReferenceForInterface(instancePtr);
-                    return (objRef.As<IActivationFactoryVftbl>(), hr);
-                }
-                else
-                {
-                    return (null, hr);
+                    int hr;
+                    (instancePtr, hr) = GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId));
+                    if (hr == 0)
+                    {
+                        using var objRef = ComWrappersSupport.GetObjectReferenceForInterface(instancePtr);
+                        return (objRef.As<IActivationFactoryVftbl>(), hr);
+                    }
+                    else
+                    {
+                        return (null, hr);
+                    }
                 }
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(instancePtr);
-                m.Dispose();
             }
         }
 

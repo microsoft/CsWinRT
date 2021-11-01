@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -23,7 +24,10 @@ namespace WinRT
 #if !NET
         public static unsafe ref readonly char GetPinnableReference(this string str)
         {
-            return ref *(char*)((*(byte**)Unsafe.AsPointer(ref str)) + RuntimeHelpers.OffsetToStringData);
+            fixed (char* p = str)
+            {
+                return ref *p;
+            }
         }
 #endif
     }
@@ -45,28 +49,41 @@ namespace WinRT
             int reserved5;
         }
 
-        private HSTRING_HEADER _header;
+        private IntPtr _header;
         private GCHandle _gchandle;
 
-        public struct Pinnable
+        public ref struct Pinnable
         {
             private HSTRING_HEADER _header;
             private string _value;
+#if DEBUG
+            private bool _pinned;
+#endif
 
             public Pinnable(string value)
             {
                 _value = value ?? "";
                 _header = default;
+#if DEBUG
+                _pinned = false;
+#endif            
             }
 
             public ref readonly char GetPinnableReference()
             {
+#if DEBUG
+                _pinned = true;
+#endif
                 return ref _value.GetPinnableReference();
             }
 
             public unsafe IntPtr GetAbi()
             {
-                if (_value == "")
+#if DEBUG
+                // We assume that the string is pinned by the calling code
+                Debug.Assert(_pinned);
+#endif
+                if (_value == "") 
                 {
                     return IntPtr.Zero;
                 }
@@ -82,16 +99,19 @@ namespace WinRT
 
         public static Pinnable CreatePinnable(string value) => new(value);
 
-        public static IntPtr GetAbi(Pinnable p) => p.GetAbi();
+        public static IntPtr GetAbi(ref Pinnable p) => p.GetAbi();
 
         public MarshalString(string value)
         {
             _gchandle = GCHandle.Alloc(value, GCHandleType.Pinned);
+            _header = Marshal.AllocHGlobal(Unsafe.SizeOf<HSTRING_HEADER>());
         }
 
         public void Dispose()
         {
             _gchandle.Dispose();
+            Marshal.FreeHGlobal(_header);
+            _header = IntPtr.Zero;
         }
 
         public static MarshalString CreateMarshaler(string value)
@@ -101,7 +121,7 @@ namespace WinRT
 
         public unsafe IntPtr GetAbi()
         {
-            static bool Dispose(MarshalString m) { m.Dispose(); return false; };
+            bool success = false;
             try
             {
                 var value = (string)_gchandle.Target;
@@ -109,14 +129,18 @@ namespace WinRT
                 { 
                     IntPtr hstring;
                     Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
-                        chars, value.Length, (IntPtr*)Unsafe.AsPointer(ref _header), &hstring));
+                        chars, value.Length, (IntPtr*)_header, &hstring));
+                    success = true;
                     return hstring;
                 }
+                success = true;
             }
-            catch (Exception) when (Dispose(this))
+            finally
             {
-                // Unreachable
-                return default;
+                if (!success)
+                {
+                    Dispose();
+                }
             }
         }
 
@@ -193,7 +217,7 @@ namespace WinRT
             {
                 return m;
             }
-            static bool Dispose(MarshalerArray m) { m.Dispose(); return false; };
+            bool success = false;
             try
             {
                 var length = array.Length;
@@ -205,12 +229,15 @@ namespace WinRT
                     m._marshalers[i] = MarshalString.CreateMarshaler(array[i]);
                     elements[i] = MarshalString.GetAbi(m._marshalers[i]);
                 };
+                success = true;
                 return m;
             }
-            catch (Exception) when (Dispose(m))
+            finally
             {
-                // Unreachable
-                return default;
+                if (!success)
+                {
+                    m.Dispose();
+                }
             }
         }
 
@@ -258,7 +285,7 @@ namespace WinRT
             }
             IntPtr data = IntPtr.Zero;
             int i = 0;
-            static bool Dispose(int i, IntPtr data) { DisposeAbiArray((i, data)); return false; };
+            bool success = false;
             try
             {
                 var length = array.Length;
@@ -268,12 +295,15 @@ namespace WinRT
                 {
                     elements[i] = MarshalString.FromManaged(array[i]);
                 }
+                success = true;
                 return (i, data);
             }
-            catch (Exception) when (Dispose(i, data))
+            finally
             {
-                // Unreachable
-                return default;
+                if (!success)
+                {
+                    DisposeAbiArray((i, data));
+                }
             }
         }
 
@@ -285,7 +315,7 @@ namespace WinRT
             }
             DisposeAbiArrayElements((array.Length, data));
             int i = 0;
-            static bool Dispose(int i, IntPtr data) { DisposeAbiArrayElements((i, data)); return false; };
+            bool success = false;
             try
             {
                 var length = array.Length;
@@ -294,10 +324,14 @@ namespace WinRT
                 {
                     elements[i] = MarshalString.FromManaged(array[i]);
                 };
+                success = true;
             }
-            catch (Exception) when (Dispose(i, data))
+            finally
             {
-                // Unreachable
+                if (!success)
+                {
+                    DisposeAbiArrayElements((i, data));
+                }
             }
         }
 
@@ -613,7 +647,7 @@ namespace WinRT
             {
                 return m;
             }
-            static bool Dispose(MarshalerArray m) { m.Dispose(); return false; };
+            bool success = false;
             try
             {
                 int length = array.Length;
@@ -628,12 +662,15 @@ namespace WinRT
                     Marshaler<T>.CopyAbi(m._marshalers[i], (IntPtr)element);
                     element += abi_element_size;
                 }
+                success = true;
                 return m;
             }
-            catch (Exception) when (Dispose(m))
+            finally
             {
-                // Unreachable
-                return default;
+                if (!success)
+                {
+                    m.Dispose();
+                }
             }
         }
 
@@ -691,7 +728,7 @@ namespace WinRT
             }
             IntPtr data = IntPtr.Zero;
             int i = 0;
-            static bool Dispose(int i, IntPtr data) { DisposeAbiArray((i, data)); return false; };
+            bool success = false;
             try
             {
                 int length = array.Length;
@@ -704,12 +741,15 @@ namespace WinRT
                     Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
                     bytes += abi_element_size;
                 }
+                success = true;
                 return (i, data);
             }
-            catch (Exception) when (Dispose(i, data))
+            finally
             {
-                // Unreachable
-                return default;
+                if (!success)
+                {
+                    DisposeAbiArray((i, data));
+                }
             }
         }
 
@@ -721,7 +761,7 @@ namespace WinRT
             }
             DisposeAbiArrayElements((array.Length, data));
             int i = 0;
-            static bool Dispose(int i, IntPtr data) { DisposeAbiArrayElements((i, data)); return false; };
+            bool success = false;
             try
             {
                 int length = array.Length;
@@ -733,10 +773,14 @@ namespace WinRT
                     Marshaler<T>.CopyManaged(array[i], (IntPtr)bytes);
                     bytes += abi_element_size;
                 }
+                success = true;
             }
-            catch (Exception) when (Dispose(i, data))
+            finally
             {
-                // Unreachable
+                if (!success)
+                {
+                    DisposeAbiArrayElements((i, data));
+                }
             }
         }
 
@@ -799,7 +843,7 @@ namespace WinRT
             {
                 return m;
             }
-            static bool Dispose(MarshalerArray m) { m.Dispose(); return false; };
+            bool success = false;
             try
             {
                 int length = array.Length;
@@ -812,12 +856,15 @@ namespace WinRT
                     m._marshalers[i] = createMarshaler(array[i]);
                     element[i] = GetAbi(m._marshalers[i]);
                 }
+                success = true;
                 return m;
             }
-            catch (Exception) when (Dispose(m))
+            finally
             {
-                // Unreachable
-                return default;
+                if (!success)
+                {
+                    m.Dispose();
+                }
             }
         }
 
@@ -869,7 +916,7 @@ namespace WinRT
             }
             IntPtr data = IntPtr.Zero;
             int i = 0;
-            static bool Dispose(int i, IntPtr data) { DisposeAbiArray((i, data)); return false; };
+            bool success = false;
             try
             {
                 int length = array.Length;
@@ -880,12 +927,15 @@ namespace WinRT
                 {
                     native[i] = fromManaged(array[i]);
                 }
+                success = true;
                 return (i, data);
             }
-            catch (Exception) when (Dispose(i, data))
+            finally
             {
-                // Unreachable
-                return default;
+                if (!success)
+                {
+                    DisposeAbiArray((i, data));
+                }
             }
         }
 
@@ -897,7 +947,7 @@ namespace WinRT
             }
             DisposeAbiArrayElements((array.Length, data));
             int i = 0;
-            static bool Dispose(int i, IntPtr data) { DisposeAbiArrayElements((i, data)); return false; };
+            bool success = false;
             try
             {
                 int length = array.Length;
@@ -908,10 +958,14 @@ namespace WinRT
                     copyManaged(array[i], (IntPtr)bytes);
                     bytes += IntPtr.Size;
                 }
+                success = true;
             }
-            catch (Exception) when (Dispose(i, data))
+            finally
             {
-                // Unreachable
+                if (!success)
+                {
+                    DisposeAbiArrayElements((i, data));
+                }
             }
         }
 
