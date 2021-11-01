@@ -538,6 +538,12 @@ And this is another one"
       void f();
     }
 
+    [attr_string("a string with embedded quotes, like the string \"quotes\"")]
+    runtimeclass EmbeddedQuotesTest
+    {
+        void f();
+    }
+
     // Compile time test for sub windows namespace
     namespace Windows
     {
