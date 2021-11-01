@@ -229,7 +229,7 @@ echo Running cswinrt authoring tests for %cswinrt_platform% %cswinrt_configurati
 call :exec %this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:%this_dir%hosttest_%cswinrt_version_string%.xml 
 if ErrorLevel 1 (
   echo.
-  echo ERROR: Authoring test failed, skipping NuGet pac
+  echo ERROR: Authoring test failed, skipping NuGet pack
   exit /b !ErrorLevel!
 )
 

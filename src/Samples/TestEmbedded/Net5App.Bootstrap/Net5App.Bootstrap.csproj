@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0-windows;net5.0-windows;netstandard2.0;net48</TargetFrameworks>
-    <Platforms>x64;x86</Platforms>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0-windows</TargetFramework>
   </PropertyGroup>
+
 
   <PropertyGroup>
     <LangVersion>9</LangVersion>
@@ -19,21 +20,34 @@
     <ProjectReference Include="..\C++ Components\Alpha\Alpha.vcxproj" />
     <ProjectReference Include="..\C++ Components\Beta\Beta.vcxproj" />
     <ProjectReference Include="..\C++ Components\Gamma\Gamma.vcxproj" />
-  </ItemGroup> 
-  
+  </ItemGroup>
+
   <ItemGroup Condition="!($([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5)">
     <PackageReference Include="System.Memory" Version="4.5.4" />
     <PackageReference Include="System.Runtime.Extensions" Version="4.3.1" />
   </ItemGroup>
-  
+
   <PropertyGroup>
     <CsWinRTIncludes>
       Alpha;
       Beta;
       Gamma;
       Windows.Devices.Geolocation;
-      Windows.Foundation.Metadata;
+      Windows.Foundation.Metadata.ContractVersion;
+      Windows.Foundation.Metadata.OverloadAttribute;
       Windows.Foundation.UniversalApiContract;
+      Windows.Foundation.Metadata.DualApiPartition;
+      Windows.Foundation.Metadata.MarshalingBehavior;
+      Windows.Foundation.Metadata.MarshalingType;
+      Windows.Foundation.Metadata.Activatable;
+      Windows.Foundation.Metadata.Static;
+      Windows.Foundation.Metadata.Threading;
+      Windows.Foundation.Metadata.ThreadingModel;
+      Windows.Foundation.Metadata.Muse;
+      Windows.Foundation.Metadata.ExclusiveTo;
+      Windows.Foundation.Metadata.ApiContract;
+      Windows.Foundation.Metadata.AttributeName;
+      Windows.Foundation.Metadata.AllowMultiple;
       Windows.Foundation.IAsyncOperation;
       Windows.Foundation.TypedEventHandler;
       Windows.Foundation.UniversalApiContract;
@@ -49,4 +63,6 @@
       Windows.Foundation.AsyncOperationWithProgressCompletedHandler;
     </CsWinRTIncludes>
   </PropertyGroup>
+
+
 </Project>

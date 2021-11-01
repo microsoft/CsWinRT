@@ -95,9 +95,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{6DA854DB-57BF-4FDD-AFF6-F70C965F48F6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{CFB651EC-DAA4-4A11-ABCD-C77F90602EB5}"
-	ProjectSection(SolutionItems) = preProject
-		Tests\EmbeddedTest.ps1 = Tests\EmbeddedTest.ps1
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Authoring", "Authoring", "{DA5AE0BA-E43D-4282-BC80-807DDE0C22C0}"
 EndProject

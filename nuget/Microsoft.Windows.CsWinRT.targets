@@ -58,8 +58,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </ItemGroup>
   </Target>
 
-  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" />
-
   <Target Name="CsWinRTPrepareProjection" DependsOnTargets="$(CsWinRTPrepareProjectionDependsOn)" Outputs="$(CsWinRTGeneratedFilesDir)">
     <PropertyGroup>
       <CsWinRTGeneratedFilesDir Condition="'$(CsWinRTGeneratedFilesDir)' == ''">$(GeneratedFilesDir)</CsWinRTGeneratedFilesDir>
@@ -101,7 +99,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -input $(CsWinRTInteropMetadata)
 -include WinRT.Interop
       </CsWinRTIncludeWinRTInterop>
-      <CsWinRTEmbeddedParam Condition="'$(CsWinRTEmbedded)' == 'true' Or '$(CsWinRTEmbedProjection)' =='true'">-embedded</CsWinRTEmbeddedParam>
+      <CsWinRTEmbeddedParam Condition="'$(CsWinRTEmbedded)' == 'true'">-embedded</CsWinRTEmbeddedParam>
       <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5">$(TargetFramework)</CsWinRTExeTFM>
       <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
       <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
@@ -141,5 +139,6 @@ $(CsWinRTEmbeddedParam)
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.IIDOptimizer.targets" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'"/>
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Embedded.targets" Condition="'$(CsWinRTEmbedded)' == 'true'/>
 
 </Project>
