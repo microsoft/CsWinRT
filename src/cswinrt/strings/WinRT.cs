@@ -120,7 +120,7 @@ namespace WinRT
             // Explicitly look for module in the same directory as this one, and
             // use altered search path to ensure any dependencies in the same directory are found.
             var moduleHandle = Platform.LoadLibraryExW(System.IO.Path.Combine(_currentModuleDirectory, fileName), IntPtr.Zero, /* LOAD_WITH_ALTERED_SEARCH_PATH */ 8);
-#if !NETSTANDARD2_0 && !NETCOREAPP2_0
+#if NET
             if (moduleHandle == IntPtr.Zero)
             {
                 NativeLibrary.TryLoad(fileName, Assembly.GetExecutingAssembly(), null, out moduleHandle);
@@ -554,7 +554,7 @@ namespace WinRT
         {
             if (caches.TryGetValue(thisPtr, out var cache))
             {
-#if NETSTANDARD2_0
+#if !NET
                     // https://devblogs.microsoft.com/pfxteam/little-known-gems-atomic-conditional-removals-from-concurrentdictionary/
                     ((ICollection<KeyValuePair<int, System.WeakReference<State>>>)cache.states).Remove(
                         new KeyValuePair<int, System.WeakReference<State>>(index, state));

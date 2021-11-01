@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net5.0;netstandard2.0;net48</TargetFrameworks>
-    <Platforms>x64;x86</Platforms>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net47</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -12,21 +12,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- either use the private produced by local build, or find a way to simulate cswinrt nuget reference -->
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.7.0-private.0" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.7.1-private.0" />
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="System.Runtime.Extensions" Version="4.3.1" />
   </ItemGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="..\C++ Components\Alpha\Alpha.vcxproj" />
     <ProjectReference Include="..\C++ Components\Beta\Beta.vcxproj" />
     <ProjectReference Include="..\C++ Components\Gamma\Gamma.vcxproj" />
-  </ItemGroup> 
-  
-  <ItemGroup Condition="!($([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5)">
-    <PackageReference Include="System.Memory" Version="4.5.4" />
-    <PackageReference Include="System.Runtime.Extensions" Version="4.3.1" />
   </ItemGroup>
-    
+
   <PropertyGroup>
     <CsWinRTIncludes>
       Alpha;
@@ -63,5 +60,6 @@
       Windows.Foundation.AsyncOperationWithProgressCompletedHandler;
     </CsWinRTIncludes>
   </PropertyGroup>
- 
+
+
 </Project>

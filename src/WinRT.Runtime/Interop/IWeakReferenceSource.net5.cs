@@ -55,7 +55,12 @@ namespace WinRT.Interop
 
 namespace ABI.WinRT.Interop
 {
-    public static class IWeakReferenceSourceMethods
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IWeakReferenceSourceMethods
     {
         public static unsafe global::WinRT.Interop.IWeakReference GetWeakReference(IObjectReference _obj)
         {

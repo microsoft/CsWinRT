@@ -102,8 +102,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -include WinRT.Interop
       </CsWinRTIncludeWinRTInterop>
       <CsWinRTEmbeddedParam Condition="'$(CsWinRTEmbedded)' == 'true' Or '$(CsWinRTEmbedProjection)' =='true'">-embedded</CsWinRTEmbeddedParam>
-      <CsWinRTExeTFM Condition="'$(TargetFramework)' == 'netcoreapp3.1'">netstandard2.0</CsWinRTExeTFM>
-      <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">$(TargetFramework)</CsWinRTExeTFM>
+      <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5">$(TargetFramework)</CsWinRTExeTFM>
+      <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
       <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
 $(CsWinRTCommandVerbosity)
 -target $(CsWinRTExeTFM)

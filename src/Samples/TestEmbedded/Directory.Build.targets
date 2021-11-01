@@ -1,7 +1,2 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
-<!-- This target shadows the one from the `src` folder of cswinrt.sln  
-     which throws an error unrealted to this sample  -->
-  <Target Name="CsWinRTCheckDependencies"/>
-
 </Project>
