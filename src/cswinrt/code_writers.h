@@ -1471,7 +1471,7 @@ remove => %;
                     }
                 },
                 [&](std::string_view type_name)
-                  {
+                {
                     std::string sanitized_type_name;
                     sanitized_type_name.reserve(type_name.length() * 2);
                     for (const auto& c : type_name)
@@ -1479,7 +1479,7 @@ remove => %;
                         sanitized_type_name += c;
                         if (c == '"')
                         {
-                          sanitized_type_name += c;
+                            sanitized_type_name += c;
                         }
                     }
                     w.write("^@\"%\"", sanitized_type_name);
