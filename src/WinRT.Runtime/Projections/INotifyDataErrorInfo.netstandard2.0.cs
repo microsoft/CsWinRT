@@ -179,17 +179,18 @@ namespace ABI.System.ComponentModel
 
         public unsafe global::System.Collections.IEnumerable GetErrors(string propertyName)
         {
-            MarshalString __propertyName = default;
             IntPtr __retval = default;
             try
             {
-                __propertyName = MarshalString.CreateMarshaler(propertyName);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetErrors_3(ThisPtr, MarshalString.GetAbi(__propertyName), &__retval));
-                return (global::ABI.System.Collections.Generic.IEnumerable<object>)(object)IInspectable.FromAbi(__retval);
+                MarshalString.Pinnable __propertyName = new(propertyName);
+                fixed (void* ___propertyName = __propertyName)
+                {
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetErrors_3(ThisPtr, MarshalString.GetAbi(ref __propertyName), &__retval));
+                    return (global::ABI.System.Collections.Generic.IEnumerable<object>)(object)IInspectable.FromAbi(__retval);
+                }
             }
             finally
             {
-                MarshalString.DisposeMarshaler(__propertyName);
                 global::ABI.System.Collections.Generic.IEnumerable<object>.DisposeAbi(__retval);
             }
         }
