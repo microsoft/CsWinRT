@@ -110,6 +110,7 @@ namespace WinRT
         public void Dispose()
         {
             _gchandle.Dispose();
+            _gchandle = default;
             Marshal.FreeHGlobal(_header);
             _header = IntPtr.Zero;
         }
@@ -125,6 +126,7 @@ namespace WinRT
             fixed (char* chars = value)
             { 
                 IntPtr hstring;
+                Debug.Assert(_header == IntPtr.Zero);
                 _header = Marshal.AllocHGlobal(Unsafe.SizeOf<HSTRING_HEADER>());
                 Marshal.ThrowExceptionForHR(Platform.WindowsCreateStringReference(
                     chars, value.Length, (IntPtr*)_header, &hstring));
