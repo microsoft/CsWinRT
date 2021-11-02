@@ -46,21 +46,22 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
         public unsafe IObjectReference CreateInstance(string name, object baseInterface, out IObjectReference innerInterface)
         {
-            MarshalString __name = default;
             IObjectReference __baseInterface = default;
             IntPtr __innerInterface = default;
             IntPtr __retval = default;
             try
             {
-                __name = MarshalString.CreateMarshaler(name);
-                __baseInterface = MarshalInspectable<object>.CreateMarshaler(baseInterface);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(__name), MarshalInspectable<object>.GetAbi(__baseInterface), &__innerInterface, &__retval));
-                innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
-                return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
+                MarshalString.Pinnable __name = new(name);
+                fixed (void* ___name = __name)
+                {
+                    __baseInterface = MarshalInspectable<object>.CreateMarshaler(baseInterface);
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(ref __name), MarshalInspectable<object>.GetAbi(__baseInterface), &__innerInterface, &__retval));
+                    innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
+                    return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
+                }
             }
             finally
             {
-                MarshalString.DisposeMarshaler(__name);
                 MarshalInspectable<object>.DisposeMarshaler(__baseInterface);
                 MarshalInspectable<object>.DisposeAbi(__innerInterface);
                 MarshalInspectable<object>.DisposeAbi(__retval);

@@ -51,17 +51,18 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
         public unsafe IObjectReference CreateInstance(string name)
         {
-            MarshalString __name = default;
             IntPtr __retval = default;
             try
             {
-                __name = MarshalString.CreateMarshaler(name);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(__name), &__retval));
-                return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
+                MarshalString.Pinnable __name = new(name);
+                fixed (void* ___name = __name)
+                {
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(ref __name), &__retval));
+                    return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
+                }
             }
             finally
             {
-                MarshalString.DisposeMarshaler(__name);
                 MarshalInspectable<object>.DisposeAbi(__retval);
             }
         }

@@ -64,17 +64,12 @@ namespace ABI.System
 
         public unsafe IObjectReference CreateUri(string uri)
         {
-            MarshalString __uri = default;
             IntPtr __retval = default;
-            try
+            MarshalString.Pinnable __uri = new(uri);
+            fixed (void* ___uri = __uri)
             {
-                __uri = MarshalString.CreateMarshaler(uri);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateUri_0(ThisPtr, MarshalString.GetAbi(__uri), out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateUri_0(ThisPtr, MarshalString.GetAbi(ref __uri), out __retval));
                 return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
-            }
-            finally
-            {
-                MarshalString.DisposeMarshaler(__uri);
             }
         }
     }
