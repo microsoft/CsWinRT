@@ -83,10 +83,6 @@ Here is an example project file for a library cross-targeting and embedding a C#
 
 You will need to enable Windows Desktop Compatible for all your referenced C++/WinRT components -- either via the properties or in the `.vcxproj` file.
 
-There is a known issue consuming C++/WinRT authored WinRT components in a library using embedded support 
-when the component is consumed via `ProjectReference`. 
-You will need to edit the .vcxproj file of all the components by enabling Windows Desktop Compatible. 
-
 If you try to use an embedded projection of a native (C++/WinRT) component, via ProjectReference, then you may encounter a runtime error `CLASS_NOT_REGISTERED`.
 You can fix this by unloading the native component project in Visual Studio, and adding the following:
 
