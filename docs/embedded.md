@@ -20,7 +20,7 @@ Embedded support introduces new features to the C#/WinRT toolchain:
 
 ## Scenarios
 
-This feature allows C# apps and libraries to target `net5.0` (and above), .NET Framework 4.6.1+,`netcoreapp3.1`, and `netstandard2.0` while also using the Windows SDK.
+This feature allows C# apps and libraries to target `net5.0` (and above), .NET Framework 4.6.1+, `netcoreapp3.1`, and `netstandard2.0` while also using the Windows SDK.
 Moreover, a library can target `netstandard2.0` and be able to run on NetFX, Net Core and Net 5. 
 
 Note: the `netstandard2.0` generated projection is not optimized for .NET 5. 
