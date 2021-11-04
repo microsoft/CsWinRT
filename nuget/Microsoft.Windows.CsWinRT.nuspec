@@ -23,6 +23,7 @@
     <file src="$cswinrt_exe$"/>
     <file src="Microsoft.Windows.CsWinRT.props" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.targets" target="build"/>
+    <file src="Microsoft.Windows.CsWinRT.Transitive.targets" target="buildTransitive"/>
     <file src="Microsoft.Windows.CsWinRT.Authoring.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.IIDOptimizer.targets" target="build"/>
     <file src="Microsoft.Windows.CsWinRT.Prerelease*.targets" target="build"/>
