@@ -6542,14 +6542,10 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
     %
 }))",
                     is_generic ? "new IntPtr(thisPtr)" : "thisPtr",
-                    is_generic ? "global::System.Delegate" : type_name,
+                    type_name,
                     bind([&](writer& w)
                     {
-                        if (is_generic)
-                        {
-                            w.write(R"(invoke.DynamicInvoke(%);)", "%");
-                        }
-                        else if (signature.return_signature())
+                        if (signature.return_signature())
                         {
                             w.write("return invoke(%);", "%");
                         }

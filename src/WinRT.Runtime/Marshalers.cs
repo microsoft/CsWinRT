@@ -1173,20 +1173,13 @@ namespace WinRT
             {
                 return default;
             }
-            using var objRef = ObjectReference<IUnknownVftbl>.FromAbi(ptr);
-            using var unknownObjRef = objRef.As<IUnknownVftbl>(IUnknownVftbl.IID);
+
+            Guid iid_iunknown = IUnknownVftbl.IID;
+            Marshal.QueryInterface(ptr, ref iid_iunknown, out var iunknownPtr);
+            using var unknownObjRef = ObjectReference<IUnknownVftbl>.Attach(ref iunknownPtr);
             if (unknownObjRef.IsReferenceToManagedObject)
             {
                 return (T) ComWrappersSupport.FindObject<object>(unknownObjRef.ThisPtr);
-            }
-            else if (Projections.TryGetMarshalerTypeForProjectedRuntimeClass<T>(objRef, out Type type))
-            {
-                var fromAbiMethod = type.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-                if (fromAbiMethod is null)
-                {
-                    throw new MissingMethodException();
-                }
-                return (T) fromAbiMethod.Invoke(null, new object[] { ptr });
             }
             else
             {

@@ -123,9 +123,9 @@ namespace ABI.System
         {
             try
             {
-                global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(new IntPtr(thisPtr), (global::System.Delegate invoke) =>
+                global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(new IntPtr(thisPtr), (global::System.EventHandler<T> invoke) =>
                 {
-                    invoke.DynamicInvoke(MarshalInspectable<object>.FromAbi(sender), Marshaler<T>.FromAbi(args));
+                    invoke.Invoke(MarshalInspectable<object>.FromAbi(sender), Marshaler<T>.FromAbi(args));
                 });
             }
             catch (global::System.Exception __exception__)
@@ -254,9 +254,9 @@ namespace ABI.System
         {
             try
             {
-                global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(thisPtr, (global::System.Delegate invoke) =>
+                global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(thisPtr, (global::System.EventHandler invoke) =>
                 {
-                    invoke.DynamicInvoke(
+                    invoke.Invoke(
                         MarshalInspectable<object>.FromAbi(sender),
                         MarshalInspectable<object>.FromAbi(args) as EventArgs ?? EventArgs.Empty);
                 });
