@@ -440,8 +440,16 @@ namespace WinRT
         protected static readonly Type MarshalerType = typeof(T).GetMarshalerType();
         internal static readonly Type MarshalerArrayType = typeof(T).GetMarshalerArrayType();
 
-        public static readonly Func<T, object> CreateMarshaler = (T value) => CreateMarshalerLazy.Value(value);
-        private static readonly Lazy<Func<T, object>> CreateMarshalerLazy = new(BindCreateMarshaler);
+        // CreateMarshaler
+
+        public static readonly Func<T, object> CreateMarshaler = (T value) => _CreateMarshaler(value);
+        private static Func<T, object> _CreateMarshaler => _CreateMarshalerLazy ?? Make_CreateMarshaler();
+        private static volatile Func<T, object> _CreateMarshalerLazy; 
+        private static Func<T, object> Make_CreateMarshaler()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _CreateMarshalerLazy, BindCreateMarshaler(), null);
+            return _CreateMarshalerLazy; 
+        }
         private static Func<T, object> BindCreateMarshaler()
         {
             var parms = new[] { Expression.Parameter(typeof(T), "arg") };
@@ -450,8 +458,16 @@ namespace WinRT
                     typeof(object)), parms).Compile();
         }
 
-        public static readonly Func<object, object> GetAbi = (object objRef) => GetAbiLazy.Value(objRef);
-        private static readonly Lazy<Func<object, object>> GetAbiLazy = new(BindGetAbi);
+        // GetAbi
+
+        public static readonly Func<object, object> GetAbi = (object objRef) => _GetAbi(objRef);
+        private static Func<object, object> _GetAbi => _GetAbiLazy ?? Make_GetAbi();
+        private static volatile Func<object, object> _GetAbiLazy;
+        private static Func<object, object> Make_GetAbi()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _GetAbiLazy, BindGetAbi(), null);
+            return _GetAbiLazy; 
+        }
         private static Func<object, object> BindGetAbi()
         {
             var parms = new[] { Expression.Parameter(typeof(object), "arg") };
@@ -461,8 +477,16 @@ namespace WinRT
                         typeof(object)), parms).Compile();
         }
 
-        public static readonly Action<object, IntPtr> CopyAbi = (object box, IntPtr dest) => CopyAbiLazy.Value(box, dest);
-        private static readonly Lazy<Action<object, IntPtr>> CopyAbiLazy = new(BindCopyAbi);
+        // CopyAbi
+
+        public static readonly Action<object, IntPtr> CopyAbi = (object box, IntPtr dest) => _CopyAbi(box, dest);
+        private static Action<object, IntPtr> _CopyAbi = _CopyAbiLazy ?? Make_CopyAbi(); 
+        private static volatile Action<object, IntPtr> _CopyAbiLazy;
+        private static Action<object, IntPtr> Make_CopyAbi()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _CopyAbiLazy, BindCopyAbi(), null);
+            return _CopyAbiLazy;
+        }
         private static Action<object, IntPtr> BindCopyAbi()
         {
             var copyAbi = HelperType.GetMethod("CopyAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
@@ -473,8 +497,16 @@ namespace WinRT
                     new Expression[] { Expression.Convert(parms[0], MarshalerType), parms[1] }), parms).Compile();
         }
 
-        public static readonly Func<object, T> FromAbi = (object box) => FromAbiLazy.Value(box);
-        private static readonly Lazy<Func<object, T>> FromAbiLazy = new(BindFromAbi);
+        // FromAbi
+
+        public static readonly Func<object, T> FromAbi = (object box) => _FromAbi(box);
+        private static Func<object, T> _FromAbi => _FromAbiLazy ?? Make_FromAbi();
+        private static volatile Func<object, T> _FromAbiLazy;
+        private static Func<object, T> Make_FromAbi()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _FromAbiLazy, BindFromAbi(), null);
+            return _FromAbiLazy;
+        }
         private static Func<object, T> BindFromAbi()
         {
             var parms = new[] { Expression.Parameter(typeof(object), "arg") };
@@ -483,8 +515,16 @@ namespace WinRT
                     new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
         }
 
-        public static readonly Func<T, object> FromManaged = (T value) => FromManagedLazy.Value(value);
-        private static readonly Lazy<Func<T, object>> FromManagedLazy = new(BindFromManaged);
+        // FromManaged
+
+        public static readonly Func<T, object> FromManaged = (T value) => _FromManaged(value);
+        private static Func<T, object> _FromManaged => _FromManagedLazy ?? Make_FromManaged();
+        private static volatile Func<T, object> _FromManagedLazy;
+        private static Func<T, object> Make_FromManaged()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _FromManagedLazy, BindFromManaged(), null);
+            return _FromManagedLazy;
+        }
         private static Func<T, object> BindFromManaged()
         {
             var parms = new[] { Expression.Parameter(typeof(T), "arg") };
@@ -493,8 +533,16 @@ namespace WinRT
                     typeof(object)), parms).Compile();
         }
 
-        public static readonly Action<T, IntPtr> CopyManaged = (T value, IntPtr dest) => CopyManagedLazy.Value(value, dest);
-        private static readonly Lazy<Action<T, IntPtr>> CopyManagedLazy = new(BindCopyManaged);
+        // CopyManaged
+
+        public static readonly Action<T, IntPtr> CopyManaged = (T value, IntPtr dest) => _CopyManaged(value, dest);
+        private static Action<T, IntPtr> _CopyManaged => _CopyManagedLazy ?? Make_CopyManaged();
+        private static volatile Action<T, IntPtr> _CopyManagedLazy;
+        private static Action<T, IntPtr> Make_CopyManaged()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _CopyManagedLazy, BindCopyManaged(), null);
+            return _CopyManagedLazy;
+        }
         private static Action<T, IntPtr> BindCopyManaged()
         {
             var copyManaged = HelperType.GetMethod("CopyManaged", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
@@ -504,8 +552,16 @@ namespace WinRT
                 Expression.Call(copyManaged, parms), parms).Compile();
         }
 
-        public static readonly Action<object> DisposeMarshaler = (object objRef) => DisposeMarshalerLazy.Value(objRef);
-        private static readonly Lazy<Action<object>> DisposeMarshalerLazy = new(BindDisposeMarshaler);
+        // DisposeMarshaler
+
+        public static readonly Action<object> DisposeMarshaler = (object objRef) => _DisposeMarshaler(objRef);
+        private static Action<object> _DisposeMarshaler => _DisposeMarshalerLazy ?? Make_DisposeMarshaler();
+        private static volatile Action<object> _DisposeMarshalerLazy;
+        private static Action<object> Make_DisposeMarshaler()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _DisposeMarshalerLazy, BindDisposeMarshaler(), null);
+            return _DisposeMarshalerLazy;
+        }
         private static Action<object> BindDisposeMarshaler()
         {
             var parms = new[] { Expression.Parameter(typeof(object), "arg") };
@@ -514,8 +570,17 @@ namespace WinRT
                     new[] { Expression.Convert(parms[0], MarshalerType) }), parms).Compile();
         }
 
-        internal static readonly Action<object> DisposeAbi = (object box) => DisposeAbiLazy.Value(box);
-        private static readonly Lazy<Action<object>> DisposeAbiLazy = new(BindDisposeAbi);
+        // DisposeAbi
+
+        internal static readonly Action<object> DisposeAbi = (object box) => _DisposeAbi(box);
+        private static Action<object> _DisposeAbi => _DisposeAbiLazy ?? Make_DisposeAbi();
+        private static volatile Action<object> _DisposeAbiLazy;
+        private static Action<object> Make_DisposeAbi()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _DisposeAbiLazy, BindDisposeAbi(), null);
+            return _DisposeAbiLazy;
+        }
+
         private static Action<object> BindDisposeAbi()
         {
             var disposeAbi = HelperType.GetMethod("DisposeAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
@@ -525,8 +590,16 @@ namespace WinRT
                 Expression.Call(disposeAbi, new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
         }
 
-        internal static readonly Func<T[], object> CreateMarshalerArray = (T[] array) => CreateMarshalerArrayLazy.Value(array);
-        private static readonly Lazy<Func<T[], object>> CreateMarshalerArrayLazy = new(BindCreateMarshalerArray);
+        // CreateMarshalerArray
+
+        internal static readonly Func<T[], object> CreateMarshalerArray = (T[] array) => _CreateMarshalerArray(array);
+        private static Func<T[], object> _CreateMarshalerArray => _CreateMarshalerArrayLazy ?? Make_CreateMarshalerArray();
+        private static volatile Func<T[], object> _CreateMarshalerArrayLazy;
+        private static Func<T[], object> Make_CreateMarshalerArray()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _CreateMarshalerArrayLazy, BindCreateMarshalerArray(), null);
+            return _CreateMarshalerArrayLazy;
+        }
         private static Func<T[], object> BindCreateMarshalerArray()
         {
             var createMarshalerArray = HelperType.GetMethod("CreateMarshalerArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
@@ -536,8 +609,16 @@ namespace WinRT
                 Expression.Convert(Expression.Call(createMarshalerArray, parms), typeof(object)), parms).Compile();
         }
 
-        internal static readonly Func<object, (int, IntPtr)> GetAbiArray = (object box) => GetAbiArrayLazy.Value(box);
-        private static readonly Lazy<Func<object, (int, IntPtr)>> GetAbiArrayLazy = new(BindGetAbiArray);
+        // GetAbiArray
+
+        internal static readonly Func<object, (int, IntPtr)> GetAbiArray = (object box) => _GetAbiArray(box);
+        private static Func<object, (int, IntPtr)> _GetAbiArray => _GetAbiArrayLazy ?? Make_GetAbiArray();
+        private static volatile Func<object, (int, IntPtr)> _GetAbiArrayLazy;
+        private static Func<object, (int, IntPtr)> Make_GetAbiArray()
+        { 
+            System.Threading.Interlocked.CompareExchange(ref _GetAbiArrayLazy, BindGetAbiArray(), null);
+            return _GetAbiArrayLazy;
+        }
         private static Func<object, (int, IntPtr)> BindGetAbiArray()
         {
             var getAbiArray = HelperType.GetMethod("GetAbiArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
@@ -547,8 +628,16 @@ namespace WinRT
                 Expression.Convert(Expression.Call(getAbiArray, parms), typeof((int, IntPtr))), parms).Compile();
         }
 
-        internal static readonly Func<object, T[]> FromAbiArray = (object box) => FromAbiArrayLazy.Value(box);
-        private static readonly Lazy<Func<object, T[]>> FromAbiArrayLazy = new(BindFromAbiArray);
+        // FromAbiArray
+
+        internal static readonly Func<object, T[]> FromAbiArray = (object box) => _FromAbiArray(box);
+        private static Func<object, T[]> _FromAbiArray => _FromAbiArrayLazy ?? Make_FromAbiArray();
+        private static volatile Func<object, T[]> _FromAbiArrayLazy;
+        private static Func<object, T[]> Make_FromAbiArray()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _FromAbiArrayLazy, BindFromAbiArray(), null);
+            return _FromAbiArrayLazy;
+        }
         private static Func<object, T[]> BindFromAbiArray()
         {
             var fromAbiArray = HelperType.GetMethod("FromAbiArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
@@ -557,9 +646,17 @@ namespace WinRT
             return Expression.Lambda<Func<object, T[]>>(
                 Expression.Call(fromAbiArray, parms), parms).Compile();
         }
+ 
+        // FromManagedArray
 
-        internal static readonly Func<T[], (int, IntPtr)> FromManagedArray = (T[] array) => FromManagedArrayLazy.Value(array);
-        private static readonly Lazy<Func<T[], (int, IntPtr)>> FromManagedArrayLazy = new(BindFromManagedArray);
+        internal static readonly Func<T[], (int, IntPtr)> FromManagedArray = (T[] array) => _FromManagedArray(array);
+        private static Func<T[], (int, IntPtr)> _FromManagedArray => _FromManagedArrayLazy ?? Make_FromManagedArray();
+        private static volatile Func<T[], (int, IntPtr)> _FromManagedArrayLazy;
+        private static Func<T[], (int, IntPtr)> Make_FromManagedArray()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _FromManagedArrayLazy, BindFromManagedArray(), null);
+            return _FromManagedArrayLazy;
+        }
         private static Func<T[], (int, IntPtr)> BindFromManagedArray()
         {
             var fromManagedArray = HelperType.GetMethod("FromManagedArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
@@ -569,8 +666,16 @@ namespace WinRT
                 Expression.Convert(Expression.Call(fromManagedArray, parms), typeof((int, IntPtr))), parms).Compile();
         }
 
-        internal static readonly Action<object> DisposeMarshalerArray = (object box) => DisposeMarshalerArrayLazy.Value(box);
-        private static readonly Lazy<Action<object>> DisposeMarshalerArrayLazy = new(BindDisposeMarshalerArray);
+        // DisposeMarshalerArray
+
+        internal static readonly Action<object> DisposeMarshalerArray = (object box) => _DisposeMarshalerArray(box);
+        private static Action<object> _DisposeMarshalerArray => _DisposeMarshalerArrayLazy ?? Make_DisposeMarshalerArray();
+        private static volatile Action<object> _DisposeMarshalerArrayLazy;
+        private static Action<object> Make_DisposeMarshalerArray()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _DisposeMarshalerArrayLazy, BindDisposeMarshalerArray(), null);
+            return _DisposeMarshalerArrayLazy;
+        }
         private static Action<object> BindDisposeMarshalerArray()
         {
             var disposeMarshalerArray = HelperType.GetMethod("DisposeMarshalerArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
@@ -580,8 +685,16 @@ namespace WinRT
                 Expression.Call(disposeMarshalerArray, Expression.Convert(parms[0], MarshalerArrayType)), parms).Compile();
         }
 
-        internal static readonly Action<object> DisposeAbiArray = (object box) => DisposeAbiArrayLazy.Value(box);
-        private static readonly Lazy<Action<object>> DisposeAbiArrayLazy = new(BindDisposeAbiArray);
+        // DisposeAbiArray
+
+        internal static readonly Action<object> DisposeAbiArray = (object box) => _DisposeAbiArray(box);
+        private static Action<object> _DisposeAbiArray => _DisposeAbiArray ?? Make_DisposeAbiArray();
+        private static volatile Action<object> _DisposeAbiArrayLazy;
+        private static Action<object> Make_DisposeAbiArray()
+        {
+            System.Threading.Interlocked.CompareExchange(ref _DisposeAbiArrayLazy, BindDisposeAbiArray(), null);
+            return _DisposeAbiArrayLazy;
+        }
         private static Action<object> BindDisposeAbiArray()
         {
             var disposeAbiArray = HelperType.GetMethod("DisposeAbiArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
@@ -597,7 +710,7 @@ namespace WinRT
                 (value is null) ? IntPtr.Zero : ((IObjectReference) CreateMarshaler(value)).GetRef();
         }
 
-        internal static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, CopyManagedLazy.Value ?? CopyManagedFallback);
+        internal static unsafe void CopyManagedArray(T[] array, IntPtr data) => MarshalInterfaceHelper<T>.CopyManagedArray(array, data, _CopyManagedLazy ?? CopyManagedFallback);
     }
 
 #if EMBED
