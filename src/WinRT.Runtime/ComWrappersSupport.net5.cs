@@ -33,7 +33,7 @@ namespace WinRT
         }
 
         internal static readonly ConditionalWeakTable<Type, InspectableInfo> InspectableInfoTable = new ConditionalWeakTable<Type, InspectableInfo>();
-        internal static readonly ThreadLocal<Type> CreateRCWType = new ThreadLocal<Type>();
+        [ThreadStatic] internal static Type CreateRCWType;
 
         private static ComWrappers _comWrappers;
         private static object _comWrappersLock = new object();
@@ -96,11 +96,11 @@ namespace WinRT
             // when we are called by the ComWrappers API to create the object.  We can't pass this through the
             // ComWrappers API surface, so we are achieving it via a thread local.  We unset it after in case
             // there is other calls to it via other means.
-            CreateRCWType.Value = typeof(T);
+            CreateRCWType = typeof(T);
             
             var flags = tryUseCache ? CreateObjectFlags.TrackerObject : CreateObjectFlags.TrackerObject | CreateObjectFlags.UniqueInstance;
             var rcw = ComWrappers.GetOrCreateObjectForComInstance(ptr, flags);
-            CreateRCWType.Value = null;
+            CreateRCWType = null;
             // Because .NET will de-duplicate strings and WinRT doesn't,
             // our RCW factory returns a wrapper of our string instance.
             // This ensures that ComWrappers never sees the same managed object for two different
@@ -457,7 +457,7 @@ namespace WinRT
             {
                 IInspectable inspectable = new IInspectable(inspectableRef);
 
-                string runtimeClassName = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType.Value);
+                string runtimeClassName = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType);
                 if (string.IsNullOrEmpty(runtimeClassName))
                 {
                     // If the external IInspectable has not implemented GetRuntimeClassName,
