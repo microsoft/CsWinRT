@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.7.1-private.0" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.4-5nov.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,7 +21,7 @@
     <ProjectReference Include="..\C++ Components\Gamma\Gamma.vcxproj" />
   </ItemGroup> 
   
-  <ItemGroup Condition="!($([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5)">
+  <ItemGroup Condition="!($([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) &gt;= 5)">
     <PackageReference Include="System.Memory" Version="4.5.4" />
     <PackageReference Include="System.Runtime.Extensions" Version="4.3.1" />
   </ItemGroup>

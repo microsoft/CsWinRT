@@ -4,11 +4,13 @@
     <OutputType>Exe</OutputType>
     <Platforms>x64;x86</Platforms>
     <TargetFramework>net5.0-windows</TargetFramework>
-    <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
+    <CsWinRTWindowsMetadata>sdk</CsWinRTWindowsMetadata>
   </PropertyGroup>
-  
+
+  <!-- TODO: buildTransitive targets that have the RemoveWinMDReference target -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="0.7.1-private.0" IncludeAssets="build" ExcludeAssets="analyzers;contentFiles;lib;metadata;runtimes" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.4-5nov.0" 
+                      IncludeAssets="build" />
   </ItemGroup>
 
   <ItemGroup>

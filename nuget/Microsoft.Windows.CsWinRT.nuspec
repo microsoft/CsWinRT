@@ -40,17 +40,17 @@
     
     <!-- Add the WinRT.Runtime sources to the pkg for embedded scenarios -->
 
-    <file src="..\src\WinRT.Runtime\*.cs" exclude="..\src\WinRT.Runtime\*.net*.cs" target="contentFiles\cs\any\WinRT.Runtime" />
-    <file src="..\src\WinRT.Runtime\*net5*.cs" target="contentFiles\cs\net5.0\WinRT.Runtime" />
-    <file src="..\src\WinRT.Runtime\*netstandard2.0*.cs" target="contentFiles\cs\netstandard2.0\WinRT.Runtime" />
+    <file src="..\src\WinRT.Runtime\*.cs" exclude="..\src\WinRT.Runtime\*.net*.cs" target="embedded\any\" />
+    <file src="..\src\WinRT.Runtime\*net5*.cs" target="embedded\net5.0\" />
+    <file src="..\src\WinRT.Runtime\*netstandard2.0*.cs" target="embedded\netstandard2.0\" />
 
-    <file src="..\src\WinRT.Runtime\Interop\*.cs" exclude="..\src\WinRT.Runtime\Interop\*.net*.cs"  target="contentFiles\cs\any\WinRT.Runtime\Interop" />
-    <file src="..\src\WinRT.Runtime\Interop\*net5*.cs" target="contentFiles\cs\net5.0\WinRT.Runtime\Interop" />
-    <file src="..\src\WinRT.Runtime\Interop\*netstandard2.0*.cs" target="contentFiles\cs\netstandard2.0\WinRT.Runtime\Interop" />
+    <file src="..\src\WinRT.Runtime\Interop\*.cs" exclude="..\src\WinRT.Runtime\Interop\*.net*.cs"  target="embedded\any\" />
+    <file src="..\src\WinRT.Runtime\Interop\*net5*.cs" target="embedded\net5.0\" />
+    <file src="..\src\WinRT.Runtime\Interop\*netstandard2.0*.cs" target="embedded\netstandard2.0\" />
 
-    <file src="..\src\WinRT.Runtime\Projections\*.cs" exclude="..\src\WinRT.Runtime\Projections\*.net*.cs" target="contentFiles\cs\any\WinRT.Runtime\Projections" />
-    <file src="..\src\WinRT.Runtime\Projections\*net5*.cs" target="contentFiles\cs\net5.0\WinRT.Runtime\Projections" />
-    <file src="..\src\WinRT.Runtime\Projections\*netstandard2.0*.cs" target="contentFiles\cs\netstandard2.0\WinRT.Runtime\Projections" />
+    <file src="..\src\WinRT.Runtime\Projections\*.cs" exclude="..\src\WinRT.Runtime\Projections\*.net*.cs" target="embedded\any\" />
+    <file src="..\src\WinRT.Runtime\Projections\*net5*.cs" target="embedded\net5.0\" />
+    <file src="..\src\WinRT.Runtime\Projections\*netstandard2.0*.cs" target="embedded\netstandard2.0\" />
 
     <file src="$guid_patch$" target ="build\tools\IIDOptimizer"/>
   </files>
