@@ -4,9 +4,6 @@
 
 namespace Windows.Foundation
 {
-#if EMBED
-    internal
-#endif
     class SR
     {
         public static string Argument_BufferLengthExceedsCapacity = "The specified useful data length exceeds the capacity of this buffer.";

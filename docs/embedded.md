@@ -13,17 +13,19 @@ This means projects using embedded support no longer have a dependency on a proj
 For an example, you can look at the [sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/TestEmbedded). 
 
 Embedded support introduces new features to the C#/WinRT toolchain:
- * Decreased component/app size: The devloper only needs to include the minimum necessary parts of the Windows SDK required by their component or app, reducing the size of the output .dll significantly.
+ * Decreased component/app size: The developer only needs to include the minimum necessary parts of the Windows SDK required by their component or app, reducing the size of the output .dll significantly.
  * Downlevel support: App developers on .NET 5+ can target Windows 7 (`net5.0-windows`) and light-up on Windows 10 
   (and Windows 11) when consuming an embedded .NET 5+ library. 
  * Removes the need for multi-targeting: Library authors can support all .NET Standard 2.0 app consumers, including .NET 5+, without the need for multi-targeting. App consumers are able to target any .NET Standard 2.0 compatible TFM (e.g. `netcoreapp3.1`, `net48`, and `net5.0-windows`).
+
+It is important to remember that embedded support constrains the scope of Windows Runtime types to your binary. 
 
 ## Scenarios
 
 This feature allows C# apps and libraries to target `net5.0` (and above), .NET Framework 4.6.1+, `netcoreapp3.1`, and `netstandard2.0` while also using the Windows SDK.
 Moreover, a library can target `netstandard2.0` and be able to run on NetFX, Net Core and Net 5. 
 
-Note: the `netstandard2.0` generated projection is not optimized for .NET 5. 
+Note: the `netstandard2.0` generated projection is not optimized for .NET 5 and won't be as performant. 
 
 ## Usage 
 
