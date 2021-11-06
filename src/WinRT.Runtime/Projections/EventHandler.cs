@@ -123,10 +123,15 @@ namespace ABI.System
         {
             try
             {
+#if NET
+                var invoke = ComWrappersSupport.FindObject<global::System.EventHandler<T>>(new IntPtr(thisPtr));
+                invoke.Invoke(MarshalInspectable<object>.FromAbi(sender), Marshaler<T>.FromAbi(args));
+#else
                 global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(new IntPtr(thisPtr), (global::System.EventHandler<T> invoke) =>
                 {
                     invoke.Invoke(MarshalInspectable<object>.FromAbi(sender), Marshaler<T>.FromAbi(args));
                 });
+#endif
             }
             catch (global::System.Exception __exception__)
             {
@@ -254,12 +259,19 @@ namespace ABI.System
         {
             try
             {
+#if NET
+                var invoke = ComWrappersSupport.FindObject<global::System.EventHandler>(thisPtr);
+                invoke.Invoke(
+                    MarshalInspectable<object>.FromAbi(sender),
+                    MarshalInspectable<object>.FromAbi(args) as EventArgs ?? EventArgs.Empty);
+#else
                 global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(thisPtr, (global::System.EventHandler invoke) =>
                 {
                     invoke.Invoke(
                         MarshalInspectable<object>.FromAbi(sender),
                         MarshalInspectable<object>.FromAbi(args) as EventArgs ?? EventArgs.Empty);
                 });
+#endif
             }
             catch (global::System.Exception __exception__)
             {

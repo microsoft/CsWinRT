@@ -6536,25 +6536,41 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
                 }
                 w.write(")");
             },
-            bind<write_managed_method_call>(signature,
-                w.write_temp(R"(global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(%, (% invoke) =>
+            [&](writer& w) {
+                if (settings.netstandard_compat)
+                {
+                    write_managed_method_call(w, signature,
+                        w.write_temp(R"(
+global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(%, (% invoke) =>
 {
     %
 }))",
-                    is_generic ? "new IntPtr(thisPtr)" : "thisPtr",
-                    type_name,
-                    bind([&](writer& w)
-                    {
-                        if (signature.return_signature())
-                        {
-                            w.write("return invoke(%);", "%");
-                        }
-                        else
-                        {
-                            w.write("invoke(%);");
-                        }
-                    })
-        )));
+                            is_generic ? "new IntPtr(thisPtr)" : "thisPtr",
+                            type_name,
+                            bind([&](writer& w)
+                            {
+                                if (signature.return_signature())
+                                {
+                                    w.write("return invoke(%);", "%");
+                                }
+                                else
+                                {
+                                    w.write("invoke(%);");
+                                }
+                            })
+                        ));
+                }
+                else
+                {
+                    write_managed_method_call(w, signature,
+                        w.write_temp(R"(
+global::WinRT.ComWrappersSupport.FindObject<%>(%).Invoke(%)
+)",
+                            type_name,
+                            is_generic ? "new IntPtr(thisPtr)" : "thisPtr"
+                        ));
+                }
+            });
     }
 
     void write_constant(writer& w, Constant const& value)

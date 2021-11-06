@@ -1174,16 +1174,23 @@ namespace WinRT
                 return default;
             }
 
-            Guid iid_iunknown = IUnknownVftbl.IID;
-            Marshal.QueryInterface(ptr, ref iid_iunknown, out var iunknownPtr);
-            using var unknownObjRef = ObjectReference<IUnknownVftbl>.Attach(ref iunknownPtr);
-            if (unknownObjRef.IsReferenceToManagedObject)
+            IntPtr iunknownPtr = IntPtr.Zero;
+            try
             {
-                return (T) ComWrappersSupport.FindObject<object>(unknownObjRef.ThisPtr);
+                Guid iid_iunknown = IUnknownVftbl.IID;
+                Marshal.QueryInterface(ptr, ref iid_iunknown, out iunknownPtr);
+                if (IUnknownVftbl.IsReferenceToManagedObject(iunknownPtr))
+                {
+                    return (T)ComWrappersSupport.FindObject<object>(iunknownPtr);
+                }
+                else
+                {
+                    return ComWrappersSupport.CreateRcwForComObject<T>(ptr);
+                }
             }
-            else
+            finally
             {
-                return ComWrappersSupport.CreateRcwForComObject<T>(ptr);
+                DisposeAbi(iunknownPtr);
             }
         }
 

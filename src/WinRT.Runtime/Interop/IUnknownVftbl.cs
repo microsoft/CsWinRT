@@ -24,5 +24,15 @@ namespace WinRT.Interop
         public static IntPtr AbiToProjectionVftblPtr => ComWrappersSupport.IUnknownVftblPtr;
 
         internal static readonly Guid IID = new(0, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+
+        internal bool Equals(IUnknownVftbl other)
+        {
+            return _QueryInterface == other._QueryInterface && _AddRef == other._AddRef && _Release == other._Release;
+        }
+
+        internal unsafe static bool IsReferenceToManagedObject(IntPtr ptr)
+        {
+            return (**(IUnknownVftbl**)ptr).Equals(AbiToProjectionVftbl);
+        }
     }
 }
