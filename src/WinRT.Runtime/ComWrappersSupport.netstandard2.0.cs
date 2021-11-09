@@ -24,6 +24,42 @@ namespace WinRT
 
         internal static InspectableInfo GetInspectableInfo(IntPtr pThis) => UnmanagedObject.FindObject<ComCallableWrapper>(pThis).InspectableInfo;
 
+        private static object HelpRCW_GetRuntimeWrapper(string runtimeClassName, IInspectable inspectable)
+        {
+            if (string.IsNullOrEmpty(runtimeClassName)) 
+            { 
+                return inspectable; 
+            } 
+            else
+            { 
+                _typedObjectFactoryCacheLock.EnterReadLock(); 
+                try 
+                { 
+                    if (TypedObjectFactoryCache.TryGetValue(runtimeClassName, out var factoryFunc)) 
+                    { 
+                        return factoryFunc(inspectable); 
+                    } 
+                } 
+                finally 
+                { 
+                    _typedObjectFactoryCacheLock.ExitReadLock(); 
+                }
+
+
+                _typedObjectFactoryCacheLock.EnterWriteLock();
+                try
+                {
+                    var newFactory = CreateTypedRcwFactory(runtimeClassName);
+                    TypedObjectFactoryCache[runtimeClassName] = newFactory;
+                    return newFactory(inspectable);
+                }
+                finally
+                {
+                    _typedObjectFactoryCacheLock.ExitWriteLock();
+                }
+            }
+        }
+
         public static T CreateRcwForComObject<T>(IntPtr ptr)
         {
             if (ptr == IntPtr.Zero)
@@ -42,7 +78,8 @@ namespace WinRT
                 {
                     var inspectable = new IInspectable(identity);
                     string runtimeClassName = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
-                    runtimeWrapper = string.IsNullOrEmpty(runtimeClassName) ? inspectable : TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
+                    runtimeWrapper = HelpRCW_GetRuntimeWrapper(runtimeClassName, inspectable); 
+                    // runtimeWrapper = string.IsNullOrEmpty(runtimeClassName) ? inspectable : TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
                 {

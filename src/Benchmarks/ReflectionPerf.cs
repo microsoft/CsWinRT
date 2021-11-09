@@ -36,6 +36,7 @@ namespace Benchmarks
             return instance.NewTypeErasedNullableObject;
         }
 
+        /*
         [Benchmark]
         public object ExecuteMarshalingForExistingKeyvaluePair()
         {
@@ -59,6 +60,7 @@ namespace Benchmarks
         {
             return instance.DefaultStringProperty;
         }
+        */
 
         [Benchmark]
         public object ExecuteMarshalingForCustomObject()
@@ -66,6 +68,7 @@ namespace Benchmarks
             return instance.NewWrappedClassObject;
         }
 
+        /*
         [Benchmark]
         public void IntEventSource()
         {
@@ -81,6 +84,7 @@ namespace Benchmarks
             instance.IntPropertyChanged += (object sender, int value) => z = value;
             instance.RaiseIntChanged();
         }
+        */
 
         [Benchmark]
         public int ExistingDictionaryLookup()

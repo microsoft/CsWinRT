@@ -30,6 +30,8 @@ using Windows.Security.Cryptography.Core;
 using System.Reflection;
 using Windows.Devices.Enumeration.Pnp;
 
+using BenchmarkComponent;
+
 #if NET
 using WeakRefNS = System;
 #else
@@ -47,11 +49,134 @@ namespace UnitTest
     {
         public Class TestObject { get; private set; }
 
+        /* Benchmarks.csproj Types */
+        private ClassWithMultipleInterfaces classWithMultipleInterfaces;
+        private Windows.ApplicationModel.Chat.ChatMessage chatMessage;
+        private ClassWithMarshalingRoutines classWithMarshalingRoutines;
+        private IDictionary<String, WrappedClass> instanceDictionary;
+        
+
         public TestCSharp()
         {
             TestObject = new Class();
+            classWithMultipleInterfaces = new();
+            chatMessage = new();
+            classWithMarshalingRoutines = new();
+            instanceDictionary = classWithMarshalingRoutines.ExistingDictionary;
         }
 
+        /* QueryInterface Benchmarks */
+
+        [Fact]
+        public void Test_QIPerf_1()
+        {
+            var a = classWithMultipleInterfaces.DefaultIntProperty;
+            var b = classWithMultipleInterfaces.IntProperty;
+            var c = classWithMultipleInterfaces.BoolProperty;
+            var d = classWithMultipleInterfaces.DefaultBoolProperty;
+
+            classWithMultipleInterfaces.DefaultIntProperty = 4;
+            classWithMultipleInterfaces.IntProperty = 4;
+
+            var e = chatMessage.IsForwardingDisabled;
+            var f = chatMessage.IsSeen;
+        }
+
+        [Fact]
+        public int Test_QIPerf_2()
+        {
+            ClassWithMultipleInterfaces instance2 = new();
+            return instance2.DefaultIntProperty;
+        }
+
+
+        [Fact] 
+        public int Test_QIPerf_3() 
+        { 
+            ClassWithMultipleInterfaces instance2 = new(); 
+            return instance2.IntProperty; 
+        }
+        
+        /* ReflectionPerf Benchmarks */
+        [Fact]
+        public void Test_ReflPerf_1()
+        {
+            var a = classWithMarshalingRoutines.NewTypeErasedArrayObject;
+            var b = classWithMarshalingRoutines.NewTypeErasedNullableObject;
+            var c = classWithMarshalingRoutines.NewTypeErasedKeyValuePairObject;
+            
+            /*
+            var d = classWithMarshalingRoutines.ExistingDictionary;
+            var e = classWithMarshalingRoutines.ExistingTypeErasedArrayObject;
+            var f = classWithMarshalingRoutines.ExistingTypeErasedKeyValuePairObject;
+            var g = classWithMarshalingRoutines.ExistingTypeErasedNullableObject;
+
+            var y = classWithMarshalingRoutines.DefaultStringProperty;
+            */
+
+            var z = classWithMarshalingRoutines.NewWrappedClassObject;
+        }
+
+
+        /*
+        [Fact]
+        public void Test_ReflPerf_2()
+        {
+            ClassWithMarshalingRoutines instance = new();
+
+            int x = 0;
+            int y = 1;
+            int z;
+
+            instance.IntProperty = x;
+            instance.CallForInt(() => y);
+
+            instance.IntPropertyChanged += (object sender, int value) => z = value;
+            instance.RaiseIntChanged();
+        }
+        */
+
+        [Fact]
+        public int Test_ReflPerf_3()
+        {
+            var dict = classWithMarshalingRoutines.ExistingDictionary;
+            var count = 0;
+            for (int i = 0; i < 100; i++)
+            {
+                if (dict["a"] != null)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        [Fact]
+        public object Test_ReflPerf_4()
+        {
+            var dict = classWithMarshalingRoutines.ExistingDictionary;
+            WrappedClass cache = null;
+            for (int i = 0; i < 1000; i++)
+            {
+                cache = dict["a"];
+            }
+            return cache;
+        }
+
+        [Fact]
+        public object Test_ReflPerf_5()
+        {
+            return instanceDictionary["a"];
+        }
+
+        [Fact]
+        public object Test_ReflPerf_6()
+        {
+            var dict = classWithMarshalingRoutines.ExistingDictionary;
+            return dict["a"];
+        }
+
+        /* End Benchmarks Tests */
 
         // Test a fix for a bug in Mono.Cecil that was affecting the IIDOptimizer when it encountered long class names 
         [Fact]

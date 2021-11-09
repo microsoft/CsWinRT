@@ -198,8 +198,6 @@ namespace WinRT
 
         internal static Func<IInspectable, object> GetTypedRcwFactory(string runtimeClassName)
         {
-            // _typedObjectFactoryCacheLock
-
             _typedObjectFactoryCacheLock.EnterReadLock();
             try
             {
@@ -224,14 +222,6 @@ namespace WinRT
             {
                 _typedObjectFactoryCacheLock.ExitWriteLock();
             }
-
-            /*
-                       
-            
-
-            return TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className));
-             
-             */ 
         }
     
         

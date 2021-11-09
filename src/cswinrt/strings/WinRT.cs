@@ -605,7 +605,7 @@ namespace WinRT
         }
 
         public static void Remove(IntPtr thisPtr, int index, System.WeakReference<State> state)
-        {
+        { 
             if (caches.TryGetValue(thisPtr, out var cache))
             {
                 statesLock.EnterWriteLock();
@@ -616,7 +616,8 @@ namespace WinRT
                     ((ICollection<KeyValuePair<int, System.WeakReference<State>>>)cache.states).Remove(
                         new KeyValuePair<int, System.WeakReference<State>>(index, state));
 #else
-                    cache.states.TryRemove(new KeyValuePair<int, System.WeakReference<State>>(index, state));
+                    
+                     cache.states.Remove(index);
 #endif
                 }
                 finally

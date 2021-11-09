@@ -23,6 +23,7 @@ namespace Benchmarks
             return instance.DefaultIntProperty;
         }
 
+        /*
         [Benchmark]
         public int QueryNonDefaultInterface()
         {
@@ -75,5 +76,6 @@ namespace Benchmarks
             ClassWithMultipleInterfaces instance2 = new ClassWithMultipleInterfaces();
             return instance2.IntProperty;
         }
+        */
     }
 }

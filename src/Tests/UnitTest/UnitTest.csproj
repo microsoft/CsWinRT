@@ -16,6 +16,7 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\..\Projections\Benchmark\Benchmark.csproj" />
     <ProjectReference Include="..\..\Projections\TestSubset\TestSubset.csproj" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\..\Projections\WinUI\WinUI.csproj" />
