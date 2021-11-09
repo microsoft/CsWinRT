@@ -25,6 +25,7 @@ namespace WinRT.Interop
 
         internal static readonly Guid IID = new(0, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
 
+        // Avoids boxing when using default Equals.
         internal bool Equals(IUnknownVftbl other)
         {
             return _QueryInterface == other._QueryInterface && _AddRef == other._AddRef && _Release == other._Release;
