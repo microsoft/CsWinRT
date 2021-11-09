@@ -19,6 +19,20 @@ using ComInterfaceEntry = System.Runtime.InteropServices.ComWrappers.ComInterfac
 
 namespace WinRT
 {
+    internal class SynchronizedDictionary<TKey,TValue>
+    {
+        private System.Threading.ReaderWriterLockSlim _lock = new System.Threading.ReaderWriterLockSlim();
+        private Dictionary<TKey, TValue> _map;
+
+        public SynchronizedDictionary(Dictionary<TKey,TValue> dictionary)
+        {
+            _map = dictionary;
+        }
+
+
+    }
+
+
 #if EMBED
     internal
 #else
@@ -26,7 +40,8 @@ namespace WinRT
 #endif
     static partial class ComWrappersSupport
     {
-        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
+        private static System.Threading.ReaderWriterLockSlim _typedObjectFactoryCacheLock = new();
+        private readonly static Dictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new Dictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)

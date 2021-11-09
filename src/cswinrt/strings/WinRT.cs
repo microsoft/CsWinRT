@@ -455,10 +455,11 @@ namespace WinRT
         }
 
         private IWeakReference target;
-        private readonly ConcurrentDictionary<int, System.WeakReference<State>> states = new ConcurrentDictionary<int, System.WeakReference<State>>();
+        private static readonly ReaderWriterLockSlim statesLock = new ReaderWriterLockSlim();
+        private readonly Dictionary<int, System.WeakReference<State>> states = new Dictionary<int, System.WeakReference<State>>();
 
         private static readonly ReaderWriterLockSlim cachesLock = new ReaderWriterLockSlim();
-        private static readonly ConcurrentDictionary<IntPtr, Cache> caches = new ConcurrentDictionary<IntPtr, Cache>();
+        private static readonly Dictionary<IntPtr, Cache> caches = new Dictionary<IntPtr, Cache>();
 
         private Cache Update(IWeakReference target, int index, System.WeakReference<State> state)
         {
@@ -469,7 +470,16 @@ namespace WinRT
                 if (resolved == null)
                 {
                     this.target = target;
-                    states.Clear();
+
+                    statesLock.EnterWriteLock();
+                    try
+                    {
+                        states.Clear();
+                    }
+                    finally
+                    {
+                        statesLock.ExitWriteLock();
+                    }
                 }
             }
             SetState(index, state);
@@ -488,16 +498,32 @@ namespace WinRT
                 }
             }
 
-            if (states.TryGetValue(index, out var weakState))
+            statesLock.EnterReadLock();
+            try
             {
-                return weakState;
+                if (states.TryGetValue(index, out var weakState))
+                {
+                    return weakState;
+                }
             }
-            return null;
+            finally
+            {
+                statesLock.ExitReadLock();
+            }
+           return null;
         }
 
         private void SetState(int index, System.WeakReference<State> state)
         {
-            states[index] = state;
+            statesLock.EnterWriteLock();
+            try
+            { 
+                states[index] = state;
+            }
+            finally
+            {
+                statesLock.ExitWriteLock();
+            }
         }
 
         public static void Create(IObjectReference obj, int index, System.WeakReference<State> state)
@@ -530,16 +556,41 @@ namespace WinRT
             target = ABI.WinRT.Interop.IWeakReferenceSourceMethods.GetWeakReference(weakRefSource);
 #endif
 
+                /*
+                 * Instead of "AddOrUpdate" we use a Read lock to check if the key exists
+                 * then use a write lock and the variable to determine if we should use the update function or `new` up a Cache
+                
+                caches.AddOrUpdate(obj.ThisPtr,
+                    (IntPtr ThisPtr) => new Cache(target, index, state),
+                    (IntPtr ThisPtr, Cache cache) => cache.Update(target, index, state));   */
+
+            
+            bool shouldUpdate = false;
             cachesLock.EnterReadLock();
             try
             {
-                caches.AddOrUpdate(obj.ThisPtr,
-                    (IntPtr ThisPtr) => new Cache(target, index, state),
-                    (IntPtr ThisPtr, Cache cache) => cache.Update(target, index, state));
+                shouldUpdate |= caches.ContainsKey(obj.ThisPtr); 
             }
             finally
             {
                 cachesLock.ExitReadLock();
+            }
+
+            cachesLock.EnterWriteLock();
+            try
+            {
+                if (shouldUpdate)
+                {
+                    caches[obj.ThisPtr].Update(target, index, state);
+                }
+                else
+                {
+                    caches[obj.ThisPtr] = new Cache(target, index, state);
+                }
+            }
+            finally
+            {
+                cachesLock.ExitWriteLock();
             }
         }
 
@@ -557,28 +608,46 @@ namespace WinRT
         {
             if (caches.TryGetValue(thisPtr, out var cache))
             {
+                statesLock.EnterWriteLock();
+                try
+                {
 #if NETSTANDARD2_0
                     // https://devblogs.microsoft.com/pfxteam/little-known-gems-atomic-conditional-removals-from-concurrentdictionary/
                     ((ICollection<KeyValuePair<int, System.WeakReference<State>>>)cache.states).Remove(
                         new KeyValuePair<int, System.WeakReference<State>>(index, state));
 #else
-                cache.states.TryRemove(new KeyValuePair<int, System.WeakReference<State>>(index, state));
+                    cache.states.TryRemove(new KeyValuePair<int, System.WeakReference<State>>(index, state));
 #endif
-                // using double-checked lock idiom
-                if (cache.states.IsEmpty)
+                }
+                finally
                 {
-                    cachesLock.EnterWriteLock();
-                    try
+                    statesLock.ExitWriteLock();
+                }
+
+                // using double-checked lock idiom
+                statesLock.EnterReadLock();
+                try
+                {
+                    if (cache.states.Count == 0)
                     {
-                        if (cache.states.IsEmpty)
+                        cachesLock.EnterWriteLock();
+                        // TODO: do we need a second `statcksLock.EnterReadLock()` here?
+                        try
                         {
-                            caches.TryRemove(thisPtr, out var _);
+                            if (cache.states.Count == 0)
+                            {
+                                caches.Remove(thisPtr);
+                            }
+                        }
+                        finally
+                        {
+                            cachesLock.ExitWriteLock();
                         }
                     }
-                    finally
-                    {
-                        cachesLock.ExitWriteLock();
-                    }
+                }
+                finally
+                {
+                    statesLock.ExitReadLock();
                 }
             }
         }

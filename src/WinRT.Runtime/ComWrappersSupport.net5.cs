@@ -196,7 +196,43 @@ namespace WinRT
             ComWrappers = wrappers;
         }
 
-        internal static Func<IInspectable, object> GetTypedRcwFactory(string runtimeClassName) => TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className));
+        internal static Func<IInspectable, object> GetTypedRcwFactory(string runtimeClassName)
+        {
+            // _typedObjectFactoryCacheLock
+
+            _typedObjectFactoryCacheLock.EnterReadLock();
+            try
+            {
+                if (TypedObjectFactoryCache.ContainsKey(runtimeClassName))
+                {
+                    return TypedObjectFactoryCache[runtimeClassName];
+                }
+            }
+            finally
+            {
+                _typedObjectFactoryCacheLock.ExitReadLock();
+            }
+
+            _typedObjectFactoryCacheLock.EnterWriteLock();
+            try
+            {
+                var newFactory = CreateTypedRcwFactory(runtimeClassName);
+                TypedObjectFactoryCache[runtimeClassName] = newFactory;
+                return newFactory;
+            }
+            finally
+            {
+                _typedObjectFactoryCacheLock.ExitWriteLock();
+            }
+
+            /*
+                       
+            
+
+            return TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className));
+             
+             */ 
+        }
     
         
         private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
