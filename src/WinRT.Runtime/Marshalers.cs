@@ -1150,7 +1150,7 @@ namespace WinRT
             }
             var publicType = o.GetType();
             Type helperType = Projections.FindCustomHelperTypeMapping(publicType, true);
-            if(helperType != null)
+            if (helperType != null)
             {
                 var parms = new[] { Expression.Parameter(typeof(object), "arg") };
                 var createMarshaler = Expression.Lambda<Func<object, IObjectReference>>(
@@ -1158,10 +1158,8 @@ namespace WinRT
                         new[] { Expression.Convert(parms[0], publicType) }), parms).Compile();
                 return createMarshaler(o);
             }
-            using (var ccw = ComWrappersSupport.CreateCCWForObject(o))
-            {
-                return ccw.As<IInspectable.Vftbl>(IInspectable.IID);
-            }
+
+            return ComWrappersSupport.CreateCCWForObject<IInspectable.Vftbl>(o, IInspectable.IID);
         }
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
@@ -1251,10 +1249,8 @@ namespace WinRT
             {
                 return objRef.As<global::WinRT.Interop.IDelegateVftbl>(delegateIID);
             }
-            using (var ccw = ComWrappersSupport.CreateCCWForObject(o))
-            {
-                return ccw.As<global::WinRT.Interop.IDelegateVftbl>(delegateIID);
-            }
+
+            return ComWrappersSupport.CreateCCWForObject<global::WinRT.Interop.IDelegateVftbl>(o, delegateIID);
         }
     }
 
