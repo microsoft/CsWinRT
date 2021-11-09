@@ -103,20 +103,5 @@ namespace Benchmarks
             return instance;
             GC.KeepAlive(s);
         }
-
-//        [Benchmark]
-        public void AddIntEvent()
-        {
-            int z;
-            instance.IntPropertyChanged += (object sender, int value) => z = value;
-        }
-
-//        [Benchmark]
-        public void AddAndInvokeIntEvent()
-        {
-            int z;
-            instance.IntPropertyChanged += (object sender, int value) => z = value;
-            instance.RaiseIntChanged();
-        }
     }
 }
