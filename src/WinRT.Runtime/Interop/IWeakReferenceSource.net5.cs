@@ -44,10 +44,7 @@ namespace WinRT.Interop
                 return null;
             }
 
-            using (IObjectReference objReference = ComWrappersSupport.CreateCCWForObject(target))
-            {
-                return objReference.As(riid);
-            }
+            return ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(target, riid);
         }
     }
 }

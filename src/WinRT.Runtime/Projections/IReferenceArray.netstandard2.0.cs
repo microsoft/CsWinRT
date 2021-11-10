@@ -68,7 +68,7 @@ namespace ABI.Windows.Foundation
             {
                 return null;
             }
-            return ComWrappersSupport.CreateCCWForObject(value).As(PIID);
+            return ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(value, PIID);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;

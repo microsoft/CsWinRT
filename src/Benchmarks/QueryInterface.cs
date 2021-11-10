@@ -75,5 +75,11 @@ namespace Benchmarks
             ClassWithMultipleInterfaces instance2 = new ClassWithMultipleInterfaces();
             return instance2.IntProperty;
         }
+
+        [Benchmark]
+        public int StaticPropertyCall()
+        {
+            return Windows.System.Power.PowerManager.RemainingChargePercent;
+        }
     }
 }
