@@ -6567,7 +6567,8 @@ global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(%, (% invoke) =>
 global::WinRT.ComWrappersSupport.FindObject<%>(%).Invoke(%)
 )",
                             type_name,
-                            is_generic ? "new IntPtr(thisPtr)" : "thisPtr"
+                            is_generic ? "new IntPtr(thisPtr)" : "thisPtr",
+                            "%"
                         ));
                 }
             });
