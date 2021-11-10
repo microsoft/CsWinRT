@@ -59,6 +59,26 @@ namespace Benchmarks
             return message.IsSeen;
         }
 
+        [Benchmark]
+        public object DefaultObjectParameters()
+        {
+            instance.DefaultObjectProperty = new ClassWithMultipleInterfaces();
+            return instance.DefaultObjectProperty;
+        }
+
+        [Benchmark]
+        public object DefaultStringParameters()
+        {
+            instance.DefaultStringProperty = "Hello";
+            return instance.DefaultObjectProperty;
+        }
+
+        [Benchmark]
+        public object DynamicCast()
+        {
+            return (ClassWithMarshalingRoutines)instance.NewObject();
+        }
+
         // The following 2 benchmarks try to benchmark the time taken for the first call
         // rather than the mean time over several calls.  It has the overhead of the object
         // construction, but it can be used to track regressions to performance.

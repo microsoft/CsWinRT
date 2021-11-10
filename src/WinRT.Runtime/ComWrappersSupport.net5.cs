@@ -197,7 +197,8 @@ namespace WinRT
         }
 
         internal static Func<IInspectable, object> GetTypedRcwFactory(string runtimeClassName) => TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className));
-    
+
+        internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCache.GetOrAdd(implementationType.FullName, className => CreateTypedRcwFactory(implementationType));
         
         private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
         {
@@ -456,6 +457,13 @@ namespace WinRT
             if (objRef.TryAs<IInspectable.Vftbl>(IInspectable.IID, out var inspectableRef) == 0)
             {
                 IInspectable inspectable = new IInspectable(inspectableRef);
+
+                if (ComWrappersSupport.CreateRCWType.IsValueCreated
+                    && ComWrappersSupport.CreateRCWType.Value != null
+                    && ComWrappersSupport.CreateRCWType.Value.IsSealed)
+                {
+                    return ComWrappersSupport.GetTypedRcwFactory(ComWrappersSupport.CreateRCWType.Value)(inspectable);
+                }
 
                 string runtimeClassName = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType.Value);
                 if (string.IsNullOrEmpty(runtimeClassName))
