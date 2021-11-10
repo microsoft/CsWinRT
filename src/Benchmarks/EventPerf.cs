@@ -48,7 +48,6 @@ namespace Benchmarks
             System.EventHandler<int> s = (object sender, int value) => z = value;
             instance.IntPropertyChanged += s;
             return instance;
-            GC.KeepAlive(s);
         }
 
         [Benchmark]
@@ -62,8 +61,6 @@ namespace Benchmarks
             System.EventHandler<double> t = (object sender, double value) => y = value;
             instance.DoublePropertyChanged += t;
             return instance;
-            GC.KeepAlive(s);
-            GC.KeepAlive(t);
         }
 
         [Benchmark]
@@ -75,7 +72,6 @@ namespace Benchmarks
             instance.IntPropertyChanged += s;
             instance.RaiseIntChanged();
             return instance;
-            GC.KeepAlive(s);
         }
 
         [Benchmark]
