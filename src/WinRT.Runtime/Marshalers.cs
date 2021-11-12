@@ -1150,7 +1150,7 @@ namespace WinRT
             }
             var publicType = o.GetType();
             Type helperType = Projections.FindCustomHelperTypeMapping(publicType, true);
-            if(helperType != null)
+            if (helperType != null)
             {
                 var parms = new[] { Expression.Parameter(typeof(object), "arg") };
                 var createMarshaler = Expression.Lambda<Func<object, IObjectReference>>(
@@ -1158,10 +1158,8 @@ namespace WinRT
                         new[] { Expression.Convert(parms[0], publicType) }), parms).Compile();
                 return createMarshaler(o);
             }
-            using (var ccw = ComWrappersSupport.CreateCCWForObject(o))
-            {
-                return ccw.As<IInspectable.Vftbl>(IInspectable.IID);
-            }
+
+            return ComWrappersSupport.CreateCCWForObject<IInspectable.Vftbl>(o, IInspectable.IID);
         }
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
@@ -1173,24 +1171,24 @@ namespace WinRT
             {
                 return default;
             }
-            using var objRef = ObjectReference<IUnknownVftbl>.FromAbi(ptr);
-            using var unknownObjRef = objRef.As<IUnknownVftbl>(IUnknownVftbl.IID);
-            if (unknownObjRef.IsReferenceToManagedObject)
+
+            IntPtr iunknownPtr = IntPtr.Zero;
+            try
             {
-                return (T) ComWrappersSupport.FindObject<object>(unknownObjRef.ThisPtr);
-            }
-            else if (Projections.TryGetMarshalerTypeForProjectedRuntimeClass<T>(objRef, out Type type))
-            {
-                var fromAbiMethod = type.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-                if (fromAbiMethod is null)
+                Guid iid_iunknown = IUnknownVftbl.IID;
+                Marshal.QueryInterface(ptr, ref iid_iunknown, out iunknownPtr);
+                if (IUnknownVftbl.IsReferenceToManagedObject(iunknownPtr))
                 {
-                    throw new MissingMethodException();
+                    return (T)ComWrappersSupport.FindObject<object>(iunknownPtr);
                 }
-                return (T) fromAbiMethod.Invoke(null, new object[] { ptr });
+                else
+                {
+                    return ComWrappersSupport.CreateRcwForComObject<T>(ptr);
+                }
             }
-            else
+            finally
             {
-                return ComWrappersSupport.CreateRcwForComObject<T>(ptr);
+                DisposeAbi(iunknownPtr);
             }
         }
 
@@ -1251,10 +1249,8 @@ namespace WinRT
             {
                 return objRef.As<global::WinRT.Interop.IDelegateVftbl>(delegateIID);
             }
-            using (var ccw = ComWrappersSupport.CreateCCWForObject(o))
-            {
-                return ccw.As<global::WinRT.Interop.IDelegateVftbl>(delegateIID);
-            }
+
+            return ComWrappersSupport.CreateCCWForObject<global::WinRT.Interop.IDelegateVftbl>(o, delegateIID);
         }
     }
 

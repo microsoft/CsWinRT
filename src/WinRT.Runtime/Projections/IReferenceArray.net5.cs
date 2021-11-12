@@ -64,11 +64,7 @@ namespace ABI.Windows.Foundation
     {
         public static IObjectReference CreateMarshaler(object value)
         {
-            if (value is null)
-            {
-                return null;
-            }
-            return ComWrappersSupport.CreateCCWForObject(value).As(PIID);
+            return value is null ? null : ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(value, PIID);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
