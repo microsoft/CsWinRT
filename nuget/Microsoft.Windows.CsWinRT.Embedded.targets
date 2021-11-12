@@ -19,9 +19,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTEmbeddedSourcesNet2 Include="$(CsWinRTPath)embedded\netstandard2.0\*.cs"/>
   </ItemGroup>
  
-  <!-- Copy sources that are for any framework -->
+<!-- Copy sources that are for any framework -->
   <Target Name="CsWinRTAddEmbeddedRuntime_AnySources"
-          AfterTargets="CsWinRTGenerateProjection">
+	    AfterTargets="CsWinRTGenerateProjection"
+	    BeforeTargets="CsWinRTIncludeProjection">
     
     <Copy SourceFiles="@(CsWinRTEmbeddedSourcesAny)"
           DestinationFolder="$(CsWinRTGeneratedFilesDir)"
@@ -30,10 +31,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     
   </Target>
   
-  <!-- Copy netstandard2.0 sources -->
+<!-- Copy netstandard2.0 sources -->
   <Target Name="CsWinRTAddEmbeddedRuntime_Net2Sources"
           Condition="'$(CsWinRTEmbeddedTFMNet5OrGreater)' != 'true'"
-          AfterTargets="CsWinRTGenerateProjection">
+          AfterTargets="CsWinRTGenerateProjection"
+          BeforeTargets="CsWinRTIncludeProjection">
     
     <Copy SourceFiles="@(CsWinRTEmbeddedSourcesNet2)"
           DestinationFolder="$(CsWinRTGeneratedFilesDir)"
@@ -42,10 +44,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     
   </Target>
   
-  <!-- Copy net5.0 sources -->
+<!-- Copy net5.0 sources -->
   <Target Name="CsWinRTAddEmbeddedRuntime_Net5Sources"
           Condition="'$(CsWinRTEmbeddedTFMNet5OrGreater)' == 'true'"
-          AfterTargets="CsWinRTGenerateProjection">
+          AfterTargets="CsWinRTGenerateProjection"
+          BeforeTargets="CsWinRTIncludeProjection">
     
     <Copy SourceFiles="@(CsWinRTEmbeddedSourcesNet5)"
           DestinationFolder="$(CsWinRTGeneratedFilesDir)"
