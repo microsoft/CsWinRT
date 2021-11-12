@@ -70,7 +70,7 @@ namespace Benchmarks
         public object DefaultStringParameters()
         {
             instance.DefaultStringProperty = "Hello";
-            return instance.DefaultObjectProperty;
+            return instance.DefaultStringProperty;
         }
 
         [Benchmark]

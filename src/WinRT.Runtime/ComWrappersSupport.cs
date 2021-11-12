@@ -26,7 +26,7 @@ namespace WinRT
 #endif
     static partial class ComWrappersSupport
     {
-        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCacheForString = new ConcurrentDictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
+        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCacheForRuntimeClassName = new ConcurrentDictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
         private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new ConcurrentDictionary<Type, Func<IInspectable, object>>();
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
 
@@ -331,7 +331,7 @@ namespace WinRT
                 Expression.Call(fromAbiMethod, Expression.Property(parms[0], "ThisPtr")), parms).Compile();
         }
 
-        internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName = "")
+        internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName = null)
         {
             if (implementationType == null)
             {
