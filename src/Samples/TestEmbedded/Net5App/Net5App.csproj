@@ -7,10 +7,10 @@
     <CsWinRTWindowsMetadata>sdk</CsWinRTWindowsMetadata>
   </PropertyGroup>
 
-  <!-- TODO: buildTransitive targets that have the RemoveWinMDReference target -->
+<!-- CsWinRT reference needed for the target that blocks NETSDK1130 for the C++/WinRT components 
+             (transitive project reference asset) -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.4-5nov.0" 
-                      IncludeAssets="build" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="1.4.0-prerelease.211109.3" />
   </ItemGroup>
 
   <ItemGroup>

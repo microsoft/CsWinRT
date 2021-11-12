@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.4-5nov.0" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="1.4.0-prerelease.211109.3" />
     <PackageReference Include="System.Memory" Version="4.5.4" />
     <PackageReference Include="System.Runtime.Extensions" Version="4.3.1" />
   </ItemGroup>
@@ -30,24 +30,10 @@
       Beta;
       Gamma;
       Windows.Devices.Geolocation;
-      Windows.Foundation.Metadata.ContractVersion;
-      Windows.Foundation.Metadata.OverloadAttribute;
+      Windows.Foundation.Metadata;
       Windows.Foundation.UniversalApiContract;
-      Windows.Foundation.Metadata.DualApiPartition;
-      Windows.Foundation.Metadata.MarshalingBehavior;
-      Windows.Foundation.Metadata.MarshalingType;
-      Windows.Foundation.Metadata.Activatable;
-      Windows.Foundation.Metadata.Static;
-      Windows.Foundation.Metadata.Threading;
-      Windows.Foundation.Metadata.ThreadingModel;
-      Windows.Foundation.Metadata.Muse;
-      Windows.Foundation.Metadata.ExclusiveTo;
-      Windows.Foundation.Metadata.ApiContract;
-      Windows.Foundation.Metadata.AttributeName;
-      Windows.Foundation.Metadata.AllowMultiple;
       Windows.Foundation.IAsyncOperation;
       Windows.Foundation.TypedEventHandler;
-      Windows.Foundation.UniversalApiContract;
       Windows.Foundation.FoundationContract;
       Windows.Foundation.IAsyncInfo;
       Windows.Foundation.IAsyncAction;

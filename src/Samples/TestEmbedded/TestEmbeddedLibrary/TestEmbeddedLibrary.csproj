@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.4-5nov.0" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="1.4.0-prerelease.211109.3" />
   </ItemGroup>
 
   <ItemGroup>
