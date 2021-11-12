@@ -101,8 +101,8 @@ namespace UnitTest
         [Fact]
         public void Test_ReflPerf_1()
         {
-            var a = classWithMarshalingRoutines.NewTypeErasedArrayObject;
-            var b = classWithMarshalingRoutines.NewTypeErasedNullableObject;
+            // var a = classWithMarshalingRoutines.NewTypeErasedArrayObject;
+            // var b = classWithMarshalingRoutines.NewTypeErasedNullableObject;
             var c = classWithMarshalingRoutines.NewTypeErasedKeyValuePairObject;
             
             /*

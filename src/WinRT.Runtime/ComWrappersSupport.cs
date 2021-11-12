@@ -40,7 +40,7 @@ namespace WinRT
 #endif
     static partial class ComWrappersSupport
     {
-        private static System.Threading.ReaderWriterLockSlim _typedObjectFactoryCacheLock = new();
+        private static System.Threading.ReaderWriterLockSlim _typedObjectFactoryCacheLock = new(System.Threading.LockRecursionPolicy.SupportsRecursion);
         private readonly static Dictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new Dictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
 

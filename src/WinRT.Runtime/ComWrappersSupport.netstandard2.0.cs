@@ -19,8 +19,10 @@ namespace WinRT
     {
         private static ConditionalWeakTable<object, ComCallableWrapper> ComWrapperCache = new ConditionalWeakTable<object, ComCallableWrapper>();
 
-        private static ConcurrentDictionary<IntPtr, System.WeakReference<object>> RuntimeWrapperCache = new ConcurrentDictionary<IntPtr, System.WeakReference<object>>();
-        private readonly static ConcurrentDictionary<Type, Func<object, IObjectReference>> TypeObjectRefFuncCache = new ConcurrentDictionary<Type, Func<object, IObjectReference>>();
+        private static ReaderWriterLockSlim RuntimeWrapperCacheLock = new();
+        private static Dictionary<IntPtr, System.WeakReference<object>> RuntimeWrapperCache = new Dictionary<IntPtr, System.WeakReference<object>>();
+        private static ReaderWriterLockSlim TypeObjectRefFuncCacheLock = new();
+        private readonly static Dictionary<Type, Func<object, IObjectReference>> TypeObjectRefFuncCache = new Dictionary<Type, Func<object, IObjectReference>>();
 
         internal static InspectableInfo GetInspectableInfo(IntPtr pThis) => UnmanagedObject.FindObject<ComCallableWrapper>(pThis).InspectableInfo;
 
@@ -78,7 +80,40 @@ namespace WinRT
                 {
                     var inspectable = new IInspectable(identity);
                     string runtimeClassName = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
-                    runtimeWrapper = HelpRCW_GetRuntimeWrapper(runtimeClassName, inspectable); 
+                    if (string.IsNullOrEmpty(runtimeClassName))
+                    {
+                        runtimeWrapper = inspectable;
+                    }
+                    else
+                    {
+                        _typedObjectFactoryCacheLock.EnterReadLock();
+                        try
+                        {
+                            if (TypedObjectFactoryCache.TryGetValue(runtimeClassName, out var factoryFunc))
+                            {
+                                runtimeWrapper = factoryFunc(inspectable);
+                            }
+                        }
+                        finally
+                        {
+                            _typedObjectFactoryCacheLock.ExitReadLock();
+                        }
+
+
+                        _typedObjectFactoryCacheLock.EnterWriteLock();
+                        try
+                        {
+                            var newFactory = CreateTypedRcwFactory(runtimeClassName);
+                            TypedObjectFactoryCache[runtimeClassName] = newFactory;
+                            runtimeWrapper = newFactory(inspectable);
+                        }
+                        finally
+                        {
+                            _typedObjectFactoryCacheLock.ExitWriteLock();
+                        }
+                    }
+
+                    // runtimeWrapper = HelpRCW_GetRuntimeWrapper(runtimeClassName, inspectable); 
                     // runtimeWrapper = string.IsNullOrEmpty(runtimeClassName) ? inspectable : TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
@@ -91,6 +126,42 @@ namespace WinRT
                 return runtimeWrapperReference;
             };
 
+            /////////
+            System.WeakReference<object> oldValue;
+            System.WeakReference<object> newValue;
+            RuntimeWrapperCacheLock.EnterReadLock();
+            try
+            {
+                RuntimeWrapperCache.TryGetValue(identity.ThisPtr, out oldValue);
+            }
+            finally
+            {
+                RuntimeWrapperCacheLock.ExitReadLock();
+            }
+
+            // If TryGetValue succeeded, then we update the value
+            if (oldValue != null) 
+            { 
+                newValue = !oldValue.TryGetTarget(out keepAliveSentinel) ? rcwFactory(identity.ThisPtr) : oldValue;
+            } 
+            else // otherwise, add a new key-value pair to the dictionary
+            { 
+                newValue = rcwFactory(identity.ThisPtr); 
+            }
+
+            RuntimeWrapperCacheLock.EnterWriteLock();
+            try
+            {
+                RuntimeWrapperCache[identity.ThisPtr] = newValue;
+            }
+            finally
+            {
+                RuntimeWrapperCacheLock.ExitWriteLock();
+            }
+
+            newValue.TryGetTarget(out object rcw);
+            
+            /*
             RuntimeWrapperCache.AddOrUpdate(
                 identity.ThisPtr,
                 rcwFactory,
@@ -102,6 +173,7 @@ namespace WinRT
                     }
                     return oldValue;
                 }).TryGetTarget(out object rcw);
+            */
 
             GC.KeepAlive(keepAliveSentinel);
 
@@ -131,28 +203,51 @@ namespace WinRT
                 return TryUnwrapObject(del.Target, out objRef);
             }
 
-            var objRefFunc = TypeObjectRefFuncCache.GetOrAdd(o.GetType(), (type) =>
+
+            Func<object, IObjectReference> objRefFunc;
+            Type oType = o.GetType();
+
+            TypeObjectRefFuncCacheLock.EnterReadLock();
+            try
             {
-                ObjectReferenceWrapperAttribute objRefWrapper = type.GetCustomAttribute<ObjectReferenceWrapperAttribute>();
+                TypeObjectRefFuncCache.TryGetValue(oType, out objRefFunc);
+            }
+            finally
+            {
+                TypeObjectRefFuncCacheLock.ExitReadLock();
+            }
+
+            // Will not be null if TryGetValue succeeds
+            if (objRefFunc is null)
+            { 
+                ObjectReferenceWrapperAttribute objRefWrapper = oType.GetCustomAttribute<ObjectReferenceWrapperAttribute>();
                 if (objRefWrapper is object)
                 {
-                    var field = type.GetField(objRefWrapper.ObjectReferenceField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-                    return (o) => (IObjectReference) field.GetValue(o);
-                }
-
-                ProjectedRuntimeClassAttribute projectedClass = type.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
+                    var field = oType.GetField(objRefWrapper.ObjectReferenceField, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                    objRefFunc = (o) => (IObjectReference)field.GetValue(o);
+                } 
+                
+                ProjectedRuntimeClassAttribute projectedClass = oType.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
                 if (projectedClass is object && projectedClass.DefaultInterfaceProperty != null)
                 {
-                    var property = type.GetProperty(projectedClass.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-                    return (o) =>
+                    var property = oType.GetProperty(projectedClass.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                    objRefFunc = (o) =>
                     {
                         TryUnwrapObject(property.GetValue(o), out var objRef);
                         return objRef;
                     };
                 }
-
-                return null;
-            });
+ 
+                TypeObjectRefFuncCacheLock.EnterWriteLock();
+                try
+                {
+                    TypeObjectRefFuncCache[oType] = objRefFunc;
+                }
+                finally
+                {
+                    TypeObjectRefFuncCacheLock.ExitWriteLock();
+                }
+            }
 
             objRef = objRefFunc != null ? objRefFunc(o) : null;
             return objRef != null;
@@ -162,7 +257,30 @@ namespace WinRT
         {
             var referenceWrapper = new System.WeakReference<object>(obj);
             var _ = new RuntimeWrapperCleanup(thisPtr, referenceWrapper);
-            RuntimeWrapperCache.TryAdd(thisPtr, referenceWrapper);
+
+            var contains = false;
+            RuntimeWrapperCacheLock.EnterReadLock();
+            try
+            {
+                contains |= RuntimeWrapperCache.ContainsKey(thisPtr);
+            }
+            finally
+            {
+                RuntimeWrapperCacheLock.ExitReadLock();
+            }
+
+            if (!contains)
+            {
+                RuntimeWrapperCacheLock.EnterWriteLock();
+                try
+                {
+                    RuntimeWrapperCache.Add(thisPtr, referenceWrapper);
+                }
+                finally
+                {
+                    RuntimeWrapperCacheLock.ExitWriteLock();
+                }
+            }
         }
 
         // If we aren't in the activation scenario and we need to register an RCW after the fact,
@@ -173,15 +291,40 @@ namespace WinRT
         {
             object registered = obj;
             var referenceWrapper = new System.WeakReference<object>(obj);
-            RuntimeWrapperCache.AddOrUpdate(thisPtr, referenceWrapper, (_, value) =>
+
+            System.WeakReference<object> value;
+            RuntimeWrapperCacheLock.EnterReadLock();
+            try
             {
-                value.TryGetTarget(out registered);
-                if (registered is null)
+                RuntimeWrapperCache.TryGetValue(thisPtr, out value);
+            }
+            finally
+            {
+                RuntimeWrapperCacheLock.ExitReadLock();
+            }
+
+            RuntimeWrapperCacheLock.EnterWriteLock();
+            try
+            {
+                // If TryGetValue succeeded, then we update the value
+                if (value != null)
                 {
-                    registered = obj;
+                    value.TryGetTarget(out registered);
+                    if (registered is null)
+                    {
+                        registered = obj;
+                    }
+                    RuntimeWrapperCache[thisPtr] = value;
                 }
-                return value;
-            });
+                else // otherwise, add a new key-value pair to the dictionary
+                {
+                    RuntimeWrapperCache[thisPtr] = referenceWrapper;
+                }
+            }
+            finally
+            {
+                RuntimeWrapperCacheLock.ExitWriteLock();
+            }
 
             if (object.ReferenceEquals(registered, obj))
             {
@@ -260,7 +403,16 @@ namespace WinRT
                 }
                 else
                 {
-                    ((ICollection<KeyValuePair<IntPtr, System.WeakReference<object>>>)RuntimeWrapperCache).Remove(new KeyValuePair<IntPtr, System.WeakReference<object>>(_identityComObject, _runtimeWrapper));
+                    // ((ICollection<KeyValuePair<IntPtr, System.WeakReference<object>>>)RuntimeWrapperCache).Remove(new KeyValuePair<IntPtr, System.WeakReference<object>>(_identityComObject, _runtimeWrapper));
+                    RuntimeWrapperCacheLock.EnterWriteLock();
+                    try
+                    {
+                        RuntimeWrapperCache.Remove(_identityComObject);
+                    }
+                    finally
+                    {
+                        RuntimeWrapperCacheLock.ExitWriteLock();
+                    }
                 }
             }
         }

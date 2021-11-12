@@ -611,14 +611,7 @@ namespace WinRT
                 statesLock.EnterWriteLock();
                 try
                 {
-#if NETSTANDARD2_0
-                    // https://devblogs.microsoft.com/pfxteam/little-known-gems-atomic-conditional-removals-from-concurrentdictionary/
-                    ((ICollection<KeyValuePair<int, System.WeakReference<State>>>)cache.states).Remove(
-                        new KeyValuePair<int, System.WeakReference<State>>(index, state));
-#else
-                    
                      cache.states.Remove(index);
-#endif
                 }
                 finally
                 {
@@ -626,20 +619,16 @@ namespace WinRT
                 }
 
                 // using double-checked lock idiom
-                statesLock.EnterReadLock();
+                statesLock.EnterUpgradeableReadLock();
                 try
                 {
                     if (cache.states.Count == 0)
-                    {
-                        cachesLock.EnterWriteLock();
-                        // TODO: do we need a second `statcksLock.EnterReadLock()` here?
-                        try
-                        {
-                            if (cache.states.Count == 0)
-                            {
-                                caches.Remove(thisPtr);
-                            }
-                        }
+                    { 
+                        cachesLock.EnterWriteLock(); 
+                        try 
+                        { 
+                            caches.Remove(thisPtr); 
+                        } 
                         finally
                         {
                             cachesLock.ExitWriteLock();
@@ -648,7 +637,7 @@ namespace WinRT
                 }
                 finally
                 {
-                    statesLock.ExitReadLock();
+                    statesLock.ExitUpgradeableReadLock();
                 }
             }
         }
