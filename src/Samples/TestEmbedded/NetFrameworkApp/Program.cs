@@ -27,7 +27,6 @@ namespace NetFrameworkApp
 
         }
     }
-        ///
 
     class MyAlpha : IAlpha
     {
