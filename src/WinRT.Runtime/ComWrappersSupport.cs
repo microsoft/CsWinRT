@@ -318,6 +318,19 @@ namespace WinRT
             };
         }
 
+        private static Func<IInspectable, object> CreateCustomTypeMappingFactory(Type customTypeHelperType)
+        {
+            var fromAbiMethod = customTypeHelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            if (fromAbiMethod is null)
+            {
+                throw new MissingMethodException();
+            }
+
+            var parms = new[] { Expression.Parameter(typeof(IInspectable), "obj") };
+            return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.Call(fromAbiMethod, Expression.Property(parms[0], "ThisPtr")), parms).Compile();
+        }
+
         internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName = "")
         {
             if (implementationType == null)
@@ -325,6 +338,12 @@ namespace WinRT
                 // If we reach here, then we couldn't find a type that matches the runtime class name.
                 // Fall back to using IInspectable directly.
                 return (IInspectable obj) => obj;
+            }
+
+            var customHelperType = Projections.FindCustomHelperTypeMapping(implementationType, true);
+            if (customHelperType != null)
+            {
+                return CreateReferenceCachingFactory(CreateCustomTypeMappingFactory(customHelperType));
             }
 
             if (implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
