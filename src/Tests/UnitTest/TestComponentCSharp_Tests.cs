@@ -1458,7 +1458,7 @@ namespace UnitTest
             Assert.NotNull(marshalCCW2);
         }
 
-#if !NETCOREAPP2_0
+#if NET
         [Fact]
         public void TestDelegateCCWMarshaler()
         {

@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0-windows;net5.0-windows;netstandard2.0;net48</TargetFrameworks>
+    <Platforms>x64;x86</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>9</LangVersion>
+    <CsWinRTEmbedded>true</CsWinRTEmbedded>
+    <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="1.4.0-prerelease.211109.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\C++ Components\Alpha\Alpha.vcxproj" />
+    <ProjectReference Include="..\C++ Components\Beta\Beta.vcxproj" />
+    <ProjectReference Include="..\C++ Components\Gamma\Gamma.vcxproj" />
+  </ItemGroup> 
+  
+  <ItemGroup Condition="!($([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) &gt;= 5)">
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="System.Runtime.Extensions" Version="4.3.1" />
+  </ItemGroup>
+  
+  <PropertyGroup>
+    <CsWinRTIncludes>
+      Alpha;
+      Beta;
+      Gamma;
+      Windows.Devices.Geolocation;
+      Windows.Foundation.Metadata;
+      Windows.Foundation.UniversalApiContract;
+      Windows.Foundation.IAsyncOperation;
+      Windows.Foundation.TypedEventHandler;
+      Windows.Foundation.UniversalApiContract;
+      Windows.Foundation.FoundationContract;
+      Windows.Foundation.IAsyncInfo;
+      Windows.Foundation.IAsyncAction;
+      Windows.Foundation.AsyncStatus;
+      Windows.Foundation.AsyncActionCompletedHandler;
+      Windows.Foundation.AsyncActionProgressHandler;
+      Windows.Foundation.AsyncActionWithProgressCompletedHandler;
+      Windows.Foundation.AsyncOperationProgressHandler;
+      Windows.Foundation.AsyncOperationCompletedHandler;
+      Windows.Foundation.AsyncOperationWithProgressCompletedHandler;
+    </CsWinRTIncludes>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,13 @@
+namespace Alpha
+{
+    [default_interface]
+    runtimeclass Class
+    {
+        Class();
+    }
+
+    interface IAlpha
+    {
+        Int32 Five();
+    }
+}

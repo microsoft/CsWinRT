@@ -59,6 +59,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nuget", "Nuget", "{967889B0
 		..\nuget\LICENSE = ..\nuget\LICENSE
 		..\nuget\Microsoft.Windows.CsWinRT.Authoring.targets = ..\nuget\Microsoft.Windows.CsWinRT.Authoring.targets
 		..\nuget\Microsoft.Windows.CsWinRT.Authoring.Transitive.targets = ..\nuget\Microsoft.Windows.CsWinRT.Authoring.Transitive.targets
+		..\nuget\Microsoft.Windows.CsWinRT.Embedded.targets = ..\nuget\Microsoft.Windows.CsWinRT.Embedded.targets
 		..\nuget\Microsoft.Windows.CsWinRT.IIDOptimizer.targets = ..\nuget\Microsoft.Windows.CsWinRT.IIDOptimizer.targets
 		..\nuget\Microsoft.Windows.CsWinRT.nuspec = ..\nuget\Microsoft.Windows.CsWinRT.nuspec
 		..\nuget\Microsoft.Windows.CsWinRT.props = ..\nuget\Microsoft.Windows.CsWinRT.props
