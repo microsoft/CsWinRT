@@ -19,20 +19,6 @@ using ComInterfaceEntry = System.Runtime.InteropServices.ComWrappers.ComInterfac
 
 namespace WinRT
 {
-    internal class SynchronizedDictionary<TKey,TValue>
-    {
-        private System.Threading.ReaderWriterLockSlim _lock = new System.Threading.ReaderWriterLockSlim();
-        private Dictionary<TKey, TValue> _map;
-
-        public SynchronizedDictionary(Dictionary<TKey,TValue> dictionary)
-        {
-            _map = dictionary;
-        }
-
-
-    }
-
-
 #if EMBED
     internal
 #else

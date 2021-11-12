@@ -215,27 +215,20 @@ namespace WinRT
             _typedObjectFactoryCacheLock.EnterReadLock();
             try
             {
-                if (TypedObjectFactoryCache.ContainsKey(runtimeClassName))
+                if (TypedObjectFactoryCache.TryGetValue(runtimeClassName, out var factoryFunc))
                 {
-                    return TypedObjectFactoryCache[runtimeClassName];
+                    return factoryFunc;
                 }
             }
-            finally
-            {
-                _typedObjectFactoryCacheLock.ExitReadLock();
-            }
+            finally { _typedObjectFactoryCacheLock.ExitReadLock(); }
+
+            var newFactory = CreateTypedRcwFactory(runtimeClassName);
 
             _typedObjectFactoryCacheLock.EnterWriteLock();
-            try
-            {
-                var newFactory = CreateTypedRcwFactory(runtimeClassName);
-                TypedObjectFactoryCache[runtimeClassName] = newFactory;
-                return newFactory;
-            }
-            finally
-            {
-                _typedObjectFactoryCacheLock.ExitWriteLock();
-            }
+            try { TypedObjectFactoryCache[runtimeClassName] = newFactory; }
+            finally { _typedObjectFactoryCacheLock.ExitWriteLock(); }
+
+            return newFactory;
         }
     
         

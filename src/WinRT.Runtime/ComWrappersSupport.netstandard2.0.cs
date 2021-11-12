@@ -26,42 +26,6 @@ namespace WinRT
 
         internal static InspectableInfo GetInspectableInfo(IntPtr pThis) => UnmanagedObject.FindObject<ComCallableWrapper>(pThis).InspectableInfo;
 
-        private static object HelpRCW_GetRuntimeWrapper(string runtimeClassName, IInspectable inspectable)
-        {
-            if (string.IsNullOrEmpty(runtimeClassName)) 
-            { 
-                return inspectable; 
-            } 
-            else
-            { 
-                _typedObjectFactoryCacheLock.EnterReadLock(); 
-                try 
-                { 
-                    if (TypedObjectFactoryCache.TryGetValue(runtimeClassName, out var factoryFunc)) 
-                    { 
-                        return factoryFunc(inspectable); 
-                    } 
-                } 
-                finally 
-                { 
-                    _typedObjectFactoryCacheLock.ExitReadLock(); 
-                }
-
-
-                _typedObjectFactoryCacheLock.EnterWriteLock();
-                try
-                {
-                    var newFactory = CreateTypedRcwFactory(runtimeClassName);
-                    TypedObjectFactoryCache[runtimeClassName] = newFactory;
-                    return newFactory(inspectable);
-                }
-                finally
-                {
-                    _typedObjectFactoryCacheLock.ExitWriteLock();
-                }
-            }
-        }
-
         public static T CreateRcwForComObject<T>(IntPtr ptr)
         {
             if (ptr == IntPtr.Zero)
@@ -239,26 +203,14 @@ namespace WinRT
 
             var contains = false;
             RuntimeWrapperCacheLock.EnterReadLock();
-            try
-            {
-                contains |= RuntimeWrapperCache.ContainsKey(thisPtr);
-            }
-            finally
-            {
-                RuntimeWrapperCacheLock.ExitReadLock();
-            }
+            try { contains |= RuntimeWrapperCache.ContainsKey(thisPtr); }
+            finally { RuntimeWrapperCacheLock.ExitReadLock(); }
 
             if (!contains)
             {
                 RuntimeWrapperCacheLock.EnterWriteLock();
-                try
-                {
-                    RuntimeWrapperCache.Add(thisPtr, referenceWrapper);
-                }
-                finally
-                {
-                    RuntimeWrapperCacheLock.ExitWriteLock();
-                }
+                try { RuntimeWrapperCache.Add(thisPtr, referenceWrapper); }
+                finally { RuntimeWrapperCacheLock.ExitWriteLock(); }
             }
         }
 
@@ -273,14 +225,8 @@ namespace WinRT
 
             System.WeakReference<object> value;
             RuntimeWrapperCacheLock.EnterReadLock();
-            try
-            {
-                RuntimeWrapperCache.TryGetValue(thisPtr, out value);
-            }
-            finally
-            {
-                RuntimeWrapperCacheLock.ExitReadLock();
-            }
+            try { RuntimeWrapperCache.TryGetValue(thisPtr, out value); }
+            finally { RuntimeWrapperCacheLock.ExitReadLock(); }
 
             RuntimeWrapperCacheLock.EnterWriteLock();
             try
@@ -300,10 +246,7 @@ namespace WinRT
                     RuntimeWrapperCache[thisPtr] = referenceWrapper;
                 }
             }
-            finally
-            {
-                RuntimeWrapperCacheLock.ExitWriteLock();
-            }
+            finally { RuntimeWrapperCacheLock.ExitWriteLock(); }
 
             if (object.ReferenceEquals(registered, obj))
             {
@@ -390,16 +333,9 @@ namespace WinRT
                 }
                 else
                 {
-                    // ((ICollection<KeyValuePair<IntPtr, System.WeakReference<object>>>)RuntimeWrapperCache).Remove(new KeyValuePair<IntPtr, System.WeakReference<object>>(_identityComObject, _runtimeWrapper));
                     RuntimeWrapperCacheLock.EnterWriteLock();
-                    try
-                    {
-                        RuntimeWrapperCache.Remove(_identityComObject);
-                    }
-                    finally
-                    {
-                        RuntimeWrapperCacheLock.ExitWriteLock();
-                    }
+                    try { RuntimeWrapperCache.Remove(_identityComObject); }
+                    finally { RuntimeWrapperCacheLock.ExitWriteLock(); }
                 }
             }
         }
