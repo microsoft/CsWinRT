@@ -30,6 +30,7 @@ namespace Benchmarks
             instance2.IntPropertyChanged += s2;
         }
 
+        /*
         [Benchmark]
         public object IntEventOverhead()
         {
@@ -99,5 +100,6 @@ namespace Benchmarks
             return instance;
             GC.KeepAlive(s);
         }
+        */
     }
 }

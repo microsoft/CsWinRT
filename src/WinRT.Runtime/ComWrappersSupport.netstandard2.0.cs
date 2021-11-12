@@ -86,35 +86,34 @@ namespace WinRT
                     }
                     else
                     {
+                        // Check the cache to see if we have a RCW factory for this type already
+                        Func<IInspectable, object> factoryFunc;
                         _typedObjectFactoryCacheLock.EnterReadLock();
                         try
                         {
-                            if (TypedObjectFactoryCache.TryGetValue(runtimeClassName, out var factoryFunc))
-                            {
-                                runtimeWrapper = factoryFunc(inspectable);
-                            }
+                            TypedObjectFactoryCache.TryGetValue(runtimeClassName, out factoryFunc);
                         }
                         finally
                         {
                             _typedObjectFactoryCacheLock.ExitReadLock();
                         }
 
-
-                        _typedObjectFactoryCacheLock.EnterWriteLock();
-                        try
+                        if (factoryFunc != null)
                         {
-                            var newFactory = CreateTypedRcwFactory(runtimeClassName);
-                            TypedObjectFactoryCache[runtimeClassName] = newFactory;
+                            runtimeWrapper = factoryFunc(inspectable);
+                        }
+                        else
+                        {
+                            // If we didn't have it, we need to make a factory function and update the cache before setting runtimeWrapper
+                            var newFactory = CreateTypedRcwFactory(runtimeClassName); 
+                        
+                            _typedObjectFactoryCacheLock.EnterWriteLock();
+                            try { TypedObjectFactoryCache[runtimeClassName] = newFactory; }
+                            finally { _typedObjectFactoryCacheLock.ExitWriteLock(); }
+                        
                             runtimeWrapper = newFactory(inspectable);
-                        }
-                        finally
-                        {
-                            _typedObjectFactoryCacheLock.ExitWriteLock();
-                        }
+                        } 
                     }
-
-                    // runtimeWrapper = HelpRCW_GetRuntimeWrapper(runtimeClassName, inspectable); 
-                    // runtimeWrapper = string.IsNullOrEmpty(runtimeClassName) ? inspectable : TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
                 {
@@ -130,21 +129,15 @@ namespace WinRT
             System.WeakReference<object> oldValue;
             System.WeakReference<object> newValue;
             RuntimeWrapperCacheLock.EnterReadLock();
-            try
-            {
-                RuntimeWrapperCache.TryGetValue(identity.ThisPtr, out oldValue);
-            }
-            finally
-            {
-                RuntimeWrapperCacheLock.ExitReadLock();
-            }
+            try { RuntimeWrapperCache.TryGetValue(identity.ThisPtr, out oldValue); } 
+            finally { RuntimeWrapperCacheLock.ExitReadLock(); }
 
-            // If TryGetValue succeeded, then we update the value
+            // If the RCW we have didn't have a target then make one, otherwise use the existing one 
             if (oldValue != null) 
             { 
                 newValue = !oldValue.TryGetTarget(out keepAliveSentinel) ? rcwFactory(identity.ThisPtr) : oldValue;
             } 
-            else // otherwise, add a new key-value pair to the dictionary
+            else
             { 
                 newValue = rcwFactory(identity.ThisPtr); 
             }
@@ -161,20 +154,6 @@ namespace WinRT
 
             newValue.TryGetTarget(out object rcw);
             
-            /*
-            RuntimeWrapperCache.AddOrUpdate(
-                identity.ThisPtr,
-                rcwFactory,
-                (ptr, oldValue) =>
-                {
-                    if (!oldValue.TryGetTarget(out keepAliveSentinel))
-                    {
-                        return rcwFactory(ptr);
-                    }
-                    return oldValue;
-                }).TryGetTarget(out object rcw);
-            */
-
             GC.KeepAlive(keepAliveSentinel);
 
             // Because .NET will de-duplicate strings and WinRT doesn't,
