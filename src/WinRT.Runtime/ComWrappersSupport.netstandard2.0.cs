@@ -42,7 +42,7 @@ namespace WinRT
                 {
                     var inspectable = new IInspectable(identity);
                     string runtimeClassName = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
-                    runtimeWrapper = string.IsNullOrEmpty(runtimeClassName) ? inspectable : TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
+                    runtimeWrapper = string.IsNullOrEmpty(runtimeClassName) ? inspectable : TypedObjectFactoryCacheForString.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
                 {
