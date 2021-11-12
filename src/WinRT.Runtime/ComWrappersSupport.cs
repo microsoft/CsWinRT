@@ -26,7 +26,8 @@ namespace WinRT
 #endif
     static partial class ComWrappersSupport
     {
-        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
+        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCacheForRuntimeClassName = new ConcurrentDictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
+        private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new ConcurrentDictionary<Type, Func<IInspectable, object>>();
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
@@ -330,25 +331,8 @@ namespace WinRT
                 Expression.Call(fromAbiMethod, Expression.Property(parms[0], "ThisPtr")), parms).Compile();
         }
 
-        internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
+        internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName = null)
         {
-            // If runtime class name is empty or "Object", then just use IInspectable.
-            if (string.IsNullOrEmpty(runtimeClassName) || 
-                string.CompareOrdinal(runtimeClassName, "Object") == 0)
-            {
-                return (IInspectable obj) => obj;
-            }
-            // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
-            if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<String>") == 0)
-            {
-                return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<String>(obj.ObjRef));
-            }
-            else if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>") == 0)
-            {
-                return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef));
-            }
-
-            Type implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
             if (implementationType == null)
             {
                 // If we reach here, then we couldn't find a type that matches the runtime class name.
@@ -384,6 +368,28 @@ namespace WinRT
             }
 
             return CreateFactoryForImplementationType(runtimeClassName, implementationType);
+        }
+
+        internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
+        {
+            // If runtime class name is empty or "Object", then just use IInspectable.
+            if (string.IsNullOrEmpty(runtimeClassName) || 
+                string.CompareOrdinal(runtimeClassName, "Object") == 0)
+            {
+                return (IInspectable obj) => obj;
+            }
+            // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
+            if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<String>") == 0)
+            {
+                return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<String>(obj.ObjRef));
+            }
+            else if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>") == 0)
+            {
+                return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef));
+            }
+
+            Type implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
+            return CreateTypedRcwFactory(implementationType, runtimeClassName);
         }
 
         internal static string GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
