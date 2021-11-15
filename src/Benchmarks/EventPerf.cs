@@ -4,6 +4,22 @@ using System;
 
 namespace Benchmarks
 {
+    public class ManagedEvents : IEvents
+    {
+        public event EventHandler<double> DoublePropertyChanged;
+        public event EventHandler<int> IntPropertyChanged;
+
+        public void RaiseDoubleChanged()
+        {
+            DoublePropertyChanged.Invoke(this, 2.2);
+        }
+
+        public void RaiseIntChanged()
+        {
+            IntPropertyChanged.Invoke(this, 4);
+        }
+    }
+
     [MemoryDiagnoser]
     public class EventPerf
     {
@@ -11,6 +27,9 @@ namespace Benchmarks
         int z2;
         ClassWithMarshalingRoutines instance2;
         int z4;
+        ManagedEvents events;
+        EventOperations operations;
+
 
         [GlobalSetup]
         public void Setup()
@@ -28,6 +47,10 @@ namespace Benchmarks
                     z4 = value * 3;
             };
             instance2.IntPropertyChanged += s2;
+
+            events = new ManagedEvents();
+            operations = new EventOperations(events);
+            operations.AddIntEvent();
         }
 
         [Benchmark]
@@ -98,6 +121,59 @@ namespace Benchmarks
             instance.IntPropertyChanged -= s;
             return instance;
             GC.KeepAlive(s);
+        }
+
+        [Benchmark]
+        public object NativeIntEventOverhead()
+        {
+            ManagedEvents events = new ManagedEvents();
+            EventOperations operations = new EventOperations(events);
+            return operations;
+        }
+
+        [Benchmark]
+        public object AddNativeIntEventToNewEventSource()
+        {
+            ManagedEvents events = new ManagedEvents();
+            EventOperations operations = new EventOperations(events);
+            operations.AddIntEvent();
+            return operations;
+        }
+
+        [Benchmark]
+        public object AddMultipleNativeEventsToNewEventSource()
+        {
+            ManagedEvents events = new ManagedEvents();
+            EventOperations operations = new EventOperations(events);
+            operations.AddIntEvent();
+            operations.AddDoubleEvent();
+            return operations;
+        }
+
+        [Benchmark]
+        public object AddAndInvokeNativeIntEventOnNewEventSource()
+        {
+            ManagedEvents events = new ManagedEvents();
+            EventOperations operations = new EventOperations(events);
+            operations.AddIntEvent();
+            operations.FireIntEvent();
+            return operations;
+        }
+
+        [Benchmark]
+        public void InvokeNativeIntEvent()
+        {
+            operations.FireIntEvent();
+        }
+
+        [Benchmark]
+        public object AddAndRemoveNativeIntEventOnNewEventSource()
+        {
+            ManagedEvents events = new ManagedEvents();
+            EventOperations operations = new EventOperations(events);
+            operations.AddIntEvent();
+            operations.RemoveIntEvent();
+            return operations;
         }
     }
 }
