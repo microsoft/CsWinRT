@@ -5663,13 +5663,14 @@ public static Guid PIID = Vftbl.PIID;
         std::map<std::string, required_interface> required_interfaces;
         write_required_interface_members_for_abi_type(w, type, required_interfaces, false);
 
-        w.write(R"([DynamicInterfaceCastableImplementation]
+        w.write(R"(%
 %
 internal unsafe interface % : %
 {
 %%%%%}
 )",
 // Interface abi implementation
+            is_exclusive_to(type) ? "" : "[DynamicInterfaceCastableImplementation]",
             bind<write_guid_attribute>(type),
             type_name,
             bind<write_type_name>(type, typedef_name_type::CCW, false),
