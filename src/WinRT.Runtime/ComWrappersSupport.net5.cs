@@ -465,48 +465,63 @@ namespace WinRT
             return isRcw;
         }
 
-        private static object CreateObject(IObjectReference objRef)
+        private static object CreateObject(IntPtr externalComObject)
         {
-            if (objRef.TryAs<IInspectable.Vftbl>(IInspectable.IID, out var inspectableRef) == 0)
+            Guid inspectableIID = IInspectable.IID;
+            Guid weakReferenceIID = ABI.WinRT.Interop.IWeakReference.IID;
+            IntPtr ptr = IntPtr.Zero;
+
+            try
             {
-                IInspectable inspectable = new IInspectable(inspectableRef);
-
-                if (ComWrappersSupport.CreateRCWType != null
-                    && ComWrappersSupport.CreateRCWType.IsSealed)
+                if (Marshal.QueryInterface(externalComObject, ref inspectableIID, out ptr) == 0)
                 {
-                    return ComWrappersSupport.GetTypedRcwFactory(ComWrappersSupport.CreateRCWType)(inspectable);
-                }
+                    var inspectableObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IInspectable.Vftbl>(ptr);
+                    ComWrappersHelper.Init(inspectableObjRef);
 
-                string runtimeClassName = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType);
-                if (string.IsNullOrEmpty(runtimeClassName))
+                    IInspectable inspectable = new IInspectable(inspectableObjRef);
+
+                    if (ComWrappersSupport.CreateRCWType != null
+                        && ComWrappersSupport.CreateRCWType.IsSealed)
+                    {
+                        return ComWrappersSupport.GetTypedRcwFactory(ComWrappersSupport.CreateRCWType)(inspectable);
+                    }
+
+                    string runtimeClassName = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType);
+                    if (string.IsNullOrEmpty(runtimeClassName))
+                    {
+                        // If the external IInspectable has not implemented GetRuntimeClassName,
+                        // we use the Inspectable wrapper directly.
+                        return inspectable;
+                    }
+
+                    return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
+                }
+                else if (Marshal.QueryInterface(externalComObject, ref weakReferenceIID, out ptr) == 0)
                 {
-                    // If the external IInspectable has not implemented GetRuntimeClassName,
-                    // we use the Inspectable wrapper directly.
-                    return inspectable;
-                }
+                    // IWeakReference is IUnknown-based, so implementations of it may not (and likely won't) implement
+                    // IInspectable. As a result, we need to check for them explicitly.
+                    var iunknownObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IUnknownVftbl>(ptr);
+                    ComWrappersHelper.Init(iunknownObjRef);
 
-                return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
+                    return new SingleInterfaceOptimizedObject(typeof(IWeakReference), iunknownObjRef, false);
+                }
+                else
+                {
+                    // If the external COM object isn't IInspectable or IWeakReference, we can't handle it.
+                    // If we're registered globally, we want to let the runtime fall back for IUnknown and IDispatch support.
+                    // Return null so the runtime can fall back gracefully in IUnknown and IDispatch scenarios.
+                    return null;
+                }
             }
-            else if (objRef.TryAs<IUnknownVftbl>(ABI.WinRT.Interop.IWeakReference.IID, out var weakRef) == 0)
+            finally
             {
-                // IWeakReference is IUnknown-based, so implementations of it may not (and likely won't) implement
-                // IInspectable. As a result, we need to check for them explicitly.
-
-                return new SingleInterfaceOptimizedObject(typeof(IWeakReference), weakRef, false);
+                Marshal.Release(ptr);
             }
-
-            // If the external COM object isn't IInspectable or IWeakReference, we can't handle it.
-            // If we're registered globally, we want to let the runtime fall back for IUnknown and IDispatch support.
-            // Return null so the runtime can fall back gracefully in IUnknown and IDispatch scenarios.
-            return null;
         }
 
         protected override object CreateObject(IntPtr externalComObject, CreateObjectFlags flags)
         {
-            IObjectReference objRef = ComWrappersSupport.GetObjectReferenceForInterface(externalComObject);
-            ComWrappersHelper.Init(objRef);
-
-            var obj = CreateObject(objRef);
+            var obj = CreateObject(externalComObject);
             if (obj is IWinRTObject winrtObj && winrtObj.HasUnwrappableNativeObject && winrtObj.NativeObject != null)
             {
                 // Handle the scenario where the CLR has already done an AddRefFromTrackerSource on the instance

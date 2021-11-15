@@ -50,7 +50,7 @@ namespace ABI.System
 
         public static unsafe global::System.EventHandler<T> FromAbi(IntPtr nativeDelegate)
         {
-            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface(nativeDelegate)?.As<IDelegateVftbl>(PIID);
+            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
             return abiDelegate is null ? null : (global::System.EventHandler<T>)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler<T>(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
         }
 
@@ -180,7 +180,7 @@ namespace ABI.System
 
         public static unsafe global::System.EventHandler FromAbi(IntPtr nativeDelegate)
         {
-            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface(nativeDelegate)?.As<IDelegateVftbl>(GuidGenerator.GetIID(typeof(EventHandler)));
+            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
             return abiDelegate is null ? null : (global::System.EventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
         }
 

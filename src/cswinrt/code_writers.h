@@ -6321,7 +6321,7 @@ public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>
 
 public static unsafe % FromAbi(IntPtr nativeDelegate)
 {
-var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface(nativeDelegate)?.As<IDelegateVftbl>(GuidGenerator.GetIID(typeof(@%)));
+var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
 return abiDelegate is null ? null : (%)ComWrappersSupport.TryRegisterObjectForInterface(new %(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
 }
 
@@ -6456,8 +6456,6 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             type_name,
             // FromAbi
             type_name,
-            type.TypeName(),
-            type_params,
             type_name,
             type_name,
             // NativeDelegateWrapper.Invoke

@@ -467,13 +467,23 @@ namespace WinRT
             });
         }
 
-        internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken, Lazy<AgileReference> agileReference, Guid iid)
+        internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
             : base(thisPtr)
         {
             _contextCallbackPtr = contextCallbackPtr;
             _contextToken = contextToken;
             _cachedContext = new Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>>();
-            _agileReference = agileReference;
+            _agileReference = new Lazy<AgileReference>(() => {
+                AgileReference agileReference = null;
+                Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
+                return agileReference;
+
+                void InitAgileReference()
+                {
+                    agileReference = new AgileReference(this);
+                }
+            });
+
             _iid = iid;
         }
 
@@ -559,7 +569,7 @@ namespace WinRT
                 }
                 AddRefFromTrackerSource();
 
-                objRef = new ObjectReferenceWithContext<U>(thatPtr, Context.GetContextCallback(), Context.GetContextToken(), _agileReference, iid)
+                objRef = new ObjectReferenceWithContext<U>(thatPtr, Context.GetContextCallback(), Context.GetContextToken(), iid)
                 {
                     IsAggregated = IsAggregated,
                     PreventReleaseOnDispose = IsAggregated,

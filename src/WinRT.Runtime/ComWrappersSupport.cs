@@ -63,23 +63,27 @@ namespace WinRT
 
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)
         {
+            return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject);
+        }
+
+        public static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject)
+        {
             if (externalComObject == IntPtr.Zero)
             {
                 return null;
             }
 
-            var unknownRef = ObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
-
-            if (IsFreeThreaded(unknownRef))
+            ObjectReference<T> objRef = ObjectReference<T>.FromAbi(externalComObject);
+            if (IsFreeThreaded(objRef))
             {
-                return unknownRef;
+                return objRef;
             }
             else
             {
-                using (unknownRef)
+                using (objRef)
                 {
-                    return new ObjectReferenceWithContext<IUnknownVftbl>(
-                        unknownRef.GetRef(),
+                    return new ObjectReferenceWithContext<T>(
+                        objRef.GetRef(),
                         Context.GetContextCallback(),
                         Context.GetContextToken());
                 }
@@ -87,14 +91,14 @@ namespace WinRT
 
             // If we are free threaded, we do not need to keep track of context.
             // This can either be if the object implements IAgileObject or the free threaded marshaler.
-            unsafe static bool IsFreeThreaded(IObjectReference unknownRef)
+            unsafe static bool IsFreeThreaded(IObjectReference objRef)
             {
-                if (unknownRef.TryAs(ABI.WinRT.Interop.IAgileObject.IID, out var agilePtr) >= 0)
+                if (objRef.TryAs(ABI.WinRT.Interop.IAgileObject.IID, out var agilePtr) >= 0)
                 {
                     Marshal.Release(agilePtr);
                     return true;
                 }
-                else if (unknownRef.TryAs<ABI.WinRT.Interop.IMarshal.Vftbl>(ABI.WinRT.Interop.IMarshal.IID, out var marshalRef) >= 0)
+                else if (objRef.TryAs<ABI.WinRT.Interop.IMarshal.Vftbl>(ABI.WinRT.Interop.IMarshal.IID, out var marshalRef) >= 0)
                 {
                     using (marshalRef)
                     {
