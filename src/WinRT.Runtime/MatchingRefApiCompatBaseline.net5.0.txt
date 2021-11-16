@@ -2,6 +2,7 @@ Compat issues with assembly WinRT.Runtime:
 TypesMustExist : Type 'ABI.WinRT.Interop.IWeakReferenceSourceMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'System.Numerics.VectorExtensions' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.ComWrappersHelper' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ComWrappersSupport.GetObjectReferenceForInterface<T>(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterObjectForInterface(System.Object, System.IntPtr, System.Runtime.InteropServices.CreateObjectFlags)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'protected void WinRT.IObjectReference.AddRef(System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Int32 WinRT.IObjectReference.TryAs(System.Guid, System.IntPtr)' does not exist in the reference but it does exist in the implementation.
@@ -12,4 +13,4 @@ MembersMustExist : Member 'public System.IntPtr WinRT.MarshalString.GetAbi(WinRT
 TypesMustExist : Type 'WinRT.MarshalString.Pinnable' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 13
+Total Issues: 15

@@ -170,8 +170,8 @@ namespace WinRT
                     int hr = _GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId), &instancePtr);
                     if (hr == 0)
                     {
-                        using var objRef = ComWrappersSupport.GetObjectReferenceForInterface(instancePtr);
-                        return (objRef.As<IActivationFactoryVftbl>(), hr);
+                        var objRef = ComWrappersSupport.GetObjectReferenceForInterface<IActivationFactoryVftbl>(instancePtr);
+                        return (objRef, hr);
                     }
                     else
                     {
@@ -238,8 +238,8 @@ namespace WinRT
                     (instancePtr, hr) = GetActivationFactory(MarshalString.GetAbi(ref __runtimeClassId));
                     if (hr == 0)
                     {
-                        using var objRef = ComWrappersSupport.GetObjectReferenceForInterface(instancePtr);
-                        return (objRef.As<IActivationFactoryVftbl>(), hr);
+                        var objRef = ComWrappersSupport.GetObjectReferenceForInterface<IActivationFactoryVftbl>(instancePtr);
+                        return (objRef, hr);
                     }
                     else
                     {
@@ -299,7 +299,7 @@ namespace WinRT
             Marshal.ThrowExceptionForHR(_IActivationFactory.Vftbl.ActivateInstance(_IActivationFactory.ThisPtr, &instancePtr));
             try
             {
-                return ComWrappersSupport.GetObjectReferenceForInterface(instancePtr).As<I>();
+                return ComWrappersSupport.GetObjectReferenceForInterface<I>(instancePtr);
             }
             finally
             {
