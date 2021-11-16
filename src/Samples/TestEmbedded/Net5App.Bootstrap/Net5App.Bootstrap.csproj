@@ -9,7 +9,7 @@
   <PropertyGroup>
     <LangVersion>9</LangVersion>
     <CsWinRTEmbedded>true</CsWinRTEmbedded>
-    <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
+    <CsWinRTWindowsMetadata>sdk</CsWinRTWindowsMetadata>
   </PropertyGroup>
 
   <ItemGroup>
