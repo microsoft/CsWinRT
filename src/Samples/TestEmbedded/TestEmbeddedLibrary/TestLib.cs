@@ -24,21 +24,8 @@ namespace TestEmbeddedLibrary
 
     public class TestLib 
     {
-        Geolocator g;
         public TestLib()
         {
-            WinRT.ComWrappersSupport.RegisterProjectionAssembly(typeof(TestLib).Assembly);
-            g = new();
-        }
-
-        public void SetDesiredAccuracy()
-        {
-            g.DesiredAccuracy = PositionAccuracy.Default;
-        }
-
-        public void ShowDesiredAccuracy()
-        {
-            Console.WriteLine("Desired accuracy = " + g.DesiredAccuracy);
         }
 
         internal int Test1_Helper(IAlpha alpha) { return alpha.Five(); }
@@ -49,8 +36,6 @@ namespace TestEmbeddedLibrary
             MyGreek g = new();
             return Test1_Helper(a) + Test1_Helper(g);
         }
-
-        internal IBeta Test2_Helper(IBeta beta) { return beta; }
 
         public int Test2()
         {
@@ -78,9 +63,12 @@ namespace TestEmbeddedLibrary
 
         async System.Threading.Tasks.Task CallGeoAsyncApi()
         {
+            Console.WriteLine("Making a Microsoft.Devices.Geolocation.Geolocator object...");
             Geolocator g = new();
+            Console.WriteLine("Setting the Desired Accuracy to Default on the Geolocator object...");
             g.DesiredAccuracy = PositionAccuracy.Default;
-            Console.WriteLine("Desired accuracy " + g.DesiredAccuracy);
+            Console.WriteLine("Accessing the Desired Accuracy, shows: " + g.DesiredAccuracy);
+            Console.WriteLine("Calling GetGeopositionAsync...");
             Geoposition pos = await g.GetGeopositionAsync();
         }
 
