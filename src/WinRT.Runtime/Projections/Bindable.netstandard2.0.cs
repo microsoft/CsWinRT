@@ -1,14 +1,11 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using Microsoft.UI.Xaml.Interop;
 using WinRT;
-using WinRT.Interop;
 
 
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
@@ -403,9 +400,9 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
 namespace ABI.System.Collections
 {
+    using global::Microsoft.UI.Xaml.Interop;
     using global::System;
     using global::System.Runtime.CompilerServices;
-    using global::Microsoft.UI.Xaml.Interop;
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F")]

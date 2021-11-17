@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace WinRT.Interop
 {
@@ -37,7 +38,6 @@ namespace WinRT.Interop
 namespace ABI.WinRT.Interop
 {
     using global::WinRT;
-    using WinRT.Interop;
 
     [DynamicInterfaceCastableImplementation]
     [Guid("C03F6A43-65A4-9818-987E-E0B810D2A6F2")]
