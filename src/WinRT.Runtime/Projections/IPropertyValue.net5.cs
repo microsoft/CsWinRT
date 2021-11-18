@@ -209,7 +209,7 @@ namespace ABI.Windows.Foundation
         }
 
 #pragma warning disable CS0649
-        private class Boxed<T>
+        private sealed class Boxed<T>
             where T : struct
         {
             public T Value;

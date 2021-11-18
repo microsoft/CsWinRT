@@ -30,7 +30,7 @@ namespace ABI.Com
     using global::System.Runtime.InteropServices;
 
     [Guid("00000003-0000-0000-c000-000000000046")]
-    internal class IMarshal : global::Com.IMarshal
+    internal sealed class IMarshal : global::Com.IMarshal
     {
         [Guid("00000003-0000-0000-c000-000000000046")]
         public unsafe struct Vftbl

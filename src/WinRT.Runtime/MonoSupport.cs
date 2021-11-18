@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 
 namespace WinRT
 {
-    internal class Mono
+    internal static class Mono
     {
         static Lazy<bool> _usingMono = new Lazy<bool>(() =>
         {
@@ -72,7 +72,7 @@ namespace WinRT
             public MonoThreadFlag flags;
         }
 
-        public class ThreadContext : IDisposable
+        public sealed class ThreadContext : IDisposable
         {
             static Lazy<HashSet<IntPtr>> _foreignThreads = new Lazy<HashSet<IntPtr>>();
 

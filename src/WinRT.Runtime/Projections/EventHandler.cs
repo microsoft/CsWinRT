@@ -57,9 +57,9 @@ namespace ABI.System
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 #if !NET
-        private class NativeDelegateWrapper
+        private sealed class NativeDelegateWrapper
 #else
-        private class NativeDelegateWrapper : IWinRTObject
+        private sealed class NativeDelegateWrapper : IWinRTObject
 #endif
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
@@ -187,9 +187,9 @@ namespace ABI.System
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 #if !NET
-        private class NativeDelegateWrapper
+        private sealed class NativeDelegateWrapper
 #else
-        private class NativeDelegateWrapper : IWinRTObject
+        private sealed class NativeDelegateWrapper : IWinRTObject
 #endif
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;

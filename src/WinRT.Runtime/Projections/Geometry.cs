@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace Windows.Foundation
 {
-    internal class GSR
+    internal static class GSR
     {
         public static string ArgumentOutOfRange_NeedNonNegNum = "Non-negative number required.";
     }

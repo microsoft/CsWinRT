@@ -50,7 +50,7 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IReadOnlyList<T>));
 
-        public class FromAbiHelper : global::System.Collections.Generic.IReadOnlyList<T>
+        public sealed class FromAbiHelper : global::System.Collections.Generic.IReadOnlyList<T>
         {
             private readonly global::Windows.Foundation.Collections.IVectorView<T> _vectorView;
             private readonly global::System.Collections.Generic.IEnumerable<T> _enumerable;

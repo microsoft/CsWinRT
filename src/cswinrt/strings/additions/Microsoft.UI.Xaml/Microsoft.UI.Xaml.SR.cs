@@ -4,7 +4,7 @@
 
 namespace Microsoft.UI.Xaml
 {
-    class SR
+    static class SR
     {
         public static string DirectUI_CornerRadius_InvalidMember = "Invalid value for {0} property on CornerRadius.";
         public static string DirectUI_InvalidArgument = "Invalid argument.";

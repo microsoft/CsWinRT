@@ -551,7 +551,7 @@ namespace WinRT
             }
         }
 
-        unsafe class VtableEntries
+        unsafe sealed class VtableEntries
         {
             public ComInterfaceEntry* Data { get; }
             public int Count { get; }

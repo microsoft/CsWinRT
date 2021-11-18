@@ -69,7 +69,7 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable<T>));
 
-        public class FromAbiHelper : global::System.Collections.Generic.IEnumerable<T>
+        public sealed class FromAbiHelper : global::System.Collections.Generic.IEnumerable<T>
         {
             private readonly global::System.Collections.Generic.IEnumerable<T> _iterable;
 

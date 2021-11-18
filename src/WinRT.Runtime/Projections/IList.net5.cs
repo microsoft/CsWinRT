@@ -60,7 +60,7 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IList<T>));
 
-        public class FromAbiHelper : global::System.Collections.Generic.IList<T>
+        public sealed class FromAbiHelper : global::System.Collections.Generic.IList<T>
         {
             private readonly global::Windows.Foundation.Collections.IVector<T> _vector;
 

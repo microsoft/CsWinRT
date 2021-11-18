@@ -320,7 +320,7 @@ namespace ABI.System.Collections.Generic
 
             private sealed class ConstantSplittableMap : global::Windows.Foundation.Collections.IMapView<K, V>, global::System.Collections.Generic.IReadOnlyDictionary<K, V>
             {
-                private class KeyValuePairComparator : IComparer<global::System.Collections.Generic.KeyValuePair<K, V>>
+                private sealed class KeyValuePairComparator : IComparer<global::System.Collections.Generic.KeyValuePair<K, V>>
                 {
                     private static readonly IComparer<K> keyComparator = Comparer<K>.Default;
 

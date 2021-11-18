@@ -768,7 +768,7 @@ namespace WinRT
             };
         }
 
-        internal class InspectableInfo
+        internal sealed class InspectableInfo
         {
             private readonly Lazy<string> runtimeClassName;
 

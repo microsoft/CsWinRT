@@ -51,7 +51,7 @@ namespace WinRT.Interop
         string GetReference();
     }
 
-    internal class ManagedExceptionErrorInfo : IErrorInfo, ISupportErrorInfo
+    internal sealed class ManagedExceptionErrorInfo : IErrorInfo, ISupportErrorInfo
     {
         private readonly Exception _exception;
 
