@@ -1,4 +1,7 @@
-﻿using WinRT.Interop;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using WinRT.Interop;
 
 namespace WinRT
 {

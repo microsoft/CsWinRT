@@ -1,8 +1,10 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using WinRT;
-using WinRT.Interop;
 
 namespace ABI.System
 {
