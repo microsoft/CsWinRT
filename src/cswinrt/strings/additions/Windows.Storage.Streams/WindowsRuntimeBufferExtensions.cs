@@ -452,7 +452,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
 
 #region Private plumbing
 
-        private class WindowsRuntimeBufferUnmanagedMemoryStream : UnmanagedMemoryStream
+        private sealed class WindowsRuntimeBufferUnmanagedMemoryStream : UnmanagedMemoryStream
         {
             // We need this class because if we construct an UnmanagedMemoryStream on an IBuffer backed by native memory,
             // we must keep around a reference to the IBuffer from which we got the memory pointer. Otherwise the ref count

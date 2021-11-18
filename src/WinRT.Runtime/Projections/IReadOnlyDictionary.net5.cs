@@ -157,7 +157,7 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        public class FromAbiHelper : global::System.Collections.Generic.IReadOnlyDictionary<K, V>
+        public sealed class FromAbiHelper : global::System.Collections.Generic.IReadOnlyDictionary<K, V>
         {
             private readonly global::Windows.Foundation.Collections.IMapView<K, V> _mapView;
             private readonly global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>> _enumerable;
@@ -258,7 +258,7 @@ namespace ABI.System.Collections.Generic
 
         }
 
-        public class ToAbiHelper : global::Windows.Foundation.Collections.IMapView<K, V>
+        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IMapView<K, V>
         {
             private readonly global::System.Collections.Generic.IReadOnlyDictionary<K, V> _dictionary;
 
@@ -305,7 +305,7 @@ namespace ABI.System.Collections.Generic
 
             private sealed class ConstantSplittableMap : global::Windows.Foundation.Collections.IMapView<K, V>, global::System.Collections.Generic.IReadOnlyDictionary<K, V>
             {
-                private class KeyValuePairComparator : IComparer<global::System.Collections.Generic.KeyValuePair<K, V>>
+                private sealed class KeyValuePairComparator : IComparer<global::System.Collections.Generic.KeyValuePair<K, V>>
                 {
                     private static readonly IComparer<K> keyComparator = Comparer<K>.Default;
 

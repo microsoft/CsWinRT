@@ -444,7 +444,7 @@ namespace WinRT
         }
     }
 
-    internal class ObjectReferenceWithContext<T> : ObjectReference<T>
+    internal sealed class ObjectReferenceWithContext<T> : ObjectReference<T>
     {
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;

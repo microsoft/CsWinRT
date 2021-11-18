@@ -1800,7 +1800,7 @@ remove => %;
                 factoryAs,
                 cache_vftbl_type);
             w.write(R"(
-internal class _% : ABI.%.%
+internal sealed class _% : ABI.%.%
 {
 public _%() : base(%()) { }
 %
@@ -1818,7 +1818,7 @@ internal static % Instance => _instance;
         else
         {
             w.write(R"(
-internal class _% : IWinRTObject
+internal sealed class _% : IWinRTObject
 {
 private IObjectReference _obj;
 public _%()
@@ -3689,7 +3689,7 @@ public unsafe % %(%)
                     cache_vftbl_type);
 
             w.write(R"(
-internal class _% : ABI.%.%
+internal sealed class _% : ABI.%.%
 {
 public _%() : base(%()) { }
 private static _% _instance = new _%();
@@ -3711,7 +3711,7 @@ internal static _% Instance => _instance;
         else
         {
             w.write(R"(
-internal class _% : IWinRTObject
+internal sealed class _% : IWinRTObject
 {
 private IObjectReference _obj;
 private IntPtr ThisPtr => _obj.ThisPtr;
@@ -6328,9 +6328,9 @@ return abiDelegate is null ? null : (%)ComWrappersSupport.TryRegisterObjectForIn
 
 [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 #if !NET
-private class NativeDelegateWrapper
+private sealed class NativeDelegateWrapper
 #else
-private class NativeDelegateWrapper : IWinRTObject
+private sealed class NativeDelegateWrapper : IWinRTObject
 #endif
 {
 private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;

@@ -32,7 +32,7 @@ namespace WinRT.Interop
         IObjectReference Resolve(Guid riid);
     }
 
-    internal class ManagedWeakReference : IWeakReference
+    internal sealed class ManagedWeakReference : IWeakReference
     {
         private readonly WeakReference<object> _ref;
         public ManagedWeakReference(object obj)

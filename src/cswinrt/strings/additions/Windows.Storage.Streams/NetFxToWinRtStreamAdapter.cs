@@ -42,7 +42,7 @@ namespace System.IO
         // The latter is much more elegant, and likely also faster.
 
 
-        private class InputStream : NetFxToWinRtStreamAdapter, IInputStream, IDisposable
+        private sealed class InputStream : NetFxToWinRtStreamAdapter, IInputStream, IDisposable
         {
             internal InputStream(Stream stream, StreamReadOperationOptimization readOptimization)
                 : base(stream, readOptimization)
@@ -51,7 +51,7 @@ namespace System.IO
         }
 
 
-        private class OutputStream : NetFxToWinRtStreamAdapter, IOutputStream, IDisposable
+        private sealed class OutputStream : NetFxToWinRtStreamAdapter, IOutputStream, IDisposable
         {
             internal OutputStream(Stream stream, StreamReadOperationOptimization readOptimization)
                 : base(stream, readOptimization)
@@ -60,7 +60,7 @@ namespace System.IO
         }
 
 
-        private class RandomAccessStream : NetFxToWinRtStreamAdapter, IRandomAccessStream, IInputStream, IOutputStream, IDisposable
+        private sealed class RandomAccessStream : NetFxToWinRtStreamAdapter, IRandomAccessStream, IInputStream, IOutputStream, IDisposable
         {
             internal RandomAccessStream(Stream stream, StreamReadOperationOptimization readOptimization)
                 : base(stream, readOptimization)
@@ -69,7 +69,7 @@ namespace System.IO
         }
 
 
-        private class InputOutputStream : NetFxToWinRtStreamAdapter, IInputStream, IOutputStream, IDisposable
+        private sealed class InputOutputStream : NetFxToWinRtStreamAdapter, IInputStream, IOutputStream, IDisposable
         {
             internal InputOutputStream(Stream stream, StreamReadOperationOptimization readOptimization)
                 : base(stream, readOptimization)

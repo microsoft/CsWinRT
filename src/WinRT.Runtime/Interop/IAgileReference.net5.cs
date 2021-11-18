@@ -141,7 +141,7 @@ namespace ABI.WinRT.Interop
     }
 
     [Guid("00000146-0000-0000-C000-000000000046")]
-    internal unsafe class IGlobalInterfaceTable : global::WinRT.Interop.IGlobalInterfaceTable
+    internal sealed unsafe class IGlobalInterfaceTable : global::WinRT.Interop.IGlobalInterfaceTable
     {
         [Guid("00000146-0000-0000-C000-000000000046")]
         [StructLayout(LayoutKind.Sequential)]

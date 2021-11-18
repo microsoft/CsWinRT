@@ -422,7 +422,7 @@ namespace ABI.System.Collections
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable));
 
-        public class AdaptiveFromAbiHelper : FromAbiHelper, global::System.Collections.IEnumerable
+        public sealed class AdaptiveFromAbiHelper : FromAbiHelper, global::System.Collections.IEnumerable
         {
             private readonly Func<IWinRTObject, global::System.Collections.IEnumerator> _enumerator;
 
@@ -480,7 +480,7 @@ namespace ABI.System.Collections
             }
         }
 
-        public class ToAbiHelper : IBindableIterable
+        public sealed class ToAbiHelper : IBindableIterable
         {
             private readonly IEnumerable m_enumerable;
 
@@ -596,7 +596,7 @@ namespace ABI.System.Collections
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IList));
 
-        public class FromAbiHelper : global::System.Collections.IList
+        public sealed class FromAbiHelper : global::System.Collections.IList
         {
             private readonly global::Microsoft.UI.Xaml.Interop.IBindableVector _vector;
 

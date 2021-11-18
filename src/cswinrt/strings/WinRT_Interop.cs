@@ -28,6 +28,7 @@ namespace WinRT.Interop
     }
 
     [Guid("64BD43F8-bFEE-4EC4-B7EB-2935158DAE21")]
+    [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct IReferenceTrackerTargetVftbl
     {
         public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;

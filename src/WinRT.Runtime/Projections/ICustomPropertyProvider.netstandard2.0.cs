@@ -26,7 +26,7 @@ namespace Microsoft.UI.Xaml.Data
 namespace ABI.Microsoft.UI.Xaml.Data
 {
     [Guid("30DA92C0-23E8-42A0-AE7C-734A0E5D2782")]
-    internal unsafe class ICustomProperty
+    internal sealed unsafe class ICustomProperty
     {
         [Guid("30DA92C0-23E8-42A0-AE7C-734A0E5D2782")]
         public struct Vftbl
@@ -220,7 +220,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
         public unsafe delegate int get_CanRead_7(IntPtr thisPtr, byte* value);
     }
 
-    internal class ManagedCustomProperty : global::Microsoft.UI.Xaml.Data.ICustomProperty
+    internal sealed class ManagedCustomProperty : global::Microsoft.UI.Xaml.Data.ICustomProperty
     {
         private readonly PropertyInfo _property;
 

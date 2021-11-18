@@ -60,7 +60,7 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IDictionary<K, V>));
 
-        public class FromAbiHelper : global::System.Collections.Generic.IDictionary<K, V>
+        public sealed class FromAbiHelper : global::System.Collections.Generic.IDictionary<K, V>
         {
             private readonly global::Windows.Foundation.Collections.IMap<K, V> _map;
             internal readonly Dictionary<K, (IntPtr, V)> _lookupCache = new();
@@ -438,7 +438,7 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        public class ToAbiHelper : global::Windows.Foundation.Collections.IMap<K, V>
+        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IMap<K, V>
         {
             private readonly global::System.Collections.Generic.IDictionary<K, V> _dictionary;
 

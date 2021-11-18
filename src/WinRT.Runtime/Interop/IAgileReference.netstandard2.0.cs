@@ -39,7 +39,7 @@ namespace ABI.WinRT.Interop
     using global::WinRT;
 
     [Guid("C03F6A43-65A4-9818-987E-E0B810D2A6F2")]
-    internal unsafe class IAgileReference : global::WinRT.Interop.IAgileReference
+    internal sealed unsafe class IAgileReference : global::WinRT.Interop.IAgileReference
     {
         [Guid("C03F6A43-65A4-9818-987E-E0B810D2A6F2")]
         public struct Vftbl
@@ -162,7 +162,7 @@ namespace ABI.WinRT.Interop
     }
 
     [Guid("00000146-0000-0000-C000-000000000046")]
-    internal unsafe class IGlobalInterfaceTable : global::WinRT.Interop.IGlobalInterfaceTable
+    internal sealed unsafe class IGlobalInterfaceTable : global::WinRT.Interop.IGlobalInterfaceTable
     {
         [Guid("00000146-0000-0000-C000-000000000046")]
         [StructLayout(LayoutKind.Sequential)]

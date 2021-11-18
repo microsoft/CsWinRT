@@ -214,7 +214,7 @@ namespace WinRT
             return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).Release();
         }
 
-        private class RuntimeWrapperCleanup
+        private sealed class RuntimeWrapperCleanup
         {
             public IntPtr _identityComObject;
             public System.WeakReference<object> _runtimeWrapper;
@@ -303,7 +303,7 @@ namespace WinRT
         }
     }
 
-    internal class ComCallableWrapper
+    internal sealed class ComCallableWrapper
     {
         private Dictionary<Guid, IntPtr> _managedQITable;
         private GCHandle _qiTableHandle;
