@@ -1,17 +1,12 @@
 # Embedded C#/WinRT Support
 
+**Note**: Embedded support is currently **in preview** in C#/WinRT v1.4.1.
+
 ## Overview
 
-**Note**: Embedded support is currently **in preview**.
-
-Embedded support is a C#/WinRT feature that allows you to compile C# runtime and projection sources into your library or app's output. This is done by setting the build property `CsWinRTEmbedded` to `true` in the app or library's project file.
-
-Enabling embedded support compiles the sources for WinRT.Runtime with the project.
-You must specify the types in your component or app which you want to embed using the `CsWinRTIncludes` property.
+Embedded support is a C#/WinRT feature that allows you to compile C# runtime (WinRT.Runtime) and projection sources into your library or app's output. This is done by setting the build property `CsWinRTEmbedded` to `true` in the app or library's project file. You must specify the types in your component or app which you want to embed using the `CsWinRTIncludes` property.
 The specified types will be projected and embedded into the project's *.dll*. 
 This means that projects using embedded support no longer have a dependency on the projection assembly for the component, `WinRT.Runtime.dll`, or `Microsoft.Windows.SDK.NET.dll` in the case of dependencies on the Windows SDK projection.
-
-For an example, you can look at the [sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/TestEmbedded). 
 
 Embedded support introduces new features and benefits to the C#/WinRT toolchain:
  * Decreased component/app size: The developer only needs to include the minimum necessary parts of the Windows SDK required by their component or app, reducing the size of the output .dll significantly.
@@ -20,6 +15,8 @@ Embedded support introduces new features and benefits to the C#/WinRT toolchain:
  * Removes the need for multi-targeting: Library authors can support all .NET Standard 2.0 app consumers, including .NET 5+, without the need for multi-targeting. App consumers are able to target any .NET Standard 2.0 compatible TFM (e.g. `netcoreapp3.1`, `net48`, and `net5.0-windows`).
 
 It is important to remember that embedded support constrains the scope of Windows Runtime types to your binary (e.g., usage of WinRT types must be self-contained).
+
+For an example, you can look at the [sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/TestEmbedded).
 
 ## Scenarios
 
@@ -101,3 +98,7 @@ You can fix this by unloading the native component project in Visual Studio, and
   and set Windows Desktop Compatible to Yes for all configurations/platforms.
 
 If you find any other issues using embedded support, please [file an issue](https://github.com/microsoft/CsWinRT/issues/new/choose)!
+
+## Resources
+
+- [Embedded sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/TestEmbedded)
