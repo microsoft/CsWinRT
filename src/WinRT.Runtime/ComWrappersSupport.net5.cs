@@ -212,7 +212,6 @@ namespace WinRT
             ComWrappers = wrappers;
         }
 
-        internal static Func<IInspectable, object> GetTypedRcwFactory(string runtimeClassName) => TypedObjectFactoryCacheForRuntimeClassName.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className));
         internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
         
         private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
@@ -488,15 +487,15 @@ namespace WinRT
                         return ComWrappersSupport.GetTypedRcwFactory(ComWrappersSupport.CreateRCWType)(inspectable);
                     }
 
-                    string runtimeClassName = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType);
-                    if (string.IsNullOrEmpty(runtimeClassName))
+                    Type runtimeClassType = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType);
+                    if (runtimeClassType == null)
                     {
                         // If the external IInspectable has not implemented GetRuntimeClassName,
                         // we use the Inspectable wrapper directly.
                         return inspectable;
                     }
 
-                    return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
+                    return ComWrappersSupport.GetTypedRcwFactory(runtimeClassType)(inspectable);
                 }
                 else if (Marshal.QueryInterface(externalComObject, ref weakReferenceIID, out ptr) == 0)
                 {

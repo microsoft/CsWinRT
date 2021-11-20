@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 
@@ -75,6 +76,15 @@ namespace WinRT
             if(runtimeClassName.StartsWith("<>f__AnonymousType".AsSpan(), StringComparison.Ordinal))
             {
                 return (typeof(System.Dynamic.ExpandoObject), 0);
+            }
+            // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
+            if (string.CompareOrdinal(runtimeClassName.ToString(), "Windows.Foundation.IReference`1<String>") == 0)
+            {
+                return (typeof(ABI.System.Nullable<string>), 0);
+            }
+            else if (string.CompareOrdinal(runtimeClassName.ToString(), "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>") == 0)
+            {
+                return (typeof(ABI.System.Nullable<Type>), 0);
             }
             var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
             return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
