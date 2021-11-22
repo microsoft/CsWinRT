@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+	<metadata>
+		<id>SimpleMathComponent</id>
+		<version>0.1.0-prerelease</version>
+		<authors>Contoso Math Inc.</authors>
+		<description>A simple component with basic math operations</description>
+		<dependencies>
+      <!--Note: Target .NET 5 by replacing instances of "net6.0" with "net5.0 in this file"-->
+      <group targetFramework="net6.0-windows10.0.19041.0" />
+		</dependencies>
+	</metadata>
+	<files>
+    <!--Note: This sample assumes the configuration/platform are set to Debug/x64-->
+    <!--Projection assembly is architecture-neutral-->
+    <file src="..\..\_build\x64\Debug\SimpleMathProjection\bin\SimpleMathProjection.dll" target="lib\net6.0-windows10.0.19041.0\SimpleMathProjection.dll" />
+    <!--Arch-specific implementation DLLs should be copied into RID-relative folders -->
+    <file src="..\..\_build\x64\Debug\SimpleMathComponent\bin\SimpleMathComponent\SimpleMathComponent.dll" target="runtimes\win10-x64\native\SimpleMathComponent.dll" />
+	</files>
+</package>
