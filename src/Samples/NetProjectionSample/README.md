@@ -6,12 +6,13 @@ This sample demonstrates how to do the following:
 - Distribute the component along with the interop assembly as a NuGet package
 - Consume the component from a .NET 6 C# console application
 
-**Note**: This sample uses .NET 6 and therefore requires Visual Studio 2022, but it can be modified to target .NET 5.
+**Note**: This sample uses .NET 6 and therefore requires Visual Studio 2022 to build and run, but it can be modified to target .NET 5.
 
 ## Requirements
 
 * [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) with the Universal Windows Platform development workload installed. In **Installation Details** > **Universal Windows Platform development**, check the **C++ (v14x) Universal Windows Platform tools** option.
-* [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0). Note that you can also modify this sample to target [NET 5](https://dotnet.microsoft.com/download/dotnet/5.0).
+* [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
+    * **Note**: this sample can be modified to target [NET 5](https://dotnet.microsoft.com/download/dotnet/5.0).
 * nuget.exe 5.8.0-preview.2 or later (for command line MSBuild)
 
 ## Build and run the sample
@@ -32,3 +33,8 @@ msbuild /p:platform=x64;configuration=debug CppWinRTComponentProjectionSample.sl
 nuget restore ConsoleAppSample.sln
 msbuild /p:platform=x64;configuration=debug ConsoleAppSample.sln
 ```
+
+## Resources
+
+- [Walkthrough documentation](https://docs.microsoft.com/windows/uwp/csharp-winrt/net-projection-from-cppwinrt-component) for this sample
+- [C#/WinRT NuGet properties](../../../nuget/README.md)
