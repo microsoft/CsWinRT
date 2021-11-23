@@ -21,9 +21,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="PropertySheet.props" />
-  </ItemGroup>
-  <ItemGroup>
     <Midl Include="SimpleMath.idl" />
   </ItemGroup>
 </Project>
