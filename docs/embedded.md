@@ -4,7 +4,7 @@
 
 ## Overview
 
-Embedded support is a C#/WinRT feature that allows you to compile C# runtime (WinRT.Runtime) and projection sources into your library or app's output. This is done by setting the build property `CsWinRTEmbedded` to `true` in the app or library's project file. You must specify the types in your component or app which you want to embed using the `CsWinRTIncludes` property.
+Embedded support is a C#/WinRT feature that allows you to compile the WinRT runtime for C# and the projection sources into your library or app's output. This is done by setting the build property `CsWinRTEmbedded` to `true` in the app or library's project file. You must specify the types in your component or app which you want to embed using the `CsWinRTIncludes` property.
 The specified types will be projected and embedded into the project's *.dll*. 
 This means that projects using embedded support no longer have a dependency on the projection assembly for the component, `WinRT.Runtime.dll`, or `Microsoft.Windows.SDK.NET.dll` in the case of dependencies on the Windows SDK projection.
 
