@@ -18,7 +18,7 @@ This sample demonstrates how to do the following:
 
 For building in Visual Studio:
 
-1. Open *CppWinRTComponentProjectionSample.sln* in Visual Studio. Ensure that *SimpleMathProjection* is set as the startup project, and set the Platform and Configuration to x64 and Debug. Right click on the solution and build. This will do the following:
+1. Open *CppWinRTComponentProjectionSample.sln* in Visual Studio. Ensure that *SimpleMathProjection* is set as the startup project, and set the Platform and Configuration to x64 and Release. Right click on the solution and build. This will do the following:
     - Build *SimpleMathComponent*: this will generate *SimpleMathComponent.winmd* and *SimpleMathComponent.dll* 
     - Generate the projection interop assembly for the component using C#/WinRT, *SimpleMathProjection.dll*
     - Generate a NuGet package for the component. To ensure the solution has built successfully, navigate to the *SimpleMathProjection/nuget* folder in your file explorer. You should see the generated NuGet package (*SimpleMathComponent.0.1.0-prerelease.nupkg*). which can be referenced by C# .NET app consumers.
@@ -31,9 +31,9 @@ For building with the command line, execute the following:
 
 ```cmd
 nuget restore CppWinRTComponentProjectionSample.sln
-msbuild /p:platform=x64;configuration=debug CppWinRTComponentProjectionSample.sln
+msbuild /p:platform=x64;configuration=release CppWinRTComponentProjectionSample.sln
 nuget restore ConsoleAppSample.sln
-msbuild /p:platform=x64;configuration=debug ConsoleAppSample.sln
+msbuild /p:platform=x64;configuration=release ConsoleAppSample.sln
 ```
 
 ## Resources

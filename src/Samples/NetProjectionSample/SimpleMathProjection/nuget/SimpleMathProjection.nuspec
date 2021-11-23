@@ -11,10 +11,10 @@
 		</dependencies>
 	</metadata>
 	<files>
-    <!--Note: This sample assumes the configuration/platform are set to Debug/x64-->
+    <!--Note: This sample assumes the configuration/platform are set to Release/x64-->
     <!--Projection assembly is architecture-neutral-->
-    <file src="..\..\_build\x64\Debug\SimpleMathProjection\bin\SimpleMathProjection.dll" target="lib\net6.0-windows10.0.19041.0\SimpleMathProjection.dll" />
+    <file src="..\..\_build\x64\Release\SimpleMathProjection\bin\SimpleMathProjection.dll" target="lib\net6.0-windows10.0.19041.0\SimpleMathProjection.dll" />
     <!--Arch-specific implementation DLLs should be copied into RID-relative folders -->
-    <file src="..\..\_build\x64\Debug\SimpleMathComponent\bin\SimpleMathComponent\SimpleMathComponent.dll" target="runtimes\win10-x64\native\SimpleMathComponent.dll" />
+    <file src="..\..\_build\x64\Release\SimpleMathComponent\bin\SimpleMathComponent\SimpleMathComponent.dll" target="runtimes\win10-x64\native\SimpleMathComponent.dll" />
 	</files>
 </package>
