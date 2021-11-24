@@ -1,4 +1,5 @@
 Compat issues with assembly WinRT.Runtime:
+TypesMustExist : Type 'ABI.System.Collections.Generic.IListMethods<T>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.WinRT.Interop.IWeakReferenceSourceMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'System.Numerics.VectorExtensions' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.ComWrappersHelper' does not exist in the reference but it does exist in the implementation.

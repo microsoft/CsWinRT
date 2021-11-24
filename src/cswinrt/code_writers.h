@@ -1922,6 +1922,10 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 
     bool is_manually_generated_iface(TypeDef const& ifaceType)
     {
+        if (ifaceType.TypeNamespace() == "Windows.Foundation.Collections" && ifaceType.TypeName() == "IVector`1")
+        {
+            return false;
+        }
         if (auto mapping = get_mapped_type(ifaceType.TypeNamespace(), ifaceType.TypeName()))
         {
             return true;
@@ -2454,12 +2458,13 @@ IEnumerator IEnumerable.GetEnumerator() => %.GetEnumerator();
             target);
     }
 
-    void write_list_members(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
+    void write_list_members_using_idic(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit)
     {
         auto element = w.write_temp("%", bind<write_generic_type_name>(0));
         auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IList<%>.", element) : "";
         auto icollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.ICollection<%>.", element) : "";
         auto visibility = emit_explicit ? "" : "public ";
+        
         w.write(R"(
 %int %Count => %.Count;
 %bool %IsReadOnly => %.IsReadOnly;
@@ -2477,19 +2482,67 @@ set => %[index] = value;
 %bool %Contains(% item) => %.Contains(item);
 %void %CopyTo(%[] array, int arrayIndex) => %.CopyTo(array, arrayIndex);
 %bool %Remove(% item) => %.Remove(item);
+)",
+visibility, icollection, target,
+visibility, icollection, target,
+!emit_explicit ? R"([global::System.Runtime.CompilerServices.IndexerName("ListItem")])" : "",
+visibility, element, self, target, target,
+visibility, self, element, target,
+visibility, self, element, target,
+visibility, self, target,
+visibility, icollection, element, target,
+visibility, icollection, target,
+visibility, icollection, element, target,
+visibility, icollection, element, target,
+visibility, icollection, element, target);
+
+        if (!include_enumerable) return;
+        auto enumerable_type = emit_explicit ? w.write_temp("IEnumerable<%>.", element) : "";
+        w.write(R"(
+%IEnumerator<%> %GetEnumerator() => %.GetEnumerator();
+IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+)",
+visibility, element, enumerable_type, target);
+    }
+
+    void write_list_members_using_static_abi_methods(writer& w, std::string_view target, bool include_enumerable, bool emit_explicit, std::string objref_name)
+    {
+        auto element = w.write_temp("%", bind<write_generic_type_name>(0));
+        auto self = emit_explicit ? w.write_temp("global::System.Collections.Generic.IList<%>.", element) : "";
+        auto icollection = emit_explicit ? w.write_temp("global::System.Collections.Generic.ICollection<%>.", element) : "";
+        auto visibility = emit_explicit ? "" : "public ";
+        auto abiClass = w.write_temp("global::ABI.System.Collections.Generic.IListMethods<%>", element);
+        auto objRefName = w.write_temp("%", objref_name);
+        w.write(R"(
+%int %Count => %.get_Count(%);
+%bool %IsReadOnly => %.get_IsReadOnly(%);
+%
+%% %this[int index] 
+{
+get => %.Indexer_Get(%, index);
+set => %.Indexer_Set(%, index, value);
+}
+%int %IndexOf(% item) => %.IndexOf(%, item);
+%void %Insert(int index, % item) => %.Insert(%, index, item);
+%void %RemoveAt(int index) => %.RemoveAt(%, index);
+%void %Add(% item) => %.Add(%, item);
+%void %Clear() => %.Clear(%);
+%bool %Contains(% item) => %.Contains(%, item);
+%void %CopyTo(%[] array, int arrayIndex) => %.CopyTo(%, array, arrayIndex);
+%bool %Remove(% item) => %.Remove(%, item);
 )", 
-            visibility, icollection, target, 
-            visibility, icollection, target,
-            !emit_explicit ? R"([global::System.Runtime.CompilerServices.IndexerName("ListItem")])" : "",
-            visibility, element, self, target, target, 
-            visibility, self, element, target,
-            visibility, self, element, target,
-            visibility, self, target, 
-            visibility, icollection, element, target,
-            visibility, icollection, target, 
-            visibility, icollection, element, target,
-            visibility, icollection, element, target,
-            visibility, icollection, element, target);
+            visibility, icollection, abiClass, objref_name, //Count
+            visibility, icollection, abiClass, objref_name, //IsReadOnly
+            !emit_explicit ? R"([global::System.Runtime.CompilerServices.IndexerName("ListItem")])" : "", //Indexer
+            visibility, element, self, abiClass, objref_name, abiClass, objref_name, //Indexer
+            visibility, self, element, abiClass, objref_name, //IndexOf
+            visibility, self, element, abiClass, objref_name, //Insert
+            visibility, self, abiClass, objref_name, //RemoveAt
+            visibility, icollection, element, abiClass, objref_name, //Add
+            visibility, icollection, abiClass, objref_name, //Clear
+            visibility, icollection, element, abiClass, objref_name, //Contains
+            visibility, icollection, element, abiClass, objref_name, //CopyTo
+            visibility, icollection, element, abiClass, objref_name); //Remove
         
         if (!include_enumerable) return;
         auto enumerable_type = emit_explicit ? w.write_temp("IEnumerable<%>.", element) : "";
@@ -2530,7 +2583,7 @@ remove => %.ErrorsChanged -= value;
     visibility, self, target);
     }
 
-    void write_custom_mapped_type_members(writer& w, std::string_view target, mapped_type const& mapping, bool is_private)
+    void write_custom_mapped_type_members(writer& w, std::string_view target, mapped_type const& mapping, bool is_private, bool call_static_abi_methods, std::string objref_name)
     {
         if (mapping.abi_name == "IIterable`1") 
         {
@@ -2554,7 +2607,14 @@ remove => %.ErrorsChanged -= value;
         }
         else if (mapping.abi_name == "IVector`1")
         {
-            write_list_members(w, target, false, is_private);
+            if (call_static_abi_methods)
+            {
+                write_list_members_using_static_abi_methods(w, target, false, is_private, objref_name);
+            }
+            else
+            {
+                write_list_members_using_idic(w, target, false, is_private);
+            }
         }
         else if (mapping.mapped_namespace == "System.Collections" && mapping.mapped_name == "IEnumerable")
         {
@@ -2669,10 +2729,13 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
                     }
                 }
 
+                bool call_static_method = !(settings.netstandard_compat || wrapper_type || is_manually_generated_iface(interface_type));
+
                 if(auto mapping = get_mapped_type(interface_type.TypeNamespace(), interface_type.TypeName()); mapping && mapping->has_custom_members_output)
                 {
                     bool is_private = is_implemented_as_private_mapped_interface(w, type, interface_type);
-                    write_custom_mapped_type_members(w, target, *mapping, is_private);
+                    auto objref_name = w.write_temp("%", bind<write_objref_type_name>(semantics));
+                    write_custom_mapped_type_members(w, target, *mapping, is_private, call_static_method, objref_name);
                     return;
                 }
 
@@ -2680,7 +2743,7 @@ private % AsInternal(InterfaceTag<%> _) =>  ((Lazy<%>)_lazyInterfaces[typeof(%)]
                 auto is_protected_interface = has_attribute(ii, "Windows.Foundation.Metadata", "ProtectedAttribute");
 
                 auto platform_attribute = write_platform_attribute_temp(w, interface_type);
-                bool call_static_method = !(settings.netstandard_compat || wrapper_type || is_manually_generated_iface(interface_type));
+                
                 w.write_each<write_class_method>(interface_type.MethodList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, call_static_method ? std::optional(semantics) : std::nullopt);
                 w.write_each<write_class_event>(interface_type.EventList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, call_static_method ? std::optional(semantics) : std::nullopt);
 
@@ -4213,11 +4276,12 @@ return (eventSource.Subscribe, eventSource.Unsubscribe);
                     auto element = w.write_temp("%", bind<write_generic_type_name>(0));
                     required_interfaces[std::move(interface_name)] =
                     {
-                        w.write_temp("%", bind<write_list_members>(
+                        w.write_temp("%", bind<write_list_members_using_idic>(
                             emit_mapped_type_helpers ? "_vectorToList"
                             : w.write_temp("((global::System.Collections.Generic.IList<%>)(IWinRTObject)this)", element),
                             true,
-                            !emit_mapped_type_helpers)),
+                            !emit_mapped_type_helpers
+                            )),
                         w.write_temp("ABI.System.Collections.Generic.IList<%>", element),
                         "_vectorToList"
                     };

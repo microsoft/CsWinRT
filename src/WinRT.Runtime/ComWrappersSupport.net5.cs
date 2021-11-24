@@ -215,12 +215,19 @@ namespace WinRT
         
         private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
         {
+            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
+
+            if (implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(IList<>))
+            {
+                return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.New(typeof(IListImpl<>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
+                    Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
+                parms).Compile();
+            }
             if (implementationType.IsInterface)
             {
                 return obj => obj;
             }
-            
-            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
 
             return Expression.Lambda<Func<IInspectable, object>>(
                 Expression.New(implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
@@ -492,6 +499,12 @@ namespace WinRT
                         // If the external IInspectable has not implemented GetRuntimeClassName,
                         // we use the Inspectable wrapper directly.
                         return inspectable;
+                    }
+
+                    if (runtimeClassName.StartsWith("Windows.Foundation.Collections.IVector`1"))
+                    {
+                        ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
+                        var x = 1;
                     }
 
                     return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
