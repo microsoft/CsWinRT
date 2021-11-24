@@ -156,6 +156,19 @@ namespace Benchmarks
         }
 
         [Benchmark]
+        public object GetNullableTimeSpan()
+        {
+            return instance.NullableTimeSpan.Value;
+        }
+
+        [Benchmark]
+        public void SetNullableTimeSpan()
+        {
+            TimeSpan timeSpan = new TimeSpan(100);
+            instance.NullableTimeSpan = new Nullable<TimeSpan>(timeSpan);
+        }
+
+        [Benchmark]
         public object GetNullableNonBittableStruct()
         {
             return instance.NullableNonBlittableStruct.Value;
