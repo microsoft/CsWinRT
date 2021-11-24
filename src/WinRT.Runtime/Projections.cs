@@ -39,6 +39,7 @@ namespace WinRT
             RegisterCustomAbiTypeMappingNoLock(typeof(EventRegistrationToken), typeof(ABI.WinRT.EventRegistrationToken), "Windows.Foundation.EventRegistrationToken");
             
             RegisterCustomAbiTypeMappingNoLock(typeof(Nullable<>), typeof(ABI.System.Nullable<>), "Windows.Foundation.IReference`1");
+            RegisterCustomAbiTypeMappingNoLock(typeof(Nullable<int>), typeof(ABI.System.Nullable_int), "Windows.Foundation.IReference`1<Int32>");
             RegisterCustomAbiTypeMappingNoLock(typeof(DateTimeOffset), typeof(ABI.System.DateTimeOffset), "Windows.Foundation.DateTime");
             RegisterCustomAbiTypeMappingNoLock(typeof(Exception), typeof(ABI.System.Exception), "Windows.Foundation.HResult");
             RegisterCustomAbiTypeMappingNoLock(typeof(TimeSpan), typeof(ABI.System.TimeSpan), "Windows.Foundation.TimeSpan");
@@ -124,6 +125,11 @@ namespace WinRT
 
                 if (publicType.IsGenericType)
                 {
+                    if (CustomTypeToHelperTypeMappings.TryGetValue(publicType, out Type specializedAbiType))
+                    {
+                        return specializedAbiType;
+                    }
+
                     return CustomTypeToHelperTypeMappings.TryGetValue(publicType.GetGenericTypeDefinition(), out Type abiTypeDefinition)
                         ? abiTypeDefinition.MakeGenericType(publicType.GetGenericArguments())
                         : null;
@@ -143,6 +149,11 @@ namespace WinRT
             {
                 if (abiType.IsGenericType)
                 {
+                    if (CustomAbiTypeToTypeMappings.TryGetValue(abiType, out Type specializedPublicType))
+                    {
+                        return specializedPublicType;
+                    }
+
                     return CustomAbiTypeToTypeMappings.TryGetValue(abiType.GetGenericTypeDefinition(), out Type publicTypeDefinition)
                         ? publicTypeDefinition.MakeGenericType(abiType.GetGenericArguments())
                         : null;
