@@ -17,10 +17,14 @@ namespace winrt::SimpleMathComponent::implementation
     struct SimpleMath: SimpleMathT<SimpleMath>
     {
         SimpleMath() = default;
+
+        static SimpleMathComponent::SimpleMath Instance();
+        static void Instance(SimpleMathComponent::SimpleMath const& value);
         double add(double firstNumber, double secondNumber);
         double subtract(double firstNumber, double secondNumber);
         double multiply(double firstNumber, double secondNumber);
         double divide(double firstNumber, double secondNumber);
+        hstring GetValue(double number);
     };
 }
 

@@ -32,4 +32,18 @@ namespace winrt::SimpleMathComponent::implementation
 			return -1;
 		return firstNumber / secondNumber;
 	}
+
+	SimpleMathComponent::SimpleMath SimpleMath::Instance()
+	{
+		throw hresult_not_implemented();
+	}
+	void SimpleMath::Instance(SimpleMathComponent::SimpleMath const& value)
+	{
+		throw hresult_not_implemented();
+	}
+	hstring SimpleMath::GetValue(double number)
+	{
+		throw hresult_not_implemented();
+	}
+
 }

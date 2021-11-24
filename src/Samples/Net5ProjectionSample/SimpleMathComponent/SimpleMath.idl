@@ -18,5 +18,8 @@ namespace SimpleMathComponent
         Double subtract(Double firstNumber, Double secondNumber);
         Double multiply(Double firstNumber, Double secondNumber);
         Double divide(Double firstNumber, Double secondNumber);
+
+        String GetValue(Double number);
+        static SimpleMath Instance{ get; set; };
     }
 }
