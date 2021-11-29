@@ -39,14 +39,14 @@ namespace Microsoft.System
 
 #if NET5_0_OR_GREATER
             DispatcherQueueProxyHandler* dispatcherQueueProxyHandler = DispatcherQueueProxyHandler.Create(d!, state);
-            bool success;
             int hResult;
 
             try
             {
                 IDispatcherQueue* dispatcherQueue = (IDispatcherQueue*)((IWinRTObject)m_dispatcherQueue).NativeObject.ThisPtr;
+                byte success;
 
-                hResult = dispatcherQueue->TryEnqueue(dispatcherQueueProxyHandler, (byte*)&success);
+                hResult = dispatcherQueue->TryEnqueue(dispatcherQueueProxyHandler, &success);
 
                 GC.KeepAlive(this);
             }
@@ -60,7 +60,7 @@ namespace Microsoft.System
                 ExceptionHelpers.ThrowExceptionForHR(hResult);
             }
 #else
-            m_dispatcherQueue.TryEnqueue(() => d!(state));
+            _ = m_dispatcherQueue.TryEnqueue(() => d!(state));
 #endif
         }
 

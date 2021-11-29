@@ -89,16 +89,6 @@ namespace Microsoft.System
             }
 
             /// <summary>
-            /// Devirtualized API for <c>IUnknown.AddRef()</c>.
-            /// </summary>
-            /// <returns>The updated reference count for the current instance.</returns>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public uint AddRef()
-            {
-                return Interlocked.Increment(ref referenceCount);
-            }
-
-            /// <summary>
             /// Devirtualized API for <c>IUnknown.Release()</c>.
             /// </summary>
             /// <returns>The updated reference count for the current instance.</returns>
@@ -167,7 +157,7 @@ namespace Microsoft.System
                         riid->Equals(GuidOfIAgileObject) ||
                         riid->Equals(GuidOfIDispatcherQueueHandler))
                     {
-                        @this->AddRef();
+                        Interlocked.Increment(ref @this->referenceCount);
 
                         *ppvObject = @this;
 
