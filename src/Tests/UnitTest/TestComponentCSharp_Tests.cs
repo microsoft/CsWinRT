@@ -2150,6 +2150,9 @@ namespace UnitTest
 
             string s = "Hello World!";
             Assert.Equal(s, Class.UnboxString(s));
+
+            ProvideInt intHandler = () => 42;
+            Assert.Equal(intHandler, Class.UnboxDelegate(intHandler));
         }
 
         [Fact]
