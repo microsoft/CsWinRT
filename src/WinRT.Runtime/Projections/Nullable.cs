@@ -1556,26 +1556,23 @@ namespace ABI.System
         public unsafe struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            private void* _Get_Value_0;
-            public delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int> Get_Value_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>)_Get_Value_0; set => _Get_Value_0 = value; }
+            private Nullable_Delegates.GetValueDelegate _Get_Value_0;
 
             public static Guid PIID = GuidGenerator.CreateIID(typeof(Nullable<T>));
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-            private unsafe delegate int GetValueDelegate(IntPtr thisPtr, IntPtr* value);
-            private static readonly GetValueDelegate delegateCache;
-
             static Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
+                    _Get_Value_0 = Do_Abi_get_Value_0
                 };
                 var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(Vftbl), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
-                Marshal.StructureToPtr(AbiToProjectionVftable, (IntPtr)nativeVftbl, false);
+                Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
+                nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable._Get_Value_0);
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
@@ -1617,5 +1614,10 @@ namespace ABI.System
                 Marshal.Release(nullablePtr);
             }
         }
+    }
+
+    internal static class Nullable_Delegates
+    {
+        public unsafe delegate int GetValueDelegate(IntPtr thisPtr, IntPtr* value);
     }
 }
