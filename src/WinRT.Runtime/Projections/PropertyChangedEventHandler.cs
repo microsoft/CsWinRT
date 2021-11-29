@@ -52,7 +52,18 @@ namespace ABI.System.ComponentModel
         public static unsafe global::System.ComponentModel.PropertyChangedEventHandler FromAbi(IntPtr nativeDelegate)
         {
             var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
-            return abiDelegate is null ? null : (global::System.ComponentModel.PropertyChangedEventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.ComponentModel.PropertyChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+            if (abiDelegate is null)
+            {
+                return null;
+            }
+            else if (abiDelegate.IsReferenceToManagedObject)
+            {
+                return ComWrappersSupport.FindObject<global::System.ComponentModel.PropertyChangedEventHandler>(nativeDelegate);
+            }
+            else
+            {
+                return (global::System.ComponentModel.PropertyChangedEventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.ComponentModel.PropertyChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+            }
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]

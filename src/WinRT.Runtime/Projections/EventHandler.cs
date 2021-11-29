@@ -52,7 +52,18 @@ namespace ABI.System
         public static unsafe global::System.EventHandler<T> FromAbi(IntPtr nativeDelegate)
         {
             var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
-            return abiDelegate is null ? null : (global::System.EventHandler<T>)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler<T>(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+            if (abiDelegate is null)
+            {
+                return null;
+            }
+            else if (abiDelegate.IsReferenceToManagedObject)
+            {
+                return ComWrappersSupport.FindObject<global::System.EventHandler<T>>(nativeDelegate);
+            }
+            else
+            {
+                return (global::System.EventHandler<T>)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler<T>(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+            }
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -182,7 +193,18 @@ namespace ABI.System
         public static unsafe global::System.EventHandler FromAbi(IntPtr nativeDelegate)
         {
             var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
-            return abiDelegate is null ? null : (global::System.EventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+            if (abiDelegate is null)
+            {
+                return null;
+            }
+            else if (abiDelegate.IsReferenceToManagedObject)
+            {
+                return ComWrappersSupport.FindObject<global::System.EventHandler>(nativeDelegate);
+            }
+            else
+            {
+                return (global::System.EventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+            }
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
