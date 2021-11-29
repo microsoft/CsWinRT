@@ -1,6 +1,5 @@
 using System;
 using System.Threading;
-using Microsoft.System;
 
 namespace Microsoft.System
 {
@@ -17,19 +16,33 @@ namespace Microsoft.System
             m_dispatcherQueue = dispatcherQueue;
         }
 
+        /// <inheritdoc/>
         public override void Post(SendOrPostCallback d, object state)
         {
-            if (d == null)
+#if NET6_0
+            ArgumentNullException.ThrowIfNull(d, nameof(d));
+#else
+            static void ThrowArgumentNullException()
+            {
                 throw new ArgumentNullException(nameof(d));
+            }
+
+            if (d is null)
+            {
+                ThrowArgumentNullException();
+            }
+#endif
 
             m_dispatcherQueue.TryEnqueue(() => d(state));
         }
 
+        /// <inheritdoc/>
         public override void Send(SendOrPostCallback d, object state)
         {
             throw new NotSupportedException("Send not supported");
         }
 
+        /// <inheritdoc/>
         public override SynchronizationContext CreateCopy()
         {
             return new DispatcherQueueSynchronizationContext(m_dispatcherQueue);
