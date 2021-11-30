@@ -39,13 +39,13 @@ jobs:
     clean: true
     persistCredentials: True
   - task: CmdLine@2
-    displayName: Clone TestWinRT
+    displayName: New! Clone TestWinRT
     enabled: False
     inputs:
       script: get_testwinrt.cmd
       workingDirectory: $(Build.SourcesDirectory)
   - task: PowerShell@2
-    displayName: Download procdump
+    displayName: New! Download procdump
     enabled: False
     inputs:
       targetType: inline
@@ -60,7 +60,7 @@ jobs:
 
         Write-Host "##vso[task.setvariable variable=PATH;]${env:Agent_TempDirectory}\procdump;${env:PATH}";
   - task: UseDotNet@2
-    displayName: Use .NET Core SDK 2.1
+    displayName: New! Use .NET Core SDK 2.1
     inputs:
       version: 2.1.x
       installationPath: C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\
