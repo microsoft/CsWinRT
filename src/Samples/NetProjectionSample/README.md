@@ -38,7 +38,7 @@ msbuild /p:platform=x64;configuration=release ConsoleAppSample.sln
 
 ## Known issues
 
-When opening and building the sample (*CppWinRTComponentProjectionSample.sln*) in Visual Studio, you may see errors similar to below in the Visual Studio Error List window. The build for the proejction will still succeed, and the errors will go away when closing and reopening the solution after building.
+When opening and building the sample (*CppWinRTComponentProjectionSample.sln*) in Visual Studio, you may see errors similar to below in the Visual Studio Error List window. The build for the projection will still succeed, and the errors will go away when closing and reopening the solution after building.
 
 > Error Path 'C:\...\CsWinRT-master\src\Samples\Net5ProjectionSample\_build\x64\Debug\SimpleMathComponent\bin\SimpleMathComponent\SimpleMathComponent.winmd' is not a file or directory	SimpleMathProjection	C:\Users\...\CsWinRT-master\src\Samples\Net5ProjectionSample\SimpleMathProjection\EXEC	1
 
