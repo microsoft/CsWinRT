@@ -135,44 +135,17 @@ namespace Microsoft.System
                 /// <summary>
                 /// The GUID for the <c>IUnknown</c> COM interface.
                 /// </summary>
-                private static ref readonly Guid GuidOfIUnknown
-                {
-                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get
-                    {
-                        ReadOnlySpan<byte> data = new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 };
-
-                        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-                    }
-                }
+                private static readonly Guid GuidOfIUnknown = new(0x00000000, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
 
                 /// <summary>
                 /// The GUID for the <c>IAgileObject</c> WinRT interface.
                 /// </summary>
-                private static ref readonly Guid GuidOfIAgileObject
-                {
-                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get
-                    {
-                        ReadOnlySpan<byte> data = new byte[] { 0x94, 0xEA, 0x2B, 0x94, 0xE9, 0xCC, 0x49, 0xE0, 0xC0, 0xFF, 0xEE, 0x64, 0xCA, 0x8F, 0x5B, 0x90 };
-
-                        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-                    }
-                }
+                private static readonly Guid GuidOfIAgileObject = new(0x94EA2B94, 0xE9CC, 0x49E0, 0xC0, 0xFF, 0xEE, 0x64, 0xCA, 0x8F, 0x5B, 0x90);
 
                 /// <summary>
                 /// The GUID for the <c>IDispatcherQueueHandler</c> WinRT interface.
                 /// </summary>
-                private static ref readonly Guid GuidOfIDispatcherQueueHandler
-                {
-                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get
-                    {
-                        ReadOnlySpan<byte> data = new byte[] { 0x2E, 0x08, 0x72, 0xA9, 0x4E, 0x29, 0x5F, 0x14, 0xB6, 0x88, 0xFB, 0x96, 0xD5, 0xF9, 0xD5, 0xF8 };
-
-                        return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-                    }
-                }
+                private static readonly Guid GuidOfIDispatcherQueueHandler = new(0x2E0872A9, 0x4E29, 0x5F14, 0xB6, 0x88, 0xFB, 0x96, 0xD5, 0xF9, 0xD5, 0xF8);
 
                 /// <summary>
                 /// Implements <c>IUnknown.QueryInterface(REFIID, void**)</c>.
