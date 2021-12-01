@@ -1,5 +1,7 @@
 #if NET5_0_OR_GREATER
 
+#pragma warning disable CS0649
+
 using System.Runtime.CompilerServices;
 
 namespace Microsoft.System
