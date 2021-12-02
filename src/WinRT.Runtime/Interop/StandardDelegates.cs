@@ -231,4 +231,16 @@ namespace WinRT.Interop
     public 
 #endif 
     delegate int _remove_EventHandler(IntPtr thisPtr, EventRegistrationToken token);
+
+    // IDelegate
+#if EMBED
+    internal
+#else
+    public
+#endif
+    struct IDelegateVftbl
+    {
+        public IUnknownVftbl IUnknownVftbl;
+        public IntPtr Invoke;
+    }
 }

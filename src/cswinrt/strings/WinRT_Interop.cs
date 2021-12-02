@@ -20,13 +20,6 @@ namespace WinRT.Interop
         internal static readonly Guid IID = new(0x00000035, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
     }
 
-    // IDelegate
-    internal struct IDelegateVftbl
-    {
-        public IUnknownVftbl IUnknownVftbl;
-        public IntPtr Invoke;
-    }
-
     [Guid("64BD43F8-bFEE-4EC4-B7EB-2935158DAE21")]
     [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct IReferenceTrackerTargetVftbl

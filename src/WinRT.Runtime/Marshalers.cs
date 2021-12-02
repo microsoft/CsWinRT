@@ -1255,6 +1255,24 @@ namespace WinRT
 
             return ComWrappersSupport.CreateCCWForObject<global::WinRT.Interop.IDelegateVftbl>(o, delegateIID);
         }
+
+        public static unsafe T FromAbi<T>(IntPtr nativeDelegate, Func<ObjectReference<IDelegateVftbl>, T> createCallback)
+            where T : System.Delegate
+        {
+            if (nativeDelegate == IntPtr.Zero)
+            {
+                return null;
+            }
+            else if (IUnknownVftbl.IsReferenceToManagedObject(nativeDelegate))
+            {
+                return ComWrappersSupport.FindObject<T>(nativeDelegate);
+            }
+            else
+            {
+                var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
+                return (T) ComWrappersSupport.TryRegisterObjectForInterface(createCallback(abiDelegate), nativeDelegate);
+            }
+        }
     }
 
 #if EMBED

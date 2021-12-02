@@ -51,18 +51,11 @@ namespace ABI.System.ComponentModel
 
         public static unsafe global::System.ComponentModel.PropertyChangedEventHandler FromAbi(IntPtr nativeDelegate)
         {
-            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
-            if (abiDelegate is null)
+            return MarshalDelegate.FromAbi(nativeDelegate, CreateDelegate);
+
+            static global::System.ComponentModel.PropertyChangedEventHandler CreateDelegate(ObjectReference<global::WinRT.Interop.IDelegateVftbl> abiDelegate)
             {
-                return null;
-            }
-            else if (abiDelegate.IsReferenceToManagedObject)
-            {
-                return ComWrappersSupport.FindObject<global::System.ComponentModel.PropertyChangedEventHandler>(nativeDelegate);
-            }
-            else
-            {
-                return (global::System.ComponentModel.PropertyChangedEventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.ComponentModel.PropertyChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+                return new global::System.ComponentModel.PropertyChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke);
             }
         }
 
