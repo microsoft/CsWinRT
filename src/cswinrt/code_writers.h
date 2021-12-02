@@ -6559,7 +6559,7 @@ public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>
 
 public static unsafe % FromAbi(IntPtr nativeDelegate)
 {
-return MarshalDelegate.FromAbi(nativeDelegate, (objRef) => new %(new NativeDelegateWrapper(objRef).Invoke));
+return MarshalDelegate.FromAbi(nativeDelegate, (ptr) => new %(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr)).Invoke));
 }
 
 [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]

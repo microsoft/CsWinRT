@@ -1261,7 +1261,7 @@ namespace WinRT
             return ComWrappersSupport.CreateCCWForObject<global::WinRT.Interop.IDelegateVftbl>(o, delegateIID);
         }
 
-        public static T FromAbi<T>(IntPtr nativeDelegate, Func<ObjectReference<IDelegateVftbl>, T> createCallback)
+        public static T FromAbi<T>(IntPtr nativeDelegate, Func<IntPtr, T> createCallback)
             where T : System.Delegate
         {
             if (nativeDelegate == IntPtr.Zero)
@@ -1274,8 +1274,7 @@ namespace WinRT
             }
             else
             {
-                var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
-                return (T) ComWrappersSupport.TryRegisterObjectForInterface(createCallback(abiDelegate), nativeDelegate);
+                return (T) ComWrappersSupport.TryRegisterObjectForInterface(createCallback(nativeDelegate), nativeDelegate);
             }
         }
     }
