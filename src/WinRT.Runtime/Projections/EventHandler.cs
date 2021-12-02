@@ -51,18 +51,11 @@ namespace ABI.System
 
         public static unsafe global::System.EventHandler<T> FromAbi(IntPtr nativeDelegate)
         {
-            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
-            if (abiDelegate is null)
+            return MarshalDelegate.FromAbi(nativeDelegate, CreateDelegate);
+
+            static global::System.EventHandler<T> CreateDelegate(ObjectReference<global::WinRT.Interop.IDelegateVftbl> abiDelegate)
             {
-                return null;
-            }
-            else if (abiDelegate.IsReferenceToManagedObject)
-            {
-                return ComWrappersSupport.FindObject<global::System.EventHandler<T>>(nativeDelegate);
-            }
-            else
-            {
-                return (global::System.EventHandler<T>)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler<T>(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+                return new global::System.EventHandler<T>(new NativeDelegateWrapper(abiDelegate).Invoke);
             }
         }
 
@@ -120,7 +113,6 @@ namespace ABI.System
                     MarshalInspectable<object>.DisposeMarshaler(__sender);
                     Marshaler<T>.DisposeMarshaler(__args);
                 }
-
             }
         }
 
@@ -192,18 +184,11 @@ namespace ABI.System
 
         public static unsafe global::System.EventHandler FromAbi(IntPtr nativeDelegate)
         {
-            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
-            if (abiDelegate is null)
+            return MarshalDelegate.FromAbi(nativeDelegate, CreateDelegate);
+
+            static global::System.EventHandler CreateDelegate(ObjectReference<global::WinRT.Interop.IDelegateVftbl> abiDelegate)
             {
-                return null;
-            }
-            else if (abiDelegate.IsReferenceToManagedObject)
-            {
-                return ComWrappersSupport.FindObject<global::System.EventHandler>(nativeDelegate);
-            }
-            else
-            {
-                return (global::System.EventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+                return new global::System.EventHandler(new NativeDelegateWrapper(abiDelegate).Invoke);
             }
         }
 

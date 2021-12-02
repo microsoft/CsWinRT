@@ -52,18 +52,11 @@ namespace ABI.System.Collections.Specialized
 
         public static unsafe global::System.Collections.Specialized.NotifyCollectionChangedEventHandler FromAbi(IntPtr nativeDelegate)
         {
-            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
-            if (abiDelegate is null)
+            return MarshalDelegate.FromAbi(nativeDelegate, CreateDelegate);
+
+            static global::System.Collections.Specialized.NotifyCollectionChangedEventHandler CreateDelegate(ObjectReference<global::WinRT.Interop.IDelegateVftbl> abiDelegate)
             {
-                return null;
-            }
-            else if (abiDelegate.IsReferenceToManagedObject)
-            {
-                return ComWrappersSupport.FindObject<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>(nativeDelegate);
-            }
-            else
-            {
-                return (global::System.Collections.Specialized.NotifyCollectionChangedEventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+                return new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke);
             }
         }
 

@@ -298,7 +298,7 @@ namespace WinRT
             VftblIUnknownFromOriginalContext.Release(ThisPtrFromOriginalContext);
         }
 
-        public unsafe bool IsReferenceToManagedObject
+        internal unsafe bool IsReferenceToManagedObject
         {
             get
             {
