@@ -36,6 +36,14 @@ nuget restore ConsoleAppSample.sln
 msbuild /p:platform=x64;configuration=release ConsoleAppSample.sln
 ```
 
+## Known issues
+
+When opening and building the sample (*CppWinRTComponentProjectionSample.sln*) in Visual Studio, you may see errors similar to below in the Visual Studio Error List window. The build for the projection will still succeed, and the errors will go away when closing and reopening the solution after building.
+
+> Error Path 'C:\...\CsWinRT-master\src\Samples\Net5ProjectionSample\_build\x64\Debug\SimpleMathComponent\bin\SimpleMathComponent\SimpleMathComponent.winmd' is not a file or directory	SimpleMathProjection	C:\Users\...\CsWinRT-master\src\Samples\Net5ProjectionSample\SimpleMathProjection\EXEC	1
+
+> Error	MSB3073	The command ""C:\Users\\*username*\\.nuget\packages\microsoft.windows.cswinrt\1.4.1\cswinrt.exe" @"C:\Users\\*username*\Desktop\Dev\CsWinRT-master\src\Samples\Net5ProjectionSample\_build\x64\Debug\SimpleMathProjection\bin\cswinrt.rsp"" exited with code 1.	SimpleMathProjection	C:\Users\\*username*\.nuget\packages\microsoft.windows.cswinrt\1.4.1\build\Microsoft.Windows.CsWinRT.targets	121
+
 ## Resources
 
 - [Walkthrough documentation](https://docs.microsoft.com/windows/uwp/csharp-winrt/net-projection-from-cppwinrt-component) for this sample
