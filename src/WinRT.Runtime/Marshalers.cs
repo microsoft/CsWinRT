@@ -1256,7 +1256,7 @@ namespace WinRT
             return ComWrappersSupport.CreateCCWForObject<global::WinRT.Interop.IDelegateVftbl>(o, delegateIID);
         }
 
-        public static unsafe T FromAbi<T>(IntPtr nativeDelegate, Func<ObjectReference<IDelegateVftbl>, T> createCallback)
+        public static T FromAbi<T>(IntPtr nativeDelegate, Func<ObjectReference<IDelegateVftbl>, T> createCallback)
             where T : System.Delegate
         {
             if (nativeDelegate == IntPtr.Zero)

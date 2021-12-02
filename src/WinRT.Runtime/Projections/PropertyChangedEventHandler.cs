@@ -51,12 +51,7 @@ namespace ABI.System.ComponentModel
 
         public static unsafe global::System.ComponentModel.PropertyChangedEventHandler FromAbi(IntPtr nativeDelegate)
         {
-            return MarshalDelegate.FromAbi(nativeDelegate, CreateDelegate);
-
-            static global::System.ComponentModel.PropertyChangedEventHandler CreateDelegate(ObjectReference<global::WinRT.Interop.IDelegateVftbl> abiDelegate)
-            {
-                return new global::System.ComponentModel.PropertyChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke);
-            }
+            return MarshalDelegate.FromAbi(nativeDelegate, (objRef) => new global::System.ComponentModel.PropertyChangedEventHandler(new NativeDelegateWrapper(objRef).Invoke));
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]

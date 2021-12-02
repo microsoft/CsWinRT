@@ -51,12 +51,7 @@ namespace ABI.System
 
         public static unsafe global::System.EventHandler<T> FromAbi(IntPtr nativeDelegate)
         {
-            return MarshalDelegate.FromAbi(nativeDelegate, CreateDelegate);
-
-            static global::System.EventHandler<T> CreateDelegate(ObjectReference<global::WinRT.Interop.IDelegateVftbl> abiDelegate)
-            {
-                return new global::System.EventHandler<T>(new NativeDelegateWrapper(abiDelegate).Invoke);
-            }
+            return MarshalDelegate.FromAbi(nativeDelegate, (objRef) => new global::System.EventHandler<T>(new NativeDelegateWrapper(objRef).Invoke));
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -184,12 +179,7 @@ namespace ABI.System
 
         public static unsafe global::System.EventHandler FromAbi(IntPtr nativeDelegate)
         {
-            return MarshalDelegate.FromAbi(nativeDelegate, CreateDelegate);
-
-            static global::System.EventHandler CreateDelegate(ObjectReference<global::WinRT.Interop.IDelegateVftbl> abiDelegate)
-            {
-                return new global::System.EventHandler(new NativeDelegateWrapper(abiDelegate).Invoke);
-            }
+            return MarshalDelegate.FromAbi(nativeDelegate, (objRef) => new global::System.EventHandler(new NativeDelegateWrapper(objRef).Invoke));
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
