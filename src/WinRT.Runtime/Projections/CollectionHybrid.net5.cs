@@ -64,18 +64,17 @@ namespace ABI.System.Collections.Generic
                 var iDictionary = typeof(global::System.Collections.Generic.IDictionary<,>).MakeGenericType(genericType.GetGenericArguments());
                 if (_this.IsInterfaceImplemented(iDictionary.TypeHandle, false))
                 {
+                    var iDictionaryImpl = typeof(global::System.Collections.Generic.IDictionaryImpl<,>).MakeGenericType(genericType.GetGenericArguments());
                     return (global::System.Collections.Generic.ICollection<T>)
-                        iDictionary.FindHelperType().GetMethod(
-                            "_FromMap",
-                            global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.NonPublic | global::System.Reflection.BindingFlags.Static
-                        ).Invoke(null, global::System.Reflection.BindingFlags.Default, null, new object[] { _this }, null);
+                        iDictionaryImpl.GetConstructor(new global::System.Type[] { typeof(IObjectReference) })
+                        .Invoke(new object[] { _this.NativeObject });
                 }
             }
 
             var iList = typeof(global::System.Collections.Generic.IList<T>);
             if (_this.IsInterfaceImplemented(iList.TypeHandle, false))
             {
-                return IList<T>._FromVector(_this);
+                return new global::System.Collections.Generic.IListImpl<T>(_this.NativeObject);
             }
 
             throw new InvalidOperationException("ICollection helper can not determine derived type.");
@@ -88,7 +87,7 @@ namespace ABI.System.Collections.Generic
                 () => CreateHelper(_this));
         }
 
-        int global::System.Collections.Generic.ICollection<T>.Count
+        int global::System.Collections.Generic.ICollection<T>.Count 
             => GetHelper((IWinRTObject)this).Count;
 
         bool global::System.Collections.Generic.ICollection<T>.IsReadOnly

@@ -35,6 +35,25 @@ namespace Windows.Foundation.Collections
 
 namespace ABI.Windows.Foundation.Collections
 {
+    internal static class IIterableMethods<T>
+    {
+        public unsafe static IEnumerator<T> First(IObjectReference obj)
+        {
+            IntPtr __retval = default;
+            try
+            {
+                var _obj = (ObjectReference<ABI.System.Collections.Generic.IEnumerable<T>.Vftbl>)obj;
+                var ThisPtr = _obj.ThisPtr;
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(ThisPtr, out __retval));
+                return ABI.System.Collections.Generic.IEnumerator<T>.FromAbi(__retval);
+            }
+            finally
+            {
+                ABI.System.Collections.Generic.IEnumerator<T>.DisposeAbi(__retval);
+            }
+        }
+    }
+
     [DynamicInterfaceCastableImplementation]
     [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
     internal interface IIterable<T> : ABI.System.Collections.Generic.IEnumerable<T>
@@ -43,10 +62,46 @@ namespace ABI.Windows.Foundation.Collections
     }
 }
 
+namespace System.Collections.Generic
+{
+    internal class IEnumerableImpl<T> : IEnumerable<T>
+    {
+        private IObjectReference iEnumerableObjRef;
+
+        internal IEnumerableImpl(IObjectReference iEnumerableObjRef)
+        {
+            this.iEnumerableObjRef = iEnumerableObjRef;
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return global::ABI.System.Collections.Generic.IEnumerableMethods<T>.GetEnumerator(iEnumerableObjRef);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+}
+
 namespace ABI.System.Collections.Generic
 {
     using global::System;
     using global::System.Runtime.CompilerServices;
+
+    public static class IEnumerableMethods<T>
+    {
+        public static global::System.Collections.Generic.IEnumerator<T> GetEnumerator(IObjectReference obj)
+        {
+            var first = ABI.Windows.Foundation.Collections.IIterableMethods<T>.First(obj);
+            if (first is global::ABI.System.Collections.Generic.IEnumerator<T> iterator)
+            {
+                return iterator;
+            }
+            throw new InvalidOperationException("Unexpected type for enumerator");
+        }
+    }
 
     [DynamicInterfaceCastableImplementation]
     [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
@@ -164,23 +219,12 @@ namespace ABI.System.Collections.Generic
                 () => new FromAbiHelper((global::System.Collections.Generic.IEnumerable<T>)_this));
         }
 
-        unsafe global::System.Collections.Generic.IEnumerator<T> global::Windows.Foundation.Collections.IIterable<T>.First()
+        global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator()
         {
-            IntPtr __retval = default;
-            try
-            {
-                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle));
-                var ThisPtr = _obj.ThisPtr;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(ThisPtr, out __retval));
-                return ABI.System.Collections.Generic.IEnumerator<T>.FromAbi(__retval);
-            }
-            finally
-            {
-                ABI.System.Collections.Generic.IEnumerator<T>.DisposeAbi(__retval);
-            }
+            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle));
+            return IEnumerableMethods<T>.GetEnumerator(_obj);
         }
-        //System.Collections.Generic.IEnumerable`1.GetEnumerator()
-        global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator() => _FromIterable((IWinRTObject)this).GetEnumerator();
+
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 #if EMBED

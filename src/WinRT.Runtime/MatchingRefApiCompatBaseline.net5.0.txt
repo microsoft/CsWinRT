@@ -1,4 +1,6 @@
 Compat issues with assembly WinRT.Runtime:
+TypesMustExist : Type 'ABI.System.Collections.Generic.IDictionaryMethods<K, V>' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Collections.Generic.IEnumerableMethods<T>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IListMethods<T>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.WinRT.Interop.IWeakReferenceSourceMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'System.Numerics.VectorExtensions' does not exist in the reference but it does exist in the implementation.
@@ -14,4 +16,4 @@ MembersMustExist : Member 'public System.IntPtr WinRT.MarshalString.GetAbi(WinRT
 TypesMustExist : Type 'WinRT.MarshalString.Pinnable' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 15
+Total Issues: 17

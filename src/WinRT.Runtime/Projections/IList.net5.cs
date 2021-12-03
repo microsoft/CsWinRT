@@ -36,16 +36,29 @@ namespace Windows.Foundation.Collections
 
 namespace System.Collections.Generic
 {
-    internal sealed class IListImpl<T> : global::System.Collections.Generic.IList<T>, IEquatable<T>
+    internal sealed class IListImpl<T> : global::System.Collections.Generic.IList<T>
     {
-        private IObjectReference iListObjRef;
+        private readonly IObjectReference _inner;
 
-        private Lazy<IEnumerable<T>> iEnumerable;
-
-        internal IListImpl(IObjectReference objRef)
+        private volatile IObjectReference __iListObjRef;
+        private IObjectReference Make_IListObjRef()
         {
-            iListObjRef = objRef.As<ABI.System.Collections.Generic.IList<T>.Vftbl>();
-            iEnumerable = new Lazy<IEnumerable<T>>(() => (IEnumerable<T>)new SingleInterfaceOptimizedObject(typeof(IEnumerable<T>), iListObjRef));
+            global::System.Threading.Interlocked.CompareExchange(ref __iListObjRef, _inner.As<ABI.System.Collections.Generic.IList<T>.Vftbl>(), null);
+            return __iListObjRef;
+        }
+        private IObjectReference iListObjRef => __iListObjRef ?? Make_IListObjRef();
+
+        private volatile IObjectReference __iEnumerableObjRef;
+        private IObjectReference Make_IEnumerableObjRef()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, _inner.As<ABI.System.Collections.Generic.IEnumerable<T>.Vftbl>(), null);
+            return __iEnumerableObjRef;
+        }
+        private IObjectReference iEnumerableObjRef => __iEnumerableObjRef ?? Make_IEnumerableObjRef();
+
+        internal IListImpl(IObjectReference _inner)
+        {
+            this._inner = _inner;
         }
 
         public T this[int index] 
@@ -84,14 +97,9 @@ namespace System.Collections.Generic
             ABI.System.Collections.Generic.IListMethods<T>.CopyTo(iListObjRef, array, arrayIndex);
         }
 
-        public bool Equals(T? other)
-        {
-            throw new NotImplementedException();
-        }
-
         public IEnumerator<T> GetEnumerator()
         {
-            return iEnumerable.Value.GetEnumerator();
+            return ABI.System.Collections.Generic.IEnumerableMethods<T>.GetEnumerator(iEnumerableObjRef);
         }
 
         public int IndexOf(T item)
@@ -505,199 +513,6 @@ namespace ABI.System.Collections.Generic
             MarshalInterfaceHelper<global::Windows.Foundation.Collections.IVector<T>>.DisposeAbi(abi);
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IList<T>));
-
-        public class FromAbiHelper : global::System.Collections.Generic.IList<T>
-        {
-            private readonly global::Windows.Foundation.Collections.IVector<T> _vector;
-
-            public FromAbiHelper(global::Windows.Foundation.Collections.IVector<T> vector)
-            {
-                _vector = vector;
-            }
-
-            public int Count
-            {
-                get
-                {
-                    uint size = _vector.Size;
-                    if (((uint)int.MaxValue) < size)
-                    {
-                        throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
-                    }
-
-                    return (int)size;
-                }
-            }
-
-            public bool IsReadOnly { get => false; }
-
-            public void Add(T item) => _vector.Append(item);
-
-            public void Clear() => _vector._Clear();
-
-            public bool Contains(T item) => _vector.IndexOf(item, out _);
-
-            public void CopyTo(T[] array, int arrayIndex)
-            {
-                if (array == null)
-                    throw new ArgumentNullException(nameof(array));
-
-                if (arrayIndex < 0)
-                    throw new ArgumentOutOfRangeException(nameof(arrayIndex));
-
-                if (array.Length <= arrayIndex && Count > 0)
-                    throw new ArgumentException(ErrorStrings.Argument_IndexOutOfArrayBounds);
-
-                if (array.Length - arrayIndex < Count)
-                    throw new ArgumentException(ErrorStrings.Argument_InsufficientSpaceToCopyCollection);
-
-
-                int count = Count;
-                for (int i = 0; i < count; i++)
-                {
-                    array[i + arrayIndex] = FromAbiHelper.GetAt(_vector, (uint)i);
-                }
-            }
-
-            public bool Remove(T item)
-            {
-                uint index;
-                bool exists = _vector.IndexOf(item, out index);
-
-                if (!exists)
-                    return false;
-
-                if (((uint)int.MaxValue) < index)
-                {
-                    throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
-                }
-
-                FromAbiHelper.RemoveAtHelper(_vector, index);
-                return true;
-            }
-
-            public T this[int index] { get => Indexer_Get(index); set => Indexer_Set(index, value); }
-
-            private T Indexer_Get(int index)
-            {
-                if (index < 0)
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                return GetAt(_vector, (uint)index);
-            }
-
-            private void Indexer_Set(int index, T value)
-            {
-                if (index < 0)
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                SetAt(_vector, (uint)index, value);
-            }
-
-            public int IndexOf(T item)
-            {
-                uint index;
-                bool exists = _vector.IndexOf(item, out index);
-
-                if (!exists)
-                    return -1;
-
-                if (((uint)int.MaxValue) < index)
-                {
-                    throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
-                }
-
-                return (int)index;
-            }
-
-            public void Insert(int index, T item)
-            {
-                if (index < 0)
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                InsertAtHelper(_vector, (uint)index, item);
-            }
-
-            public void RemoveAt(int index)
-            {
-                if (index < 0)
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                RemoveAtHelper(_vector, (uint)index);
-            }
-
-            internal static T GetAt(global::Windows.Foundation.Collections.IVector<T> _this, uint index)
-            {
-                try
-                {
-                    return _this.GetAt(index);
-
-                    // We delegate bounds checking to the underlying collection and if it detected a fault,
-                    // we translate it to the right exception:
-                }
-                catch (Exception ex)
-                {
-                    if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                        throw new ArgumentOutOfRangeException(nameof(index));
-
-                    throw;
-                }
-            }
-
-            private static void SetAt(global::Windows.Foundation.Collections.IVector<T> _this, uint index, T value)
-            {
-                try
-                {
-                    _this.SetAt(index, value);
-
-                    // We deligate bounds checking to the underlying collection and if it detected a fault,
-                    // we translate it to the right exception:
-                }
-                catch (Exception ex)
-                {
-                    if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                        throw new ArgumentOutOfRangeException(nameof(index));
-
-                    throw;
-                }
-            }
-
-            private static void InsertAtHelper(global::Windows.Foundation.Collections.IVector<T> _this, uint index, T item)
-            {
-                try
-                {
-                    _this.InsertAt(index, item);
-
-                    // We delegate bounds checking to the underlying collection and if it detected a fault,
-                    // we translate it to the right exception:
-                }
-                catch (Exception ex)
-                {
-                    if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                        throw new ArgumentOutOfRangeException(nameof(index));
-
-                    throw;
-                }
-            }
-
-            internal static void RemoveAtHelper(global::Windows.Foundation.Collections.IVector<T> _this, uint index)
-            {
-                try
-                {
-                    _this.RemoveAt(index);
-
-                    // We delegate bounds checking to the underlying collection and if it detected a fault,
-                    // we translate it to the right exception:
-                }
-                catch (Exception ex)
-                {
-                    if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                        throw new ArgumentOutOfRangeException(nameof(index));
-
-                    throw;
-                }
-            }
-
-            public global::System.Collections.Generic.IEnumerator<T> GetEnumerator() => ((global::System.Collections.Generic.IEnumerable<T>)(IWinRTObject)_vector).GetEnumerator();
-
-            global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-        }
 
         public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IVector<T>
         {
@@ -1173,11 +988,11 @@ namespace ABI.System.Collections.Generic
         }
         public static Guid PIID = Vftbl.PIID;
         
-        internal static FromAbiHelper _FromVector(IWinRTObject _this)
-        {
-            return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IList<T>).TypeHandle,
-                () => new FromAbiHelper((global::Windows.Foundation.Collections.IVector<T>)_this));
-        }
+        //internal static FromAbiHelper _FromVector(IWinRTObject _this)
+        //{
+        //    return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IList<T>).TypeHandle,
+        //        () => new FromAbiHelper((global::Windows.Foundation.Collections.IVector<T>)_this));
+        //}
 
 
         unsafe T global::Windows.Foundation.Collections.IVector<T>.GetAt(uint index)
@@ -1440,7 +1255,12 @@ namespace ABI.System.Collections.Generic
             return IListMethods<T>.Remove(_obj, item);
         }
         
-        global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator() => _FromVector((IWinRTObject)this).GetEnumerator();
+        global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator()
+        {
+            ((IWinRTObject)this).IsInterfaceImplemented(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle, true);
+            var _objEnumerable = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle));
+            return IEnumerableMethods<T>.GetEnumerator(_objEnumerable);
+        }
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 

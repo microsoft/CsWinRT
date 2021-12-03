@@ -224,6 +224,13 @@ namespace WinRT
                     Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
                 parms).Compile();
             }
+            if (implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+            {
+                return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.New(typeof(IDictionaryImpl<,>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0], implementationType.GetGenericArguments()[1] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
+                    Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
+                parms).Compile();
+            }
             if (implementationType.IsInterface)
             {
                 return obj => obj;
