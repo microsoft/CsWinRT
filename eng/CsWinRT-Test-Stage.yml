@@ -1,0 +1,61 @@
+stages:
+- stage: Test
+  displayName: Test Stage
+  jobs:
+  - job: Test CsWinRT
+    pool:
+      vmImage: windows-2019
+    steps:
+    - checkout: self
+      clean: true
+      persistCredentials: true
+
+# Run Unit Tests
+    - task: DotNetCoreCLI@2
+      displayName: Run Unit Tests
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        command: test
+        projects: 'src/Tests/UnitTest/UnitTest.csproj '
+        arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        testRunTitle: Unit Tests
+
+# Run Object Lifetime Tests
+    - task: VSTest@2
+      displayName: Run Object Lifetime Tests
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net5.0-windows10.0.19041.0\win10-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
+        searchFolder: $(Build.SourcesDirectory)\src
+
+# Publish Test Log
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Test Log
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        PathtoPublish: $(Build.ArtifactStagingDirectory)\unittest
+        ArtifactName: $(BuildConfiguration)_$(BuildPlatform)_UnitTest
+
+# Run Host Tests
+    - task: CmdLine@2
+      displayName: Run Host Tests
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      continueOnError: True
+      inputs:
+        workingDirectory: $(Build.SourcesDirectory)\src
+        script: |
+          dir _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin
+          _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin\HostTest.exe --gtest_output=xml:HOSTTEST-$(Build.BuildNumber).xml 
+          exit /b 0
+
+# Run Source Generator Tests  
+    - task: CmdLine@2
+      displayName: Run Source Generator Tests
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      continueOnError: True
+      inputs:
+        workingDirectory: $(Build.SourcesDirectory)\src
+        script: |
+          dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin
+          _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
+          exit /b 0 
