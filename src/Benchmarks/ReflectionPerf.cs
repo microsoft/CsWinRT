@@ -190,6 +190,19 @@ namespace Benchmarks
         }
 
         [Benchmark]
+        public void SetNullableIntDelegate()
+        {
+            ProvideInt s = () => 4;
+            instance.BoxedDelegate = s;
+        }
+
+        [Benchmark]
+        public object GetNullableIntDelegate()
+        {
+            return instance.BoxedDelegate as ProvideInt;
+        }
+
+        [Benchmark]
         public string CreateAndIterateList()
         {
             var list = instance.NewList();
