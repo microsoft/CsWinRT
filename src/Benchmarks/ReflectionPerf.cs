@@ -188,5 +188,18 @@ namespace Benchmarks
             System.EventHandler<int> s = (object sender, int value) => z = value;
             instance.NewTypeErasedNullableObject = s;
         }
+
+        [Benchmark]
+        public void SetNullableIntDelegate()
+        {
+            ProvideInt s = () => 4;
+            instance.BoxedDelegate = s;
+        }
+
+        [Benchmark]
+        public object GetNullableIntDelegate()
+        {
+            return instance.BoxedDelegate as ProvideInt;
+        }
     }
 }

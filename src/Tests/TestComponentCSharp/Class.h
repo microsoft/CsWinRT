@@ -369,6 +369,7 @@ namespace winrt::TestComponentCSharp::implementation
         static hstring GetTypeNameForType(Windows::UI::Xaml::Interop::TypeName const& type);
 
         static Windows::Foundation::IInspectable EmptyString();
+        static Windows::Foundation::IInspectable BoxedDelegate();
 
         hstring Catch(hstring const& params, hstring& locks);
 

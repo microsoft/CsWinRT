@@ -2224,6 +2224,15 @@ namespace UnitTest
             Assert.Equal(string.Empty, (string)str2);
         }
 
+        [Fact]
+        public void TestDelegateUnboxing()
+        {
+            var del = Class.BoxedDelegate;
+            Assert.IsType<ProvideUri>(del);
+            var provideUriDel = (ProvideUri) del;
+            Assert.Equal(new Uri("http://microsoft.com"), provideUriDel());
+        }
+
         internal class ManagedType { }
 
         [Fact]

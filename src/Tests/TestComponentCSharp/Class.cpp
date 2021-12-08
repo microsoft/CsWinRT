@@ -1467,6 +1467,12 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::box_value(hstring{});
     }
 
+    WF::IInspectable Class::BoxedDelegate()
+    {
+        TestComponentCSharp::ProvideUri handler = [] { return Windows::Foundation::Uri(L"http://microsoft.com"); };
+        return winrt::box_value(handler);
+    }
+
     hstring Class::Catch(hstring const& /*params*/, hstring& /*lock*/)
     {
         // Compile-only test for keyword escaping
