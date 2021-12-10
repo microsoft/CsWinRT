@@ -80,8 +80,7 @@ namespace WinRT
             // for a single System.Type.
             return rcw switch
             {
-                ABI.System.Nullable<string> ns => (T)(object)ns.Value,
-                ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                ABI.System.Nullable nt => (T)nt.Value,
                 _ => (T)rcw
             };
         }

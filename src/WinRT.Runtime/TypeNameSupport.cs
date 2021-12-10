@@ -133,6 +133,10 @@ namespace WinRT
             {
                 if (genericTypes != null)
                 {
+                    if(resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
+                    {
+                        return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
+                    }
                     resolvedType = resolvedType.MakeGenericType(genericTypes);
                 }
                 return resolvedType;

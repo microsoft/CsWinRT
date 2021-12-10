@@ -270,6 +270,11 @@ namespace WinRT
             return implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(System.Nullable<>);
         }
 
+        private static bool IsAbiNullableDelegate(Type implementationType)
+        {
+            return implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(ABI.System.Nullable_Delegate<>);
+        }
+
         private static bool IsIReferenceArray(Type implementationType)
         {
             return implementationType.FullName.StartsWith("Windows.Foundation.IReferenceArray`1", StringComparison.Ordinal);
@@ -290,6 +295,14 @@ namespace WinRT
             ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
             return Expression.Lambda<Func<IInspectable, object>>(
                 Expression.Convert(Expression.Call(helperType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic), 
+                    parms), typeof(object)), parms).Compile();
+        }
+
+        private static Func<IInspectable, object> CreateAbiNullableTFactory(Type implementationType)
+        {
+            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
+            return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.Convert(Expression.Call(implementationType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic),
                     parms), typeof(object)), parms).Compile();
         }
 
@@ -365,6 +378,10 @@ namespace WinRT
                     return CreateReferenceCachingFactory(CreateNullableTFactory(typeof(System.Nullable<>).MakeGenericType(implementationType)));
                 }
             }
+            else if(IsAbiNullableDelegate(implementationType))
+            {
+                return CreateReferenceCachingFactory(CreateAbiNullableTFactory(implementationType));
+            }
             else if (IsIReferenceArray(implementationType))
             {
                 return CreateReferenceCachingFactory(CreateArrayFactory(implementationType));
@@ -384,11 +401,11 @@ namespace WinRT
             // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
             if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<String>") == 0)
             {
-                return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<String>(obj.ObjRef));
+                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_string.GetValue(obj));
             }
             else if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>") == 0)
             {
-                return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef));
+                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_Type.GetValue(obj));
             }
 
             Type implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
