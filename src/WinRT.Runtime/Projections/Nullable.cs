@@ -156,6 +156,20 @@ namespace ABI.System
         }
     }
 
+    // Used to handle boxing of strings and types where the C# compiler will de-duplicate them
+    // causing for the same instance to be reused with multiple different box instances.
+    // This is also used for delegates which are objects themselves in C# and are associated with their own
+    // ptr and can not be also associated with the ptr for the box / nullable.
+    internal sealed class Nullable
+    {
+        public Nullable(object boxedObject)
+        {
+            Value = boxedObject;
+        }
+
+        public object Value { get; }
+    }
+
     [Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4")]
     internal static class Nullable_int
     {
@@ -293,7 +307,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static string GetValue(IInspectable inspectable)
+        unsafe internal static Nullable GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             IntPtr __retval = default;
@@ -301,7 +315,7 @@ namespace ABI.System
             {
                 ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return MarshalString.FromAbi(__retval);
+                return new Nullable(MarshalString.FromAbi(__retval));
             }
             finally
             {
@@ -1450,23 +1464,6 @@ namespace ABI.System
                 return 0;
             }
         }
-
-        unsafe internal static object GetValue(IInspectable inspectable)
-        {
-            IntPtr nullablePtr = IntPtr.Zero;
-            IntPtr __retval = default;
-            try
-            {
-                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
-                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return MarshalInspectable<object>.FromAbi(__retval);
-            }
-            finally
-            {
-                MarshalInspectable<object>.DisposeAbi(__retval);
-                Marshal.Release(nullablePtr);
-            }
-        }
     }
 
     [Guid("3830ad99-d8da-53f3-989b-fc92ad222778")]
@@ -1529,7 +1526,7 @@ namespace ABI.System
             }
         }
 
-        unsafe internal static global::System.Type GetValue(IInspectable inspectable)
+        unsafe internal static Nullable GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             Type __retval = default;
@@ -1537,7 +1534,7 @@ namespace ABI.System
             {
                 ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref IID, out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Type*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return Type.FromAbi(__retval);
+                return new Nullable(Type.FromAbi(__retval));
             }
             finally
             {
@@ -1598,7 +1595,7 @@ namespace ABI.System
 
         public static Guid PIID = Vftbl.PIID;
 
-        unsafe internal static T GetValue(IInspectable inspectable)
+        unsafe internal static Nullable GetValue(IInspectable inspectable)
         {
             IntPtr nullablePtr = IntPtr.Zero;
             IntPtr __retval = default;
@@ -1606,7 +1603,7 @@ namespace ABI.System
             {
                 ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref PIID, out nullablePtr));
                 ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr*, int>**)nullablePtr)[6](nullablePtr, &__retval));
-                return Marshaler<T>.FromAbi(__retval);
+                return new Nullable(Marshaler<T>.FromAbi(__retval));
             }
             finally
             {
