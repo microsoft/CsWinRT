@@ -86,12 +86,12 @@ To make your component available as a NuGet package, it is important to include 
 
 This section describes the steps needed to consume a C#/WinRT component for the following scenarios:
 
-- [C++/WinRT desktop applications](#Consuming-from-C++/WinRT)
+- [C++/WinRT desktop applications (Unpackaged)](#Consuming-from-C++/WinRT-(Unpackaged))
 - [C# desktop applications](#Consuming-from-C#-applications) (.NET 5 or later)
 - [Out of process components](#Consuming-an-out-of-process-component)
 - [Packaged applications](#Consuming-from-packaged-applications)
 
-### Consuming from C++/WinRT
+### Consuming from C++/WinRT (Unpackaged)
 
 Consuming a C#/WinRT component from a C++/WinRT desktop application is supported by both package reference or project reference:
 
@@ -137,14 +137,14 @@ Consuming a C#/WinRT component from C#/.NET apps is supported by both package re
 
 ### Consuming an out of process component
 
-C#/WinRT supports authoring out-of-process components that can be consumed by Windows Runtime compatible languages. Currently, consuming an out-of-process component is supported for managed C# apps with the use of a packaging project. This scenario requires creating a `WinRT.Host.runtimeconfig.json` file, as demonstrated in the [background task component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/BgTaskComponent). Native consumption of out-of-process components is not fully supported yet.
+C#/WinRT supports authoring out-of-process components that can be consumed by Windows Runtime compatible languages. Currently, consuming an out-of-process component is supported for managed C# apps with the use of a packaging project. This scenario requires creating a `WinRT.Host.runtimeconfig.json` file, as demonstrated in the [background task component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/BgTaskComponent). Native C++ consumption of out-of-process C# components is not fully supported yet.
 
 ### Consuming from packaged applications
 
 Consuming C#/WinRT components from MSIX-packaged applications is supported for some scenarios. 
 
 - Consuming a C#/WinRT component from packaged C# apps is supported.
-- Consuming a C#/WinRT component from a C++/WinRT packaged app (using a separate Windows Application Packaging Project) is supported as a package reference only, and requires the `exe.manifest` file.
+- Consuming a C#/WinRT component from a C++/WinRT packaged app is supported as a package reference only, and requires the `exe.manifest` file.
 
 ## Known Issues and Troubleshooting
 
