@@ -1,4 +1,4 @@
-# Authoring C# Components
+# Authoring C#/WinRT Components
 
 **Note**: C#/WinRT authoring support is in preview. See [Known Issues and Troubleshooting](#known-issues-and-troubleshooting) below for more details on what is supported.
 
