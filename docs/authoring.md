@@ -86,8 +86,8 @@ To make your component available as a NuGet package, it is important to include 
 
 This section describes the steps needed to consume a C#/WinRT component for the following scenarios:
 
-- [C++/WinRT desktop applications (Unpackaged)](#Consuming-from-C++/WinRT-(Unpackaged))
-- [C# desktop applications](#Consuming-from-C#-applications) (.NET 5 or later)
+- [C++/WinRT desktop applications (Unpackaged)](#consuming-from-cwinrt-unpackaged)
+- [C# desktop applications](#consuming-from-c-applications) (.NET 5 or later)
 - [Out of process components](#Consuming-an-out-of-process-component)
 - [Packaged applications](#Consuming-from-packaged-applications)
 
