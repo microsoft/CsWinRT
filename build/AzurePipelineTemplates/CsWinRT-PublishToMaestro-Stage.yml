@@ -43,7 +43,7 @@ stages:
           echo ##vso[task.setvariable variable=VersionNumber;]%VersionNumber%
           echo ##vso[task.setvariable variable=NugetVersion;]%NugetVersion%
 
-    - template: eng\common\AzurePipelineTemplates\Maestro-PublishBuildToMaestro-Steps.yml 
+    - template: ..\..\eng\common\AzurePipelineTemplates\Maestro-PublishBuildToMaestro-Steps.yml 
       parameters:
         AssetNames: Microsoft.Windows.CsWinRT;CsWinRT.Dependency.DotNetCoreSdkVersion;CsWinRT.Dependency.DotNetCoreRuntimeVersion;CsWinRT.Dependency.WindowsSdkPackageVersion
         AssetVersions: $(NugetVersion);$(Net5.Sdk.Version);$(_DotNetCoreRuntimeVersion);$(_WindowsSdkPackageVersion)
