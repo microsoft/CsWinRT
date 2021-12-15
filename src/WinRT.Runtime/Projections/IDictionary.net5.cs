@@ -35,10 +35,12 @@ namespace System.Collections.Generic
     internal class IDictionaryImpl<K, V> : IDictionary<K, V>
     {
         private IObjectReference _inner;
+        private Dictionary<K, (IntPtr, V)> _lookupCache;
 
         internal IDictionaryImpl(IObjectReference _inner)
         {
             this._inner = _inner;
+            this._lookupCache = new Dictionary<K, (IntPtr, V)>();
         }
 
         private volatile IObjectReference __iDictionaryObjRef;
@@ -59,7 +61,7 @@ namespace System.Collections.Generic
 
         public V this[K key] 
         { 
-            get => ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Indexer_Get(iDictionaryObjRef, key);
+            get => ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Indexer_Get(iDictionaryObjRef, _lookupCache, key);
             set => ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Indexer_Set(iDictionaryObjRef, key, value);
         }
 
@@ -88,7 +90,7 @@ namespace System.Collections.Generic
 
         public bool Contains(KeyValuePair<K, V> item)
         {
-            return ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Contains(iDictionaryObjRef, item);
+            return ABI.System.Collections.Generic.IDictionaryMethods<K, V>.Contains(iDictionaryObjRef, _lookupCache, item);
         }
 
         public bool ContainsKey(K key)
@@ -118,7 +120,7 @@ namespace System.Collections.Generic
 
         public bool TryGetValue(K key, [MaybeNullWhen(false)] out V value)
         {
-            return ABI.System.Collections.Generic.IDictionaryMethods<K, V>.TryGetValue(iDictionaryObjRef, key, out value);
+            return ABI.System.Collections.Generic.IDictionaryMethods<K, V>.TryGetValue(iDictionaryObjRef, _lookupCache, key, out value);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -136,7 +138,7 @@ namespace ABI.Windows.Foundation.Collections
 
     internal static class IMapMethods<K, V>
     {
-        public static unsafe V Lookup(IObjectReference obj, K key, Dictionary<K, (IntPtr, V)> __lookupCache = null)
+        public static unsafe V Lookup(IObjectReference obj, Dictionary<K, (IntPtr, V)> __lookupCache, K key)
         {
             var _obj = (ObjectReference<IDictionary<K, V>.Vftbl>)obj;
             var ThisPtr = _obj.ThisPtr;
@@ -297,13 +299,13 @@ namespace ABI.System.Collections.Generic
             IMapMethods<K, V>.Clear(obj);
         }
 
-        public static bool Contains(IObjectReference obj, global::System.Collections.Generic.KeyValuePair<K, V> item)
+        public static bool Contains(IObjectReference obj, Dictionary<K, (IntPtr, V)> __lookupCache, global::System.Collections.Generic.KeyValuePair<K, V> item)
         {
             bool hasKey = IMapMethods<K, V>.HasKey(obj, item.Key);
             if (!hasKey)
                 return false;
             // todo: toctou
-            V value = IMapMethods<K, V>.Lookup(obj, item.Key);
+            V value = IMapMethods<K, V>.Lookup(obj, __lookupCache, item.Key);
             return EqualityComparer<V>.Default.Equals(value, item.Value);
         }
 
@@ -333,11 +335,11 @@ namespace ABI.System.Collections.Generic
             return true;
         }
 
-        public static V Indexer_Get(IObjectReference obj, K key)
+        public static V Indexer_Get(IObjectReference obj, Dictionary<K, (IntPtr, V)> __lookupCache, K key)
         {
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
-            return Lookup(obj, key);
+            return Lookup(obj, __lookupCache, key);
         }
 
         public static void Indexer_Set(IObjectReference obj, K key, V value)
@@ -391,7 +393,7 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        public static bool TryGetValue(IObjectReference obj, K key, out V value)
+        public static bool TryGetValue(IObjectReference obj, Dictionary<K, (IntPtr, V)> __lookupCache, K key, out V value)
         {
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
@@ -404,7 +406,7 @@ namespace ABI.System.Collections.Generic
 
             try
             {
-                value = Lookup(obj, key);
+                value = Lookup(obj, __lookupCache, key);
                 return true;
             }
             catch (KeyNotFoundException)
@@ -414,13 +416,13 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        private static V Lookup(IObjectReference obj, K key)
+        private static V Lookup(IObjectReference obj, Dictionary<K, (IntPtr, V)> __lookupCache, K key)
         {
             Debug.Assert(null != key);
 
             try
             {
-                return IMapMethods<K, V>.Lookup(obj, key);
+                return IMapMethods<K, V>.Lookup(obj, __lookupCache, key);
             }
             catch (global::System.Exception ex)
             {
@@ -933,391 +935,6 @@ namespace ABI.System.Collections.Generic
         }
         public static Guid PIID = Vftbl.PIID;
 
-        //public sealed class FromAbiHelper : global::System.Collections.Generic.IDictionary<K, V>
-        //{
-        //    private readonly global::Windows.Foundation.Collections.IMap<K, V> _map;
-        //    internal readonly Dictionary<K, (IntPtr, V)> _lookupCache = new();
-
-        //    public FromAbiHelper(global::Windows.Foundation.Collections.IMap<K, V> map)
-        //    {
-        //        _map = map;
-        //    }
-
-        //    public int Count
-        //    {
-        //        get
-        //        {
-        //            uint size = _map.Size;
-
-        //            if (((uint)int.MaxValue) < size)
-        //            {
-        //                throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingDictionaryTooLarge);
-        //            }
-
-        //            return (int)size;
-        //        }
-        //    }
-
-        //    public bool IsReadOnly { get => false; }
-
-        //    public void Add(global::System.Collections.Generic.KeyValuePair<K, V> item)
-        //    {
-        //        _map.Insert(item.Key, item.Value);
-        //    }
-
-        //    public void Clear()
-        //    {
-        //        _map.Clear();
-        //    }
-
-        //    public bool Contains(global::System.Collections.Generic.KeyValuePair<K, V> item)
-        //    {
-        //        bool hasKey = _map.HasKey(item.Key);
-        //        if (!hasKey)
-        //            return false;
-        //        // todo: toctou
-        //        V value = _map.Lookup(item.Key);
-        //        return EqualityComparer<V>.Default.Equals(value, item.Value);
-        //    }
-
-        //    public void CopyTo(global::System.Collections.Generic.KeyValuePair<K, V>[] array, int arrayIndex)
-        //    {
-        //        if (array == null)
-        //            throw new ArgumentNullException(nameof(array));
-
-        //        if (arrayIndex < 0)
-        //            throw new ArgumentOutOfRangeException(nameof(arrayIndex));
-
-        //        if (array.Length <= arrayIndex && Count > 0)
-        //            throw new ArgumentException(ErrorStrings.Argument_IndexOutOfArrayBounds);
-
-        //        if (array.Length - arrayIndex < Count)
-        //            throw new ArgumentException(ErrorStrings.Argument_InsufficientSpaceToCopyCollection);
-
-        //        foreach (global::System.Collections.Generic.KeyValuePair<K, V> mapping in this)
-        //        {
-        //            array[arrayIndex++] = mapping;
-        //        }
-        //    }
-
-        //    public bool Remove(global::System.Collections.Generic.KeyValuePair<K, V> item)
-        //    {
-        //        _map._Remove(item.Key);
-        //        return true;
-        //    }
-
-        //    public V this[K key] { get => Indexer_Get(key); set => Indexer_Set(key, value); }
-
-        //    private V Indexer_Get(K key)
-        //    {
-        //        if (key == null)
-        //            throw new ArgumentNullException(nameof(key));
-        //        return Lookup(_map, key);
-        //    }
-        //    private void Indexer_Set(K key, V value)
-        //    {
-        //        if (key == null)
-        //            throw new ArgumentNullException(nameof(key));
-        //        Insert(_map, key, value);
-        //    }
-
-        //    public global::System.Collections.Generic.ICollection<K> Keys { get => new DictionaryKeyCollection(this); }
-
-        //    public global::System.Collections.Generic.ICollection<V> Values { get => new DictionaryValueCollection(this); }
-
-        //    public bool ContainsKey(K key)
-        //    {
-        //        if (key == null)
-        //            throw new ArgumentNullException(nameof(key));
-        //        return _map.HasKey(key);
-        //    }
-
-        //    public void Add(K key, V value)
-        //    {
-        //        if (key == null)
-        //            throw new ArgumentNullException(nameof(key));
-
-        //        if (ContainsKey(key))
-        //            throw new ArgumentException(ErrorStrings.Argument_AddingDuplicate);
-
-        //        Insert(_map, key, value);
-        //    }
-
-        //    public bool Remove(K key)
-        //    {
-        //        if (key == null)
-        //            throw new ArgumentNullException(nameof(key));
-
-        //        if (!_map.HasKey(key))
-        //            return false;
-
-        //        try
-        //        {
-        //            _map._Remove(key);
-        //            return true;
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-        //                return false;
-
-        //            throw;
-        //        }
-        //    }
-
-        //    public bool TryGetValue(K key, out V value)
-        //    {
-        //        if (key == null)
-        //            throw new ArgumentNullException(nameof(key));
-
-        //        if (!_map.HasKey(key))
-        //        {
-        //            value = default!;
-        //            return false;
-        //        }
-
-        //        try
-        //        {
-        //            value = Lookup(_map, key);
-        //            return true;
-        //        }
-        //        catch (KeyNotFoundException)
-        //        {
-        //            value = default!;
-        //            return false;
-        //        }
-        //    }
-
-        //    private static V Lookup(global::Windows.Foundation.Collections.IMap<K, V> _this, K key)
-        //    {
-        //        Debug.Assert(null != key);
-
-        //        try
-        //        {
-        //            return _this.Lookup(key);
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-        //                throw new KeyNotFoundException(ErrorStrings.Arg_KeyNotFound);
-        //            throw;
-        //        }
-        //    }
-
-        //    private static bool Insert(global::Windows.Foundation.Collections.IMap<K, V> _this, K key, V value)
-        //    {
-        //        Debug.Assert(null != key);
-
-        //        bool replaced = _this.Insert(key, value);
-        //        return replaced;
-        //    }
-
-        //    public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator() => ((global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>)(IWinRTObject)_map).GetEnumerator();
-
-        //    global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-
-        //    private sealed class DictionaryKeyCollection : global::System.Collections.Generic.ICollection<K>
-        //    {
-        //        private readonly global::System.Collections.Generic.IDictionary<K, V> dictionary;
-
-        //        public DictionaryKeyCollection(global::System.Collections.Generic.IDictionary<K, V> dictionary)
-        //        {
-        //            if (dictionary == null)
-        //                throw new ArgumentNullException(nameof(dictionary));
-
-        //            this.dictionary = dictionary;
-        //        }
-
-        //        public void CopyTo(K[] array, int index)
-        //        {
-        //            if (array == null)
-        //                throw new ArgumentNullException(nameof(array));
-        //            if (index < 0)
-        //                throw new ArgumentOutOfRangeException(nameof(index));
-        //            if (array.Length <= index && this.Count > 0)
-        //                throw new ArgumentException(ErrorStrings.Arg_IndexOutOfRangeException);
-        //            if (array.Length - index < dictionary.Count)
-        //                throw new ArgumentException(ErrorStrings.Argument_InsufficientSpaceToCopyCollection);
-
-        //            int i = index;
-        //            foreach (global::System.Collections.Generic.KeyValuePair<K, V> mapping in dictionary)
-        //            {
-        //                array[i++] = mapping.Key;
-        //            }
-        //        }
-
-        //        public int Count => dictionary.Count;
-
-        //        public bool IsReadOnly => true;
-
-        //        void global::System.Collections.Generic.ICollection<K>.Add(K item)
-        //        {
-        //            throw new NotSupportedException(ErrorStrings.NotSupported_KeyCollectionSet);
-        //        }
-
-        //        void global::System.Collections.Generic.ICollection<K>.Clear()
-        //        {
-        //            throw new NotSupportedException(ErrorStrings.NotSupported_KeyCollectionSet);
-        //        }
-
-        //        public bool Contains(K item)
-        //        {
-        //            return dictionary.ContainsKey(item);
-        //        }
-
-        //        bool global::System.Collections.Generic.ICollection<K>.Remove(K item)
-        //        {
-        //            throw new NotSupportedException(ErrorStrings.NotSupported_KeyCollectionSet);
-        //        }
-
-        //        global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-
-        //        public global::System.Collections.Generic.IEnumerator<K> GetEnumerator() =>
-        //            new DictionaryKeyEnumerator(dictionary);
-
-        //        private sealed class DictionaryKeyEnumerator : global::System.Collections.Generic.IEnumerator<K>
-        //        {
-        //            private readonly global::System.Collections.Generic.IDictionary<K, V> dictionary;
-        //            private global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> enumeration;
-
-        //            public DictionaryKeyEnumerator(global::System.Collections.Generic.IDictionary<K, V> dictionary)
-        //            {
-        //                if (dictionary == null)
-        //                    throw new ArgumentNullException(nameof(dictionary));
-
-        //                this.dictionary = dictionary;
-        //                enumeration = dictionary.GetEnumerator();
-        //            }
-
-        //            public void Dispose()
-        //            {
-        //                enumeration.Dispose();
-        //            }
-
-        //            public bool MoveNext()
-        //            {
-        //                return enumeration.MoveNext();
-        //            }
-
-        //            object IEnumerator.Current => Current;
-
-        //            public K Current => enumeration.Current.Key;
-
-        //            public void Reset()
-        //            {
-        //                enumeration = dictionary.GetEnumerator();
-        //            }
-        //        }
-        //    }
-
-        //    private sealed class DictionaryValueCollection : global::System.Collections.Generic.ICollection<V>
-        //    {
-        //        private readonly global::System.Collections.Generic.IDictionary<K, V> dictionary;
-
-        //        public DictionaryValueCollection(global::System.Collections.Generic.IDictionary<K, V> dictionary)
-        //        {
-        //            if (dictionary == null)
-        //                throw new ArgumentNullException(nameof(dictionary));
-
-        //            this.dictionary = dictionary;
-        //        }
-
-        //        public void CopyTo(V[] array, int index)
-        //        {
-        //            if (array == null)
-        //                throw new ArgumentNullException(nameof(array));
-        //            if (index < 0)
-        //                throw new ArgumentOutOfRangeException(nameof(index));
-        //            if (array.Length <= index && this.Count > 0)
-        //                throw new ArgumentException(ErrorStrings.Arg_IndexOutOfRangeException);
-        //            if (array.Length - index < dictionary.Count)
-        //                throw new ArgumentException(ErrorStrings.Argument_InsufficientSpaceToCopyCollection);
-
-        //            int i = index;
-        //            foreach (global::System.Collections.Generic.KeyValuePair<K, V> mapping in dictionary)
-        //            {
-        //                array[i++] = mapping.Value;
-        //            }
-        //        }
-
-        //        public int Count => dictionary.Count;
-
-        //        public bool IsReadOnly => true;
-
-        //        void global::System.Collections.Generic.ICollection<V>.Add(V item)
-        //        {
-        //            throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
-        //        }
-
-        //        void global::System.Collections.Generic.ICollection<V>.Clear()
-        //        {
-        //            throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
-        //        }
-
-        //        public bool Contains(V item)
-        //        {
-        //            EqualityComparer<V> comparer = EqualityComparer<V>.Default;
-        //            foreach (V value in this)
-        //                if (comparer.Equals(item, value))
-        //                    return true;
-        //            return false;
-        //        }
-
-        //        bool global::System.Collections.Generic.ICollection<V>.Remove(V item)
-        //        {
-        //            throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
-        //        }
-
-        //        IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-
-        //        public global::System.Collections.Generic.IEnumerator<V> GetEnumerator()
-        //        {
-        //            return new DictionaryValueEnumerator(dictionary);
-        //        }
-
-        //        private sealed class DictionaryValueEnumerator : global::System.Collections.Generic.IEnumerator<V>
-        //        {
-        //            private readonly global::System.Collections.Generic.IDictionary<K, V> dictionary;
-        //            private global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> enumeration;
-
-        //            public DictionaryValueEnumerator(global::System.Collections.Generic.IDictionary<K, V> dictionary)
-        //            {
-        //                if (dictionary == null)
-        //                    throw new ArgumentNullException(nameof(dictionary));
-
-        //                this.dictionary = dictionary;
-        //                enumeration = dictionary.GetEnumerator();
-        //            }
-
-        //            void IDisposable.Dispose()
-        //            {
-        //                enumeration.Dispose();
-        //            }
-
-        //            public bool MoveNext()
-        //            {
-        //                return enumeration.MoveNext();
-        //            }
-
-        //            object IEnumerator.Current => Current;
-
-        //            public V Current => enumeration.Current.Value;
-
-        //            public void Reset()
-        //            {
-        //                enumeration = dictionary.GetEnumerator();
-        //            }
-        //        }
-        //    }
-        //}
-
-
-        //static FromAbiHelper _FromMap(IWinRTObject obj)
-        //{
-        //    return (FromAbiHelper)obj.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle,
-        //        () => new FromAbiHelper((global::Windows.Foundation.Collections.IMap<K, V>)(IWinRTObject)obj));
-        //}
-
         global::System.Collections.Generic.ICollection<K> global::System.Collections.Generic.IDictionary<K, V>.Keys
         {
             get
@@ -1359,7 +976,7 @@ namespace ABI.System.Collections.Generic
             get
             {
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
-                return IDictionaryMethods<K, V>.Indexer_Get(_obj, key);
+                return IDictionaryMethods<K, V>.Indexer_Get(_obj, GetLookupCache(), key);
             }
             set
             {
@@ -1386,10 +1003,16 @@ namespace ABI.System.Collections.Generic
             return IDictionaryMethods<K, V>.Remove(_obj, key);
         }
 
+        Dictionary<K, (IntPtr, V)> GetLookupCache()
+        {
+            return (Dictionary<K, (IntPtr, V)>)((IWinRTObject)this).GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle,
+                () => new Dictionary<K, (IntPtr, V)>());
+        }
+
         bool global::System.Collections.Generic.IDictionary<K, V>.TryGetValue(K key, out V value)
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
-            return IDictionaryMethods<K, V>.TryGetValue(_obj, key, out value);
+            return IDictionaryMethods<K, V>.TryGetValue(_obj, GetLookupCache(), key, out value);
         }
 
         void global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Add(global::System.Collections.Generic.KeyValuePair<K, V> item)
@@ -1401,7 +1024,7 @@ namespace ABI.System.Collections.Generic
         bool global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Contains(global::System.Collections.Generic.KeyValuePair<K, V> item)
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
-            return IDictionaryMethods<K, V>.Contains(_obj, item);
+            return IDictionaryMethods<K, V>.Contains(_obj, GetLookupCache(), item);
         }
 
         void global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.CopyTo(global::System.Collections.Generic.KeyValuePair<K, V>[] array, int arrayIndex)
