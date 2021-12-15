@@ -30,39 +30,6 @@ stages:
           Write-Host "##vso[task.complete result=Failed;]DONE"
       condition: or(eq(variables['MaestroUri'], ''), eq(variables['MaestroToken'], ''))
 
-# Parse Versions needed for offical CsWinRT version of build
-    - task: CmdLine@2
-      displayName: Parse Versions
-      inputs:
-        workingDirectory: $(Build.SourcesDirectory)
-        script: |
-          rem Parse the build-generated Build.BuildNumber into components that 
-          rem can be recombined for version resources, nuget packages, etc.
-   
-          @echo off
-   
-          rem Encode the build date/rev into a 16 bit value for resource versions
-          if "$(PrereleaseVersion)"=="" (
-            set RevisionBase=30000
-          ) else (
-            set RevisionBase=0
-          )
-          for /f "tokens=4,5 delims=." %%i in ("$(Build.BuildNumber)") do set BuildMetadata=%%i.%%j & set /a BuildRevision=%RevisionBase%+(((%%i/10000)-20)*366+((%%i)%%10000)/100*31+((%%i)%%100))*10+%%j
-   
-          set VersionNumber=$(MajorVersion).$(MinorVersion).$(PatchVersion).%BuildRevision%
-   
-          if "$(PrereleaseVersion)"=="" (
-            set NugetVersion=$(MajorVersion).$(MinorVersion).$(PatchVersion)
-          ) else (
-            set NugetVersion=$(Build.BuildNumber)
-          )
-   
-          rem Export generated version numbers back for subsequent tasks
-          echo ##vso[task.setvariable variable=BuildMetadata;]%BuildMetadata%
-          echo ##vso[task.setvariable variable=BuildRevision;]%BuildRevision%
-          echo ##vso[task.setvariable variable=VersionNumber;]%VersionNumber%
-          echo ##vso[task.setvariable variable=NugetVersion;]%NugetVersion%
-
     - task: PowerShell@2
       displayName: Build JsonBody 
       inputs:
