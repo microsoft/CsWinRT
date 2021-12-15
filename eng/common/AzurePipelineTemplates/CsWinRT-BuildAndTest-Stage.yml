@@ -1,11 +1,34 @@
 stages:
-- stage: Build
-  displayName: Build Stage
+- stage: BuildAndTest
+  displayName: Build/Test Stage
   jobs: 
-  - job: Build CsWinRT
-    timeoutInMinutes: 90
+  - job: BuildAndTest
     pool:
       vmImage: windows-2019
+    timeoutInMinutes: 90
+    # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
+    strategy:
+      maxParallel: 10
+      matrix:
+        x64_Debug:
+          BuildPlatform: x64
+          BuildConfiguration: debug
+        x86_Debug:
+          BuildPlatform: x86
+          BuildConfiguration: debug
+        arm64_Debug:
+          BuildPlatform: arm64
+          BuildConfiguration: debug
+        x64_Release:
+          BuildPlatform: x64
+          BuildConfiguration: release 
+        x86_Release:
+          BuildPlatform: x86
+          BuildConfiguration: release
+        arm64_Release:
+          BuildPlatform: arm64
+          BuildConfiguration: release 
+
     steps:
     - checkout: self
       clean: true
@@ -54,9 +77,7 @@ stages:
           Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH};
         
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
-        
-          dotnet new globaljson --sdk-version "$($env:NET6_SDK_VERSION)"
-        
+                
           &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET5_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
 
 # Install .NET 6 SDK 
@@ -75,7 +96,7 @@ stages:
          &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
 
 # Verify .NET SDK
-    - task: CmdLin@2
+    - task: CmdLine@2
       displayName: Verify .NET SDK
       inputs:
         workingDirectory: $(Build.SourcesDirectory)
@@ -354,3 +375,53 @@ stages:
       inputs:
         PathtoPublish: $(Build.ArtifactStagingDirectory)\release_net5.0
         ArtifactName: net5.0
+
+# Run Unit Tests
+    - task: DotNetCoreCLI@2
+      displayName: Run Unit Tests
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        command: test
+        projects: 'src/Tests/UnitTest/UnitTest.csproj '
+        arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        testRunTitle: Unit Tests
+
+# Run Object Lifetime Tests
+    - task: VSTest@2
+      displayName: Run Object Lifetime Tests
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        testAssemblyVer2: Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net5.0-windows10.0.19041.0\win10-$(BuildPlatform)\ObjectLifetimeTests.Lifted.build.appxrecipe
+        searchFolder: $(Build.SourcesDirectory)\src
+
+# Publish Test Log
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Test Log
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        PathtoPublish: $(Build.ArtifactStagingDirectory)\unittest
+        ArtifactName: $(BuildConfiguration)_$(BuildPlatform)_UnitTest
+
+# Run Host Tests
+    - task: CmdLine@2
+      displayName: Run Host Tests
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      continueOnError: True
+      inputs:
+        workingDirectory: $(Build.SourcesDirectory)\src
+        script: |
+          dir _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin
+          _build\$(BuildPlatform)\$(BuildConfiguration)\HostTest\bin\HostTest.exe --gtest_output=xml:HOSTTEST-$(Build.BuildNumber).xml 
+          exit /b 0
+
+# Run Source Generator Tests  
+    - task: CmdLine@2
+      displayName: Run Source Generator Tests
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      continueOnError: True
+      inputs:
+        workingDirectory: $(Build.SourcesDirectory)\src
+        script: |
+          dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin
+          _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
+          exit /b 0 

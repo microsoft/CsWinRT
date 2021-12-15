@@ -2,7 +2,7 @@ stages:
 - stage: Publish
   displayName: Publish To Internal Nuget Feed Stage
   jobs:
-  - job: Publish To CsWinRT Internal Feed
+  - job: PublishTo_CsWinRT_InternalFeed
     pool:
       vmImage: windows-2019
     steps:
