@@ -207,7 +207,6 @@ stages:
         command: pack
         searchPatternPack: nuget/Microsoft.Windows.CsWinRT.nuspec
         configurationToPack: Release
-        # TODO: embedded folder?
         buildProperties: cswinrt_nuget_version=$(NugetVersion);cswinrt_exe=$(Build.SourcesDirectory)\cswinrt.exe;interop_winmd=$(Build.SourcesDirectory)\WinRT.Interop.winmd;netstandard2_runtime=$(Build.SourcesDirectory)\netstandard2.0\WinRT.Runtime.dll;net5_runtime=$(Build.SourcesDirectory)\net5.0\WinRT.Runtime.dll;source_generator=$(Build.SourcesDirectory)\netstandard2.0\WinRT.SourceGenerator.dll;winrt_shim=$(Build.SourcesDirectory)\net5.0\WinRT.Host.Shim.dll;winrt_host_x86=$(Build.SourcesDirectory)\release_x86\WinRT.Host.dll;winrt_host_x64=$(Build.SourcesDirectory)\release_x64\WinRT.Host.dll;winrt_host_arm64=$(Build.SourcesDirectory)\release_arm64\WinRT.Host.dll;guid_patch=$(Build.SourcesDirectory)\net5.0\IIDOptimizer\*.*
 
 # ESRP CodeSigning 
