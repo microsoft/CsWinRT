@@ -88,8 +88,8 @@ This section describes the steps needed to consume a C#/WinRT component for the 
 
 - [C++/WinRT desktop applications (Unpackaged)](#consuming-from-cwinrt-unpackaged)
 - [C# desktop applications](#consuming-from-c-applications) (.NET 5 or later)
-- [Out of process components](#Consuming-an-out-of-process-component)
 - [Packaged applications](#Consuming-from-packaged-applications)
+- [Out of process components](#Consuming-an-out-of-process-component)
 
 ### Consuming from C++/WinRT (Unpackaged)
 
@@ -102,7 +102,7 @@ Consuming a C#/WinRT component from a C++/WinRT desktop application is supported
 
 **Application Manifest file**
 
-For native consumption of C#/WinRT components, you also need to create an [application manifest file](https://docs.microsoft.com/windows/win32/sbscs/application-manifests) named `YourNativeApp.exe.manifest`. The application manifest file must specify activatable Windows Runtime classes in the DLL that the application will be making use of. At runtime, this directs activation of the component’s classes. See the [sample manifest file](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo/CppConsoleApp/CppConsoleApp.exe.manifest) for an example.
+For consumption of C#/WinRT components from unpackaged applications, you need to create an [application manifest file](https://docs.microsoft.com/windows/win32/sbscs/application-manifests) named `YourNativeApp.exe.manifest`. The application manifest file must specify activatable Windows Runtime classes in the DLL that the application will be making use of. At runtime, this directs activation of the component’s classes. See the [sample manifest file](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo/CppConsoleApp/CppConsoleApp.exe.manifest) for an example.
 
 Follow these steps to add an application manifest file to your project:
 
@@ -135,20 +135,38 @@ Consuming a C#/WinRT component from C#/.NET apps is supported by both package re
 
 **Note:** With C#/WinRT 1.3.5 or later, project references to a C#/WinRT component require .NET 6.
 
+### Consuming from packaged applications
+
+Consuming C#/WinRT components from MSIX-packaged applications is supported with a few modifications.
+
+- Consuming a C#/WinRT component from packaged C# apps is supported.
+- Consuming a C#/WinRT component from a C++/WinRT packaged app (e.g., a Windows App SDK C++ application) is supported with a few modifications listed below. See the [Simple C#/WinRT component sample](../src/Samples/AuthoringDemo) (specifically the WinUI3CppApp) for an example.
+  - If consuming via project reference, adding a project reference to the C#/WinRT component project in Visual Studio may result in the error: *"A reference to 'MyAuthoredComponent' cannot be added because it is incompatible with this project"*. To workaround this, unload the `.vcxproj` file and add the `ProjectReference` manually, for example:
+      ```xml
+      <ProjectReference Include="..\MyAuthoredComponent\MyAuthoredComponent.csproj" />
+      ```
+  - The app consumer needs to add the `ActivatableClass` registrations in the `Package.appxmanifest` file, like below. Note that packaged app consumers do not create a new application manifest (`.exe.manifest`) file.
+      ```xml
+      <Extensions>
+        <Extension Category="windows.activatableClass.inProcessServer">
+          <InProcessServer>
+            <Path>WinRT.Host.dll</Path>
+              <ActivatableClass ActivatableClassId="MyAuthoredComponent.Class1" ThreadingModel="both" />
+              <ActivatableClass ActivatableClassId="MyAuthoredComponent.Class2" ThreadingModel="both" />
+            </InProcessServer>
+        </Extension>
+      </Extensions>
+      ```
+
 ### Consuming an out of process component
 
 C#/WinRT supports authoring out-of-process components that can be consumed by Windows Runtime compatible languages. Currently, consuming an out-of-process component is supported for managed C# apps with the use of a packaging project. This scenario requires creating a `WinRT.Host.runtimeconfig.json` file, as demonstrated in the [background task component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/BgTaskComponent). Native C++ consumption of out-of-process C# components is not fully supported yet.
 
-### Consuming from packaged applications
-
-Consuming C#/WinRT components from MSIX-packaged applications is supported for some scenarios. 
-
-- Consuming a C#/WinRT component from packaged C# apps is supported.
-- Consuming a C#/WinRT component from a C++/WinRT packaged app is supported as a package reference only, and requires the `exe.manifest` file.
-
 ## Known Issues and Troubleshooting
 
 - Project reference support (from C++ and C# apps) for C#/WinRT authored components is available with .NET 6. Referencing a C#/WinRT authored component by project reference in a C# app is **not supported with .NET 5**.
+
+- Hosting WinUI3 components is not fully supported yet.
 
 - Authoring issues are [tagged under the *authoring* label](https://github.com/microsoft/CsWinRT/issues?q=is%3Aopen+is%3Aissue+label%3Aauthoring). Feel free to [file an issue](https://github.com/microsoft/CsWinRT/issues/new/choose) tagged with the *authoring* label if you encounter any new issues!
 
