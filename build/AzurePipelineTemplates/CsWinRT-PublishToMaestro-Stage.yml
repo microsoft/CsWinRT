@@ -1,12 +1,11 @@
-variables:
-  _DotNetCoreRuntimeVersion: 5.0.11        # matches with SDK v. 5.0.402
-  _WindowsSdkPackageVersion: 10.0.18362.22 # matches with one consumed in WindowsAppSdk
-
 stages:
 - stage: PublishToMaestro
   displayName: Trigger Maestro Publish
   jobs:
   - job: TriggerMaestroPublish
+    variables:
+      _DotNetCoreRuntimeVersion: 5.0.11        # matches with SDK v. 5.0.402
+      _WindowsSdkPackageVersion: 10.0.18362.22 # matches with one consumed in WindowsAppSdk
     pool: 
       vmImage: windows-2019
     steps:
