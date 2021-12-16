@@ -7,5 +7,5 @@ stages:
 - template: CsWinRT-PublishToNuget-Stage.yml
 
 # if we are doing a release build, publish the build to Maestro
-# - ${{ if eq( '$(PrereleaseVersion)', '') }}:
-- template: CsWinRT-PublishToMaestro-Stage.yml
+- ${{ if eq( '$(PrereleaseVersion)', '') }}:
+  template: CsWinRT-PublishToMaestro-Stage.yml
