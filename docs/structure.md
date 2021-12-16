@@ -2,10 +2,14 @@
 
 This document describes the CsWinRT repository organization. Documentation and specs are located in the [`/docs`](.) folder. All source code for CsWinRT is located in the [`/src`](../src) folder, and files for generating the NuGet package are located in [`/nuget`](../nuget).
 
-## [`eng`](../eng)
+## [`build`](../build)
 
 Contains source files for Azure DevOps pipeline that handles official builds and testing for C#/WinRT. Uses Maestro to publish builds conveniently for dependent projects; Maestro is a dependency manager 
 developed by dotnet as part of the [Arcade Build System](https://github.com/dotnet/arcade).
+
+## [`eng`](../eng)
+
+Contains files that assist with publishing to Maestro.
 
 ## [`nuget`](../nuget)
 
