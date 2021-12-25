@@ -231,6 +231,20 @@ namespace WinRT
                     Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
                 parms).Compile();
             }
+            if (implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>))
+            {
+                return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.New(typeof(IReadOnlyDictionaryImpl<,>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0], implementationType.GetGenericArguments()[1] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
+                    Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
+                parms).Compile();
+            }
+            if (implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(IReadOnlyList<>))
+            {
+                return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.New(typeof(IReadOnlyListImpl<>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
+                    Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
+                parms).Compile();
+            }
             if (implementationType.IsInterface)
             {
                 return obj => obj;
