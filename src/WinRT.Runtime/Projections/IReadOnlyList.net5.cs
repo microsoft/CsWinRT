@@ -198,59 +198,6 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IReadOnlyList<T>));
 
-        public class FromAbiHelper : global::System.Collections.Generic.IReadOnlyList<T>
-        {
-            private readonly global::Windows.Foundation.Collections.IVectorView<T> _vectorView;
-            private readonly global::System.Collections.Generic.IEnumerable<T> _enumerable;
-
-            public FromAbiHelper(global::Windows.Foundation.Collections.IVectorView<T> vectorView, ObjectReference<Vftbl> objRef)
-            {
-                _vectorView = vectorView;
-                _enumerable = (global::System.Collections.Generic.IEnumerable<T>)new IInspectable(objRef);
-            }
-
-            public int Count
-            {
-                get
-                {
-                    uint size = _vectorView.Size;
-                    if (((uint)int.MaxValue) < size)
-                    {
-                        throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
-                    }
-
-                    return (int)size;
-                }
-            }
-
-            public T this[int index] { get => Indexer_Get(index); }
-
-            private T Indexer_Get(int index)
-            {
-                if (index < 0)
-                    throw new ArgumentOutOfRangeException(nameof(index));
-
-                try
-                {
-                    return _vectorView.GetAt((uint)index);
-
-                    // We delegate bounds checking to the underlying collection and if it detected a fault,
-                    // we translate it to the right exception:
-                }
-                catch (Exception ex)
-                {
-                    if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                        throw new ArgumentOutOfRangeException(nameof(index));
-
-                    throw;
-                }
-            }
-
-            public global::System.Collections.Generic.IEnumerator<T> GetEnumerator() => _enumerable.GetEnumerator();
-
-            global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-        }
-
         public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IVectorView<T>
         {
             private readonly global::System.Collections.Generic.IReadOnlyList<T> _list;
@@ -490,15 +437,6 @@ namespace ABI.System.Collections.Generic
             return ObjectReference<Vftbl>.FromAbi(thisPtr, vftblT);
         }
         public static Guid PIID = Vftbl.PIID;
-
-        internal static FromAbiHelper _FromVectorView(IWinRTObject _this)
-        {
-            var _obj = ((ObjectReference<Vftbl>)_this.GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyList<T>).TypeHandle));
-            var ThisPtr = _obj.ThisPtr;
-
-            return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IReadOnlyList<T>).TypeHandle,
-                () => new FromAbiHelper((global::Windows.Foundation.Collections.IVectorView<T>)_this, _obj));
-        }
 
         int global::System.Collections.Generic.IReadOnlyCollection<T>.Count
         {

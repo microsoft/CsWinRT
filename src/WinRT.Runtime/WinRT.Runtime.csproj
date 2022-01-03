@@ -52,6 +52,7 @@
     <CsWinRTApiCompatVersion>1.0.1</CsWinRTApiCompatVersion>
     <ApiCompatArgs>$(ApiCompatArgs) --allow-default-interface-methods</ApiCompatArgs>
     <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --allow-default-interface-methods</MatchingRefApiCompatArgs>
+    <UserSecretsId>5a1988bc-9b5a-43c7-8041-3c37d862ab77</UserSecretsId>
   </PropertyGroup> 
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">

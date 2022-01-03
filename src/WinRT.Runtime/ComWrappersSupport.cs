@@ -377,10 +377,6 @@ namespace WinRT
         internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
         {
             // If runtime class name is empty or "Object", then just use IInspectable.
-            Type implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
-
-            ABI.System.Nullable<String?> x;
-
             if (string.IsNullOrEmpty(runtimeClassName) || 
                 string.CompareOrdinal(runtimeClassName, "Object") == 0)
             {
@@ -396,7 +392,7 @@ namespace WinRT
                 return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef));
             }
 
-            
+            Type implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
             return CreateTypedRcwFactory(implementationType, runtimeClassName);
         }
 

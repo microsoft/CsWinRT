@@ -123,28 +123,6 @@ namespace ABI.System.Collections.Generic
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable<T>));
 
-        public class FromAbiHelper : global::System.Collections.Generic.IEnumerable<T>
-        {
-            private readonly global::System.Collections.Generic.IEnumerable<T> _iterable;
-
-            public FromAbiHelper(global::System.Collections.Generic.IEnumerable<T> iterable)
-            {
-                _iterable = iterable;
-            }
-
-            public global::System.Collections.Generic.IEnumerator<T> GetEnumerator()
-            {
-                var first = ((global::Windows.Foundation.Collections.IIterable<T>)(IWinRTObject)_iterable).First();
-                if (first is global::ABI.System.Collections.Generic.IEnumerator<T> iterator)
-                {
-                    return iterator;
-                }
-                throw new InvalidOperationException("Unexpected type for enumerator");
-            }
-
-            global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-        }
-
         internal sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterable<T>
         {
             private readonly IEnumerable<T> m_enumerable;
@@ -212,12 +190,6 @@ namespace ABI.System.Collections.Generic
             return ObjectReference<Vftbl>.FromAbi(thisPtr, vftblT);
         }
         public static Guid PIID = Vftbl.PIID;
-
-        private static FromAbiHelper _FromIterable(IWinRTObject _this)
-        {
-            return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle,
-                () => new FromAbiHelper((global::System.Collections.Generic.IEnumerable<T>)_this));
-        }
 
         global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator()
         {

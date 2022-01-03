@@ -988,13 +988,6 @@ namespace ABI.System.Collections.Generic
         }
         public static Guid PIID = Vftbl.PIID;
         
-        //internal static FromAbiHelper _FromVector(IWinRTObject _this)
-        //{
-        //    return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IList<T>).TypeHandle,
-        //        () => new FromAbiHelper((global::Windows.Foundation.Collections.IVector<T>)_this));
-        //}
-
-
         unsafe T global::Windows.Foundation.Collections.IVector<T>.GetAt(uint index)
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
