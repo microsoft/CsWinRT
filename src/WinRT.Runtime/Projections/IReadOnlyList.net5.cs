@@ -26,7 +26,7 @@ namespace Windows.Foundation.Collections
 
 namespace System.Collections.Generic
 {
-    internal class IReadOnlyListImpl<T> : IReadOnlyList<T>
+    internal sealed class IReadOnlyListImpl<T> : IReadOnlyList<T>
     {
         private readonly IObjectReference _inner;
 

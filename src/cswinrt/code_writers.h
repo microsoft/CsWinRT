@@ -1922,19 +1922,12 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 
     bool is_manually_generated_iface(TypeDef const& ifaceType)
     {
-        if (ifaceType.TypeNamespace() == "Windows.Foundation.Collections" && ifaceType.TypeName() == "IVector`1")
-        {
-            return false;
-        }
-        if (ifaceType.TypeNamespace() == "Windows.Foundation.Collections" && ifaceType.TypeName() == "IMap`2")
-        {
-            return false;
-        }
-        if (ifaceType.TypeNamespace() == "Windows.Foundation.Collections" && ifaceType.TypeName() == "IIterable`1")
-        {
-            return false;
-        }
-        if (ifaceType.TypeNamespace() == "Windows.Foundation.Collections" && ifaceType.TypeName() == "IMapView`2")
+        if (ifaceType.TypeNamespace() == "Windows.Foundation.Collections" && 
+            (ifaceType.TypeName() == "IVector`1"
+                || ifaceType.TypeName() == "IMap`2")
+                || ifaceType.TypeName() == "IIterable`1"
+                || ifaceType.TypeName() == "IMapView`2"
+                || ifaceType.TypeName() == "IVectorView`1")
         {
             return false;
         }

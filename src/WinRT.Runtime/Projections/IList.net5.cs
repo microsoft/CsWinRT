@@ -71,12 +71,6 @@ namespace System.Collections.Generic
 
         public bool IsReadOnly => ABI.System.Collections.Generic.IListMethods<T>.get_IsReadOnly(iListObjRef);
 
-        public IObjectReference NativeObject => iListObjRef;
-
-        public bool HasUnwrappableNativeObject => true;
-
-        public ConcurrentDictionary<RuntimeTypeHandle, object> AdditionalTypeData => null;
-
         public void Add(T item)
         {
             ABI.System.Collections.Generic.IListMethods<T>.Add(iListObjRef, item);

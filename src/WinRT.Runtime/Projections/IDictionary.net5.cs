@@ -32,7 +32,7 @@ namespace Windows.Foundation.Collections
 namespace System.Collections.Generic
 {
 
-    internal class IDictionaryImpl<K, V> : IDictionary<K, V>
+    internal sealed class IDictionaryImpl<K, V> : IDictionary<K, V>
     {
         private IObjectReference _inner;
         private Dictionary<K, (IntPtr, V)> _lookupCache;

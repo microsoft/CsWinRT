@@ -217,10 +217,9 @@ namespace WinRT
         {
             ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
 
-            var genericType = implementationType.GetGenericTypeDefinition();
-
             if (implementationType.IsGenericType)
             {
+                var genericType = implementationType.GetGenericTypeDefinition();
                 if (genericType == typeof(IList<>))
                 {
                     return Expression.Lambda<Func<IInspectable, object>>(

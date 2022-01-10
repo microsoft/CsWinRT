@@ -28,7 +28,7 @@ namespace Windows.Foundation.Collections
 
 namespace System.Collections.Generic
 {
-    internal class IReadOnlyDictionaryImpl<K, V> : IReadOnlyDictionary<K, V>
+    internal sealed class IReadOnlyDictionaryImpl<K, V> : IReadOnlyDictionary<K, V>
     {
         private IObjectReference _inner;
 

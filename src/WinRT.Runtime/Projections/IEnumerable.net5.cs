@@ -64,7 +64,7 @@ namespace ABI.Windows.Foundation.Collections
 
 namespace System.Collections.Generic
 {
-    internal class IEnumerableImpl<T> : IEnumerable<T>
+    internal sealed class IEnumerableImpl<T> : IEnumerable<T>
     {
         private IObjectReference iEnumerableObjRef;
 
