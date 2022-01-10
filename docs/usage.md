@@ -3,6 +3,7 @@
 The [C#/WinRT NuGet package](https://www.nuget.org/packages/Microsoft.Windows.CsWinRT/) provides tooling for the following scenarios:
 
 - [Generate and distribute an interop assembly](#generate-and-distribute-an-interop-assembly)
+- [Embedded support for WinRT types](#embedded-support-for-winrt-types)
 - [Author and consume a C#/WinRT component](#author-and-consume-a-cwinrt-component) (in preview)
 
 For more information on using the NuGet package, refer to the [NuGet documentation](../nuget/readme.md). Command line options can be displayed by running `cswinrt -?`.
@@ -11,7 +12,7 @@ For more information on using the NuGet package, refer to the [NuGet documentati
 
 Component authors need to build a C#/WinRT interop assembly for .NET 5+ consumers. The C#/WinRT NuGet package (Microsoft.Windows.CsWinRT) includes the C#/WinRT compiler, **cswinrt.exe**, which you can use to process .winmd files and generate projection source files. These source files are compiled into an interop projection assembly, and then distributed along with the C#/WinRT runtime assembly for .NET 5+ applications to reference.
 
-For an example of generating and distributing a projection interop assembly as a NuGet package, see the [projection sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/Net5ProjectionSample) and [associated walkthrough](https://docs.microsoft.com/windows/uwp/csharp-winrt/net-projection-from-cppwinrt-component).
+For an example of generating and distributing a projection interop assembly as a NuGet package, see the [projection sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/NetProjectionSample) and [associated walkthrough](https://docs.microsoft.com/windows/uwp/csharp-winrt/net-projection-from-cppwinrt-component).
 
 ### Generating an interop assembly
 
@@ -37,7 +38,7 @@ In the example diagram below, the projection project invokes **cswinrt.exe** at 
 
 An interop assembly is typically distributed along with the implementation assemblies as a NuGet package for applications to reference. This package will require a dependency on C#/WinRT to include `WinRT.Runtime.dll` for .NET 5+ targets. If the interop assembly is not distributed as a NuGet package, an application adds references to both the component interop assembly produced above and to C#/WinRT to include the `WinRT.Runtime.dll` assembly. If a third party WinRT component is distributed without an official interop assembly, an application may add a reference to C#/WinRT to generate its own private component interop assembly.  There are versioning concerns related to this scenario, so the preferred solution is for the third party to publish an interop assembly directly.
 
-See the [projection sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/Net5ProjectionSample) for an example of how to create and reference the interop NuGet package.
+See the [projection sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/NetProjectionSample) for an example of how to create and reference the interop NuGet package.
 
 ### Applications
 
@@ -47,6 +48,9 @@ Application developers on .NET 5+ can reference C#/WinRT interop assemblies by a
     src="images/Diagram_AddProjection.jpg"
     width="70%" height="50%">
 
+## Embedded support for WinRT types
+
+Starting with C#/WinRT version 1.4.1, support is included for embedding Windows SDK projection and runtime sources for both .NET 5+ and .NET Standard 2.0 into your library or app's output. This is useful in scenarios where usage of Windows SDK types is self-contained. Embedded support removes dependencies on WinRT.Runtime.dll and Microsoft.Windows.SDK.NET.dll which reduces the library or app output size. It also allows library developers to provide downlevel support and removes the need for multi-targeting. See the [embedded docs](https://github.com/microsoft/CsWinRT/blob/master/docs/embedded.md) for more details.
 
 ## Author and consume a C#/WinRT component
 

@@ -1,7 +1,8 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 using WinRT;
 using WinRT.Interop;
 
@@ -60,7 +61,7 @@ namespace ABI.Windows.Foundation
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("61C17707-2D65-11E0-9AE8-D48564015472")]
-    internal class IReferenceArray<T> : global::Windows.Foundation.IReferenceArray<T>
+    internal sealed class IReferenceArray<T> : global::Windows.Foundation.IReferenceArray<T>
     {
         public static IObjectReference CreateMarshaler(object value)
         {

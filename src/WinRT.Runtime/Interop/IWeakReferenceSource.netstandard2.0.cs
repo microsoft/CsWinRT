@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace WinRT.Interop
 {
@@ -29,7 +30,7 @@ namespace WinRT.Interop
         IObjectReference Resolve(Guid riid);
     }
 
-    internal class ManagedWeakReference : IWeakReference
+    internal sealed class ManagedWeakReference : IWeakReference
     {
         private WeakReference<object> _ref;
         public ManagedWeakReference(object obj)
@@ -53,7 +54,6 @@ namespace WinRT.Interop
 namespace ABI.WinRT.Interop
 {
     using global::WinRT;
-    using WinRT.Interop;
 
     [Guid("00000038-0000-0000-C000-000000000046")]
     internal unsafe class IWeakReferenceSource : global::WinRT.Interop.IWeakReferenceSource

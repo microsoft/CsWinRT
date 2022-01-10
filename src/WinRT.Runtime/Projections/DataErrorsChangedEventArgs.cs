@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Text;
 using WinRT;
 using WinRT.Interop;
-
 
 namespace ABI.Microsoft.UI.Xaml.Data
 {

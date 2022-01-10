@@ -293,7 +293,7 @@ namespace System.IO
 
     #region class StreamReadAsyncResult
 
-    internal class StreamReadAsyncResult : StreamOperationAsyncResult
+    internal sealed class StreamReadAsyncResult : StreamOperationAsyncResult
     {
         private readonly IBuffer _userBuffer;
 
@@ -332,7 +332,7 @@ namespace System.IO
 
     #region class StreamWriteAsyncResult
 
-    internal class StreamWriteAsyncResult : StreamOperationAsyncResult
+    internal sealed class StreamWriteAsyncResult : StreamOperationAsyncResult
     {
         internal StreamWriteAsyncResult(IAsyncOperationWithProgress<uint, uint> asyncStreamWriteOperation,
                                         AsyncCallback userCompletionCallback, object userAsyncStateInfo,
@@ -362,7 +362,7 @@ namespace System.IO
 
     #region class StreamFlushAsyncResult
 
-    internal class StreamFlushAsyncResult : StreamOperationAsyncResult
+    internal sealed class StreamFlushAsyncResult : StreamOperationAsyncResult
     {
         internal StreamFlushAsyncResult(IAsyncOperation<bool> asyncStreamFlushOperation, bool processCompletedOperationInCallback)
 

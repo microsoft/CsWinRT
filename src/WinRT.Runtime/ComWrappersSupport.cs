@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using ABI.Microsoft.UI.Xaml.Data;
 using ABI.Windows.Foundation;
 using System;
@@ -765,7 +768,7 @@ namespace WinRT
             };
         }
 
-        internal class InspectableInfo
+        internal sealed class InspectableInfo
         {
             private readonly Lazy<string> runtimeClassName;
 

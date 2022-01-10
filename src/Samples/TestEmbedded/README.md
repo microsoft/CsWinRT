@@ -1,16 +1,29 @@
-# Structure
+# C#/WinRT Embedded Sample
 
-This sample is composed of C++/WinRT components, a C#/WinRT projection that uses embedded support 
-(WinRT and Windows SDK), and apps of various flavors that use the embedded projection.
+These samples demonstrate how to use [C#/WinRT Embedded Support](../../../docs/embedded.md).
 
-Looking at the C#/WinRT projection, `TestEmbeddedLibrary`, we see it targets several different frameworks, 
+## Structure
+
+This sample is composed of a few projects to demonstrate C#/WinRT embedded support:
+
+- C++/WinRT component projects: *Alpha*, *Beta*, *Gamma*
+- *TestEmbeddedLibrary*: a C# library project using C#/WinRT embedded support to embed the WinRT.Runtime and Windows SDK sources into the projection/library output.
+- C#/.NET apps of various flavors that use the embedded projection (either by referencing *TestEmbeddedLibrary*, or by referencing the C++/WinRT components and generating the projection directly in the app project):
+    - *Net5App*: References *TestEmbeddedLibrary* to consume the embedded projection.
+    - *Net5App.Bootstrap*: References *Alpha*, *Beta*, and *Gamma* and creates an embeddded projection in the app itself.
+    - *NetCore3App*: References *TestEmbeddedLibrary* to consume the embedded projection.
+    - *NetFrameworkApp*: References *Alpha*, *Beta*, and *Gamma* and creates an embeddded projection in the app itself.
+
+Looking at the C#/WinRT embedded projection, `TestEmbeddedLibrary`, we see it targets several different frameworks, 
 demonstrating support for the latest Windows SDK on all platforms. 
 
 ```xml
     <TargetFrameworks>net6.0-windows;net5.0-windows;netstandard2.0;net48</TargetFrameworks>
 ```
 
-Of the apps,  `Net5App` and `NetCore3App` use the same C#/WinRT projection to make use of Windows 10 APIs 
-like `Windows.Devices.Geolocation` via the embedded WinRT support provided by C#/WinRT.
+Of the apps,  `Net5App` and `NetCore3App` reference the same C#/WinRT embedded projection (*TestEmbeddedLibrary*) to make use of WinRT APIs 
+like `Windows.Devices.Geolocation`. The other two apps, `Net5App.Bootstrap` and `NetFrameworkApp`, demonstrate how an app can generate and embed the projection itself using a package reference to C#/WinRT.
 
-The other two, `Net5App.Bootstrap` and `NetFrameworkApp` demonstrate how an app can generate and embed the projection itself.
+## Build and run the sample
+
+Open `TestEmbedded.sln` in Visual Studio. Select one of the application projects described above as the startup project in Visual Studio. Then build and run the application.

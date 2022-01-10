@@ -1,15 +1,9 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Numerics;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
-using System.Linq.Expressions;
 
 #pragma warning disable CS0649
 
@@ -34,6 +28,7 @@ namespace WinRT.Interop
     }
 
     [Guid("64BD43F8-bFEE-4EC4-B7EB-2935158DAE21")]
+    [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct IReferenceTrackerTargetVftbl
     {
         public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;

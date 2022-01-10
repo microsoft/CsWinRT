@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -256,7 +259,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
         // the exception instance in the app to hold the error object alive.
         //
         [Serializable]
-        internal class __RestrictedErrorObject
+        internal sealed class __RestrictedErrorObject
         {
             // Hold the error object instance but don't serialize/deserialize it
             [NonSerialized]
@@ -401,7 +404,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
         }
     }
 
-    internal class ErrorStrings
+    internal static class ErrorStrings
     {
         internal static string Format(string format, params object[] args) => String.Format(format, args);
 

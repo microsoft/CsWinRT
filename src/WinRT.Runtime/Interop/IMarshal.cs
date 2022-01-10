@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -30,7 +33,7 @@ namespace WinRT.Interop
 namespace ABI.WinRT.Interop
 {
     [Guid("00000003-0000-0000-c000-000000000046")]
-    internal class IMarshal
+    internal sealed class IMarshal
     {
         internal static readonly Guid IID = new(0x00000003, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
 

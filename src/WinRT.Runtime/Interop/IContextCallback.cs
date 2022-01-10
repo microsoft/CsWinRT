@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Runtime.InteropServices;
-using System.Text;
 using WinRT;
 using WinRT.Interop;
 
@@ -36,7 +37,7 @@ namespace WinRT.Interop
 namespace ABI.WinRT.Interop
 {
     [Guid("000001da-0000-0000-C000-000000000046")]
-    unsafe class IContextCallback : global::WinRT.Interop.IContextCallback
+    internal sealed unsafe class IContextCallback : global::WinRT.Interop.IContextCallback
     {
         [Guid("000001da-0000-0000-C000-000000000046")]
         public struct Vftbl

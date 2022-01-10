@@ -1,19 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0-windows10.0.19041.0</TargetFramework>
+    <!-- Note: target .NET 5 by setting the TargetFramework to net5.0-windows10.0.19041.0 -->
+    <TargetFramework>net6.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <Platforms>x64</Platforms>
+    <Platforms>x64;x86;ARM64</Platforms>
   </PropertyGroup>
-	
+
   <ItemGroup>
     <ProjectReference Include="..\SimpleMathComponent\SimpleMathComponent.vcxproj" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="1.2.6" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="1.3.5" />
   </ItemGroup>
 
   <!--CsWinRT properties-->
   <PropertyGroup>
+    <!--Specify namespaces to create a C# projection for-->
     <CsWinRTIncludes>SimpleMathComponent</CsWinRTIncludes>
+    <!--Set output path for generated source files/projection dll to OutDir (defined in Directory.Build.props)-->
     <CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
   </PropertyGroup>
 
@@ -21,7 +24,9 @@
   <PropertyGroup>
     <GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
     <NuspecFile>$(GeneratedNugetDir)SimpleMathProjection.nuspec</NuspecFile>
+    <!--Specify output path for the generated *.nupkg file-->
     <OutputPath>$(GeneratedNugetDir)</OutputPath>
+    <!--Set the property below to false if you do not want to generate a NuGet package on build-->
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 

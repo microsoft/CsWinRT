@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -441,7 +444,7 @@ namespace WinRT
         }
     }
 
-    internal class ObjectReferenceWithContext<T> : ObjectReference<T>
+    internal sealed class ObjectReferenceWithContext<T> : ObjectReference<T>
     {
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;

@@ -1,9 +1,10 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using WinRT;
 using WinRT.Interop;
 
@@ -57,9 +58,9 @@ namespace ABI.System.Collections.Specialized
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
 #if !NET
-        private class NativeDelegateWrapper
+        private sealed class NativeDelegateWrapper
 #else
-        private class NativeDelegateWrapper : IWinRTObject
+        private sealed class NativeDelegateWrapper : IWinRTObject
 #endif
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;

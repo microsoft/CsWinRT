@@ -1,9 +1,10 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using ABI.Microsoft.UI.Xaml.Interop;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Text;
 using WinRT;
 using WinRT.Interop;
 
@@ -110,7 +111,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("5108EBA4-4892-5A20-8374-A96815E0FD27")]
-    internal unsafe sealed class WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory
+    internal sealed unsafe class WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory
     {
         [Guid("5108EBA4-4892-5A20-8374-A96815E0FD27")]
         [StructLayout(LayoutKind.Sequential)]

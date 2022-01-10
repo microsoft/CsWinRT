@@ -17,7 +17,7 @@ namespace Windows.Storage.Streams
     /// <summary>
     /// A <code>Stream</code> used to wrap a Windows Runtime stream to expose it as a managed steam.
     /// </summary>
-    internal class WinRtToNetFxStreamAdapter : Stream, IDisposable
+    internal sealed class WinRtToNetFxStreamAdapter : Stream, IDisposable
     {
         #region Construction
 

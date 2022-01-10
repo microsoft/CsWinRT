@@ -1,9 +1,11 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
-using WinRT.Interop;
 
 namespace Windows.Foundation
 {
@@ -209,7 +211,7 @@ namespace ABI.Windows.Foundation
         }
 
 #pragma warning disable CS0649
-        private class Boxed<T>
+        private sealed class Boxed<T>
             where T : struct
         {
             public T Value;
