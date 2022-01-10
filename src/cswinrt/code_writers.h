@@ -1876,7 +1876,11 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
             for (auto&& method : factory_type.MethodList())
             {
                 method_signature signature{ method };
-                w.write(R"(
+                if (settings.netstandard_compat)
+                {
+                    w.write(R"(
+// Alpha
+
 %public %(%) : this(((Func<%>)(() => {
 IntPtr ptr = (%.%(%));
 try
@@ -1889,18 +1893,54 @@ MarshalInspectable<object>.DisposeAbi(ptr);
 }
 }))())
 {
+)",
+                        platform_attribute,
+                        class_type.TypeName(),
+                        bind_list<write_projection_parameter>(", ", signature.params()),
+                        default_interface_name,
+                        cache_object,
+                        method.Name(),
+                        bind_list<write_parameter_name_with_modifier>(", ", signature.params()),
+                        "new " + default_interface_name
+                    );
+                }
+                else
+                {
+                    
+                    bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(class_type.Extends()));
+
+                    w.write(R"(
+// Beta
+
+%public %(%) %
+{ 
+IntPtr ptr = (%.%(%)); 
+try 
+{ 
+_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr); 
+} 
+finally 
+{ 
+MarshalInspectable<object>.DisposeAbi(ptr); 
+}
+)",
+                        // accesibility, name, etc
+                        platform_attribute,
+                        class_type.TypeName(),
+                        bind_list<write_projection_parameter>(", ", signature.params()),
+                        //
+                        has_base_type ? ":base(global::WinRT.DerivedComposed.Instance)" : "",
+                        // static local helper 
+                        cache_object,
+                        method.Name(),
+                        bind_list<write_parameter_name_with_modifier>(", ", signature.params())
+                    );
+                }
+                w.write(R"(
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 %
 }
 )",
-                    platform_attribute, 
-                    class_type.TypeName(),
-                    bind_list<write_projection_parameter>(", ", signature.params()),
-                    settings.netstandard_compat ? default_interface_name : "IObjectReference",
-                    cache_object,
-                    method.Name(),
-                    bind_list<write_parameter_name_with_modifier>(", ", signature.params()),
-                    settings.netstandard_compat ? "new " + default_interface_name : "",
                     settings.netstandard_compat ? "" : "ComWrappersHelper.Init(_inner, false);");
             }
         }
@@ -2052,7 +2092,6 @@ _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
 var defaultInterface = new %(_inner);
 _defaultLazy = new Lazy<%>(() => defaultInterface);
 %
-
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
 finally
@@ -6113,7 +6152,7 @@ private struct InterfaceTag<I>{};
                         w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
                     }
                 }),
-            bind<write_lazy_interface_initialization>(type),
+            bind<write_lazy_interface_initialization>(type), // Here 3 (cut, moved)
             // Equality operators
             type_name,
             type_name,
@@ -6135,13 +6174,13 @@ protected %(global::WinRT.DerivedComposed _)%
                         type.TypeName(),
                         has_base_type ? ":base(_)" : "",
                         bind([&](writer& w)
+                        {
+                            if (is_manually_gen_default_interface)
                             {
-                                if (is_manually_gen_default_interface)
-                                {
-                                    w.write("_defaultLazy = new Lazy<%>(() => (%)new IInspectable(((IWinRTObject)this).NativeObject));", default_interface_name, default_interface_name);
-                                }
-                            }),
-                        bind<write_lazy_interface_initialization>(type));
+                                w.write("_defaultLazy = new Lazy<%>(() => (%)new IInspectable(((IWinRTObject)this).NativeObject));", default_interface_name, default_interface_name);
+                            }
+                        }),
+                    bind<write_lazy_interface_initialization>(type)); // Here 4 (cut)
                     w.write(R"(
 bool IWinRTObject.HasUnwrappableNativeObject => this.GetType() == typeof(%);)",
                         type.TypeName());
