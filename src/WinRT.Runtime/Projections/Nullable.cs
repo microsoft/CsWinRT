@@ -158,8 +158,8 @@ namespace ABI.System
 
     // Used to handle boxing of strings and types where the C# compiler will de-duplicate them
     // causing for the same instance to be reused with multiple different box instances.
-    // This is also used for delegates which are objects themselves in C# and are associated with their own
-    // ptr and can not be also associated with the ptr for the box / nullable.
+    // This is also used for delegates which are objects themselves in C# and are associated with
+    // their own ptr and thereby can not be associated with the ptr for the box / nullable.
     internal sealed class Nullable
     {
         public Nullable(object boxedObject)
