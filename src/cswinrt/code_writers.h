@@ -1256,8 +1256,6 @@ namespace cswinrt
 
                     numLazyInterfaces++;
                     auto lazy_interface_name = w.write_temp("%", bind<write_lazy_interface_type_name>(interface_type)); 
-                    // diff in write_temp and just "bind<write_lazy_interface_type_name>(interface_type);" ?
-
                     auto interface_name = write_type_name_temp(w, interface_type);
                     auto interface_abi_name = write_type_name_temp(w, interface_type, "%", typedef_name_type::ABI);
 
@@ -1891,8 +1889,6 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
                 if (settings.netstandard_compat)
                 {
                     w.write(R"(
-// Alpha
-
 %public %(%) : this(((Func<%>)(() => {
 IntPtr ptr = (%.%(%));
 try
@@ -1922,8 +1918,6 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                     bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(class_type.Extends()));
 
                     w.write(R"(
-// Beta
-
 %public %(%) %
 { 
 IntPtr ptr = (%.%(%)); 
@@ -1936,13 +1930,10 @@ finally
 MarshalInspectable<object>.DisposeAbi(ptr); 
 }
 )",
-                        // accesibility, name, etc
                         platform_attribute,
                         class_type.TypeName(),
                         bind_list<write_projection_parameter>(", ", signature.params()),
-                        //
                         has_base_type ? ":base(global::WinRT.DerivedComposed.Instance)" : "",
-                        // static local helper 
                         cache_object,
                         method.Name(),
                         bind_list<write_parameter_name_with_modifier>(", ", signature.params())
