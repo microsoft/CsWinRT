@@ -1,6 +1,8 @@
 # This file is used as basis for the ADO pipeline
 name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
 
+variables: CsWinRT-Variables.yml
+
 stages:
 - template: CsWinRT-BuildAndTest-Stage.yml
 
