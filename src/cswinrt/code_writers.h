@@ -2688,19 +2688,21 @@ remove => %.ErrorsChanged -= value;
                     if (settings.netstandard_compat)
                     {
                         w.write(R"(
-private % AsInternal(InterfaceTag<%> _) => Make_%();
+private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 )",
                             interface_name,
                             interface_name,
+                            bind<write_lazy_interface_type_name>(interface_type),
                             bind<write_lazy_interface_type_name>(interface_type));
                     }
                     else if (is_manually_generated_iface(interface_type))
                     {
                         w.write(R"(
-private % AsInternal(InterfaceTag<%> _) =>  Make_%();
+private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 )",
                             interface_name,
                             interface_name,
+                            bind<write_lazy_interface_type_name>(interface_type),
                             bind<write_lazy_interface_type_name>(interface_type));
                     }
                 }
