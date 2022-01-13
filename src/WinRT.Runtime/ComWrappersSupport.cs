@@ -155,7 +155,7 @@ namespace WinRT
                         Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
                     });
 
-                    if(!hasCustomIMarshalInterface && iid == typeof(ABI.WinRT.Interop.IMarshal.Vftbl).GUID)
+                    if (!hasCustomIMarshalInterface && iid == typeof(ABI.WinRT.Interop.IMarshal.Vftbl).GUID)
                     {
                         hasCustomIMarshalInterface = true;
                     }
@@ -390,7 +390,7 @@ namespace WinRT
                     return CreateReferenceCachingFactory(CreateNullableTFactory(typeof(System.Nullable<>).MakeGenericType(implementationType)));
                 }
             }
-            else if(IsAbiNullableDelegate(implementationType))
+            else if (IsAbiNullableDelegate(implementationType))
             {
                 return CreateReferenceCachingFactory(CreateAbiNullableTFactory(implementationType));
             }
