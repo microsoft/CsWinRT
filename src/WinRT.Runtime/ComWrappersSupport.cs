@@ -32,6 +32,7 @@ namespace WinRT
         private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCacheForRuntimeClassName = new ConcurrentDictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
         private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new ConcurrentDictionary<Type, Func<IInspectable, object>>();
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
+        private readonly static ConcurrentDictionary<Type, Func<IntPtr, object>> DelegateFactoryCache = new ConcurrentDictionary<Type, Func<IntPtr, object>>();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate
@@ -286,6 +287,17 @@ namespace WinRT
             return Expression.Lambda<Func<IInspectable, object>>(
                 Expression.Call(type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static), 
                     parms), parms).Compile();
+        }
+
+        internal static Func<IntPtr, object> CreateDelegateFactory(Type type)
+        {
+            return DelegateFactoryCache.GetOrAdd(type, (type) =>
+            {
+                var parms = new[] { Expression.Parameter(typeof(IntPtr), "ptr") };
+                return Expression.Lambda<Func<IntPtr, object>>(
+                    Expression.Call(type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static),
+                        parms), parms).Compile();
+            });
         }
 
         private static Func<IInspectable, object> CreateNullableTFactory(Type implementationType)

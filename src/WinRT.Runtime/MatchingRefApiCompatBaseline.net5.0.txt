@@ -1,4 +1,7 @@
 Compat issues with assembly WinRT.Runtime:
+MembersMustExist : Member 'public System.EventHandler<T> ABI.System.EventHandler<T>.CreateRcw(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Collections.Specialized.NotifyCollectionChangedEventHandler ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.CreateRcw(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ComponentModel.PropertyChangedEventHandler ABI.System.ComponentModel.PropertyChangedEventHandler.CreateRcw(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.WinRT.Interop.IWeakReferenceSourceMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'System.Numerics.VectorExtensions' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.ComWrappersHelper' does not exist in the reference but it does exist in the implementation.
@@ -6,7 +9,7 @@ MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ComWrappersSupp
 MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterObjectForInterface(System.Object, System.IntPtr, System.Runtime.InteropServices.CreateObjectFlags)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'protected void WinRT.IObjectReference.AddRef(System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Int32 WinRT.IObjectReference.TryAs(System.Guid, System.IntPtr)' does not exist in the reference but it does exist in the implementation.
-MembersMustExist : Member 'public T WinRT.MarshalDelegate.FromAbi<T>(System.IntPtr, System.Func<System.IntPtr, T>)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public T WinRT.MarshalDelegate.FromAbi<T>(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.MarshalString..ctor(System.String)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.MarshalString.Pinnable WinRT.MarshalString.CreatePinnable(System.String)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.IntPtr WinRT.MarshalString.GetAbi()' does not exist in the reference but it does exist in the implementation.
