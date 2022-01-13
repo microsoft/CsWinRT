@@ -1262,7 +1262,7 @@ namespace cswinrt
                     auto interface_init_code = settings.netstandard_compat
                         ? w.write_temp(R"(new %(GetReferenceForQI()))",
                             interface_abi_name)
-                        : w.write_temp(R"((%)(object)new SingleInterfaceOptimizedObject(typeof(%), _inner ?? ((IWinRTObject)this).NativeObject))",
+                        : w.write_temp(R"((%)(object)new SingleInterfaceOptimizedObject(typeof(%), _innerLazy ?? ((IWinRTObject)this).NativeObject))",
                             interface_name,
                             interface_name);
 
@@ -1923,7 +1923,7 @@ MarshalInspectable<object>.DisposeAbi(ptr);
 IntPtr ptr = (%.%(%)); 
 try 
 { 
-_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr); 
+_innerLazy = ComWrappersSupport.GetObjectReferenceForInterface(ptr); 
 } 
 finally 
 { 
@@ -6081,7 +6081,10 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
 {
 private IntPtr ThisPtr => _inner == null ? (((IWinRTObject)this).NativeObject).ThisPtr : _inner.ThisPtr;
 
-private IObjectReference _inner = null;
+private volatile IObjectReference _innerLazy;
+private IObjectReference _inner => _innerLazy ?? Make_Inner();
+private IObjectReference 
+
 %
 %
 
@@ -6094,8 +6097,12 @@ if (thisPtr == IntPtr.Zero) return null;
 return MarshalInspectable<%>.FromAbi(thisPtr);
 }
 
+private volatile IObjectReference _innerObjRef;
+private volatile IObjectReference _innerBackingField
+
 % %(IObjectReference objRef)%
 {
+_innerObjRef = objRef;
 _inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 %
 }
