@@ -51,7 +51,12 @@ namespace ABI.System
 
         public static unsafe global::System.EventHandler<T> FromAbi(IntPtr nativeDelegate)
         {
-            return MarshalDelegate.FromAbi(nativeDelegate, (ptr) => new global::System.EventHandler<T>(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr)).Invoke));
+            return MarshalDelegate.FromAbi<global::System.EventHandler<T>>(nativeDelegate);
+        }
+
+        public static global::System.EventHandler<T> CreateRcw(IntPtr ptr)
+        {
+            return new global::System.EventHandler<T>(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr)).Invoke);
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -179,7 +184,12 @@ namespace ABI.System
 
         public static unsafe global::System.EventHandler FromAbi(IntPtr nativeDelegate)
         {
-            return MarshalDelegate.FromAbi(nativeDelegate, (ptr) => new global::System.EventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr)).Invoke));
+            return MarshalDelegate.FromAbi<global::System.EventHandler>(nativeDelegate);
+        }
+
+        public static global::System.EventHandler CreateRcw(IntPtr ptr)
+        {
+            return new global::System.EventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr)).Invoke);
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]

@@ -545,6 +545,10 @@ namespace WinRT
 
                     return new SingleInterfaceOptimizedObject(typeof(IWeakReference), iunknownObjRef, false);
                 }
+                else if (ComWrappersSupport.CreateRCWType != null && ComWrappersSupport.CreateRCWType.IsDelegate())
+                {
+                    return ComWrappersSupport.CreateDelegateFactory(ComWrappersSupport.CreateRCWType)(externalComObject);
+                }
                 else
                 {
                     // If the external COM object isn't IInspectable or IWeakReference, we can't handle it.
@@ -555,7 +559,10 @@ namespace WinRT
             }
             finally
             {
-                Marshal.Release(ptr);
+                if (ptr != IntPtr.Zero)
+                {
+                    Marshal.Release(ptr);
+                }
             }
         }
 

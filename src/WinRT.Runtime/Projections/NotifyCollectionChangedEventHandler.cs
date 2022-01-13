@@ -52,7 +52,12 @@ namespace ABI.System.Collections.Specialized
 
         public static unsafe global::System.Collections.Specialized.NotifyCollectionChangedEventHandler FromAbi(IntPtr nativeDelegate)
         {
-            return MarshalDelegate.FromAbi(nativeDelegate, (ptr) => new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr)).Invoke));
+            return MarshalDelegate.FromAbi<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>(nativeDelegate);
+        }
+
+        public static global::System.Collections.Specialized.NotifyCollectionChangedEventHandler CreateRcw(IntPtr ptr)
+        {
+            return new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr)).Invoke);
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
