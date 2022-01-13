@@ -67,6 +67,38 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
   </Target>
 
+  <UsingTask TaskName="GetNewestItem" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <Inputs ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <Newest ParameterType="Microsoft.Build.Framework.ITaskItem" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        Newest = Inputs[0];
+        var NewestTime = System.DateTime.Parse(Newest.GetMetadata("ModifiedTime")).Ticks;
+        foreach(var Input in Inputs)
+        {
+          var InputTime = System.DateTime.Parse(Input.GetMetadata("ModifiedTime")).Ticks;
+          if(InputTime > NewestTime)
+          {
+            Newest = Input;
+            NewestTime = InputTime;
+          }
+        }
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+    
+  <Target Name="Touch">
+      <GetNewestItem Inputs="@(TouchInputs)">
+          <Output ItemName="NewestInput" TaskParameter="Newest" />
+      </GetNewestItem>
+      <Message Text="NewestInput: @(NewestInput)" Importance="high" />
+      <Touch Files="out.txt" Time="%(NewestInput.ModifiedTime)" />
+  </Target>
+
   <Target Name="CsWinRTGenerateProjection" DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences" Condition="'$(CsWinRTGenerateProjection)' == 'true'">
     <PropertyGroup>
       <CsWinRTResponseFile>$(CsWinRTGeneratedFilesDir)cswinrt.rsp</CsWinRTResponseFile>
@@ -123,8 +155,14 @@ $(CsWinRTEmbeddedParam)
     To ensure that modifications to input winmds are reflected in generated *.cs files, WinRT.cs is used as a build
     marker and updated to the most recent winmd timestamp. UpToDateCheckBuilt then captures the dependency from
     winmds to cs files.-->
-    <Touch Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)WinRT.cs')" Files="$(CsWinRTGeneratedFilesDir)WinRT.cs" Time="%(CsWinRTInputs.ModifiedTime)"/>
-    <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)WinRT.cs')">
+    <PropertyGroup>
+      <UpdateDependencies Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)WinRT.cs')">true</UpdateDependencies>
+    </PropertyGroup>
+    <GetNewestItem Condition="'$(UpdateDependencies)' == 'true'" Inputs="@(CsWinRTInputs)">
+        <Output ItemName="NewestInput" TaskParameter="Newest" />
+    </GetNewestItem>
+    <Touch Condition="'$(UpdateDependencies)' == 'true'" Files="$(CsWinRTGeneratedFilesDir)WinRT.cs" Time="%(NewestInput.ModifiedTime)"/>
+    <ItemGroup Condition="'$(UpdateDependencies)' == 'true'">
       <UpToDateCheckInput Include="$(CsWinRTGeneratedFilesDir)WinRT.cs" />
       <UpToDateCheckInput Include="@(CsWinRTInputs)" Set="WinMDs" />
       <UpToDateCheckBuilt Include="$(CsWinRTGeneratedFilesDir)WinRT.cs" Set="WinMDs" />
