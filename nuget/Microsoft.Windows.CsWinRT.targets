@@ -91,14 +91,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </Task>
   </UsingTask>
     
-  <Target Name="Touch">
-      <GetNewestItem Inputs="@(TouchInputs)">
-          <Output ItemName="NewestInput" TaskParameter="Newest" />
-      </GetNewestItem>
-      <Message Text="NewestInput: @(NewestInput)" Importance="high" />
-      <Touch Files="out.txt" Time="%(NewestInput.ModifiedTime)" />
-  </Target>
-
   <Target Name="CsWinRTGenerateProjection" DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences" Condition="'$(CsWinRTGenerateProjection)' == 'true'">
     <PropertyGroup>
       <CsWinRTResponseFile>$(CsWinRTGeneratedFilesDir)cswinrt.rsp</CsWinRTResponseFile>
