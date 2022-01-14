@@ -203,6 +203,18 @@ namespace Benchmarks
         }
 
         [Benchmark]
+        public object GetNewIntDelegate()
+        {
+            return instance.NewIntDelegate;
+        }
+
+        [Benchmark]
+        public object GetExistingIntDelegate()
+        {
+            return instance.ExistingIntDelegate;
+        }
+
+        [Benchmark]
         public string CreateAndIterateList()
         {
             var list = instance.NewList();
