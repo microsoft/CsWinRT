@@ -597,6 +597,34 @@ namespace UnitTest
             IDictionary<string, string> b = null;
             var c = Tests.Collection3(a, out b);
             Assert.True(SequencesEqual(a, b, c));
+            RunDictionaryTests(c);
+        }
+
+#if NET
+        [Fact]
+        public void Collections_Dictionary_IDIC()
+        {
+            var a = new Dictionary<string, string>()
+            {
+                ["apples"] = "1",
+                ["oranges"] = "2",
+                ["pears"] = "3"
+            };
+            var c = Tests.Collection3(a, out _);
+            var inspectable = new IInspectable(((IWinRTObject)c).NativeObject);
+            var dictCreatedWithIDIC = (IDictionary<string, string>)inspectable;
+            RunDictionaryTests(dictCreatedWithIDIC);
+        }
+#endif 
+        private void RunDictionaryTests(IDictionary<string, string> c)
+        {
+            Assert.True(SequencesEqual(c.Keys, new List<string> { "apples", "oranges", "pears" }));
+            Assert.True(SequencesEqual(c.Values, new List<string> { "1", "2", "3" }));
+            Assert.True(SequencesEqual(c, new List<KeyValuePair<string, string>> {
+                new KeyValuePair<string, string>("apples", "1"),
+                new KeyValuePair<string, string>("oranges", "2"),
+                new KeyValuePair<string, string>("pears", "3")
+            }));
 
             c["bananas"] = "4";
             Assert.Equal("4", c["bananas"]);
@@ -623,8 +651,12 @@ namespace UnitTest
             Assert.Equal(4, c.Keys.Count());
             Assert.Equal(4, c.Values.Count());
 
+            c.Remove(new KeyValuePair<string, string>("apples", "1"));
+            Assert.ThrowsAny<Exception>(() => c["apples"]);
+
             c.Clear();
             Assert.Empty(c);
+
         }
 
         [Fact]
@@ -639,9 +671,39 @@ namespace UnitTest
             IReadOnlyDictionary<string, string> b = null;
             var c = Tests.Collection4(a, out b);
             Assert.True(SequencesEqual(a, b, c));
+            RunReadOnlyDictionaryTests(c);
+        }
+
+#if NET
+        [Fact]
+        public void Collections_ReadOnly_Dictionary_IDIC()
+        {
+            var a = new Dictionary<string, string>()
+            {
+                ["apples"] = "1",
+                ["oranges"] = "2",
+                ["pears"] = "3"
+            };
+            IReadOnlyDictionary<string, string> b = null;
+            var c = Tests.Collection4(a, out b);
+            var inspectable = new IInspectable(((IWinRTObject)c).NativeObject);
+            var dictCreatedWithIDIC = (IReadOnlyDictionary<string, string>)inspectable;
+            RunReadOnlyDictionaryTests(dictCreatedWithIDIC);
+        }
+#endif
+
+        private void RunReadOnlyDictionaryTests(IReadOnlyDictionary<string, string> c)
+        {
+            Assert.True(SequencesEqual(c.Keys, new List<string> { "apples", "oranges", "pears" }));
+            Assert.True(SequencesEqual(c.Values, new List<string> { "1", "2", "3" }));
+            Assert.True(SequencesEqual(c, new List<KeyValuePair<string, string>> {
+                new KeyValuePair<string, string>("apples", "1"),
+                new KeyValuePair<string, string>("oranges", "2"),
+                new KeyValuePair<string, string>("pears", "3")
+            }));
 
             Assert.Equal("2", c["oranges"]);
-            Assert.Equal(3, c.Count());
+            Assert.Equal(3, c.Count);
             Assert.True(c.ContainsKey("pears"));
             Assert.Equal(3, c.Values.Count());
             Assert.Equal(3, c.Keys.Count());
@@ -654,26 +716,53 @@ namespace UnitTest
             IList<string> b = null;
             var c = Tests.Collection5(a, out b);
             Assert.True(SequencesEqual(a, b, c));
+            RunListTests(c);
+        }
 
+#if NET
+        [Fact]
+        public void Collections_List_IDIC()
+        {
+            string[] a = new string[] { "apples", "oranges", "pears" };
+            IList<string> b = null;
+            var c = Tests.Collection5(a, out b);
+            Assert.True(SequencesEqual(a, b, c));
+            var inspectable = new IInspectable(((IWinRTObject)c).NativeObject);
+            var listCreatedWithIDIC = (IList<string>)inspectable;
+            RunListTests(listCreatedWithIDIC);
+        }
+#endif
+
+        private void RunListTests(IList<string> c)
+        {
+            Assert.Equal(3, c.Count);
             Assert.Equal(1, c.IndexOf("oranges"));
             Assert.NotNull(c.AsAgile());
+
+            Assert.False(c.IsReadOnly);
+
             c.Add("bananas");
 
             c[3] = "strawberries";
             Assert.Equal("strawberries", c[3]);
             Assert.False(c.Contains("bananas"));
-            
+
             c.Insert(3, "kiwis");
             Assert.True(c.Remove("kiwis"));
             c.RemoveAt(3);
 
             string[] copied = new string[c.Count];
             c.CopyTo(copied, 0);
+            Assert.True(SequencesEqual<string>(new string[] { "apples", "oranges", "pears" }, copied));
 
             var enumerator = c.GetEnumerator();
             Assert.True(enumerator.MoveNext());
             Assert.NotNull(enumerator.Current);
-         }
+
+            c.Clear();
+            Assert.Empty(c);
+            Assert.Equal(0, c.Count);
+        }
 
         [Fact]
         public void CastListToEnum_String()
@@ -692,11 +781,29 @@ namespace UnitTest
             IReadOnlyList<string> b = null;
             var c = Tests.Collection6(a, out b);
             Assert.True(SequencesEqual(a, b, c));
+            RunReadonlyListTests(c);
+        }
 
-            Assert.Equal("oranges", a[1]);
-            Assert.Equal(3, a.Count());
-            Assert.NotNull(a.GetEnumerator());
-        } 
+#if NET
+        [Fact]
+        public void Collections_ReadOnly_List_IDIC()
+        {
+            string[] a = new string[] { "apples", "oranges", "pears" };
+            IReadOnlyList<string> b = null;
+            var c = Tests.Collection6(a, out b);
+            Assert.True(SequencesEqual(a, b, c));
+            var inspectable = new IInspectable(((IWinRTObject)c).NativeObject);
+            var listCreatedWithIDIC = (IReadOnlyList<string>)inspectable;
+            RunReadonlyListTests(listCreatedWithIDIC);
+        }
+#endif
+        private void RunReadonlyListTests(IReadOnlyList<string> c)
+        {
+            Assert.Equal("oranges", c[1]);
+            Assert.Equal(3, c.Count());
+            Assert.Equal(3, c.Count);
+            Assert.NotNull(c.GetEnumerator());
+        }
 
         [Fact]
         public void Collections_IEnumerable_Call()

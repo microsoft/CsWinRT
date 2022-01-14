@@ -27,7 +27,7 @@ namespace Windows.Foundation.Collections
 
 namespace System.Collections.Generic
 {
-    internal sealed class IReadOnlyListImpl<T> : IReadOnlyList<T>
+    internal sealed class IReadOnlyListImpl<T> : IReadOnlyList<T>, IWinRTObject
     {
         private readonly IObjectReference _inner;
 
@@ -51,6 +51,25 @@ namespace System.Collections.Generic
         {
             this._inner = _inner;
         }
+
+        IObjectReference IWinRTObject.NativeObject => _inner;
+
+        bool IWinRTObject.HasUnwrappableNativeObject => true;
+
+        private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+        private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null);
+            return _queryInterfaceCache;
+        }
+        global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+        private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+        private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null);
+            return _additionalTypeData;
+        }
+        global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
 
         public T this[int index] => ABI.System.Collections.Generic.IReadOnlyListMethods<T>.Indexer_Get(iReadOnlyListObjRef, index);
 

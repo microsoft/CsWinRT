@@ -35,7 +35,7 @@ namespace Windows.Foundation.Collections
 namespace System.Collections.Generic
 {
 
-    internal sealed class IDictionaryImpl<K, V> : IDictionary<K, V>
+    internal sealed class IDictionaryImpl<K, V> : IDictionary<K, V>, IWinRTObject
     {
         private IObjectReference _inner;
         private Dictionary<K, (IntPtr, V)> _lookupCache;
@@ -61,6 +61,25 @@ namespace System.Collections.Generic
             return __iEnumerableObjRef;
         }
         private IObjectReference iEnumerableObjRef => __iEnumerableObjRef ?? Make_IEnumerableObjRef();
+
+        IObjectReference IWinRTObject.NativeObject => _inner;
+
+        bool IWinRTObject.HasUnwrappableNativeObject => true;
+
+        private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+        private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null);
+            return _queryInterfaceCache;
+        }
+        global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+        private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+        private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null);
+            return _additionalTypeData;
+        }
+        global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
 
         public V this[K key] 
         { 
@@ -458,7 +477,7 @@ namespace ABI.System.Collections.Generic
             private volatile IObjectReference __iEnumerableObjRef;
             private IObjectReference Make_IEnumerableObjRef()
             {
-                global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, iDictionaryObjRef.As<ABI.System.Collections.Generic.IEnumerable<KeyValuePair<K, V>>.Vftbl>(), null);
+                global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, iDictionaryObjRef.As<ABI.System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>.Vftbl>(), null);
                 return __iEnumerableObjRef;
             }
             private IObjectReference iEnumerableObjRef => __iEnumerableObjRef ?? Make_IEnumerableObjRef();
@@ -554,7 +573,7 @@ namespace ABI.System.Collections.Generic
             private volatile IObjectReference __iEnumerableObjRef;
             private IObjectReference Make_IEnumerableObjRef()
             {
-                global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, iDictionaryObjRef.As<ABI.System.Collections.Generic.IEnumerable<KeyValuePair<K, V>>.Vftbl>(), null);
+                global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, iDictionaryObjRef.As<ABI.System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>.Vftbl>(), null);
                 return __iEnumerableObjRef;
             }
             private IObjectReference iEnumerableObjRef => __iEnumerableObjRef ?? Make_IEnumerableObjRef();
@@ -979,7 +998,7 @@ namespace ABI.System.Collections.Generic
             get
             {
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
-                return IDictionaryMethods<K, V>.Indexer_Get(_obj, GetLookupCache(), key);
+                return IDictionaryMethods<K, V>.Indexer_Get(_obj, GetLookupCache((IWinRTObject)this), key);
             }
             set
             {
@@ -1006,16 +1025,16 @@ namespace ABI.System.Collections.Generic
             return IDictionaryMethods<K, V>.Remove(_obj, key);
         }
 
-        Dictionary<K, (IntPtr, V)> GetLookupCache()
+        internal static global::System.Collections.Generic.Dictionary<K, (IntPtr, V)> GetLookupCache(IWinRTObject _this)
         {
-            return (Dictionary<K, (IntPtr, V)>)((IWinRTObject)this).GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle,
+            return (Dictionary<K, (IntPtr, V)>)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle,
                 () => new Dictionary<K, (IntPtr, V)>());
         }
 
         bool global::System.Collections.Generic.IDictionary<K, V>.TryGetValue(K key, out V value)
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
-            return IDictionaryMethods<K, V>.TryGetValue(_obj, GetLookupCache(), key, out value);
+            return IDictionaryMethods<K, V>.TryGetValue(_obj, GetLookupCache((IWinRTObject)this), key, out value);
         }
 
         void global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Add(global::System.Collections.Generic.KeyValuePair<K, V> item)
@@ -1027,7 +1046,7 @@ namespace ABI.System.Collections.Generic
         bool global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Contains(global::System.Collections.Generic.KeyValuePair<K, V> item)
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IDictionary<K, V>).TypeHandle));
-            return IDictionaryMethods<K, V>.Contains(_obj, GetLookupCache(), item);
+            return IDictionaryMethods<K, V>.Contains(_obj, GetLookupCache((IWinRTObject)this), item);
         }
 
         void global::System.Collections.Generic.ICollection<global::System.Collections.Generic.KeyValuePair<K, V>>.CopyTo(global::System.Collections.Generic.KeyValuePair<K, V>[] array, int arrayIndex)

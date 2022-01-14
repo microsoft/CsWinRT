@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
 
@@ -24,11 +25,11 @@ namespace ABI.System.Collections.Generic
                 {
                     var iReadOnlyDictionaryImpl = typeof(global::System.Collections.Generic.IReadOnlyDictionaryImpl<,>).MakeGenericType(genericType.GetGenericArguments());
                     return (global::System.Collections.Generic.IReadOnlyCollection<T>)
-                        iReadOnlyDictionaryImpl.GetConstructor(new global::System.Type[] { typeof(IObjectReference) })
+                        iReadOnlyDictionaryImpl.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, new global::System.Type[] { typeof(IObjectReference) }, null)
                         .Invoke(new object[] { _this.NativeObject });
                 }
             }
-
+             
             var iReadOnlyList = typeof(global::System.Collections.Generic.IReadOnlyList<T>);
             if (_this.IsInterfaceImplemented(iReadOnlyList.TypeHandle, false))
             {
@@ -68,7 +69,7 @@ namespace ABI.System.Collections.Generic
                 {
                     var iDictionaryImpl = typeof(global::System.Collections.Generic.IDictionaryImpl<,>).MakeGenericType(genericType.GetGenericArguments());
                     return (global::System.Collections.Generic.ICollection<T>)
-                        iDictionaryImpl.GetConstructor(new global::System.Type[] { typeof(IObjectReference) })
+                        iDictionaryImpl.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, new global::System.Type[] { typeof(IObjectReference) }, null)
                         .Invoke(new object[] { _this.NativeObject });
                 }
             }
