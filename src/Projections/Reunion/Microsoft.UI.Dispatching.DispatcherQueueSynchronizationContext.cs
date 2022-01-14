@@ -27,7 +27,20 @@ namespace Microsoft.System
 
         public override void Send(SendOrPostCallback d, object state)
         {
-            throw new NotSupportedException("Send not supported");
+            if (m_dispatcherQueue.HasThreadAccess)
+            {
+                d(state);
+            }
+            else
+            {
+                var m = new ManualResetEvent(false);
+                m_dispatcherQueue.TryEnqueue(() =>
+                {
+                    d(state);
+                    m.Set();
+                });
+                m.WaitOne();
+            }
         }
 
         public override SynchronizationContext CreateCopy()
