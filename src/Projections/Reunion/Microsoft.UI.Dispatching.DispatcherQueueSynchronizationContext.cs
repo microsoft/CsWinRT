@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Microsoft.System;
 
@@ -34,12 +35,28 @@ namespace Microsoft.System
             else
             {
                 var m = new ManualResetEvent(false);
+                ExceptionDispatchInfo edi = null;
+
                 m_dispatcherQueue.TryEnqueue(() =>
                 {
-                    d(state);
-                    m.Set();
+                    try
+                    {
+                        d(state);
+                    }
+                    catch (Exception ex)
+                    {
+                        edi = ExceptionDispatchInfo.Capture(ex);
+                    }
+                    finally
+                    {
+                        m.Set();
+                    }
                 });
                 m.WaitOne();
+
+#pragma warning disable CA1508 // Avoid dead conditional code
+                edi?.Throw();
+#pragma warning restore CA1508 // Avoid dead conditional code
             }
         }
 
