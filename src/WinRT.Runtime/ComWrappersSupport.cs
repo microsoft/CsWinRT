@@ -73,18 +73,22 @@ namespace WinRT
                 Marshal.Release(agilePtr);
                 return true;
             }
-            else if (objRef.TryAs<ABI.WinRT.Interop.IMarshal.Vftbl>(ABI.WinRT.Interop.IMarshal.IID, out var marshalRef) >= 0)
+            else if (objRef.TryAs(ABI.WinRT.Interop.IMarshal.IID, out var marshalPtr) >= 0)
             {
-                using (marshalRef)
+                try
                 {
                     Guid iid_IUnknown = IUnknownVftbl.IID;
                     Guid iid_unmarshalClass;
-                    Marshal.ThrowExceptionForHR(marshalRef.Vftbl.GetUnmarshalClass_0(
-                        marshalRef.ThisPtr, &iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass));
+                    Marshal.ThrowExceptionForHR((**(ABI.WinRT.Interop.IMarshal.Vftbl**)marshalPtr).GetUnmarshalClass_0(
+                        marshalPtr, &iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass));
                     if (iid_unmarshalClass == ABI.WinRT.Interop.IMarshal.IID_InProcFreeThreadedMarshaler.Value)
                     {
                         return true;
                     }
+                }
+                finally
+                {
+                    Marshal.Release(marshalPtr);
                 }
             }
             return false;
