@@ -1914,7 +1914,9 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                 }
                 else
                 {
-                    
+                    auto default_interface_typedef = for_typedef(w, get_type_semantics(get_default_interface(class_type)), [&](auto&& iface) { return iface; });
+                    auto is_manually_gen_default_interface = is_manually_generated_iface(default_interface_typedef);
+
                     bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(class_type.Extends()));
 
                     w.write(R"(
@@ -1924,6 +1926,7 @@ IntPtr ptr = (%.%(%));
 try 
 { 
 _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr); 
+%
 } 
 finally 
 { 
@@ -1936,8 +1939,15 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                         has_base_type ? ":base(global::WinRT.DerivedComposed.Instance)" : "",
                         cache_object,
                         method.Name(),
-                        bind_list<write_parameter_name_with_modifier>(", ", signature.params())
-                    );
+                        bind_list<write_parameter_name_with_modifier>(", ", signature.params()),
+                        bind([&](writer& w)
+                        {
+                            if (is_manually_gen_default_interface)
+                            {
+                                auto default_interface_name_non_ABI = get_default_interface_name(w, class_type, false);
+                                w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name_non_ABI, default_interface_name_non_ABI, default_interface_name_non_ABI);
+                            }
+                        }));
                 }
                 w.write(R"(
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
@@ -2149,6 +2159,7 @@ Marshal.Release(inner);
                         {
                             if (is_manually_gen_default_interface)
                             {
+                                // Here 1
                                 w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
                             }
                         }));
@@ -6149,7 +6160,6 @@ private struct InterfaceTag<I>{};
                         w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
                     }
                 }),
-            
             // Equality operators
             type_name,
             type_name,
