@@ -2159,7 +2159,6 @@ Marshal.Release(inner);
                         {
                             if (is_manually_gen_default_interface)
                             {
-                                // Here 1
                                 w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
                             }
                         }));
