@@ -1944,7 +1944,8 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                         {
                             if (is_manually_gen_default_interface)
                             {
-                                w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
+                                auto default_interface_name_non_ABI = get_default_interface_name(w, class_type, false);
+                                w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name_non_ABI, default_interface_name_non_ABI, default_interface_name_non_ABI);
                             }
                         }));
                 }
@@ -6153,12 +6154,12 @@ private struct InterfaceTag<I>{};
             bind<write_base_constructor_dispatch>(base_semantics),
             default_interface_name,
             bind([&](writer& w)
-            {
+                {
                     if (is_manually_gen_default_interface)
                     {
                         w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
                     }
-            }),
+                }),
             // Equality operators
             type_name,
             type_name,
