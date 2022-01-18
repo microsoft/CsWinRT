@@ -13,4 +13,5 @@ MembersMustExist : Member 'public System.IntPtr WinRT.MarshalString.GetAbi(WinRT
 TypesMustExist : Type 'WinRT.MarshalString.Pinnable' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 15
+MembersMustExist : Member 'public WinRT.IObjectReference WinRT.MarshalInspectable<T>.CreateMarshaler<V>(T, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
+Total Issues: 16

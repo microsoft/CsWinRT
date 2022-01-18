@@ -1140,6 +1140,31 @@ namespace WinRT
 #endif
     static class MarshalInspectable<T>
     {
+        public static IObjectReference CreateMarshaler<V>(T o, Guid iid, bool unwrapObject = true)
+        {
+            if (o is null)
+            {
+                return null;
+            }
+
+            if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
+            {
+                return objRef.As<V>(iid);
+            }
+            var publicType = o.GetType();
+            Type helperType = Projections.FindCustomHelperTypeMapping(publicType, true);
+            if (helperType != null)
+            {
+                var parms = new[] { Expression.Parameter(typeof(object), "arg") };
+                var createMarshaler = Expression.Lambda<Func<object, IObjectReference>>(
+                    Expression.Call(helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
+                        new[] { Expression.Convert(parms[0], publicType) }), parms).Compile();
+                return createMarshaler(o);
+            }
+
+            return ComWrappersSupport.CreateCCWForObject<V>(o, iid);
+        }
+
         public static IObjectReference CreateMarshaler(T o, bool unwrapObject = true)
         {
             if (o is null)
