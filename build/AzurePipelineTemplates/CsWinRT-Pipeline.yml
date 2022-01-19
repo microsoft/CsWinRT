@@ -1,13 +1,12 @@
-# This file is used as basis for the ADO pipeline
-name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
-
 variables: 
 - template: CsWinRT-Variables.yml
 
-stages:
-- template: CsWinRT-BuildAndTest-Stage.yml
+name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
 
-- template: CsWinRT-PublishToNuget-Stage.yml
+stages:
+# - template: CsWinRT-BuildAndTest-Stage.yml
+
+# - template: CsWinRT-PublishToNuget-Stage.yml
 
 # if we are doing a release build, publish the build to Maestro
 - ${{ if eq( variables['PrereleaseVersion'], '') }}:
