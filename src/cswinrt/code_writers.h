@@ -1944,8 +1944,8 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                         {
                             if (is_manually_gen_default_interface)
                             {
-                                auto default_interface_name_non_ABI = get_default_interface_name(w, class_type, false);
-                                w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name_non_ABI, default_interface_name_non_ABI, default_interface_name_non_ABI);
+                                auto projected_default_interface_name = get_default_interface_name(w, class_type, false);
+                                w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", projected_default_interface_name, projected_default_interface_name, projected_default_interface_name);
                             }
                         }));
                 }
@@ -2695,17 +2695,7 @@ remove => %.ErrorsChanged -= value;
                         (is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())"));
                 if (!is_default_interface && !wrapper_type)
                 {
-                    if (settings.netstandard_compat)
-                    {
-                        w.write(R"(
-private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
-)",
-                            interface_name,
-                            interface_name,
-                            bind<write_lazy_interface_type_name>(interface_type),
-                            bind<write_lazy_interface_type_name>(interface_type));
-                    }
-                    else if (is_manually_generated_iface(interface_type))
+                    if (settings.netstandard_compat || is_manually_generated_iface(interface_type))
                     {
                         w.write(R"(
 private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
