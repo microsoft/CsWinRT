@@ -1,12 +1,12 @@
-variables:
-  isRelease: $[eq(variables['PrereleaseVersion'],'')]
+parameters:
+  IsRelease: ''
 
 stages:
 - stage: PublishToMaestro
   displayName: Trigger Maestro Publish
   jobs:
   - job: TriggerMaestroPublish
-    condition: eq(variables.isRelease,'true')
+    condition: eq(parameters.IsRelease,'true')
     variables:
       _DotNetCoreRuntimeVersion: 5.0.11        # matches with SDK v. 5.0.402
       _WindowsSdkPackageVersion: 10.0.18362.22 # matches with one consumed in WindowsAppSdk

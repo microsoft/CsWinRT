@@ -5,6 +5,9 @@ name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date
 
 stages:
 - template: CsWinRT-PublishToMaestro-Stage.yml
+  parameters:
+    ${{ if eq(variables['PrereleaseVersion'], '') }}:
+      IsRelease: true
 
 # - template: CsWinRT-BuildAndTest-Stage.yml
 
