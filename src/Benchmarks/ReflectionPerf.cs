@@ -121,5 +121,20 @@ namespace Benchmarks
             var dict = instance.ExistingDictionary;
             return dict["a"];
         }
+
+        [Benchmark]
+        public string CreateAndIterateList()
+        {
+            var list = instance.NewList();
+            list.Add("How");
+            list.Add("Are");
+            list.Add("You");
+            var sentence = "";
+            for (int i = 0; i < list.Count; i++)
+            {
+                sentence += list[i];
+            }
+            return sentence;
+        }
     }
 }

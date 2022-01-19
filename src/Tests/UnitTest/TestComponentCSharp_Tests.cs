@@ -851,6 +851,9 @@ namespace UnitTest
             {
                 Assert.Equal(stringMap[item.Key], item.Value);
             }
+            KeyValuePair<string, string>[] pairs = new KeyValuePair<string, string>[2];
+            stringMap.CopyTo(pairs, 0);
+            Assert.Equal(2, pairs.Length);
         }
 
         [Fact]
