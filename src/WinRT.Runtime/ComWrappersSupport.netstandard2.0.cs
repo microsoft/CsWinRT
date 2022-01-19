@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -10,7 +13,12 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    public static partial class ComWrappersSupport
+#if EMBED 
+    internal 
+#else
+    public 
+#endif     
+    static partial class ComWrappersSupport
     {
         private static ConditionalWeakTable<object, ComCallableWrapper> ComWrapperCache = new ConditionalWeakTable<object, ComCallableWrapper>();
 
@@ -37,7 +45,7 @@ namespace WinRT
                 {
                     var inspectable = new IInspectable(identity);
                     string runtimeClassName = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
-                    runtimeWrapper = string.IsNullOrEmpty(runtimeClassName) ? inspectable : TypedObjectFactoryCache.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
+                    runtimeWrapper = string.IsNullOrEmpty(runtimeClassName) ? inspectable : TypedObjectFactoryCacheForRuntimeClassName.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
                 {
@@ -74,7 +82,6 @@ namespace WinRT
             {
                 ABI.System.Nullable<string> ns => (T)(object)ns.Value,
                 ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
-                ValueTypeWrapper vt => (T)vt.Value,
                 _ => (T)rcw
             };
         }
@@ -158,6 +165,14 @@ namespace WinRT
             return objRef;
         }
 
+        internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
+        {
+            var wrapper = ComWrapperCache.GetValue(obj, _ => new ComCallableWrapper(obj));
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface(wrapper.IdentityPtr, ref iid, out var iidCcw));
+            GC.KeepAlive(wrapper); // This GC.KeepAlive ensures that a newly created wrapper is alive until objRef is created and has AddRef'd the CCW.
+            return ObjectReference<T>.Attach(ref iidCcw);
+        }
+
         public static T FindObject<T>(IntPtr thisPtr)
             where T : class =>
             (T)UnmanagedObject.FindObject<ComCallableWrapper>(thisPtr).ManagedObject;
@@ -199,7 +214,7 @@ namespace WinRT
             return UnmanagedObject.FindObject<ComCallableWrapper>(pThis).Release();
         }
 
-        private class RuntimeWrapperCleanup
+        private sealed class RuntimeWrapperCleanup
         {
             public IntPtr _identityComObject;
             public System.WeakReference<object> _runtimeWrapper;
@@ -288,7 +303,7 @@ namespace WinRT
         }
     }
 
-    internal class ComCallableWrapper
+    internal sealed class ComCallableWrapper
     {
         private Dictionary<Guid, IntPtr> _managedQITable;
         private GCHandle _qiTableHandle;

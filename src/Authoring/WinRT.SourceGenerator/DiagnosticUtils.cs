@@ -286,8 +286,8 @@ namespace Generator
         /// <param name="methodDeclarations">Collection of methods</param><param name="typeId">Containing class or interface</param>
         private void CheckMethods(IEnumerable<MethodDeclarationSyntax> methodDeclarations, SyntaxToken typeId)
         {
-            Dictionary<string, bool> methodsHasAttributeMap = new();
-            Dictionary<string, Diagnostic> overloadsWithoutAttributeMap = new Dictionary<string, Diagnostic>();
+            Dictionary<string, bool> methodsHasAttributeMap = new(StringComparer.Ordinal);
+            Dictionary<string, Diagnostic> overloadsWithoutAttributeMap = new Dictionary<string, Diagnostic>(StringComparer.Ordinal);
 
             // var methodDeclarations = interfaceDeclaration.DescendantNodes().OfType<MethodDeclarationSyntax>();
             foreach (MethodDeclarationSyntax method in methodDeclarations)
@@ -403,7 +403,7 @@ namespace Generator
         /// <returns>True iff namespace is disjoint from the assembly name</returns>
         private bool IsInvalidNamespace(INamespaceSymbol @namespace, string assemblyName)
         {
-            if (@namespace.ToString() == assemblyName)
+            if (string.CompareOrdinal(@namespace.ToString(), assemblyName) == 0)
             {
                 return false;
             }
@@ -411,14 +411,14 @@ namespace Generator
             var topLevel = @namespace;
             while (!topLevel.ContainingNamespace.IsGlobalNamespace)
             {
-                if (topLevel.ToString() == assemblyName)
+                if (string.CompareOrdinal(topLevel.ToString(), assemblyName) == 0)
                 {
                     return false;
                 }
                 topLevel = topLevel.ContainingNamespace;
             }
 
-            return topLevel.ToString() != assemblyName;
+            return string.CompareOrdinal(topLevel.ToString(), assemblyName) != 0;
         }
 
         ///<summary>Array types can only be one dimensional and not System.Array, 

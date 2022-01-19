@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Text;
 using WinRT;
 using WinRT.Interop;
-
 
 namespace ABI.Microsoft.UI.Xaml.Data
 {
@@ -25,7 +25,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("62D0BD1E-B85F-5FCC-842A-7CB0DDA37FE5")]
-    internal unsafe class WinRTDataErrorsChangedEventArgsRuntimeClassFactory
+    internal unsafe sealed class WinRTDataErrorsChangedEventArgsRuntimeClassFactory
     {
         [Guid("62D0BD1E-B85F-5FCC-842A-7CB0DDA37FE5")]
         [StructLayout(LayoutKind.Sequential)]
@@ -51,17 +51,18 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
         public unsafe IObjectReference CreateInstance(string name)
         {
-            MarshalString __name = default;
             IntPtr __retval = default;
             try
             {
-                __name = MarshalString.CreateMarshaler(name);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(__name), &__retval));
-                return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
+                MarshalString.Pinnable __name = new(name);
+                fixed (void* ___name = __name)
+                {
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstance_0(ThisPtr, MarshalString.GetAbi(ref __name), &__retval));
+                    return ObjectReference<IUnknownVftbl>.Attach(ref __retval);
+                }
             }
             finally
             {
-                MarshalString.DisposeMarshaler(__name);
                 MarshalInspectable<object>.DisposeAbi(__retval);
             }
         }
@@ -72,15 +73,21 @@ namespace ABI.System.ComponentModel
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct DataErrorsChangedEventArgs
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe struct DataErrorsChangedEventArgs
     {
-        private static WeakLazy<ActivationFactory> _factory = new WeakLazy<ActivationFactory>();
-
-        private class ActivationFactory : BaseActivationFactory
+        private sealed class ActivationFactory : BaseActivationFactory
         {
             public ActivationFactory() : base("Microsoft.UI.Xaml.Data", "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs")
             {
             }
+
+            internal static ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory Instance =
+                new ActivationFactory()._As<ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory.Vftbl>();
         }
 
         public static IObjectReference CreateMarshaler(global::System.ComponentModel.DataErrorsChangedEventArgs value)
@@ -90,8 +97,7 @@ namespace ABI.System.ComponentModel
                 return null;
             }
 
-            ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory factory = _factory.Value._As<ABI.Microsoft.UI.Xaml.Data.WinRTDataErrorsChangedEventArgsRuntimeClassFactory.Vftbl>();
-            return factory.CreateInstance(value.PropertyName);
+            return ActivationFactory.Instance.CreateInstance(value.PropertyName);
         }
 
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
@@ -128,11 +134,12 @@ namespace ABI.System.ComponentModel
             {
                 return IntPtr.Zero;
             }
-            return CreateMarshaler(value).GetRef();
+            using var objRef = CreateMarshaler(value);
+            return objRef.GetRef();
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
-        public static void DisposeAbi(IntPtr abi) { using var objRef = ObjectReference<IUnknownVftbl>.Attach(ref abi); }
+        public static void DisposeAbi(IntPtr abi) { MarshalInspectable<object>.DisposeAbi(abi); }
 
         public static string GetGuidSignature()
         {

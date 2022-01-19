@@ -21,6 +21,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{96495AB4-2D86-47D1-A174-27D0B436DC98}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		benchmark.cmd = benchmark.cmd
 		build.cmd = build.cmd
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
@@ -58,6 +59,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nuget", "Nuget", "{967889B0
 		..\nuget\LICENSE = ..\nuget\LICENSE
 		..\nuget\Microsoft.Windows.CsWinRT.Authoring.targets = ..\nuget\Microsoft.Windows.CsWinRT.Authoring.targets
 		..\nuget\Microsoft.Windows.CsWinRT.Authoring.Transitive.targets = ..\nuget\Microsoft.Windows.CsWinRT.Authoring.Transitive.targets
+		..\nuget\Microsoft.Windows.CsWinRT.Embedded.targets = ..\nuget\Microsoft.Windows.CsWinRT.Embedded.targets
 		..\nuget\Microsoft.Windows.CsWinRT.IIDOptimizer.targets = ..\nuget\Microsoft.Windows.CsWinRT.IIDOptimizer.targets
 		..\nuget\Microsoft.Windows.CsWinRT.nuspec = ..\nuget\Microsoft.Windows.CsWinRT.nuspec
 		..\nuget\Microsoft.Windows.CsWinRT.props = ..\nuget\Microsoft.Windows.CsWinRT.props
@@ -116,6 +118,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IIDOptimizer", "Perf\IIDOptimizer\IIDOptimizer.csproj", "{AE3B0611-2FBB-42AB-A245-B4E79868A5F9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reunion", "Projections\Reunion\Reunion.csproj", "{B6312AD1-A59E-4F3B-AA39-20B780FE9E15}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSubset", "Projections\TestSubset\TestSubset.csproj", "{80F0EC48-5536-49D6-8ED1-B1F4CED88073}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_component_fast", "TestWinRT\test_component_fast\test_component_fast.vcxproj", "{0E0ACA62-A92F-44CF-BD41-AEB541946DF8}"
 EndProject
@@ -498,6 +502,18 @@ Global
 		{0E0ACA62-A92F-44CF-BD41-AEB541946DF8}.Release|x64.Build.0 = Release|x64
 		{0E0ACA62-A92F-44CF-BD41-AEB541946DF8}.Release|x86.ActiveCfg = Release|Win32
 		{0E0ACA62-A92F-44CF-BD41-AEB541946DF8}.Release|x86.Build.0 = Release|Win32
+		{80F0EC48-5536-49D6-8ED1-B1F4CED88073}.Debug|ARM.ActiveCfg = Debug|x86
+		{80F0EC48-5536-49D6-8ED1-B1F4CED88073}.Debug|ARM64.ActiveCfg = Debug|x86
+		{80F0EC48-5536-49D6-8ED1-B1F4CED88073}.Debug|x64.ActiveCfg = Debug|x64
+		{80F0EC48-5536-49D6-8ED1-B1F4CED88073}.Debug|x64.Build.0 = Debug|x64
+		{80F0EC48-5536-49D6-8ED1-B1F4CED88073}.Debug|x86.ActiveCfg = Debug|x86
+		{80F0EC48-5536-49D6-8ED1-B1F4CED88073}.Debug|x86.Build.0 = Debug|x86
+		{80F0EC48-5536-49D6-8ED1-B1F4CED88073}.Release|ARM.ActiveCfg = Release|x86
+		{80F0EC48-5536-49D6-8ED1-B1F4CED88073}.Release|ARM64.ActiveCfg = Release|x86
+		{80F0EC48-5536-49D6-8ED1-B1F4CED88073}.Release|x64.ActiveCfg = Release|x64
+		{80F0EC48-5536-49D6-8ED1-B1F4CED88073}.Release|x64.Build.0 = Release|x64
+		{80F0EC48-5536-49D6-8ED1-B1F4CED88073}.Release|x86.ActiveCfg = Release|x86
+		{80F0EC48-5536-49D6-8ED1-B1F4CED88073}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -525,6 +541,7 @@ Global
 		{493C7729-2F21-4198-AB09-BDF56BF501D3} = {CFB651EC-DAA4-4A11-ABCD-C77F90602EB5}
 		{AE3B0611-2FBB-42AB-A245-B4E79868A5F9} = {539DBDEF-3B49-4503-9BD3-7EB83C2179CB}
 		{B6312AD1-A59E-4F3B-AA39-20B780FE9E15} = {6D41796B-9904-40B8-BBCB-40B2D1BAE44B}
+		{80F0EC48-5536-49D6-8ED1-B1F4CED88073} = {6D41796B-9904-40B8-BBCB-40B2D1BAE44B}
 		{0E0ACA62-A92F-44CF-BD41-AEB541946DF8} = {CFB651EC-DAA4-4A11-ABCD-C77F90602EB5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

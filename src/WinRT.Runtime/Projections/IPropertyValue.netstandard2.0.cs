@@ -1,9 +1,11 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
-using WinRT.Interop;
 
 namespace Windows.Foundation
 {
@@ -209,7 +211,7 @@ namespace ABI.Windows.Foundation
         }
 
 #pragma warning disable CS0649
-        private class Boxed<T>
+        private sealed class Boxed<T>
             where T : struct
         {
             public T Value;
@@ -1131,15 +1133,15 @@ namespace ABI.Windows.Foundation
                 {
                     value = global::Windows.Foundation.PropertyType.Guid;
                 }
-                else if (managedType.FullName == "Windows.Foundation.Point")
+                else if (string.CompareOrdinal(managedType.FullName, "Windows.Foundation.Point") == 0)
                 {
                     value = global::Windows.Foundation.PropertyType.Point;
                 }
-                else if (managedType.FullName == "Windows.Foundation.Rect")
+                else if (string.CompareOrdinal(managedType.FullName, "Windows.Foundation.Rect") == 0)
                 {
                     value = global::Windows.Foundation.PropertyType.Rect;
                 }
-                else if (managedType.FullName == "Windows.Foundation.Size")
+                else if (string.CompareOrdinal(managedType.FullName, "Windows.Foundation.Size") == 0)
                 {
                     value = global::Windows.Foundation.PropertyType.Size;
                 }

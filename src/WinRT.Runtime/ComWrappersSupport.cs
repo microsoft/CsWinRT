@@ -1,21 +1,19 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using ABI.Microsoft.UI.Xaml.Data;
+using ABI.Windows.Foundation;
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Numerics;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
-using System.Linq.Expressions;
 using WinRT.Interop;
-using ABI.Windows.Foundation;
-using ABI.Microsoft.UI.Xaml.Data;
 
-#if !NETSTANDARD2_0
+#if NET
 using ComInterfaceEntry = System.Runtime.InteropServices.ComWrappers.ComInterfaceEntry;
 #endif
 
@@ -24,15 +22,23 @@ using ComInterfaceEntry = System.Runtime.InteropServices.ComWrappers.ComInterfac
 
 namespace WinRT
 {
-    public static partial class ComWrappersSupport
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    static partial class ComWrappersSupport
     {
-        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCache = new ConcurrentDictionary<string, Func<IInspectable, object>>();
+        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCacheForRuntimeClassName = new ConcurrentDictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
+        private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new ConcurrentDictionary<Type, Func<IInspectable, object>>();
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate
         {
+#if !NET
             using (new Mono.ThreadContext())
+#endif
             {
                 var target_invoke = FindObject<TDelegate>(thisPtr);
                 if (target_invoke != null)
@@ -46,7 +52,9 @@ namespace WinRT
         public static void MarshalDelegateInvoke<T>(IntPtr thisPtr, Action<T> invoke)
             where T : class, Delegate
         {
+#if !NET
             using (new Mono.ThreadContext())
+#endif
             {
                 var target_invoke = FindObject<T>(thisPtr);
                 if (target_invoke != null)
@@ -56,55 +64,58 @@ namespace WinRT
             }
         }
 
+        // If we are free threaded, we do not need to keep track of context.
+        // This can either be if the object implements IAgileObject or the free threaded marshaler.
+        internal unsafe static bool IsFreeThreaded(IObjectReference objRef)
+        {
+            if (objRef.TryAs(ABI.WinRT.Interop.IAgileObject.IID, out var agilePtr) >= 0)
+            {
+                Marshal.Release(agilePtr);
+                return true;
+            }
+            else if (objRef.TryAs<ABI.WinRT.Interop.IMarshal.Vftbl>(ABI.WinRT.Interop.IMarshal.IID, out var marshalRef) >= 0)
+            {
+                using (marshalRef)
+                {
+                    Guid iid_IUnknown = IUnknownVftbl.IID;
+                    Guid iid_unmarshalClass;
+                    Marshal.ThrowExceptionForHR(marshalRef.Vftbl.GetUnmarshalClass_0(
+                        marshalRef.ThisPtr, &iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass));
+                    if (iid_unmarshalClass == ABI.WinRT.Interop.IMarshal.IID_InProcFreeThreadedMarshaler.Value)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public static IObjectReference GetObjectReferenceForInterface(IntPtr externalComObject)
+        {
+            return GetObjectReferenceForInterface<IUnknownVftbl>(externalComObject);
+        }
+
+        public static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject)
         {
             if (externalComObject == IntPtr.Zero)
             {
                 return null;
             }
 
-            using var unknownRef = ObjectReference<IUnknownVftbl>.FromAbi(externalComObject);
-
-            if (IsFreeThreaded())
+            ObjectReference<T> objRef = ObjectReference<T>.FromAbi(externalComObject);
+            if (IsFreeThreaded(objRef))
             {
-                return unknownRef.As<IUnknownVftbl>();
+                return objRef;
             }
             else
             {
-                return new ObjectReferenceWithContext<IUnknownVftbl>(
-                    unknownRef.GetRef(),
-                    Context.GetContextCallback(),
-                    Context.GetContextToken());
-            }
-
-            // If we are free threaded, we do not need to keep track of context.
-            // This can either be if the object implements IAgileObject or the free threaded marshaler.
-            unsafe bool IsFreeThreaded()
-            {
-                if (unknownRef.TryAs<IUnknownVftbl>(typeof(ABI.WinRT.Interop.IAgileObject.Vftbl).GUID, out var agileRef) >= 0)
+                using (objRef)
                 {
-                    agileRef.Dispose();
-                    return true;
+                    return new ObjectReferenceWithContext<T>(
+                        objRef.GetRef(),
+                        Context.GetContextCallback(),
+                        Context.GetContextToken());
                 }
-                else if (unknownRef.TryAs<ABI.WinRT.Interop.IMarshal.Vftbl>(out var marshalRef) >= 0)
-                {
-                    try
-                    {
-                        Guid iid_IUnknown = typeof(IUnknownVftbl).GUID;
-                        Guid iid_unmarshalClass;
-                        var marshaler = new ABI.WinRT.Interop.IMarshal(marshalRef);
-                        marshaler.GetUnmarshalClass(&iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass);
-                        if (iid_unmarshalClass == ABI.WinRT.Interop.IMarshal.IID_InProcFreeThreadedMarshaler.Value)
-                        {
-                            return true;
-                        }
-                    }
-                    finally 
-                    {
-                        marshalRef.Dispose();
-                    }
-                }
-                return false;
             }
         }
 
@@ -211,8 +222,8 @@ namespace WinRT
 
             entries.Add(new ComInterfaceEntry
             {
-                IID = typeof(ABI.WinRT.Interop.IWeakReferenceSource.Vftbl).GUID,
-                Vtable = ABI.WinRT.Interop.IWeakReferenceSource.Vftbl.AbiToProjectionVftablePtr
+                IID = ABI.WinRT.Interop.IWeakReferenceSource.IID,
+                Vtable = ABI.WinRT.Interop.IWeakReferenceSource.AbiToProjectionVftablePtr
             });
 
             // Add IMarhal implemented using the free threaded marshaler
@@ -244,7 +255,7 @@ namespace WinRT
                 iids[i] = interfaceTableEntries[i].IID;
             }
 
-            if (type.FullName.StartsWith("ABI."))
+            if (type.FullName.StartsWith("ABI.", StringComparison.Ordinal))
             {
                 type = Projections.FindCustomPublicTypeForAbiType(type) ?? type.Assembly.GetType(type.FullName.Substring("ABI.".Length)) ?? type;
             }
@@ -261,7 +272,7 @@ namespace WinRT
 
         private static bool IsIReferenceArray(Type implementationType)
         {
-            return implementationType.FullName.StartsWith("Windows.Foundation.IReferenceArray`1");
+            return implementationType.FullName.StartsWith("Windows.Foundation.IReferenceArray`1", StringComparison.Ordinal);
         }
 
         private static Func<IInspectable, object> CreateKeyValuePairFactory(Type type)
@@ -282,9 +293,8 @@ namespace WinRT
                     Expression.Call(parms[0],
                         typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
 
-            var getValueExpression = Expression.Convert(Expression.Property(createInterfaceInstanceExpression, "Value"), typeof(object));
-            var setValueInWrapperexpression = Expression.New(typeof(ValueTypeWrapper).GetConstructor(new[] { typeof(object) }), getValueExpression);
-            return Expression.Lambda<Func<IInspectable, object>>(setValueInWrapperexpression, parms).Compile();
+            return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.Convert(Expression.Property(createInterfaceInstanceExpression, "Value"), typeof(object)), parms).Compile();
         }
 
         private static Func<IInspectable, object> CreateArrayFactory(Type implementationType)
@@ -297,58 +307,96 @@ namespace WinRT
                     Expression.Call(parms[0],
                         typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
 
-            var getValueExpression = Expression.Property(createInterfaceInstanceExpression, "Value");
-            var setValueInWrapperexpression = Expression.New(typeof(ValueTypeWrapper).GetConstructor(new[] { typeof(object) }), getValueExpression);
-            return Expression.Lambda<Func<IInspectable, object>>(setValueInWrapperexpression, parms).Compile();
+            return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.Property(createInterfaceInstanceExpression, "Value"), parms).Compile();
         }
 
-        internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
+        // This is used to hold the reference to the native value type object (IReference) until the actual value in it (boxed as an object) gets cleaned up by GC
+        // This is done to avoid pointer reuse until GC cleans up the boxed object
+        private static ConditionalWeakTable<object, IInspectable> _boxedValueReferenceCache = new();
+
+        private static Func<IInspectable, object> CreateReferenceCachingFactory(Func<IInspectable, object> internalFactory)
         {
-            // If runtime class name is empty or "Object", then just use IInspectable.
-            if (string.IsNullOrEmpty(runtimeClassName) || runtimeClassName == "Object")
+            return inspectable =>
             {
-                return (IInspectable obj) => obj;
-            }
-            // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
-            if (runtimeClassName == "Windows.Foundation.IReference`1<String>")
+                object resultingObject = internalFactory(inspectable);
+                _boxedValueReferenceCache.Add(resultingObject, inspectable);
+                return resultingObject;
+            };
+        }
+
+        private static Func<IInspectable, object> CreateCustomTypeMappingFactory(Type customTypeHelperType)
+        {
+            var fromAbiMethod = customTypeHelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            if (fromAbiMethod is null)
             {
-                return (IInspectable obj) => new ABI.System.Nullable<String>(obj.ObjRef);
-            }
-            else if (runtimeClassName == "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>")
-            {
-                return (IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef);
+                throw new MissingMethodException();
             }
 
-            Type implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
-            if(implementationType == null)
+            var parms = new[] { Expression.Parameter(typeof(IInspectable), "obj") };
+            return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.Call(fromAbiMethod, Expression.Property(parms[0], "ThisPtr")), parms).Compile();
+        }
+
+        internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName = null)
+        {
+            if (implementationType == null)
             {
                 // If we reach here, then we couldn't find a type that matches the runtime class name.
                 // Fall back to using IInspectable directly.
                 return (IInspectable obj) => obj;
             }
 
+            var customHelperType = Projections.FindCustomHelperTypeMapping(implementationType, true);
+            if (customHelperType != null)
+            {
+                return CreateReferenceCachingFactory(CreateCustomTypeMappingFactory(customHelperType));
+            }
+
             if (implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
-                return CreateKeyValuePairFactory(implementationType);
+                return CreateReferenceCachingFactory(CreateKeyValuePairFactory(implementationType));
             }
 
             if (implementationType.IsValueType)
             {
                 if (IsNullableT(implementationType))
                 {
-                    return CreateNullableTFactory(implementationType);
+                    return CreateReferenceCachingFactory(CreateNullableTFactory(implementationType));
                 }
                 else
                 {
-                    return CreateNullableTFactory(typeof(System.Nullable<>).MakeGenericType(implementationType));
+                    return CreateReferenceCachingFactory(CreateNullableTFactory(typeof(System.Nullable<>).MakeGenericType(implementationType)));
                 }
             }
             else if (IsIReferenceArray(implementationType))
             {
-                return CreateArrayFactory(implementationType);
+                return CreateReferenceCachingFactory(CreateArrayFactory(implementationType));
             }
 
             return CreateFactoryForImplementationType(runtimeClassName, implementationType);
+        }
+
+        internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
+        {
+            // If runtime class name is empty or "Object", then just use IInspectable.
+            if (string.IsNullOrEmpty(runtimeClassName) || 
+                string.CompareOrdinal(runtimeClassName, "Object") == 0)
+            {
+                return (IInspectable obj) => obj;
+            }
+            // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
+            if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<String>") == 0)
+            {
+                return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<String>(obj.ObjRef));
+            }
+            else if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>") == 0)
+            {
+                return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef));
+            }
+
+            Type implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
+            return CreateTypedRcwFactory(implementationType, runtimeClassName);
         }
 
         internal static string GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
@@ -383,9 +431,10 @@ namespace WinRT
             return runtimeClassName;
         }
 
-        private static bool ShouldProvideIReference(Type type)
+        private readonly static ConcurrentDictionary<Type, bool> IsIReferenceTypeCache = new ConcurrentDictionary<Type, bool>();
+        private static bool IsIReferenceType(Type type)
         {
-            static bool IsWindowsRuntimeType(Type type)
+            static bool IsIReferenceTypeHelper(Type type)
             {
                 if ((type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object) ||
                     WinRT.Projections.IsTypeWindowsRuntimeType(type))
@@ -400,14 +449,19 @@ namespace WinRT
                 return false;
             }
 
-            if (type == typeof(string) || type.IsTypeOfType())
-                return true;
-            if (type.IsDelegate())
-                return IsWindowsRuntimeType(type);
-            if (!type.IsValueType)
-                return false;
-            return type.IsPrimitive || IsWindowsRuntimeType(type);
+            return IsIReferenceTypeCache.GetOrAdd(type, (type) =>
+            {
+                if (type == typeof(string) || type.IsTypeOfType())
+                    return true;
+                if (type.IsDelegate())
+                    return IsIReferenceTypeHelper(type);
+                if (!type.IsValueType)
+                    return false;
+                return type.IsPrimitive || IsIReferenceTypeHelper(type);
+            });
         }
+
+        private static bool ShouldProvideIReference(Type type) => IsIReferenceType(type);
 
         private static ComInterfaceEntry IPropertyValueEntry =>
             new ComInterfaceEntry
@@ -714,7 +768,7 @@ namespace WinRT
             };
         }
 
-        internal class InspectableInfo
+        internal sealed class InspectableInfo
         {
             private readonly Lazy<string> runtimeClassName;
 
@@ -727,21 +781,6 @@ namespace WinRT
                 IIDs = iids;
             }
 
-        }
-
-        internal class ValueTypeWrapper
-        {
-            private readonly object value;
-
-            public ValueTypeWrapper(object value)
-            {
-                this.value = value;
-            }
-
-            public object Value
-            {
-                get => this.value;
-            }
         }
     }
 }

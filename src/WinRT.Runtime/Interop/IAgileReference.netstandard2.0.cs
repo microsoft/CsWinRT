@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace WinRT.Interop
 {
@@ -14,7 +15,12 @@ namespace WinRT.Interop
 
     [WindowsRuntimeType]
     [Guid("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90")]
-    public interface IAgileObject
+#if EMBED
+    internal
+#else
+    public
+#endif 
+    interface IAgileObject
     {
     }
 
@@ -31,10 +37,9 @@ namespace WinRT.Interop
 namespace ABI.WinRT.Interop
 {
     using global::WinRT;
-    using WinRT.Interop;
 
     [Guid("C03F6A43-65A4-9818-987E-E0B810D2A6F2")]
-    internal unsafe class IAgileReference : global::WinRT.Interop.IAgileReference
+    internal sealed unsafe class IAgileReference : global::WinRT.Interop.IAgileReference
     {
         [Guid("C03F6A43-65A4-9818-987E-E0B810D2A6F2")]
         public struct Vftbl
@@ -112,8 +117,15 @@ namespace ABI.WinRT.Interop
     }
 
     [Guid("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90")]
-    public class IAgileObject : global::WinRT.Interop.IAgileObject
+#if EMBED
+    internal
+#else
+    public 
+#endif 
+    class IAgileObject : global::WinRT.Interop.IAgileObject
     {
+        internal static readonly Guid IID = new(0x94ea2b94, 0xe9cc, 0x49e0, 0xc0, 0xff, 0xee, 0x64, 0xca, 0x8f, 0x5b, 0x90);
+
         [Guid("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90")]
         public struct Vftbl
         {
@@ -150,7 +162,7 @@ namespace ABI.WinRT.Interop
     }
 
     [Guid("00000146-0000-0000-C000-000000000046")]
-    internal unsafe class IGlobalInterfaceTable : global::WinRT.Interop.IGlobalInterfaceTable
+    internal sealed unsafe class IGlobalInterfaceTable : global::WinRT.Interop.IGlobalInterfaceTable
     {
         [Guid("00000146-0000-0000-C000-000000000046")]
         [StructLayout(LayoutKind.Sequential)]

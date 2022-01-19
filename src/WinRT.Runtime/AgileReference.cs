@@ -1,18 +1,26 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
 
 namespace WinRT
 {
-    public class AgileReference : IDisposable
+#if EMBED
+    internal
+#else
+    public
+#endif 
+    class AgileReference : IDisposable
     {
-        private readonly static Guid CLSID_StdGlobalInterfaceTable = Guid.Parse("00000323-0000-0000-c000-000000000046");
+        private readonly static Guid CLSID_StdGlobalInterfaceTable = new(0x00000323, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
         private readonly static Lazy<IGlobalInterfaceTable> Git = new Lazy<IGlobalInterfaceTable>(() => GetGitTable());
         private readonly IAgileReference _agileReference;
         private readonly IntPtr _cookie;
         private bool disposed;
 
-        public unsafe AgileReference(IObjectReference instance)
+        public unsafe AgileReference(IObjectReference instance) 
         {
             if(instance?.ThisPtr == null)
             {
@@ -43,7 +51,6 @@ namespace WinRT
                 MarshalInterface<IAgileReference>.DisposeAbi(agileReference);
             }
         }
-
         public IObjectReference Get() => _cookie == IntPtr.Zero ? _agileReference?.Resolve(typeof(IUnknownVftbl).GUID) : Git.Value?.GetInterfaceFromGlobal(_cookie, typeof(IUnknownVftbl).GUID);
 
         protected virtual void Dispose(bool disposing)
@@ -99,7 +106,12 @@ namespace WinRT
         }
     }
 
-    public sealed class AgileReference<T> : AgileReference
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    sealed class AgileReference<T> : AgileReference
         where T : class
     {
         public unsafe AgileReference(IObjectReference instance)

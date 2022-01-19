@@ -12,10 +12,10 @@ namespace System.Threading.Tasks
     using System.Threading.Tasks;
     using global::Windows.Foundation;
 
-#if !NETSTANDARD2_0
+#if NET
     [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
-    internal class TaskToAsyncOperationAdapter<TResult>
+    internal sealed class TaskToAsyncOperationAdapter<TResult>
                     : TaskToAsyncInfoAdapter<AsyncOperationCompletedHandler<TResult>, VoidReferenceTypeParameter, TResult, VoidValueTypeParameter>,
                       IAsyncOperation<TResult>
     {
@@ -39,7 +39,7 @@ namespace System.Threading.Tasks
         {
         }
 
-        public virtual TResult GetResults()
+        public TResult GetResults()
         {
             return GetResultsInternal();
         }

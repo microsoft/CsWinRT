@@ -120,11 +120,17 @@ namespace UnitTest
             TestObject.CallForEnums(() => expectedEnums);
             Assert.Equal(expectedEnums, TestObject.EnumsProperty);
 
+            TestObject.EnumsProperty = null;
+            Assert.Equal(null, TestObject.EnumsProperty);
+
             var expectedEnumStructs = new EnumStruct[] { new EnumStruct(EnumValue.One), new EnumStruct(EnumValue.Two) };
             TestObject.EnumStructsProperty = expectedEnumStructs;
             Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
             TestObject.CallForEnumStructs(() => expectedEnumStructs);
             Assert.Equal(expectedEnumStructs, TestObject.EnumStructsProperty);
+
+            TestObject.EnumStructsProperty = null;
+            Assert.Equal(null, TestObject.EnumStructsProperty);
 
             // Flags
             var expectedFlag = FlagValue.All;
@@ -845,6 +851,9 @@ namespace UnitTest
             {
                 Assert.Equal(stringMap[item.Key], item.Value);
             }
+            KeyValuePair<string, string>[] pairs = new KeyValuePair<string, string>[2];
+            stringMap.CopyTo(pairs, 0);
+            Assert.Equal(2, pairs.Length);
         }
 
         [Fact]
@@ -1169,6 +1178,17 @@ namespace UnitTest
             Assert.True(val.bools.z);
         }
 
+        [Fact]
+        public void TestBlittableArrays()
+        {
+            int[] arr = new[] { 2, 4, 6, 8 };
+            TestObject.SetInts(arr);
+            Assert.True(TestObject.GetInts().SequenceEqual(arr));
+
+            TestObject.SetInts(null);
+            Assert.Null(TestObject.GetInts());
+        }
+
 #if NETCOREAPP2_0
         [Fact]
         public void TestGenericCast()
@@ -1441,7 +1461,7 @@ namespace UnitTest
             Assert.NotNull(marshalCCW2);
         }
 
-#if !NETCOREAPP2_0
+#if NET
         [Fact]
         public void TestDelegateCCWMarshaler()
         {
@@ -2318,8 +2338,9 @@ namespace UnitTest
 
             public void CallProxyObject()
             {
-                // Call to the proxy object after the apartment is gone should throw.
-                Assert.ThrowsAny<System.Exception>(() => proxyObject2.Commands);
+                // Call to a proxy object which we internally use an agile reference
+                // to resolve after the apartment is gone should throw.
+                Assert.ThrowsAny<System.Exception>(() => proxyObject.Commands);
             }
 
             private Windows.UI.Popups.PopupMenu nonAgileObject, nonAgileObject2;
@@ -2434,6 +2455,17 @@ namespace UnitTest
             Assert.Equal(TestObject.ReadWriteProperty, nativeProperties.ReadWriteProperty);
         }
 
+        [Fact]
+        public void TestSetPropertyAcrossProjections()
+        {
+            var setPropertyClass = new TestComponentCSharp.AnotherAssembly.SetPropertyClass();
+            setPropertyClass.ReadWriteProperty = 4;
+            Assert.Equal(4, setPropertyClass.ReadWriteProperty);
+
+            IProperties1 property = setPropertyClass;
+            Assert.Equal(4, property.ReadWriteProperty);
+        }
+
         // Test scenario where type reported by runtimeclass name is not a valid type (i.e. internal type).
         [Fact]
         public void TestNonProjectedRuntimeClass()
@@ -2524,6 +2556,8 @@ namespace UnitTest
         {
             bool eventCalled = false;
             void Class_StaticIntPropertyChanged(object sender, int e) => eventCalled = (e == 3);
+            bool eventCalled2 = false;
+            void Class_StaticIntPropertyChanged2(object sender, int e) => eventCalled2 = (e == 3);
 
             // Test static codegen-based EventSource caching
             Class.StaticIntPropertyChanged += Class_StaticIntPropertyChanged;
@@ -2537,6 +2571,21 @@ namespace UnitTest
             GC.WaitForPendingFinalizers();
             Class.StaticIntProperty = 3;
             Assert.True(eventCalled);
+            eventCalled = false;
+
+            // Test adding another delegate to validate COM reference tracking in EventSource
+            Class.StaticIntPropertyChanged += Class_StaticIntPropertyChanged2;
+            Class.StaticIntProperty = 3;
+            Assert.True(eventCalled);
+            Assert.True(eventCalled2);
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            eventCalled = false;
+            eventCalled2 = false;
+            Class.StaticIntPropertyChanged -= Class_StaticIntPropertyChanged;
+            Class.StaticIntProperty = 3;
+            Assert.False(eventCalled);
+            Assert.True(eventCalled2);
 
             // Test dynamic WeakRef-based EventSource caching
             eventCalled = false;
@@ -2578,6 +2627,95 @@ namespace UnitTest
             }
 
             public void IntPropertyChanged(object sender, int e) => eventCalled();
+        }
+
+        // Test scenario where events may be removed by the native event source without an unsubscribe.
+        [Fact]
+        public void TestEventRemovalByEventSource()
+        {
+            bool eventCalled = false;
+            void Class_IntPropertyChanged(object sender, int e) => eventCalled = (e == 3);
+            bool eventCalled2 = false;
+            void Class_IntPropertyChanged2(object sender, int e) => eventCalled2 = (e == 3);
+
+            var classInstance = new Class();
+            classInstance.IntPropertyChanged += Class_IntPropertyChanged;
+            classInstance.IntProperty = 3;
+            Assert.True(eventCalled);
+            Assert.False(eventCalled2);
+            eventCalled = false;
+            classInstance.RemoveLastIntPropertyChangedHandler();
+            classInstance.IntPropertyChanged += Class_IntPropertyChanged2;
+            classInstance.IntProperty = 3;
+            Assert.False(eventCalled);
+            Assert.True(eventCalled2);
+            eventCalled2 = false;
+
+            classInstance.RemoveLastIntPropertyChangedHandler();
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+            classInstance.IntPropertyChanged += Class_IntPropertyChanged;
+            classInstance.IntProperty = 3;
+            Assert.True(eventCalled);
+            Assert.False(eventCalled2);
+            eventCalled = false;
+
+            classInstance.IntPropertyChanged += Class_IntPropertyChanged2;
+            classInstance.IntProperty = 3;
+            Assert.True(eventCalled);
+            Assert.True(eventCalled2);
+        }
+
+        [Fact]
+        private async Task TestPnpPropertiesInLoop()
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                await TestPnpPropertiesAsync();
+            }
+        }
+
+        private async Task TestPnpPropertiesAsync()
+        {
+            var requestedDeviceProperties = new List<string>()
+                {
+                    "System.Devices.ClassGuid",
+                    "System.Devices.ContainerId",
+                    "System.Devices.DeviceHasProblem",
+                    "System.Devices.DeviceInstanceId",
+                    "System.Devices.Parent",
+                    "System.Devices.Present",
+                    "System.ItemNameDisplay",
+                    "System.Devices.Children",
+                };
+            var devicefilter = "System.Devices.Present:System.StructuredQueryType.Boolean#True";
+            var presentDevices = (await PnpObject.FindAllAsync(PnpObjectType.Device, requestedDeviceProperties, devicefilter).AsTask().ConfigureAwait(false)).Select(pnpObject => {
+                var prop = pnpObject.Properties;
+                // Iterating through each key is necessary for this test even though we do not use each key directly
+                // This makes it more probable for a native pointer to get repeated and a value type to be cached and seen again.
+                foreach (var key in prop.Keys)
+                {
+                    var val = prop[key];
+                    if (string.CompareOrdinal(key, "System.Devices.ContainerId") == 0 && val != null)
+                    {
+                        var val4 = pnpObject.Properties[key];
+                        if (val is not Guid || val4 is not Guid)
+                        {
+                            throw new Exception("Incorrect value type Guid. Actual type: " + val.GetType() + "  " + val4.GetType());
+                        }
+                    }
+                    if (string.CompareOrdinal(key, "System.Devices.Parent") == 0 && val != null)
+                    {
+                        var val4 = pnpObject.Properties[key];
+                        if (val is not string || val4 is not string)
+                        {
+                            throw new Exception("Incorrect value type string Actual type: " + val.GetType() + "  " + val4.GetType());
+                        }
+                    }
+
+                }
+                return pnpObject;
+            }).ToList();
         }
 
 #if NET
@@ -2628,50 +2766,5 @@ namespace UnitTest
             WarningStatic.WarningEvent += (object s, Int32 v) => { }; // warning CA1416
         }
 #endif
-
-        [Fact]
-        private async Task TestPnpPropertiesAsync()
-        {
-            var requestedDeviceProperties = new List<string>()
-                {
-                    "System.Devices.ClassGuid",
-                    "System.Devices.ContainerId",
-                    "System.Devices.DeviceHasProblem",
-                    "System.Devices.DeviceInstanceId",
-                    "System.Devices.Parent",
-                    "System.Devices.Present",
-                    "System.ItemNameDisplay",
-                    "System.Devices.Children",
-                };
-            var devicefilter = "System.Devices.Present:System.StructuredQueryType.Boolean#True";
-            var presentDevices = (await PnpObject.FindAllAsync(PnpObjectType.Device, requestedDeviceProperties, devicefilter).AsTask().ConfigureAwait(false)).Select(pnpObject => {
-                var prop = pnpObject.Properties;
-                // Iterating through each key is necessary for this test even though we do not use each key directly
-                // This makes it more probable for a native pointer to get repeated and a value type to be cached and seen again.
-                foreach (var key in prop.Keys)
-                {
-                    var val = prop[key];
-                    if (key == "System.Devices.ContainerId" && val != null)
-                    {
-                        var val4 = pnpObject.Properties[key];
-                        if (val is not Guid || val4 is not Guid)
-                        {
-                            throw new Exception("Incorrect value type Guid");
-                        }
-                    }
-                    if (key == "System.Devices.Parent" && val != null)
-                    {
-                        var val4 = pnpObject.Properties[key];
-                        if (val is not string || val4 is not string)
-                        {
-                            throw new Exception("Incorrect value type string");
-                        }
-                    }
-
-                }
-                return pnpObject;
-            }).ToList();
-        }
-
     }
 }

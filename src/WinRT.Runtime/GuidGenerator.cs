@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -6,7 +9,12 @@ using System.Text;
 
 namespace WinRT
 {
-    public static class GuidGenerator
+#if EMBED
+    internal
+#else 
+    public
+#endif
+    static class GuidGenerator
     {
         public static Guid GetGUID(Type type)
         {
@@ -31,7 +39,7 @@ namespace WinRT
                 var sigMethod = helperType.GetMethod("GetGuidSignature", BindingFlags.Static | BindingFlags.Public);
                 if (sigMethod != null)
                 {
-                    return (string)sigMethod.Invoke(null, new Type[] { });
+                    return (string)sigMethod.Invoke(null, null);
                 }
             }
 
@@ -121,14 +129,14 @@ namespace WinRT
                 // encode rfc clock/reserved field
                 data[8] = (byte)((data[8] & 0x3f) | 0x80);
             }
-#if NETSTANDARD2_0
+#if !NET
             return new Guid(data.Slice(0, 16).ToArray());
 #else
             return new Guid(data[0..16]);
 #endif
         }
 
-        private static Guid wrt_pinterface_namespace = new Guid("d57af411-737b-c042-abae-878b1e16adee");
+        private readonly static Guid wrt_pinterface_namespace = new(0xd57af411, 0x737b, 0xc042, 0xab, 0xae, 0x87, 0x8b, 0x1e, 0x16, 0xad, 0xee);
 
         public static Guid CreateIID(Type type)
         {
@@ -137,7 +145,7 @@ namespace WinRT
             {
                 return new Guid(sig);
             }
-#if NETSTANDARD2_0
+#if !NET
             var data = wrt_pinterface_namespace.ToByteArray().Concat(UTF8Encoding.UTF8.GetBytes(sig)).ToArray();
 #else
             var maxBytes = UTF8Encoding.UTF8.GetMaxByteCount(sig.Length);

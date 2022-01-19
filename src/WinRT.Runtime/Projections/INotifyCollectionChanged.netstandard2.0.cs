@@ -1,8 +1,9 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Text;
 using WinRT;
 using WinRT.Interop;
 
@@ -10,7 +11,12 @@ namespace ABI.System.Collections.Specialized
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), EditorBrowsable(EditorBrowsableState.Never)]
     [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
-    public unsafe class INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe class INotifyCollectionChanged : global::System.Collections.Specialized.INotifyCollectionChanged
     {
         [Guid("530155E1-28A5-5693-87CE-30724D95A06D")]
         public struct Vftbl
@@ -42,8 +48,13 @@ namespace ABI.System.Collections.Specialized
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-            private readonly static Lazy<global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.Collections.Specialized.INotifyCollectionChanged, global::WinRT.EventRegistrationTokenTable<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>>> _CollectionChanged_TokenTablesLazy = new();
-            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.Collections.Specialized.INotifyCollectionChanged, global::WinRT.EventRegistrationTokenTable<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>> _CollectionChanged_TokenTables => _CollectionChanged_TokenTablesLazy.Value;
+            private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.Collections.Specialized.INotifyCollectionChanged, global::WinRT.EventRegistrationTokenTable<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>> _collectionChanged_TokenTables;
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.Collections.Specialized.INotifyCollectionChanged, global::WinRT.EventRegistrationTokenTable<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>> MakeConditionalWeakTable()
+            {
+                global::System.Threading.Interlocked.CompareExchange(ref _collectionChanged_TokenTables, new(), null);
+                return _collectionChanged_TokenTables;
+            }
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.Collections.Specialized.INotifyCollectionChanged, global::WinRT.EventRegistrationTokenTable<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>> _CollectionChanged_TokenTables => _collectionChanged_TokenTables ?? MakeConditionalWeakTable();
 
             private static unsafe int Do_Abi_add_CollectionChanged_0(IntPtr thisPtr, IntPtr handler, out global::WinRT.EventRegistrationToken token)
             {

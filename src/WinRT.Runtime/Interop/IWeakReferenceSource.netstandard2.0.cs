@@ -1,25 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace WinRT.Interop
 {
     [WindowsRuntimeType]
     [Guid("00000038-0000-0000-C000-000000000046")]
-    public interface IWeakReferenceSource
+#if EMBED
+    internal
+#else
+    public
+#endif
+    interface IWeakReferenceSource
     {
         IWeakReference GetWeakReference();
     }
 
     [WindowsRuntimeType]
     [Guid("00000037-0000-0000-C000-000000000046")]
-    public interface IWeakReference
+#if EMBED
+    internal
+#else
+    public
+#endif 
+    interface IWeakReference
     {
         IObjectReference Resolve(Guid riid);
     }
 
-    internal class ManagedWeakReference : IWeakReference
+    internal sealed class ManagedWeakReference : IWeakReference
     {
         private WeakReference<object> _ref;
         public ManagedWeakReference(object obj)
@@ -34,10 +45,7 @@ namespace WinRT.Interop
                 return null;
             }
 
-            using (IObjectReference objReference = ComWrappersSupport.CreateCCWForObject(target))
-            {
-                return objReference.As(riid);
-            }
+            return ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(target, riid);
         }
     }
 }
@@ -46,7 +54,6 @@ namespace WinRT.Interop
 namespace ABI.WinRT.Interop
 {
     using global::WinRT;
-    using WinRT.Interop;
 
     [Guid("00000038-0000-0000-C000-000000000046")]
     internal unsafe class IWeakReferenceSource : global::WinRT.Interop.IWeakReferenceSource
@@ -90,6 +97,8 @@ namespace ABI.WinRT.Interop
             }
         }
 
+        internal static readonly Guid IID = new(0x00000038, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+        public static IntPtr AbiToProjectionVftablePtr => Vftbl.AbiToProjectionVftablePtr;
         public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
         public static implicit operator IWeakReferenceSource(IObjectReference obj) => (obj != null) ? new IWeakReferenceSource(obj) : null;

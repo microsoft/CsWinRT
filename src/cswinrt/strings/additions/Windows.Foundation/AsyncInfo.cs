@@ -15,10 +15,15 @@ namespace System.Runtime.InteropServices.WindowsRuntime
     /// When an asynchronous operation created by this factory is actually started (by calling <code>Start()</code>),
     /// the specified <code>Task</code>-provider delegate will be invoked to create the <code>Task</code> that will
     /// be wrapped by the to-WinRT adapter.</p> </summary>
-#if !NETSTANDARD2_0
+#if NET
     [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
-    public static class AsyncInfo
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class AsyncInfo
     {
         #region Factory methods for creating "normal" IAsyncInfo instances backed by a Task created by a pastProvider delegate
 

@@ -1,18 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Linq;
 using WinRT;
-using WinRT.Interop;
 
 namespace ABI.System.ComponentModel
 {
     [DynamicInterfaceCastableImplementation]
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
-    public unsafe interface INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
+#if EMBED
+    internal
+#else
+    public 
+#endif 
+    unsafe interface INotifyDataErrorInfo : global::System.ComponentModel.INotifyDataErrorInfo
     {
         [Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
         public struct Vftbl
@@ -82,8 +87,16 @@ namespace ABI.System.ComponentModel
                 }
                 return 0;
             }
-            private readonly static Lazy<global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>>> _ErrorsChanged_TokenTablesLazy = new();
-            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTables => _ErrorsChanged_TokenTablesLazy.Value;
+            
+            private volatile static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTablesLazy = null;
+            
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> MakeConditionalWeakTable()
+            {
+                global::System.Threading.Interlocked.CompareExchange(ref _ErrorsChanged_TokenTablesLazy, new(), null);
+                return _ErrorsChanged_TokenTablesLazy;
+            }
+            
+            private static global::System.Runtime.CompilerServices.ConditionalWeakTable<global::System.ComponentModel.INotifyDataErrorInfo, global::WinRT.EventRegistrationTokenTable<global::System.EventHandler<global::System.ComponentModel.DataErrorsChangedEventArgs>>> _ErrorsChanged_TokenTables => _ErrorsChanged_TokenTablesLazy ?? MakeConditionalWeakTable();
 
             [UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvStdcall)})]
             private static unsafe int Do_Abi_add_ErrorsChanged_1(IntPtr thisPtr, IntPtr handler, global::WinRT.EventRegistrationToken* token)
@@ -138,17 +151,18 @@ namespace ABI.System.ComponentModel
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.ComponentModel.INotifyDataErrorInfo).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
-            MarshalString __propertyName = default;
             IntPtr __retval = default;
             try
             {
-                __propertyName = MarshalString.CreateMarshaler(propertyName);
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetErrors_3(ThisPtr, MarshalString.GetAbi(__propertyName), &__retval));
-                return (global::ABI.System.Collections.Generic.IEnumerable<object>)(object)IInspectable.FromAbi(__retval);
+                MarshalString.Pinnable __propertyName = new(propertyName);
+                fixed (void* ___propertyName = __propertyName)
+                {
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetErrors_3(ThisPtr, MarshalString.GetAbi(ref __propertyName), &__retval));
+                    return (global::ABI.System.Collections.Generic.IEnumerable<object>)(object)IInspectable.FromAbi(__retval);
+                }
             }
             finally
             {
-                MarshalString.DisposeMarshaler(__propertyName);
                 global::ABI.System.Collections.Generic.IEnumerable<object>.DisposeAbi(__retval);
             }
         }

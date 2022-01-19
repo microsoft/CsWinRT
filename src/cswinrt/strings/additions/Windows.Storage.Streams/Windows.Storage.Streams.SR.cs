@@ -4,7 +4,7 @@
 
 namespace Windows.Storage.Streams
 {
-    class SR
+    static class SR
     {
         public static string Argument_BufferIndexExceedsCapacity = "The specified buffer index is not within the buffer capacity.";
 

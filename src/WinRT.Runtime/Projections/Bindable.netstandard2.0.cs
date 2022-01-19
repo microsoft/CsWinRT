@@ -1,14 +1,11 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using Microsoft.UI.Xaml.Interop;
 using WinRT;
-using WinRT.Interop;
 
 
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
@@ -403,13 +400,18 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
 namespace ABI.System.Collections
 {
+    using global::Microsoft.UI.Xaml.Interop;
     using global::System;
     using global::System.Runtime.CompilerServices;
-    using global::Microsoft.UI.Xaml.Interop;
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F")]
-    public unsafe class IEnumerable : global::System.Collections.IEnumerable, IBindableIterable
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe class IEnumerable : global::System.Collections.IEnumerable, IBindableIterable
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable));
 
@@ -551,14 +553,24 @@ namespace ABI.System.Collections
         public IEnumerator GetEnumerator() => _FromIterable.GetEnumerator();
     }
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    public static class IEnumerable_Delegates
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IEnumerable_Delegates
     {
         public unsafe delegate int First_0(IntPtr thisPtr, IntPtr* result);
     }
 
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj))]
     [Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93")]
-    public unsafe class IList : global::System.Collections.IList
+#if EMBED
+    internal
+#else
+    public
+#endif 
+    unsafe class IList : global::System.Collections.IList
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IList));
 

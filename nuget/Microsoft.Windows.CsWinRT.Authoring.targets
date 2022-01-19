@@ -16,6 +16,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTDetectDependentAuthoringWinMDs Condition="'$(CsWinRTDetectDependentAuthoringWinMDs)'==''">true</CsWinRTDetectDependentAuthoringWinMDs>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <CsWinRTAuthoring_Platform Condition="'$(Platform)'=='AnyCPU'">x86</CsWinRTAuthoring_Platform>
+    <CsWinRTAuthoring_Platform Condition="'$(Platform)'!='AnyCPU'">$(Platform)</CsWinRTAuthoring_Platform>
+  </PropertyGroup>
+
   <ItemGroup>
     <CompilerVisibleProperty Include="AssemblyName" />
     <CompilerVisibleProperty Include="AssemblyVersion" />
@@ -67,13 +72,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
 
-    <None Condition="Exists('$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll')" 
-          Include="$(CsWinRTPath)runtimes\win-$(Platform)\native\WinRT.Host.dll">
+    <None Condition="Exists('$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll')" 
+          Include="$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll">
       <TargetPath>WinRT.Host.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  
-  </ItemGroup>
+
+ </ItemGroup>
 
   <!-- Add the RuntimeConfig to output of project reference consumers -->
   <Target Name="CsWinRTAuthoring_AddRuntimeDependenciesToContent" 
@@ -96,16 +101,46 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   
   </Target>
 
-  <Target Name="GetTargetPath" Returns="@(TargetPathWithTargetPlatformMoniker)">
+  <!-- Because we remove this .dll during GetTargetPath, we have to make sure it gets placed in the output directory -->
+  <Target Name="CsWinRTAuthoring_OutputManagedDll" DependsOnTargets="GetTargetPathWithTargetPlatformMoniker" BeforeTargets="GetTargetPath">
     
+    <ItemGroup> 
+      <AllItemsFullPathWithTargetPath Include="@(TargetPathWithTargetPlatformMoniker)">
+        <TargetPath>%(Filename)%(Extension)</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </AllItemsFullPathWithTargetPath>
+
+      <AllPublishItemsFullPathWithTargetPath Include="@(TargetPathWithTargetPlatformMoniker)">
+        <TargetPath>%(Filename)%(Extension)</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> 
+      </AllPublishItemsFullPathWithTargetPath>
+    </ItemGroup>
+
+  </Target>
+
+  <!-- Update the project to only output the assembly's .winmd -->
+  <Target Name="GetTargetPath" DependsOnTargets="CsWinRTAuthoring_OutputManagedDll" Returns="@(TargetPathWithTargetPlatformMoniker)">
     <ItemGroup>
-    
+      <CsWinRTComponent_ManagedImplementation Include="@(TargetPathWithTargetPlatformMoniker)">
+        <TargetPath>%(FullPath)</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> 
+      </CsWinRTComponent_ManagedImplementation>
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- Clear the .dll -->
+      <TargetPathWithTargetPlatformMoniker Remove="@(TargetPathWithTargetPlatformMoniker)" />
+      <!-- Add the .winmd -->
       <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)$(AssemblyName).winmd">
-        <BuildReference>true</BuildReference>
-        <WinMDFile>true</WinMDFile>
+        <!-- implementation is NOT $(AssemblyName).dll -->
         <Implementation>WinRT.Host.dll</Implementation>
-        <ResolveableAssembly>false</ResolveableAssembly>
+        <!-- show to c++ compiler (native case) and dotnet sdk (managed case) -->
+        <ResolveableAssembly>true</ResolveableAssembly>
+        <!-- Used by the dotnet sdk -->
+        <ManagedImplementation>%(CsWinRTComponent_ManagedImplementation.TargetPath)</ManagedImplementation>
         <FileType>winmd</FileType>
+        <WinMDFile>true</WinMDFile>
+        <BuildReference>true</BuildReference>
         <Primary>true</Primary>
       </TargetPathWithTargetPlatformMoniker>
     
@@ -138,7 +173,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
       <!-- Local item group to store the SDK.NET.dll -->
       <CsWinRTSDKRefDll Include="@(RuntimePackAsset)" Condition="'%(RuntimePackAsset.DestinationSubPath)' == 'Microsoft.Windows.SDK.NET.dll'" />
-      <!-- Use the below item group to package up managed DLLs from one source -->
+      <!-- the target "CsWinRTIncludeHostDlls" uses the item group CsWinRTAuthoringDependencyDlls
+            as a source for all managed DLLS that need to be packaged -->
       <CsWinRTAuthoringDependencyDlls Include="@(CsWinRTSDKRefDll)" />
       <!-- Make sure it is copied out -->
       <_ThisProjectItemstoCopyToOutputDirectory Include="@(CsWinRTSDKRefDll)">

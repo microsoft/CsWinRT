@@ -1,14 +1,12 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using Microsoft.UI.Xaml.Interop;
 using WinRT;
-using WinRT.Interop;
 
 
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
@@ -414,9 +412,9 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
 namespace ABI.System.Collections
 {
+    using global::Microsoft.UI.Xaml.Interop;
     using global::System;
     using global::System.Runtime.CompilerServices;
-    using global::Microsoft.UI.Xaml.Interop;
 
     [DynamicInterfaceCastableImplementation]
     [Guid("036D2C08-DF29-41AF-8AA2-D774BE62BA6F")]
@@ -424,7 +422,7 @@ namespace ABI.System.Collections
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable));
 
-        public class AdaptiveFromAbiHelper : FromAbiHelper, global::System.Collections.IEnumerable
+        public sealed class AdaptiveFromAbiHelper : FromAbiHelper, global::System.Collections.IEnumerable
         {
             private readonly Func<IWinRTObject, global::System.Collections.IEnumerator> _enumerator;
 
@@ -482,7 +480,7 @@ namespace ABI.System.Collections
             }
         }
 
-        public class ToAbiHelper : IBindableIterable
+        public sealed class ToAbiHelper : IBindableIterable
         {
             private readonly IEnumerable m_enumerable;
 
@@ -598,7 +596,7 @@ namespace ABI.System.Collections
     {
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IList));
 
-        public class FromAbiHelper : global::System.Collections.IList
+        public sealed class FromAbiHelper : global::System.Collections.IList
         {
             private readonly global::Microsoft.UI.Xaml.Interop.IBindableVector _vector;
 

@@ -1,13 +1,14 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
-using System.Diagnostics;
 
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
 #pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
@@ -15,6 +16,9 @@ using System.Diagnostics;
 namespace Windows.Foundation.Collections
 {
     [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
+#if EMBED
+    internal
+#endif
     interface IMapView<K, V> : IIterable<IKeyValuePair<K, V>>
     {
         V Lookup(K key);
@@ -30,10 +34,15 @@ namespace ABI.System.Collections.Generic
     using global::System.Runtime.CompilerServices;
 
     [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
-    public class IReadOnlyDictionary<K, V> : global::System.Collections.Generic.IReadOnlyDictionary<K, V>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class IReadOnlyDictionary<K, V> : global::System.Collections.Generic.IReadOnlyDictionary<K, V>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IReadOnlyDictionary<K, V> obj) =>
-            obj is null ? null : ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IReadOnlyDictionary<K, V>)));
+            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, GuidGenerator.GetIID(typeof(IReadOnlyDictionary<K, V>)));
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
@@ -311,7 +320,7 @@ namespace ABI.System.Collections.Generic
 
             private sealed class ConstantSplittableMap : global::Windows.Foundation.Collections.IMapView<K, V>, global::System.Collections.Generic.IReadOnlyDictionary<K, V>
             {
-                private class KeyValuePairComparator : IComparer<global::System.Collections.Generic.KeyValuePair<K, V>>
+                private sealed class KeyValuePairComparator : IComparer<global::System.Collections.Generic.KeyValuePair<K, V>>
                 {
                     private static readonly IComparer<K> keyComparator = Comparer<K>.Default;
 
@@ -723,7 +732,13 @@ namespace ABI.System.Collections.Generic
         public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator() => _FromMapView.GetEnumerator();
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
-    public static class IReadOnlyDictionary_Delegates
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IReadOnlyDictionary_Delegates
     {
         public unsafe delegate int Split_3(IntPtr thisPtr, out IntPtr first, out IntPtr second);
     }

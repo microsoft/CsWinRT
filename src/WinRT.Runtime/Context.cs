@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Runtime.InteropServices;
 using WinRT.Interop;
 
@@ -12,7 +15,7 @@ namespace WinRT
         [DllImport("api-ms-win-core-com-l1-1-0.dll")]
         private static extern int CoGetObjectContext(ref Guid riid, out IntPtr ppv);
 
-        private static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = Guid.Parse("0A299774-3E4E-FC42-1D9D-72CEE105CA57");
+        private static readonly Guid IID_ICallbackWithNoReentrancyToApplicationSTA = new(0x0A299774, 0x3E4E, 0xFC42, 0x1D, 0x9D, 0x72, 0xCE, 0xE1, 0x05, 0xCA, 0x57);
 
         public static IntPtr GetContextCallback()
         {
@@ -60,7 +63,7 @@ namespace WinRT
 
         public static void DisposeContextCallback(IntPtr contextCallbackPtr)
         {
-            using var contextcallback = ObjectReference<ABI.WinRT.Interop.IContextCallback.Vftbl>.Attach(ref contextCallbackPtr);
+            MarshalInspectable<object>.DisposeAbi(contextCallbackPtr);
         }
     }
 }

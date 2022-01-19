@@ -1,17 +1,25 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
 
 namespace Windows.Foundation
 {
-    internal class SR
+    internal static class GSR
     {
         public static string ArgumentOutOfRange_NeedNonNegNum = "Non-negative number required.";
     }
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Point : IFormattable
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    struct Point : IFormattable
     {
         public float _x;
         public float _y;
@@ -98,7 +106,12 @@ namespace Windows.Foundation
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Rect : IFormattable
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    struct Rect : IFormattable
     {
         public float _x;
         public float _y;
@@ -118,9 +131,9 @@ namespace Windows.Foundation
                     float height)
         {
             if (width < 0)
-                throw new ArgumentOutOfRangeException(nameof(width), SR.ArgumentOutOfRange_NeedNonNegNum);
+                throw new ArgumentOutOfRangeException(nameof(width), GSR.ArgumentOutOfRange_NeedNonNegNum);
             if (height < 0)
-                throw new ArgumentOutOfRangeException(nameof(height), SR.ArgumentOutOfRange_NeedNonNegNum);
+                throw new ArgumentOutOfRangeException(nameof(height), GSR.ArgumentOutOfRange_NeedNonNegNum);
 
             _x = x;
             _y = y;
@@ -176,7 +189,7 @@ namespace Windows.Foundation
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(Width), SR.ArgumentOutOfRange_NeedNonNegNum);
+                    throw new ArgumentOutOfRangeException(nameof(Width), GSR.ArgumentOutOfRange_NeedNonNegNum);
 
                 _width = (float)value;
             }
@@ -188,7 +201,7 @@ namespace Windows.Foundation
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(Height), SR.ArgumentOutOfRange_NeedNonNegNum);
+                    throw new ArgumentOutOfRangeException(nameof(Height), GSR.ArgumentOutOfRange_NeedNonNegNum);
 
                 _height = (float)value;
             }
@@ -417,7 +430,12 @@ namespace Windows.Foundation
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
     [StructLayout(LayoutKind.Sequential)]
-    public struct Size
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    struct Size
     {
         public float _width;
         public float _height;
@@ -427,9 +445,9 @@ namespace Windows.Foundation
         public Size(float width, float height)
         {
             if (width < 0)
-                throw new ArgumentOutOfRangeException(nameof(width), SR.ArgumentOutOfRange_NeedNonNegNum);
+                throw new ArgumentOutOfRangeException(nameof(width), GSR.ArgumentOutOfRange_NeedNonNegNum);
             if (height < 0)
-                throw new ArgumentOutOfRangeException(nameof(height), SR.ArgumentOutOfRange_NeedNonNegNum);
+                throw new ArgumentOutOfRangeException(nameof(height), GSR.ArgumentOutOfRange_NeedNonNegNum);
             _width = width;
             _height = height;
         }
@@ -442,7 +460,7 @@ namespace Windows.Foundation
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(Width), SR.ArgumentOutOfRange_NeedNonNegNum);
+                    throw new ArgumentOutOfRangeException(nameof(Width), GSR.ArgumentOutOfRange_NeedNonNegNum);
 
                 _width = (float)value;
             }
@@ -454,7 +472,7 @@ namespace Windows.Foundation
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(Height), SR.ArgumentOutOfRange_NeedNonNegNum);
+                    throw new ArgumentOutOfRangeException(nameof(Height), GSR.ArgumentOutOfRange_NeedNonNegNum);
 
                 _height = (float)value;
             }
@@ -540,7 +558,12 @@ namespace Windows.Foundation
         }
     }
 
-    public static class TokenizerHelper
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    static class TokenizerHelper
     {
         public static char GetNumericListSeparator(IFormatProvider provider)
         {
@@ -565,7 +588,12 @@ namespace Windows.Foundation
 
 namespace ABI.Windows.Foundation
 {
-    public static class Point
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    static class Point
     {
         public static string GetGuidSignature()
         {
@@ -573,7 +601,12 @@ namespace ABI.Windows.Foundation
         }
     }
 
-    public static class Rect
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    static class Rect
     {
         public static string GetGuidSignature()
         {
@@ -581,7 +614,12 @@ namespace ABI.Windows.Foundation
         }
     }
 
-    public static class Size
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    static class Size
     {
         public static string GetGuidSignature()
         {
@@ -592,7 +630,12 @@ namespace ABI.Windows.Foundation
 
 namespace System.Numerics
 {
-    public static class VectorExtensions
+#if EMBED
+    internal
+#else
+    public 
+#endif
+    static class VectorExtensions
     {
         public static global::Windows.Foundation.Point ToPoint(this Vector2 vector)
         {

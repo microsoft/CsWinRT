@@ -1,14 +1,13 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WinRT;
-using WinRT.Interop;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
 #pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
@@ -28,7 +27,12 @@ namespace ABI.System.Collections.Generic
     using global::System;
 
     [Guid("02B51929-C1C4-4A7E-8940-0312B5C18500")]
-    public class KeyValuePair<K, V> : global::Windows.Foundation.Collections.IKeyValuePair<K, V>
+#if EMBED
+    internal
+#else
+    public
+#endif 
+    class KeyValuePair<K, V> : global::Windows.Foundation.Collections.IKeyValuePair<K, V>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.KeyValuePair<K, V> obj) =>
             MarshalInterface<global::System.Collections.Generic.KeyValuePair<K, V>>.CreateMarshaler(obj);

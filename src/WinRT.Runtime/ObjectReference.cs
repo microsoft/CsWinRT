@@ -1,10 +1,11 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using WinRT.Interop;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
@@ -12,7 +13,13 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    public abstract class IObjectReference : IDisposable
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    abstract class IObjectReference : IDisposable
     {
         protected bool disposed;
         private readonly IntPtr _thisPtr;
@@ -140,7 +147,7 @@ namespace WinRT
                 }
             }
 
-#if NETSTANDARD2_0
+#if !NET
             return (TInterface)typeof(TInterface).GetHelperType().GetConstructor(new[] { typeof(IObjectReference) }).Invoke(new object[] { this });
 #else
             return (TInterface)(object)new WinRT.IInspectable(this);
@@ -355,7 +362,12 @@ namespace WinRT
         }
     }
 
-    public class ObjectReference<T> : IObjectReference
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class ObjectReference<T> : IObjectReference
     {
         private readonly T _vftbl;
         public T Vftbl
@@ -421,7 +433,7 @@ namespace WinRT
             // Since it is a JIT time constant, this function will be branchless on .NET 5.
             // On .NET Standard 2.0, the IsReferenceOrContainsReferences method does not exist,
             // so we instead fall back to typeof(T).IsGenericType, which sadly is not a JIT-time constant.
-#if NETSTANDARD2_0
+#if !NET
             if (typeof(T).IsGenericType)
 #else
             if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
@@ -442,7 +454,7 @@ namespace WinRT
         }
     }
 
-    internal class ObjectReferenceWithContext<T> : ObjectReference<T>
+    internal sealed class ObjectReferenceWithContext<T> : ObjectReference<T>
     {
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;
@@ -468,13 +480,23 @@ namespace WinRT
             });
         }
 
-        internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken, Lazy<AgileReference> agileReference, Guid iid)
+        internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
             : base(thisPtr)
         {
             _contextCallbackPtr = contextCallbackPtr;
             _contextToken = contextToken;
             _cachedContext = new Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>>();
-            _agileReference = agileReference;
+            _agileReference = new Lazy<AgileReference>(() => {
+                AgileReference agileReference = null;
+                Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
+                return agileReference;
+
+                void InitAgileReference()
+                {
+                    agileReference = new AgileReference(this);
+                }
+            });
+
             _iid = iid;
         }
 
@@ -560,7 +582,7 @@ namespace WinRT
                 }
                 AddRefFromTrackerSource();
 
-                objRef = new ObjectReferenceWithContext<U>(thatPtr, Context.GetContextCallback(), Context.GetContextToken(), _agileReference, iid)
+                objRef = new ObjectReferenceWithContext<U>(thatPtr, Context.GetContextCallback(), Context.GetContextToken(), iid)
                 {
                     IsAggregated = IsAggregated,
                     PreventReleaseOnDispose = IsAggregated,

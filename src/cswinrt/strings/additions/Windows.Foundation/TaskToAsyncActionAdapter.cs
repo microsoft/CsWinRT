@@ -11,10 +11,10 @@ namespace System.Threading.Tasks
     using System.Threading.Tasks;
     using global::Windows.Foundation;
 
-#if !NETSTANDARD2_0
+#if NET
     [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
-    internal class TaskToAsyncActionAdapter
+    internal sealed class TaskToAsyncActionAdapter
                         : TaskToAsyncInfoAdapter<AsyncActionCompletedHandler, VoidReferenceTypeParameter, VoidValueTypeParameter, VoidValueTypeParameter>,
                           IAsyncAction
     {
@@ -41,7 +41,7 @@ namespace System.Threading.Tasks
         }
 
 
-        public virtual void GetResults()
+        public void GetResults()
         {
             GetResultsInternal();
         }

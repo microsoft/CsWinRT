@@ -4,6 +4,7 @@ using WinRT.SourceGenerator;
 using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace DiagnosticTests
 {
@@ -20,7 +21,7 @@ namespace DiagnosticTests
             Compilation compilation = CreateCompilation(source);
             RunGenerators(compilation, out var diagnosticsFound,  new Generator.SourceGenerator());
             
-            var WinRTDiagnostics = diagnosticsFound.Where(diag => diag.Id.StartsWith("CsWinRT"));
+            var WinRTDiagnostics = diagnosticsFound.Where(diag => diag.Id.StartsWith("CsWinRT", StringComparison.Ordinal));
             if (WinRTDiagnostics.Any())
             {
                 string foundDiagnostics = "";

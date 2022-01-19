@@ -195,6 +195,7 @@ namespace TestComponentCSharp
         Int32 IntProperty;
         event Windows.Foundation.EventHandler<Int32> IntPropertyChanged;
         void RaiseIntChanged();
+        void RemoveLastIntPropertyChangedHandler();
         void CallForInt(ProvideInt provideInt);
 
         Boolean BoolProperty;
@@ -537,6 +538,12 @@ And this is another one"
       void f();
     }
 
+    [attr_string("a string with embedded quotes, like the string \"quotes\"")]
+    runtimeclass EmbeddedQuotesTest
+    {
+        void f();
+    }
+
     // Compile time test for sub windows namespace
     namespace Windows
     {
@@ -561,5 +568,15 @@ And this is another one"
         attribute Warning2Attribute
         {
         };
+    }
+
+    namespace AnotherAssembly
+    {
+        [default_interface]
+        runtimeclass SetPropertyClass : TestComponentCSharp.IProperties1
+        {
+            SetPropertyClass();
+            Int32 ReadWriteProperty{ set; };
+        }
     }
 }

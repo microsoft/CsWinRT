@@ -1,17 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Linq;
 using WinRT;
-using WinRT.Interop;
 
 namespace ABI.System
 {
     [global::WinRT.ObjectReferenceWrapper(nameof(_obj)), global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     [Guid("68B3A2DF-8173-539F-B524-C8A2348F5AFB")]
-    public unsafe class IServiceProvider : global::System.IServiceProvider
+#if EMBED
+    internal
+#else
+    public
+#endif
+    unsafe class IServiceProvider : global::System.IServiceProvider
     {
         [Guid("68B3A2DF-8173-539F-B524-C8A2348F5AFB")]
         public struct Vftbl

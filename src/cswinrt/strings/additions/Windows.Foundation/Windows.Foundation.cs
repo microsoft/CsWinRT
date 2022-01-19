@@ -11,7 +11,12 @@ namespace System
 #if NET
     [global::System.Runtime.Versioning.SupportedOSPlatform("windows10.0.10240.0")]
 #endif
-    public static class WindowsRuntimeSystemExtensions
+#if EMBED
+    internal
+#else 
+    public 
+#endif 
+    static class WindowsRuntimeSystemExtensions
     {
         public static Task AsTask(this IAsyncAction source, CancellationToken cancellationToken)
         {
@@ -333,82 +338,70 @@ namespace System
                 }
                 ctr.Dispose();
 
-                try
+                if (asyncStatus != AsyncStatus.Completed && asyncStatus != AsyncStatus.Canceled && asyncStatus != AsyncStatus.Error)
                 {
-                    if (asyncStatus != AsyncStatus.Completed && asyncStatus != AsyncStatus.Canceled && asyncStatus != AsyncStatus.Error)
-                    {
-                        Debug.Fail("The async operation should be in a terminal state.");
-                        throw new InvalidOperationException("The asynchronous operation could not be completed.");
-                    }
-
-                    TResult result = default(TResult);
-                    Exception error = null;
-                    if (asyncStatus == AsyncStatus.Error)
-                    {
-                        error = asyncInfo.ErrorCode;
-
-                        // Defend against a faulty IAsyncInfo implementation
-                        if (error is null)
-                        {
-                            Debug.Fail("IAsyncInfo.Status == Error, but ErrorCode returns a null Exception (implying S_OK).");
-                            error = new InvalidOperationException("The asynchronous operation could not be completed.");
-                        }
-                    }
-                    else if (asyncStatus == AsyncStatus.Completed && getResultsFunction != null)
-                    {
-                        try
-                        {
-                            result = getResultsFunction(asyncInfo);
-                        }
-                        catch (Exception resultsEx)
-                        {
-                            // According to the WinRT team, this can happen in some egde cases, such as marshalling errors in GetResults.
-                            error = resultsEx;
-                            asyncStatus = AsyncStatus.Error;
-                        }
-                    }
-
-                    // Complete the task based on the previously retrieved results:
-                    bool success = false;
-                    switch (asyncStatus)
-                    {
-                        case AsyncStatus.Completed:
-                            // TODO: AsyncCausality?
-                            success = base.TrySetResult(result);
-                            break;
-
-                        case AsyncStatus.Error:
-                            Debug.Assert(error != null, "The error should have been retrieved previously.");
-                            success = base.TrySetException(error);
-                            break;
-
-                        case AsyncStatus.Canceled:
-                            success = base.TrySetCanceled(_ct.IsCancellationRequested ? _ct : new CancellationToken(true));
-                            break;
-                    }
-
-                    Debug.Assert(success, "Expected the outcome to be successfully transfered to the task.");
+                    Debug.Fail("The async operation should be in a terminal state.");
+                    throw new InvalidOperationException("The asynchronous operation could not be completed.");
                 }
-                catch (Exception exc)
+
+                TResult result = default(TResult);
+                Exception error = null;
+                if (asyncStatus == AsyncStatus.Error)
                 {
-                    Debug.Fail($"Unexpected exception in Complete: {exc}");
+                    error = asyncInfo.ErrorCode;
 
-                    // TODO: AsyncCausality
-
-                    if (!base.TrySetException(exc))
+                    // Defend against a faulty IAsyncInfo implementation
+                    if (error is null)
                     {
-                        Debug.Fail("The task was already completed and thus the exception couldn't be stored.");
-                        throw;
+                        Debug.Fail("IAsyncInfo.Status == Error, but ErrorCode returns a null Exception (implying S_OK).");
+                        error = new InvalidOperationException("The asynchronous operation could not be completed.");
                     }
                 }
+                else if (asyncStatus == AsyncStatus.Completed && getResultsFunction != null)
+                {
+                    try
+                    {
+                        result = getResultsFunction(asyncInfo);
+                    }
+                    catch (Exception resultsEx)
+                    {
+                        // According to the WinRT team, this can happen in some egde cases, such as marshalling errors in GetResults.
+                        error = resultsEx;
+                        asyncStatus = AsyncStatus.Error;
+                    }
+                }
+
+                // Complete the task based on the previously retrieved results:
+                bool success = false;
+                switch (asyncStatus)
+                {
+                    case AsyncStatus.Completed:
+                        // TODO: AsyncCausality?
+                        success = base.TrySetResult(result);
+                        break;
+
+                    case AsyncStatus.Error:
+                        Debug.Assert(error != null, "The error should have been retrieved previously.");
+                        success = base.TrySetException(error);
+                        break;
+
+                    case AsyncStatus.Canceled:
+                        success = base.TrySetCanceled(_ct.IsCancellationRequested ? _ct : new CancellationToken(true));
+                        break;
+                }
+
+                Debug.Assert(success, "Expected the outcome to be successfully transfered to the task.");
             }
-            finally
+            catch (Exception exc)
             {
-                // We may be called on an STA thread which we don't own, so make sure that the RCW is released right
-                // away. Otherwise, if we leave it up to the finalizer, the apartment may already be gone.
-                if (ComWrappersSupport.TryUnwrapObject(asyncInfo, out var objRef))
+                Debug.Fail($"Unexpected exception in Complete: {exc}");
+
+                // TODO: AsyncCausality
+
+                if (!base.TrySetException(exc))
                 {
-                    objRef.Dispose();
+                    Debug.Fail("The task was already completed and thus the exception couldn't be stored.");
+                    throw;
                 }
             }
         }

@@ -35,6 +35,7 @@ namespace cswinrt
         { "target", 0, 1, "<net6.0|net5.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with newest TFM (net5.0)." },
         { "component", 0, 0, {}, "Generate component projection." },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
+        { "embedded", 0, 0, {}, "Generate the projection as internal."},
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
     };
@@ -84,6 +85,7 @@ Where <spec> is one or more of:
             throw usage_exception{};
         }
 
+
         settings.verbose = args.exists("verbose");
         auto target = args.value("target");
         if (!target.empty() && target != "netstandard2.0" && !starts_with(target, "net5.0") && !starts_with(target, "net6.0"))
@@ -92,6 +94,7 @@ Where <spec> is one or more of:
         }
         settings.netstandard_compat = target == "netstandard2.0";
         settings.component = args.exists("component");
+        settings.embedded = args.exists("embedded");
         settings.input = args.files("input", database::is_database);
 
         for (auto && include : args.values("include"))
@@ -277,7 +280,8 @@ Where <spec> is one or more of:
                                             write_abi_interface_netstandard(w, type);
                                         }
                                         else
-                                        {
+                                        {   
+                                            write_static_abi_classes(w, type);
                                             write_abi_interface(w, type);
                                         }
                                         break;

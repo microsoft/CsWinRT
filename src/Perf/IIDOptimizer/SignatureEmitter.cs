@@ -196,7 +196,7 @@ namespace GuidPatch
             var systemType = module.ImportReference(
                 new TypeReference("System", "Type", module, module.TypeSystem.CoreLibrary));
 
-            var getTypeFromHandleMethod = module.ImportReference(systemType.Resolve().Methods.First(m => m.Name == "GetTypeFromHandle"));
+            var getTypeFromHandleMethod = module.ImportReference(systemType.Resolve().Methods.First(m => string.CompareOrdinal(m.Name, "GetTypeFromHandle") == 0));
             var getSignatureMethod = module.ImportReference(
                 new MethodReference("GetSignature", module.TypeSystem.String, guidGeneratorType)
                 {

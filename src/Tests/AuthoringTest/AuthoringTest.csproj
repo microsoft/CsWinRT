@@ -10,13 +10,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.ApplicationModel.Resources.winmd" />
-    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.Foundation.winmd" />
-    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.Graphics.winmd" />
-    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.System.winmd" />
-    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.UI.Text.winmd" />
-    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.UI.winmd" />
-    <CsWinRTAuthoringWinMDs Include="$(NuGetPackageRoot)\microsoft.winui\3.0.0-preview3.201113.0\lib\uap10.0\Microsoft.Web.WebView2.Core.winmd" />
+    <PackageReference Include="Microsoft.WinUI" Version="[$(MicrosoftWinUIVersion)]" GeneratePathProperty="true">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
+    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WinUI)\lib\uap10.0\Microsoft.ApplicationModel.Resources.winmd" />
+    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WinUI)\lib\uap10.0\Microsoft.Foundation.winmd" />
+    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WinUI)\lib\uap10.0\Microsoft.Graphics.winmd" />
+    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WinUI)\lib\uap10.0\Microsoft.System.winmd" />
+    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WinUI)\lib\uap10.0\Microsoft.UI.Text.winmd" />
+    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WinUI)\lib\uap10.0\Microsoft.UI.winmd" />
+    <CsWinRTAuthoringWinMDs Include="$(PkgMicrosoft_WinUI)\lib\uap10.0\Microsoft.Web.WebView2.Core.winmd" />
   </ItemGroup>
   
   <ItemGroup>    

@@ -1,13 +1,16 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
-using System.Diagnostics;
 
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
 #pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
@@ -33,10 +36,15 @@ namespace ABI.System.Collections.Generic
     using global::System.Runtime.CompilerServices;
 
     [Guid("3C2925FE-8519-45C1-AA79-197B6718C1C1")]
-    public class IDictionary<K, V> : global::System.Collections.Generic.IDictionary<K, V>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class IDictionary<K, V> : global::System.Collections.Generic.IDictionary<K, V>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IDictionary<K, V> obj) =>
-            obj is null ? null : ComWrappersSupport.CreateCCWForObject(obj).As<Vftbl>(GuidGenerator.GetIID(typeof(IDictionary<K, V>)));
+            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, GuidGenerator.GetIID(typeof(IDictionary<K, V>)));
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
@@ -833,7 +841,12 @@ namespace ABI.System.Collections.Generic
         public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator() => _FromMap.GetEnumerator();
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
-    public static class IDictionary_Delegates
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IDictionary_Delegates
     {
         public unsafe delegate int GetView_3(IntPtr thisPtr, out IntPtr __return_value__);
         public unsafe delegate int Clear_6(IntPtr thisPtr);

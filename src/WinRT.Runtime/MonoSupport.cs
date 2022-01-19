@@ -1,14 +1,16 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
 #pragma warning disable 0169 // The field 'xxx' is never used
 #pragma warning disable 0649 // Field 'xxx' is never assigned to, and will always have its default value
 
 namespace WinRT
 {
-    internal class Mono
+    internal static class Mono
     {
         static Lazy<bool> _usingMono = new Lazy<bool>(() =>
         {
@@ -70,7 +72,7 @@ namespace WinRT
             public MonoThreadFlag flags;
         }
 
-        public class ThreadContext : IDisposable
+        public sealed class ThreadContext : IDisposable
         {
             static Lazy<HashSet<IntPtr>> _foreignThreads = new Lazy<HashSet<IntPtr>>();
 
@@ -117,5 +119,4 @@ namespace WinRT
             }
         }
     }
-
 }

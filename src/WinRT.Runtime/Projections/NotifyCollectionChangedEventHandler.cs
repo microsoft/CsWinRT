@@ -1,9 +1,10 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using WinRT;
 using WinRT.Interop;
 
@@ -12,9 +13,14 @@ namespace ABI.System.Collections.Specialized
 
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
     [Guid("8B0909DC-2005-5D93-BF8A-725F017BAA8D")]
-    public static class NotifyCollectionChangedEventHandler
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class NotifyCollectionChangedEventHandler
     {
-#if NETSTANDARD2_0
+#if !NET
         private unsafe delegate int Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr e);
 #endif
 
@@ -26,7 +32,7 @@ namespace ABI.System.Collections.Specialized
             AbiToProjectionVftable = new global::WinRT.Interop.IDelegateVftbl
             {
                 IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-#if NETSTANDARD2_0
+#if !NET
                 Invoke = Marshal.GetFunctionPointerForDelegate(AbiInvokeDelegate = (Abi_Invoke)Do_Abi_Invoke)
 #else
                 Invoke = (IntPtr)(delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)&Do_Abi_Invoke
@@ -46,15 +52,15 @@ namespace ABI.System.Collections.Specialized
 
         public static unsafe global::System.Collections.Specialized.NotifyCollectionChangedEventHandler FromAbi(IntPtr nativeDelegate)
         {
-            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface(nativeDelegate)?.As<IDelegateVftbl>(GuidGenerator.GetIID(typeof(NotifyCollectionChangedEventHandler)));
+            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
             return abiDelegate is null ? null : (global::System.Collections.Specialized.NotifyCollectionChangedEventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.Collections.Specialized.NotifyCollectionChangedEventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
-#if NETSTANDARD2_0
-        private class NativeDelegateWrapper
+#if !NET
+        private sealed class NativeDelegateWrapper
 #else
-        private class NativeDelegateWrapper : IWinRTObject
+        private sealed class NativeDelegateWrapper : IWinRTObject
 #endif
         {
             private readonly ObjectReference<global::WinRT.Interop.IDelegateVftbl> _nativeDelegate;
@@ -64,17 +70,30 @@ namespace ABI.System.Collections.Specialized
                 _nativeDelegate = nativeDelegate;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             IObjectReference IWinRTObject.NativeObject => _nativeDelegate;
             bool IWinRTObject.HasUnwrappableNativeObject => true;
-            ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache { get; } = new();
-            ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData { get; } = new();
+            private volatile ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+            private ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+            {
+                global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null);
+                return _queryInterfaceCache;
+            }
+            ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+
+            private volatile ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+            private ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+            {
+                global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new ConcurrentDictionary<RuntimeTypeHandle, object>(), null);
+                return _additionalTypeData;
+            }
+            ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
 #endif
 
             public unsafe void Invoke(object sender, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
             {
                 IntPtr ThisPtr = _nativeDelegate.ThisPtr;
-#if NETSTANDARD2_0
+#if !NET
                 var abiInvoke = Marshal.GetDelegateForFunctionPointer<Abi_Invoke>(_nativeDelegate.Vftbl.Invoke);
 #else
                 var abiInvoke = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)(_nativeDelegate.Vftbl.Invoke);
@@ -103,17 +122,22 @@ namespace ABI.System.Collections.Specialized
 
         public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.DisposeAbi(abi);
 
-#if !NETSTANDARD2_0
+#if NET
         [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]
 #endif
         private static unsafe int Do_Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr e)
         {
             try
             {
+#if NET
+                var invoke = ComWrappersSupport.FindObject<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>(thisPtr);
+                invoke.Invoke(MarshalInspectable<object>.FromAbi(sender), global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.FromAbi(e));
+#else
                 global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(thisPtr, (global::System.Collections.Specialized.NotifyCollectionChangedEventHandler invoke) =>
                 {
                     invoke(MarshalInspectable<object>.FromAbi(sender), global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.FromAbi(e));
                 });
+#endif
             }
             catch (global::System.Exception __exception__)
             {
@@ -157,7 +181,7 @@ namespace ABI.System.Collections.Specialized
                 global::System.Collections.Specialized.NotifyCollectionChangedEventHandler handler =
                     (global::System.Object obj, global::System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
                     {
-                        var localDel = del;
+                        var localDel = (global::System.Collections.Specialized.NotifyCollectionChangedEventHandler) del;
                         if (localDel != null)
                             localDel.Invoke(obj, e);
                     };

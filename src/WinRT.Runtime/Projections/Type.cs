@@ -1,6 +1,7 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
-using System.Collections.Generic;
-using System.Text;
 using WinRT;
 
 namespace ABI.System
@@ -13,7 +14,12 @@ namespace ABI.System
         Custom
     }
 
-    public struct Type
+#if EMBED
+    internal
+#else
+    public
+#endif
+    struct Type
     {
         private IntPtr Name;
         private TypeKind Kind;

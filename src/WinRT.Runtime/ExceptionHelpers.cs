@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -6,7 +9,13 @@ using WinRT.Interop;
 
 namespace WinRT
 {
-    public static class ExceptionHelpers
+
+#if EMBED
+    internal
+#else 
+    public
+#endif
+    static unsafe class ExceptionHelpers
     {
         private const int COR_E_OBJECTDISPOSED = unchecked((int)0x80131622);
         private const int RO_E_CLOSED = unchecked((int)0x80000013);
@@ -25,61 +34,61 @@ namespace WinRT
         [DllImport("oleaut32.dll")]
         private static extern int SetErrorInfo(uint dwReserved, IntPtr perrinfo);
 
-        internal delegate int GetRestrictedErrorInfo(out IntPtr ppRestrictedErrorInfo);
-        private static GetRestrictedErrorInfo getRestrictedErrorInfo;
+        private static delegate* unmanaged[Stdcall]<out IntPtr, int> getRestrictedErrorInfo;
+        private static delegate* unmanaged[Stdcall]<IntPtr, int> setRestrictedErrorInfo;
+        private static delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int> roOriginateLanguageException;
+        private static delegate* unmanaged[Stdcall]<IntPtr, int> roReportUnhandledError;
 
-        internal delegate int SetRestrictedErrorInfo(IntPtr pRestrictedErrorInfo);
-        private static SetRestrictedErrorInfo setRestrictedErrorInfo;
+        private static readonly bool initialized =  Initialize();
 
-        internal delegate int RoOriginateLanguageException(int error, IntPtr message, IntPtr langaugeException);
-        private static RoOriginateLanguageException roOriginateLanguageException;
-
-        internal delegate int RoReportUnhandledError(IntPtr pRestrictedErrorInfo);
-        private static RoReportUnhandledError roReportUnhandledError;
-
-        static ExceptionHelpers()
+        private static bool Initialize()
         {
             IntPtr winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
             if (winRTErrorModule != IntPtr.Zero)
             {
-                getRestrictedErrorInfo = Platform.GetProcAddress<GetRestrictedErrorInfo>(winRTErrorModule);
-                setRestrictedErrorInfo = Platform.GetProcAddress<SetRestrictedErrorInfo>(winRTErrorModule);
-                roOriginateLanguageException = Platform.GetProcAddress<RoOriginateLanguageException>(winRTErrorModule);
-                roReportUnhandledError = Platform.GetProcAddress<RoReportUnhandledError>(winRTErrorModule);
+                roOriginateLanguageException = (delegate* unmanaged[Stdcall]<int, IntPtr, IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoOriginateLanguageException");
+                roReportUnhandledError = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "RoReportUnhandledError");
             }
             else
             {
                 winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-0.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
-                if (winRTErrorModule != IntPtr.Zero)
-                {
-                    getRestrictedErrorInfo = Platform.GetProcAddress<GetRestrictedErrorInfo>(winRTErrorModule);
-                    setRestrictedErrorInfo = Platform.GetProcAddress<SetRestrictedErrorInfo>(winRTErrorModule);
-                }
             }
+
+            if (winRTErrorModule != IntPtr.Zero)
+            {
+                getRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<out IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "GetRestrictedErrorInfo");
+                setRestrictedErrorInfo = (delegate* unmanaged[Stdcall]<IntPtr, int>)Platform.GetProcAddress(winRTErrorModule, "SetRestrictedErrorInfo");
+            }
+
+            return true;
         }
 
         public static void ThrowExceptionForHR(int hr)
         {
-            Exception ex = GetExceptionForHR(hr, useGlobalErrorState: true, out bool restoredExceptionFromGlobalState);
-            if (restoredExceptionFromGlobalState)
+            if (hr < 0)
             {
-                ExceptionDispatchInfo.Capture(ex).Throw();
+                Throw(hr);
             }
-            else if (ex is object)
+
+            static void Throw(int hr)
             {
-                throw ex;
+                Exception ex = GetExceptionForHR(hr, useGlobalErrorState: true, out bool restoredExceptionFromGlobalState);
+                if (restoredExceptionFromGlobalState)
+                {
+                    ExceptionDispatchInfo.Capture(ex).Throw();
+                }
+                else
+                {
+                    throw ex;
+                }
             }
         }
 
-        public static Exception GetExceptionForHR(int hr) => GetExceptionForHR(hr, false, out _);
+        public static Exception GetExceptionForHR(int hr) => hr >= 0 ? null : GetExceptionForHR(hr, false, out _);
 
         private static Exception GetExceptionForHR(int hr, bool useGlobalErrorState, out bool restoredExceptionFromGlobalState)
         {
             restoredExceptionFromGlobalState = false;
-            if (hr >= 0)
-            {
-                return null;
-            }
 
             ObjectReference<ABI.WinRT.Interop.IErrorInfo.Vftbl> iErrorInfo = null;
             IObjectReference restrictedErrorInfoToSave = null;
@@ -250,7 +259,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
         // the exception instance in the app to hold the error object alive.
         //
         [Serializable]
-        internal class __RestrictedErrorObject
+        internal sealed class __RestrictedErrorObject
         {
             // Hold the error object instance but don't serialize/deserialize it
             [NonSerialized]
@@ -366,7 +375,12 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
         }
     }
 
-    public static class ExceptionExtensions
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class ExceptionExtensions
     {
         public static void SetHResult(this Exception ex, int value)
         {
@@ -390,7 +404,7 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
         }
     }
 
-    internal class ErrorStrings
+    internal static class ErrorStrings
     {
         internal static string Format(string format, params object[] args) => String.Format(format, args);
 
@@ -421,7 +435,12 @@ namespace Microsoft.UI.Xaml
     namespace Automation
     {
         [Serializable]
-        public class ElementNotAvailableException : Exception
+#if EMBED
+        internal
+#else
+        public
+#endif
+        class ElementNotAvailableException : Exception
         {
             public ElementNotAvailableException()
                 : base("The element is not available.")
@@ -447,7 +466,12 @@ namespace Microsoft.UI.Xaml
             }
         }
 
-        public class ElementNotEnabledException : Exception
+#if EMBED
+        internal
+#else
+        public
+#endif
+        class ElementNotEnabledException : Exception
         {
             public ElementNotEnabledException()
                 : base("The element is not enabled.")
@@ -470,7 +494,13 @@ namespace Microsoft.UI.Xaml
     }
     namespace Markup
     {
-        public class XamlParseException : Exception
+
+#if EMBED
+        internal
+#else 
+        public
+#endif
+        class XamlParseException : Exception
         {
             public XamlParseException()
                 : base("XAML parsing failed.")
@@ -492,7 +522,12 @@ namespace Microsoft.UI.Xaml
         }
     }
     [Serializable]
-    public class LayoutCycleException : Exception
+#if EMBED
+    internal
+#else
+    public
+#endif
+    class LayoutCycleException : Exception
     {
         public LayoutCycleException()
             : base("A cycle occurred while laying out the GUI.")

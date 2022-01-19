@@ -1,5 +1,9 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -12,14 +16,19 @@ using Windows.Foundation.Collections;
 
 namespace WinRT
 {
-    public static class Projections
+#if EMBED
+    internal
+#else 
+    public
+#endif
+    static class Projections
     {
         private static readonly ReaderWriterLockSlim rwlock = new ReaderWriterLockSlim();
         private static readonly Dictionary<Type, Type> CustomTypeToHelperTypeMappings = new Dictionary<Type, Type>();
         private static readonly Dictionary<Type, Type> CustomAbiTypeToTypeMappings = new Dictionary<Type, Type>();
-        private static readonly Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>();
+        private static readonly Dictionary<string, Type> CustomAbiTypeNameToTypeMappings = new Dictionary<string, Type>(StringComparer.Ordinal);
         private static readonly Dictionary<Type, string> CustomTypeToAbiTypeNameMappings = new Dictionary<Type, string>();
-        private static readonly HashSet<string> ProjectedRuntimeClassNames = new HashSet<string>();
+        private static readonly HashSet<string> ProjectedRuntimeClassNames = new HashSet<string>(StringComparer.Ordinal);
         private static readonly HashSet<Type> ProjectedCustomTypeRuntimeClasses = new HashSet<Type>();
 
         static Projections()
@@ -172,14 +181,18 @@ namespace WinRT
             }
         }
 
+        private readonly static ConcurrentDictionary<Type, bool> IsTypeWindowsRuntimeTypeCache = new ConcurrentDictionary<Type, bool>();
         public static bool IsTypeWindowsRuntimeType(Type type)
         {
-            Type typeToTest = type;
-            if (typeToTest.IsArray)
+            return IsTypeWindowsRuntimeTypeCache.GetOrAdd(type, (type) =>
             {
-                typeToTest = typeToTest.GetElementType();
-            }
-            return IsTypeWindowsRuntimeTypeNoArray(typeToTest);
+                Type typeToTest = type;
+                if (typeToTest.IsArray)
+                {
+                    typeToTest = typeToTest.GetElementType();
+                }
+                return IsTypeWindowsRuntimeTypeNoArray(typeToTest);
+            });
         }
 
         private static bool IsTypeWindowsRuntimeTypeNoArray(Type type)
@@ -397,7 +410,7 @@ namespace WinRT
             Type projectedType = typeof(T);
             if (projectedType == typeof(object))
             {
-                if (objectReference.TryAs<IInspectable.Vftbl>(out var inspectablePtr) == 0)
+                if (objectReference.TryAs<IInspectable.Vftbl>(IInspectable.IID, out var inspectablePtr) == 0)
                 {
                     rwlock.EnterReadLock();
                     try
