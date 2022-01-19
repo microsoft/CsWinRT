@@ -333,7 +333,7 @@ namespace ABI.System.Collections.Generic
 
     internal static class IVectorMethods<T>
     {
-        public static uint get_Size(IObjectReference obj)
+        public static unsafe uint get_Size(IObjectReference obj)
         {
             var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
             uint __retval = default;
