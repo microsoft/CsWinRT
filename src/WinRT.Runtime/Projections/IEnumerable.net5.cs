@@ -36,6 +36,25 @@ namespace Windows.Foundation.Collections
 
 namespace ABI.Windows.Foundation.Collections
 {
+    internal static class IIterableMethods<T>
+    {
+        public unsafe static IEnumerator<T> First(IObjectReference obj)
+        {
+            IntPtr __retval = default;
+            try
+            {
+                var _obj = (ObjectReference<ABI.System.Collections.Generic.IEnumerable<T>.Vftbl>)obj;
+                var ThisPtr = _obj.ThisPtr;
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(ThisPtr, out __retval));
+                return ABI.System.Collections.Generic.IEnumerator<T>.FromAbi(__retval);
+            }
+            finally
+            {
+                ABI.System.Collections.Generic.IEnumerator<T>.DisposeAbi(__retval);
+            }
+        }
+    }
+
     [DynamicInterfaceCastableImplementation]
     [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
     internal interface IIterable<T> : ABI.System.Collections.Generic.IEnumerable<T>
@@ -44,10 +63,73 @@ namespace ABI.Windows.Foundation.Collections
     }
 }
 
+namespace System.Collections.Generic
+{
+    internal sealed class IEnumerableImpl<T> : IEnumerable<T>, IWinRTObject
+    {
+        private IObjectReference _inner;
+
+        internal IEnumerableImpl(IObjectReference _inner)
+        {
+            this._inner = _inner;
+        }
+
+        private volatile IObjectReference __iEnumerableObjRef;
+        private IObjectReference Make_IEnumerableObjRef()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, _inner.As<ABI.System.Collections.Generic.IEnumerable<T>.Vftbl>(), null);
+            return __iEnumerableObjRef;
+        }
+        private IObjectReference iEnumerableObjRef => __iEnumerableObjRef ?? Make_IEnumerableObjRef();
+
+        IObjectReference IWinRTObject.NativeObject => _inner;
+
+        bool IWinRTObject.HasUnwrappableNativeObject => true;
+
+        private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+        private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null);
+            return _queryInterfaceCache;
+        }
+        global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+        private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+        private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null);
+            return _additionalTypeData;
+        }
+        global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return global::ABI.System.Collections.Generic.IEnumerableMethods<T>.GetEnumerator(iEnumerableObjRef);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+}
+
 namespace ABI.System.Collections.Generic
 {
     using global::System;
     using global::System.Runtime.CompilerServices;
+
+    public static class IEnumerableMethods<T>
+    {
+        public static global::System.Collections.Generic.IEnumerator<T> GetEnumerator(IObjectReference obj)
+        {
+            var first = ABI.Windows.Foundation.Collections.IIterableMethods<T>.First(obj);
+            if (first is global::ABI.System.Collections.Generic.IEnumerator<T> iterator)
+            {
+                return iterator;
+            }
+            throw new InvalidOperationException("Unexpected type for enumerator");
+        }
+    }
 
     [DynamicInterfaceCastableImplementation]
     [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
@@ -68,28 +150,6 @@ namespace ABI.System.Collections.Generic
             MarshalInterfaceHelper<global::Windows.Foundation.Collections.IIterable<T>>.DisposeAbi(abi);
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IEnumerable<T>));
-
-        public sealed class FromAbiHelper : global::System.Collections.Generic.IEnumerable<T>
-        {
-            private readonly global::System.Collections.Generic.IEnumerable<T> _iterable;
-
-            public FromAbiHelper(global::System.Collections.Generic.IEnumerable<T> iterable)
-            {
-                _iterable = iterable;
-            }
-
-            public global::System.Collections.Generic.IEnumerator<T> GetEnumerator()
-            {
-                var first = ((global::Windows.Foundation.Collections.IIterable<T>)(IWinRTObject)_iterable).First();
-                if (first is global::ABI.System.Collections.Generic.IEnumerator<T> iterator)
-                {
-                    return iterator;
-                }
-                throw new InvalidOperationException("Unexpected type for enumerator");
-            }
-
-            global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-        }
 
         internal sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterable<T>
         {
@@ -159,29 +219,12 @@ namespace ABI.System.Collections.Generic
         }
         public static Guid PIID = Vftbl.PIID;
 
-        private static FromAbiHelper _FromIterable(IWinRTObject _this)
+        global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator()
         {
-            return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle,
-                () => new FromAbiHelper((global::System.Collections.Generic.IEnumerable<T>)_this));
+            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle));
+            return IEnumerableMethods<T>.GetEnumerator(_obj);
         }
 
-        unsafe global::System.Collections.Generic.IEnumerator<T> global::Windows.Foundation.Collections.IIterable<T>.First()
-        {
-            IntPtr __retval = default;
-            try
-            {
-                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle));
-                var ThisPtr = _obj.ThisPtr;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.First_0(ThisPtr, out __retval));
-                return ABI.System.Collections.Generic.IEnumerator<T>.FromAbi(__retval);
-            }
-            finally
-            {
-                ABI.System.Collections.Generic.IEnumerator<T>.DisposeAbi(__retval);
-            }
-        }
-        //System.Collections.Generic.IEnumerable`1.GetEnumerator()
-        global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator() => _FromIterable((IWinRTObject)this).GetEnumerator();
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 #if EMBED
