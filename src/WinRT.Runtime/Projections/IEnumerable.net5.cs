@@ -67,14 +67,22 @@ namespace System.Collections.Generic
 {
     internal sealed class IEnumerableImpl<T> : IEnumerable<T>, IWinRTObject
     {
-        private IObjectReference iEnumerableObjRef;
+        private IObjectReference _inner;
 
-        internal IEnumerableImpl(IObjectReference iEnumerableObjRef)
+        internal IEnumerableImpl(IObjectReference _inner)
         {
-            this.iEnumerableObjRef = iEnumerableObjRef;
+            this._inner = _inner;
         }
 
-        IObjectReference IWinRTObject.NativeObject => iEnumerableObjRef;
+        private volatile IObjectReference __iEnumerableObjRef;
+        private IObjectReference Make_IEnumerableObjRef()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, _inner.As<ABI.System.Collections.Generic.IEnumerable<T>.Vftbl>(), null);
+            return __iEnumerableObjRef;
+        }
+        private IObjectReference iEnumerableObjRef => __iEnumerableObjRef ?? Make_IEnumerableObjRef();
+
+        IObjectReference IWinRTObject.NativeObject => _inner;
 
         bool IWinRTObject.HasUnwrappableNativeObject => true;
 
