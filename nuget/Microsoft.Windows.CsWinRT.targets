@@ -67,13 +67,21 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
   </Target>
 
-  <Target Name="CsWinRTGenerateProjection" DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences" Condition="'$(CsWinRTGenerateProjection)' == 'true'">
+  <Target Name="CsWinRTCleanGenerateProjectionOutputs">
+    <Delete Files="$(CsWinRTGeneratedFilesDir)cswinrt.rsp" />
+  </Target>
+
+  <Target Name="CsWinRTGenerateProjection"
+          DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences"
+          Condition="'$(CsWinRTGenerateProjection)' == 'true'"
+          Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTExcludes);$(CsWinRTIncludes);$(CsWinRTFilters);$(CsWinRTWindowsMetadata)"
+          Outputs="$(CsWinRTGeneratedFilesDir)cswinrt.rsp">
     <PropertyGroup>
       <CsWinRTResponseFile>$(CsWinRTGeneratedFilesDir)cswinrt.rsp</CsWinRTResponseFile>
       <!-- %40 is an MSBuild escape code for the @ character; 
-           https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2015/msbuild/msbuild-special-characters?view=vs-2015&redirectedfrom=MSDN 
-      -->
-	    <CsWinRTCommand>"$(CsWinRTExe)" %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+       https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2015/msbuild/msbuild-special-characters?view=vs-2015&redirectedfrom=MSDN 
+  -->
+      <CsWinRTCommand>"$(CsWinRTExe)" %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
       <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadataInput Condition="'$(CsWinRTWindowsMetadata)' != ''">-input $(CsWinRTWindowsMetadata)</CsWinRTWindowsMetadataInput>
@@ -116,19 +124,18 @@ $(CsWinRTEmbeddedParam)
       </CsWinRTParams>
     </PropertyGroup>
     <MakeDir Directories="$(CsWinRTGeneratedFilesDir)" />
-    <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
     <Exec Command="$(CsWinRTCommand)" />
-    <!--To support Visual Studio's FastUpToDate builds (except in authoring), need to capture the relationship of *.cs: *.winmd.
-    To ensure that modifications to input winmds are reflected in generated *.cs files, WinRT.cs is used as a build
-    marker and updated to the most recent winmd timestamp. UpToDateCheckBuilt then captures the dependency from
-    winmds to cs files.-->
-    <Touch Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)WinRT.cs')" Files="$(CsWinRTGeneratedFilesDir)WinRT.cs" Time="%(CsWinRTInputs.ModifiedTime)"/>
+
     <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)WinRT.cs')">
       <UpToDateCheckInput Include="$(CsWinRTGeneratedFilesDir)WinRT.cs" />
       <UpToDateCheckInput Include="@(CsWinRTInputs)" Set="WinMDs" />
-      <UpToDateCheckBuilt Include="$(CsWinRTGeneratedFilesDir)WinRT.cs" Set="WinMDs" />
+      <UpToDateCheckBuilt Include="$(CsWinRTResponseFile)" Set="WinMDs" />
     </ItemGroup>
+
+    <!-- Clean the output file if the target failed to indicate it needs to be rebuild -->
+    <OnError ExecuteTargets="CsWinRTCleanGenerateProjectionOutputs" />
   </Target>
 
   <!-- Note: GenerateTargetFrameworkMonikerAttribute is conditional upon @(Compile) not being empty -->
