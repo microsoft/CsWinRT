@@ -5175,10 +5175,12 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
                 if (!m_fast_abi_class.has_value() 
                     || !is_interfaces_equal(m_fast_abi_class.value().default_interface, type))
                 {
+                    // TODO: refactor
                     auto& nullopt = std::nullopt;
                     write_interface_members(w, type, 6, nullopt);
                     return;
                 }
+                // Constant for 6
                 auto vtable_start_index = 6;
                 write_interface_members(w, type, 6, std::ref(m_fast_abi_class.value()));
                 vtable_start_index += distance(type.MethodList()) + get_class_hierarchy_index(m_fast_abi_class.value().class_type);

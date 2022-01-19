@@ -874,8 +874,11 @@ namespace UnitTest
             var sv = compositor.CreateSpriteVisual();
             sv.Offset = 10;
             sv.StartAnimationGroup();
+            Assert.Equal("", sv.Serialize(100));
             Assert.Equal(10, sv.Offset);
             Assert.Equal(10, sv.Pad);
+            sv.ObjectProperty = new List<int> { 1, 2, 3 };
+            Assert.Equal(3, ((List<int>)sv.ObjectProperty).Count);
         }
 #endif
         // Nota Bene: this test case must always remain the final one

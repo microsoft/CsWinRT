@@ -1106,13 +1106,13 @@ namespace cswinrt
 
             //compare contract versions if they exist
             auto contractVersionIface = get_contract_version(iface);
-            auto contractVersionOtherIface = get_contract_version(iface);
+            auto contractVersionOtherIface = get_contract_version(otherIface);
             if (contractVersionIface.has_value() && contractVersionOtherIface.has_value() && contractVersionIface.value() != contractVersionOtherIface.value())
                 return contractVersionIface.value() < contractVersionOtherIface.value();
 
             //compare versions
             auto versionIface = get_version(iface);
-            auto versionOtherIface = get_version(iface);
+            auto versionOtherIface = get_version(otherIface);
             if (versionIface.has_value() && versionOtherIface.has_value() && versionIface.value() != versionOtherIface.value())
                 return versionIface.value() < versionOtherIface.value();
 
