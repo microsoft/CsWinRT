@@ -6539,23 +6539,14 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<obje
                 });
                 if (is_exclusive_to_default)
                 {
+                    auto is_generic = distance(type.GenericParam()) > 0;
                     auto default_interface_abi_name = get_default_interface_name(w, type, true);
-                    w.write("public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable<%>.CreateMarshaler(obj)%;",
+                    w.write("public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable<%>.CreateMarshaler<%>(obj, %);",
                         projected_type_name,
                         projected_type_name,
-                        bind([&](writer& w)
-                        {
-                            if (distance(type.GenericParam()) > 0)
-                            {
-                                w.write(".As<%.Vftbl>()", default_interface_abi_name);
-                            }
-                            else
-                            {
-                                w.write(
-                                    ".As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).GetHelperType()))",
-                                    bind<write_type_name>(get_type_semantics(get_default_interface(type)), typedef_name_type::CCW, false));
-                            }
-                        }));
+                        is_generic ? w.write_temp("%.Vftbl", default_interface_abi_name) : w.write_temp("IUnknownVftbl"),
+                        is_generic ? w.write_temp("GuidGenerator.GetIID(%.Vftbl)", default_interface_abi_name)
+                        : w.write_temp("GuidGenerator.GetIID(typeof(%).GetHelperType())", bind<write_type_name>(get_type_semantics(get_default_interface(type)), typedef_name_type::CCW, false)));
                 }
                 else
                 {
