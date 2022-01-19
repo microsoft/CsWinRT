@@ -3058,7 +3058,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 db_path.stem().string());
     }
 
-    auto get_invoke_info(writer& w, MethodDef const& method, uint32_t const& method_start_index = 6)
+    auto get_invoke_info(writer& w, MethodDef const& method)
     {
         TypeDef const& type = method.Parent();
         if (!settings.netstandard_compat && distance(type.GenericParam()) == 0)
@@ -3066,7 +3066,7 @@ db_path.stem().string());
             return std::pair{
                 w.write_temp("(*(delegate* unmanaged[Stdcall]<%, int>**)ThisPtr)[%]",
                     bind<write_abi_parameter_types>(method_signature { method }),
-                    get_vmethod_index(type, method) + method_start_index /* number of methods in IInspectable + previous methods if fastabi*/),
+                    get_vmethod_index(type, method) + 6 /* number of methods in IInspectable */),
                 false
             };
         }
@@ -3091,7 +3091,7 @@ db_path.stem().string());
 
     void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics);
 
-    void write_event_source_ctor(writer& w, Event const& evt, int index, int member_invoke_start_index)
+    void write_event_source_ctor(writer& w, Event const& evt, int index)
     {
         if (for_typedef(w, get_type_semantics(evt.EventType()), [&](TypeDef const& eventType)
             {
@@ -3103,8 +3103,8 @@ db_path.stem().string());
 %,
 %))",
 bind<write_type_params>(eventType),
-get_invoke_info(w, add, member_invoke_start_index).first,
-get_invoke_info(w, remove, member_invoke_start_index).first,
+get_invoke_info(w, add).first,
+get_invoke_info(w, remove).first,
 index);
                     return true;
                 }
@@ -3122,8 +3122,8 @@ new %%(_obj,
 %))",
             bind<write_event_source_type_name>(get_type_semantics(evt.EventType())),
             bind<write_event_source_generic_args>(get_type_semantics(evt.EventType())),
-            get_invoke_info(w, add, member_invoke_start_index).first,
-            get_invoke_info(w, remove, member_invoke_start_index).first,
+            get_invoke_info(w, add).first,
+            get_invoke_info(w, remove).first,
             index);
     }
 
@@ -3161,9 +3161,7 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<obje
             evt.Name());
     }
 
-    }
-
-    void write_interface_member_signatures(writer& w, TypeDef const& type, std::optional<std::reference_wrapper<fast_abi_class>> fast_abi_class_val = {})
+    void write_interface_member_signatures(writer& w, TypeDef const& type)
     {
         for (auto&& method : type.MethodList())
         {
@@ -3185,11 +3183,6 @@ private static global::System.Runtime.CompilerServices.ConditionalWeakTable<obje
         for (auto&& prop : type.PropertyList())
         {
             auto [getter, setter] = get_property_methods(prop);
-            if (getter && !setter && fast_abi_class_val.has_value() 
-                && fast_abi_class_val.value().get().contains_setter(prop.Name()))
-            {
-                continue; // this would be generated when the setter comes
-            }
             // "new" required if overriding a getter in a base interface
             auto new_keyword = (!getter && setter && find_property_interface(w, type, prop.Name()).second) ? "new " : "";
             w.write(R"(
@@ -4116,7 +4109,7 @@ remove => %.Unsubscribe(value);
         }
     }
 
-    void write_interface_members(writer& w, TypeDef const& type, uint32_t const& invoke_start_index = 6, std::optional<std::reference_wrapper<fast_abi_class>> fast_abi_class_val = {})
+    void write_interface_members(writer& w, TypeDef const& type)
     {
         if (is_exclusive_to(type))
         {
@@ -4142,7 +4135,7 @@ remove => %.Unsubscribe(value);
                 continue;
             }
             method_signature signature{ method };
-            auto [invoke_target, is_generic] = get_invoke_info(w, method, invoke_start_index);
+            auto [invoke_target, is_generic] = get_invoke_info(w, method);
             w.write(R"(
 %unsafe %% %%(%)
 {%
@@ -4170,13 +4163,6 @@ remove => %.Unsubscribe(value);
         for (auto&& prop : type.PropertyList())
         {
             auto [getter, setter] = get_property_methods(prop);
-            if (setter && !getter && fast_abi_class_val.has_value()
-                && fast_abi_class_val.value().get().contains_other_interface(type)
-                && fast_abi_class_val.value().get().contains_getter(prop.Name()))
-            {
-                continue; //setter was already written when the getter was encountered
-            }
-            std::optional<std::pair<MethodDef, int>> overridden_setter = {};
             w.write(R"(
 %unsafe % %%
 {
@@ -4194,7 +4180,7 @@ bind([&](writer& w)
 
             if (getter)
             {
-                auto [invoke_target, is_generic] = get_invoke_info(w, getter, invoke_start_index);
+                auto [invoke_target, is_generic] = get_invoke_info(w, getter);
                 auto signature = method_signature(getter);
                 auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
                 w.write(R"(get
@@ -4217,9 +4203,7 @@ return %;
                     auto getter_cast = settings.netstandard_compat ? "As<%>()"s : "((%)(IWinRTObject)this)"s;
                     w.write("get{ return " + getter_cast + ".%; }\n", getter_interface, prop.Name());
                 }
-                setter = overridden_setter.has_value() ? overridden_setter.value().first : setter;
-                auto [invoke_target, is_generic] = get_invoke_info(w, setter,
-                    overridden_setter.has_value() ? overridden_setter.value().second : invoke_start_index);
+                auto [invoke_target, is_generic] = get_invoke_info(w, setter);
                 auto signature = method_signature(setter);
                 auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
                 marshalers[0].param_name = "value";
@@ -5771,14 +5755,6 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 
     void write_interface(writer& w, TypeDef const& type)
     {
-        auto m_fast_abi_class = get_fast_abi_class_for_interface(type);
-        if (m_fast_abi_class.has_value() 
-            && m_fast_abi_class.value().contains_other_interface(type)
-            && !settings.netstandard_compat)
-        {
-            return;
-        }
-
         XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::CCW);
 
@@ -5794,23 +5770,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             is_exclusive_to(type) || (is_projection_internal(type) || settings.embedded) ? "internal" : "public",
             type_name,
             bind<write_type_inheritance>(type, object_type{}, false, false),
-            [&](writer& w)
-            {
-                if (m_fast_abi_class.has_value() 
-                    && !settings.netstandard_compat
-                    && is_interfaces_equal(m_fast_abi_class.value().default_interface, type))
-                {
-                    write_interface_member_signatures(w, type, std::optional(std::ref(m_fast_abi_class.value())));
-                    for (auto&& fast_abi_iface : m_fast_abi_class.value().other_interfaces)
-                    {
-                        write_interface_member_signatures(w, fast_abi_iface, std::optional(std::ref(m_fast_abi_class.value())));
-                    }
-                }
-                else
-                {
-                    write_interface_member_signatures(w, type);
-                }
-            }
+            bind<write_interface_member_signatures>(type)
         );
     }
 
@@ -5879,7 +5839,7 @@ public static Guid PIID = Vftbl.PIID;
                 int index = 0;
                 for (auto&& evt : type.EventList())
                 {
-                    w.write("_% = %;\n", evt.Name(), bind<write_event_source_ctor>(evt, index++, 6));
+                    w.write("_% = %;\n", evt.Name(), bind<write_event_source_ctor>(evt, index++));
                 }
             },
             [&](writer& w) {
@@ -5944,6 +5904,7 @@ public static Guid PIID = Vftbl.PIID;
     {
 
         bool is_generic = distance(type.GenericParam()) > 0;
+        XLANG_ASSERT(get_category(type) == category::interface_type);
         auto type_name = write_type_name_temp(w, type, "%", typedef_name_type::ABI);
 
         auto nongenerics_class = w.write_temp("%_Delegates", bind<write_typedef_name>(type, typedef_name_type::ABI, false));
@@ -6411,36 +6372,6 @@ private struct InterfaceTag<I>{};
             bind([&](writer& w)
             {
                 bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
-                if (is_fast_abi_class(type))
-                {
-                    int hierarchy_index = get_class_hierarchy_index(type);
-                    if (hierarchy_index > 0 || !type.Flags().Sealed())
-                    {
-                        auto default_interface = get_default_interface(type);
-                        auto default_iface_method_count = 0;
-                        for_typedef(w, get_type_semantics(default_interface), [&](TypeDef iface)
-                        {
-                            default_iface_method_count = distance(iface.MethodList());
-                        });
-
-                        w.write(R"(
-protected unsafe % List<Func<IntPtr>> GetDefaultFactories()
-{
-var list = new List<Func<IntPtr>>();
-%
-return list;
-})",
-                        hierarchy_index == 0 ? "virtual" : "override",
-                        bind([&](writer& w)
-                        {
-                            for (auto i = 0; i < hierarchy_index; i++)
-                            {
-                                w.write("list.Add(() => (*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr>**)_inner.ThisPtr)[%](_inner.ThisPtr));\n", 6 + default_iface_method_count + i);
-                            }
-                        }));
-                    }
-                }
-
                 if (!type.Flags().Sealed())
                 {
                     w.write(R"(
