@@ -4,10 +4,11 @@ variables:
 name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
 
 stages:
+# if we are doing a release build, publish the build to Maestro
+- ${{ if eq( variables.PrereleaseVersion, '') }}:
+  template: CsWinRT-PublishToMaestro-Stage.yml
+
 # - template: CsWinRT-BuildAndTest-Stage.yml
 
 # - template: CsWinRT-PublishToNuget-Stage.yml
 
-# if we are doing a release build, publish the build to Maestro
-- ${{ if eq( variables['PrereleaseVersion'], '') }}:
-  template: CsWinRT-PublishToMaestro-Stage.yml
