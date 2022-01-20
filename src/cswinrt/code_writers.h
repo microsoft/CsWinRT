@@ -1262,7 +1262,7 @@ namespace cswinrt
                     auto interface_init_code = settings.netstandard_compat
                         ? w.write_temp(R"(new %(GetReferenceForQI()))",
                             interface_abi_name)
-                        : w.write_temp(R"((%)(object)new SingleInterfaceOptimizedObject(typeof(%), _inner ?? ((IWinRTObject)this).NativeObject))",
+                        : w.write_temp(R"((%)(object)new SingleInterfaceOptimizedObject(typeof(%), Inner ?? ((IWinRTObject)this).NativeObject))",
                             interface_name,
                             interface_name);
 
@@ -1925,7 +1925,7 @@ MarshalInspectable<object>.DisposeAbi(ptr);
 IntPtr ptr = (%.%(%)); 
 try 
 { 
-_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr); 
+Inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr); 
 %
 } 
 finally 
@@ -1945,7 +1945,7 @@ MarshalInspectable<object>.DisposeAbi(ptr);
                             if (is_manually_gen_default_interface)
                             {
                                 auto projected_default_interface_name = get_default_interface_name(w, class_type, false);
-                                w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", projected_default_interface_name, projected_default_interface_name, projected_default_interface_name);
+                                w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), Inner));", projected_default_interface_name, projected_default_interface_name, projected_default_interface_name);
                             }
                         }));
                 }
@@ -1954,7 +1954,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 %
 }
 )",
-                    settings.netstandard_compat ? "" : "ComWrappersHelper.Init(_inner, false);");
+                    settings.netstandard_compat ? "" : "ComWrappersHelper.Init(Inner, false);");
             }
         }
         else
@@ -1969,7 +1969,7 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
                 class_type.TypeName(),
                 settings.netstandard_compat ? "new " + default_interface_name : "",
                 class_type.TypeName(),
-                settings.netstandard_compat ? "" : "ComWrappersHelper.Init(_inner, false);");
+                settings.netstandard_compat ? "" : "ComWrappersHelper.Init(Inner, false);");
         }
     }
 
@@ -2023,7 +2023,7 @@ private IObjectReference Make__%()
                    
                     if (replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0)
                     {
-                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, _inner, null);)", objrefname);
+                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, Inner, null);)", objrefname);
                     }
                     else if (distance(ifaceType.GenericParam()) == 0)
                     {
@@ -2110,8 +2110,8 @@ IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
 using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
 try
 {
-_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
-var defaultInterface = new %(_inner);
+Inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+var defaultInterface = new %(Inner);
 _defaultLazy = new Lazy<%>(() => defaultInterface);
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
@@ -2145,7 +2145,7 @@ object baseInspectable = isAggregation ? this : null;
 IntPtr composed = %.%(%%baseInspectable, out IntPtr inner);
 try
 {
-ComWrappersHelper.Init(isAggregation, this, composed, inner, out _inner);
+ComWrappersHelper.Init(isAggregation, this, composed, inner, out Inner);
 %
 }
 finally
@@ -2168,7 +2168,7 @@ Marshal.Release(inner);
                         {
                             if (is_manually_gen_default_interface)
                             {
-                                w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
+                                w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), Inner));", default_interface_name, default_interface_name, default_interface_name);
                             }
                         }));
             }
@@ -6146,7 +6146,7 @@ private readonly % _comp;
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
 
-private IObjectReference _inner = null;
+private IObjectReference Inner = null;
 private readonly Lazy<%> _defaultLazy;
 %
 
@@ -6252,7 +6252,7 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
                     override_spec);
 
                 w.write(R"(
-%%IObjectReference GetReferenceForQI() => _inner ?? _default.ObjRef;)",
+%%IObjectReference GetReferenceForQI() => Inner ?? _default.ObjRef;)",
                     access_spec,
                     override_spec);
             }),
@@ -6289,12 +6289,11 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
 
         w.write(R"(%
 [global::WinRT.ProjectedRuntimeClass(nameof(_default))]
-[global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %% %class %%, IWinRTObject, IEquatable<%>
 {
-private IntPtr ThisPtr => _inner == null ? (((IWinRTObject)this).NativeObject).ThisPtr : _inner.ThisPtr;
+private IntPtr ThisPtr => Inner == null ? (((IWinRTObject)this).NativeObject).ThisPtr : Inner.ThisPtr;
 
-private IObjectReference _inner = null;
+private IObjectReference Inner = null;
 %
 %
 
@@ -6309,7 +6308,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 
 % %(IObjectReference objRef)%
 {
-_inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
+Inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 %
 }
 
@@ -6359,7 +6358,7 @@ private struct InterfaceTag<I>{};
                 {
                     if (is_manually_gen_default_interface)
                     {
-                        w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), _inner));", default_interface_name, default_interface_name, default_interface_name);
+                        w.write("_defaultLazy = new Lazy<%>(() => (%)new SingleInterfaceOptimizedObject(typeof(%), Inner));", default_interface_name, default_interface_name, default_interface_name);
                     }
                 }),
             // Equality operators
@@ -6399,7 +6398,7 @@ bool IWinRTObject.HasUnwrappableNativeObject => true;)");
                 }
 
                 w.write(R"(
-IObjectReference IWinRTObject.NativeObject => _inner;)");
+IObjectReference IWinRTObject.NativeObject => Inner;)");
                 if (!has_base_type)
                 { 
                 w.write(R"(
