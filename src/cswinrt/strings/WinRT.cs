@@ -593,6 +593,7 @@ namespace WinRT
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
         protected System.WeakReference<State> _state;
+        private readonly (Action<TDelegate>, Action<TDelegate>) _handlerTuple;
 
         protected EventSource(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
@@ -604,6 +605,7 @@ namespace WinRT
             _removeHandler = removeHandler;
             _index = index;
             _state = Cache.GetState(obj, index);
+            _handlerTuple = (Subscribe, Unsubscribe);
         }
 
         protected abstract IObjectReference CreateMarshaler(TDelegate del);
@@ -669,6 +671,8 @@ namespace WinRT
                 }
             }
         }
+
+        public (Action<TDelegate>, Action<TDelegate>) EventActions => _handlerTuple;
 
         private void UnsubscribeFromNative(State state)
         {
