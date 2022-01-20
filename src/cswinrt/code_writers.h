@@ -1925,7 +1925,7 @@ MarshalInspectable<object>.DisposeAbi(ptr);
 IntPtr ptr = (%.%(%)); 
 try 
 { 
-Inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr); 
+_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr); 
 %
 } 
 finally 
@@ -2110,7 +2110,7 @@ IntPtr composed = %.%(%%baseInspectable, out IntPtr ptr);
 using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref composed);
 try
 {
-Inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+_inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
 var defaultInterface = new %(Inner);
 _defaultLazy = new Lazy<%>(() => defaultInterface);
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
@@ -6293,7 +6293,15 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
 {
 private IntPtr ThisPtr => Inner == null ? (((IWinRTObject)this).NativeObject).ThisPtr : Inner.ThisPtr;
 
-private IObjectReference Inner = null;
+private volatile IObjectReference _innerLazy; 
+private volatile IObjectReference _inner;
+private IObjectReference Inner => _inner ?? Make_Inner();
+private IObjectReference Make_Inner()
+{
+    global::Sytem.Threading.Interlocked.CompareExchange(ref _inner, _innerLazy.As(GuidGenerator.GetIID(typeof(%).GetHelperType())), null);
+    return _inner;
+}
+
 %
 %
 
@@ -6308,7 +6316,7 @@ return MarshalInspectable<%>.FromAbi(thisPtr);
 
 % %(IObjectReference objRef)%
 {
-Inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
+_innerLazy = objRef; 
 %
 }
 
