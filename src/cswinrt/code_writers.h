@@ -6298,7 +6298,7 @@ private volatile IObjectReference _inner;
 private IObjectReference Inner => _inner ?? Make_Inner();
 private IObjectReference Make_Inner()
 {
-    global::Sytem.Threading.Interlocked.CompareExchange(ref _inner, _innerLazy.As(GuidGenerator.GetIID(typeof(%).GetHelperType())), null);
+    global::System.Threading.Interlocked.CompareExchange(ref _inner, _innerLazy.As(GuidGenerator.GetIID(typeof(%).GetHelperType())), null);
     return _inner;
 }
 
@@ -6339,6 +6339,7 @@ private struct InterfaceTag<I>{};
             type_name,
             bind<write_type_inheritance>(type, base_semantics, true, false),
             type_name,
+            default_interface_name,
             bind<write_lazy_interface_initialization>(type),
             bind([&](writer& w)
                 {
@@ -6361,7 +6362,6 @@ private struct InterfaceTag<I>{};
             type.Flags().Sealed() ? "internal" : "protected internal",
             type_name,
             bind<write_base_constructor_dispatch>(base_semantics),
-            default_interface_name,
             bind([&](writer& w)
                 {
                     if (is_manually_gen_default_interface)
