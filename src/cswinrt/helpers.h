@@ -6,6 +6,7 @@ namespace cswinrt
     using namespace winmd::reader;
 
     std::string get_mapped_element_type(ElementType elementType);
+    bool is_default_interface(InterfaceImpl const& ifaceImpl);
 
     static inline bool starts_with(std::string_view const& value, std::string_view const& match) noexcept
     {
@@ -444,7 +445,7 @@ namespace cswinrt
 
         for (auto&& impl : impls)
         {
-            if (has_attribute(impl, "Windows.Foundation.Metadata", "DefaultAttribute"))
+            if (is_default_interface(impl))
             {
                 return impl.Interface();
             }
@@ -1054,7 +1055,12 @@ namespace cswinrt
 
     bool is_fast_abi_class(TypeDef const& type)
     {
-        return has_attribute(type, "Windows.Foundation.Metadata"sv, "FastAbiAttribute"sv);
+        return has_attribute(type, "Windows.Foundation.Metadata"sv, "FastAbiAttribute"sv) && !settings.netstandard_compat;
+    }
+
+    bool is_default_interface(InterfaceImpl const& ifaceImpl)
+    {
+        return has_attribute(ifaceImpl, "Windows.Foundation.Metadata", "DefaultAttribute");
     }
 
     std::optional<TypeDef> find_fast_abi_class_type(TypeDef const& iface)
@@ -1064,7 +1070,7 @@ namespace cswinrt
         {
             auto sys_type = get_attribute_value<ElemSig::SystemType>(exclusiveToAttribute, 0);
             TypeDef exclusiveToClass = iface.get_cache().find_required(sys_type.name);
-            if (!has_attribute(exclusiveToClass, "Windows.Foundation.Metadata"sv, "FastAbiAttribute"sv))
+            if (!is_fast_abi_class(exclusiveToClass))
             {
                 return {};
             }
@@ -1080,7 +1086,7 @@ namespace cswinrt
         for (auto&& ifaceImpl : classType.InterfaceImpl())
         {
             auto&& sem = get_type_semantics(ifaceImpl.Interface());
-            if (has_attribute(ifaceImpl, "Windows.Foundation.Metadata", "DefaultAttribute"))
+            if (is_default_interface(ifaceImpl))
             {
                 exclusive_ifaces.first = std::get<type_definition>(sem);
             }
@@ -1093,6 +1099,18 @@ namespace cswinrt
             }
         }
         return exclusive_ifaces;
+    }
+
+    type_semantics get_default_iface_as_type_sem(TypeDef const& classType)
+    {
+        for (auto&& ifaceImpl : classType.InterfaceImpl())
+        {
+            auto&& sem = get_type_semantics(ifaceImpl.Interface());
+            if (is_default_interface(ifaceImpl))
+            {
+                return sem;
+            }
+        }
     }
 
     void sort_fast_abi_ifaces(std::vector<TypeDef>& fast_abi_ifaces)
@@ -1184,13 +1202,27 @@ namespace cswinrt
         }
     };
 
+    std::optional<fast_abi_class> get_fast_abi_class_for_class(TypeDef const& classType)
+    {
+        if (!is_fast_abi_class(classType))
+        {
+            return {};
+        }
+        auto [default_iface, other_ifaces] = get_default_and_exclusive_interfaces(classType);
+        sort_fast_abi_ifaces(other_ifaces);
+        return fast_abi_class(classType, default_iface, other_ifaces);
+    }
+
     std::optional<fast_abi_class> get_fast_abi_class_for_interface(TypeDef const& iface)
     {
         auto fast_abi_class_type = find_fast_abi_class_type(iface);
         if (!fast_abi_class_type.has_value())
             return {};
-        auto [default_iface, other_ifaces] = get_default_and_exclusive_interfaces(fast_abi_class_type.value());
-        sort_fast_abi_ifaces(other_ifaces);
-        return fast_abi_class(fast_abi_class_type.value(), default_iface, other_ifaces);
+        return get_fast_abi_class_for_class(fast_abi_class_type.value());
+    }
+
+    auto&& is_fast_abi_enabled()
+    {
+        return true;
     }
 }
