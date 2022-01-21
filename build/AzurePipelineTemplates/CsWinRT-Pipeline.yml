@@ -1,6 +1,11 @@
 variables: 
 - template: CsWinRT-Variables.yml
 
+parameters:
+- name: isRelease
+  type: boolean
+  default: false
+
 name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
 
 stages:
@@ -10,4 +15,4 @@ stages:
 
 - template: CsWinRT-PublishToMaestro-Stage.yml
   parameters:
-      IsRelease: $[variables.isRelease]
+      IsRelease: ${{ paramters.isRelease }}
