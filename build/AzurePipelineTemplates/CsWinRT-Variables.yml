@@ -14,4 +14,4 @@ variables:
   # E.g. '_privateIXPNupkgVersion' defaults to empty string, but if 'privateIXPNupkgVersion' is set at queue time that value will be used.
 
   # _isRelease: $[coalesce(variables.isRelease, '')]
-  _isRelease: $[coalesce(variables.isRelease,false)]
+  _isRelease: $[coalesce(variables.isRelease, '')]
