@@ -14,15 +14,15 @@ namespace ABI.Windows.Foundation
 
     internal static class BoxedValueIReferenceImpl<T>
     {
-        private static Nullable<T>.Vftbl AbiToProjectionVftable;
+        private static global::ABI.System.Nullable<T>.Vftbl AbiToProjectionVftable;
         public static IntPtr AbiToProjectionVftablePtr;
 
         static unsafe BoxedValueIReferenceImpl()
         {
-            AbiToProjectionVftable = new Nullable<T>.Vftbl
+            AbiToProjectionVftable = new global::ABI.System.Nullable<T>.Vftbl
             {
                 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                get_Value_0 = global::System.Delegate.CreateDelegate(Nullable<T>.Vftbl.get_Value_0_Type, typeof(BoxedValueIReferenceImpl<T>).GetMethod("Do_Abi_get_Value_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType))
+                get_Value_0 = global::System.Delegate.CreateDelegate(global::ABI.System.Nullable<T>.Vftbl.get_Value_0_Type, typeof(BoxedValueIReferenceImpl<T>).GetMethod("Do_Abi_get_Value_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType))
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(BoxedValueIReferenceImpl<T>), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
             Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
