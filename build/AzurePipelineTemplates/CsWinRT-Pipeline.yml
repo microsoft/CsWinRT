@@ -10,4 +10,4 @@ stages:
 
 - template: CsWinRT-PublishToMaestro-Stage.yml
   parameters:
-      IsRelease: varibles['_IsRelease']
+      IsRelease: $(isRelease)
