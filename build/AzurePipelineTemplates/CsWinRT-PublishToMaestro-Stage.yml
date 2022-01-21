@@ -3,7 +3,7 @@ stages:
   displayName: Trigger Maestro Publish
   jobs:
   - job: TriggerMaestroPublish
-    condition: eq(variables['_isRelease'],'true')
+    condition: eq(variables['_IsRelease'],'true')
     variables:
       _DotNetCoreRuntimeVersion: 5.0.11        # matches with SDK v. 5.0.402
       _WindowsSdkPackageVersion: 10.0.18362.22 # matches with one consumed in WindowsAppSdk

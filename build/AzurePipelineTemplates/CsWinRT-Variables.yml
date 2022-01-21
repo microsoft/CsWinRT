@@ -11,6 +11,6 @@ variables:
   NoSamples: 'false'
 
   # This 'coalesce' pattern allows the yml to define a default value for a variable but allows the value to be overridden at queue time.
-  # E.g. '_isRelease' defaults to empty string, but if 'isRelease' is set at queue time that value will be used.
+  # E.g. '_IsRelease' defaults to empty string, but if 'IsRelease' is set at queue time that value will be used.
 
-  _isRelease: $[coalesce(variables.isRelease, '')]
+  _IsRelease: $[coalesce(variables.IsRelease, '')]
