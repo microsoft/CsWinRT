@@ -4338,7 +4338,7 @@ var eventSource = _%.GetValue(_thisObj, (key) =>
 %
 return %;
 });
-return (eventSource.Subscribe, eventSource.Unsubscribe);
+return eventSource.EventActions;
 }
 )",
                         bind<write_event_source_table>(evt),
