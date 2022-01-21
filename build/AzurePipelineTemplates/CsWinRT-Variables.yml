@@ -9,3 +9,10 @@ variables:
   Net5.SDK.Version: '5.0.402'
   Net6.SDK.Version: '6.0.100-rc.2.21505.57'
   NoSamples: 'false'
+
+   # This 'coalesce' pattern allows the yml to define a default value for a variable but allows the value to be overridden at queue time.
+  # E.g. '_isRelease' defaults to empty string, but if 'isRelease' is set at queue time that value will be used.
+
+  _isRelease: $[coalesce(variables.isRelease, '')]
+
+
