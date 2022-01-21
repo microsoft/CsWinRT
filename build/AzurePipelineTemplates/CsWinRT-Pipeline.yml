@@ -10,7 +10,7 @@ stages:
 
 - template: CsWinRT-PublishToMaestro-Stage.yml
   parameters:
-  ${{ if eq(variables['isRelease'], 'true') }}:
+    ${{ if eq(variables['isRelease'], 'true') }}:
       IsRelease: true
-  ${{ if ne(variables['isRelease'], 'true') }}:
+    ${{ if ne(variables['isRelease'], 'true') }}:
       IsRelease: false 
