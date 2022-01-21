@@ -13,5 +13,4 @@ variables:
   # This 'coalesce' pattern allows the yml to define a default value for a variable but allows the value to be overridden at queue time.
   # E.g. '_privateIXPNupkgVersion' defaults to empty string, but if 'privateIXPNupkgVersion' is set at queue time that value will be used.
 
-  # _isRelease: $[coalesce(variables.isRelease, '')]
   _isRelease: $[coalesce(variables.isRelease, '')]
