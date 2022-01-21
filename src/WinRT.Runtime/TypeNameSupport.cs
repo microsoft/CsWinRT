@@ -160,6 +160,7 @@ namespace WinRT
                 "Boolean" => typeof(bool),
                 "String" => typeof(string),
                 "Char" => typeof(char),
+                "Char16" => typeof(char),
                 "Single" => typeof(float),
                 "Double" => typeof(double),
                 "Guid" => typeof(Guid),
