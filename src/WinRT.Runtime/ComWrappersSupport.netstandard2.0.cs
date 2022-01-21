@@ -51,6 +51,11 @@ namespace WinRT
                 {
                     runtimeWrapper = new ABI.WinRT.Interop.IWeakReference(weakRef);
                 }
+                else if (typeof(T).IsDelegate())
+                {
+                    runtimeWrapper = CreateDelegateFactory(typeof(T))(ptr);
+                }
+
                 keepAliveSentinel = runtimeWrapper; // We don't take a strong reference on runtimeWrapper at any point, so we need to make sure it lives until it can get assigned to rcw.
                 var runtimeWrapperReference = new System.WeakReference<object>(runtimeWrapper);
                 var cleanupSentinel = new RuntimeWrapperCleanup(identity.ThisPtr, runtimeWrapperReference);
@@ -80,8 +85,7 @@ namespace WinRT
             // for a single System.Type.
             return rcw switch
             {
-                ABI.System.Nullable<string> ns => (T)(object)ns.Value,
-                ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                ABI.System.Nullable nt => (T)nt.Value,
                 _ => (T)rcw
             };
         }

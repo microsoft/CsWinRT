@@ -51,8 +51,12 @@ namespace ABI.System
 
         public static unsafe global::System.EventHandler<T> FromAbi(IntPtr nativeDelegate)
         {
-            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
-            return abiDelegate is null ? null : (global::System.EventHandler<T>)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler<T>(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+            return MarshalDelegate.FromAbi<global::System.EventHandler<T>>(nativeDelegate);
+        }
+
+        public static global::System.EventHandler<T> CreateRcw(IntPtr ptr)
+        {
+            return new global::System.EventHandler<T>(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr)).Invoke);
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -109,7 +113,6 @@ namespace ABI.System
                     MarshalInspectable<object>.DisposeMarshaler(__sender);
                     Marshaler<T>.DisposeMarshaler(__args);
                 }
-
             }
         }
 
@@ -181,8 +184,12 @@ namespace ABI.System
 
         public static unsafe global::System.EventHandler FromAbi(IntPtr nativeDelegate)
         {
-            var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
-            return abiDelegate is null ? null : (global::System.EventHandler)ComWrappersSupport.TryRegisterObjectForInterface(new global::System.EventHandler(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+            return MarshalDelegate.FromAbi<global::System.EventHandler>(nativeDelegate);
+        }
+
+        public static global::System.EventHandler CreateRcw(IntPtr ptr)
+        {
+            return new global::System.EventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr)).Invoke);
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]

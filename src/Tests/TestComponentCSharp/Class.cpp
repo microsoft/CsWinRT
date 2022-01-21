@@ -1407,6 +1407,11 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::unbox_value<hstring>(obj);
     }
 
+    winrt::TestComponentCSharp::ProvideInt Class::UnboxDelegate(WF::IInspectable const& obj)
+    {
+        return winrt::unbox_value<TestComponentCSharp::ProvideInt>(obj);
+    }
+
     com_array<int32_t> Class::UnboxInt32Array(WF::IInspectable const& obj)
     {
         return obj.as<IReferenceArray<int32_t>>().Value();
@@ -1460,6 +1465,12 @@ namespace winrt::TestComponentCSharp::implementation
     WF::IInspectable Class::EmptyString()
     {
         return winrt::box_value(hstring{});
+    }
+
+    WF::IInspectable Class::BoxedDelegate()
+    {
+        TestComponentCSharp::ProvideUri handler = [] { return Windows::Foundation::Uri(L"http://microsoft.com"); };
+        return winrt::box_value(handler);
     }
 
     hstring Class::Catch(hstring const& /*params*/, hstring& /*lock*/)
