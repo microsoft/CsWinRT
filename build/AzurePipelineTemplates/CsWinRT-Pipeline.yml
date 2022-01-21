@@ -1,6 +1,5 @@
 variables: 
 - template: CsWinRT-Variables.yml
-- _isRelease: $[coalesce(variables.isRelease,false)]
 
 name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
 
@@ -11,4 +10,4 @@ stages:
 
 - template: CsWinRT-PublishToMaestro-Stage.yml
   parameters:
-      IsRelease: $(_isRelease)
+      IsRelease: ${{ variables._isRelease }}
