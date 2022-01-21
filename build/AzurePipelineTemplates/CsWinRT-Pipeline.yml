@@ -7,11 +7,9 @@ stages:
 # - template: CsWinRT-BuildAndTest-Stage.yml
 
 # - template: CsWinRT-PublishToNuget-Stage.yml
-
-- 
-  template: CsWinRT-PublishToMaestro-Stage.yml
-    parameters: 
-      ${{ if eq(variables._isRelease, 'true') }}:
-        IsRelease: true
-      ${{ if ne(variables._isRelease, 'true') }}:
-        IsRelease: false
+- template: CsWinRT-PublishToMaestro-Stage.yml
+  parameters: 
+    ${{ if eq(variables._isRelease, 'true') }}:
+      IsRelease: true
+    ${{ if ne(variables._isRelease, 'true') }}:
+      IsRelease: false
