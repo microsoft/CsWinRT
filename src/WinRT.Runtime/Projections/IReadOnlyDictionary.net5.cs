@@ -180,7 +180,12 @@ namespace ABI.System.Collections.Generic
     using global::System;
     using global::System.Runtime.CompilerServices;
 
-    public static class IReadOnlyDictionaryMethods<K, V>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IReadOnlyDictionaryMethods<K, V>
     {
         public static int get_Count(IObjectReference obj)
         {

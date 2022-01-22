@@ -297,7 +297,12 @@ namespace ABI.System.Collections.Generic
 {
     using ABI.Windows.Foundation.Collections;
 
-    public static class IDictionaryMethods<K, V>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IDictionaryMethods<K, V>
     {
         public static int get_Count(IObjectReference obj)
         {

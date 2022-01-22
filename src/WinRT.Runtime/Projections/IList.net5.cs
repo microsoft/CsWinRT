@@ -150,7 +150,12 @@ namespace ABI.System.Collections.Generic
     using global::System;
     using global::System.Runtime.CompilerServices;
 
-    public static class IListMethods<T> {
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IListMethods<T> {
         
         public static int get_Count(IObjectReference obj)
         {

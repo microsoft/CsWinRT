@@ -166,7 +166,12 @@ namespace ABI.System.Collections.Generic
     using global::System;
     using global::System.Runtime.CompilerServices;
 
-    public static class IReadOnlyListMethods<T>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IReadOnlyListMethods<T>
     {
         public static int get_Count(IObjectReference obj)
         {

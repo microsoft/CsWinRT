@@ -118,7 +118,12 @@ namespace ABI.System.Collections.Generic
     using global::System;
     using global::System.Runtime.CompilerServices;
 
-    public static class IEnumerableMethods<T>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IEnumerableMethods<T>
     {
         public static global::System.Collections.Generic.IEnumerator<T> GetEnumerator(IObjectReference obj)
         {
