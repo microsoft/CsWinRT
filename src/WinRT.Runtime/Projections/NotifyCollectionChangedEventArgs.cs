@@ -33,7 +33,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
         public static implicit operator INotifyCollectionChangedEventArgs(IObjectReference obj) => (obj != null) ? new INotifyCollectionChangedEventArgs(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
+        private readonly ObjectReference<Vftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
@@ -125,7 +125,7 @@ namespace ABI.Microsoft.UI.Xaml.Interop
 
         public static implicit operator WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory(IObjectReference obj) => (obj != null) ? new WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory(obj) : null;
         public static implicit operator WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WinRTNotifyCollectionChangedEventArgsRuntimeClassFactory(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
+        private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();

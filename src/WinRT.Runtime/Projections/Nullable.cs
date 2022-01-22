@@ -14,15 +14,15 @@ namespace ABI.Windows.Foundation
 
     internal static class BoxedValueIReferenceImpl<T>
     {
-        private static Nullable<T>.Vftbl AbiToProjectionVftable;
+        private static global::ABI.System.Nullable<T>.Vftbl AbiToProjectionVftable;
         public static IntPtr AbiToProjectionVftablePtr;
 
         static unsafe BoxedValueIReferenceImpl()
         {
-            AbiToProjectionVftable = new Nullable<T>.Vftbl
+            AbiToProjectionVftable = new global::ABI.System.Nullable<T>.Vftbl
             {
                 IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                get_Value_0 = global::System.Delegate.CreateDelegate(Nullable<T>.Vftbl.get_Value_0_Type, typeof(BoxedValueIReferenceImpl<T>).GetMethod("Do_Abi_get_Value_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType))
+                get_Value_0 = global::System.Delegate.CreateDelegate(global::ABI.System.Nullable<T>.Vftbl.get_Value_0_Type, typeof(BoxedValueIReferenceImpl<T>).GetMethod("Do_Abi_get_Value_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType))
             };
             var nativeVftbl = (IntPtr*)ComWrappersSupport.AllocateVtableMemory(typeof(BoxedValueIReferenceImpl<T>), Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
             Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
@@ -186,7 +186,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, int* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -196,7 +196,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, int*, int>)&Do_Abi_get_Value_0
@@ -207,7 +207,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, int* __return_value__)
@@ -263,7 +263,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, IntPtr* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -273,7 +273,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_get_Value_0
@@ -284,7 +284,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, IntPtr* __return_value__)
@@ -341,7 +341,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, byte* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -351,7 +351,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, byte*, int>)&Do_Abi_get_Value_0
@@ -362,7 +362,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, byte* __return_value__)
@@ -418,7 +418,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, sbyte* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -428,7 +428,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, sbyte*, int>)&Do_Abi_get_Value_0
@@ -439,7 +439,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, sbyte* __return_value__)
@@ -495,7 +495,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, short* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -505,7 +505,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, short*, int>)&Do_Abi_get_Value_0
@@ -516,7 +516,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, short* __return_value__)
@@ -572,7 +572,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, ushort* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -582,7 +582,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, ushort*, int>)&Do_Abi_get_Value_0
@@ -593,7 +593,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, ushort* __return_value__)
@@ -649,7 +649,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, uint* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -659,7 +659,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, uint*, int>)&Do_Abi_get_Value_0
@@ -670,7 +670,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, uint* __return_value__)
@@ -726,7 +726,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, long* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -736,7 +736,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, long*, int>)&Do_Abi_get_Value_0
@@ -747,7 +747,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, long* __return_value__)
@@ -803,7 +803,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, ulong* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -813,7 +813,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, ulong*, int>)&Do_Abi_get_Value_0
@@ -824,7 +824,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, ulong* __return_value__)
@@ -880,7 +880,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, float* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -890,7 +890,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, float*, int>)&Do_Abi_get_Value_0
@@ -901,7 +901,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, float* __return_value__)
@@ -957,7 +957,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, double* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -967,7 +967,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, double*, int>)&Do_Abi_get_Value_0
@@ -978,7 +978,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, double* __return_value__)
@@ -1034,7 +1034,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, char* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -1044,7 +1044,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, char*, int>)&Do_Abi_get_Value_0
@@ -1055,7 +1055,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, char* __return_value__)
@@ -1111,7 +1111,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, bool* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -1121,7 +1121,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, bool*, int>)&Do_Abi_get_Value_0
@@ -1132,7 +1132,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, bool* __return_value__)
@@ -1188,7 +1188,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, Guid* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -1198,7 +1198,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, Guid*, int>)&Do_Abi_get_Value_0
@@ -1209,7 +1209,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, Guid* __return_value__)
@@ -1265,7 +1265,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, DateTimeOffset* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -1275,7 +1275,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, DateTimeOffset*, int>)&Do_Abi_get_Value_0
@@ -1286,7 +1286,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, DateTimeOffset* __return_value__)
@@ -1343,7 +1343,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, TimeSpan* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -1353,7 +1353,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, TimeSpan*, int>)&Do_Abi_get_Value_0
@@ -1364,7 +1364,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, TimeSpan* __return_value__)
@@ -1421,7 +1421,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, IntPtr* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -1431,7 +1431,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, IntPtr*, int>)&Do_Abi_get_Value_0
@@ -1442,7 +1442,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, IntPtr* __return_value__)
@@ -1482,7 +1482,7 @@ namespace ABI.System
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
 
-#if NETSTANDARD2_0
+#if !NET
             private unsafe delegate int GetValueDelegate(IntPtr thisPtr, Type* value);
             private static readonly GetValueDelegate delegateCache;
 #endif
@@ -1492,7 +1492,7 @@ namespace ABI.System
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-#if NETSTANDARD2_0
+#if !NET
                     _Get_Value_0 = Marshal.GetFunctionPointerForDelegate(delegateCache = Do_Abi_get_Value_0).ToPointer()
 #else
                     _Get_Value_0 = (delegate* unmanaged<IntPtr, Type*, int>)&Do_Abi_get_Value_0
@@ -1503,7 +1503,7 @@ namespace ABI.System
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
 
-#if !NETSTANDARD2_0
+#if NET
             [UnmanagedCallersOnly]
 #endif
             private static unsafe int Do_Abi_get_Value_0(IntPtr thisPtr, Type* __return_value__)
