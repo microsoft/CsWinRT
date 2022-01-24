@@ -2111,7 +2111,7 @@ using IObjectReference composedRef = ObjectReference<IUnknownVftbl>.Attach(ref c
 try
 {
 _inner = ComWrappersSupport.GetObjectReferenceForInterface(ptr);
-var defaultInterface = new %(Inner);
+var defaultInterface = new %(_inner);
 _defaultLazy = new Lazy<%>(() => defaultInterface);
 ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
 }
@@ -2135,6 +2135,15 @@ MarshalInspectable<object>.DisposeAbi(ptr);
             }
             else
             {
+                /*
+                // 
+ 1. add nonvolatile field, check it before volatile one
+ 2. try for only sealed types
+
+benchmark MUX.Input.PointerRoutedEventArgs
+//
+
+                */
                 auto platform_attribute = write_platform_attribute_temp(w, composable_type);
 
                 w.write(R"(
@@ -2145,7 +2154,7 @@ object baseInspectable = isAggregation ? this : null;
 IntPtr composed = %.%(%%baseInspectable, out IntPtr inner);
 try
 {
-ComWrappersHelper.Init(isAggregation, this, composed, inner, out Inner);
+ComWrappersHelper.Init(isAggregation, this, composed, inner, out _inner2);
 %
 }
 finally
@@ -6146,7 +6155,7 @@ private readonly % _comp;
 {
 public %IntPtr ThisPtr => _default.ThisPtr;
 
-private IObjectReference Inner = null;
+private IObjectReference _inner = null;
 private readonly Lazy<%> _defaultLazy;
 %
 
@@ -6252,7 +6261,7 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
                     override_spec);
 
                 w.write(R"(
-%%IObjectReference GetReferenceForQI() => Inner ?? _default.ObjRef;)",
+%%IObjectReference GetReferenceForQI() => _inner ?? _default.ObjRef;)",
                     access_spec,
                     override_spec);
             }),
@@ -6291,13 +6300,15 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
 [global::WinRT.ProjectedRuntimeClass(nameof(_default))]
 %% %class %%, IWinRTObject, IEquatable<%>
 {
-private IntPtr ThisPtr => Inner == null ? (((IWinRTObject)this).NativeObject).ThisPtr : Inner.ThisPtr;
+private IntPtr ThisPtr => _inner == null ? (((IWinRTObject)this).NativeObject).ThisPtr : _inner.ThisPtr;
 
-private volatile IObjectReference _innerLazy; 
+private IObjectReference _innerLazy; 
+private IObjectReference _inner2; 
 private volatile IObjectReference _inner;
-private IObjectReference Inner => _inner ?? Make_Inner();
+private IObjectReference Inner => _inner ?? _inner2 ?? Make_Inner();
 private IObjectReference Make_Inner()
 {
+    // This lazy initialization pattern for _inner avoids the cost of creating an object that doesn't get used
     global::System.Threading.Interlocked.CompareExchange(ref _inner, _innerLazy.As(GuidGenerator.GetIID(typeof(%).GetHelperType())), null);
     return _inner;
 }
