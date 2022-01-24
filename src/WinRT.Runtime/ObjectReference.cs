@@ -448,8 +448,28 @@ namespace WinRT
     {
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;
-        private readonly Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>> _cachedContext;
-        private readonly Lazy<AgileReference> _agileReference;
+
+        private volatile ConcurrentDictionary<IntPtr, ObjectReference<T>> __cachedContext;
+        private ConcurrentDictionary<IntPtr, ObjectReference<T>> _cachedContext => __cachedContext ?? Make_CachedContext();
+        private ConcurrentDictionary<IntPtr, ObjectReference<T>> Make_CachedContext()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref __cachedContext, new(), null);
+            return __cachedContext;
+        }
+
+        private volatile AgileReference __agileReference;
+        private AgileReference _agileReference => __agileReference ?? Make_AgileReference();
+        private AgileReference Make_AgileReference()
+        { 
+            // Might need to wrap these into a lambda and call it in the CompareExchange 
+            AgileReference agileReference = null; 
+            Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null); 
+            void InitAgileReference() { agileReference = new AgileReference(this); }
+
+            global::System.Threading.Interlocked.CompareExchange(ref __agileReference, agileReference, null);
+            return __agileReference;
+        }
+
         private readonly Guid _iid;
 
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken)
@@ -457,7 +477,8 @@ namespace WinRT
         {
             _contextCallbackPtr = contextCallbackPtr;
             _contextToken = contextToken;
-            _cachedContext = new Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>>();
+            // _cachedContext = new Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>>();
+            /*
             _agileReference = new Lazy<AgileReference>(() => {
                 AgileReference agileReference = null;
                 Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
@@ -468,6 +489,7 @@ namespace WinRT
                     agileReference = new AgileReference(this);
                 }
             });
+            */
         }
 
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
@@ -475,7 +497,8 @@ namespace WinRT
         {
             _contextCallbackPtr = contextCallbackPtr;
             _contextToken = contextToken;
-            _cachedContext = new Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>>();
+            // _cachedContext = new Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>>();
+            /* 
             _agileReference = new Lazy<AgileReference>(() => {
                 AgileReference agileReference = null;
                 Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
@@ -486,6 +509,7 @@ namespace WinRT
                     agileReference = new AgileReference(this);
                 }
             });
+            */
 
             _iid = iid;
         }
@@ -524,11 +548,11 @@ namespace WinRT
                 return null;
             }
 
-            return _cachedContext.Value.GetOrAdd(currentContext, CreateForCurrentContext);
+            return _cachedContext.GetOrAdd(currentContext, CreateForCurrentContext);
 
             ObjectReference<T> CreateForCurrentContext(IntPtr _)
             {
-                var agileReference = _agileReference.Value;
+                var agileReference = _agileReference;
                 // We may fail to switch context and thereby not get an agile reference.
                 // In these cases, fallback to using the current context.
                 if (agileReference == null)
@@ -550,9 +574,9 @@ namespace WinRT
 
         protected override unsafe void Release()
         {
-            if (_cachedContext.IsValueCreated)
+            if (_cachedContext != null)
             {
-                _cachedContext.Value.Clear();
+                _cachedContext.Clear();
             }
 
             Context.CallInContext(_contextCallbackPtr, _contextToken, base.Release, ReleaseWithoutContext);
