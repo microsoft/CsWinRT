@@ -57,6 +57,21 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
     <PackageReference Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.20560.3" PrivateAssets="All" />
     <PackageDownload Include="Microsoft.Windows.CsWinRT" Version="[$(CsWinRTApiCompatVersion)]" />
+  </ItemGroup> 
+  
+  <ItemGroup>
+    <Compile Update="WinRTRuntimeLocalizationResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>WinRTRuntimeLocalizationResources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup> 
+  
+  <ItemGroup>
+    <EmbeddedResource Update="WinRTRuntimeLocalizationResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>WinRTRuntimeLocalizationResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
   <Target Name="_ResolveResolvedMatchingContract" BeforeTargets="ValidateApiCompatForSrc;RunMatchingRefApiCompat" Condition="'$(TargetFramework)' == 'net5.0'">

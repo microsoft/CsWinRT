@@ -616,7 +616,7 @@ namespace ABI.System.Collections
                     uint size = _vector.Size;
                     if (((uint)int.MaxValue) < size)
                     {
-                        throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
+                        throw new InvalidOperationException(WinRTRuntimeLocalizationResources.InvalidOperation_CollectionBackingListTooLarge);
                     }
 
                     return (int)size;
@@ -630,7 +630,7 @@ namespace ABI.System.Collections
 
                 // ICollection expects the destination array to be single-dimensional.
                 if (array.Rank != 1)
-                    throw new ArgumentException(ErrorStrings.Arg_RankMultiDimNotSupported);
+                    throw new ArgumentException(WinRTRuntimeLocalizationResources.Arg_RankMultiDimNotSupported);
 
                 int destLB = array.GetLowerBound(0);
                 int srcLen = Count;
@@ -649,10 +649,10 @@ namespace ABI.System.Collections
                 // list.CopyTo(items, 0);
 
                 if (srcLen > (destLen - (arrayIndex - destLB)))
-                    throw new ArgumentException(ErrorStrings.Argument_InsufficientSpaceToCopyCollection);
+                    throw new ArgumentException(WinRTRuntimeLocalizationResources.Argument_InsufficientSpaceToCopyCollection);
 
                 if (arrayIndex - destLB > destLen)
-                    throw new ArgumentException(ErrorStrings.Argument_IndexOutOfArrayBounds);
+                    throw new ArgumentException(WinRTRuntimeLocalizationResources.Argument_IndexOutOfArrayBounds);
 
                 // We need to verify the index as we;
                 for (uint i = 0; i < srcLen; i++)
@@ -690,7 +690,7 @@ namespace ABI.System.Collections
                 uint size = _vector.Size;
                 if (((uint)int.MaxValue) < size)
                 {
-                    throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
+                    throw new InvalidOperationException(WinRTRuntimeLocalizationResources.InvalidOperation_CollectionBackingListTooLarge);
                 }
 
                 return (int)(size - 1);
@@ -720,7 +720,7 @@ namespace ABI.System.Collections
 
                 if (((uint)int.MaxValue) < index)
                 {
-                    throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
+                    throw new InvalidOperationException(WinRTRuntimeLocalizationResources.InvalidOperation_CollectionBackingListTooLarge);
                 }
 
                 return (int)index;
@@ -743,7 +743,7 @@ namespace ABI.System.Collections
                 {
                     if (((uint)int.MaxValue) < index)
                     {
-                        throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
+                        throw new InvalidOperationException(WinRTRuntimeLocalizationResources.InvalidOperation_CollectionBackingListTooLarge);
                     }
 
                     RemoveAtHelper(_vector, index);
@@ -848,7 +848,7 @@ namespace ABI.System.Collections
                 }
                 catch (ArgumentOutOfRangeException ex)
                 {
-                    throw ex.GetExceptionForHR(ExceptionHelpers.E_BOUNDS, ErrorStrings.ArgumentOutOfRange_Index);
+                    throw ex.GetExceptionForHR(ExceptionHelpers.E_BOUNDS, WinRTRuntimeLocalizationResources.ArgumentOutOfRange_Index);
                 }
             }
 
@@ -883,7 +883,7 @@ namespace ABI.System.Collections
                 }
                 catch (ArgumentOutOfRangeException ex)
                 {
-                    throw ex.GetExceptionForHR(ExceptionHelpers.E_BOUNDS, ErrorStrings.ArgumentOutOfRange_Index);
+                    throw ex.GetExceptionForHR(ExceptionHelpers.E_BOUNDS, WinRTRuntimeLocalizationResources.ArgumentOutOfRange_Index);
                 }
             }
 
@@ -930,7 +930,7 @@ namespace ABI.System.Collections
             {
                 if (_list.Count == 0)
                 {
-                    Exception e = new InvalidOperationException(ErrorStrings.InvalidOperation_CannotRemoveLastFromEmptyCollection);
+                    Exception e = new InvalidOperationException(WinRTRuntimeLocalizationResources.InvalidOperation_CannotRemoveLastFromEmptyCollection);
                     e.SetHResult(ExceptionHelpers.E_BOUNDS);
                     throw e;
                 }
@@ -950,7 +950,7 @@ namespace ABI.System.Collections
                 // that Size > int.MaxValue:
                 if (((uint)int.MaxValue) <= index || index >= (uint)listCapacity)
                 {
-                    Exception e = new ArgumentOutOfRangeException(nameof(index), ErrorStrings.ArgumentOutOfRange_IndexLargerThanMaxValue);
+                    Exception e = new ArgumentOutOfRangeException(nameof(index), WinRTRuntimeLocalizationResources.ArgumentOutOfRange_IndexLargerThanMaxValue);
                     e.SetHResult(ExceptionHelpers.E_BOUNDS);
                     throw e;
                 }
@@ -977,7 +977,7 @@ namespace ABI.System.Collections
                     // that Size > int.MaxValue:
                     if (((uint)int.MaxValue) <= index || index >= (uint)listCapacity)
                     {
-                        Exception e = new ArgumentOutOfRangeException(nameof(index), ErrorStrings.ArgumentOutOfRange_IndexLargerThanMaxValue);
+                        Exception e = new ArgumentOutOfRangeException(nameof(index), WinRTRuntimeLocalizationResources.ArgumentOutOfRange_IndexLargerThanMaxValue);
                         e.SetHResult(ExceptionHelpers.E_BOUNDS);
                         throw e;
                     }
@@ -996,7 +996,7 @@ namespace ABI.System.Collections
                     }
                     catch (ArgumentOutOfRangeException ex)
                     {
-                        throw ex.GetExceptionForHR(ExceptionHelpers.E_BOUNDS, ErrorStrings.ArgumentOutOfRange_Index);
+                        throw ex.GetExceptionForHR(ExceptionHelpers.E_BOUNDS, WinRTRuntimeLocalizationResources.ArgumentOutOfRange_Index);
                     }
                 }
 

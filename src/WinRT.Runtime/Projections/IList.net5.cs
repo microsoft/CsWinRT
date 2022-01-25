@@ -76,7 +76,7 @@ namespace ABI.System.Collections.Generic
                     uint size = _vector.Size;
                     if (((uint)int.MaxValue) < size)
                     {
-                        throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
+                        throw new InvalidOperationException(WinRTRuntimeLocalizationResources.InvalidOperation_CollectionBackingListTooLarge);
                     }
 
                     return (int)size;
@@ -100,10 +100,10 @@ namespace ABI.System.Collections.Generic
                     throw new ArgumentOutOfRangeException(nameof(arrayIndex));
 
                 if (array.Length <= arrayIndex && Count > 0)
-                    throw new ArgumentException(ErrorStrings.Argument_IndexOutOfArrayBounds);
+                    throw new ArgumentException(WinRTRuntimeLocalizationResources.Argument_IndexOutOfArrayBounds);
 
                 if (array.Length - arrayIndex < Count)
-                    throw new ArgumentException(ErrorStrings.Argument_InsufficientSpaceToCopyCollection);
+                    throw new ArgumentException(WinRTRuntimeLocalizationResources.Argument_InsufficientSpaceToCopyCollection);
 
 
                 int count = Count;
@@ -123,7 +123,7 @@ namespace ABI.System.Collections.Generic
 
                 if (((uint)int.MaxValue) < index)
                 {
-                    throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
+                    throw new InvalidOperationException(WinRTRuntimeLocalizationResources.InvalidOperation_CollectionBackingListTooLarge);
                 }
 
                 FromAbiHelper.RemoveAtHelper(_vector, index);
@@ -156,7 +156,7 @@ namespace ABI.System.Collections.Generic
 
                 if (((uint)int.MaxValue) < index)
                 {
-                    throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
+                    throw new InvalidOperationException(WinRTRuntimeLocalizationResources.InvalidOperation_CollectionBackingListTooLarge);
                 }
 
                 return (int)index;
@@ -267,7 +267,7 @@ namespace ABI.System.Collections.Generic
                 // that Size > int.MaxValue:
                 if (((uint)int.MaxValue) <= index || index >= (uint)limit)
                 {
-                    Exception e = new ArgumentOutOfRangeException(nameof(index), ErrorStrings.ArgumentOutOfRange_IndexLargerThanMaxValue);
+                    Exception e = new ArgumentOutOfRangeException(nameof(index), WinRTRuntimeLocalizationResources.ArgumentOutOfRange_IndexLargerThanMaxValue);
                     e.SetHResult(ExceptionHelpers.E_BOUNDS);
                     throw e;
                 }
@@ -283,7 +283,7 @@ namespace ABI.System.Collections.Generic
                 }
                 catch (ArgumentOutOfRangeException ex)
                 {
-                    throw ex.GetExceptionForHR(ExceptionHelpers.E_BOUNDS, ErrorStrings.ArgumentOutOfRange_Index);
+                    throw ex.GetExceptionForHR(ExceptionHelpers.E_BOUNDS, WinRTRuntimeLocalizationResources.ArgumentOutOfRange_Index);
                 }
             }
 
@@ -324,7 +324,7 @@ namespace ABI.System.Collections.Generic
                 }
                 catch (ArgumentOutOfRangeException ex)
                 {
-                    throw ex.GetExceptionForHR(ExceptionHelpers.E_BOUNDS, ErrorStrings.ArgumentOutOfRange_Index);
+                    throw ex.GetExceptionForHR(ExceptionHelpers.E_BOUNDS, WinRTRuntimeLocalizationResources.ArgumentOutOfRange_Index);
                 }
             }
 
@@ -371,7 +371,7 @@ namespace ABI.System.Collections.Generic
             {
                 if (_list.Count == 0)
                 {
-                    Exception e = new InvalidOperationException(ErrorStrings.InvalidOperation_CannotRemoveLastFromEmptyCollection);
+                    Exception e = new InvalidOperationException(WinRTRuntimeLocalizationResources.InvalidOperation_CannotRemoveLastFromEmptyCollection);
                     e.SetHResult(ExceptionHelpers.E_BOUNDS);
                     throw e;
                 }
