@@ -10,6 +10,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
+using System.Diagnostics;
+using System.Collections.Concurrent;
 
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
 #pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
@@ -35,17 +37,490 @@ namespace Windows.Foundation.Collections
     }
 }
 
+namespace System.Collections.Generic
+{
+    internal sealed class IListImpl<T> : global::System.Collections.Generic.IList<T>, IWinRTObject
+    {
+        private readonly IObjectReference _inner;
+
+        private volatile IObjectReference __iListObjRef;
+        private IObjectReference Make_IListObjRef()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref __iListObjRef, _inner.As<ABI.System.Collections.Generic.IList<T>.Vftbl>(), null);
+            return __iListObjRef;
+        }
+        private IObjectReference iListObjRef => __iListObjRef ?? Make_IListObjRef();
+
+        private volatile IObjectReference __iEnumerableObjRef;
+        private IObjectReference Make_IEnumerableObjRef()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, _inner.As<ABI.System.Collections.Generic.IEnumerable<T>.Vftbl>(), null);
+            return __iEnumerableObjRef;
+        }
+        private IObjectReference iEnumerableObjRef => __iEnumerableObjRef ?? Make_IEnumerableObjRef();
+
+        internal IListImpl(IObjectReference _inner)
+        {
+            this._inner = _inner;
+        }
+
+        public T this[int index] 
+        {
+            get => ABI.System.Collections.Generic.IListMethods<T>.Indexer_Get(iListObjRef, index);
+            set => ABI.System.Collections.Generic.IListMethods<T>.Indexer_Set(iListObjRef, index, value); 
+        }
+
+        public int Count => ABI.System.Collections.Generic.IListMethods<T>.get_Count(iListObjRef);
+
+        public bool IsReadOnly => ABI.System.Collections.Generic.IListMethods<T>.get_IsReadOnly(iListObjRef);
+
+        IObjectReference IWinRTObject.NativeObject => _inner;
+
+        bool IWinRTObject.HasUnwrappableNativeObject => true;
+
+        private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+        private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null);
+            return _queryInterfaceCache;
+        }
+        global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+        private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+        private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null);
+            return _additionalTypeData;
+        }
+        global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
+
+        public void Add(T item)
+        {
+            ABI.System.Collections.Generic.IListMethods<T>.Add(iListObjRef, item);
+        }
+
+        public void Clear()
+        {
+            ABI.System.Collections.Generic.IListMethods<T>.Clear(iListObjRef);
+        }
+
+        public bool Contains(T item)
+        {
+            return ABI.System.Collections.Generic.IListMethods<T>.Contains(iListObjRef, item);
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            ABI.System.Collections.Generic.IListMethods<T>.CopyTo(iListObjRef, array, arrayIndex);
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return ABI.System.Collections.Generic.IEnumerableMethods<T>.GetEnumerator(iEnumerableObjRef);
+        }
+
+        public int IndexOf(T item)
+        {
+            return ABI.System.Collections.Generic.IListMethods<T>.IndexOf(iListObjRef, item);
+        }
+
+        public void Insert(int index, T item)
+        {
+            ABI.System.Collections.Generic.IListMethods<T>.Insert(iListObjRef, index, item);
+        }
+
+        public bool Remove(T item)
+        {
+            return ABI.System.Collections.Generic.IListMethods<T>.Remove(iListObjRef, item);
+        }
+
+        public void RemoveAt(int index)
+        {
+            ABI.System.Collections.Generic.IListMethods<T>.RemoveAt(iListObjRef, index);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+}
+
 namespace ABI.System.Collections.Generic
 {
     using global::System;
     using global::System.Runtime.CompilerServices;
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IListMethods<T> {
+        
+        public static int get_Count(IObjectReference obj)
+        {
+            uint size = IVectorMethods<T>.get_Size(obj);
+            if (((uint)int.MaxValue) < size)
+            {
+                throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
+            }
+
+            return (int)size;
+        }
+
+        public static bool get_IsReadOnly(IObjectReference obj) 
+        {
+            return false;
+        }
+
+        public static void Add(IObjectReference obj, T item) => IVectorMethods<T>.Append(obj, item);
+
+        public static void Clear(IObjectReference obj) => IVectorMethods<T>.Clear(obj);
+
+        public static bool Contains(IObjectReference obj, T item) => IVectorMethods<T>.IndexOf(obj, item, out _);
+
+        public static void CopyTo(IObjectReference obj, T[] array, int arrayIndex)
+        {
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+
+            if (arrayIndex < 0)
+                throw new ArgumentOutOfRangeException(nameof(arrayIndex));
+
+            if (array.Length <= arrayIndex && get_Count(obj) > 0)
+                throw new ArgumentException(ErrorStrings.Argument_IndexOutOfArrayBounds);
+
+            if (array.Length - arrayIndex < get_Count(obj))
+                throw new ArgumentException(ErrorStrings.Argument_InsufficientSpaceToCopyCollection);
+
+
+            int count = get_Count(obj);
+            for (int i = 0; i < count; i++)
+            {
+                array[i + arrayIndex] = GetAtHelper(obj, (uint)i);
+            }
+        }
+
+        public static bool Remove(IObjectReference obj, T item)
+        {
+            uint index;
+            bool exists = IVectorMethods<T>.IndexOf(obj, item, out index);
+
+            if (!exists)
+                return false;
+
+            if (((uint)int.MaxValue) < index)
+            {
+                throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
+            }
+
+            RemoveAtHelper(obj, index);
+            return true;
+        }
+
+        public static T Indexer_Get(IObjectReference obj, int index)
+        {
+            if (index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            return GetAtHelper(obj, (uint)index);
+        }
+
+        public static void Indexer_Set(IObjectReference obj, int index, T value)
+        {
+            if (index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            SetAtHelper(obj, (uint)index, value);
+        }
+
+        public static int IndexOf(IObjectReference obj, T item)
+        {
+            uint index;
+            bool exists = IVectorMethods<T>.IndexOf(obj, item, out index);
+
+            if (!exists)
+                return -1;
+
+            if (((uint)int.MaxValue) < index)
+            {
+                throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
+            }
+
+            return (int)index;
+        }
+
+        public static void Insert(IObjectReference obj, int index, T item)
+        {
+            if (index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            InsertAtHelper(obj, (uint)index, item);
+        }
+
+        public static void RemoveAt(IObjectReference obj, int index)
+        {
+            if (index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index));
+            RemoveAtHelper(obj, (uint)index);
+        }
+
+        internal static T GetAtHelper(IObjectReference obj, uint index)
+        {
+            try
+            {
+                return IVectorMethods<T>.GetAt(obj, index);
+
+                // We delegate bounds checking to the underlying collection and if it detected a fault,
+                // we translate it to the right exception:
+            }
+            catch (Exception ex)
+            {
+                if (ExceptionHelpers.E_BOUNDS == ex.HResult)
+                    throw new ArgumentOutOfRangeException(nameof(index));
+
+                throw;
+            }
+        }
+
+        private static void SetAtHelper(IObjectReference obj, uint index, T value)
+        {
+            try
+            {
+                IVectorMethods<T>.SetAt(obj, index, value);
+
+                // We deligate bounds checking to the underlying collection and if it detected a fault,
+                // we translate it to the right exception:
+            }
+            catch (Exception ex)
+            {
+                if (ExceptionHelpers.E_BOUNDS == ex.HResult)
+                    throw new ArgumentOutOfRangeException(nameof(index));
+
+                throw;
+            }
+        }
+
+        private static void InsertAtHelper(IObjectReference obj, uint index, T item)
+        {
+            try
+            {
+                IVectorMethods<T>.InsertAt(obj, index, item);
+
+                // We delegate bounds checking to the underlying collection and if it detected a fault,
+                // we translate it to the right exception:
+            }
+            catch (Exception ex)
+            {
+                if (ExceptionHelpers.E_BOUNDS == ex.HResult)
+                    throw new ArgumentOutOfRangeException(nameof(index));
+
+                throw;
+            }
+        }
+
+        internal static void RemoveAtHelper(IObjectReference obj, uint index)
+        {
+            try
+            {
+                IVectorMethods<T>.RemoveAt(obj, index);
+
+                // We delegate bounds checking to the underlying collection and if it detected a fault,
+                // we translate it to the right exception:
+            }
+            catch (Exception ex)
+            {
+                if (ExceptionHelpers.E_BOUNDS == ex.HResult)
+                    throw new ArgumentOutOfRangeException(nameof(index));
+
+                throw;
+            }
+        }
+
+    }
+
+    internal static class IVectorMethods<T>
+    {
+        public static unsafe uint get_Size(IObjectReference obj)
+        {
+            var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
+            uint __retval = default;
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSize_1(_obj.ThisPtr, out __retval));
+            return __retval;
+        }
+
+        public static unsafe T GetAt(IObjectReference obj, uint index)
+        {
+            var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+            var __params = new object[] { ThisPtr, index, null };
+            try
+            {
+                _obj.Vftbl.GetAt_0.DynamicInvokeAbi(__params);
+                return Marshaler<T>.FromAbi(__params[2]);
+            }
+            finally
+            {
+                Marshaler<T>.DisposeAbi(__params[2]);
+            }
+        }
+
+        public static unsafe global::System.Collections.Generic.IReadOnlyList<T> GetView(IObjectReference obj)
+        {
+            var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+            IntPtr __retval = default;
+            try
+            {
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetView_2(ThisPtr, out __retval));
+                return MarshalInterface<global::System.Collections.Generic.IReadOnlyList<T>>.FromAbi(__retval);
+            }
+            finally
+            {
+                MarshalInterface<global::Windows.Foundation.Collections.IVectorView<T>>.DisposeAbi(__retval);
+            }
+        }
+
+        public static unsafe bool IndexOf(IObjectReference obj, T value, out uint index)
+        {
+            var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+            object __value = default;
+            var __params = new object[] { ThisPtr, null, null, null };
+            try
+            {
+                __value = Marshaler<T>.CreateMarshaler(value);
+                __params[1] = Marshaler<T>.GetAbi(__value);
+                _obj.Vftbl.IndexOf_3.DynamicInvokeAbi(__params);
+                index = (uint)__params[2];
+                return (byte)__params[3] != 0;
+            }
+            finally
+            {
+                Marshaler<T>.DisposeMarshaler(__value);
+            }
+        }
+
+        public static unsafe void SetAt(IObjectReference obj, uint index, T value)
+        {
+            var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+            object __value = default;
+            var __params = new object[] { ThisPtr, index, null };
+            try
+            {
+                __value = Marshaler<T>.CreateMarshaler(value);
+                __params[2] = Marshaler<T>.GetAbi(__value);
+                _obj.Vftbl.SetAt_4.DynamicInvokeAbi(__params);
+            }
+            finally
+            {
+                Marshaler<T>.DisposeMarshaler(__value);
+            }
+        }
+
+        public static unsafe void InsertAt(IObjectReference obj, uint index, T value)
+        {
+            var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+            object __value = default;
+            var __params = new object[] { ThisPtr, index, null };
+            try
+            {
+                __value = Marshaler<T>.CreateMarshaler(value);
+                __params[2] = Marshaler<T>.GetAbi(__value);
+                _obj.Vftbl.InsertAt_5.DynamicInvokeAbi(__params);
+            }
+            finally
+            {
+                Marshaler<T>.DisposeMarshaler(__value);
+            }
+        }
+
+        public static unsafe void RemoveAt(IObjectReference obj, uint index)
+        {
+            var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RemoveAt_6(ThisPtr, index));
+        }
+
+        public static unsafe void Append(IObjectReference obj, T value)
+        {
+            var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+            object __value = default;
+            var __params = new object[] { ThisPtr, null };
+            try
+            {
+                __value = Marshaler<T>.CreateMarshaler(value);
+                __params[1] = Marshaler<T>.GetAbi(__value);
+                _obj.Vftbl.Append_7.DynamicInvokeAbi(__params);
+            }
+            finally
+            {
+                Marshaler<T>.DisposeMarshaler(__value);
+            }
+        }
+
+        public static unsafe void RemoveAtEnd(IObjectReference obj)
+        {
+            var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RemoveAtEnd_8(ThisPtr));
+        }
+
+        public static unsafe void Clear(IObjectReference obj)
+        {
+            var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Clear_9(ThisPtr));
+        }
+
+        public static unsafe uint GetMany(IObjectReference obj, uint startIndex, ref T[] items)
+        {
+            var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+            object __items = default;
+            int __items_length = default;
+            IntPtr __items_data = default;
+            uint __retval = default;
+            try
+            {
+                __items = Marshaler<T>.CreateMarshalerArray(items);
+                (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetMany_10(ThisPtr, startIndex, __items_length, __items_data, out __retval));
+                items = Marshaler<T>.FromAbiArray((__items_length, __items_data));
+                return __retval;
+            }
+            finally
+            {
+                Marshaler<T>.DisposeMarshalerArray(__items);
+            }
+        }
+
+        public static unsafe void ReplaceAll(IObjectReference obj, T[] items)
+        {
+            var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+            object __items = default;
+            int __items_length = default;
+            IntPtr __items_data = default;
+            try
+            {
+                __items = Marshaler<T>.CreateMarshalerArray(items);
+                (__items_length, __items_data) = Marshaler<T>.GetAbiArray(__items);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.ReplaceAll_11(ThisPtr, __items_length, __items_data));
+            }
+            finally
+            {
+                Marshaler<T>.DisposeMarshalerArray(__items);
+            }
+        }
+    }
 
     [DynamicInterfaceCastableImplementation]
     [Guid("913337E9-11A1-4345-A3A2-4E7F956E222D")]
     interface IList<T> : global::System.Collections.Generic.IList<T>, global::Windows.Foundation.Collections.IVector<T>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IList<T> obj) =>
-            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, GuidGenerator.GetIID(typeof(IList<T>)));
+            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, PIID);
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
@@ -59,199 +534,6 @@ namespace ABI.System.Collections.Generic
             MarshalInterfaceHelper<global::Windows.Foundation.Collections.IVector<T>>.DisposeAbi(abi);
 
         public static string GetGuidSignature() => GuidGenerator.GetSignature(typeof(IList<T>));
-
-        public sealed class FromAbiHelper : global::System.Collections.Generic.IList<T>
-        {
-            private readonly global::Windows.Foundation.Collections.IVector<T> _vector;
-
-            public FromAbiHelper(global::Windows.Foundation.Collections.IVector<T> vector)
-            {
-                _vector = vector;
-            }
-
-            public int Count
-            {
-                get
-                {
-                    uint size = _vector.Size;
-                    if (((uint)int.MaxValue) < size)
-                    {
-                        throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
-                    }
-
-                    return (int)size;
-                }
-            }
-
-            public bool IsReadOnly { get => false; }
-
-            public void Add(T item) => _vector.Append(item);
-
-            public void Clear() => _vector._Clear();
-
-            public bool Contains(T item) => _vector.IndexOf(item, out _);
-
-            public void CopyTo(T[] array, int arrayIndex)
-            {
-                if (array == null)
-                    throw new ArgumentNullException(nameof(array));
-
-                if (arrayIndex < 0)
-                    throw new ArgumentOutOfRangeException(nameof(arrayIndex));
-
-                if (array.Length <= arrayIndex && Count > 0)
-                    throw new ArgumentException(ErrorStrings.Argument_IndexOutOfArrayBounds);
-
-                if (array.Length - arrayIndex < Count)
-                    throw new ArgumentException(ErrorStrings.Argument_InsufficientSpaceToCopyCollection);
-
-
-                int count = Count;
-                for (int i = 0; i < count; i++)
-                {
-                    array[i + arrayIndex] = FromAbiHelper.GetAt(_vector, (uint)i);
-                }
-            }
-
-            public bool Remove(T item)
-            {
-                uint index;
-                bool exists = _vector.IndexOf(item, out index);
-
-                if (!exists)
-                    return false;
-
-                if (((uint)int.MaxValue) < index)
-                {
-                    throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
-                }
-
-                FromAbiHelper.RemoveAtHelper(_vector, index);
-                return true;
-            }
-
-            public T this[int index] { get => Indexer_Get(index); set => Indexer_Set(index, value); }
-
-            private T Indexer_Get(int index)
-            {
-                if (index < 0)
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                return GetAt(_vector, (uint)index);
-            }
-
-            private void Indexer_Set(int index, T value)
-            {
-                if (index < 0)
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                SetAt(_vector, (uint)index, value);
-            }
-
-            public int IndexOf(T item)
-            {
-                uint index;
-                bool exists = _vector.IndexOf(item, out index);
-
-                if (!exists)
-                    return -1;
-
-                if (((uint)int.MaxValue) < index)
-                {
-                    throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
-                }
-
-                return (int)index;
-            }
-
-            public void Insert(int index, T item)
-            {
-                if (index < 0)
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                InsertAtHelper(_vector, (uint)index, item);
-            }
-
-            public void RemoveAt(int index)
-            {
-                if (index < 0)
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                RemoveAtHelper(_vector, (uint)index);
-            }
-
-            internal static T GetAt(global::Windows.Foundation.Collections.IVector<T> _this, uint index)
-            {
-                try
-                {
-                    return _this.GetAt(index);
-
-                    // We delegate bounds checking to the underlying collection and if it detected a fault,
-                    // we translate it to the right exception:
-                }
-                catch (Exception ex)
-                {
-                    if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                        throw new ArgumentOutOfRangeException(nameof(index));
-
-                    throw;
-                }
-            }
-
-            private static void SetAt(global::Windows.Foundation.Collections.IVector<T> _this, uint index, T value)
-            {
-                try
-                {
-                    _this.SetAt(index, value);
-
-                    // We deligate bounds checking to the underlying collection and if it detected a fault,
-                    // we translate it to the right exception:
-                }
-                catch (Exception ex)
-                {
-                    if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                        throw new ArgumentOutOfRangeException(nameof(index));
-
-                    throw;
-                }
-            }
-
-            private static void InsertAtHelper(global::Windows.Foundation.Collections.IVector<T> _this, uint index, T item)
-            {
-                try
-                {
-                    _this.InsertAt(index, item);
-
-                    // We delegate bounds checking to the underlying collection and if it detected a fault,
-                    // we translate it to the right exception:
-                }
-                catch (Exception ex)
-                {
-                    if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                        throw new ArgumentOutOfRangeException(nameof(index));
-
-                    throw;
-                }
-            }
-
-            internal static void RemoveAtHelper(global::Windows.Foundation.Collections.IVector<T> _this, uint index)
-            {
-                try
-                {
-                    _this.RemoveAt(index);
-
-                    // We delegate bounds checking to the underlying collection and if it detected a fault,
-                    // we translate it to the right exception:
-                }
-                catch (Exception ex)
-                {
-                    if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                        throw new ArgumentOutOfRangeException(nameof(index));
-
-                    throw;
-                }
-            }
-
-            public global::System.Collections.Generic.IEnumerator<T> GetEnumerator() => ((global::System.Collections.Generic.IEnumerable<T>)(IWinRTObject)_vector).GetEnumerator();
-
-            global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-        }
 
         public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IVector<T>
         {
@@ -439,21 +721,29 @@ namespace ABI.System.Collections.Generic
         }
 
         [Guid("913337E9-11A1-4345-A3A2-4E7F956E222D")]
-        public struct Vftbl
+        public unsafe struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public global::System.Delegate GetAt_0;
-            internal _get_PropertyAsUInt32 get_Size_1;
-            public IList_Delegates.GetView_2 GetView_2;
+            private void* _get_Size_1;
+            internal delegate* unmanaged[Stdcall]<IntPtr, out uint, int> GetSize_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, out uint, int>)_get_Size_1; set => _get_Size_1 = (void*)value; }
+            private void* _getView_2;
+            public delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int> GetView_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)_getView_2; set => _getView_2 = (void*)value; }
             public global::System.Delegate IndexOf_3;
             public global::System.Delegate SetAt_4;
             public global::System.Delegate InsertAt_5;
-            public IList_Delegates.RemoveAt_6 RemoveAt_6;
+            private void* _removeAt_6;
+            public delegate* unmanaged[Stdcall]<IntPtr, uint, int> RemoveAt_6 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, int>)_removeAt_6; set => _removeAt_6 = (void*)value; }
             public global::System.Delegate Append_7;
-            public IList_Delegates.RemoveAtEnd_8 RemoveAtEnd_8;
-            public IList_Delegates.Clear_9 Clear_9;
-            public IList_Delegates.GetMany_10 GetMany_10;
-            public IList_Delegates.ReplaceAll_11 ReplaceAll_11;
+            private void* _removeAtEnd_8;
+            public delegate* unmanaged[Stdcall]<IntPtr, int> RemoveAtEnd_8 { get => (delegate* unmanaged[Stdcall]<IntPtr, int>)_removeAtEnd_8; set => _removeAtEnd_8 = (void*)value; }
+            private void* _clear_9;
+            public delegate* unmanaged[Stdcall]<IntPtr, int> Clear_9 { get => (delegate* unmanaged[Stdcall]<IntPtr, int>)_clear_9; set => _clear_9 = (void*)value; }
+            private void* _getMany_10;
+            public delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, out uint, int> GetMany_10 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, out uint, int>)_getMany_10; set => _getMany_10 = (void*)value; }
+            private void* _replaceAll_11;
+            public delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, int> ReplaceAll_11 { get => (delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, int>)_replaceAll_11; set => _replaceAll_11 = (void*)value; }
+
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IList<T>));
             private static readonly Type GetAt_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
             private static readonly Type IndexOf_3_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
@@ -461,59 +751,61 @@ namespace ABI.System.Collections.Generic
             private static readonly Type InsertAt_5_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType, typeof(int) });
             private static readonly Type Append_7_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(int) });
 
-            internal unsafe Vftbl(IntPtr thisPtr)
+            internal unsafe Vftbl(IntPtr thisPtr) : this()
             {
                 var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
                 var vftbl = (IntPtr*)vftblPtr.Vftbl;
                 IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
                 GetAt_0 = Marshal.GetDelegateForFunctionPointer(vftbl[6], GetAt_0_Type);
-                get_Size_1 = Marshal.GetDelegateForFunctionPointer<_get_PropertyAsUInt32>(vftbl[7]);
-                GetView_2 = Marshal.GetDelegateForFunctionPointer<IList_Delegates.GetView_2>(vftbl[8]);
+                GetSize_1 = (delegate* unmanaged[Stdcall]<IntPtr, out uint, int>)vftbl[7];
+                GetView_2 = (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)vftbl[8];
                 IndexOf_3 = Marshal.GetDelegateForFunctionPointer(vftbl[9], IndexOf_3_Type);
                 SetAt_4 = Marshal.GetDelegateForFunctionPointer(vftbl[10], SetAt_4_Type);
                 InsertAt_5 = Marshal.GetDelegateForFunctionPointer(vftbl[11], InsertAt_5_Type);
-                RemoveAt_6 = Marshal.GetDelegateForFunctionPointer<IList_Delegates.RemoveAt_6>(vftbl[12]);
+                RemoveAt_6 = (delegate* unmanaged[Stdcall]<IntPtr, uint, int>)vftbl[12];
                 Append_7 = Marshal.GetDelegateForFunctionPointer(vftbl[13], Append_7_Type);
-                RemoveAtEnd_8 = Marshal.GetDelegateForFunctionPointer<IList_Delegates.RemoveAtEnd_8>(vftbl[14]);
-                Clear_9 = Marshal.GetDelegateForFunctionPointer<IList_Delegates.Clear_9>(vftbl[15]);
-                GetMany_10 = Marshal.GetDelegateForFunctionPointer<IList_Delegates.GetMany_10>(vftbl[16]);
-                ReplaceAll_11 = Marshal.GetDelegateForFunctionPointer<IList_Delegates.ReplaceAll_11>(vftbl[17]);
+                RemoveAtEnd_8 = (delegate* unmanaged[Stdcall]<IntPtr, int>)vftbl[14];
+                Clear_9 = (delegate* unmanaged[Stdcall]<IntPtr, int>)vftbl[15];
+                GetMany_10 = (delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, out uint, int>)vftbl[16];
+                ReplaceAll_11 = (delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, int>)vftbl[17];
             }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+            private static readonly Delegate[] DelegateCache = new Delegate[7];
+
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
                     GetAt_0 = global::System.Delegate.CreateDelegate(GetAt_0_Type, typeof(Vftbl).GetMethod("Do_Abi_GetAt_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
-                    get_Size_1 = Do_Abi_get_Size_1,
-                    GetView_2 = Do_Abi_GetView_2,
+                    _get_Size_1 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new _get_PropertyAsUInt32(Do_Abi_get_Size_1)),
+                    _getView_2 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IList_Delegates.GetView_2(Do_Abi_GetView_2)),
                     IndexOf_3 = global::System.Delegate.CreateDelegate(IndexOf_3_Type, typeof(Vftbl).GetMethod("Do_Abi_IndexOf_3", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
                     SetAt_4 = global::System.Delegate.CreateDelegate(SetAt_4_Type, typeof(Vftbl).GetMethod("Do_Abi_SetAt_4", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
                     InsertAt_5 = global::System.Delegate.CreateDelegate(InsertAt_5_Type, typeof(Vftbl).GetMethod("Do_Abi_InsertAt_5", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
-                    RemoveAt_6 = Do_Abi_RemoveAt_6,
+                    _removeAt_6 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new IList_Delegates.RemoveAt_6(Do_Abi_RemoveAt_6)),
                     Append_7 = global::System.Delegate.CreateDelegate(Append_7_Type, typeof(Vftbl).GetMethod("Do_Abi_Append_7", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
-                    RemoveAtEnd_8 = Do_Abi_RemoveAtEnd_8,
-                    Clear_9 = Do_Abi_Clear_9,
-                    GetMany_10 = Do_Abi_GetMany_10,
-                    ReplaceAll_11 = Do_Abi_ReplaceAll_11
+                    _removeAtEnd_8 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[3] = new IList_Delegates.RemoveAtEnd_8(Do_Abi_RemoveAtEnd_8)),
+                    _clear_9 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[4] = new IList_Delegates.Clear_9(Do_Abi_Clear_9)),
+                    _getMany_10 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[5] = new IList_Delegates.GetMany_10(Do_Abi_GetMany_10)),
+                    _replaceAll_11 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[6] = new IList_Delegates.ReplaceAll_11(Do_Abi_ReplaceAll_11)),
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 12);
                 Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
                 nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.GetAt_0);
-                nativeVftbl[7] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.get_Size_1);
-                nativeVftbl[8] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.GetView_2);
+                nativeVftbl[7] = (IntPtr)AbiToProjectionVftable.GetSize_1;
+                nativeVftbl[8] = (IntPtr)AbiToProjectionVftable.GetView_2;
                 nativeVftbl[9] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.IndexOf_3);
                 nativeVftbl[10] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.SetAt_4);
                 nativeVftbl[11] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.InsertAt_5);
-                nativeVftbl[12] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.RemoveAt_6);
+                nativeVftbl[12] = (IntPtr)AbiToProjectionVftable._removeAt_6;
                 nativeVftbl[13] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.Append_7);
-                nativeVftbl[14] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.RemoveAtEnd_8);
-                nativeVftbl[15] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.Clear_9);
-                nativeVftbl[16] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.GetMany_10);
-                nativeVftbl[17] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.ReplaceAll_11);
+                nativeVftbl[14] = (IntPtr)AbiToProjectionVftable._removeAtEnd_8;
+                nativeVftbl[15] = (IntPtr)AbiToProjectionVftable._clear_9;
+                nativeVftbl[16] = (IntPtr)AbiToProjectionVftable._getMany_10;
+                nativeVftbl[17] = (IntPtr)AbiToProjectionVftable._replaceAll_11;
 
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -727,13 +1019,6 @@ namespace ABI.System.Collections.Generic
         }
         public static Guid PIID = Vftbl.PIID;
         
-        internal static FromAbiHelper _FromVector(IWinRTObject _this)
-        {
-            return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IList<T>).TypeHandle,
-                () => new FromAbiHelper((global::Windows.Foundation.Collections.IVector<T>)_this));
-        }
-
-
         unsafe T global::Windows.Foundation.Collections.IVector<T>.GetAt(uint index)
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
@@ -909,23 +1194,97 @@ namespace ABI.System.Collections.Generic
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
                 var ThisPtr = _obj.ThisPtr;
                 uint __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSize_1(ThisPtr, out __retval));
                 return __retval;
             }
         }
 
-        int global::System.Collections.Generic.ICollection<T>.Count => _FromVector((IWinRTObject)this).Count;
-        bool global::System.Collections.Generic.ICollection<T>.IsReadOnly => _FromVector((IWinRTObject)this).IsReadOnly;
-        T global::System.Collections.Generic.IList<T>.this[int index] { get => _FromVector((IWinRTObject)this)[index]; set => _FromVector((IWinRTObject)this)[index] = value; }
-        int global::System.Collections.Generic.IList<T>.IndexOf(T item) => _FromVector((IWinRTObject)this).IndexOf(item);
-        void global::System.Collections.Generic.IList<T>.Insert(int index, T item) => _FromVector((IWinRTObject)this).Insert(index, item);
-        void global::System.Collections.Generic.IList<T>.RemoveAt(int index) => _FromVector((IWinRTObject)this).RemoveAt(index);
-        void global::System.Collections.Generic.ICollection<T>.Add(T item) => _FromVector((IWinRTObject)this).Add(item);
-        void global::System.Collections.Generic.ICollection<T>.Clear() => _FromVector((IWinRTObject)this).Clear();
-        bool global::System.Collections.Generic.ICollection<T>.Contains(T item) => _FromVector((IWinRTObject)this).Contains(item);
-        void global::System.Collections.Generic.ICollection<T>.CopyTo(T[] array, int arrayIndex) => _FromVector((IWinRTObject)this).CopyTo(array, arrayIndex);
-        bool global::System.Collections.Generic.ICollection<T>.Remove(T item) => _FromVector((IWinRTObject)this).Remove(item);
-        global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator() => _FromVector((IWinRTObject)this).GetEnumerator();
+        int global::System.Collections.Generic.ICollection<T>.Count
+        {
+            get
+            {
+                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
+                return IListMethods<T>.get_Count(_obj);
+            }
+        }
+
+        bool global::System.Collections.Generic.ICollection<T>.IsReadOnly
+        {
+            get
+            {
+                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
+                return IListMethods<T>.get_IsReadOnly(_obj);
+            }
+        }
+
+        T global::System.Collections.Generic.IList<T>.this[int index] 
+        {
+            get
+            {
+                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
+                return IListMethods<T>.Indexer_Get(_obj, index);
+            } 
+            set
+            {
+                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
+                IListMethods<T>.Indexer_Set(_obj, index, value);
+            }
+        }
+
+        int global::System.Collections.Generic.IList<T>.IndexOf(T item)
+        {
+            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
+            return IListMethods<T>.IndexOf(_obj, item);
+        }
+
+        void global::System.Collections.Generic.IList<T>.Insert(int index, T item)
+        {
+            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
+            IListMethods<T>.Insert(_obj, index, item);
+        }
+
+        void global::System.Collections.Generic.IList<T>.RemoveAt(int index)
+        {
+            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
+            IListMethods<T>.RemoveAt(_obj, index);
+        }
+
+        void global::System.Collections.Generic.ICollection<T>.Add(T item)
+        {
+            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
+            IListMethods<T>.Add(_obj, item);
+        }
+
+        void global::System.Collections.Generic.ICollection<T>.Clear()
+        {
+            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
+            IListMethods<T>.Clear(_obj);
+        }
+
+        bool global::System.Collections.Generic.ICollection<T>.Contains(T item)
+        {
+            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
+            return IListMethods<T>.Contains(_obj, item);
+        }
+
+        void global::System.Collections.Generic.ICollection<T>.CopyTo(T[] array, int arrayIndex)
+        {
+            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
+            IListMethods<T>.CopyTo(_obj, array, arrayIndex);
+        }
+
+        bool global::System.Collections.Generic.ICollection<T>.Remove(T item)
+        {
+            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
+            return IListMethods<T>.Remove(_obj, item);
+        }
+        
+        global::System.Collections.Generic.IEnumerator<T> global::System.Collections.Generic.IEnumerable<T>.GetEnumerator()
+        {
+            ((IWinRTObject)this).IsInterfaceImplemented(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle, true);
+            var _objEnumerable = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IEnumerable<T>).TypeHandle));
+            return IEnumerableMethods<T>.GetEnumerator(_objEnumerable);
+        }
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 

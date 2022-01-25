@@ -6,7 +6,6 @@
 *.c
 *.winmd
 *test*.xml
-build
 obj
 packages
 Debug

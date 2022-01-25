@@ -1140,7 +1140,7 @@ namespace WinRT
 #endif
     static class MarshalInspectable<T>
     {
-        public static IObjectReference CreateMarshaler(T o, bool unwrapObject = true)
+        public static IObjectReference CreateMarshaler<V>(T o, Guid iid, bool unwrapObject = true)
         {
             if (o is null)
             {
@@ -1149,7 +1149,7 @@ namespace WinRT
 
             if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
             {
-                return objRef.As<IInspectable.Vftbl>(IInspectable.IID);
+                return objRef.As<V>(iid);
             }
             var publicType = o.GetType();
             Type helperType = Projections.FindCustomHelperTypeMapping(publicType, true);
@@ -1157,12 +1157,17 @@ namespace WinRT
             {
                 var parms = new[] { Expression.Parameter(typeof(object), "arg") };
                 var createMarshaler = Expression.Lambda<Func<object, IObjectReference>>(
-                    Expression.Call(helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static), 
+                    Expression.Call(helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
                         new[] { Expression.Convert(parms[0], publicType) }), parms).Compile();
                 return createMarshaler(o);
             }
 
-            return ComWrappersSupport.CreateCCWForObject<IInspectable.Vftbl>(o, IInspectable.IID);
+            return ComWrappersSupport.CreateCCWForObject<V>(o, iid);
+        }
+
+        public static IObjectReference CreateMarshaler(T o, bool unwrapObject = true)
+        {
+            return CreateMarshaler<IInspectable.Vftbl>(o, IInspectable.IID, unwrapObject);
         }
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
@@ -1254,6 +1259,23 @@ namespace WinRT
             }
 
             return ComWrappersSupport.CreateCCWForObject<global::WinRT.Interop.IDelegateVftbl>(o, delegateIID);
+        }
+
+        public static T FromAbi<T>(IntPtr nativeDelegate)
+            where T : System.Delegate
+        {
+            if (nativeDelegate == IntPtr.Zero)
+            {
+                return null;
+            }
+            else if (IUnknownVftbl.IsReferenceToManagedObject(nativeDelegate))
+            {
+                return ComWrappersSupport.FindObject<T>(nativeDelegate);
+            }
+            else
+            {
+                return ComWrappersSupport.CreateRcwForComObject<T>(nativeDelegate);
+            }
         }
     }
 

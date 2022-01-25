@@ -133,6 +133,10 @@ namespace WinRT
             {
                 if (genericTypes != null)
                 {
+                    if(resolvedType == typeof(global::System.Nullable<>) && genericTypes[0].IsDelegate())
+                    {
+                        return typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(genericTypes);
+                    }
                     resolvedType = resolvedType.MakeGenericType(genericTypes);
                 }
                 return resolvedType;
@@ -156,6 +160,7 @@ namespace WinRT
                 "Boolean" => typeof(bool),
                 "String" => typeof(string),
                 "Char" => typeof(char),
+                "Char16" => typeof(char),
                 "Single" => typeof(float),
                 "Double" => typeof(double),
                 "Guid" => typeof(Guid),

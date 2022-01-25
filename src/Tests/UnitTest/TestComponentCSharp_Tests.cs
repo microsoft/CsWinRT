@@ -851,6 +851,9 @@ namespace UnitTest
             {
                 Assert.Equal(stringMap[item.Key], item.Value);
             }
+            KeyValuePair<string, string>[] pairs = new KeyValuePair<string, string>[2];
+            stringMap.CopyTo(pairs, 0);
+            Assert.Equal(2, pairs.Length);
         }
 
         [Fact]
@@ -2150,6 +2153,9 @@ namespace UnitTest
 
             string s = "Hello World!";
             Assert.Equal(s, Class.UnboxString(s));
+
+            ProvideInt intHandler = () => 42;
+            Assert.Equal(intHandler, Class.UnboxDelegate(intHandler));
         }
 
         [Fact]
@@ -2219,6 +2225,15 @@ namespace UnitTest
             Assert.IsType<string>(str2);
             Assert.Equal(string.Empty, (string)str1);
             Assert.Equal(string.Empty, (string)str2);
+        }
+
+        [Fact]
+        public void TestDelegateUnboxing()
+        {
+            var del = Class.BoxedDelegate;
+            Assert.IsType<ProvideUri>(del);
+            var provideUriDel = (ProvideUri) del;
+            Assert.Equal(new Uri("http://microsoft.com"), provideUriDel());
         }
 
         internal class ManagedType { }

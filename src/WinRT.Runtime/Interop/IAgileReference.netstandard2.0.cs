@@ -91,7 +91,7 @@ namespace ABI.WinRT.Interop
 
         public static implicit operator IAgileReference(IObjectReference obj) => (obj != null) ? new IAgileReference(obj) : null;
         public static implicit operator IAgileReference(ObjectReference<Vftbl> obj) => (obj != null) ? new IAgileReference(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
+        private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
@@ -181,7 +181,7 @@ namespace ABI.WinRT.Interop
 
         public static implicit operator IGlobalInterfaceTable(IObjectReference obj) => (obj != null) ? new IGlobalInterfaceTable(obj) : null;
         public static implicit operator IGlobalInterfaceTable(ObjectReference<Vftbl> obj) => (obj != null) ? new IGlobalInterfaceTable(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
+        private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();

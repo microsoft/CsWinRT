@@ -9,6 +9,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using WinRT;
 using WinRT.Interop;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable 0169 // warning CS0169: The field '...' is never used
 #pragma warning disable 0649 // warning CS0169: Field '...' is never assigned to
@@ -26,17 +28,364 @@ namespace Windows.Foundation.Collections
     }
 }
 
+namespace System.Collections.Generic
+{
+    internal sealed class IReadOnlyDictionaryImpl<K, V> : IReadOnlyDictionary<K, V>, IWinRTObject
+    {
+        private IObjectReference _inner;
+
+        internal IReadOnlyDictionaryImpl(IObjectReference _inner)
+        {
+            this._inner = _inner;
+        }
+
+        private volatile IObjectReference __iReadOnlyDictionaryObjRef;
+        private IObjectReference Make_IDictionaryObjRef()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref __iReadOnlyDictionaryObjRef, _inner.As<ABI.System.Collections.Generic.IReadOnlyDictionary<K, V>.Vftbl>(), null);
+            return __iReadOnlyDictionaryObjRef;
+        }
+        private IObjectReference iReadOnlyDictionaryObjRef => __iReadOnlyDictionaryObjRef ?? Make_IDictionaryObjRef();
+
+        private volatile IObjectReference __iEnumerableObjRef;
+        private IObjectReference Make_IEnumerableObjRef()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, _inner.As<ABI.System.Collections.Generic.IEnumerable<KeyValuePair<K, V>>.Vftbl>(), null);
+            return __iEnumerableObjRef;
+        }
+        private IObjectReference iEnumerableObjRef => __iEnumerableObjRef ?? Make_IEnumerableObjRef();
+
+        IObjectReference IWinRTObject.NativeObject => _inner;
+
+        bool IWinRTObject.HasUnwrappableNativeObject => true;
+
+        private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> _queryInterfaceCache;
+        private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> MakeQueryInterfaceCache()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _queryInterfaceCache, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference>(), null);
+            return _queryInterfaceCache;
+        }
+        global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, IObjectReference> IWinRTObject.QueryInterfaceCache => _queryInterfaceCache ?? MakeQueryInterfaceCache();
+        private volatile global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> _additionalTypeData;
+        private global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> MakeAdditionalTypeData()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref _additionalTypeData, new global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object>(), null);
+            return _additionalTypeData;
+        }
+        global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, object> IWinRTObject.AdditionalTypeData => _additionalTypeData ?? MakeAdditionalTypeData();
+
+        public V this[K key] => ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.Indexer_Get(iReadOnlyDictionaryObjRef, key);
+
+        public IEnumerable<K> Keys => ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.get_Keys(iReadOnlyDictionaryObjRef);
+
+        public IEnumerable<V> Values => ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.get_Values(iReadOnlyDictionaryObjRef);
+
+        public int Count => ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.get_Count(iReadOnlyDictionaryObjRef);
+
+        public bool ContainsKey(K key) => ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.ContainsKey(iReadOnlyDictionaryObjRef, key);
+
+        public IEnumerator<KeyValuePair<K, V>> GetEnumerator() => ABI.System.Collections.Generic.IEnumerableMethods<KeyValuePair<K, V>>.GetEnumerator(iEnumerableObjRef);
+
+        public bool TryGetValue(K key, [MaybeNullWhen(false)] out V value)
+        {
+            return ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>.TryGetValue(iReadOnlyDictionaryObjRef, key, out value);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+}
+
+namespace ABI.Windows.Foundation.Collections
+{
+    using global::System;
+    using global::System.Runtime.CompilerServices;
+
+    internal static class IMapViewMethods<K, V>
+    {
+        public static unsafe V Lookup(IObjectReference obj, K key)
+        {
+            var _obj = (ObjectReference<global::ABI.System.Collections.Generic.IReadOnlyDictionary<K, V>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+
+            object __key = default;
+            var __params = new object[] { ThisPtr, null, null };
+            try
+            {
+                __key = Marshaler<K>.CreateMarshaler(key);
+                __params[1] = Marshaler<K>.GetAbi(__key);
+                _obj.Vftbl.Lookup_0.DynamicInvokeAbi(__params);
+                return Marshaler<V>.FromAbi(__params[2]);
+            }
+            finally
+            {
+                Marshaler<K>.DisposeMarshaler(__key);
+                Marshaler<V>.DisposeAbi(__params[2]);
+            }
+        }
+
+        public static unsafe bool HasKey(IObjectReference obj, K key)
+        {
+            var _obj = (ObjectReference<ABI.System.Collections.Generic.IReadOnlyDictionary<K, V>.Vftbl>)obj; 
+            var ThisPtr = _obj.ThisPtr;
+
+            object __key = default;
+            var __params = new object[] { ThisPtr, null, null };
+            try
+            {
+                __key = Marshaler<K>.CreateMarshaler(key);
+                __params[1] = Marshaler<K>.GetAbi(__key);
+                _obj.Vftbl.HasKey_2.DynamicInvokeAbi(__params);
+                return (byte)__params[2] != 0;
+            }
+            finally
+            {
+                Marshaler<K>.DisposeMarshaler(__key);
+            }
+        }
+
+        public static unsafe void Split(IObjectReference obj, out global::Windows.Foundation.Collections.IMapView<K, V> first, out global::Windows.Foundation.Collections.IMapView<K, V> second)
+        {
+            var _obj = (ObjectReference<ABI.System.Collections.Generic.IReadOnlyDictionary<K, V>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+
+            IntPtr __first = default;
+            IntPtr __second = default;
+            try
+            {
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Split_3(ThisPtr, out __first, out __second));
+                first = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__first);
+                second = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__second);
+            }
+            finally
+            {
+                MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.DisposeAbi(__first);
+                MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.DisposeAbi(__second);
+            }
+        }
+
+        public static unsafe uint get_Size(IObjectReference obj)
+        {
+            var _obj = (ObjectReference<ABI.System.Collections.Generic.IReadOnlyDictionary<K, V>.Vftbl>)obj;
+            var ThisPtr = _obj.ThisPtr;
+
+            uint __retval = default;
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSize_1(ThisPtr, out __retval));
+            return __retval;   
+        }
+    }
+}
+
 namespace ABI.System.Collections.Generic
 {
     using global::System;
     using global::System.Runtime.CompilerServices;
+
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IReadOnlyDictionaryMethods<K, V>
+    {
+        public static int get_Count(IObjectReference obj)
+        {
+            uint size = ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>.get_Size(obj);
+
+            if (((uint)int.MaxValue) < size)
+            {
+                throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingDictionaryTooLarge);
+            }
+
+            return (int)size;
+        }
+
+        public static V Indexer_Get(IObjectReference obj, K key)
+        {
+            if (key == null)
+                throw new ArgumentNullException(nameof(key));
+            return Lookup(obj, key);
+        }
+
+        public static global::System.Collections.Generic.IEnumerable<K> get_Keys(IObjectReference obj)
+        {
+            return new ReadOnlyDictionaryKeyCollection(obj);
+        }
+
+        public static global::System.Collections.Generic.IEnumerable<V> get_Values(IObjectReference obj)
+        {
+            return new ReadOnlyDictionaryValueCollection(obj);
+        }
+
+        public static bool ContainsKey(IObjectReference obj, K key)
+        {
+            if (key == null)
+                throw new ArgumentNullException(nameof(key));
+            return ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>.HasKey(obj, key);
+        }
+
+        public static bool TryGetValue(IObjectReference obj, K key, out V value)
+        {
+            if (key == null)
+                throw new ArgumentNullException(nameof(key));
+
+            // It may be faster to call HasKey then Lookup.  On failure, we would otherwise
+            // throw an exception from Lookup.
+            if (!ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>.HasKey(obj, key))
+            {
+                value = default!;
+                return false;
+            }
+
+            try
+            {
+                value = ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>.Lookup(obj, key);
+                return true;
+            }
+            catch (Exception ex)  // Still may hit this case due to a race condition
+            {
+                if (ExceptionHelpers.E_BOUNDS == ex.HResult)
+                {
+                    value = default!;
+                    return false;
+                }
+                throw;
+            }
+        }
+
+        public static V Lookup(IObjectReference obj, K key)
+        {
+            try
+            {
+                return ABI.Windows.Foundation.Collections.IMapViewMethods<K, V>.Lookup(obj, key);
+            }
+            catch (Exception ex)
+            {
+                if (ExceptionHelpers.E_BOUNDS == ex.HResult)
+                    throw new KeyNotFoundException(ErrorStrings.Format(ErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
+                throw;
+            }
+        }
+
+        private sealed class ReadOnlyDictionaryKeyCollection : global::System.Collections.Generic.IEnumerable<K>
+        {
+            private readonly IObjectReference iReadOnlyDictionaryObjRef;
+
+            public ReadOnlyDictionaryKeyCollection(IObjectReference iReadOnlyDictionaryObjRef)
+            {
+                if (iReadOnlyDictionaryObjRef == null)
+                    throw new ArgumentNullException(nameof(iReadOnlyDictionaryObjRef));
+
+                this.iReadOnlyDictionaryObjRef = iReadOnlyDictionaryObjRef;
+            }
+
+            private volatile IObjectReference __iEnumerableObjRef;
+            private IObjectReference Make_IEnumerableObjRef()
+            {
+                global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, iReadOnlyDictionaryObjRef.As<ABI.System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>.Vftbl>(), null);
+                return __iEnumerableObjRef;
+            }
+            private IObjectReference iEnumerableObjRef => __iEnumerableObjRef ?? Make_IEnumerableObjRef();
+
+            public global::System.Collections.Generic.IEnumerator<K> GetEnumerator() => new ReadOnlyDictionaryKeyEnumerator(iEnumerableObjRef);                                                            
+
+            IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+
+            private sealed class ReadOnlyDictionaryKeyEnumerator : global::System.Collections.Generic.IEnumerator<K>
+            {
+                private readonly IObjectReference iEnumerableObjRef;
+                private global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> enumeration;
+
+                public ReadOnlyDictionaryKeyEnumerator(IObjectReference iEnumerableObjRef)
+                {
+                    this.iEnumerableObjRef = iEnumerableObjRef;
+                    enumeration = IEnumerableMethods<global::System.Collections.Generic.KeyValuePair<K, V>>.GetEnumerator(iEnumerableObjRef);
+                }
+
+                void IDisposable.Dispose()
+                {
+                    enumeration.Dispose();
+                }
+
+                public bool MoveNext()
+                {
+                    return enumeration.MoveNext();
+                }
+
+                object IEnumerator.Current => Current;
+
+                public K Current => enumeration.Current.Key;
+
+                public void Reset()
+                {
+                    enumeration = IEnumerableMethods<global::System.Collections.Generic.KeyValuePair<K, V>>.GetEnumerator(iEnumerableObjRef);
+                }
+            }
+        }
+
+        private sealed class ReadOnlyDictionaryValueCollection : global::System.Collections.Generic.IEnumerable<V>
+        {
+            private readonly IObjectReference iDictionaryObjRef;
+
+            public ReadOnlyDictionaryValueCollection(IObjectReference iDictionaryObjRef)
+            {
+                this.iDictionaryObjRef = iDictionaryObjRef;
+            }
+
+            private volatile IObjectReference __iEnumerableObjRef;
+            private IObjectReference Make_IEnumerableObjRef()
+            {
+                global::System.Threading.Interlocked.CompareExchange(ref __iEnumerableObjRef, iDictionaryObjRef.As<ABI.System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>.Vftbl>(), null);
+                return __iEnumerableObjRef;
+            }
+            private IObjectReference iEnumerableObjRef => __iEnumerableObjRef ?? Make_IEnumerableObjRef();
+
+            public global::System.Collections.Generic.IEnumerator<V> GetEnumerator()
+            {
+                return new ReadOnlyDictionaryValueEnumerator(iEnumerableObjRef);
+            }
+            global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+
+            private sealed class ReadOnlyDictionaryValueEnumerator : global::System.Collections.Generic.IEnumerator<V>
+            {
+                private readonly IObjectReference iEnumerableObjRef;
+                private global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> enumeration;
+
+                public ReadOnlyDictionaryValueEnumerator(IObjectReference iEnumerableObjRef)
+                {
+                    this.iEnumerableObjRef = iEnumerableObjRef;
+                    enumeration = IEnumerableMethods<global::System.Collections.Generic.KeyValuePair<K, V>>.GetEnumerator(iEnumerableObjRef);
+                }
+
+                void IDisposable.Dispose()
+                {
+                    enumeration.Dispose();
+                }
+
+                public bool MoveNext()
+                {
+                    return enumeration.MoveNext();
+                }
+
+                object IEnumerator.Current => Current;
+
+                public V Current => enumeration.Current.Value;
+
+                public void Reset()
+                {
+                    enumeration = IEnumerableMethods<global::System.Collections.Generic.KeyValuePair<K, V>>.GetEnumerator(iEnumerableObjRef);
+                }
+            }
+        }
+    }
+
+    
 
     [DynamicInterfaceCastableImplementation]
     [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
     interface IReadOnlyDictionary<K, V> : global::System.Collections.Generic.IReadOnlyDictionary<K, V>, global::Windows.Foundation.Collections.IMapView<K, V>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IReadOnlyDictionary<K, V> obj) =>
-            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, GuidGenerator.GetIID(typeof(IReadOnlyDictionary<K, V>)));
+            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, PIID);
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
@@ -155,107 +504,6 @@ namespace ABI.System.Collections.Generic
                     enumeration = dictionary.GetEnumerator();
                 }
             }
-        }
-
-        public sealed class FromAbiHelper : global::System.Collections.Generic.IReadOnlyDictionary<K, V>
-        {
-            private readonly global::Windows.Foundation.Collections.IMapView<K, V> _mapView;
-            private readonly global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>> _enumerable;
-
-            public FromAbiHelper(global::Windows.Foundation.Collections.IMapView<K, V> mapView, ObjectReference<Vftbl> objRef)
-            {
-                _mapView = mapView;
-                _enumerable = (global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>)new IInspectable(objRef);
-            }
-
-            public int Count
-            {
-                get
-                {
-                    uint size = _mapView.Size;
-
-                    if (((uint)int.MaxValue) < size)
-                    {
-                        throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingDictionaryTooLarge);
-                    }
-
-                    return (int)size;
-                }
-            }
-
-            public V this[K key] { get => Indexer_Get(key); }
-
-            private V Indexer_Get(K key)
-            {
-                if (key == null)
-                    throw new ArgumentNullException(nameof(key));
-                return Lookup(_mapView, key);
-            }
-
-            public global::System.Collections.Generic.IEnumerable<K> Keys 
-            { 
-                get => new ReadOnlyDictionaryKeyCollection(this); 
-            }
-
-            public global::System.Collections.Generic.IEnumerable<V> Values 
-            { 
-                get => new ReadOnlyDictionaryValueCollection(this); 
-            }
-
-            public bool ContainsKey(K key)
-            {
-                if (key == null)
-                    throw new ArgumentNullException(nameof(key));
-                return _mapView.HasKey(key);
-            }
-
-            public bool TryGetValue(K key, out V value)
-            {
-                if (key == null)
-                    throw new ArgumentNullException(nameof(key));
-
-                // It may be faster to call HasKey then Lookup.  On failure, we would otherwise
-                // throw an exception from Lookup.
-                if (!_mapView.HasKey(key))
-                {
-                    value = default!;
-                    return false;
-                }
-
-                try
-                {
-                    value = _mapView.Lookup(key);
-                    return true;
-                }
-                catch (Exception ex)  // Still may hit this case due to a race condition
-                {
-                    if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                    {
-                        value = default!;
-                        return false;
-                    }
-                    throw;
-                }
-            }
-
-            private static V Lookup(global::Windows.Foundation.Collections.IMapView<K, V> _this, K key)
-            {
-                try
-                {
-                    return _this.Lookup(key);
-                }
-                catch (Exception ex)
-                {
-                    if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                        throw new KeyNotFoundException(ErrorStrings.Format(ErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
-                    throw;
-                }
-            }
-
-            public global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> GetEnumerator() => _enumerable.GetEnumerator();
-
-            IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-
         }
 
         public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IMapView<K, V>
@@ -490,46 +738,51 @@ namespace ABI.System.Collections.Generic
         }
 
         [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
-        public struct Vftbl
+        public unsafe struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public global::System.Delegate Lookup_0;
-            internal _get_PropertyAsUInt32 get_Size_1;
+            private void* _get_Size_1;
+            internal delegate* unmanaged[Stdcall]<IntPtr, out uint, int> GetSize_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, out uint, int>)_get_Size_1; set => _get_Size_1 = (void*)value; }
             public global::System.Delegate HasKey_2;
-            public IReadOnlyDictionary_Delegates.Split_3 Split_3;
+            private void* _split_3;
+            internal delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, out IntPtr, int> Split_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, out IntPtr, int>)_split_3; set => _split_3 = (void*)value; }
+
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IReadOnlyDictionary<K, V>));
             private static readonly Type Lookup_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, Marshaler<V>.AbiType.MakeByRefType(), typeof(int) });
             private static readonly Type HasKey_2_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, typeof(byte).MakeByRefType(), typeof(int) });
 
-            internal unsafe Vftbl(IntPtr thisPtr)
+            internal unsafe Vftbl(IntPtr thisPtr) : this()
             {
                 var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
                 var vftbl = (IntPtr*)vftblPtr.Vftbl;
                 IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
                 Lookup_0 = Marshal.GetDelegateForFunctionPointer(vftbl[6], Lookup_0_Type);
-                get_Size_1 = Marshal.GetDelegateForFunctionPointer<_get_PropertyAsUInt32>(vftbl[7]);
+                GetSize_1 = (delegate* unmanaged[Stdcall]<IntPtr, out uint, int>)vftbl[7];
                 HasKey_2 = Marshal.GetDelegateForFunctionPointer(vftbl[8], HasKey_2_Type);
-                Split_3 = Marshal.GetDelegateForFunctionPointer<IReadOnlyDictionary_Delegates.Split_3>(vftbl[9]);
+                Split_3 = (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, out IntPtr, int>)vftbl[9];
             }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+            private static readonly Delegate[] DelegateCache = new Delegate[2];
+
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
                     Lookup_0 = global::System.Delegate.CreateDelegate(Lookup_0_Type, typeof(Vftbl).GetMethod("Do_Abi_Lookup_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<K>.AbiType, Marshaler<V>.AbiType)),
-                    get_Size_1 = Do_Abi_get_Size_1,
+                    _get_Size_1 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new _get_PropertyAsUInt32(Do_Abi_get_Size_1)),
                     HasKey_2 = global::System.Delegate.CreateDelegate(HasKey_2_Type, typeof(Vftbl).GetMethod("Do_Abi_HasKey_2", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<K>.AbiType)),
-                    Split_3 = Do_Abi_Split_3
+                    _split_3 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IReadOnlyDictionary_Delegates.Split_3(Do_Abi_Split_3)),
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
                 Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
                 nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.Lookup_0);
-                nativeVftbl[7] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.get_Size_1);
+                nativeVftbl[7] = (IntPtr)AbiToProjectionVftable.GetSize_1;
                 nativeVftbl[8] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.HasKey_2);
-                nativeVftbl[9] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.Split_3);
+                nativeVftbl[9] = (IntPtr)AbiToProjectionVftable.Split_3;
 
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -630,96 +883,55 @@ namespace ABI.System.Collections.Generic
         }
         public static Guid PIID = Vftbl.PIID;
 
-        private static FromAbiHelper _FromMapView(IWinRTObject _this)
-        {
-            var _obj = ((ObjectReference<Vftbl>)_this.GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>).TypeHandle));
-            var ThisPtr = _obj.ThisPtr;
-            
-            return (FromAbiHelper)_this.GetOrCreateTypeHelperData(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>).TypeHandle,
-                () => new FromAbiHelper((global::Windows.Foundation.Collections.IMapView<K, V>)_this, _obj));
-        }
-
-        unsafe V global::Windows.Foundation.Collections.IMapView<K, V>.Lookup(K key)
-        {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>).TypeHandle));
-            var ThisPtr = _obj.ThisPtr;
-
-            object __key = default;
-            var __params = new object[] { ThisPtr, null, null };
-            try
-            {
-                __key = Marshaler<K>.CreateMarshaler(key);
-                __params[1] = Marshaler<K>.GetAbi(__key);
-                _obj.Vftbl.Lookup_0.DynamicInvokeAbi(__params);
-                return Marshaler<V>.FromAbi(__params[2]);
-            }
-            finally
-            {
-                Marshaler<K>.DisposeMarshaler(__key);
-                Marshaler<V>.DisposeAbi(__params[2]);
-            }
-        }
-
-        unsafe bool global::Windows.Foundation.Collections.IMapView<K, V>.HasKey(K key)
-        {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>).TypeHandle));
-            var ThisPtr = _obj.ThisPtr;
-
-            object __key = default;
-            var __params = new object[] { ThisPtr, null, null };
-            try
-            {
-                __key = Marshaler<K>.CreateMarshaler(key);
-                __params[1] = Marshaler<K>.GetAbi(__key);
-                _obj.Vftbl.HasKey_2.DynamicInvokeAbi(__params);
-                return (byte)__params[2] != 0;
-            }
-            finally
-            {
-                Marshaler<K>.DisposeMarshaler(__key);
-            }
-        }
-
-        unsafe void global::Windows.Foundation.Collections.IMapView<K, V>.Split(out global::Windows.Foundation.Collections.IMapView<K, V> first, out global::Windows.Foundation.Collections.IMapView<K, V> second)
-        {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>).TypeHandle));
-            var ThisPtr = _obj.ThisPtr;
-
-            IntPtr __first = default;
-            IntPtr __second = default;
-            try
-            {
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Split_3(ThisPtr, out __first, out __second));
-                first = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__first);
-                second = MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.FromAbi(__second);
-            }
-            finally
-            {
-                MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.DisposeAbi(__first);
-                MarshalInterface<global::Windows.Foundation.Collections.IMapView<K, V>>.DisposeAbi(__second);
-            }
-        }
-
-        unsafe uint global::Windows.Foundation.Collections.IMapView<K, V>.Size
+        global::System.Collections.Generic.IEnumerable<K> global::System.Collections.Generic.IReadOnlyDictionary<K, V>.Keys
         {
             get
             {
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>).TypeHandle));
-                var ThisPtr = _obj.ThisPtr;
-
-                uint __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
-                return __retval;
+                return IReadOnlyDictionaryMethods<K, V>.get_Keys(_obj);
             }
         }
+        global::System.Collections.Generic.IEnumerable<V> global::System.Collections.Generic.IReadOnlyDictionary<K, V>.Values
+        {
+            get
+            {
+                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>).TypeHandle));
+                return IReadOnlyDictionaryMethods<K, V>.get_Values(_obj);
+            }
+        }
+        int global::System.Collections.Generic.IReadOnlyCollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Count
+        {
+            get
+            {
+                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>).TypeHandle));
+                return IReadOnlyDictionaryMethods<K, V>.get_Count(_obj);
+            }
+        }
+        V global::System.Collections.Generic.IReadOnlyDictionary<K, V>.this[K key]
+        {
+            get
+            {
+                var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>).TypeHandle));
+                return IReadOnlyDictionaryMethods<K, V>.Indexer_Get(_obj, key);
+            }
+        }
+        bool global::System.Collections.Generic.IReadOnlyDictionary<K, V>.ContainsKey(K key)
+        {
+            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>).TypeHandle));
+            return IReadOnlyDictionaryMethods<K, V>.ContainsKey(_obj, key);
+        }
+        bool global::System.Collections.Generic.IReadOnlyDictionary<K, V>.TryGetValue(K key, out V value)
+        {
+            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IReadOnlyDictionary<K, V>).TypeHandle));
+            return IReadOnlyDictionaryMethods<K, V>.TryGetValue(_obj, key, out value);
+        }
+        global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>.GetEnumerator()
+        {
+            ((IWinRTObject)this).IsInterfaceImplemented(typeof(global::System.Collections.Generic.IEnumerable<KeyValuePair<K, V>>).TypeHandle, true);
+            var _objEnumerable = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IEnumerable<KeyValuePair<K, V>>).TypeHandle));
+            return IEnumerableMethods<global::System.Collections.Generic.KeyValuePair<K, V>>.GetEnumerator(_objEnumerable);
+        }
 
-        global::System.Collections.Generic.IEnumerable<K> global::System.Collections.Generic.IReadOnlyDictionary<K, V>.Keys => _FromMapView((IWinRTObject)this).Keys;
-        global::System.Collections.Generic.IEnumerable<V> global::System.Collections.Generic.IReadOnlyDictionary<K, V>.Values => _FromMapView((IWinRTObject)this).Values;
-        int global::System.Collections.Generic.IReadOnlyCollection<global::System.Collections.Generic.KeyValuePair<K, V>>.Count => _FromMapView((IWinRTObject)this).Count;
-        V global::System.Collections.Generic.IReadOnlyDictionary<K, V>.this[K key] => _FromMapView((IWinRTObject)this)[key];
-        bool global::System.Collections.Generic.IReadOnlyDictionary<K, V>.ContainsKey(K key) => _FromMapView((IWinRTObject)this).ContainsKey(key);
-        bool global::System.Collections.Generic.IReadOnlyDictionary<K, V>.TryGetValue(K key, out V value) => _FromMapView((IWinRTObject)this).TryGetValue(key, out value);
-        global::System.Collections.Generic.IEnumerator<global::System.Collections.Generic.KeyValuePair<K, V>> global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<K, V>>.GetEnumerator() => _FromMapView((IWinRTObject)this).GetEnumerator();
         IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
