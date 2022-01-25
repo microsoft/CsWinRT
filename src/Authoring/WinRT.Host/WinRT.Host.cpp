@@ -5,6 +5,8 @@
 #include <filesystem>
 #include <sstream>
 
+// for retrieving strings from resource table
+#include "atlstr.h"
 #undef GetObject  
 
 #include <unknwn.h>
@@ -12,6 +14,9 @@
 #include <winrt/Windows.Data.Json.h>
 #include <winrt/Windows.Storage.h>
 #include <roerrorapi.h>
+
+// provides CString, used to retrieve error messages from Resource string table
+#include "atlstr.h"
 
 using namespace winrt;
 using namespace winrt::Windows::Storage;
@@ -43,52 +48,69 @@ static load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_
     static const struct
     {
         HostFxrStatus status;
-        const wchar_t* message;
+        int resourceID;
+        // const wchar_t* message;
     }
     hostfxr_status_messages[] =
     {
-        { InvalidArgFailure, L"One of the specified arguments for the operation is invalid." },
-        { CoreHostLibLoadFailure, L"There was a failure loading a dependent library." },
-        { CoreHostLibMissingFailure, L"One of the dependent libraries is missing." },
-        { CoreHostEntryPointFailure, L"One of the dependent libraries is missing a required entry point." },
-        { CoreHostCurHostFindFailure, L"Could not deduce installation location from current module." },
-        { CoreClrResolveFailure, L"The coreclr library could not be found." },
-        { CoreClrBindFailure, L"The loaded coreclr library doesn't have one of the required entry points." },
-        { CoreClrInitFailure, L"The call to coreclr_initialize failed." },
-        { CoreClrExeFailure, L"The call to coreclr_execute_assembly failed." },
-        { ResolverInitFailure, L"Initialization of the hostpolicy dependency resolver failed." },
-        { ResolverResolveFailure, L"Resolution of dependencies in hostpolicy failed." },
-        { LibHostCurExeFindFailure, L"Failure to determine the location of the current executable." },
-        { LibHostInitFailure, L"Initialization of the hostpolicy library failed." },
-        { LibHostSdkFindFailure, L"Failure to find the requested SDK. This happens in the hostfxr when an SDK(also called CLI) command is used with dotnet. In this case the hosting layer tries to find an installed. NET SDK to run the command on. The search is based on deduced install locationand on the requested version from potential global. json file. If either no matching SDK version can be found, or that version exists, but it's missing the dotnet. dll file, this error code is returned." },
-        { LibHostInvalidArgs, L"Arguments to hostpolicy are invalid." },
-        { InvalidConfigFile, L"The .runtimeconfig.json file is invalid." },
-        { AppArgNotRunnable, L"The command line for dotnet.exe doesn't contain the path to the application." },
-        { AppHostExeNotBoundFailure, L"Apphost failed to determine which application to run." },
-        { FrameworkMissingFailure, L"It was not possible to find a compatible framework version." },
-        { HostApiFailed, L"The hostpolicy could not calculate the NATIVE_DLL_SEARCH_DIRECTORIES." },
-        { HostApiBufferTooSmall, L"The buffer specified to an API is not big enough to fit the requested value." },
-        { LibHostUnknownCommand, L"The corehost_main_with_output_buffer is called with unsupported host command." },
-        { LibHostAppRootFindFailure, L"The imprinted application path doesn't exist." },
-        { SdkResolverResolveFailure, L"hostfxr_resolve_sdk2 failed to find matching SDK." },
-        { FrameworkCompatFailure, L"The .runtimeconfig.json contains two incompatible framework references." },
-        { FrameworkCompatRetry, L"A previously processed framework reference was reprocessed." },
-        { BundleExtractionFailure, L"Error extracting single-file apphost bundle." },
-        { BundleExtractionIOError, L"Error reading or writing files during single-file apphost bundle extraction." },
-        { LibHostDuplicateProperty, L"The .runtimeconfig.json contains a runtime property which is also produced by the hosting layer." },
-        { HostApiUnsupportedVersion, L"Feature which requires certain version of the hosting layer binaries was used on a version which doesn't support it." },
-        { HostInvalidState, L"The current state is incompatible with the requested operation." },
-        { HostPropertyNotFound, L"A property requested by hostfxr_get_runtime_property_value doesn't exist." },
-        { CoreHostIncompatibleConfig, L"The component being initialized requires framework which is not available" },
-        { HostApiUnsupportedScenario, L"hostfxr doesn't currently support requesting the given delegate type using the given context." },
+        { InvalidArgFailure, 106 },
+        { CoreHostLibLoadFailure, 107 },
+        { CoreHostLibMissingFailure, 108 },
+		{ CoreHostEntryPointFailure, 109 },
+        { CoreHostCurHostFindFailure, 110 },
+        { CoreClrResolveFailure, 111 },
+        { CoreClrBindFailure, 112 },
+        { CoreClrInitFailure, 113 },
+        { CoreClrExeFailure, 114 },
+        { ResolverInitFailure, 115 },
+        { ResolverResolveFailure, 116 },
+        { LibHostCurExeFindFailure, 117 },
+        { LibHostInitFailure, 118 },
+        { LibHostSdkFindFailure, 119 },
+        { LibHostInvalidArgs, 120 },
+        { InvalidConfigFile, 121 },
+        { AppArgNotRunnable, 122 },
+        { AppHostExeNotBoundFailure, 123 },
+        { FrameworkMissingFailure, 124 },
+        { HostApiFailed, 125 },
+        { HostApiBufferTooSmall, 126 },
+        { LibHostUnknownCommand, 127 },
+        { LibHostAppRootFindFailure, 128 },
+        { SdkResolverResolveFailure, 129 },
+        { FrameworkCompatFailure, 130 },
+        { FrameworkCompatRetry, 131 },
+        { BundleExtractionFailure, 132 },
+        { BundleExtractionIOError, 133 },
+        { LibHostDuplicateProperty, 134 },
+        { HostApiUnsupportedVersion, 135 },
+        { HostInvalidState, 136 },
+        { HostPropertyNotFound, 137 },
+        { CoreHostIncompatibleConfig, 138 },
+        { HostApiUnsupportedScenario, 139 },
     };
 
+    auto string_table_entry = 0;
     for (auto&& elem : hostfxr_status_messages)
     {
         if (elem.status == result)
         {
-            throw hresult_error(result, elem.message);
+            string_table_entry = elem.resourceID;
         }
+    }
+
+    if (string_table_entry != 0)
+    { 
+        // The longest string in the table is 460 characters, we make a buffer of 461 to allow enough space for any case.
+        TCHAR buf[461];
+        HMODULE resources_handle;
+        resources_handle = LoadLibrary(L"WinRT.Host.ErrorStrings.dll");
+        if (resources_handle)
+        {
+            LoadString(resources_handle, string_table_entry, buf, sizeof(buf));
+            // Done
+            FreeLibrary(resources_handle);
+        }
+        throw hresult_error(result, buf);
     }
     
     winrt::throw_hresult(result);

@@ -1,0 +1,122 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource2.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource2.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    InvalidArgFailure       "One of the specified arguments for the operation is invalid."
+    CoreHostLibLoadFailure  "There was a failure loading a dependent library."
+    CoreHostLibMissingFailure "One of the dependent libraries is missing."
+    CoreHostEntryPointFailure 
+                            "One of the dependent libraries is missing a required entry point."
+    CoreHostCurHostFindFailure 
+                            "Could not deduce installation location from current module."
+    CoreClrResolveFailure   "The coreclr library could not be found."
+END
+
+STRINGTABLE
+BEGIN
+    CoreClrBindFailure      "The loaded coreclr library doesn't have one of the required entry points."
+    CoreClrInitFailure      "The call to coreclr_initialize failed."
+    CoreClrExeFailure       "The call to coreclr_execute_assembly failed."
+    ResolverInitFailure     "Initialization of the hostpolicy dependency resolver failed."
+    ResolverResolveFailure  "Resolution of dependencies in hostpolicy failed."
+    LibHostCurExeFindFailure 
+                            "Failure to determine the location of the current executable."
+    LibHostInitFailure      "Initialization of the hostpolicy library failed."
+    LibHostSdkFindFailure   "Failure to find the requested SDK. This happens in the hostfxr when an SDK(also called CLI) command is used with dotnet. In this case the hosting layer tries to find an installed. NET SDK to run the command on. The search is based on deduced install locationand on the requested version from potential global. json file. If either no matching SDK version can be found, or that version exists, but it's missing the dotnet. dll file, this error code is returned."
+    LibHostInvalidArgs      "Arguments to hostpolicy are invalid."
+    InvalidConfigFile       "The .runtimeconfig.json file is invalid."
+    AppArgNotRunnable       "The command line for dotnet.exe doesn't contain the path to the application."
+    AppHostExeNotBoundFailure 
+                            "Apphost failed to determine which application to run."
+    FrameworkMissingFailure "It was not possible to find a compatible framework version."
+    HostApiFailed           "The hostpolicy could not calculate the NATIVE_DLL_SEARCH_DIRECTORIES."
+    HostApiBufferTooSmall   "The buffer specified to an API is not big enough to fit the requested value."
+    LibHostUnknownCommand   "The corehost_main_with_output_buffer is called with unsupported host command."
+END
+
+STRINGTABLE
+BEGIN
+    LibHostAppRootFindFailure "The imprinted application path doesn't exist."
+    SdkResolverResolveFailure 
+                            "hostfxr_resolve_sdk2 failed to find matching SDK."
+    FrameworkCompatFailure  "The .runtimeconfig.json contains two incompatible framework references."
+    FrameworkCompatRetry    "A previously processed framework reference was reprocessed."
+    BundleExtractionFailure "Error extracting single-file apphost bundle."
+    BundleExtractionIOError "Error reading or writing files during single-file apphost bundle extraction."
+    LibHostDuplicateProperty 
+                            "The .runtimeconfig.json contains a runtime property which is also produced by the hosting layer."
+    HostApiUnsupportedVersion 
+                            "Feature which requires certain version of the hosting layer binaries was used on a version which doesn't support it."
+    HostInvalidState        "The current state is incompatible with the requested operation."
+    HostPropertyNotFound    "A property requested by hostfxr_get_runtime_property_value doesn't exist."
+    CoreHostIncompatibleConfig 
+                            "The component being initialized requires framework which is not available."
+    HostApiUnsupportedScenario 
+                            "hostfxr doesn't currently support requesting the given delegate type using the given context."
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
