@@ -111,11 +111,10 @@ namespace ABI.System.ComponentModel
                 return null;
             }
 
-            using var args = ObjectReference<ABI.Microsoft.UI.Xaml.Data.IPropertyChangedEventArgsVftbl>.FromAbi(ptr);
             IntPtr propertyName = IntPtr.Zero;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(args.Vftbl.get_PropertyName_0(args.ThisPtr, &propertyName));
+                ExceptionHelpers.ThrowExceptionForHR((**(ABI.Microsoft.UI.Xaml.Data.IPropertyChangedEventArgsVftbl**)ptr).get_PropertyName_0(ptr, &propertyName));
                 return new global::System.ComponentModel.PropertyChangedEventArgs(MarshalString.FromAbi(propertyName));
             }
             finally
