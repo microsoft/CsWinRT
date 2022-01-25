@@ -1,0 +1,222 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppArgNotRunnable" xml:space="preserve">
+    <value>The command line for dotnet.exe doesn't contain the path to the application.</value>
+  </data>
+  <data name="AppHostExeNotBoundFailure" xml:space="preserve">
+    <value>Apphost failed to determine which application to run.</value>
+  </data>
+  <data name="BundleExtractionFailure" xml:space="preserve">
+    <value>Error extracting single-file apphost bundle.</value>
+  </data>
+  <data name="BundleExtractionIOError" xml:space="preserve">
+    <value>Error reading or writing files during single-file apphost bundle extraction.</value>
+  </data>
+  <data name="CoreClrBindFailure" xml:space="preserve">
+    <value>The loaded coreclr library doesn't have one of the required entry points.</value>
+  </data>
+  <data name="CoreClrExeFailure" xml:space="preserve">
+    <value>The call to coreclr_execute_assembly failed.</value>
+  </data>
+  <data name="CoreClrInitFailure" xml:space="preserve">
+    <value>The call to coreclr_initialize failed.</value>
+  </data>
+  <data name="CoreClrResolveFailure" xml:space="preserve">
+    <value>The coreclr library could not be found.</value>
+  </data>
+  <data name="CoreHostCurHostFindFailure" xml:space="preserve">
+    <value>Could not deduce installation location from current module.</value>
+  </data>
+  <data name="CoreHostEntryPointFailure" xml:space="preserve">
+    <value>One of the dependent libraries is missing a required entry point.</value>
+  </data>
+  <data name="CoreHostIncompatibleConfig" xml:space="preserve">
+    <value>The component being initialized requires framework which is not available.</value>
+  </data>
+  <data name="CoreHostLibLoadFailure" xml:space="preserve">
+    <value>There was a failure loading a dependent library.</value>
+  </data>
+  <data name="CoreHostLibMissingFailure" xml:space="preserve">
+    <value>One of the dependent libraries is missing.</value>
+  </data>
+  <data name="FrameworkCompatFailure" xml:space="preserve">
+    <value>The .runtimeconfig.json contains two incompatible framework references.</value>
+  </data>
+  <data name="FrameworkCompatRetry" xml:space="preserve">
+    <value>A previously processed framework reference was reprocessed.</value>
+  </data>
+  <data name="FrameworkMissingFailure" xml:space="preserve">
+    <value>It was not possible to find a compatible framework version.</value>
+  </data>
+  <data name="HostApiBufferTooSmall" xml:space="preserve">
+    <value>The buffer specified to an API is not big enough to fit the requested value.</value>
+  </data>
+  <data name="HostApiFailed" xml:space="preserve">
+    <value>The hostpolicy could not calculate the NATIVE_DLL_SEARCH_DIRECTORIES.</value>
+  </data>
+  <data name="HostApiUnsupportedScenario" xml:space="preserve">
+    <value>hostfxr doesn't currently support requesting the given delegate type using the given context.</value>
+  </data>
+  <data name="HostApiUnsupportedVersion" xml:space="preserve">
+    <value>Feature which requires certain version of the hosting layer binaries was used on a version which doesn't support it.</value>
+  </data>
+  <data name="HostInvalidState" xml:space="preserve">
+    <value>The current state is incompatible with the requested operation.</value>
+  </data>
+  <data name="HostPropertyNotFound" xml:space="preserve">
+    <value>A property requested by hostfxr_get_runtime_property_value doesn't exist.</value>
+  </data>
+  <data name="InvalidArgFailure" xml:space="preserve">
+    <value>One of the specified arguments for the operation is invalid.</value>
+  </data>
+  <data name="InvalidConfigFile" xml:space="preserve">
+    <value>The .runtimeconfig.json file is invalid.</value>
+  </data>
+  <data name="LibHostAppRootFindFailure" xml:space="preserve">
+    <value>The imprinted application path doesn't exist.</value>
+  </data>
+  <data name="LibHostCurExeFindFailure" xml:space="preserve">
+    <value>Failure to determine the location of the current executable.</value>
+  </data>
+  <data name="LibHostDuplicateProperty" xml:space="preserve">
+    <value>The .runtimeconfig.json contains a runtime property which is also produced by the hosting layer.</value>
+  </data>
+  <data name="LibHostInitFailure" xml:space="preserve">
+    <value>Initialization of the hostpolicy library failed.</value>
+  </data>
+  <data name="LibHostInvalidArgs" xml:space="preserve">
+    <value>Arguments to hostpolicy are invalid.</value>
+  </data>
+  <data name="LibHostSdkFindFailure" xml:space="preserve">
+    <value>Failure to find the requested SDK. This happens in the hostfxr when an SDK(also called CLI) command is used with dotnet. In this case the hosting layer tries to find an installed. NET SDK to run the command on. The search is based on deduced install locationand on the requested version from potential global. json file. If either no matching SDK version can be found, or that version exists, but it's missing the dotnet. dll file, this error code is returned.</value>
+  </data>
+  <data name="LibHostUnknownCommand" xml:space="preserve">
+    <value>The corehost_main_with_output_buffer is called with unsupported host command.</value>
+  </data>
+  <data name="ResolverInitFailure" xml:space="preserve">
+    <value>Initialization of the hostpolicy dependency resolver failed.</value>
+  </data>
+  <data name="ResolverResolveFailure" xml:space="preserve">
+    <value>Resolution of dependencies in hostpolicy failed.</value>
+  </data>
+  <data name="SdkResolverResolveFailure" xml:space="preserve">
+    <value>hostfxr_resolve_sdk2 failed to find matching SDK.</value>
+  </data>
+</root>

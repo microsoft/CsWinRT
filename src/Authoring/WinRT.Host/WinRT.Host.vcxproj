@@ -268,6 +268,12 @@
   <ItemGroup>
     <ClInclude Include="hostfxr_status.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="resource1.h" />
+    <ClInclude Include="resource2.h" />
+    <ClInclude Include="resource3.h" />
+    <ClInclude Include="resource4.h" />
+    <ClInclude Include="resource5.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -291,6 +297,12 @@
     <ProjectReference Include="..\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
       <Project>{0bb8f82d-874e-45aa-bca3-20ce0562164a}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="WinRTHostLocalizationResources.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WinRT.Host.Localization.Resources.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
