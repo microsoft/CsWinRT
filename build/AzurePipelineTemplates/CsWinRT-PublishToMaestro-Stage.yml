@@ -3,7 +3,7 @@ stages:
   displayName: Trigger Maestro Publish
   jobs:
   - job: TriggerMaestroPublish
-    condition: eq(variables['_IsRelease'],'true')
+    # condition: eq(variables['_IsRelease'],'true')
     pool: 
       vmImage: windows-2019
     steps:
