@@ -14,4 +14,4 @@ variables:
 
   _IsRelease: $[coalesce(variables.IsRelease, '')]
   _DotNetRuntimeVersion: $[coalesce(variables.DotNetRuntimeVersion, '5.0.13')]  
-  _WindowsSdkPackageVersion: $[coalesce(variables.WindowsSdkPackageVersion, '10.0.18362.23-preview')]  
+  _WindowsSdkPackageVersion: $[coalesce(variables.WindowsSdkPackageVersion, '23-preview')]  
