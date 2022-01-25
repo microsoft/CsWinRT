@@ -13,5 +13,5 @@ variables:
   # E.g. '_IsRelease' defaults to empty string, but if 'IsRelease' is set at queue time that value will be used.
 
   _IsRelease: $[coalesce(variables.IsRelease, '')]
-  _DotNetRuntimeVersion: $[coalesce(variables.DotNetRuntimeVersion, '5.0.11')]  
+  _DotNetRuntimeVersion: $[coalesce(variables.DotNetRuntimeVersion, '5.0.13')]  
   _WindowsSdkPackageVersion: $[coalesce(variables.WindowsSdkPackageVersion, '10.0.18362.23-preview')]  
