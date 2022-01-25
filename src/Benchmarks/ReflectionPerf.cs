@@ -228,5 +228,23 @@ namespace Benchmarks
             }
             return sentence;
         }
+
+        [Benchmark]
+        public object GetUri()
+        {
+            return instance.NewUri;
+        }
+
+        [Benchmark]
+        public void SetUri()
+        {
+            instance.NewUri = new Uri("https://github.com");
+        }
+
+        [Benchmark]
+        public object GetExistingUri()
+        {
+            return instance.ExistingUri;
+        }
     }
 }
