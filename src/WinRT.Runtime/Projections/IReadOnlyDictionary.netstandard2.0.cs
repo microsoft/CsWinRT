@@ -261,7 +261,7 @@ namespace ABI.System.Collections.Generic
                 catch (Exception ex)
                 {
                     if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                        throw new KeyNotFoundException(WinRTRuntimeErrorStrings.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
+                        throw new KeyNotFoundException(String.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
                     throw;
                 }
             }
@@ -291,7 +291,7 @@ namespace ABI.System.Collections.Generic
 
                 if (!keyFound)
                 {
-                    Exception e = new KeyNotFoundException(WinRTRuntimeErrorStrings.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
+                    Exception e = new KeyNotFoundException(String.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
                     e.SetHResult(ExceptionHelpers.E_BOUNDS);
                     throw e;
                 }
@@ -389,7 +389,7 @@ namespace ABI.System.Collections.Generic
 
                     if (!found)
                     {
-                        Exception e = new KeyNotFoundException(WinRTRuntimeErrorStrings.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
+                        Exception e = new KeyNotFoundException(String.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
                         e.SetHResult(ExceptionHelpers.E_BOUNDS);
                         throw e;
                     }

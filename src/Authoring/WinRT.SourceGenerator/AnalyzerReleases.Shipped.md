@@ -1,7 +1,9 @@
 ﻿; Shipped analyzer releases
 ; https://github.com/dotnet/roslyn-analyzers/blob/master/src/Microsoft.CodeAnalysis.Analyzers/ReleaseTrackingAnalyzers.Help.md
 
-### Rules
+## Release 1.1.1
+
+### New Rules
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 CsWinRT1000 | Usage | Error | Property should have public `get` method

@@ -601,7 +601,7 @@ namespace ABI.System.Collections
                     uint size = _vector.Size;
                     if (((uint)int.MaxValue) < size)
                     {
-                        throw new InvalidOperationException(WinRTRuntimeWinRTRuntimeErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
+                        throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
                     }
 
                     return (int)size;
@@ -615,7 +615,7 @@ namespace ABI.System.Collections
 
                 // ICollection expects the destination array to be single-dimensional.
                 if (array.Rank != 1)
-                    throw new ArgumentException(WinRTRuntimeWinRTRuntimeErrorStrings.Arg_RankMultiDimNotSupported);
+                    throw new ArgumentException(WinRTRuntimeErrorStrings.Arg_RankMultiDimNotSupported);
 
                 int destLB = array.GetLowerBound(0);
                 int srcLen = Count;

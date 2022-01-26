@@ -717,7 +717,7 @@ namespace ABI.System.Collections.Generic
                 if (!keyFound)
                 {
                     Debug.Assert(key != null);
-                    Exception e = new KeyNotFoundException(WinRTRuntimeErrorStrings.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
+                    Exception e = new KeyNotFoundException(String.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
                     e.SetHResult(ExceptionHelpers.E_BOUNDS);
                     throw e;
                 }
@@ -752,7 +752,7 @@ namespace ABI.System.Collections.Generic
                 if (!removed)
                 {
                     Debug.Assert(key != null);
-                    Exception e = new KeyNotFoundException(WinRTRuntimeErrorStrings.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
+                    Exception e = new KeyNotFoundException(String.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
                     e.SetHResult(ExceptionHelpers.E_BOUNDS);
                     throw e;
                 }
