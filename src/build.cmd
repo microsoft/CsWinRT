@@ -150,7 +150,9 @@ if ErrorLevel 1 (
 )
 if "%cswinrt_build_only%"=="true" goto :eof
 
+
 :buildembedded
+goto :test
 echo Building embedded sample for %cswinrt_platform% %cswinrt_configuration%
 call :exec %nuget_dir%\nuget.exe restore %nuget_params% %this_dir%Samples\TestEmbedded\TestEmbedded.sln
 call :exec %msbuild_path%msbuild.exe %this_dir%\Samples\TestEmbedded\TestEmbedded.sln /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
@@ -181,6 +183,7 @@ if not exist %dotnet_exe% (
 )
 
 :embeddedtests
+goto :objectlifetimetests
 :: build the embedded sample and run the unittest 
 call :exec %dotnet_exe% test --verbosity normal --no-build --logger xunit;LogFilePath=%~dp0embedunittest_%cswinrt_version_string%.xml %this_dir%Samples/TestEmbedded/UnitTestEmbedded/UnitTestEmbedded.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%
 if ErrorLevel 1 (

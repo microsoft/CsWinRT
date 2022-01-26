@@ -30,6 +30,8 @@ using Windows.Security.Cryptography.Core;
 using System.Reflection;
 using Windows.Devices.Enumeration.Pnp;
 
+using BenchmarkComponent;
+
 #if NET
 using WeakRefNS = System;
 #else
@@ -43,15 +45,198 @@ using WeakRefNS = WinRT;
 
 namespace UnitTest
 {
+    public class ManagedEvents : IEvents
+    {
+        public event EventHandler<double> DoublePropertyChanged;
+        public event EventHandler<int> IntPropertyChanged;
+
+        public void RaiseDoubleChanged()
+        {
+            DoublePropertyChanged.Invoke(this, 2.2);
+        }
+
+        public void RaiseIntChanged()
+        {
+            IntPropertyChanged.Invoke(this, 4);
+        }
+    }
+
     public class TestCSharp
     {
+        ClassWithMarshalingRoutines instance;
+        int z2;
+        ClassWithMarshalingRoutines instance2;
+        int z4;
+        ManagedEvents events;
+        EventOperations operations;
+
         public Class TestObject { get; private set; }
 
         public TestCSharp()
         {
             TestObject = new Class();
+            /*
+            instance = new ClassWithMarshalingRoutines();
+            System.EventHandler<int> s = (object sender, int value) => z2 = value;
+            instance.IntPropertyChanged += s;
+
+            instance2 = new ClassWithMarshalingRoutines();
+            System.EventHandler<int> s2 = (object sender, int value) =>
+            {
+                if (sender == this)
+                    z4 = value;
+                else
+                    z4 = value * 3;
+            };
+            instance2.IntPropertyChanged += s2;
+
+            events = new ManagedEvents();
+            operations = new EventOperations(events);
+            operations.AddIntEvent();
+            */
         }
 
+        [Fact]
+        public void PerfEventArgs()
+        { 
+            ClassWithMarshalingRoutines @class = new ClassWithMarshalingRoutines();
+            @class.GiveWrappedClass(@class.NewWrappedClassObject);
+        }
+        
+    /*
+        [Fact]
+        public void PerfEventArgs()
+        {
+            ClassWithMarshalingRoutines @class = new ClassWithMarshalingRoutines();
+            @class.NewWrappedClassObject;
+            // Microsoft.UI.Xaml.RoutedEventArgs args = new();
+            // Microsoft.UI.Xaml.Input.PointerRoutedEventArgs eventArgs = new Microsoft.UI.Xaml.Input.PointerRoutedEventArgs()
+        }
+
+        [Fact]
+        public object IntEventOverhead()
+        {
+            ClassWithMarshalingRoutines instance = new ClassWithMarshalingRoutines();
+            int z;
+            System.EventHandler<int> s = (object sender, int value) => z = value;
+            return instance;
+            GC.KeepAlive(s);
+        }
+
+        [Fact]
+        public object AddIntEventToNewEventSource()
+        {
+            ClassWithMarshalingRoutines instance = new ClassWithMarshalingRoutines();
+            int z;
+            System.EventHandler<int> s = (object sender, int value) => z = value;
+            instance.IntPropertyChanged += s;
+            return instance;
+        }
+
+        [Fact]
+        public object AddMultipleEventsToNewEventSource()
+        {
+            ClassWithMarshalingRoutines instance = new ClassWithMarshalingRoutines();
+            int z;
+            double y;
+            System.EventHandler<int> s = (object sender, int value) => z = value;
+            instance.IntPropertyChanged += s;
+            System.EventHandler<double> t = (object sender, double value) => y = value;
+            instance.DoublePropertyChanged += t;
+            return instance;
+        }
+
+        [Fact]
+        public object AddAndInvokeIntEventOnNewEventSource()
+        {
+            ClassWithMarshalingRoutines instance = new ClassWithMarshalingRoutines();
+            int z;
+            System.EventHandler<int> s = (object sender, int value) => z = value;
+            instance.IntPropertyChanged += s;
+            instance.RaiseIntChanged();
+            return instance;
+        }
+
+        [Fact]
+        public int InvokeIntEvent()
+        {
+            instance.RaiseIntChanged();
+            return z2;
+        }
+
+        [Fact]
+        public int InvokeIntEventWithSenderCheck()
+        {
+            instance2.RaiseIntChanged();
+            return z4;
+        }
+
+        [Fact]
+        public object AddAndRemoveIntEventOnNewEventSource()
+        {
+            ClassWithMarshalingRoutines instance = new ClassWithMarshalingRoutines();
+            int z;
+            System.EventHandler<int> s = (object sender, int value) => z = value;
+            instance.IntPropertyChanged += s;
+            instance.IntPropertyChanged -= s;
+            return instance;
+            GC.KeepAlive(s);
+        }
+
+        [Fact]
+        public object NativeIntEventOverhead()
+        {
+            ManagedEvents events = new ManagedEvents();
+            EventOperations operations = new EventOperations(events);
+            return operations;
+        }
+
+        [Fact]
+        public object AddNativeIntEventToNewEventSource()
+        {
+            ManagedEvents events = new ManagedEvents();
+            EventOperations operations = new EventOperations(events);
+            operations.AddIntEvent();
+            return operations;
+        }
+
+        [Fact]
+        public object AddMultipleNativeEventsToNewEventSource()
+        {
+            ManagedEvents events = new ManagedEvents();
+            EventOperations operations = new EventOperations(events);
+            operations.AddIntEvent();
+            operations.AddDoubleEvent();
+            return operations;
+        }
+
+        [Fact]
+        public object AddAndInvokeNativeIntEventOnNewEventSource()
+        {
+            ManagedEvents events = new ManagedEvents();
+            EventOperations operations = new EventOperations(events);
+            operations.AddIntEvent();
+            operations.FireIntEvent();
+            return operations;
+        }
+
+        [Fact]
+        public void InvokeNativeIntEvent()
+        {
+            operations.FireIntEvent();
+        }
+
+        [Fact]
+        public object AddAndRemoveNativeIntEventOnNewEventSource()
+        {
+            ManagedEvents events = new ManagedEvents();
+            EventOperations operations = new EventOperations(events);
+            operations.AddIntEvent();
+            operations.RemoveIntEvent();
+            return operations;
+        }
+        */
+        // end EventPerf
 
         // Test a fix for a bug in Mono.Cecil that was affecting the IIDOptimizer when it encountered long class names 
         [Fact]
@@ -1004,6 +1189,7 @@ namespace UnitTest
             Assert.Equal(TestObject.StringProperty2, test_string2);
         }
 
+        /*
         [Fact]
         public void TestBlittableStruct()
         {
@@ -1188,6 +1374,7 @@ namespace UnitTest
             TestObject.SetInts(null);
             Assert.Null(TestObject.GetInts());
         }
+        */
 
 #if NETCOREAPP2_0
         [Fact]
