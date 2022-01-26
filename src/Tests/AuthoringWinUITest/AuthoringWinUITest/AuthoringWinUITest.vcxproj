@@ -147,10 +147,6 @@
       <Project>{ffa9a78b-f53f-43ee-af87-24a80f4c330a}</Project>
       <SetTargetFramework>TargetFramework=net5.0</SetTargetFramework>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Projections\WinUI\WinUI.csproj">
-      <Project>{0a991d5f-bfee-4d2f-9aad-6ad06470a5df}</Project>
-      <SetTargetFramework>TargetFramework=net5.0</SetTargetFramework>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\WinRT.Runtime\WinRT.Runtime.csproj">
       <Project>{25244ced-966e-45f2-9711-1f51e951ff89}</Project>
       <SetTargetFramework>TargetFramework=net5.0</SetTargetFramework>

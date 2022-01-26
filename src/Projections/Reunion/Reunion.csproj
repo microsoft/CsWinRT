@@ -12,18 +12,14 @@
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
-    <PackageReference Include="Microsoft.ProjectReunion" Version="0.5.7" GeneratePathProperty="true">
-      <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
-    </PackageReference>
-      <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.5.7" GeneratePathProperty="true">
-      <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
-    </PackageReference>
-      <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.5.7" GeneratePathProperty="true">
-      <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
-    </PackageReference>
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
-
+  <!--
+  uninstall-package Microsoft.ProjectReunion -ProjectName Projections\Reunion\Reunion.csproj
+  uninstall-package Microsoft.ProjectReunion.Foundation -ProjectName Projections\Reunion\Reunion.csproj
+  uninstall-package Microsoft.ProjectReunion.WinUI -ProjectName Projections\Reunion\Reunion.csproj
+  install-package Microsoft.ProjectReunion -Version 0.8.1 -ProjectName Projections\Reunion\Reunion.csproj
+   -->
   <PropertyGroup>
     <CsWinRTFilters>
 -exclude Windows

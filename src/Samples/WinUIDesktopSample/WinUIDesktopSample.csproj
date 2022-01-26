@@ -22,16 +22,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
-    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
-    <ProjectReference Include="..\..\Projections\WinUI\WinUI.csproj" />
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.8.1">
+      <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.8.1">
+      <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.8.1">
     <!--
       Exclude compile time assets so we don't pick up the interop assembly from the WinUI Nuget
-      since we are building our own in the WinUIProjection project
+      since we are building our own in the Reunion project
     -->
-    <PackageReference Include="Microsoft.WinUI" Version="$(MicrosoftWinUIVersion)" GeneratePathProperty="true">
-      <ExcludeAssets>compile; runtime</ExcludeAssets>
+      <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.VCRTForwarders.140" Version="1.0.6" />
+    <ProjectReference Include="..\..\Projections\Reunion\Reunion.csproj" />
+    <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
   </ItemGroup>
 
   <!--
