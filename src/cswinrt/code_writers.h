@@ -2013,43 +2013,54 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
     
                     auto objrefname = bind<write_objref_type_name>(semantics);
 
-                    w.write(R"(
+                    // If we're going to use inner, we can simplify the program a step, compared to the lazy methods which save an unnecessary QI
+                    if (replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0)
+                    {
+                        w.write(R"(
+private IObjectReference % => _inner;)", 
+                            objrefname);
+                    }
+                    else
+                    {
+                        w.write(R"(
 private volatile IObjectReference __%;
 private IObjectReference Make__%()
 {
 )",
-                        objrefname,
-                        objrefname);
+                            objrefname,
+                            objrefname);
                    
-                    if (replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0)
-                    {
-                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, _inner, null);)", objrefname);
-                    }
-                    else if (distance(ifaceType.GenericParam()) == 0)
-                    {
+                        if (distance(ifaceType.GenericParam()) == 0)
+                        {
+                            w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).FindHelperType())), null);)", 
+                                objrefname,
+                                bind<write_type_name>(semantics, typedef_name_type::Projected, false)
+                                ); 
+                        }
+                        else
+                        {
+                            w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(typeof(%).FindHelperType().FindVftblType()).Invoke(((IWinRTObject)this).NativeObject, null), null);)",
+                                objrefname,
+                                bind<write_type_name>(semantics, typedef_name_type::Projected, false));
+                        }
 
-                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).FindHelperType())), null);)", 
-                            objrefname,
-                            bind<write_type_name>(semantics, typedef_name_type::Projected, false)
-                            ); 
-                    }
-                    else
-                    {
-                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(typeof(%).FindHelperType().FindVftblType()).Invoke(((IWinRTObject)this).NativeObject, null), null);)",
-                            objrefname,
-                            bind<write_type_name>(semantics, typedef_name_type::Projected, false));
-                    }
-
-                     w.write(R"(
+                        w.write(R"(
     return __%;
 }
 private IObjectReference % => __% ?? Make__%();
 
 )",
-                        objrefname,
-                        objrefname,
-                        objrefname,
-                        objrefname);
+                            objrefname,
+                            objrefname,
+                            objrefname,
+                            objrefname);
+
+                    }
+ 
+
+
+
+
                 });
         }
     }
