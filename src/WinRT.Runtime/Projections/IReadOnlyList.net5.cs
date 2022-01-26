@@ -178,7 +178,7 @@ namespace ABI.System.Collections.Generic
             uint size = ABI.Windows.Foundation.Collections.IVectorViewMethods<T>.get_Size(obj);
             if (((uint)int.MaxValue) < size)
             {
-                throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
+                throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_CollectionBackingListTooLarge);
             }
             return (int)size;
         }
@@ -237,7 +237,7 @@ namespace ABI.System.Collections.Generic
                 // that Size > int.MaxValue:
                 if (((uint)int.MaxValue) <= index || index >= (uint)limit)
                 {
-                    Exception e = new ArgumentOutOfRangeException(nameof(index), ErrorStrings.ArgumentOutOfRange_IndexLargerThanMaxValue);
+                    Exception e = new ArgumentOutOfRangeException(nameof(index), WinRTRuntimeErrorStrings.ArgumentOutOfRange_IndexLargerThanMaxValue);
                     e.SetHResult(ExceptionHelpers.E_BOUNDS);
                     throw e;
                 }

@@ -300,10 +300,10 @@ namespace ABI.System.Collections.Generic
                 {
                     // The enumerator has not been advanced to the first element yet.
                     if (!m_isInitialized)
-                        throw new InvalidOperationException(ErrorStrings.InvalidOperation_EnumNotStarted);
+                        throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_EnumNotStarted);
                     // The enumerator has reached the end of the collection
                     if (!m_hadCurrent)
-                        throw new InvalidOperationException(ErrorStrings.InvalidOperation_EnumEnded);
+                        throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_EnumEnded);
                     return m_current;
                 }
             }
@@ -314,10 +314,10 @@ namespace ABI.System.Collections.Generic
                 {
                     // The enumerator has not been advanced to the first element yet.
                     if (!m_isInitialized)
-                        throw new InvalidOperationException(ErrorStrings.InvalidOperation_EnumNotStarted);
+                        throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_EnumNotStarted);
                     // The enumerator has reached the end of the collection
                     if (!m_hadCurrent)
-                        throw new InvalidOperationException(ErrorStrings.InvalidOperation_EnumEnded);
+                        throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_EnumEnded);
                     return m_current;
                 }
             }
@@ -363,7 +363,7 @@ namespace ABI.System.Collections.Generic
                     // Translate E_CHANGED_STATE into an InvalidOperationException for an updated enumeration
                     if (Marshal.GetHRForException(e) == ExceptionHelpers.E_CHANGED_STATE)
                     {
-                        throw new InvalidOperationException(ErrorStrings.InvalidOperation_EnumFailedVersion);
+                        throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_EnumFailedVersion);
                     }
                     else
                     {

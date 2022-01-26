@@ -60,17 +60,17 @@
   </ItemGroup> 
   
   <ItemGroup>
-    <Compile Update="WinRTRuntimeLocalizationResources.Designer.cs">
+    <Compile Update="WinRTRuntimeWinRTRuntimeErrorStrings.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>WinRTRuntimeLocalizationResources.resx</DependentUpon>
+      <DependentUpon>WinRTRuntimeWinRTRuntimeErrorStrings.resx</DependentUpon>
     </Compile>
   </ItemGroup> 
   
   <ItemGroup>
-    <EmbeddedResource Update="WinRTRuntimeLocalizationResources.resx">
+    <EmbeddedResource Update="WinRTRuntimeWinRTRuntimeErrorStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>WinRTRuntimeLocalizationResources.Designer.cs</LastGenOutput>
+      <LastGenOutput>WinRTRuntimeWinRTRuntimeErrorStrings.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
 
