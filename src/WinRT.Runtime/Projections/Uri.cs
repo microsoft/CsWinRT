@@ -114,11 +114,10 @@ namespace ABI.System
                 return null;
             }
 
-            using var uri = ObjectReference<ABI.Windows.Foundation.IUriRuntimeClassVftbl>.FromAbi(ptr);
             IntPtr rawUri = IntPtr.Zero;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(uri.Vftbl.get_RawUri_10(uri.ThisPtr, &rawUri));
+                ExceptionHelpers.ThrowExceptionForHR((**(ABI.Windows.Foundation.IUriRuntimeClassVftbl**)ptr).get_RawUri_10(ptr, &rawUri));
                 return new global::System.Uri(MarshalString.FromAbi(rawUri));
             }
             finally

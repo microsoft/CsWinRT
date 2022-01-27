@@ -109,11 +109,10 @@ namespace ABI.System.ComponentModel
                 return null;
             }
 
-            using var args = ObjectReference<ABI.Microsoft.UI.Xaml.Data.IDataErrorsChangedEventArgsVftbl>.FromAbi(ptr);
             IntPtr propertyName = IntPtr.Zero;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(args.Vftbl.get_PropertyName_0(args.ThisPtr, &propertyName));
+                ExceptionHelpers.ThrowExceptionForHR((**(ABI.Microsoft.UI.Xaml.Data.IDataErrorsChangedEventArgsVftbl**)ptr).get_PropertyName_0(ptr, &propertyName));
                 return new global::System.ComponentModel.DataErrorsChangedEventArgs(MarshalString.FromAbi(propertyName));
             }
             finally
