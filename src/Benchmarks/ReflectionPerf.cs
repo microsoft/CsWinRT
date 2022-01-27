@@ -18,6 +18,7 @@ namespace Benchmarks
             instanceDictionary = instance.ExistingDictionary;
         }
 
+        /*
         [Benchmark]
         public object ExecuteMarshalingForNewKeyValuePair()
         {
@@ -228,5 +229,6 @@ namespace Benchmarks
             }
             return sentence;
         }
+        */
     }
 }

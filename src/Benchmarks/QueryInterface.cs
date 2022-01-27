@@ -17,6 +17,8 @@ namespace Benchmarks
             message = new ChatMessage();
         }
 
+        /*
+
         [Benchmark]
         public int QueryDefaultInterface()
         {
@@ -101,5 +103,6 @@ namespace Benchmarks
         {
             return Windows.System.Power.PowerManager.RemainingChargePercent;
         }
+        */
     }
 }
