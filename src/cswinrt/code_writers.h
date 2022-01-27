@@ -2029,7 +2029,7 @@ private IObjectReference Make__%()
                    
                     if (!classType.Flags().Sealed() && is_fast_abi_class(classType) && is_exclusive_to(ifaceType) && is_default_interface(ii))
                     {
-                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, GetDefaultFactories()[%](), null);)", objrefname, get_class_hierarchy_index(classType));
+                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, GetDefaultInterfaceAccessors()[%](), null);)", objrefname, get_class_hierarchy_index(classType));
                     }
                     else if (replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0)
                     {
@@ -6423,20 +6423,20 @@ private struct InterfaceTag<I>{};
                             });
 
                         w.write(R"(
-protected unsafe % List<Func<IObjectReference>> GetDefaultFactories()
+protected unsafe % Func<IObjectReference>[] GetDefaultInterfaceAccessors()
 {
-var list = new List<Func<IObjectReference>>();
+return new Func<IObjectReference>[] {
 %
-return list;
+};
 })",
                             hierarchy_index == 0 ? "virtual" : "override",
                             bind([&](writer& w)
                             {
                                 for (auto i = 0; i < hierarchy_index; i++)
                                 {
-                                    w.write("list.Add(() => ((IWinRTObject)this).NativeObject.AsKnownPtr((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr>**)_inner.ThisPtr)[%](_inner.ThisPtr)));\n", INSPECTABLE_METHOD_COUNT + default_iface_method_count + i);
+                                    w.write("() => ((IWinRTObject)this).NativeObject.AsKnownPtr((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr>**)_inner.ThisPtr)[%](_inner.ThisPtr)),\n", INSPECTABLE_METHOD_COUNT + default_iface_method_count + i);
                                 }
-                                w.write("list.Add(() => _inner);");
+                                w.write("() => _inner");
                             }));
                     }
                 }

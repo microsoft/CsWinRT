@@ -1065,6 +1065,11 @@ namespace cswinrt
 
     std::optional<TypeDef> find_fast_abi_class_type(TypeDef const& iface)
     {
+        static std::map<TypeDef, std::optional<TypeDef>> cache;
+        if (cache.find(iface) != cache.end())
+        {
+            return cache[iface];
+        }
         auto exclusiveToAttribute = get_attribute(iface, "Windows.Foundation.Metadata"sv, "ExclusiveToAttribute"sv);
         if (exclusiveToAttribute)
         {
@@ -1072,10 +1077,13 @@ namespace cswinrt
             TypeDef exclusiveToClass = iface.get_cache().find_required(sys_type.name);
             if (!is_fast_abi_class(exclusiveToClass))
             {
+                cache[iface] = {};
                 return {};
             }
+            cache[iface] = exclusiveToClass;
             return exclusiveToClass;
         }
+        cache[iface] = {};
         return {};
     }
 
@@ -1135,7 +1143,7 @@ namespace cswinrt
             if (versionIface.has_value() && versionOtherIface.has_value() && versionIface.value() != versionOtherIface.value())
                 return versionIface.value() < versionOtherIface.value();
 
-            //compare strings
+            //compare type names
             return iface.TypeNamespace() == otherIface.TypeNamespace() ? iface.TypeName() < otherIface.TypeName() : iface.TypeNamespace() < otherIface.TypeNamespace();
         });
     }
@@ -1216,13 +1224,10 @@ namespace cswinrt
     std::optional<fast_abi_class> get_fast_abi_class_for_interface(TypeDef const& iface)
     {
         auto fast_abi_class_type = find_fast_abi_class_type(iface);
-        if (!fast_abi_class_type.has_value())
+        if (!fast_abi_class_type.has_value()) {
             return {};
+        }
         return get_fast_abi_class_for_class(fast_abi_class_type.value());
     }
 
-    auto&& is_fast_abi_enabled()
-    {
-        return true;
-    }
 }
