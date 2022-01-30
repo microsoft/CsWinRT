@@ -1406,7 +1406,7 @@ namespace WinRT
                     FromManaged = MarshalNonBlittable<T>.FromManaged;
                     CopyManaged = MarshalNonBlittable<T>.CopyManaged;
                     DisposeMarshaler = MarshalNonBlittable<T>.DisposeMarshaler;
-                    DisposeAbi = (object box) => { };
+                    DisposeAbi = MarshalNonBlittable<T>.DisposeAbi;
                     CreateMarshalerArray = (T[] array) => MarshalNonBlittable<T>.CreateMarshalerArray(array);
                     GetAbiArray = (object box) => MarshalNonBlittable<T>.GetAbiArray(box);
                     FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box);

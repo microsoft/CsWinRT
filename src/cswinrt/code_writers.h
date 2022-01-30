@@ -7032,7 +7032,7 @@ var m = new Marshaler();)",
         if (have_disposers)
         {
             w.write(R"(
-Func<bool> dispose = () => { m.Dispose(); return false; };
+bool success = false;
 try
 {)");
         }
@@ -7047,6 +7047,7 @@ try
 m.__abi = new %()
 {
 %};
+%
 return m;)",
             abi_type,
             [&](writer& w)
@@ -7080,15 +7081,18 @@ return m;)",
                         m.marshaler_type,
                         m.param_name);
                 }
-            });
+            },
+            have_disposers ? "success = true;" : "");
         if (have_disposers)
         {
             w.write(R"(
 }
-catch (Exception) when (dispose())
+finally
 {
-// Will never execute
-return default;
+if (!success)
+{
+m.Dispose();
+}
 }
 )");
         }
@@ -7204,13 +7208,20 @@ public static void DisposeMarshaler(Marshaler m) %
             have_disposers ? "=> m.Dispose();" : "{}");
 
         w.write(R"(
-public static void DisposeAbi(% abi){ /*todo*/ }
+public static void DisposeAbi(% abi)
+{
+%}
 }
-
 )",
-            abi_type);
+            abi_type,
+            bind_each([](writer& w, abi_marshaler const& m)
+            {
+                if (m.is_value_type) return;
+                w.write("%.DisposeAbi(abi.%);\n",
+                    m.marshaler_type,
+                    m.param_name);
+            }, marshalers));
     }
-
 
     void write_factory_class_inheritance(writer& w, TypeDef const& type)
     {
