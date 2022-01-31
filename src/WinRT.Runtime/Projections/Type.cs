@@ -36,6 +36,24 @@ namespace ABI.System
             }
         }
 
+        public ref struct Pinnable
+        {
+            internal MarshalString.Pinnable Name;
+            internal TypeKind Kind;
+
+            public Pinnable(global::System.Type type)
+            {
+                var abi = ToAbi(type);
+                Name = new MarshalString.Pinnable(abi.Name);
+                Kind = abi.Kind;
+            }
+
+            public ref readonly char GetPinnableReference()
+            {
+                return ref Name.GetPinnableReference();
+            }
+        }
+
         private static (String Name, TypeKind Kind) ToAbi(global::System.Type value)
         {
             TypeKind kind = TypeKind.Custom;
@@ -79,6 +97,15 @@ namespace ABI.System
             {
                 Name = MarshalString.CreateMarshaler(abi.Name),
                 Kind = abi.Kind
+            };
+        }
+
+        public static Type GetAbi(ref Pinnable p)
+        {
+            return new Type
+            {
+                Name = MarshalString.GetAbi(ref p.Name),
+                Kind = p.Kind
             };
         }
 

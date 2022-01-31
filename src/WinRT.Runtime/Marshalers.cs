@@ -1332,7 +1332,26 @@ namespace WinRT
                 DisposeMarshalerArray = (object box) => MarshalInterface<T>.DisposeMarshalerArray(box);
                 DisposeAbiArray = (object box) => MarshalInterface<T>.DisposeAbiArray(box);
             }
-            else if (type.IsValueType || type == typeof(Type))
+            else if (type == typeof(Type))
+            {
+                AbiType = typeof(ABI.System.Type);
+                CreateMarshaler = (T value) => ABI.System.Type.CreateMarshaler((Type)(object)value);
+                GetAbi = (object box) => ABI.System.Type.GetAbi((ABI.System.Type.Marshaler)box);
+                FromAbi = (object value) => (T)(object)ABI.System.Type.FromAbi((ABI.System.Type)value);
+                CopyAbi = (object box, IntPtr dest) => ABI.System.Type.CopyAbi((ABI.System.Type.Marshaler)box, dest);
+                CopyManaged = (T value, IntPtr dest) => ABI.System.Type.CopyManaged((global::System.Type)(object)value, dest);
+                FromManaged = (T value) => ABI.System.Type.FromManaged((Type)(object)value);
+                DisposeMarshaler = (object box) => ABI.System.Type.DisposeMarshaler((ABI.System.Type.Marshaler)box);
+                DisposeAbi = (object box) => ABI.System.Type.DisposeAbi((ABI.System.Type)box);
+                CreateMarshalerArray = (T[] array) => MarshalNonBlittable<T>.CreateMarshalerArray(array);
+                GetAbiArray = (object box) => MarshalNonBlittable<T>.GetAbiArray(box);
+                FromAbiArray = (object box) => MarshalNonBlittable<T>.FromAbiArray(box);
+                FromManagedArray = (T[] array) => MarshalNonBlittable<T>.FromManagedArray(array);
+                CopyManagedArray = (T[] array, IntPtr data) => MarshalNonBlittable<T>.CopyManagedArray(array, data);
+                DisposeMarshalerArray = (object box) => MarshalNonBlittable<T>.DisposeMarshalerArray(box);
+                DisposeAbiArray = (object box) => MarshalNonBlittable<T>.DisposeAbiArray(box);
+            }
+            else if (type.IsValueType)
             {
                 AbiType = type.FindHelperType();
                 if (AbiType != null)
