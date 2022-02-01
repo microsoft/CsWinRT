@@ -76,7 +76,7 @@ namespace WinRT
                         {
                             if (type.IsEnum)
                             {
-                                var isFlags = type.CustomAttributes.Any(cad => cad.AttributeType == typeof(FlagsAttribute));
+                                var isFlags = type.IsDefined(typeof(FlagsAttribute));
                                 return "enum(" + type.FullName + ";" + (isFlags ? "u4" : "i4") + ")";
                             }
                             if (!type.IsPrimitive)
