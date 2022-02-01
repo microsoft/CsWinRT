@@ -104,11 +104,14 @@ namespace WinRT
             return type.IsClass && !type.IsArray ? type.GetAuthoringMetadataType() : null;
         }
 
+        private readonly static ConcurrentDictionary<Type, Type> AuthoringMetadataTypeCache = new ConcurrentDictionary<Type, Type>();
         internal static Type GetAuthoringMetadataType(this Type type)
         {
-            var ccwTypeName = $"ABI.Impl.{type.FullName}";
-            return type.Assembly.GetType(ccwTypeName, false) ?? Type.GetType(ccwTypeName, false);
+            return AuthoringMetadataTypeCache.GetOrAdd(type, (type) =>
+            {
+                var ccwTypeName = $"ABI.Impl.{type.FullName}";
+                return type.Assembly.GetType(ccwTypeName, false) ?? Type.GetType(ccwTypeName, false);
+            });
         }
-
     }
 }

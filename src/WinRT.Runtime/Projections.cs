@@ -244,7 +244,7 @@ namespace WinRT
                 || type == typeof(string)
                 || type == typeof(Guid)
                 || type == typeof(object)
-                || type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object;
+                || type.IsDefined(typeof(WindowsRuntimeTypeAttribute));
         }
 
         // Use TryGetCompatibleWindowsRuntimeTypesForVariantType instead.
@@ -401,25 +401,28 @@ namespace WinRT
             return true;
         }
 
+        private readonly static ConcurrentDictionary<Type, Type> DefaultInterfaceTypeCache = new ConcurrentDictionary<Type, Type>();
         internal static bool TryGetDefaultInterfaceTypeForRuntimeClassType(Type runtimeClass, out Type defaultInterface)
         {
-            runtimeClass = runtimeClass.GetRuntimeClassCCWType() ?? runtimeClass;
-            defaultInterface = null;
-            ProjectedRuntimeClassAttribute attr = runtimeClass.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
-            if (attr is null)
+            defaultInterface = DefaultInterfaceTypeCache.GetOrAdd(runtimeClass, (runtimeClass) =>
             {
-                return false;
-            }
+                runtimeClass = runtimeClass.GetRuntimeClassCCWType() ?? runtimeClass;
+                ProjectedRuntimeClassAttribute attr = runtimeClass.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
+                if (attr is null)
+                {
+                    return null;
+                }
 
-            if (attr.DefaultInterfaceProperty != null)
-            {
-                defaultInterface = runtimeClass.GetProperty(attr.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).PropertyType;
-            }
-            else
-            {
-                defaultInterface = attr.DefaultInterface;
-            }
-            return true;
+                if (attr.DefaultInterfaceProperty != null)
+                {
+                    return runtimeClass.GetProperty(attr.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).PropertyType;
+                }
+                else
+                {
+                    return attr.DefaultInterface;
+                }
+            });
+            return defaultInterface != null;
         }
 
         internal static Type GetDefaultInterfaceTypeForRuntimeClassType(Type runtimeClass)
