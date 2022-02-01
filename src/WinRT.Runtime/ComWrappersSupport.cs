@@ -465,13 +465,13 @@ namespace WinRT
         {
             static bool IsIReferenceTypeHelper(Type type)
             {
-                if ((type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object) ||
+                if (type.IsDefined(typeof(WindowsRuntimeTypeAttribute)) ||
                     WinRT.Projections.IsTypeWindowsRuntimeType(type))
                     return true;
                 type = type.GetAuthoringMetadataType();
                 if (type is object)
                 {
-                    if ((type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object) ||
+                    if (type.IsDefined(typeof(WindowsRuntimeTypeAttribute)) ||
                         WinRT.Projections.IsTypeWindowsRuntimeType(type))
                         return true;
                 }
