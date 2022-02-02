@@ -131,7 +131,7 @@ namespace WinRT
 
         public unsafe TInterface AsInterface<TInterface>()
         {
-            if (typeof(TInterface).GetCustomAttribute(typeof(System.Runtime.InteropServices.ComImportAttribute)) is object)
+            if (typeof(TInterface).IsDefined(typeof(System.Runtime.InteropServices.ComImportAttribute)))
             {
                 Guid iid = typeof(TInterface).GUID;
                 Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr comPtr));
