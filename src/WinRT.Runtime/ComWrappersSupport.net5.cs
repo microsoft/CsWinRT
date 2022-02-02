@@ -462,14 +462,14 @@ namespace WinRT
 
                 entries.Add(new ComInterfaceEntry
                 {
-                    IID = typeof(IInspectable).GUID,
+                    IID = InterfaceIIDs.IInspectable_IID,
                     Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
                 });
 
                 // This should be the last entry as it is included / excluded based on the flags.
                 entries.Add(new ComInterfaceEntry
                 {
-                    IID = typeof(IUnknownVftbl).GUID,
+                    IID = IUnknownVftbl.IID,
                     Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
                 });
 
@@ -507,7 +507,7 @@ namespace WinRT
 
         private static object CreateObject(IntPtr externalComObject)
         {
-            Guid inspectableIID = IInspectable.IID;
+            Guid inspectableIID = InterfaceIIDs.IInspectable_IID;
             Guid weakReferenceIID = ABI.WinRT.Interop.IWeakReference.IID;
             IntPtr ptr = IntPtr.Zero;
 

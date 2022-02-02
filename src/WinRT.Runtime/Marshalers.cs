@@ -1167,7 +1167,7 @@ namespace WinRT
 
         public static IObjectReference CreateMarshaler(T o, bool unwrapObject = true)
         {
-            return CreateMarshaler<IInspectable.Vftbl>(o, IInspectable.IID, unwrapObject);
+            return CreateMarshaler<IInspectable.Vftbl>(o, InterfaceIIDs.IInspectable_IID, unwrapObject);
         }
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
