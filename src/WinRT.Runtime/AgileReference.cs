@@ -28,7 +28,7 @@ namespace WinRT
             }   
 
             IntPtr agileReference = default;
-            Guid iid = typeof(IUnknownVftbl).GUID;
+            Guid iid = IUnknownVftbl.IID;
             try
             {
                 Marshal.ThrowExceptionForHR(Platform.RoGetAgileReference(
@@ -51,7 +51,7 @@ namespace WinRT
                 MarshalInterface<IAgileReference>.DisposeAbi(agileReference);
             }
         }
-        public IObjectReference Get() => _cookie == IntPtr.Zero ? _agileReference?.Resolve(typeof(IUnknownVftbl).GUID) : Git.Value?.GetInterfaceFromGlobal(_cookie, typeof(IUnknownVftbl).GUID);
+        public IObjectReference Get() => _cookie == IntPtr.Zero ? _agileReference?.Resolve(IUnknownVftbl.IID) : Git.Value?.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID);
 
         protected virtual void Dispose(bool disposing)
         {
@@ -75,7 +75,7 @@ namespace WinRT
         private static unsafe IGlobalInterfaceTable GetGitTable()
         {
             Guid gitClsid = CLSID_StdGlobalInterfaceTable;
-            Guid gitIid = typeof(IGlobalInterfaceTable).GUID;
+            Guid gitIid = ABI.WinRT.Interop.IGlobalInterfaceTable.IID;
             IntPtr gitPtr = default;
 
             try

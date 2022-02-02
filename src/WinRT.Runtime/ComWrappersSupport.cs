@@ -159,7 +159,7 @@ namespace WinRT
                         Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
                     });
 
-                    if (!hasCustomIMarshalInterface && iid == typeof(ABI.WinRT.Interop.IMarshal.Vftbl).GUID)
+                    if (!hasCustomIMarshalInterface && iid == ABI.WinRT.Interop.IMarshal.IID)
                     {
                         hasCustomIMarshalInterface = true;
                     }
@@ -215,13 +215,13 @@ namespace WinRT
 
             entries.Add(new ComInterfaceEntry
             {
-                IID = typeof(ManagedIStringableVftbl).GUID,
+                IID = ManagedIStringableVftbl.IID,
                 Vtable = ManagedIStringableVftbl.AbiToProjectionVftablePtr
             });
 
             entries.Add(new ComInterfaceEntry
             {
-                IID = typeof(ManagedCustomPropertyProviderVftbl).GUID,
+                IID = ManagedCustomPropertyProviderVftbl.IID,
                 Vtable = ManagedCustomPropertyProviderVftbl.AbiToProjectionVftablePtr
             });
 
@@ -237,7 +237,7 @@ namespace WinRT
             {
                 entries.Add(new ComInterfaceEntry
                 {
-                    IID = typeof(ABI.WinRT.Interop.IMarshal.Vftbl).GUID,
+                    IID = ABI.WinRT.Interop.IMarshal.IID,
                     Vtable = ABI.WinRT.Interop.IMarshal.Vftbl.AbiToProjectionVftablePtr
                 });
             }
@@ -245,7 +245,7 @@ namespace WinRT
             // Add IAgileObject to all CCWs
             entries.Add(new ComInterfaceEntry
             {
-                IID = typeof(ABI.WinRT.Interop.IAgileObject.Vftbl).GUID,
+                IID = ABI.WinRT.Interop.IAgileObject.IID,
                 Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
             });
             return entries;
