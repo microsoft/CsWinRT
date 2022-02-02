@@ -12,9 +12,14 @@
 	</metadata>
 	<files>
     <!--Note: This sample assumes the configuration/platform are set to Release/x64-->
-    <!--Projection assembly is architecture-neutral-->
+    
+    <!--Projection assembly is architecture-neutral and targets AnyCPU, even though it builds with x64.-->
     <file src="..\..\_build\x64\Release\SimpleMathProjection\bin\SimpleMathProjection.dll" target="lib\net6.0-windows10.0.19041.0\SimpleMathProjection.dll" />
-    <!--Arch-specific implementation DLLs should be copied into RID-relative folders -->
-    <file src="..\..\_build\x64\Release\SimpleMathComponent\bin\SimpleMathComponent\SimpleMathComponent.dll" target="runtimes\win10-x64\native\SimpleMathComponent.dll" />
+    
+    <!--Arch-specific implementation DLLs should be copied into RID-relative folders-->
+    <file src="..\..\_build\x64\Release\SimpleMathComponent\bin\SimpleMathComponent\SimpleMathComponent.dll" target="runtimes\win10-x64\native\SimpleMathComponent.dll" />  
+    <!--To support x86 and ARM64, build SimpleMathComponent for those other architectures and uncomment the entries below.-->
+    <!--<file src="..\..\_build\Win32\Release\SimpleMathComponent\bin\SimpleMathComponent\SimpleMathComponent.dll" target="runtimes\win10-x86\native\SimpleMathComponent.dll" />-->
+    <!--<file src="..\..\_build\arm64\Release\SimpleMathComponent\bin\SimpleMathComponent\SimpleMathComponent.dll" target="runtimes\win10-arm64\native\SimpleMathComponent.dll" />-->
 	</files>
 </package>
