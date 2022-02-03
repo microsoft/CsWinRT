@@ -151,7 +151,7 @@ namespace ABI.System
             *(Type*)dest.ToPointer() = FromManaged(arg);
 
         public static void DisposeMarshaler(Marshaler m) { m.Dispose(); }
-        public static void DisposeAbi(Type abi) { }
+        public static void DisposeAbi(Type abi) { MarshalString.DisposeAbi(abi.Name); }
 
         public static string GetGuidSignature()
         {
