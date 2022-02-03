@@ -34,8 +34,8 @@ namespace WinRT
 #endif
     static class TypeNameSupport
     {
-        private static List<Assembly> projectionAssemblies = new List<Assembly>();
-        private static ConcurrentDictionary<string, Type> typeNameCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal) { ["TrackerCollection<T>"] = null };
+        private static readonly List<Assembly> projectionAssemblies = new List<Assembly>();
+        private static readonly ConcurrentDictionary<string, Type> typeNameCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal) { ["TrackerCollection<T>"] = null };
 
         public static void RegisterProjectionAssembly(Assembly assembly)
         {
@@ -380,7 +380,7 @@ namespace WinRT
                 return TryAppendSimpleTypeName(type, builder, flags);
             }
 
-            if (!Projections.IsTypeWindowsRuntimeType(type) && (flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
+            if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0 && !Projections.IsTypeWindowsRuntimeType(type))
             {
                 return TryAppendWinRTInterfaceNameForType(type, builder, flags);
             }

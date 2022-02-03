@@ -3561,6 +3561,12 @@ event % %;)",
                 m.marshaler_type = get_abi_type();
                 m.local_type = m.marshaler_type;
                 if (!m.is_out()) m.local_type += ".Marshaler";
+
+                auto abi_type = w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
+                if (m.marshaler_type == "global::ABI.System.Type")
+                {
+                    m.is_pinnable = (m.category == param_category::in);
+                }
             }
         };
 

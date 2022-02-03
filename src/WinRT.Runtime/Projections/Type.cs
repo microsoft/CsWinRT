@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Concurrent;
 using WinRT;
 
 namespace ABI.System
@@ -35,6 +36,24 @@ namespace ABI.System
             }
         }
 
+        public ref struct Pinnable
+        {
+            internal MarshalString.Pinnable Name;
+            internal TypeKind Kind;
+
+            public Pinnable(global::System.Type type)
+            {
+                var abi = ToAbi(type);
+                Name = new MarshalString.Pinnable(abi.Name);
+                Kind = abi.Kind;
+            }
+
+            public ref readonly char GetPinnableReference()
+            {
+                return ref Name.GetPinnableReference();
+            }
+        }
+
         private static (String Name, TypeKind Kind) ToAbi(global::System.Type value)
         {
             TypeKind kind = TypeKind.Custom;
@@ -55,7 +74,20 @@ namespace ABI.System
                 }
             }
 
-            return (kind == TypeKind.Custom ? value.AssemblyQualifiedName : TypeNameSupport.GetNameForType(value, TypeNameGenerationFlags.None), kind);
+            return (GetNameForTypeCached(value, kind == TypeKind.Custom), kind);
+        }
+
+        private static readonly ConcurrentDictionary<global::System.Type, string> typeNameCache = new();
+        private static string GetNameForTypeCached(global::System.Type value, bool customKind)
+        {
+            if (customKind)
+            {
+                return typeNameCache.GetOrAdd(value, (type) => type.AssemblyQualifiedName);
+            }
+            else
+            {
+                return typeNameCache.GetOrAdd(value, (type) => TypeNameSupport.GetNameForType(type, TypeNameGenerationFlags.None));
+            }
         }
 
         public static Marshaler CreateMarshaler(global::System.Type value)
@@ -65,6 +97,15 @@ namespace ABI.System
             {
                 Name = MarshalString.CreateMarshaler(abi.Name),
                 Kind = abi.Kind
+            };
+        }
+
+        public static Type GetAbi(ref Pinnable p)
+        {
+            return new Type
+            {
+                Name = MarshalString.GetAbi(ref p.Name),
+                Kind = p.Kind
             };
         }
 
@@ -90,7 +131,7 @@ namespace ABI.System
                 return global::System.Type.GetType(name);
             }
 
-            return TypeNameSupport.FindTypeByName(name.AsSpan()).type;
+            return TypeNameSupport.FindTypeByNameCached(name);
         }
 
         public static unsafe void CopyAbi(Marshaler arg, IntPtr dest) =>
