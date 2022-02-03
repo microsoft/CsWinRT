@@ -173,18 +173,24 @@ namespace WinRT
             return ObjectReference<IUnknownVftbl>.Attach(ref ccw);
         }
 
-        internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
+        internal static IntPtr CreateCCWForObjectForABI(object obj, Guid iid)
         {
             IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);
             try
             {
                 Marshal.ThrowExceptionForHR(Marshal.QueryInterface(ccw, ref iid, out var iidCcw));
-                return ObjectReference<T>.Attach(ref iidCcw);
+                return iidCcw;
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(ccw);
             }
+        }
+
+        internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
+        {
+            IntPtr ccw = CreateCCWForObjectForABI(obj, iid);
+            return ObjectReference<T>.Attach(ref ccw);
         }
 
         public static unsafe T FindObject<T>(IntPtr ptr)

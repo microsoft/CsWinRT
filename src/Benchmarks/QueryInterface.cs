@@ -4,17 +4,37 @@ using Windows.ApplicationModel.Chat;
 
 namespace Benchmarks
 {
+    class ManagedObjectWithInterfaces : IIntProperties, IBoolProperties
+    {
+        private int intProperty;
+        private bool boolProperty;
+
+        public int IntProperty { get => intProperty; set => intProperty = value; }
+        public bool BoolProperty { get => boolProperty; set => boolProperty = value; }
+    }
+
+    class ManagedComposableObjectWithInterfaces : Composable, IIntProperties
+    {
+        private int intProperty;
+
+        public int IntProperty { get => intProperty; set => intProperty = value; }
+    }
+
     [MemoryDiagnoser]
     public class QueryInterfacePerf
     {
         ClassWithMultipleInterfaces instance;
         ChatMessage message;
+        ManagedObjectWithInterfaces managedObject;
+        ManagedComposableObjectWithInterfaces composableObject;
 
         [GlobalSetup]
         public void Setup()
         {
             instance = new ClassWithMultipleInterfaces();
             message = new ChatMessage();
+            managedObject = new ManagedObjectWithInterfaces();
+            composableObject = new ManagedComposableObjectWithInterfaces();
         }
 
         [Benchmark]
@@ -100,6 +120,18 @@ namespace Benchmarks
         public int StaticPropertyCall()
         {
             return Windows.System.Power.PowerManager.RemainingChargePercent;
+        }
+
+        [Benchmark]
+        public void QueryInterfaceOnManagedObject()
+        {
+            instance.QueryBoolInterface(managedObject);
+        }
+
+        [Benchmark]
+        public void QueryNativeInterfaceOnComposedObject()
+        {
+            instance.QueryBoolInterface(composableObject);
         }
     }
 }
