@@ -2029,7 +2029,7 @@ private IObjectReference Make__%()
                    
                     if (!classType.Flags().Sealed() && is_fast_abi_class(classType) && is_exclusive_to(ifaceType) && is_default_interface(ii))
                     {
-                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, GetDefaultInterfaceAccessors()[%](), null);)", objrefname, get_class_hierarchy_index(classType));
+                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, GetDefaultInterfaceObjRef(%), null);)", objrefname, get_class_hierarchy_index(classType));
                     }
                     else if (replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0)
                     {
@@ -6423,21 +6423,17 @@ private struct InterfaceTag<I>{};
                             });
 
                         w.write(R"(
-protected unsafe % Func<IObjectReference>[] GetDefaultInterfaceAccessors()
+protected unsafe % IObjectReference GetDefaultInterfaceObjRef(int hierarchyIndex)
 {
-return new Func<IObjectReference>[] {
-%
-};
+if (hierarchyIndex < %)
+{
+    return ((IWinRTObject)this).NativeObject.AsKnownPtr((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr>**)_inner.ThisPtr)[% + hierarchyIndex](_inner.ThisPtr));
+}
+return _inner;
 })",
                             hierarchy_index == 0 ? "virtual" : "override",
-                            bind([&](writer& w)
-                            {
-                                for (auto i = 0; i < hierarchy_index; i++)
-                                {
-                                    w.write("() => ((IWinRTObject)this).NativeObject.AsKnownPtr((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr>**)_inner.ThisPtr)[%](_inner.ThisPtr)),\n", INSPECTABLE_METHOD_COUNT + default_iface_method_count + i);
-                                }
-                                w.write("() => _inner");
-                            }));
+                            hierarchy_index,
+                            INSPECTABLE_METHOD_COUNT + default_iface_method_count);
                     }
                 }
                 bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));

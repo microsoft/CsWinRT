@@ -14,7 +14,7 @@ git checkout -f master
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
 git fetch -f
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
-git reset -q --hard 8700e96e29f27349ad8f904fcd27fb7e07b98a88
+git reset -q --hard 0c024d092a215533aad298fd32b6132ba4d072fd
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
 echo Restoring Nuget
 %this_dir%.nuget\nuget.exe restore

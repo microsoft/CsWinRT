@@ -974,7 +974,7 @@ namespace UnitTest
             Assert.True(composableObjects.GetRange(1, 3).SequenceEqual(interfaceSubset));
         }
 
-#if NET5_0
+#if NET
         [Fact]
         public void Fast_Abi_Simple()
         {
@@ -982,6 +982,12 @@ namespace UnitTest
             Assert.Equal("Method1", simple.Method1());
             Assert.Equal("Method2", simple.Method2());
             Assert.Equal("Method3", simple.Method3());
+            Assert.Equal("Method4", simple.Method4());
+            Assert.Equal("Method5", simple.Method5());
+            Assert.Equal("Method6", simple.Method6());
+            Assert.Equal("Method7", simple.Method7());
+            Assert.Equal("Method8", simple.Method8());
+            Assert.Equal("Method9", simple.Method9());
             simple.Property1 = "Property1";
             simple.Property3 = "Property3";
             Assert.Equal("Property1", simple.Property1);
