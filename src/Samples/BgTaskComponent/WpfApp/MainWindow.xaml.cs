@@ -1,4 +1,7 @@
-﻿using System.Windows;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Windows;
 using Windows.ApplicationModel.Background;
 
 namespace WpfApp
