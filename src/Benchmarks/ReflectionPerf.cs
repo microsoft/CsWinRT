@@ -246,5 +246,35 @@ namespace Benchmarks
         {
             return instance.ExistingUri;
         }
+
+        [Benchmark]
+        public object GetWinRTType()
+        {
+            return instance.NewType;
+        }
+
+        [Benchmark]
+        public void SetWinRTType()
+        {
+            instance.NewType = typeof(ClassWithMarshalingRoutines);
+        }
+
+        [Benchmark]
+        public void SetPrimitiveType()
+        {
+            instance.NewType = typeof(int);
+        }
+
+        [Benchmark]
+        public void SetNonWinRTType()
+        {
+            instance.NewType = typeof(ReflectionPerf);
+        }
+
+        [Benchmark]
+        public object GetExistingWinRTType()
+        {
+            return instance.ExistingType;
+        }
     }
 }
