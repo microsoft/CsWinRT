@@ -279,6 +279,7 @@ namespace Benchmarks
             return instance.ExistingType;
         }
 
+        [Benchmark]
         public void GetWeakReferenceOfManagedObject()
         {
             instance.GetWeakReference(managedObject);

@@ -495,7 +495,7 @@ namespace WinRT
         private static ComInterfaceEntry IPropertyValueEntry =>
             new ComInterfaceEntry
             {
-                IID = global::WinRT.GuidGenerator.GetIID(typeof(global::Windows.Foundation.IPropertyValue)),
+                IID = ManagedIPropertyValueImpl.IID,
                 Vtable = ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
             };
 
