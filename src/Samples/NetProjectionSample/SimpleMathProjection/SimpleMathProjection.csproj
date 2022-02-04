@@ -4,9 +4,8 @@
     <!-- Note: target .NET 5 by setting the TargetFramework to net5.0-windows10.0.19041.0 -->
     <TargetFramework>net6.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <Platforms>x64;x86;ARM64</Platforms>
-    <!-- Set PlatformTarget to AnyCPU to allow consumption of the projection assembly from any architecture. -->
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <!-- Set Platform to AnyCPU to allow consumption of the projection assembly from any architecture. -->
+    <Platform>AnyCPU</Platform>
     <!-- Workaround for MSB3271 error on processor architecture mismatch -->
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
   </PropertyGroup>
