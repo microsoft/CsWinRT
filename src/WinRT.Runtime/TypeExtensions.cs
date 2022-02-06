@@ -7,6 +7,142 @@ using System.Reflection;
 
 namespace WinRT
 {
+    internal sealed class TypeCache
+    {
+        private readonly Type type;
+        private volatile bool isHelperTypeSet;
+        private volatile Type helperType;
+        private volatile bool isAuthoringMetadataTypeSet;
+        private volatile Type authoringMetadataType;
+        private volatile bool isVftblTypeSet;
+        private volatile Type vftblType;
+        private volatile bool isDefaultInterfaceTypeSet;
+        private volatile Type defaultInterfaceType;
+        private volatile bool isWindowsRuntimeTypeSet;
+        private volatile bool isWindowsRuntimeType;
+
+        public TypeCache(Type type)
+        {
+            this.type = type;
+        }
+
+        private static Type GetHelperType(Type type)
+        {
+            if (typeof(Exception).IsAssignableFrom(type))
+            {
+                type = typeof(Exception);
+            }
+            Type customMapping = Projections.FindCustomHelperTypeMapping(type);
+            if (customMapping is object)
+            {
+                return customMapping;
+            }
+
+            string fullTypeName = type.FullName;
+            string ccwTypePrefix = "ABI.Impl.";
+            if (fullTypeName.StartsWith(ccwTypePrefix, StringComparison.Ordinal))
+            {
+                fullTypeName = fullTypeName.Substring(ccwTypePrefix.Length);
+            }
+
+            var helper = $"ABI.{fullTypeName}";
+            return type.Assembly.GetType(helper) ?? Type.GetType(helper);
+        }
+
+        private Type MakeHelperType()
+        {
+            helperType = GetHelperType(type);
+            isHelperTypeSet = true;
+            return helperType;
+        }
+
+        public Type HelperType => isHelperTypeSet ? helperType : MakeHelperType();
+
+        private static Type GetAuthoringMetadataType(Type type)
+        {
+            var ccwTypeName = $"ABI.Impl.{type.FullName}";
+            return type.Assembly.GetType(ccwTypeName, false) ?? Type.GetType(ccwTypeName, false);
+        }
+
+        private Type MakeAuthoringMetadataType()
+        {
+            authoringMetadataType = GetAuthoringMetadataType(type);
+            isAuthoringMetadataTypeSet = true;
+            return authoringMetadataType;
+        }
+
+        public Type AuthoringMetadataType => isAuthoringMetadataTypeSet ? authoringMetadataType : MakeAuthoringMetadataType();
+
+        private static Type GetVftblType(Type helperType)
+        {
+            Type vftblType = helperType.GetNestedType("Vftbl");
+            if (vftblType is null)
+            {
+                return null;
+            }
+            if (helperType.IsGenericType && vftblType is object)
+            {
+                vftblType = vftblType.MakeGenericType(helperType.GetGenericArguments());
+            }
+            return vftblType;
+        }
+
+        private Type MakeVftblType()
+        {
+            vftblType = GetVftblType(type);
+            isVftblTypeSet = true;
+            return vftblType;
+        }
+
+        public Type VftblType => isVftblTypeSet ? vftblType : MakeVftblType();
+
+        private static Type GetDefaultInterfaceType(Type runtimeClass)
+        {
+            runtimeClass = runtimeClass.GetRuntimeClassCCWType() ?? runtimeClass;
+            ProjectedRuntimeClassAttribute attr = runtimeClass.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
+            if (attr is null)
+            {
+                return null;
+            }
+            else if (attr.DefaultInterfaceProperty != null)
+            {
+                return runtimeClass.GetProperty(attr.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).PropertyType;
+            }
+            else
+            {
+                return attr.DefaultInterface;
+            }
+        }
+
+        private Type MakeDefaultInterfaceType()
+        {
+            defaultInterfaceType = GetDefaultInterfaceType(type);
+            isDefaultInterfaceTypeSet = true;
+            return defaultInterfaceType;
+        }
+
+        public Type DefaultInterfaceType => isDefaultInterfaceTypeSet ? defaultInterfaceType : MakeDefaultInterfaceType();
+
+        private static bool GetIsWindowsRuntimeType(Type type)
+        {
+            Type typeToTest = type;
+            if (typeToTest.IsArray)
+            {
+                typeToTest = typeToTest.GetElementType();
+            }
+            return Projections.IsTypeWindowsRuntimeTypeNoArray(typeToTest);
+        }
+
+        private bool MakeIsWindowsRuntimeType()
+        {
+            isWindowsRuntimeType = GetIsWindowsRuntimeType(type);
+            isWindowsRuntimeTypeSet = true;
+            return isWindowsRuntimeType;
+        }
+
+        public bool IsWindowsRuntimeType => isWindowsRuntimeTypeSet ? isWindowsRuntimeType : MakeIsWindowsRuntimeType();
+    }
+
 #if EMBED
     internal
 #else 
@@ -14,32 +150,15 @@ namespace WinRT
 #endif
     static class TypeExtensions
     {
-        private readonly static ConcurrentDictionary<Type, Type> HelperTypeCache = new ConcurrentDictionary<Type, Type>();
+        private readonly static ConcurrentDictionary<Type, TypeCache> TypeCache = new();
+        internal static TypeCache GetTypeCacheEntry(this Type type)
+        {
+            return TypeCache.GetOrAdd(type, (type) => new TypeCache(type));
+        }
 
         public static Type FindHelperType(this Type type)
         {
-            return HelperTypeCache.GetOrAdd(type, (type) =>
-            {
-                if (typeof(Exception).IsAssignableFrom(type))
-                {
-                    type = typeof(Exception);
-                }
-                Type customMapping = Projections.FindCustomHelperTypeMapping(type);
-                if (customMapping is object)
-                {
-                    return customMapping;
-                }
-
-                string fullTypeName = type.FullName;
-                string ccwTypePrefix = "ABI.Impl.";
-                if (fullTypeName.StartsWith(ccwTypePrefix, StringComparison.Ordinal))
-                {
-                    fullTypeName = fullTypeName.Substring(ccwTypePrefix.Length);
-                }
-
-                var helper = $"ABI.{fullTypeName}";
-                return type.Assembly.GetType(helper) ?? Type.GetType(helper);
-            });
+            return type.GetTypeCacheEntry().HelperType;
         }
 
         public static Type GetHelperType(this Type type)
@@ -57,16 +176,7 @@ namespace WinRT
 
         public static Type FindVftblType(this Type helperType)
         {
-            Type vftblType = helperType.GetNestedType("Vftbl");
-            if (vftblType is null)
-            {
-                return null;
-            }
-            if (helperType.IsGenericType && vftblType is object)
-            {
-                vftblType = vftblType.MakeGenericType(helperType.GetGenericArguments());
-            }
-            return vftblType;
+            return helperType.GetTypeCacheEntry().VftblType;
         }
 
         internal static IntPtr GetAbiToProjectionVftblPtr(this Type helperType)
@@ -104,14 +214,14 @@ namespace WinRT
             return type.IsClass && !type.IsArray ? type.GetAuthoringMetadataType() : null;
         }
 
-        private readonly static ConcurrentDictionary<Type, Type> AuthoringMetadataTypeCache = new ConcurrentDictionary<Type, Type>();
         internal static Type GetAuthoringMetadataType(this Type type)
         {
-            return AuthoringMetadataTypeCache.GetOrAdd(type, (type) =>
-            {
-                var ccwTypeName = $"ABI.Impl.{type.FullName}";
-                return type.Assembly.GetType(ccwTypeName, false) ?? Type.GetType(ccwTypeName, false);
-            });
+            return type.GetTypeCacheEntry().AuthoringMetadataType;
+        }
+
+        internal static Type GetDefaultInterfaceType(this Type type)
+        {
+            return type.GetTypeCacheEntry().DefaultInterfaceType;
         }
     }
 }

@@ -207,21 +207,12 @@ namespace WinRT
             }
         }
 
-        private readonly static ConcurrentDictionary<Type, bool> IsTypeWindowsRuntimeTypeCache = new ConcurrentDictionary<Type, bool>();
         public static bool IsTypeWindowsRuntimeType(Type type)
         {
-            return IsTypeWindowsRuntimeTypeCache.GetOrAdd(type, (type) =>
-            {
-                Type typeToTest = type;
-                if (typeToTest.IsArray)
-                {
-                    typeToTest = typeToTest.GetElementType();
-                }
-                return IsTypeWindowsRuntimeTypeNoArray(typeToTest);
-            });
+            return type.GetTypeCacheEntry().IsWindowsRuntimeType;
         }
 
-        private static bool IsTypeWindowsRuntimeTypeNoArray(Type type)
+        internal static bool IsTypeWindowsRuntimeTypeNoArray(Type type)
         {
             type = type.GetAuthoringMetadataType() ?? type;
             if (type.IsConstructedGenericType)
@@ -401,27 +392,9 @@ namespace WinRT
             return true;
         }
 
-        private readonly static ConcurrentDictionary<Type, Type> DefaultInterfaceTypeCache = new ConcurrentDictionary<Type, Type>();
         internal static bool TryGetDefaultInterfaceTypeForRuntimeClassType(Type runtimeClass, out Type defaultInterface)
         {
-            defaultInterface = DefaultInterfaceTypeCache.GetOrAdd(runtimeClass, (runtimeClass) =>
-            {
-                runtimeClass = runtimeClass.GetRuntimeClassCCWType() ?? runtimeClass;
-                ProjectedRuntimeClassAttribute attr = runtimeClass.GetCustomAttribute<ProjectedRuntimeClassAttribute>();
-                if (attr is null)
-                {
-                    return null;
-                }
-
-                if (attr.DefaultInterfaceProperty != null)
-                {
-                    return runtimeClass.GetProperty(attr.DefaultInterfaceProperty, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly).PropertyType;
-                }
-                else
-                {
-                    return attr.DefaultInterface;
-                }
-            });
+            defaultInterface = runtimeClass.GetDefaultInterfaceType();
             return defaultInterface != null;
         }
 
