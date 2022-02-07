@@ -29,7 +29,6 @@ namespace WinRT
 #endif
     static partial class ComWrappersSupport
     {
-        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCacheForRuntimeClassName = new ConcurrentDictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
         private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new ConcurrentDictionary<Type, Func<IInspectable, object>>();
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
         private readonly static ConcurrentDictionary<Type, Func<IntPtr, object>> DelegateFactoryCache = new ConcurrentDictionary<Type, Func<IntPtr, object>>();
@@ -338,7 +337,7 @@ namespace WinRT
 
         // This is used to hold the reference to the native value type object (IReference) until the actual value in it (boxed as an object) gets cleaned up by GC
         // This is done to avoid pointer reuse until GC cleans up the boxed object
-        private static ConditionalWeakTable<object, IInspectable> _boxedValueReferenceCache = new();
+        private static readonly ConditionalWeakTable<object, IInspectable> _boxedValueReferenceCache = new();
 
         private static Func<IInspectable, object> CreateReferenceCachingFactory(Func<IInspectable, object> internalFactory)
         {
@@ -365,11 +364,21 @@ namespace WinRT
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName = null)
         {
-            if (implementationType == null)
+            // If runtime class name is empty or "Object", then just use IInspectable.
+            if (implementationType == null || implementationType == typeof(object))
             {
                 // If we reach here, then we couldn't find a type that matches the runtime class name.
                 // Fall back to using IInspectable directly.
                 return (IInspectable obj) => obj;
+            }
+
+            if (implementationType == typeof(ABI.System.Nullable_string))
+            {
+                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_string.GetValue(obj));
+            }
+            else if (implementationType == typeof(ABI.System.Nullable_Type))
+            {
+                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_Type.GetValue(obj));
             }
 
             var customHelperType = Projections.FindCustomHelperTypeMapping(implementationType, true);
@@ -406,31 +415,15 @@ namespace WinRT
             return CreateFactoryForImplementationType(runtimeClassName, implementationType);
         }
 
-        internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
-        {
-            // If runtime class name is empty or "Object", then just use IInspectable.
-            if (string.IsNullOrEmpty(runtimeClassName) || 
-                string.CompareOrdinal(runtimeClassName, "Object") == 0)
-            {
-                return (IInspectable obj) => obj;
-            }
-            // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
-            if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<String>") == 0)
-            {
-                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_string.GetValue(obj));
-            }
-            else if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>") == 0)
-            {
-                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_Type.GetValue(obj));
-            }
-
-            Type implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
-            return CreateTypedRcwFactory(implementationType, runtimeClassName);
-        }
-
-        internal static string GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
+        internal static Type GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
         {
             string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
+            Type implementationType = null;
+            if (!string.IsNullOrEmpty(runtimeClassName))
+            {
+                implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
+            }
+
             if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))
             {
                 // We have a static type which we can use to construct the object.  But, we can't just use it for all scenarios
@@ -441,23 +434,16 @@ namespace WinRT
                 // be cast to the sub class via as operator even if it is really an instance of it per rutimeclass.
                 // To handle these scenarios, we use the runtimeclass if we find it is assignable to the statically determined type.
                 // If it isn't, we use the statically determined type as it is a tear off.
-
-                Type implementationType = null;
-                if (!string.IsNullOrEmpty(runtimeClassName))
-                {
-                    implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
-                }
-
                 if (!(implementationType != null &&
                     (staticallyDeterminedType == implementationType ||
                      staticallyDeterminedType.IsAssignableFrom(implementationType) ||
                      staticallyDeterminedType.IsGenericType && implementationType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == staticallyDeterminedType.GetGenericTypeDefinition()))))
                 {
-                    runtimeClassName = TypeNameSupport.GetNameForType(staticallyDeterminedType, TypeNameGenerationFlags.GenerateBoxedName);
+                    return staticallyDeterminedType;
                 }
             }
 
-            return runtimeClassName;
+            return implementationType;
         }
 
         private readonly static ConcurrentDictionary<Type, bool> IsIReferenceTypeCache = new ConcurrentDictionary<Type, bool>();
