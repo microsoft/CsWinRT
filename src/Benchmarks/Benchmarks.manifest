@@ -15,6 +15,10 @@
 		name="BenchmarkComponent.EventOperations"
 		threadingModel="both"
 		xmlns="urn:schemas-microsoft-com:winrt.v1" />
+	<activatableClass
+		name="BenchmarkComponent.Composable"
+		threadingModel="both"
+		xmlns="urn:schemas-microsoft-com:winrt.v1" />  
   </file>
 
 </assembly>

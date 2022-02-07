@@ -330,19 +330,19 @@ namespace WinRT
 
             interfaceTableEntries.Add(new ComInterfaceEntry
             {
-                IID = typeof(IUnknownVftbl).GUID,
+                IID = IUnknownVftbl.IID,
                 Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
             });
 
             interfaceTableEntries.Add(new ComInterfaceEntry
             {
-                IID = typeof(IInspectable).GUID,
+                IID = InterfaceIIDs.IInspectable_IID,
                 Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
             });
 
             InitializeManagedQITable(interfaceTableEntries);
 
-            IdentityPtr = _managedQITable[typeof(IUnknownVftbl).GUID];
+            IdentityPtr = _managedQITable[IUnknownVftbl.IID];
         }
 
         ~ComCallableWrapper()

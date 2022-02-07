@@ -6009,7 +6009,7 @@ bind_each(nongeneric_delegates));
 global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
 {
 ppv = IntPtr.Zero;
-if (IsOverridableInterface(iid) || typeof(global::WinRT.IInspectable).GUID == iid)
+if (IsOverridableInterface(iid) || global::WinRT.InterfaceIIDs.IInspectable_IID == iid)
 {
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
