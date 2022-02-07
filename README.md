@@ -1,4 +1,4 @@
-[![Build status](https://dev.azure.com/microsoft/Dart/_apis/build/status/cswinrt%20Nuget)](https://dev.azure.com/microsoft/Dart/_build/latest?definitionId=45187)
+[![Build Status](https://dev.azure.com/microsoft/Dart/_apis/build/status/CsWinRT%20CI?branchName=master)](https://dev.azure.com/microsoft/Dart/_build/latest?definitionId=76961&branchName=master)
 
 # The C#/WinRT Language Projection
 
