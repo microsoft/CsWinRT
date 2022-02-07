@@ -72,12 +72,24 @@ namespace WinRT
         {
             // Assume that anonymous types are expando objects, whether declared 'dynamic' or not.
             // It may be necessary to detect otherwise and return System.Object.
-            if(runtimeClassName.StartsWith("<>f__AnonymousType".AsSpan(), StringComparison.Ordinal))
+            if (runtimeClassName.StartsWith("<>f__AnonymousType".AsSpan(), StringComparison.Ordinal))
             {
                 return (typeof(System.Dynamic.ExpandoObject), 0);
             }
-            var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
-            return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
+            // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
+            else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<String>".AsSpan(), StringComparison.Ordinal) == 0)
+            {
+                return (typeof(ABI.System.Nullable_string), 0);
+            }
+            else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>".AsSpan(), StringComparison.Ordinal) == 0)
+            {
+                return (typeof(ABI.System.Nullable_Type), 0);
+            }
+            else
+            {
+                var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
+                return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
+            }
         }
 
         /// <summary>
