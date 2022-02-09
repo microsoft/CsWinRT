@@ -10,7 +10,7 @@ namespace Benchmarks
         AutoResetEvent exitThread;
         AutoResetEvent objectCreated;
         Thread staThread;
-        private Windows.UI.Popups.PopupMenu nonAgileObject;
+        private volatile Windows.UI.Popups.PopupMenu nonAgileObject;
 
         [GlobalSetup]
         public void Setup()
@@ -36,7 +36,7 @@ namespace Benchmarks
             {
                 createObject.Reset();
                 nonAgileObject = new Windows.UI.Popups.PopupMenu();
-                _ = nonAgileObject.Commands.Count;
+                CallObject();
                 objectCreated.Set();
             }
         }
