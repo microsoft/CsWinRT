@@ -67,12 +67,30 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
   </Target>
 
+  <!-- 
+      During a design-time build, input WinMDs may not exist yet if a full build has not been completed.
+      If that is the case, generation of the CsWinRT projection will fail. To avoid causing a design-time
+      build break (which can put the design-time build results of dependent projects into a bad state),
+      we want to skip projection generation if a) this is a design-time build, and b) any of the inputs
+      do not exist.
+  -->
+  <Target Name="CsWinRTCalculateSkipDesignTimeGenerateProjection" 
+          DependsOnTargets="CsWinRTRemoveWinMDReferences">
+    <ItemGroup>
+      <_CsWinRTNonexistentInputs Include="@(CsWinRTInputs)" Condition="!Exists('%(CsWinRTInputs.Identity)')" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <CsWinRTSkipDesignTimeGenerateProjection Condition="('$(DesignTimeBuild)' == 'true' OR '$(BuildingProject)' != 'true') and '@(_CsWinRTNonexistentInputs)'!=''">true</CsWinRTSkipDesignTimeGenerateProjection>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="CsWinRTCleanGenerateProjectionOutputs">
     <Delete Files="$(CsWinRTGeneratedFilesDir)cswinrt.rsp" />
   </Target>
 
   <Target Name="CsWinRTGenerateProjection"
-          DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences"
+          DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences;CsWinRTCalculateSkipDesignTimeGenerateProjection"
           Condition="'$(CsWinRTGenerateProjection)' == 'true'"
           Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTExcludes);$(CsWinRTIncludes);$(CsWinRTFilters);$(CsWinRTWindowsMetadata)"
           Outputs="$(CsWinRTGeneratedFilesDir)cswinrt.rsp">
@@ -123,10 +141,17 @@ $(CsWinRTIncludeWinRTInterop)
 $(CsWinRTEmbeddedParam)
       </CsWinRTParams>
     </PropertyGroup>
-    <MakeDir Directories="$(CsWinRTGeneratedFilesDir)" />
-    <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" />
-    <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
-    <Exec Command="$(CsWinRTCommand)" />
+
+  <!-- The following tasks should only be executed if design-time generation of the projection
+       is not being skipped. -->
+    <MakeDir Condition="'$(CsWinRTSkipDesignTimeGenerateProjection)'!='true'" 
+      Directories="$(CsWinRTGeneratedFilesDir)" />
+    <WriteLinesToFile Condition="'$(CsWinRTSkipDesignTimeGenerateProjection)'!='true'"
+      File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" />
+    <Message Condition="'$(CsWinRTSkipDesignTimeGenerateProjection)'!='true'"
+      Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
+    <Exec Condition="'$(CsWinRTSkipDesignTimeGenerateProjection)'!='true'"
+      Command="$(CsWinRTCommand)" />
 
     <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)WinRT.cs')">
       <UpToDateCheckInput Include="$(CsWinRTGeneratedFilesDir)WinRT.cs" />
