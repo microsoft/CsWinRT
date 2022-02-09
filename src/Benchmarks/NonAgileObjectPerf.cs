@@ -1,7 +1,4 @@
 ﻿using BenchmarkDotNet.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace Benchmarks
@@ -55,6 +52,14 @@ namespace Benchmarks
             createObject.Set();
             objectCreated.WaitOne();
             CallObject();
+            objectCreated.Reset();
+        }
+
+        [Benchmark]
+        public void ConstructNonAgileObject()
+        {
+            createObject.Set();
+            objectCreated.WaitOne();
             objectCreated.Reset();
         }
     }
