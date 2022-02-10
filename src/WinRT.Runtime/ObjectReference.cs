@@ -458,15 +458,15 @@ namespace WinRT
         }
 
         // Agile reference can be null, so whether it is set is tracked separately.
-        private volatile bool _agileReferenceSet;
+        private volatile bool _isAgileReferenceSet;
         private volatile AgileReference __agileReference;
-        private AgileReference AgileReference => _agileReferenceSet ? __agileReference : Make_AgileReference();
+        private AgileReference AgileReference => _isAgileReferenceSet ? __agileReference : Make_AgileReference();
         private AgileReference Make_AgileReference()
         { 
             Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
 
             // Set after CallInContext callback given callback can fail to occur.
-            _agileReferenceSet = true;
+            _isAgileReferenceSet = true;
             return __agileReference;
 
             void InitAgileReference()
