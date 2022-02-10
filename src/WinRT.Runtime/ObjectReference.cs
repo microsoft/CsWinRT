@@ -457,16 +457,22 @@ namespace WinRT
             return __cachedContext;
         }
 
+        // Agile reference can be null, so whether it is set is tracked separately.
+        private volatile bool _agileReferenceSet;
         private volatile AgileReference __agileReference;
-        private AgileReference AgileReference => __agileReference ?? Make_AgileReference();
+        private AgileReference AgileReference => _agileReferenceSet ? __agileReference : Make_AgileReference();
         private AgileReference Make_AgileReference()
         { 
-            AgileReference agileReference = null; 
-            Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null); 
-            void InitAgileReference() { agileReference = new AgileReference(this); }
+            Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
 
-            global::System.Threading.Interlocked.CompareExchange(ref __agileReference, agileReference, null);
+            // Set after CallInContext callback given callback can fail to occur.
+            _agileReferenceSet = true;
             return __agileReference;
+
+            void InitAgileReference()
+            {
+                global::System.Threading.Interlocked.CompareExchange(ref __agileReference, new AgileReference(this), null);
+            }
         }
 
         private readonly Guid _iid;
@@ -530,20 +536,21 @@ namespace WinRT
                     return null;
                 }
 
-                using var referenceInContext = agileReference.Get();
                 if (_iid == Guid.Empty)
                 {
+                    using var referenceInContext = agileReference.Get();
                     return referenceInContext.TryAs<T>(out var objRef) >= 0 ? objRef : null;
                 }
                 else
                 {
-                    return referenceInContext.TryAs<T>(_iid, out var objRef) >= 0 ? objRef : null;
+                    return agileReference.Get<T>(_iid);
                 }
             }
         }
 
         protected override unsafe void Release()
         {
+            // Don't initialize cached context by calling through property if it is already null.
             if (__cachedContext != null)
             {
                 CachedContext.Clear();

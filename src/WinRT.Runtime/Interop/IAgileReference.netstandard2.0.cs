@@ -38,6 +38,45 @@ namespace ABI.WinRT.Interop
 {
     using global::WinRT;
 
+    internal static class IAgileReferenceMethods
+    {
+        public static unsafe IObjectReference Resolve(IObjectReference _obj, Guid riid)
+        {
+            if (_obj == null) return null;
+
+            var ThisPtr = _obj.ThisPtr;
+            IntPtr ptr = IntPtr.Zero;
+            ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)ThisPtr)[3](
+                ThisPtr, &riid, &ptr));
+            try
+            {
+                return ComWrappersSupport.GetObjectReferenceForInterface(ptr);
+            }
+            finally
+            {
+                MarshalInspectable<object>.DisposeAbi(ptr);
+            }
+        }
+
+        public static unsafe ObjectReference<T> Resolve<T>(IObjectReference _obj, Guid riid)
+        {
+            if (_obj == null) return null;
+
+            var ThisPtr = _obj.ThisPtr;
+            IntPtr ptr = IntPtr.Zero;
+            ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)ThisPtr)[3](
+                ThisPtr, &riid, &ptr));
+            try
+            {
+                return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr);
+            }
+            finally
+            {
+                MarshalInspectable<object>.DisposeAbi(ptr);
+            }
+        }
+    }
+
     [Guid("C03F6A43-65A4-9818-987E-E0B810D2A6F2")]
     internal sealed unsafe class IAgileReference : global::WinRT.Interop.IAgileReference
     {
@@ -104,15 +143,7 @@ namespace ABI.WinRT.Interop
 
         public IObjectReference Resolve(Guid riid)
         {
-            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Resolve(ThisPtr, ref riid, out IntPtr ptr));
-            try
-            {
-                return ComWrappersSupport.GetObjectReferenceForInterface(ptr);
-            }
-            finally
-            {
-                MarshalInspectable<object>.DisposeAbi(ptr);
-            }
+            return IAgileReferenceMethods.Resolve(_obj, riid);
         }
     }
 
