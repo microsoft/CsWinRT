@@ -357,9 +357,11 @@ namespace WinRT
                 throw new MissingMethodException();
             }
 
-            var parms = new[] { Expression.Parameter(typeof(IInspectable), "obj") };
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.Call(fromAbiMethod, Expression.Property(parms[0], "ThisPtr")), parms).Compile();
+            var fromAbiMethodFunc = (Func<IntPtr, object>) fromAbiMethod.CreateDelegate(typeof(Func<IntPtr, object>));
+            return (IInspectable obj) => fromAbiMethodFunc(obj.ThisPtr);
+  //          var parms = new[] { Expression.Parameter(typeof(IInspectable), "obj") };
+    //        return Expression.Lambda<Func<IInspectable, object>>(
+      //          Expression.Call(fromAbiMethod, Expression.Property(parms[0], "ThisPtr")), parms).Compile();
         }
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName = null)

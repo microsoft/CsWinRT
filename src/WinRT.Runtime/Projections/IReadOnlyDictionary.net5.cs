@@ -39,6 +39,8 @@ namespace System.Collections.Generic
             this._inner = _inner;
         }
 
+        public static IReadOnlyDictionaryImpl<K, V> CreateRcw(IInspectable obj) => new(obj.ObjRef);
+
         private volatile IObjectReference __iReadOnlyDictionaryObjRef;
         private IObjectReference Make_IDictionaryObjRef()
         {
