@@ -25,6 +25,7 @@
   <ItemGroup>
     <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Windows\bin\x64\Release\$(BenchmarkTargetFramework)\Microsoft.Windows.SDK.NET.dll" Condition="$(UseWinmd) == false"></Reference>
     <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Benchmark\bin\x64\Release\$(BenchmarkTargetFramework)\Benchmark.dll" Condition="$(UseWinmd) == false"></Reference>
+    <Reference Include="$(MSBuildThisFileDirectory)..\Projections\Benchmark\bin\x64\Release\$(BenchmarkTargetFramework)\WinRT.Runtime.dll" Condition="$(UseWinmd) == false"></Reference>
     
     <ProjectReference Include="..\Projections\Windows\Windows.csproj" Condition="$(UseWinmd) == false And $(IsDotnetBuild) == false" />
     <ProjectReference Include="..\Projections\Benchmark\Benchmark.csproj" Condition="$(UseWinmd) == false And $(IsDotnetBuild) == false" />
