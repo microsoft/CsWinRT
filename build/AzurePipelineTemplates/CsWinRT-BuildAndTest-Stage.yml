@@ -425,3 +425,12 @@ stages:
           dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin
           _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
           exit /b 0 
+
+# Run Benchmarks
+    - task: CmdLine@2
+      displayName: Run Benchmarks
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        workingDirectory: $(Build.SourcesDirectory)\src
+        script: |
+          benchmark.cmd
