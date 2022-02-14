@@ -11,8 +11,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <!-- Name the RuntimeConfig properly -->
     <ProjectRuntimeConfigFileName>WinRT.Host.runtimeconfig.json</ProjectRuntimeConfigFileName>
-    <!-- Make sure WinRT.Runtime.dll and Microsoft.Windows.SDK.NET.dll get binplaced with authored component's dll  -->
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <CsWinRTDetectDependentAuthoringWinMDs Condition="'$(CsWinRTDetectDependentAuthoringWinMDs)'==''">true</CsWinRTDetectDependentAuthoringWinMDs>
     <GetCopyToOutputDirectoryItemsDependsOn>$(GetCopyToOutputDirectoryItemsDependsOn);CsWinRTAuthoring_AddManagedDependencies</GetCopyToOutputDirectoryItemsDependsOn>
   </PropertyGroup>
@@ -57,11 +55,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     
   </Target>
 
-  <!-- Experiment: what is WinAppSdkRemovePayloadDuplicates doing?  the input was _UnfilteredAppxPackagePayload -->
-  <Target Name="CsWinRT_Test" BeforeTargets="WinAppSdkRemovePayloadDuplicates" Returns="@(_UnfilteredAppxPackagePayload)">
-    <Message Text="@(_UnfilteredAppxPackagePayload)"/>
-  </Target>
-
   <!-- For Project Reference consumers, copy the necessary WinRT DLLs to output directory --> 
   <ItemGroup> 
 
@@ -86,26 +79,31 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
 
     <ItemGroup>
+
       <_CsWinRTDeDupRuntime_NETSDK Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'Microsoft.Windows.SDK.NET.Ref' AND '%(ReferenceCopyLocalPaths.Filename)' == 'WinRT.Runtime'"/>
       <_CsWinRTDeDupRuntime_CsWinRT Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'Microsoft.Windows.CsWinRT' AND '%(ReferenceCopyLocalPaths.Filename)' == 'WinRT.Runtime'"/>
+
     </ItemGroup>
 
     <!-- If we don't have a reference to the .NET SDK Ref Package, then we don't need to compare versions -->
     <PropertyGroup>
+
       <_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest Condition="'@(_CsWinRTDeDupRuntime_NETSDK)' == ''">true</_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest>
+
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest)' != 'true'">
+
       <_CsWinRTDeDupRuntime_NETSDK_Version>%(_CsWinRTDeDupRuntime_NETSDK.FileVersion)</_CsWinRTDeDupRuntime_NETSDK_Version>
       <_CsWinRTDeDupRuntime_CsWinRT_Version>%(_CsWinRTDeDupRuntime_CsWinRT.NuGetPackageVersion)</_CsWinRTDeDupRuntime_CsWinRT_Version>
       <_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest>$([MSBuild]::VersionGreaterthanOrEquals($(_CsWinRTDeDupRuntime_CsWinRT_Version),$(_CsWinRTDeDupRuntime_NETSDK_Version)))</_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest>
+
     </PropertyGroup>
 
     <ItemGroup>
       
       <_CsWinRTDeDupRuntime_Newest Include="@(_CsWinRTDeDupRuntime_CsWinRT)" Condition="'$(_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest)' == 'true'"/>
       <_CsWinRTDeDupRuntime_Newest Include="@(_CsWinRTDeDupRuntime_NETSDK)" Condition="'$(_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest)' != 'true'"/>
-
 
       <AllItemsFullPathWithTargetPath Include="@(ReferenceCopyLocalPaths)" 
         Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime' AND '%(ReferenceCopyLocalPaths.Filename)' != 'WinRT.Runtime'">
