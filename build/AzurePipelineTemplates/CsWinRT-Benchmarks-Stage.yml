@@ -15,10 +15,9 @@ stages:
 # Clone TestWinRT
     - task: CmdLine@2
       displayName: Clone TestWinRT
-      enabled: false
       inputs: 
         script: get_testwinrt.cmd
-        workingDirectory: $(Build.SourcesDirectory)
+        workingDirectory: $(Build.SourcesDirectory)\src
 
 # Use .NET Core SDK 2.1
     - task: UseDotNet@2
