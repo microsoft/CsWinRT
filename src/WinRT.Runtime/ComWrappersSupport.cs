@@ -281,58 +281,43 @@ namespace WinRT
 
         private static bool IsIReferenceArray(Type implementationType)
         {
-            return implementationType.FullName.StartsWith("Windows.Foundation.IReferenceArray`1", StringComparison.Ordinal);
+            return implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(Windows.Foundation.IReferenceArray<>);
         }
 
         private static Func<IInspectable, object> CreateKeyValuePairFactory(Type type)
         {
-            var parms = new[] { Expression.Parameter(typeof(IInspectable), "obj") };
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.Call(type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static), 
-                    parms), parms).Compile();
+            var createRcwFunc = (Func<IInspectable, object>) type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static).
+                    CreateDelegate(typeof(Func<IInspectable, object>));
+            return createRcwFunc;
         }
 
         internal static Func<IntPtr, object> CreateDelegateFactory(Type type)
         {
             return DelegateFactoryCache.GetOrAdd(type, (type) =>
             {
-                var parms = new[] { Expression.Parameter(typeof(IntPtr), "ptr") };
-                return Expression.Lambda<Func<IntPtr, object>>(
-                    Expression.Call(type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static),
-                        parms), parms).Compile();
+                var createRcwFunc = (Func<IntPtr, object>)type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static).
+                        CreateDelegate(typeof(Func<IntPtr, object>));
+                return createRcwFunc;
             });
         }
 
         private static Func<IInspectable, object> CreateNullableTFactory(Type implementationType)
         {
-            Type helperType = implementationType.GetHelperType();
-
-            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.Convert(Expression.Call(helperType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic), 
-                    parms), typeof(object)), parms).Compile();
+            var getValueMethod = implementationType.GetHelperType().GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic);
+            return (IInspectable obj) => getValueMethod.Invoke(null, new[] { obj });
         }
 
         private static Func<IInspectable, object> CreateAbiNullableTFactory(Type implementationType)
         {
-            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.Convert(Expression.Call(implementationType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic),
-                    parms), typeof(object)), parms).Compile();
+            var getValueMethod = implementationType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic);
+            return (IInspectable obj) => getValueMethod.Invoke(null, new[] { obj });
         }
 
         private static Func<IInspectable, object> CreateArrayFactory(Type implementationType)
         {
-            Type helperType = implementationType.GetHelperType();
-            Type vftblType = helperType.FindVftblType();
-
-            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
-            var createInterfaceInstanceExpression = Expression.New(helperType.GetConstructor(new[] { typeof(ObjectReference<>).MakeGenericType(vftblType) }),
-                    Expression.Call(parms[0],
-                        typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
-
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.Property(createInterfaceInstanceExpression, "Value"), parms).Compile();
+            var getValueFunc = (Func<IInspectable, object>)implementationType.GetHelperType().GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic).
+                CreateDelegate(typeof(Func<IInspectable, object>));
+            return getValueFunc;
         }
 
         // This is used to hold the reference to the native value type object (IReference) until the actual value in it (boxed as an object) gets cleaned up by GC
@@ -359,9 +344,6 @@ namespace WinRT
 
             var fromAbiMethodFunc = (Func<IntPtr, object>) fromAbiMethod.CreateDelegate(typeof(Func<IntPtr, object>));
             return (IInspectable obj) => fromAbiMethodFunc(obj.ThisPtr);
-  //          var parms = new[] { Expression.Parameter(typeof(IInspectable), "obj") };
-    //        return Expression.Lambda<Func<IInspectable, object>>(
-      //          Expression.Call(fromAbiMethod, Expression.Property(parms[0], "ThisPtr")), parms).Compile();
         }
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName = null)

@@ -83,6 +83,24 @@ namespace ABI.Windows.Foundation
             return wrapper.Value;
         }
 
+        internal static unsafe object GetValue(IInspectable inspectable)
+        {
+            IntPtr referenceArrayPtr = IntPtr.Zero;
+            int __retval_length = default;
+            IntPtr __retval_data = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref PIID, out referenceArrayPtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
+                return Marshaler<T>.FromAbiArray((__retval_length, __retval_data));
+            }
+            finally
+            {
+                Marshaler<T>.DisposeAbiArray((__retval_length, __retval_data));
+                Marshal.Release(referenceArrayPtr);
+            }
+        }
+
         public static unsafe void CopyManaged(object o, IntPtr dest)
         {
             using var objRef = CreateMarshaler(o);

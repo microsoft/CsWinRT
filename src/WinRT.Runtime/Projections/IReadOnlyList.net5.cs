@@ -334,7 +334,6 @@ namespace ABI.System.Collections.Generic
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IReadOnlyList<T>));
             private static readonly Type GetAt_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
             private static readonly Type IndexOf_2_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
-//            private static readonly Type GetAt_0_Type2 = typeof(IReadOnlyList_Delegates<>).MakeGenericType(Marshaler<T>.AbiType).GetMethod("GetAt_0");
 
             internal unsafe Vftbl(IntPtr thisPtr) : this()
             {
@@ -507,11 +506,5 @@ namespace ABI.System.Collections.Generic
     static class IReadOnlyList_Delegates
     {
         public unsafe delegate int GetMany_3(IntPtr thisPtr, uint startIndex, int __itemsSize, IntPtr items, out uint __return_value__);
-    }
-
-    internal static class IReadOnlyList_Delegates<TAbi>
-    {
-        public unsafe delegate int GetAt_0(IntPtr thisPtr, uint index, out TAbi __return_value__);
-        public unsafe delegate int IndexOf_2(IntPtr thisPtr, TAbi value, out uint index, out byte __return_value__);
     }
 }
