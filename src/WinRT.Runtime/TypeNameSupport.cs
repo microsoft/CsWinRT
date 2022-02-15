@@ -34,8 +34,8 @@ namespace WinRT
 #endif
     static class TypeNameSupport
     {
-        private static List<Assembly> projectionAssemblies = new List<Assembly>();
-        private static ConcurrentDictionary<string, Type> typeNameCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal) { ["TrackerCollection<T>"] = null };
+        private static readonly List<Assembly> projectionAssemblies = new List<Assembly>();
+        private static readonly ConcurrentDictionary<string, Type> typeNameCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal) { ["TrackerCollection<T>"] = null };
 
         public static void RegisterProjectionAssembly(Assembly assembly)
         {
@@ -72,12 +72,24 @@ namespace WinRT
         {
             // Assume that anonymous types are expando objects, whether declared 'dynamic' or not.
             // It may be necessary to detect otherwise and return System.Object.
-            if(runtimeClassName.StartsWith("<>f__AnonymousType".AsSpan(), StringComparison.Ordinal))
+            if (runtimeClassName.StartsWith("<>f__AnonymousType".AsSpan(), StringComparison.Ordinal))
             {
                 return (typeof(System.Dynamic.ExpandoObject), 0);
             }
-            var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
-            return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
+            // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
+            else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<String>".AsSpan(), StringComparison.Ordinal) == 0)
+            {
+                return (typeof(ABI.System.Nullable_string), 0);
+            }
+            else if (runtimeClassName.CompareTo("Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>".AsSpan(), StringComparison.Ordinal) == 0)
+            {
+                return (typeof(ABI.System.Nullable_Type), 0);
+            }
+            else
+            {
+                var (genericTypeName, genericTypes, remaining) = ParseGenericTypeName(runtimeClassName);
+                return (FindTypeByNameCore(genericTypeName, genericTypes), remaining);
+            }
         }
 
         /// <summary>
@@ -380,7 +392,7 @@ namespace WinRT
                 return TryAppendSimpleTypeName(type, builder, flags);
             }
 
-            if (!Projections.IsTypeWindowsRuntimeType(type) && (flags & TypeNameGenerationFlags.NoCustomTypeName) != 0)
+            if ((flags & TypeNameGenerationFlags.NoCustomTypeName) != 0 && !Projections.IsTypeWindowsRuntimeType(type))
             {
                 return TryAppendWinRTInterfaceNameForType(type, builder, flags);
             }

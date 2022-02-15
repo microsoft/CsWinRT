@@ -44,8 +44,8 @@ namespace WinRT
                 if (identity.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
                 {
                     var inspectable = new IInspectable(identity);
-                    string runtimeClassName = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
-                    runtimeWrapper = string.IsNullOrEmpty(runtimeClassName) ? inspectable : TypedObjectFactoryCacheForRuntimeClassName.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
+                    Type runtimeClassType = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
+                    runtimeWrapper = runtimeClassType == null ? inspectable : TypedObjectFactoryCacheForType.GetOrAdd(runtimeClassType, classType => CreateTypedRcwFactory(classType))(inspectable);
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
                 {
@@ -330,19 +330,19 @@ namespace WinRT
 
             interfaceTableEntries.Add(new ComInterfaceEntry
             {
-                IID = typeof(IUnknownVftbl).GUID,
+                IID = IUnknownVftbl.IID,
                 Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
             });
 
             interfaceTableEntries.Add(new ComInterfaceEntry
             {
-                IID = typeof(IInspectable).GUID,
+                IID = InterfaceIIDs.IInspectable_IID,
                 Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
             });
 
             InitializeManagedQITable(interfaceTableEntries);
 
-            IdentityPtr = _managedQITable[typeof(IUnknownVftbl).GUID];
+            IdentityPtr = _managedQITable[IUnknownVftbl.IID];
         }
 
         ~ComCallableWrapper()
