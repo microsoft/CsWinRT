@@ -56,6 +56,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Authoring\WinRT.Host.ErrorStrings\WinRT.Host.ErrorStrings.vcxproj">
+      <Project>{29c9b987-5a54-49e0-af4b-fb7be0c8676f}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\Projections\TestHost.ProbeByClass\TestHost.ProbeByClass.csproj">
       <Project>{ef3326b5-716f-41d2-ab30-4efab30955e2}</Project>
     </ProjectReference>

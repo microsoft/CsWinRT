@@ -146,6 +146,9 @@
       <EnableUAC>false</EnableUAC>
       <NoEntryPoint>true</NoEntryPoint>
     </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />

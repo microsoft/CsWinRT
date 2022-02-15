@@ -288,6 +288,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\WinRT.Host.ErrorStrings\WinRT.Host.ErrorStrings.vcxproj">
+      <Project>{29c9b987-5a54-49e0-af4b-fb7be0c8676f}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
       <Project>{0bb8f82d-874e-45aa-bca3-20ce0562164a}</Project>
     </ProjectReference>

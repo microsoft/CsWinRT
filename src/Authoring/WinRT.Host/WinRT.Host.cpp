@@ -91,7 +91,7 @@ static load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_
 
     auto string_table_entry = 0;
     for (auto&& elem : hostfxr_status_messages)
-    {
+    {   
         if (elem.status == result)
         {
             string_table_entry = elem.resourceID;
