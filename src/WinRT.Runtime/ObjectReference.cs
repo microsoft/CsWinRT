@@ -536,14 +536,21 @@ namespace WinRT
                     return null;
                 }
 
-                if (_iid == Guid.Empty)
+                try
                 {
-                    using var referenceInContext = agileReference.Get();
-                    return referenceInContext.TryAs<T>(out var objRef) >= 0 ? objRef : null;
+                    if (_iid == Guid.Empty)
+                    {
+                        return agileReference.Get<T>(GuidGenerator.GetIID(typeof(T)));
+                    }
+                    else
+                    {
+                        return agileReference.Get<T>(_iid);
+                    }
                 }
-                else
+                catch (Exception)
                 {
-                    return agileReference.Get<T>(_iid);
+                    // Fallback to using the current context in case of error.
+                    return null;
                 }
             }
         }
