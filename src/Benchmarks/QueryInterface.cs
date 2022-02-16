@@ -9,12 +9,14 @@ namespace Benchmarks
     {
         ClassWithMultipleInterfaces instance;
         ChatMessage message;
+        ClassWithFastAbi fastAbiInstance;
 
         [GlobalSetup]
         public void Setup()
         {
             instance = new ClassWithMultipleInterfaces();
             message = new ChatMessage();
+            fastAbiInstance = new ClassWithFastAbi();
         }
 
         [Benchmark]
@@ -27,6 +29,18 @@ namespace Benchmarks
         public int QueryNonDefaultInterface()
         {
             return instance.IntProperty;
+        }
+
+        [Benchmark]
+        public int QueryFastAbiDefaultInterface()
+        {
+            return fastAbiInstance.DefaultIntProperty;
+        }
+
+        [Benchmark]
+        public int QueryFastAbiNonDefaultInterface()
+        {
+            return fastAbiInstance.NonDefaultIntProperty;
         }
 
         [Benchmark]
@@ -79,7 +93,7 @@ namespace Benchmarks
             return (ClassWithMarshalingRoutines)instance.NewObject();
         }
 
-        // The following 2 benchmarks try to benchmark the time taken for the first call
+        // The following 4 benchmarks try to benchmark the time taken for the first call
         // rather than the mean time over several calls.  It has the overhead of the object
         // construction, but it can be used to track regressions to performance.
         [Benchmark]
@@ -94,6 +108,20 @@ namespace Benchmarks
         {
             ClassWithMultipleInterfaces instance2 = new ClassWithMultipleInterfaces();
             return instance2.IntProperty;
+        }
+
+        [Benchmark]
+        public int ConstructAndQueryFastAbiDefaultInterfaceFirstCall()
+        {
+            var instance2 = new ClassWithFastAbi();
+            return instance2.DefaultIntProperty;
+        }
+
+        [Benchmark]
+        public int ConstructAndQueryFastAbiNonDefaultInterfaceFirstCall()
+        {
+            var instance2 = new ClassWithFastAbi();
+            return instance2.NonDefaultIntProperty;
         }
 
         [Benchmark]

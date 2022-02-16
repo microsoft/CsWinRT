@@ -1023,7 +1023,7 @@ namespace cswinrt
         return 0;
     }
 
-    bool is_interfaces_equal(TypeDef const& interface1, TypeDef const& interface2)
+    bool interfaces_equal(TypeDef const& interface1, TypeDef const& interface2)
     {
         return interface1.TypeNamespace() == interface2.TypeNamespace()
             && interface1.TypeName() == interface2.TypeName();
@@ -1077,13 +1077,11 @@ namespace cswinrt
             TypeDef exclusiveToClass = iface.get_cache().find_required(sys_type.name);
             if (!is_fast_abi_class(exclusiveToClass))
             {
-                cache[iface] = {};
                 return {};
             }
             cache[iface] = exclusiveToClass;
             return exclusiveToClass;
         }
-        cache[iface] = {};
         return {};
     }
 

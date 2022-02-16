@@ -5910,7 +5910,7 @@ public static Guid PIID = Vftbl.PIID;
         auto fast_abi_class_val = get_fast_abi_class_for_interface(iface);
         if (fast_abi_class_val.has_value())
         {
-            if (!is_interfaces_equal(fast_abi_class_val.value().default_interface, iface))
+            if (!interfaces_equal(fast_abi_class_val.value().default_interface, iface))
             {
                 return;
             }

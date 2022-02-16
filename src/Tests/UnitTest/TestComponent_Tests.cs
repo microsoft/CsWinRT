@@ -974,7 +974,6 @@ namespace UnitTest
             Assert.True(composableObjects.GetRange(1, 3).SequenceEqual(interfaceSubset));
         }
 
-#if NET
         [Fact]
         public void Fast_Abi_Simple()
         {
@@ -1015,7 +1014,7 @@ namespace UnitTest
             sv.ObjectProperty = new List<int> { 1, 2, 3 };
             Assert.Equal(3, ((List<int>)sv.ObjectProperty).Count);
         }
-#endif
+
         // Nota Bene: this test case must always remain the final one
         [Fact]
         public void Z_Check_Coverage()
