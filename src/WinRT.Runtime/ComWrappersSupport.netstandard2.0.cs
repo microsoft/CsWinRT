@@ -44,13 +44,18 @@ namespace WinRT
                 if (identity.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
                 {
                     var inspectable = new IInspectable(identity);
-                    string runtimeClassName = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
-                    runtimeWrapper = string.IsNullOrEmpty(runtimeClassName) ? inspectable : TypedObjectFactoryCacheForRuntimeClassName.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className))(inspectable);
+                    Type runtimeClassType = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
+                    runtimeWrapper = runtimeClassType == null ? inspectable : TypedObjectFactoryCacheForType.GetOrAdd(runtimeClassType, classType => CreateTypedRcwFactory(classType))(inspectable);
                 }
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
                 {
                     runtimeWrapper = new ABI.WinRT.Interop.IWeakReference(weakRef);
                 }
+                else if (typeof(T).IsDelegate())
+                {
+                    runtimeWrapper = CreateDelegateFactory(typeof(T))(ptr);
+                }
+
                 keepAliveSentinel = runtimeWrapper; // We don't take a strong reference on runtimeWrapper at any point, so we need to make sure it lives until it can get assigned to rcw.
                 var runtimeWrapperReference = new System.WeakReference<object>(runtimeWrapper);
                 var cleanupSentinel = new RuntimeWrapperCleanup(identity.ThisPtr, runtimeWrapperReference);
@@ -80,8 +85,7 @@ namespace WinRT
             // for a single System.Type.
             return rcw switch
             {
-                ABI.System.Nullable<string> ns => (T)(object)ns.Value,
-                ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                ABI.System.Nullable nt => (T)nt.Value,
                 _ => (T)rcw
             };
         }
@@ -326,19 +330,19 @@ namespace WinRT
 
             interfaceTableEntries.Add(new ComInterfaceEntry
             {
-                IID = typeof(IUnknownVftbl).GUID,
+                IID = IUnknownVftbl.IID,
                 Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
             });
 
             interfaceTableEntries.Add(new ComInterfaceEntry
             {
-                IID = typeof(IInspectable).GUID,
+                IID = InterfaceIIDs.IInspectable_IID,
                 Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
             });
 
             InitializeManagedQITable(interfaceTableEntries);
 
-            IdentityPtr = _managedQITable[typeof(IUnknownVftbl).GUID];
+            IdentityPtr = _managedQITable[IUnknownVftbl.IID];
         }
 
         ~ComCallableWrapper()

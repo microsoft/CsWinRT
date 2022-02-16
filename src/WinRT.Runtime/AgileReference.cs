@@ -16,7 +16,7 @@ namespace WinRT
     {
         private readonly static Guid CLSID_StdGlobalInterfaceTable = new(0x00000323, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
         private readonly static Lazy<IGlobalInterfaceTable> Git = new Lazy<IGlobalInterfaceTable>(() => GetGitTable());
-        private readonly IAgileReference _agileReference;
+        private readonly IObjectReference _agileReference;
         private readonly IntPtr _cookie;
         private bool disposed;
 
@@ -28,7 +28,7 @@ namespace WinRT
             }   
 
             IntPtr agileReference = default;
-            Guid iid = typeof(IUnknownVftbl).GUID;
+            Guid iid = IUnknownVftbl.IID;
             try
             {
                 Marshal.ThrowExceptionForHR(Platform.RoGetAgileReference(
@@ -36,11 +36,7 @@ namespace WinRT
                     ref iid,
                     instance.ThisPtr,
                     &agileReference));
-#if NET
-                _agileReference = (IAgileReference)new SingleInterfaceOptimizedObject(typeof(IAgileReference), ObjectReference<ABI.WinRT.Interop.IAgileReference.Vftbl>.Attach(ref agileReference));
-#else
-                _agileReference = ABI.WinRT.Interop.IAgileReference.FromAbi(agileReference).AsType<ABI.WinRT.Interop.IAgileReference>();
-#endif
+                _agileReference = ObjectReference<IUnknownVftbl>.Attach(ref agileReference);
             }
             catch(TypeLoadException)
             {
@@ -51,7 +47,10 @@ namespace WinRT
                 MarshalInterface<IAgileReference>.DisposeAbi(agileReference);
             }
         }
-        public IObjectReference Get() => _cookie == IntPtr.Zero ? _agileReference?.Resolve(typeof(IUnknownVftbl).GUID) : Git.Value?.GetInterfaceFromGlobal(_cookie, typeof(IUnknownVftbl).GUID);
+
+        public IObjectReference Get() => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve(_agileReference, IUnknownVftbl.IID) : Git.Value?.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID);
+
+        internal ObjectReference<T> Get<T>(Guid iid) => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve<T>(_agileReference, iid) : Git.Value?.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID)?.As<T>(iid);
 
         protected virtual void Dispose(bool disposing)
         {
@@ -75,7 +74,7 @@ namespace WinRT
         private static unsafe IGlobalInterfaceTable GetGitTable()
         {
             Guid gitClsid = CLSID_StdGlobalInterfaceTable;
-            Guid gitIid = typeof(IGlobalInterfaceTable).GUID;
+            Guid gitIid = ABI.WinRT.Interop.IGlobalInterfaceTable.IID;
             IntPtr gitPtr = default;
 
             try

@@ -974,6 +974,117 @@ namespace UnitTest
             Assert.True(composableObjects.GetRange(1, 3).SequenceEqual(interfaceSubset));
         }
 
+        private void Box_type<T>(T val, Func<T, object, object> boxFunc)
+        {
+            var boxedVal = boxFunc(val, val);
+            Assert.IsType<T>(boxedVal);
+            Assert.Equal((T)boxedVal, val);
+        }
+
+        [Fact]
+        public void Box_Byte()
+        {
+            Box_type<byte>(4, Tests.Box1);
+        }
+
+        [Fact]
+        public void Box_UShort()
+        {
+            Box_type<ushort>(4, Tests.Box2);
+        }
+
+        [Fact]
+        public void Box_UInt()
+        {
+            Box_type<uint>(4, Tests.Box3);
+        }
+
+        [Fact]
+        public void Box_ULong()
+        {
+            Box_type<ulong>(4, Tests.Box4);
+        }
+
+        [Fact]
+        public void Box_Short()
+        {
+            Box_type<short>(4, Tests.Box5);
+        }
+
+        [Fact]
+        public void Box_Int()
+        {
+            Box_type(4, Tests.Box6);
+        }
+
+        [Fact]
+        public void Box_Long()
+        {
+            Box_type<long>(4, Tests.Box7);
+        }
+
+        [Fact]
+        public void Box_Bool()
+        {
+            Box_type(true, Tests.Box8);
+        }
+
+        [Fact]
+        public void Box_Float()
+        {
+            Box_type<float>(4, Tests.Box9);
+        }
+
+        [Fact]
+        public void Box_Double()
+        {
+            Box_type(4.0, Tests.Box10);
+        }
+
+        [Fact]
+        public void Box_Guid()
+        {
+            Box_type(Guid.NewGuid(), Tests.Box11);
+        }
+
+        [Fact]
+        public void Box_Char()
+        {
+            Box_type('c', Tests.Box12);
+        }
+
+        [Fact]
+        public void Box_String()
+        {
+            Box_type("test", Tests.Box13);
+        }
+
+        [Fact]
+        public void Box_Timespan()
+        {
+            Box_type(TimeSpan.FromMilliseconds(4), Tests.Box14);
+        }
+
+        [Fact]
+        public void Box_Blittable()
+        {
+            Blittable blittable = new Blittable(3, 4, 5, 6, 7, 8, 9, 10, 11, typeof(ITests).GUID);
+            Box_type(blittable, Tests.Box15);
+        }
+
+        [Fact]
+        public void Box_NonBittable()
+        {
+            NonBlittable nonBlittable = new NonBlittable(true, 'a', "one", 1);
+            Box_type(nonBlittable, Tests.Box16);
+        }
+
+        [Fact]
+        public void Box_DateTime()
+        {
+            Box_type(DateTimeOffset.Now, Tests.Box17);
+        }
+
         [Fact]
         public void Fast_Abi_Simple()
         {

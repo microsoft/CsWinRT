@@ -1,9 +1,14 @@
 Compat issues with assembly WinRT.Runtime:
+MembersMustExist : Member 'public System.EventHandler<T> ABI.System.EventHandler<T>.CreateRcw(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public ABI.System.Type ABI.System.Type.GetAbi(ABI.System.Type.Pinnable)' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'ABI.System.Type.Pinnable' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IDictionaryMethods<K, V>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IEnumerableMethods<T>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IListMethods<T>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IReadOnlyListMethods<T>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Collections.Specialized.NotifyCollectionChangedEventHandler ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.CreateRcw(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.ComponentModel.PropertyChangedEventHandler ABI.System.ComponentModel.PropertyChangedEventHandler.CreateRcw(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.WinRT.Interop.IWeakReferenceSourceMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'System.Numerics.VectorExtensions' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.ComWrappersHelper' does not exist in the reference but it does exist in the implementation.
@@ -12,6 +17,7 @@ MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterObjectFo
 MembersMustExist : Member 'protected void WinRT.IObjectReference.AddRef(System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> WinRT.IObjectReference.AsKnownPtr(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Int32 WinRT.IObjectReference.TryAs(System.Guid, System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public T WinRT.MarshalDelegate.FromAbi<T>(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.IObjectReference WinRT.MarshalInspectable<T>.CreateMarshaler<V>(T, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.MarshalString..ctor(System.String)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.MarshalString.Pinnable WinRT.MarshalString.CreatePinnable(System.String)' does not exist in the reference but it does exist in the implementation.
@@ -20,4 +26,4 @@ MembersMustExist : Member 'public System.IntPtr WinRT.MarshalString.GetAbi(WinRT
 TypesMustExist : Type 'WinRT.MarshalString.Pinnable' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 21
+Total Issues: 28

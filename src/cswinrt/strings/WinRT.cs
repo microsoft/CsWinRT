@@ -593,6 +593,7 @@ namespace WinRT
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> _addHandler;
         readonly delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> _removeHandler;
         protected System.WeakReference<State> _state;
+        private readonly (Action<TDelegate>, Action<TDelegate>) _handlerTuple;
 
         protected EventSource(IObjectReference obj,
             delegate* unmanaged[Stdcall]<System.IntPtr, System.IntPtr, out WinRT.EventRegistrationToken, int> addHandler,
@@ -604,6 +605,7 @@ namespace WinRT
             _removeHandler = removeHandler;
             _index = index;
             _state = Cache.GetState(obj, index);
+            _handlerTuple = (Subscribe, Unsubscribe);
         }
 
         protected abstract IObjectReference CreateMarshaler(TDelegate del);
@@ -669,6 +671,8 @@ namespace WinRT
                 }
             }
         }
+
+        public (Action<TDelegate>, Action<TDelegate>) EventActions => _handlerTuple;
 
         private void UnsubscribeFromNative(State state)
         {
@@ -842,8 +846,12 @@ namespace WinRT
             }
         }
     }
-}
 
+    internal static class InterfaceIIDs
+    {
+        internal static readonly Guid IInspectable_IID = new(0xAF86E2E0, 0xB12D, 0x4c6a, 0x9C, 0x5A, 0xD7, 0xAA, 0x65, 0x10, 0x1E, 0x90);
+    }
+}
 
 namespace System.Runtime.CompilerServices
 {

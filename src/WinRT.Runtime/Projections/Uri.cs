@@ -54,7 +54,7 @@ namespace ABI.System
 
         public static implicit operator WinRTUriRuntimeClassFactory(IObjectReference obj) => (obj != null) ? new WinRTUriRuntimeClassFactory(obj) : null;
         public static implicit operator WinRTUriRuntimeClassFactory(ObjectReference<Vftbl> obj) => (obj != null) ? new WinRTUriRuntimeClassFactory(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
+        private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
@@ -114,11 +114,10 @@ namespace ABI.System
                 return null;
             }
 
-            using var uri = ObjectReference<ABI.Windows.Foundation.IUriRuntimeClassVftbl>.FromAbi(ptr);
             IntPtr rawUri = IntPtr.Zero;
             try
             {
-                ExceptionHelpers.ThrowExceptionForHR(uri.Vftbl.get_RawUri_10(uri.ThisPtr, &rawUri));
+                ExceptionHelpers.ThrowExceptionForHR((**(ABI.Windows.Foundation.IUriRuntimeClassVftbl**)ptr).get_RawUri_10(ptr, &rawUri));
                 return new global::System.Uri(MarshalString.FromAbi(rawUri));
             }
             finally

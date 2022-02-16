@@ -42,7 +42,7 @@ namespace ABI.WinRT.Interop
 
         private static readonly string NotImplemented_NativeRoutineNotFound = "A native library routine was not found: {0}.";
 
-        internal static Lazy<Guid> IID_InProcFreeThreadedMarshaler = new Lazy<Guid>(Vftbl.GetInProcFreeThreadedMarshalerIID);
+        internal static readonly Lazy<Guid> IID_InProcFreeThreadedMarshaler = new Lazy<Guid>(Vftbl.GetInProcFreeThreadedMarshalerIID);
 
         [Guid("00000003-0000-0000-c000-000000000046")]
         public unsafe struct Vftbl
@@ -132,7 +132,7 @@ namespace ABI.WinRT.Interop
             {
                 EnsureHasFreeThreadedMarshaler();
 
-                Guid iid_IUnknown = typeof(IUnknownVftbl).GUID;
+                Guid iid_IUnknown = IUnknownVftbl.IID;
                 Guid iid_unmarshalClass;
                 t_freeThreadedMarshaler.GetUnmarshalClass(&iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass);
                 return iid_unmarshalClass;
@@ -246,12 +246,12 @@ namespace ABI.WinRT.Interop
         internal static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
 
         public static implicit operator IMarshal(IObjectReference obj) => (obj != null) ? new IMarshal(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
+        private readonly ObjectReference<Vftbl> _obj;
         public IObjectReference ObjRef { get => _obj; }
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
-        public IMarshal(IObjectReference obj) : this(obj.As<Vftbl>()) { }
+        public IMarshal(IObjectReference obj) : this(obj.As<Vftbl>(IID)) { }
         internal IMarshal(ObjectReference<Vftbl> obj)
         {
             _obj = obj;

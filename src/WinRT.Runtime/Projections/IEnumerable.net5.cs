@@ -59,7 +59,7 @@ namespace ABI.Windows.Foundation.Collections
     [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
     internal interface IIterable<T> : ABI.System.Collections.Generic.IEnumerable<T>
     {
-        public static Guid PIID = ABI.System.Collections.Generic.IEnumerable<T>.PIID;
+        public static new Guid PIID = ABI.System.Collections.Generic.IEnumerable<T>.PIID;
     }
 }
 
@@ -118,7 +118,12 @@ namespace ABI.System.Collections.Generic
     using global::System;
     using global::System.Runtime.CompilerServices;
 
-    public static class IEnumerableMethods<T>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IEnumerableMethods<T>
     {
         public static global::System.Collections.Generic.IEnumerator<T> GetEnumerator(IObjectReference obj)
         {
@@ -136,7 +141,7 @@ namespace ABI.System.Collections.Generic
     interface IEnumerable<T> : global::System.Collections.Generic.IEnumerable<T>, global::Windows.Foundation.Collections.IIterable<T>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IEnumerable<T> obj) =>
-            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, GuidGenerator.GetIID(typeof(IEnumerable<T>)));
+            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, PIID);
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
@@ -161,32 +166,36 @@ namespace ABI.System.Collections.Generic
         }
 
         [Guid("FAA585EA-6214-4217-AFDA-7F46DE5869B3")]
-        public struct Vftbl
+        public unsafe struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
-            public IEnumerable_Delegates.First_0 First_0;
+            private void* _first_0;
+            public delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int> First_0 { get => (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)_first_0; set => _first_0 = (void*)value; }
+
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IEnumerable<T>));
 
-            internal unsafe Vftbl(IntPtr thisPtr)
+            internal unsafe Vftbl(IntPtr thisPtr) : this()
             {
                 var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
                 var vftbl = (IntPtr*)vftblPtr.Vftbl;
                 IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
-                First_0 = Marshal.GetDelegateForFunctionPointer<IEnumerable_Delegates.First_0>(vftbl[6]);
+                First_0 = (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)vftbl[6];
             }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+            private static readonly Delegate DelegateCache;
+
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    First_0 = Do_Abi_First_0
+                    _first_0 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache = new IEnumerable_Delegates.First_0(Do_Abi_First_0)),
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 1);
                 Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
-                nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.First_0);
+                nativeVftbl[6] = (IntPtr)AbiToProjectionVftable.First_0;
 
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -246,7 +255,7 @@ namespace ABI.System.Collections.Generic
     class IEnumerator<T> : global::System.Collections.Generic.IEnumerator<T>, global::Windows.Foundation.Collections.IIterator<T>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IEnumerator<T> obj) =>
-            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, GuidGenerator.GetIID(typeof(IEnumerator<T>)));
+            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, PIID);
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
@@ -375,7 +384,7 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, IBindableIterator
+        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, global::Microsoft.UI.Xaml.Interop.IBindableIterator
         {
             private readonly global::System.Collections.Generic.IEnumerator<T> m_enumerator;
             private bool m_firstItem = true;
@@ -465,7 +474,7 @@ namespace ABI.System.Collections.Generic
 
             public bool MoveNext() => _MoveNext();
 
-            uint IBindableIterator.GetMany(ref object[] items)
+            uint global::Microsoft.UI.Xaml.Interop.IBindableIterator.GetMany(ref object[] items)
             {
                 // Should not be called.
                 throw new NotImplementedException();
@@ -473,43 +482,47 @@ namespace ABI.System.Collections.Generic
         }
 
         [Guid("6A79E863-4300-459A-9966-CBB660963EE1")]
-        public struct Vftbl
+        public unsafe struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public global::System.Delegate get_Current_0;
-            internal _get_PropertyAsBoolean get_HasCurrent_1;
+            private void* _get_HasCurrent_1;
+            internal delegate* unmanaged[Stdcall]<IntPtr, out byte, int> Get_HasCurrent_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, out byte, int>)_get_HasCurrent_1; set => _get_HasCurrent_1 = (void*)value; }
             public IEnumerator_Delegates.MoveNext_2 MoveNext_2;
             public IEnumerator_Delegates.GetMany_3 GetMany_3;
+
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IEnumerator<T>));
             private static readonly Type get_Current_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
 
-            internal unsafe Vftbl(IntPtr thisPtr)
+            internal unsafe Vftbl(IntPtr thisPtr) : this()
             {
                 var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
                 var vftbl = (IntPtr*)vftblPtr.Vftbl;
                 IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
                 get_Current_0 = Marshal.GetDelegateForFunctionPointer(vftbl[6], get_Current_0_Type);
-                get_HasCurrent_1 = Marshal.GetDelegateForFunctionPointer<_get_PropertyAsBoolean>(vftbl[7]);
+                Get_HasCurrent_1 = (delegate* unmanaged[Stdcall]<IntPtr, out byte, int>)vftbl[7];
                 MoveNext_2 = Marshal.GetDelegateForFunctionPointer<IEnumerator_Delegates.MoveNext_2>(vftbl[8]);
                 GetMany_3 = Marshal.GetDelegateForFunctionPointer<IEnumerator_Delegates.GetMany_3>(vftbl[9]);
             }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+            private static readonly Delegate DelegateCache;
+
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
                     get_Current_0 = global::System.Delegate.CreateDelegate(get_Current_0_Type, typeof(Vftbl).GetMethod("Do_Abi_get_Current_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
-                    get_HasCurrent_1 = Do_Abi_get_HasCurrent_1,
+                    _get_HasCurrent_1 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache = new _get_PropertyAsBoolean(Do_Abi_get_HasCurrent_1)),
                     MoveNext_2 = Do_Abi_MoveNext_2,
                     GetMany_3 = Do_Abi_GetMany_3
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
                 Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
                 nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.get_Current_0);
-                nativeVftbl[7] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.get_HasCurrent_1);
+                nativeVftbl[7] = (IntPtr)AbiToProjectionVftable.Get_HasCurrent_1;
                 nativeVftbl[8] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.MoveNext_2);
                 nativeVftbl[9] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.GetMany_3);
 
@@ -681,7 +694,7 @@ namespace ABI.System.Collections.Generic
             get
             {
                 byte __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_HasCurrent_1(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Get_HasCurrent_1(ThisPtr, out __retval));
                 return __retval != 0;
             }
         }

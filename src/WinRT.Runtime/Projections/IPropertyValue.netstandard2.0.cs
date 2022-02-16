@@ -108,6 +108,7 @@ namespace ABI.Windows.Foundation
         private static IPropertyValue.Vftbl AbiToProjectionVftable;
         public static IntPtr AbiToProjectionVftablePtr;
 
+        internal static readonly Guid IID = new(0x4BD682DD, 0x7554, 0x40E9, 0x9A, 0x9B, 0x82, 0x65, 0x4E, 0xDE, 0x7E, 0x62);
 
         private static readonly Delegate[] DelegateCache = new Delegate[39];
 

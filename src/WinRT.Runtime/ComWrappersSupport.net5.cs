@@ -119,8 +119,7 @@ namespace WinRT
 
             return rcw switch
             {
-                ABI.System.Nullable<string> ns => (T)(object)ns.Value,
-                ABI.System.Nullable<Type> nt => (T)(object)nt.Value,
+                ABI.System.Nullable nt => (T)nt.Value,
                 T castRcw => castRcw,
                 _ when tryUseCache => CreateRcwForComObject<T>(ptr, false),
                 _ => throw new ArgumentException(string.Format("Unable to create a wrapper object. The WinRT object {0} has type {1} which cannot be assigned to type {2}", ptr, rcw.GetType(), typeof(T)))
@@ -174,18 +173,24 @@ namespace WinRT
             return ObjectReference<IUnknownVftbl>.Attach(ref ccw);
         }
 
-        internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
+        internal static IntPtr CreateCCWForObjectForABI(object obj, Guid iid)
         {
             IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);
             try
             {
                 Marshal.ThrowExceptionForHR(Marshal.QueryInterface(ccw, ref iid, out var iidCcw));
-                return ObjectReference<T>.Attach(ref iidCcw);
+                return iidCcw;
             }
             finally
             {
                 MarshalInspectable<object>.DisposeAbi(ccw);
             }
+        }
+
+        internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
+        {
+            IntPtr ccw = CreateCCWForObjectForABI(obj, iid);
+            return ObjectReference<T>.Attach(ref ccw);
         }
 
         public static unsafe T FindObject<T>(IntPtr ptr)
@@ -212,7 +217,6 @@ namespace WinRT
             ComWrappers = wrappers;
         }
 
-        internal static Func<IInspectable, object> GetTypedRcwFactory(string runtimeClassName) => TypedObjectFactoryCacheForRuntimeClassName.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className));
         internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
         
         private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
@@ -463,14 +467,14 @@ namespace WinRT
 
                 entries.Add(new ComInterfaceEntry
                 {
-                    IID = typeof(IInspectable).GUID,
+                    IID = InterfaceIIDs.IInspectable_IID,
                     Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
                 });
 
                 // This should be the last entry as it is included / excluded based on the flags.
                 entries.Add(new ComInterfaceEntry
                 {
-                    IID = typeof(IUnknownVftbl).GUID,
+                    IID = IUnknownVftbl.IID,
                     Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
                 });
 
@@ -508,7 +512,7 @@ namespace WinRT
 
         private static object CreateObject(IntPtr externalComObject)
         {
-            Guid inspectableIID = IInspectable.IID;
+            Guid inspectableIID = InterfaceIIDs.IInspectable_IID;
             Guid weakReferenceIID = ABI.WinRT.Interop.IWeakReference.IID;
             IntPtr ptr = IntPtr.Zero;
 
@@ -527,15 +531,15 @@ namespace WinRT
                         return ComWrappersSupport.GetTypedRcwFactory(ComWrappersSupport.CreateRCWType)(inspectable);
                     }
 
-                    string runtimeClassName = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType);
-                    if (string.IsNullOrEmpty(runtimeClassName))
+                    Type runtimeClassType = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType);
+                    if (runtimeClassType == null)
                     {
                         // If the external IInspectable has not implemented GetRuntimeClassName,
                         // we use the Inspectable wrapper directly.
                         return inspectable;
                     }
 
-                    return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
+                    return ComWrappersSupport.GetTypedRcwFactory(runtimeClassType)(inspectable);
                 }
                 else if (Marshal.QueryInterface(externalComObject, ref weakReferenceIID, out ptr) == 0)
                 {
@@ -545,6 +549,10 @@ namespace WinRT
                     ComWrappersHelper.Init(iunknownObjRef);
 
                     return new SingleInterfaceOptimizedObject(typeof(IWeakReference), iunknownObjRef, false);
+                }
+                else if (ComWrappersSupport.CreateRCWType != null && ComWrappersSupport.CreateRCWType.IsDelegate())
+                {
+                    return ComWrappersSupport.CreateDelegateFactory(ComWrappersSupport.CreateRCWType)(externalComObject);
                 }
                 else
                 {
@@ -556,7 +564,10 @@ namespace WinRT
             }
             finally
             {
-                Marshal.Release(ptr);
+                if (ptr != IntPtr.Zero)
+                {
+                    Marshal.Release(ptr);
+                }
             }
         }
 

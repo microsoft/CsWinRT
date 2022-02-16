@@ -355,6 +355,7 @@ namespace winrt::TestComponentCSharp::implementation
         static int32_t UnboxInt32(IInspectable const& obj);
         static bool UnboxBoolean(IInspectable const& obj);
         static hstring UnboxString(IInspectable const& obj);
+        static TestComponentCSharp::ProvideInt UnboxDelegate(IInspectable const& obj);
         static com_array<int32_t> UnboxInt32Array(IInspectable const& obj);
         static com_array<bool> UnboxBooleanArray(IInspectable const& obj);
         static com_array<hstring> UnboxStringArray(IInspectable const& obj);
@@ -368,6 +369,7 @@ namespace winrt::TestComponentCSharp::implementation
         static hstring GetTypeNameForType(Windows::UI::Xaml::Interop::TypeName const& type);
 
         static Windows::Foundation::IInspectable EmptyString();
+        static Windows::Foundation::IInspectable BoxedDelegate();
 
         hstring Catch(hstring const& params, hstring& locks);
 

@@ -150,7 +150,12 @@ namespace ABI.System.Collections.Generic
     using global::System;
     using global::System.Runtime.CompilerServices;
 
-    public static class IListMethods<T> {
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IListMethods<T> {
         
         public static int get_Count(IObjectReference obj)
         {
@@ -333,11 +338,11 @@ namespace ABI.System.Collections.Generic
 
     internal static class IVectorMethods<T>
     {
-        public static uint get_Size(IObjectReference obj)
+        public static unsafe uint get_Size(IObjectReference obj)
         {
             var _obj = (ObjectReference<IList<T>.Vftbl>)obj;
             uint __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(_obj.ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSize_1(_obj.ThisPtr, out __retval));
             return __retval;
         }
 
@@ -515,7 +520,7 @@ namespace ABI.System.Collections.Generic
     interface IList<T> : global::System.Collections.Generic.IList<T>, global::Windows.Foundation.Collections.IVector<T>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IList<T> obj) =>
-            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, GuidGenerator.GetIID(typeof(IList<T>)));
+            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, PIID);
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
@@ -716,21 +721,29 @@ namespace ABI.System.Collections.Generic
         }
 
         [Guid("913337E9-11A1-4345-A3A2-4E7F956E222D")]
-        public struct Vftbl
+        public unsafe struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public global::System.Delegate GetAt_0;
-            internal _get_PropertyAsUInt32 get_Size_1;
-            public IList_Delegates.GetView_2 GetView_2;
+            private void* _get_Size_1;
+            internal delegate* unmanaged[Stdcall]<IntPtr, out uint, int> GetSize_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, out uint, int>)_get_Size_1; set => _get_Size_1 = (void*)value; }
+            private void* _getView_2;
+            public delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int> GetView_2 { get => (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)_getView_2; set => _getView_2 = (void*)value; }
             public global::System.Delegate IndexOf_3;
             public global::System.Delegate SetAt_4;
             public global::System.Delegate InsertAt_5;
-            public IList_Delegates.RemoveAt_6 RemoveAt_6;
+            private void* _removeAt_6;
+            public delegate* unmanaged[Stdcall]<IntPtr, uint, int> RemoveAt_6 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, int>)_removeAt_6; set => _removeAt_6 = (void*)value; }
             public global::System.Delegate Append_7;
-            public IList_Delegates.RemoveAtEnd_8 RemoveAtEnd_8;
-            public IList_Delegates.Clear_9 Clear_9;
-            public IList_Delegates.GetMany_10 GetMany_10;
-            public IList_Delegates.ReplaceAll_11 ReplaceAll_11;
+            private void* _removeAtEnd_8;
+            public delegate* unmanaged[Stdcall]<IntPtr, int> RemoveAtEnd_8 { get => (delegate* unmanaged[Stdcall]<IntPtr, int>)_removeAtEnd_8; set => _removeAtEnd_8 = (void*)value; }
+            private void* _clear_9;
+            public delegate* unmanaged[Stdcall]<IntPtr, int> Clear_9 { get => (delegate* unmanaged[Stdcall]<IntPtr, int>)_clear_9; set => _clear_9 = (void*)value; }
+            private void* _getMany_10;
+            public delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, out uint, int> GetMany_10 { get => (delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, out uint, int>)_getMany_10; set => _getMany_10 = (void*)value; }
+            private void* _replaceAll_11;
+            public delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, int> ReplaceAll_11 { get => (delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, int>)_replaceAll_11; set => _replaceAll_11 = (void*)value; }
+
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IList<T>));
             private static readonly Type GetAt_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
             private static readonly Type IndexOf_3_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
@@ -738,59 +751,61 @@ namespace ABI.System.Collections.Generic
             private static readonly Type InsertAt_5_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType, typeof(int) });
             private static readonly Type Append_7_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(int) });
 
-            internal unsafe Vftbl(IntPtr thisPtr)
+            internal unsafe Vftbl(IntPtr thisPtr) : this()
             {
                 var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
                 var vftbl = (IntPtr*)vftblPtr.Vftbl;
                 IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
                 GetAt_0 = Marshal.GetDelegateForFunctionPointer(vftbl[6], GetAt_0_Type);
-                get_Size_1 = Marshal.GetDelegateForFunctionPointer<_get_PropertyAsUInt32>(vftbl[7]);
-                GetView_2 = Marshal.GetDelegateForFunctionPointer<IList_Delegates.GetView_2>(vftbl[8]);
+                GetSize_1 = (delegate* unmanaged[Stdcall]<IntPtr, out uint, int>)vftbl[7];
+                GetView_2 = (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, int>)vftbl[8];
                 IndexOf_3 = Marshal.GetDelegateForFunctionPointer(vftbl[9], IndexOf_3_Type);
                 SetAt_4 = Marshal.GetDelegateForFunctionPointer(vftbl[10], SetAt_4_Type);
                 InsertAt_5 = Marshal.GetDelegateForFunctionPointer(vftbl[11], InsertAt_5_Type);
-                RemoveAt_6 = Marshal.GetDelegateForFunctionPointer<IList_Delegates.RemoveAt_6>(vftbl[12]);
+                RemoveAt_6 = (delegate* unmanaged[Stdcall]<IntPtr, uint, int>)vftbl[12];
                 Append_7 = Marshal.GetDelegateForFunctionPointer(vftbl[13], Append_7_Type);
-                RemoveAtEnd_8 = Marshal.GetDelegateForFunctionPointer<IList_Delegates.RemoveAtEnd_8>(vftbl[14]);
-                Clear_9 = Marshal.GetDelegateForFunctionPointer<IList_Delegates.Clear_9>(vftbl[15]);
-                GetMany_10 = Marshal.GetDelegateForFunctionPointer<IList_Delegates.GetMany_10>(vftbl[16]);
-                ReplaceAll_11 = Marshal.GetDelegateForFunctionPointer<IList_Delegates.ReplaceAll_11>(vftbl[17]);
+                RemoveAtEnd_8 = (delegate* unmanaged[Stdcall]<IntPtr, int>)vftbl[14];
+                Clear_9 = (delegate* unmanaged[Stdcall]<IntPtr, int>)vftbl[15];
+                GetMany_10 = (delegate* unmanaged[Stdcall]<IntPtr, uint, int, IntPtr, out uint, int>)vftbl[16];
+                ReplaceAll_11 = (delegate* unmanaged[Stdcall]<IntPtr, int, IntPtr, int>)vftbl[17];
             }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+            private static readonly Delegate[] DelegateCache = new Delegate[7];
+
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
                     GetAt_0 = global::System.Delegate.CreateDelegate(GetAt_0_Type, typeof(Vftbl).GetMethod("Do_Abi_GetAt_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
-                    get_Size_1 = Do_Abi_get_Size_1,
-                    GetView_2 = Do_Abi_GetView_2,
+                    _get_Size_1 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new _get_PropertyAsUInt32(Do_Abi_get_Size_1)),
+                    _getView_2 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IList_Delegates.GetView_2(Do_Abi_GetView_2)),
                     IndexOf_3 = global::System.Delegate.CreateDelegate(IndexOf_3_Type, typeof(Vftbl).GetMethod("Do_Abi_IndexOf_3", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
                     SetAt_4 = global::System.Delegate.CreateDelegate(SetAt_4_Type, typeof(Vftbl).GetMethod("Do_Abi_SetAt_4", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
                     InsertAt_5 = global::System.Delegate.CreateDelegate(InsertAt_5_Type, typeof(Vftbl).GetMethod("Do_Abi_InsertAt_5", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
-                    RemoveAt_6 = Do_Abi_RemoveAt_6,
+                    _removeAt_6 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[2] = new IList_Delegates.RemoveAt_6(Do_Abi_RemoveAt_6)),
                     Append_7 = global::System.Delegate.CreateDelegate(Append_7_Type, typeof(Vftbl).GetMethod("Do_Abi_Append_7", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
-                    RemoveAtEnd_8 = Do_Abi_RemoveAtEnd_8,
-                    Clear_9 = Do_Abi_Clear_9,
-                    GetMany_10 = Do_Abi_GetMany_10,
-                    ReplaceAll_11 = Do_Abi_ReplaceAll_11
+                    _removeAtEnd_8 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[3] = new IList_Delegates.RemoveAtEnd_8(Do_Abi_RemoveAtEnd_8)),
+                    _clear_9 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[4] = new IList_Delegates.Clear_9(Do_Abi_Clear_9)),
+                    _getMany_10 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[5] = new IList_Delegates.GetMany_10(Do_Abi_GetMany_10)),
+                    _replaceAll_11 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[6] = new IList_Delegates.ReplaceAll_11(Do_Abi_ReplaceAll_11)),
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 12);
                 Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
                 nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.GetAt_0);
-                nativeVftbl[7] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.get_Size_1);
-                nativeVftbl[8] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.GetView_2);
+                nativeVftbl[7] = (IntPtr)AbiToProjectionVftable.GetSize_1;
+                nativeVftbl[8] = (IntPtr)AbiToProjectionVftable.GetView_2;
                 nativeVftbl[9] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.IndexOf_3);
                 nativeVftbl[10] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.SetAt_4);
                 nativeVftbl[11] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.InsertAt_5);
-                nativeVftbl[12] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.RemoveAt_6);
+                nativeVftbl[12] = (IntPtr)AbiToProjectionVftable._removeAt_6;
                 nativeVftbl[13] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.Append_7);
-                nativeVftbl[14] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.RemoveAtEnd_8);
-                nativeVftbl[15] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.Clear_9);
-                nativeVftbl[16] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.GetMany_10);
-                nativeVftbl[17] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.ReplaceAll_11);
+                nativeVftbl[14] = (IntPtr)AbiToProjectionVftable._removeAtEnd_8;
+                nativeVftbl[15] = (IntPtr)AbiToProjectionVftable._clear_9;
+                nativeVftbl[16] = (IntPtr)AbiToProjectionVftable._getMany_10;
+                nativeVftbl[17] = (IntPtr)AbiToProjectionVftable._replaceAll_11;
 
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }
@@ -1179,7 +1194,7 @@ namespace ABI.System.Collections.Generic
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.Generic.IList<T>).TypeHandle));
                 var ThisPtr = _obj.ThisPtr;
                 uint __retval = default;
-                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSize_1(ThisPtr, out __retval));
                 return __retval;
             }
         }

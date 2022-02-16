@@ -98,6 +98,21 @@ namespace Benchmarks
         }
 
         [Benchmark]
+        public object AddAndInvokeMultipleIntEventsToSameEventSource()
+        {
+            ClassWithMarshalingRoutines instance = new ClassWithMarshalingRoutines();
+            int z;
+            System.EventHandler<int> s = (object sender, int value) => z = value;
+            System.EventHandler<int> t = (object sender, int value) => z = value * 2;
+            System.EventHandler<int> u = (object sender, int value) => z = value * 3;
+            instance.IntPropertyChanged += s;
+            instance.IntPropertyChanged += t;
+            instance.IntPropertyChanged += u;
+            instance.RaiseIntChanged();
+            return instance;
+        }
+
+        [Benchmark]
         public int InvokeIntEvent()
         {
             instance.RaiseIntChanged();

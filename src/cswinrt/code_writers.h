@@ -3579,6 +3579,12 @@ event % %;)",
                 m.marshaler_type = get_abi_type();
                 m.local_type = m.marshaler_type;
                 if (!m.is_out()) m.local_type += ".Marshaler";
+
+                auto abi_type = w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
+                if (m.marshaler_type == "global::ABI.System.Type")
+                {
+                    m.is_pinnable = (m.category == param_category::in);
+                }
             }
         };
 
@@ -4355,7 +4361,7 @@ var eventSource = _%.GetValue(_thisObj, (key) =>
 %
 return %;
 });
-return (eventSource.Subscribe, eventSource.Unsubscribe);
+return eventSource.EventActions;
 }
 )",
                         bind<write_event_source_table>(evt),
@@ -6042,7 +6048,7 @@ bind_each(nongeneric_delegates));
 global::System.Runtime.InteropServices.CustomQueryInterfaceResult global::System.Runtime.InteropServices.ICustomQueryInterface.GetInterface(ref Guid iid, out IntPtr ppv)
 {
 ppv = IntPtr.Zero;
-if (IsOverridableInterface(iid) || typeof(global::WinRT.IInspectable).GUID == iid)
+if (IsOverridableInterface(iid) || global::WinRT.InterfaceIIDs.IInspectable_IID == iid)
 {
 return global::System.Runtime.InteropServices.CustomQueryInterfaceResult.NotHandled;
 }
@@ -6624,8 +6630,12 @@ public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>
 
 public static unsafe % FromAbi(IntPtr nativeDelegate)
 {
-var abiDelegate = ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(nativeDelegate);
-return abiDelegate is null ? null : (%)ComWrappersSupport.TryRegisterObjectForInterface(new %(new NativeDelegateWrapper(abiDelegate).Invoke), nativeDelegate);
+return MarshalDelegate.FromAbi<%>(nativeDelegate);
+}
+
+public static % CreateRcw(IntPtr ptr)
+{
+return new %(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr)).Invoke);
 }
 
 [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -6758,6 +6768,7 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             // GetAbi
             type_name,
             // FromAbi
+            type_name,
             type_name,
             type_name,
             type_name,
@@ -7086,7 +7097,7 @@ var m = new Marshaler();)",
         if (have_disposers)
         {
             w.write(R"(
-Func<bool> dispose = () => { m.Dispose(); return false; };
+bool success = false;
 try
 {)");
         }
@@ -7101,6 +7112,7 @@ try
 m.__abi = new %()
 {
 %};
+%
 return m;)",
             abi_type,
             [&](writer& w)
@@ -7134,15 +7146,18 @@ return m;)",
                         m.marshaler_type,
                         m.param_name);
                 }
-            });
+            },
+            have_disposers ? "success = true;" : "");
         if (have_disposers)
         {
             w.write(R"(
 }
-catch (Exception) when (dispose())
+finally
 {
-// Will never execute
-return default;
+if (!success)
+{
+m.Dispose();
+}
 }
 )");
         }
@@ -7258,13 +7273,20 @@ public static void DisposeMarshaler(Marshaler m) %
             have_disposers ? "=> m.Dispose();" : "{}");
 
         w.write(R"(
-public static void DisposeAbi(% abi){ /*todo*/ }
+public static void DisposeAbi(% abi)
+{
+%}
 }
-
 )",
-            abi_type);
+            abi_type,
+            bind_each([](writer& w, abi_marshaler const& m)
+            {
+                if (m.is_value_type) return;
+                w.write("%.DisposeAbi(abi.%);\n",
+                    m.marshaler_type,
+                    m.param_name);
+            }, marshalers));
     }
-
 
     void write_factory_class_inheritance(writer& w, TypeDef const& type)
     {

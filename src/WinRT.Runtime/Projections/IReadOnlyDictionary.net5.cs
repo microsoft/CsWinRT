@@ -169,7 +169,7 @@ namespace ABI.Windows.Foundation.Collections
             var ThisPtr = _obj.ThisPtr;
 
             uint __retval = default;
-            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.get_Size_1(ThisPtr, out __retval));
+            global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.GetSize_1(ThisPtr, out __retval));
             return __retval;   
         }
     }
@@ -180,7 +180,12 @@ namespace ABI.System.Collections.Generic
     using global::System;
     using global::System.Runtime.CompilerServices;
 
-    public static class IReadOnlyDictionaryMethods<K, V>
+#if EMBED
+    internal
+#else
+    public
+#endif
+    static class IReadOnlyDictionaryMethods<K, V>
     {
         public static int get_Count(IObjectReference obj)
         {
@@ -380,7 +385,7 @@ namespace ABI.System.Collections.Generic
     interface IReadOnlyDictionary<K, V> : global::System.Collections.Generic.IReadOnlyDictionary<K, V>, global::Windows.Foundation.Collections.IMapView<K, V>
     {
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IReadOnlyDictionary<K, V> obj) =>
-            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, GuidGenerator.GetIID(typeof(IReadOnlyDictionary<K, V>)));
+            obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, PIID);
 
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
@@ -733,46 +738,51 @@ namespace ABI.System.Collections.Generic
         }
 
         [Guid("E480CE40-A338-4ADA-ADCF-272272E48CB9")]
-        public struct Vftbl
+        public unsafe struct Vftbl
         {
             internal IInspectable.Vftbl IInspectableVftbl;
             public global::System.Delegate Lookup_0;
-            internal _get_PropertyAsUInt32 get_Size_1;
+            private void* _get_Size_1;
+            internal delegate* unmanaged[Stdcall]<IntPtr, out uint, int> GetSize_1 { get => (delegate* unmanaged[Stdcall]<IntPtr, out uint, int>)_get_Size_1; set => _get_Size_1 = (void*)value; }
             public global::System.Delegate HasKey_2;
-            public IReadOnlyDictionary_Delegates.Split_3 Split_3;
+            private void* _split_3;
+            internal delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, out IntPtr, int> Split_3 { get => (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, out IntPtr, int>)_split_3; set => _split_3 = (void*)value; }
+
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IReadOnlyDictionary<K, V>));
             private static readonly Type Lookup_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, Marshaler<V>.AbiType.MakeByRefType(), typeof(int) });
             private static readonly Type HasKey_2_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, typeof(byte).MakeByRefType(), typeof(int) });
 
-            internal unsafe Vftbl(IntPtr thisPtr)
+            internal unsafe Vftbl(IntPtr thisPtr) : this()
             {
                 var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
                 var vftbl = (IntPtr*)vftblPtr.Vftbl;
                 IInspectableVftbl = Marshal.PtrToStructure<IInspectable.Vftbl>(vftblPtr.Vftbl);
                 Lookup_0 = Marshal.GetDelegateForFunctionPointer(vftbl[6], Lookup_0_Type);
-                get_Size_1 = Marshal.GetDelegateForFunctionPointer<_get_PropertyAsUInt32>(vftbl[7]);
+                GetSize_1 = (delegate* unmanaged[Stdcall]<IntPtr, out uint, int>)vftbl[7];
                 HasKey_2 = Marshal.GetDelegateForFunctionPointer(vftbl[8], HasKey_2_Type);
-                Split_3 = Marshal.GetDelegateForFunctionPointer<IReadOnlyDictionary_Delegates.Split_3>(vftbl[9]);
+                Split_3 = (delegate* unmanaged[Stdcall]<IntPtr, out IntPtr, out IntPtr, int>)vftbl[9];
             }
 
             private static readonly Vftbl AbiToProjectionVftable;
             public static readonly IntPtr AbiToProjectionVftablePtr;
+            private static readonly Delegate[] DelegateCache = new Delegate[2];
+
             static unsafe Vftbl()
             {
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
                     Lookup_0 = global::System.Delegate.CreateDelegate(Lookup_0_Type, typeof(Vftbl).GetMethod("Do_Abi_Lookup_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<K>.AbiType, Marshaler<V>.AbiType)),
-                    get_Size_1 = Do_Abi_get_Size_1,
+                    _get_Size_1 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new _get_PropertyAsUInt32(Do_Abi_get_Size_1)),
                     HasKey_2 = global::System.Delegate.CreateDelegate(HasKey_2_Type, typeof(Vftbl).GetMethod("Do_Abi_HasKey_2", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<K>.AbiType)),
-                    Split_3 = Do_Abi_Split_3
+                    _split_3 = (void*)Marshal.GetFunctionPointerForDelegate(DelegateCache[1] = new IReadOnlyDictionary_Delegates.Split_3(Do_Abi_Split_3)),
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
                 Marshal.StructureToPtr(AbiToProjectionVftable.IInspectableVftbl, (IntPtr)nativeVftbl, false);
                 nativeVftbl[6] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.Lookup_0);
-                nativeVftbl[7] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.get_Size_1);
+                nativeVftbl[7] = (IntPtr)AbiToProjectionVftable.GetSize_1;
                 nativeVftbl[8] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.HasKey_2);
-                nativeVftbl[9] = Marshal.GetFunctionPointerForDelegate(AbiToProjectionVftable.Split_3);
+                nativeVftbl[9] = (IntPtr)AbiToProjectionVftable.Split_3;
 
                 AbiToProjectionVftablePtr = (IntPtr)nativeVftbl;
             }

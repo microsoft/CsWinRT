@@ -342,7 +342,7 @@ namespace ABI.System.Collections.Generic
             }
         }
 
-        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, IBindableIterator
+        public sealed class ToAbiHelper : global::Windows.Foundation.Collections.IIterator<T>, global::Microsoft.UI.Xaml.Interop.IBindableIterator
         {
             private readonly global::System.Collections.Generic.IEnumerator<T> m_enumerator;
             private bool m_firstItem = true;
@@ -432,7 +432,7 @@ namespace ABI.System.Collections.Generic
 
             public bool MoveNext() => _MoveNext();
 
-            uint IBindableIterator.GetMany(ref object[] items)
+            uint global::Microsoft.UI.Xaml.Interop.IBindableIterator.GetMany(ref object[] items)
             {
                 // Should not be called.
                 throw new NotImplementedException();

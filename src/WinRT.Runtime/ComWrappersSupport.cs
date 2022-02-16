@@ -29,9 +29,9 @@ namespace WinRT
 #endif
     static partial class ComWrappersSupport
     {
-        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCacheForRuntimeClassName = new ConcurrentDictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
         private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new ConcurrentDictionary<Type, Func<IInspectable, object>>();
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
+        private readonly static ConcurrentDictionary<Type, Func<IntPtr, object>> DelegateFactoryCache = new ConcurrentDictionary<Type, Func<IntPtr, object>>();
 
         public static TReturn MarshalDelegateInvoke<TDelegate, TReturn>(IntPtr thisPtr, Func<TDelegate, TReturn> invoke)
             where TDelegate : class, Delegate
@@ -73,18 +73,22 @@ namespace WinRT
                 Marshal.Release(agilePtr);
                 return true;
             }
-            else if (objRef.TryAs<ABI.WinRT.Interop.IMarshal.Vftbl>(ABI.WinRT.Interop.IMarshal.IID, out var marshalRef) >= 0)
+            else if (objRef.TryAs(ABI.WinRT.Interop.IMarshal.IID, out var marshalPtr) >= 0)
             {
-                using (marshalRef)
+                try
                 {
                     Guid iid_IUnknown = IUnknownVftbl.IID;
                     Guid iid_unmarshalClass;
-                    Marshal.ThrowExceptionForHR(marshalRef.Vftbl.GetUnmarshalClass_0(
-                        marshalRef.ThisPtr, &iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass));
+                    Marshal.ThrowExceptionForHR((**(ABI.WinRT.Interop.IMarshal.Vftbl**)marshalPtr).GetUnmarshalClass_0(
+                        marshalPtr, &iid_IUnknown, IntPtr.Zero, MSHCTX.InProc, IntPtr.Zero, MSHLFLAGS.Normal, &iid_unmarshalClass));
                     if (iid_unmarshalClass == ABI.WinRT.Interop.IMarshal.IID_InProcFreeThreadedMarshaler.Value)
                     {
                         return true;
                     }
+                }
+                finally
+                {
+                    Marshal.Release(marshalPtr);
                 }
             }
             return false;
@@ -154,7 +158,7 @@ namespace WinRT
                         Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
                     });
 
-                    if(!hasCustomIMarshalInterface && iid == typeof(ABI.WinRT.Interop.IMarshal.Vftbl).GUID)
+                    if (!hasCustomIMarshalInterface && iid == ABI.WinRT.Interop.IMarshal.IID)
                     {
                         hasCustomIMarshalInterface = true;
                     }
@@ -210,13 +214,13 @@ namespace WinRT
 
             entries.Add(new ComInterfaceEntry
             {
-                IID = typeof(ManagedIStringableVftbl).GUID,
+                IID = ManagedIStringableVftbl.IID,
                 Vtable = ManagedIStringableVftbl.AbiToProjectionVftablePtr
             });
 
             entries.Add(new ComInterfaceEntry
             {
-                IID = typeof(ManagedCustomPropertyProviderVftbl).GUID,
+                IID = ManagedCustomPropertyProviderVftbl.IID,
                 Vtable = ManagedCustomPropertyProviderVftbl.AbiToProjectionVftablePtr
             });
 
@@ -232,7 +236,7 @@ namespace WinRT
             {
                 entries.Add(new ComInterfaceEntry
                 {
-                    IID = typeof(ABI.WinRT.Interop.IMarshal.Vftbl).GUID,
+                    IID = ABI.WinRT.Interop.IMarshal.IID,
                     Vtable = ABI.WinRT.Interop.IMarshal.Vftbl.AbiToProjectionVftablePtr
                 });
             }
@@ -240,7 +244,7 @@ namespace WinRT
             // Add IAgileObject to all CCWs
             entries.Add(new ComInterfaceEntry
             {
-                IID = typeof(ABI.WinRT.Interop.IAgileObject.Vftbl).GUID,
+                IID = ABI.WinRT.Interop.IAgileObject.IID,
                 Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
             });
             return entries;
@@ -270,6 +274,11 @@ namespace WinRT
             return implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(System.Nullable<>);
         }
 
+        private static bool IsAbiNullableDelegate(Type implementationType)
+        {
+            return implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(ABI.System.Nullable_Delegate<>);
+        }
+
         private static bool IsIReferenceArray(Type implementationType)
         {
             return implementationType.FullName.StartsWith("Windows.Foundation.IReferenceArray`1", StringComparison.Ordinal);
@@ -283,18 +292,33 @@ namespace WinRT
                     parms), parms).Compile();
         }
 
+        internal static Func<IntPtr, object> CreateDelegateFactory(Type type)
+        {
+            return DelegateFactoryCache.GetOrAdd(type, (type) =>
+            {
+                var parms = new[] { Expression.Parameter(typeof(IntPtr), "ptr") };
+                return Expression.Lambda<Func<IntPtr, object>>(
+                    Expression.Call(type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static),
+                        parms), parms).Compile();
+            });
+        }
+
         private static Func<IInspectable, object> CreateNullableTFactory(Type implementationType)
         {
             Type helperType = implementationType.GetHelperType();
-            Type vftblType = helperType.FindVftblType();
 
             ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
-            var createInterfaceInstanceExpression = Expression.New(helperType.GetConstructor(new[] { typeof(ObjectReference<>).MakeGenericType(vftblType) }),
-                    Expression.Call(parms[0],
-                        typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
-
             return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.Convert(Expression.Property(createInterfaceInstanceExpression, "Value"), typeof(object)), parms).Compile();
+                Expression.Convert(Expression.Call(helperType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic), 
+                    parms), typeof(object)), parms).Compile();
+        }
+
+        private static Func<IInspectable, object> CreateAbiNullableTFactory(Type implementationType)
+        {
+            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
+            return Expression.Lambda<Func<IInspectable, object>>(
+                Expression.Convert(Expression.Call(implementationType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic),
+                    parms), typeof(object)), parms).Compile();
         }
 
         private static Func<IInspectable, object> CreateArrayFactory(Type implementationType)
@@ -313,7 +337,7 @@ namespace WinRT
 
         // This is used to hold the reference to the native value type object (IReference) until the actual value in it (boxed as an object) gets cleaned up by GC
         // This is done to avoid pointer reuse until GC cleans up the boxed object
-        private static ConditionalWeakTable<object, IInspectable> _boxedValueReferenceCache = new();
+        private static readonly ConditionalWeakTable<object, IInspectable> _boxedValueReferenceCache = new();
 
         private static Func<IInspectable, object> CreateReferenceCachingFactory(Func<IInspectable, object> internalFactory)
         {
@@ -340,11 +364,21 @@ namespace WinRT
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName = null)
         {
-            if (implementationType == null)
+            // If runtime class name is empty or "Object", then just use IInspectable.
+            if (implementationType == null || implementationType == typeof(object))
             {
                 // If we reach here, then we couldn't find a type that matches the runtime class name.
                 // Fall back to using IInspectable directly.
                 return (IInspectable obj) => obj;
+            }
+
+            if (implementationType == typeof(ABI.System.Nullable_string))
+            {
+                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_string.GetValue(obj));
+            }
+            else if (implementationType == typeof(ABI.System.Nullable_Type))
+            {
+                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_Type.GetValue(obj));
             }
 
             var customHelperType = Projections.FindCustomHelperTypeMapping(implementationType, true);
@@ -369,6 +403,10 @@ namespace WinRT
                     return CreateReferenceCachingFactory(CreateNullableTFactory(typeof(System.Nullable<>).MakeGenericType(implementationType)));
                 }
             }
+            else if (IsAbiNullableDelegate(implementationType))
+            {
+                return CreateReferenceCachingFactory(CreateAbiNullableTFactory(implementationType));
+            }
             else if (IsIReferenceArray(implementationType))
             {
                 return CreateReferenceCachingFactory(CreateArrayFactory(implementationType));
@@ -377,31 +415,15 @@ namespace WinRT
             return CreateFactoryForImplementationType(runtimeClassName, implementationType);
         }
 
-        internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
-        {
-            // If runtime class name is empty or "Object", then just use IInspectable.
-            if (string.IsNullOrEmpty(runtimeClassName) || 
-                string.CompareOrdinal(runtimeClassName, "Object") == 0)
-            {
-                return (IInspectable obj) => obj;
-            }
-            // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
-            if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<String>") == 0)
-            {
-                return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<String>(obj.ObjRef));
-            }
-            else if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>") == 0)
-            {
-                return CreateReferenceCachingFactory((IInspectable obj) => new ABI.System.Nullable<Type>(obj.ObjRef));
-            }
-
-            Type implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
-            return CreateTypedRcwFactory(implementationType, runtimeClassName);
-        }
-
-        internal static string GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
+        internal static Type GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
         {
             string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
+            Type implementationType = null;
+            if (!string.IsNullOrEmpty(runtimeClassName))
+            {
+                implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
+            }
+
             if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))
             {
                 // We have a static type which we can use to construct the object.  But, we can't just use it for all scenarios
@@ -412,23 +434,16 @@ namespace WinRT
                 // be cast to the sub class via as operator even if it is really an instance of it per rutimeclass.
                 // To handle these scenarios, we use the runtimeclass if we find it is assignable to the statically determined type.
                 // If it isn't, we use the statically determined type as it is a tear off.
-
-                Type implementationType = null;
-                if (!string.IsNullOrEmpty(runtimeClassName))
-                {
-                    implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
-                }
-
                 if (!(implementationType != null &&
                     (staticallyDeterminedType == implementationType ||
                      staticallyDeterminedType.IsAssignableFrom(implementationType) ||
                      staticallyDeterminedType.IsGenericType && implementationType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == staticallyDeterminedType.GetGenericTypeDefinition()))))
                 {
-                    runtimeClassName = TypeNameSupport.GetNameForType(staticallyDeterminedType, TypeNameGenerationFlags.GenerateBoxedName);
+                    return staticallyDeterminedType;
                 }
             }
 
-            return runtimeClassName;
+            return implementationType;
         }
 
         private readonly static ConcurrentDictionary<Type, bool> IsIReferenceTypeCache = new ConcurrentDictionary<Type, bool>();
@@ -436,13 +451,13 @@ namespace WinRT
         {
             static bool IsIReferenceTypeHelper(Type type)
             {
-                if ((type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object) ||
+                if (type.IsDefined(typeof(WindowsRuntimeTypeAttribute)) ||
                     WinRT.Projections.IsTypeWindowsRuntimeType(type))
                     return true;
                 type = type.GetAuthoringMetadataType();
                 if (type is object)
                 {
-                    if ((type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object) ||
+                    if (type.IsDefined(typeof(WindowsRuntimeTypeAttribute)) ||
                         WinRT.Projections.IsTypeWindowsRuntimeType(type))
                         return true;
                 }
@@ -466,7 +481,7 @@ namespace WinRT
         private static ComInterfaceEntry IPropertyValueEntry =>
             new ComInterfaceEntry
             {
-                IID = global::WinRT.GuidGenerator.GetIID(typeof(global::Windows.Foundation.IPropertyValue)),
+                IID = ManagedIPropertyValueImpl.IID,
                 Vtable = ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
             };
 
@@ -476,143 +491,160 @@ namespace WinRT
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<int>)),
-                    Vtable = BoxedValueIReferenceImpl<int>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_int.IID,
+                    Vtable = ABI.System.Nullable_int.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(string))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<string>)),
-                    Vtable = BoxedValueIReferenceImpl<string>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_string.IID,
+                    Vtable = ABI.System.Nullable_string.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(byte))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<byte>)),
-                    Vtable = BoxedValueIReferenceImpl<byte>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_byte.IID,
+                    Vtable = ABI.System.Nullable_byte.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(short))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<short>)),
-                    Vtable = BoxedValueIReferenceImpl<short>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_short.IID,
+                    Vtable = ABI.System.Nullable_short.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(ushort))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<ushort>)),
-                    Vtable = BoxedValueIReferenceImpl<ushort>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_ushort.IID,
+                    Vtable = ABI.System.Nullable_ushort.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(uint))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<uint>)),
-                    Vtable = BoxedValueIReferenceImpl<uint>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_uint.IID,
+                    Vtable = ABI.System.Nullable_uint.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(long))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<long>)),
-                    Vtable = BoxedValueIReferenceImpl<long>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_long.IID,
+                    Vtable = ABI.System.Nullable_long.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(ulong))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<ulong>)),
-                    Vtable = BoxedValueIReferenceImpl<ulong>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_ulong.IID,
+                    Vtable = ABI.System.Nullable_ulong.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(float))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<float>)),
-                    Vtable = BoxedValueIReferenceImpl<float>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_float.IID,
+                    Vtable = ABI.System.Nullable_float.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(double))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<double>)),
-                    Vtable = BoxedValueIReferenceImpl<double>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_double.IID,
+                    Vtable = ABI.System.Nullable_double.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(char))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<char>)),
-                    Vtable = BoxedValueIReferenceImpl<char>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_char.IID,
+                    Vtable = ABI.System.Nullable_char.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(bool))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<bool>)),
-                    Vtable = BoxedValueIReferenceImpl<bool>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_bool.IID,
+                    Vtable = ABI.System.Nullable_bool.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(Guid))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<Guid>)),
-                    Vtable = BoxedValueIReferenceImpl<Guid>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_guid.IID,
+                    Vtable = ABI.System.Nullable_guid.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(DateTimeOffset))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<DateTimeOffset>)),
-                    Vtable = BoxedValueIReferenceImpl<DateTimeOffset>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_DateTimeOffset.IID,
+                    Vtable = ABI.System.Nullable_DateTimeOffset.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(TimeSpan))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<TimeSpan>)),
-                    Vtable = BoxedValueIReferenceImpl<TimeSpan>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_TimeSpan.IID,
+                    Vtable = ABI.System.Nullable_TimeSpan.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type == typeof(object))
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<object>)),
-                    Vtable = BoxedValueIReferenceImpl<object>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_Object.IID,
+                    Vtable = ABI.System.Nullable_Object.Vftbl.AbiToProjectionVftablePtr
                 };
             }
             if (type.IsTypeOfType())
             {
                 return new ComInterfaceEntry
                 {
-                    IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<Type>)),
-                    Vtable = BoxedValueIReferenceImpl<Type>.AbiToProjectionVftablePtr
+                    IID = ABI.System.Nullable_Type.IID,
+                    Vtable = ABI.System.Nullable_Type.Vftbl.AbiToProjectionVftablePtr
+                };
+            }
+            if (type == typeof(sbyte))
+            {
+                return new ComInterfaceEntry
+                {
+                    IID = ABI.System.Nullable_sbyte.IID,
+                    Vtable = ABI.System.Nullable_sbyte.Vftbl.AbiToProjectionVftablePtr
+                };
+            }
+            if (type.IsDelegate())
+            {
+                var delegateHelperType = typeof(ABI.System.Nullable_Delegate<>).MakeGenericType(type);
+                return new ComInterfaceEntry
+                {
+                    IID = global::WinRT.GuidGenerator.GetIID(delegateHelperType),
+                    Vtable = delegateHelperType.GetAbiToProjectionVftblPtr()
                 };
             }
 
             return new ComInterfaceEntry
             {
                 IID = global::WinRT.GuidGenerator.GetIID(typeof(ABI.System.Nullable<>).MakeGenericType(type)),
-                Vtable = (IntPtr)typeof(BoxedValueIReferenceImpl<>).MakeGenericType(type).GetAbiToProjectionVftblPtr()
+                Vtable = typeof(BoxedValueIReferenceImpl<>).MakeGenericType(type).GetAbiToProjectionVftblPtr()
             };
         }
 

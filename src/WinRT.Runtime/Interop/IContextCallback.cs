@@ -39,6 +39,8 @@ namespace ABI.WinRT.Interop
     [Guid("000001da-0000-0000-C000-000000000046")]
     internal sealed unsafe class IContextCallback : global::WinRT.Interop.IContextCallback
     {
+        internal static readonly Guid IID = new(0x000001da, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+
         [Guid("000001da-0000-0000-C000-000000000046")]
         public struct Vftbl
         {
@@ -54,7 +56,7 @@ namespace ABI.WinRT.Interop
 
         public static implicit operator IContextCallback(IObjectReference obj) => (obj != null) ? new IContextCallback(obj) : null;
         public static implicit operator IContextCallback(ObjectReference<Vftbl> obj) => (obj != null) ? new IContextCallback(obj) : null;
-        protected readonly ObjectReference<Vftbl> _obj;
+        private readonly ObjectReference<Vftbl> _obj;
         public IntPtr ThisPtr => _obj.ThisPtr;
         public ObjectReference<I> AsInterface<I>() => _obj.As<I>();
         public A As<A>() => _obj.AsType<A>();
