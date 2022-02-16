@@ -5,8 +5,6 @@
 #include <filesystem>
 #include <sstream>
 
-// for retrieving strings from resource table
-#include "atlstr.h"
 #undef GetObject  
 
 #include <unknwn.h>
@@ -49,7 +47,6 @@ static load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_
     {
         HostFxrStatus status;
         int resourceID;
-        // const wchar_t* message;
     }
     hostfxr_status_messages[] =
     {
