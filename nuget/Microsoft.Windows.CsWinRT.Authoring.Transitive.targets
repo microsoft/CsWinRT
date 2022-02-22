@@ -16,6 +16,7 @@
   <ItemGroup>
     <!-- Managed, WinRT and SDK.NET dlls -->   
     <HostingAssets Include="$(MSBuildThisFileDirectory)..\lib\net5.0*\*.dll"/>
+    <HostingAssets Include="$(MSBuildThisFileDirectory)..\lib\net6.0*\*.dll"/>
     <!-- Managed DLLs from packages the component depends on --> 
     <HostingAssets Include="$(MSBuildThisFileDirectory)..\build\native\*.dll"/>
     <!-- Add the runtimeconfig.json -->
@@ -29,6 +30,14 @@
 
     <ItemGroup> 
       <Reference Include="$(MSBuildThisFileDirectory)..\lib\net5.0*\winmd\*.winmd">
+        <IsWinMDFile>true</IsWinMDFile>
+        <Implementation>WinRT.Host.dll</Implementation>
+      </Reference>
+    </ItemGroup>
+
+
+    <ItemGroup> 
+      <Reference Include="$(MSBuildThisFileDirectory)..\lib\net6.0*\winmd\*.winmd">
         <IsWinMDFile>true</IsWinMDFile>
         <Implementation>WinRT.Host.dll</Implementation>
       </Reference>

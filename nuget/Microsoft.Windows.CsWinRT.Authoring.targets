@@ -96,19 +96,19 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
       <_CsWinRTDeDupRuntime_NETSDK_Version>%(_CsWinRTDeDupRuntime_NETSDK.FileVersion)</_CsWinRTDeDupRuntime_NETSDK_Version>
       <_CsWinRTDeDupRuntime_CsWinRT_Version>%(_CsWinRTDeDupRuntime_CsWinRT.NuGetPackageVersion)</_CsWinRTDeDupRuntime_CsWinRT_Version>
-      <!-- Use MSBuild property function to determine latest version -->
+      <!-- Use MSBuild Property Function to determine latest version -->
       <_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest>$([MSBuild]::VersionGreaterthanOrEquals($(_CsWinRTDeDupRuntime_CsWinRT_Version),$(_CsWinRTDeDupRuntime_NETSDK_Version)))</_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest>
 
     </PropertyGroup>
 
     <ItemGroup>
-
+      
       <_CsWinRTDeDupRuntime_Newest Include="@(_CsWinRTDeDupRuntime_CsWinRT)" Condition="'$(_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest)' == 'true'"/>
       <_CsWinRTDeDupRuntime_Newest Include="@(_CsWinRTDeDupRuntime_NETSDK)" Condition="'$(_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest)' != 'true'"/>
 
-      <!-- Make sure all managed binaries and projections are shared across project references for native app consumers -->
+      <!-- Make sure all managed binaries/projections are shared across project references made by native apps -->
       <AllItemsFullPathWithTargetPath Include="@(ReferenceCopyLocalPaths)" 
-        Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime' AND '%(ReferenceCopyLocalPaths.Filename)' != 'WinRT.Runtime'">
+        Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime' AND '%(ReferenceCopyLocalPaths.Filename)' != 'WinRT.Runtime' AND '$(CsWinRTAuthoring_SkipDependencies)' != 'true'">
         <TargetPath>%(ReferenceCopyLocalPaths.DestinationSubDirectory)%(ReferenceCopyLocalPaths.Filename)%(ReferenceCopyLocalPaths.Extension)</TargetPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </AllItemsFullPathWithTargetPath>
@@ -208,8 +208,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   </Target>
 
-  <!-- Each component will need the transitive targets modified to be for their app, 
-       so we rename a few fields in the XML by changing CsWinRT to $(AssemblyName) -->
+<!-- Each component will need the transitive targets modified to be for their app,
+     so we rename a few fields in the XML by changing "CsWinRT" to "$(AssemblyName)" -->
   <Target Name="CsWinRTGenerateTransitiveTargets" BeforeTargets="CsWinRTIncludeHostDlls"> 
 
     <!-- Use the Authoring.Transitive targets as a template to rewrite for the authoring component -->
@@ -278,6 +278,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     
     <!-- When packing, include all necessary DLLs and the targets file for DLL copying on the native side -->
     <ItemGroup>
+
+      <Content Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll">
+        <Pack>true</Pack>
+        <PackagePath>lib\$(TargetFramework)</PackagePath>
+      </Content>
     
       <!-- We must pack any managed DLLs the component depends on, because a native consumer won't restore them -->
       <Content Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime'">
