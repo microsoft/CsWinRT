@@ -15,6 +15,8 @@
 
 // provides CString, used to retrieve error messages from Resource string table
 #include "atlstr.h"
+// provides mappings for hostfxr error codes and error strings
+#include "../WinRT.Host.ErrorStrings/resource.h"
 
 using namespace winrt;
 using namespace winrt::Windows::Storage;
@@ -50,40 +52,40 @@ static load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_
     }
     hostfxr_status_messages[] =
     {
-        { InvalidArgFailure, 106 },
-        { CoreHostLibLoadFailure, 107 },
-        { CoreHostLibMissingFailure, 108 },
-		{ CoreHostEntryPointFailure, 109 },
-        { CoreHostCurHostFindFailure, 110 },
-        { CoreClrResolveFailure, 111 },
-        { CoreClrBindFailure, 112 },
-        { CoreClrInitFailure, 113 },
-        { CoreClrExeFailure, 114 },
-        { ResolverInitFailure, 115 },
-        { ResolverResolveFailure, 116 },
-        { LibHostCurExeFindFailure, 117 },
-        { LibHostInitFailure, 118 },
-        { LibHostSdkFindFailure, 119 },
-        { LibHostInvalidArgs, 120 },
-        { InvalidConfigFile, 121 },
-        { AppArgNotRunnable, 122 },
-        { AppHostExeNotBoundFailure, 123 },
-        { FrameworkMissingFailure, 124 },
-        { HostApiFailed, 125 },
-        { HostApiBufferTooSmall, 126 },
-        { LibHostUnknownCommand, 127 },
-        { LibHostAppRootFindFailure, 128 },
-        { SdkResolverResolveFailure, 129 },
-        { FrameworkCompatFailure, 130 },
-        { FrameworkCompatRetry, 131 },
-        { BundleExtractionFailure, 132 },
-        { BundleExtractionIOError, 133 },
-        { LibHostDuplicateProperty, 134 },
-        { HostApiUnsupportedVersion, 135 },
-        { HostInvalidState, 136 },
-        { HostPropertyNotFound, 137 },
-        { CoreHostIncompatibleConfig, 138 },
-        { HostApiUnsupportedScenario, 139 },
+        { InvalidArgFailure, InvalidArgFailureStr },
+        { CoreHostLibLoadFailure, CoreHostLibLoadFailureStr },
+        { CoreHostLibMissingFailure, CoreHostLibMissingFailureStr },
+		{ CoreHostEntryPointFailure, CoreHostEntryPointFailureStr },
+        { CoreHostCurHostFindFailure, CoreHostCurHostFindFailureStr },
+        { CoreClrResolveFailure, CoreClrResolveFailureStr },
+        { CoreClrBindFailure, CoreClrBindFailureStr },
+        { CoreClrInitFailure, CoreClrInitFailureStr },
+        { CoreClrExeFailure, CoreClrExeFailureStr },
+        { ResolverInitFailure, ResolverInitFailureStr },
+        { ResolverResolveFailure, ResolverResolveFailureStr },
+        { LibHostCurExeFindFailure, LibHostCurExeFindFailureStr },
+        { LibHostInitFailure, LibHostInitFailureStr },
+        { LibHostSdkFindFailure, LibHostSdkFindFailureStr },
+        { LibHostInvalidArgs, LibHostInvalidArgsStr },
+        { InvalidConfigFile, InvalidConfigFileStr },
+        { AppArgNotRunnable, AppArgNotRunnableStr },
+        { AppHostExeNotBoundFailure, AppHostExeNotBoundFailureStr },
+        { FrameworkMissingFailure, FrameworkMissingFailureStr },
+        { HostApiFailed, HostApiFailedStr },
+        { HostApiBufferTooSmall, HostApiBufferTooSmallStr },
+        { LibHostUnknownCommand, LibHostUnknownCommandStr },
+        { LibHostAppRootFindFailure, LibHostAppRootFindFailureStr },
+        { SdkResolverResolveFailure, SdkResolverResolveFailureStr },
+        { FrameworkCompatFailure, FrameworkCompatFailureStr },
+        { FrameworkCompatRetry, FrameworkCompatRetryStr },
+        { BundleExtractionFailure, BundleExtractionFailureStr },
+        { BundleExtractionIOError, BundleExtractionIOErrorStr },
+        { LibHostDuplicateProperty, LibHostDuplicatePropertyStr },
+        { HostApiUnsupportedVersion, HostApiUnsupportedVersionStr },
+        { HostInvalidState, HostInvalidStateStr },
+        { HostPropertyNotFound, HostPropertyNotFoundStr },
+        { CoreHostIncompatibleConfig, CoreHostIncompatibleConfigStr },
+        { HostApiUnsupportedScenario, HostApiUnsupportedScenarioStr },
     };
 
     auto string_table_entry = 0;
