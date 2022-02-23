@@ -64,6 +64,8 @@ namespace System.Collections.Generic
             this._inner = _inner;
         }
 
+        public static IListImpl<T> CreateRcw(IInspectable obj) => new(obj.ObjRef);
+
         public T this[int index] 
         {
             get => ABI.System.Collections.Generic.IListMethods<T>.Indexer_Get(iListObjRef, index);

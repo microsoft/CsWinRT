@@ -2012,44 +2012,47 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
                     }
     
                     auto objrefname = bind<write_objref_type_name>(semantics);
+                    bool useInner = replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0;
 
-                    w.write(R"(
+                    if (!useInner)
+                    {
+                        w.write(R"(
 private volatile IObjectReference __%;
 private IObjectReference Make__%()
 {
 )",
                         objrefname,
                         objrefname);
-                   
-                    if (replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0)
-                    {
-                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, _inner, null);)", objrefname);
-                    }
-                    else if (distance(ifaceType.GenericParam()) == 0)
-                    {
 
-                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).FindHelperType())), null);)", 
-                            objrefname,
-                            bind<write_type_name>(semantics, typedef_name_type::Projected, false)
-                            ); 
-                    }
-                    else
-                    {
-                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(typeof(%).FindHelperType().FindVftblType()).Invoke(((IWinRTObject)this).NativeObject, null), null);)",
-                            objrefname,
-                            bind<write_type_name>(semantics, typedef_name_type::Projected, false));
-                    }
+                        if (distance(ifaceType.GenericParam()) == 0)
+                        {
 
-                     w.write(R"(
-    return __%;
+                            w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).GetHelperType())), null);)",
+                                objrefname,
+                                bind<write_type_name>(semantics, typedef_name_type::Projected, false)
+                            );
+                        }
+                        else
+                        {
+                            w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(typeof(%).GetHelperType().FindVftblType()).Invoke(((IWinRTObject)this).NativeObject, null), null);)",
+                                objrefname,
+                                bind<write_type_name>(semantics, typedef_name_type::Projected, false));
+                        }
+
+                        w.write(R"(
+return __%;
 }
 private IObjectReference % => __% ?? Make__%();
-
 )",
                         objrefname,
                         objrefname,
                         objrefname,
                         objrefname);
+                    }
+                    else
+                    {
+                        w.write(R"(private IObjectReference % => _inner;)", objrefname);
+                    }
                 });
         }
     }

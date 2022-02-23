@@ -85,6 +85,12 @@ namespace ABI.Windows.Foundation
             return wrapper.Value;
         }
 
+        internal static object GetValue(IInspectable inspectable)
+        {
+            var array = new IReferenceArray<T>(inspectable.ObjRef);
+            return array.Value;
+        }
+
         public static unsafe void CopyManaged(object o, IntPtr dest)
         {
             using var objRef = CreateMarshaler(o);
