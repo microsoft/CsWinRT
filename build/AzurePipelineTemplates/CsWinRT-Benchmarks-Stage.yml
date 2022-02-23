@@ -88,14 +88,14 @@ stages:
         TargetFolder: $(Build.ArtifactStagingDirectory)\benchmarks
 
 # Build ResultsComparer
-  - task: VSBuild@1
-    displayName: Build ResultsComparer solution
-    inputs:
-      solution: $(Build.SourcesDirectory)\src\Perf\ResultsComparer\ResultsComparer.sln
-      vsVersion: 16.0
-      platform: 'Any CPU'
-      configuration: 'Release'
-      msbuildArgs: '/restore'
+    - task: VSBuild@1
+      displayName: Build ResultsComparer solution
+      inputs:
+        solution: $(Build.SourcesDirectory)\src\Perf\ResultsComparer\ResultsComparer.sln
+        vsVersion: 16.0
+        platform: 'Any CPU'
+        configuration: 'Release'
+        msbuildArgs: '/restore'
 
 # Publish Results
     - task: PublishBuildArtifacts@1
