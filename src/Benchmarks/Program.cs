@@ -1,6 +1,7 @@
 ﻿using BenchmarkDotNet.Running;
 using System;
 using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Exporters.Json;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Toolchains.CsProj;
 using BenchmarkDotNet.Toolchains.DotNetCli;
@@ -34,6 +35,8 @@ namespace Benchmarks
                             new MsBuildArgument("/p:IsDotnetBuild=true")
                         }
                     ).AsDefault();
+
+                Config = Config.AddExporter(JsonExporter.Full);
 
                 // Test WinMD support
 #if NETCOREAPP3_1
