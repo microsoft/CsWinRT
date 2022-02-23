@@ -54,8 +54,8 @@ static load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_
     {
         { InvalidArgFailure, InvalidArgFailureStr },
         { CoreHostLibLoadFailure, CoreHostLibLoadFailureStr },
-        { CoreHostLibMissingFailure, CoreHostLibMissingFailureStr },
-		{ CoreHostEntryPointFailure, CoreHostEntryPointFailureStr },
+        { CoreHostLibMissingFailure, CoreHostLibMissingFailureStr }, 
+        { CoreHostEntryPointFailure, CoreHostEntryPointFailureStr },
         { CoreHostCurHostFindFailure, CoreHostCurHostFindFailureStr },
         { CoreClrResolveFailure, CoreClrResolveFailureStr },
         { CoreClrBindFailure, CoreClrBindFailureStr },
