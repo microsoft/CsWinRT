@@ -52,6 +52,8 @@ namespace System.Collections.Generic
             this._inner = _inner;
         }
 
+        public static IReadOnlyListImpl<T> CreateRcw(IInspectable obj) => new(obj.ObjRef);
+
         IObjectReference IWinRTObject.NativeObject => _inner;
 
         bool IWinRTObject.HasUnwrappableNativeObject => true;
