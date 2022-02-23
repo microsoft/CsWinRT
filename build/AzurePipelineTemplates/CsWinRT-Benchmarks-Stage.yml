@@ -84,7 +84,7 @@ stages:
       condition: always()
       inputs:
         SourceFolder: $(Build.SourcesDirectory)\src\BenchmarkDotNet.Artifacts\results\
-        Contents: *
+        Contents: '*'
         TargetFolder: $(Build.ArtifactStagingDirectory)\benchmarks
 
 # Build ResultsComparer
