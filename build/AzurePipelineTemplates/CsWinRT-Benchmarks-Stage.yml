@@ -103,7 +103,7 @@ stages:
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src
         script: |
-          Perf\ResultsComparer\bin\Release\net5.0\ResultsComparer.exe --base Perf\BenchmarkBaseline --diff $(Build.ArtifactStagingDirectory)\benchmarks --threshold 5% --xml $(Build.ArtifactStagingDirectory)\benchmarks\results.xml
+          Perf\ResultsComparer\bin\Release\net5.0\ResultsComparer.exe --base Perf\BenchmarkBaseline --diff $(Build.ArtifactStagingDirectory)\benchmarks --threshold 5%% --xml $(Build.ArtifactStagingDirectory)\benchmarks\results.xml
 
 # Publish Results
     - task: PublishBuildArtifacts@1
