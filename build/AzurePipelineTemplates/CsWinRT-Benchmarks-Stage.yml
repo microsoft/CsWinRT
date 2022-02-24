@@ -1,5 +1,6 @@
 stages:
 - stage: Benchmarks
+  dependsOn: []
   displayName: Run Benchmarks stage
   jobs: 
   - job: RunBenchmarks
