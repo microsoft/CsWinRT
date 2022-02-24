@@ -1,6 +1,5 @@
 stages:
 - stage: Benchmarks
-  dependsOn: BuildAndTest x64_Release
   displayName: Run Benchmarks stage
   jobs: 
   - job: RunBenchmarks
