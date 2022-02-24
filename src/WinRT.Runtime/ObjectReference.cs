@@ -177,6 +177,16 @@ namespace WinRT
             return hr;
         }
 
+        public virtual unsafe ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
+        {
+            AddRef(true);
+            var objRef = ObjectReference<IUnknownVftbl>.Attach(ref ptr);
+            objRef.IsAggregated = IsAggregated;
+            objRef.PreventReleaseOnDispose = IsAggregated;
+            objRef.ReferenceTrackerPtr = ReferenceTrackerPtr;
+            return objRef;
+        }
+
         // Used only as part of the GetInterface implementation where the
         // result is an reference passed across the ABI and doesn't need to
         // be tracked as an internal reference.  This is separate to handle
@@ -565,6 +575,18 @@ namespace WinRT
 
             Context.CallInContext(_contextCallbackPtr, _contextToken, base.Release, ReleaseWithoutContext);
             Context.DisposeContextCallback(_contextCallbackPtr);
+        }
+
+        public override ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
+        {
+            AddRef(true);
+            var objRef = new ObjectReferenceWithContext<IUnknownVftbl>(ptr, Context.GetContextCallback(), Context.GetContextToken())
+            {
+                IsAggregated = IsAggregated,
+                PreventReleaseOnDispose = IsAggregated,
+                ReferenceTrackerPtr = ReferenceTrackerPtr
+            };
+            return objRef;
         }
 
         public override unsafe int TryAs<U>(Guid iid, out ObjectReference<U> objRef)
