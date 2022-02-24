@@ -4,10 +4,19 @@ variables:
 name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
 
 stages:
-- template: CsWinRT-BuildAndTest-Stage.yml
+- stage: Build
+  - template: CsWinRT-BuildAndTest-Stage.yml
 
-- template: CsWinRT-Benchmarks-Stage.yml
+- stage: Benchmarks
+  dependsOn: BuildAndTest x64_Release
+  - template: CsWinRT-Benchmarks-Stage.yml
 
-- template: CsWinRT-PublishToNuget-Stage.yml
+- stage: PublishNuget
+  dependsOn: 
+  - Build
+  - Benchmarks
+  - template: CsWinRT-PublishToNuget-Stage.yml
 
-- template: CsWinRT-PublishToMaestro-Stage.yml
+- stage: PublishMaestro
+  dependsOn: PublishNuget
+  - template: CsWinRT-PublishToMaestro-Stage.yml
