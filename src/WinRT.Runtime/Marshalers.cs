@@ -788,6 +788,15 @@ namespace WinRT
                         DisposeMarshaler(marshaler);
                     }
                 }
+
+                if (_objectReferenceValues != null)
+                {
+                    foreach (var objectReferenceValue in _objectReferenceValues)
+                    {
+                        objectReferenceValue.Dispose();
+                    }
+                }
+
                 if (_array != IntPtr.Zero)
                 {
                     Marshal.FreeCoTaskMem(_array);
@@ -796,6 +805,7 @@ namespace WinRT
 
             public IntPtr _array;
             public IObjectReference[] _marshalers;
+            internal ObjectReferenceValue[] _objectReferenceValues;
         }
 
         public static unsafe MarshalerArray CreateMarshalerArray(T[] array, Func<T, IObjectReference> createMarshaler)
@@ -830,10 +840,42 @@ namespace WinRT
             }
         }
 
+        public static unsafe MarshalerArray CreateMarshalerArray2(T[] array, Func<T, ObjectReferenceValue> createMarshaler)
+        {
+            MarshalerArray m = new MarshalerArray();
+            if (array is null)
+            {
+                return m;
+            }
+            bool success = false;
+            try
+            {
+                int length = array.Length;
+                var byte_length = length * IntPtr.Size;
+                m._array = Marshal.AllocCoTaskMem(byte_length);
+                m._objectReferenceValues = new ObjectReferenceValue[length];
+                var element = (IntPtr*)m._array.ToPointer();
+                for (int i = 0; i < length; i++)
+                {
+                    m._objectReferenceValues[i] = createMarshaler(array[i]);
+                    element[i] = GetAbi(m._objectReferenceValues[i]);
+                }
+                success = true;
+                return m;
+            }
+            finally
+            {
+                if (!success)
+                {
+                    m.Dispose();
+                }
+            }
+        }
+
         public static (int length, IntPtr data) GetAbiArray(object box)
         {
             var m = (MarshalerArray)box;
-            return (m._marshalers?.Length ?? 0, m._array);
+            return (m._objectReferenceValues?.Length ?? m._marshalers?.Length ?? 0, m._array);
         }
 
         public static unsafe T[] FromAbiArray(object box, Func<IntPtr, T> fromAbi)
@@ -956,10 +998,11 @@ namespace WinRT
             return objRef?.ThisPtr ?? IntPtr.Zero;
         }
 
-        public static void DisposeMarshaler(IObjectReference objRef)
-        {
-            objRef?.Dispose();
-        }
+        public static IntPtr GetAbi(ObjectReferenceValue value) => value.GetAbi();
+
+        public static void DisposeMarshaler(IObjectReference objRef) => objRef?.Dispose();
+
+        public static void DisposeMarshaler(ObjectReferenceValue value) => value.Dispose();
 
         public static void DisposeAbi(IntPtr ptr)
         {
@@ -981,6 +1024,7 @@ namespace WinRT
         private static readonly Type HelperType = typeof(T).GetHelperType();
         private static Func<T, IObjectReference> _ToAbi;
         private static Func<T, IObjectReference> _CreateMarshaler;
+        private static Guid _iid = default;
 
         public static T FromAbi(IntPtr ptr)
         {
@@ -1022,26 +1066,60 @@ namespace WinRT
             return _CreateMarshaler(value);
         }
 
-        public static IntPtr GetAbi(IObjectReference value) => 
+        public static ObjectReferenceValue CreateMarshaler2(T value, Guid iid = default)
+        {
+            if (value is null)
+            {
+                return new ObjectReferenceValue();
+            }
+
+            // If the value passed in is the native implementation of the interface
+            // use the ToAbi delegate since it will be faster than reflection.
+            if (value.GetType() == HelperType)
+            {
+                if (_ToAbi == null)
+                {
+                    _ToAbi = BindToAbi();
+                }
+                return _ToAbi(value).AsValue();
+            }
+
+            return MarshalInspectable<T>.CreateMarshaler2(value, iid == default ? GetIIDForHelperType() : iid, true);
+        }
+
+        private static Guid GetIIDForHelperType()
+        {
+            if (_iid == default)
+            {
+                _iid = GuidGenerator.GetIID(HelperType);
+            }
+            return _iid;
+        }
+
+        public static IntPtr GetAbi(IObjectReference value) =>
             value is null ? IntPtr.Zero : MarshalInterfaceHelper<T>.GetAbi(value);
+
+        public static IntPtr GetAbi(ObjectReferenceValue value) => MarshalInterfaceHelper<T>.GetAbi(value);
 
         public static void DisposeAbi(IntPtr thisPtr) => MarshalInterfaceHelper<T>.DisposeAbi(thisPtr);
 
         public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<T>.DisposeMarshaler(value);
 
+        public static void DisposeMarshaler(ObjectReferenceValue value) => MarshalInterfaceHelper<T>.DisposeMarshaler(value);
+
         public static IntPtr FromManaged(T value)
         {
-            using var objRef = CreateMarshaler(value);
-            return objRef?.GetRef() ?? IntPtr.Zero;
+            return CreateMarshaler2(value).DetachRef();
         }
 
         public static unsafe void CopyManaged(T value, IntPtr dest)
         {
-            using var objRef = CreateMarshaler(value);
-            *(IntPtr*)dest.ToPointer() = objRef?.GetRef() ?? IntPtr.Zero;
+            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(value).DetachRef();
         }
 
         public static unsafe MarshalInterfaceHelper<T>.MarshalerArray CreateMarshalerArray(T[] array) => MarshalInterfaceHelper<T>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
+
+        public static MarshalInterfaceHelper<T>.MarshalerArray CreateMarshalerArray2(T[] array) => MarshalInterfaceHelper<T>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
 
         public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<T>.GetAbiArray(box);
 
@@ -1115,8 +1193,35 @@ namespace WinRT
             return CreateMarshaler<IInspectable.Vftbl>(o, InterfaceIIDs.IInspectable_IID, unwrapObject);
         }
 
+        public static ObjectReferenceValue CreateMarshaler2(T o, Guid iid, bool unwrapObject = true)
+        {
+            if (o is null)
+            {
+                return new ObjectReferenceValue();
+            }
+
+            if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
+            {
+                return objRef.AsValue(iid);
+            }
+            var publicType = o.GetType();
+            Type helperType = Projections.FindCustomHelperTypeMapping(publicType, true);
+            if (helperType != null)
+            {
+                var createMarshaler = helperType.GetMethod("CreateMarshaler2", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                return ((ObjectReferenceValue)createMarshaler.Invoke(null, new[] { (object)o }));
+            }
+
+            return ComWrappersSupport.CreateCCWForObjectForMarshaling(o, iid);
+        }
+
+        public static ObjectReferenceValue CreateMarshaler2(T o, bool unwrapObject = true) => 
+            CreateMarshaler2(o, InterfaceIIDs.IInspectable_IID, unwrapObject);
+
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef is null ? IntPtr.Zero : MarshalInterfaceHelper<T>.GetAbi(objRef);
+
+        public static IntPtr GetAbi(ObjectReferenceValue value) => value.GetAbi();
 
         public static T FromAbi(IntPtr ptr)
         {
@@ -1147,20 +1252,22 @@ namespace WinRT
 
         public static void DisposeMarshaler(IObjectReference objRef) => MarshalInterfaceHelper<T>.DisposeMarshaler(objRef);
 
+        public static void DisposeMarshaler(ObjectReferenceValue value) => value.Dispose();
+
         public static void DisposeAbi(IntPtr ptr) => MarshalInterfaceHelper<T>.DisposeAbi(ptr);
         public static IntPtr FromManaged(T o, bool unwrapObject = true)
         {
-            using var objRef = CreateMarshaler(o, unwrapObject);
-            return objRef?.GetRef() ?? IntPtr.Zero;
+            return CreateMarshaler2(o, unwrapObject).DetachRef();
         }
 
         public static unsafe void CopyManaged(T o, IntPtr dest, bool unwrapObject = true)
         {
-            using var objRef = CreateMarshaler(o, unwrapObject);
-            *(IntPtr*)dest.ToPointer() = objRef?.GetRef() ?? IntPtr.Zero;
+            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o, unwrapObject).DetachRef();
         }
 
         public static unsafe MarshalInterfaceHelper<T>.MarshalerArray CreateMarshalerArray(T[] array) => MarshalInterfaceHelper<T>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
+
+        public static unsafe MarshalInterfaceHelper<T>.MarshalerArray CreateMarshalerArray2(T[] array) => MarshalInterfaceHelper<T>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
 
         public static (int length, IntPtr data) GetAbiArray(T box) => MarshalInterfaceHelper<T>.GetAbiArray(box);
 
@@ -1204,6 +1311,21 @@ namespace WinRT
             }
 
             return ComWrappersSupport.CreateCCWForObject<global::WinRT.Interop.IDelegateVftbl>(o, delegateIID);
+        }
+
+        public static ObjectReferenceValue CreateMarshaler2(object o, Guid delegateIID, bool unwrapObject = true)
+        {
+            if (o is null)
+            {
+                return new ObjectReferenceValue();
+            }
+
+            if (unwrapObject && ComWrappersSupport.TryUnwrapObject(o, out var objRef))
+            {
+                return objRef.AsValue(delegateIID);
+            }
+
+            return ComWrappersSupport.CreateCCWForObjectForMarshaling(o, delegateIID);
         }
 
         public static T FromAbi<T>(IntPtr nativeDelegate)

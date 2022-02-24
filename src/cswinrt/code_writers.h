@@ -3218,6 +3218,7 @@ event % %;)",
         std::string marshaler_type;
         bool is_value_type;
         bool is_pinnable;
+        bool marshal_by_object_reference_value;
 
         bool is_out() const
         {
@@ -3244,6 +3245,11 @@ event % %;)",
         {
             return ((category == param_category::in) || (category == param_category::ref)) &&
                 marshaler_type.empty() && local_type == "IntPtr";
+        }
+
+        bool is_marshal_by_object_reference_value() const
+        {
+            return marshal_by_object_reference_value;
         }
 
         std::string get_marshaler_local(writer& w) const
@@ -3299,9 +3305,10 @@ event % %;)",
 
         void write_create(writer& w, std::string_view source) const
         {
-            w.write("%.CreateMarshaler%(%)",
+            w.write("%.CreateMarshaler%%(%)",
                 marshaler_type,
                 is_array() ? "Array" : "",
+                is_marshal_by_object_reference_value() ? "2" : "",
                 source);
         }
 
@@ -3315,17 +3322,18 @@ event % %;)",
             if (is_pinnable || is_object_in() || is_out() || local_type.empty())
                 return;
 
-            w.write("% = %.CreateMarshaler%(%);\n",
+            w.write("% = %.CreateMarshaler%%(%);\n",
                 get_marshaler_local(w),
                 marshaler_type,
                 is_array() ? "Array" : "",
+                is_marshal_by_object_reference_value() ? "2" : "",
                 bind<write_escaped_identifier>(param_name));
 
             if (is_generic() || is_array())
             {
                 w.write("% = %.GetAbi%(%);\n",
                     get_param_local(w),
-                    marshaler_type,
+                    is_marshal_by_object_reference_value() && !is_array() ? "MarshalInspectable<object>" : marshaler_type,
                     is_array() ? "Array" : "",
                     get_marshaler_local(w));
             }
@@ -3411,7 +3419,7 @@ event % %;)",
             }
 
             w.write("%.GetAbi%(%%)",
-                marshaler_type,
+                is_marshal_by_object_reference_value() && !is_array() ? "MarshalInspectable<object>" : marshaler_type,
                 is_array() ? "Array" : "",
                 is_pinnable ? "ref " : "",
                 get_marshaler_local(w));
@@ -3528,7 +3536,7 @@ event % %;)",
             else
             {
                 w.write("%.DisposeMarshaler%(%);\n",
-                    marshaler_type,
+                    is_marshal_by_object_reference_value() && !is_array() ? "MarshalInspectable<object>" : marshaler_type,
                     is_array() ? "Array" : "",
                     get_marshaler_local(w));
             }
@@ -3583,36 +3591,39 @@ event % %;)",
                 set_simple_marshaler_type(m, type);
                 break;
             case category::interface_type:
-                m.marshaler_type = "MarshalInterface<" + m.param_type + ">";    
+                m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
+                m.marshal_by_object_reference_value = true;
                 if (m.is_array())
                 {
                     m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
                 }
                 else
                 {
-                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                    m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
                 }
                 break;
             case category::class_type:
                 m.marshaler_type = w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
+                m.marshal_by_object_reference_value = true;
                 if (m.is_array())
                 {
                     m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
                 }
                 else
                 {
-                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                    m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
                 }
                 break;
             case category::delegate_type:
                 m.marshaler_type = get_abi_type();
+                m.marshal_by_object_reference_value = true;
                 if (m.is_array())
                 {
                     m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
                 }
                 else
                 {
-                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                    m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
                 }
                 break;
             }
@@ -3622,13 +3633,14 @@ event % %;)",
             [&](object_type)
             {
                 m.marshaler_type = "MarshalInspectable<object>";
+                m.marshal_by_object_reference_value = true;
                 if (m.is_array())
                 {
                     m.local_type = "MarshalInterfaceHelper<object>.MarshalerArray";
                 }
                 else
                 {
-                    m.local_type = m.is_out() ? "IntPtr" : "IObjectReference";
+                    m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
                 }
             },
             [&](type_definition const& type)
@@ -6457,8 +6469,9 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
 %
 public static IntPtr GetAbi(IObjectReference value) => value is null ? IntPtr.Zero : MarshalInterfaceHelper<object>.GetAbi(value);
 public static % FromAbi(IntPtr thisPtr) => %.FromAbi(thisPtr);
-public static IntPtr FromManaged(% obj) => obj is null ? IntPtr.Zero : CreateMarshaler(obj).GetRef();
+public static IntPtr FromManaged(% obj) => obj is null ? IntPtr.Zero : CreateMarshaler2(obj).DetachRef();
 public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArray(%[] array) => MarshalInterfaceHelper<%>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
+public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArray2(%[] array) => MarshalInterfaceHelper<%>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
 public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<%>.GetAbiArray(box);
 public static unsafe %[] FromAbiArray(object box) => MarshalInterfaceHelper<%>.FromAbiArray(box, FromAbi);
 public static (int length, IntPtr data) FromManagedArray(%[] array) => MarshalInterfaceHelper<%>.FromManagedArray(array, (o) => FromManaged(o));
@@ -6481,23 +6494,37 @@ public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<obje
                 {
                     auto is_generic = distance(type.GenericParam()) > 0;
                     auto default_interface_abi_name = get_default_interface_name(w, type, true);
-                    w.write("public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable<%>.CreateMarshaler<%>(obj, %);",
+                    auto iid = is_generic ? w.write_temp("GuidGenerator.GetIID(%.Vftbl)", default_interface_abi_name)
+                        : w.write_temp("GuidGenerator.GetIID(typeof(%).GetHelperType())", bind<write_type_name>(get_type_semantics(get_default_interface(type)), typedef_name_type::CCW, false));
+
+                    w.write(R"(
+public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInspectable<%>.CreateMarshaler<%>(obj, %);
+public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInspectable<object>.CreateMarshaler2(obj, %);)",
                         projected_type_name,
                         projected_type_name,
                         is_generic ? w.write_temp("%.Vftbl", default_interface_abi_name) : w.write_temp("IUnknownVftbl"),
-                        is_generic ? w.write_temp("GuidGenerator.GetIID(%.Vftbl)", default_interface_abi_name)
-                        : w.write_temp("GuidGenerator.GetIID(typeof(%).GetHelperType())", bind<write_type_name>(get_type_semantics(get_default_interface(type)), typedef_name_type::CCW, false)));
+                        iid,
+                        projected_type_name,
+                        iid);
                 }
                 else
                 {
                     auto default_interface_name = get_default_interface_name(w, type, false);
-                    w.write("public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInterface<%>.CreateMarshaler(obj);",
+                    w.write(R"(
+public static IObjectReference CreateMarshaler(% obj) => obj is null ? null : MarshalInterface<%>.CreateMarshaler(obj);
+public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%>.CreateMarshaler2(obj, GuidGenerator.GetIID(typeof(%).GetHelperType()));)",
                         projected_type_name,
+                        default_interface_name,
+                        projected_type_name,
+                        default_interface_name,
                         default_interface_name);
                 }
             }),
             projected_type_name,
             ccw_type_name,
+            projected_type_name,
+            projected_type_name,
+            projected_type_name,
             projected_type_name,
             projected_type_name,
             projected_type_name,
@@ -6564,6 +6591,9 @@ AbiToProjectionVftablePtr = nativeVftbl;
 public static unsafe IObjectReference CreateMarshaler(% managedDelegate) => 
 managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(@%)));
 
+public static unsafe ObjectReferenceValue CreateMarshaler2(% managedDelegate) => 
+MarshalDelegate.CreateMarshaler2(managedDelegate, GuidGenerator.GetIID(typeof(@%)));
+
 public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<%>.GetAbi(value);
 
 public static unsafe % FromAbi(IntPtr nativeDelegate)
@@ -6616,7 +6646,7 @@ IntPtr ThisPtr = _nativeDelegate.ThisPtr;
 }
 }
 
-public static IntPtr FromManaged(% managedDelegate) => CreateMarshaler(managedDelegate)?.GetRef() ?? IntPtr.Zero;
+public static IntPtr FromManaged(% managedDelegate) => CreateMarshaler2(managedDelegate).DetachRef();
 
 public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<%>.DisposeMarshaler(value);
 
@@ -6700,6 +6730,9 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             type_params,
             settings.netstandard_compat || is_generic ? "\npublic static global::System.Delegate AbiInvokeDelegate { get; }\n" : "",
             // CreateMarshaler
+            type_name,
+            type.TypeName(),
+            type_params,
             type_name,
             type.TypeName(),
             type_params,
@@ -7019,9 +7052,9 @@ public struct Marshaler
 )",
                 bind_each([](writer& w, abi_marshaler const& m)
                 {
-                    if(m.is_value_type) return;
+                    if (m.is_value_type) return;
                     w.write("%.DisposeMarshaler(_%);\n",
-                        m.marshaler_type,
+                        m.is_marshal_by_object_reference_value() ? "MarshalInspectable<object>" : m.marshaler_type,
                         m.param_name);
                 }, marshalers));
         }
@@ -7081,7 +7114,7 @@ return m;)",
                     }
                     w.write("% = %.GetAbi(m._%)\n",
                         m.get_escaped_param_name(w),
-                        m.marshaler_type,
+                        m.is_marshal_by_object_reference_value() ? "MarshalInspectable<object>" : m.marshaler_type,
                         m.param_name);
                 }
             },
@@ -7413,14 +7446,14 @@ delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> r
 {
 }
 
-protected override IObjectReference CreateMarshaler(% del) =>
-del is null ? null : %.CreateMarshaler(del);
+protected override ObjectReferenceValue CreateMarshaler(% del) =>
+%.CreateMarshaler2(del);
 
-protected override void DisposeMarshaler(IObjectReference marshaler) =>
-%.DisposeMarshaler(marshaler);
+protected override void DisposeMarshaler(ObjectReferenceValue marshaler) =>
+marshaler.Dispose();
 
-protected override System.IntPtr GetAbi(IObjectReference marshaler) =>
-marshaler is null ? System.IntPtr.Zero : %.GetAbi(marshaler);
+protected override System.IntPtr GetAbi(ObjectReferenceValue marshaler) =>
+marshaler.GetAbi();
 
 protected override State CreateEventState() =>
 new EventState(_obj.ThisPtr, _index);
@@ -7453,8 +7486,6 @@ bind<write_event_source_generic_args>(eventTypeSemantics),
 eventTypeCode, 
 bind<write_event_source_type_name>(eventTypeSemantics), 
 eventTypeCode,
-abiTypeName,
-abiTypeName,
 abiTypeName,
 eventTypeCode,
 bind<write_event_invoke_params>(invokeMethodSig),

@@ -134,18 +134,19 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         {
             _obj = obj;
         }
+
         public unsafe IObjectReference CreateInstanceWithAllParameters(global::System.Collections.Specialized.NotifyCollectionChangedAction action, global::System.Collections.IList newItems, global::System.Collections.IList oldItems, int newIndex, int oldIndex, object baseInterface, out IObjectReference innerInterface)
         {
-            IObjectReference __newItems = default;
-            IObjectReference __oldItems = default;
-            IObjectReference __baseInterface = default;
+            ObjectReferenceValue __newItems = default;
+            ObjectReferenceValue __oldItems = default;
+            ObjectReferenceValue __baseInterface = default;
             IntPtr __innerInterface = default;
             IntPtr __retval = default;
             try
             {
-                __newItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler(newItems);
-                __oldItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler(oldItems);
-                __baseInterface = MarshalInspectable<object>.CreateMarshaler(baseInterface);
+                __newItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(newItems);
+                __oldItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(oldItems);
+                __baseInterface = MarshalInspectable<object>.CreateMarshaler2(baseInterface);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, MarshalInspectable<object>.GetAbi(__baseInterface), out __innerInterface, out __retval));
                 innerInterface = ObjectReference<IUnknownVftbl>.FromAbi(__innerInterface);
                 return ObjectReference<IUnknownVftbl>.FromAbi(__retval);
@@ -157,6 +158,27 @@ namespace ABI.Microsoft.UI.Xaml.Interop
                 MarshalInspectable<object>.DisposeMarshaler(__baseInterface);
                 MarshalInspectable<object>.DisposeAbi(__innerInterface);
                 MarshalInspectable<object>.DisposeAbi(__retval);
+            }
+        }
+
+        public unsafe ObjectReferenceValue CreateInstanceWithAllParameters(global::System.Collections.Specialized.NotifyCollectionChangedAction action, global::System.Collections.IList newItems, global::System.Collections.IList oldItems, int newIndex, int oldIndex)
+        {
+            ObjectReferenceValue __newItems = default;
+            ObjectReferenceValue __oldItems = default;
+            IntPtr __innerInterface = default;
+            IntPtr __retval = default;
+            try
+            {
+                __newItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(newItems);
+                __oldItems = MarshalInterface<global::System.Collections.IList>.CreateMarshaler2(oldItems);
+                global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CreateInstanceWithAllParameters_0(ThisPtr, action, MarshalInterface<global::System.Collections.IList>.GetAbi(__newItems), MarshalInterface<global::System.Collections.IList>.GetAbi(__oldItems), newIndex, oldIndex, IntPtr.Zero, out __innerInterface, out __retval));
+                return new ObjectReferenceValue(__retval);
+            }
+            finally
+            {
+                __newItems.Dispose();
+                __oldItems.Dispose();
+                MarshalInspectable<object>.DisposeAbi(__innerInterface);
             }
         }
     }
@@ -193,6 +215,16 @@ namespace ABI.System.Collections.Specialized
             return ActivationFactory.Instance.CreateInstanceWithAllParameters(value.Action, value.NewItems, value.OldItems, value.NewStartingIndex, value.OldStartingIndex, null, out _);
         }
 
+        public static ObjectReferenceValue CreateMarshaler2(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs value)
+        {
+            if (value is null)
+            {
+                return new ObjectReferenceValue();
+            }
+
+            return ActivationFactory.Instance.CreateInstanceWithAllParameters(value.Action, value.NewItems, value.OldItems, value.NewStartingIndex, value.OldStartingIndex);
+        }
+
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
 
         public static global::System.Collections.Specialized.NotifyCollectionChangedEventArgs FromAbi(IntPtr ptr)
@@ -224,8 +256,7 @@ namespace ABI.System.Collections.Specialized
 
         public static unsafe void CopyManaged(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs o, IntPtr dest)
         {
-            using var objRef = CreateMarshaler(o);
-            *(IntPtr*)dest.ToPointer() = objRef?.GetRef() ?? IntPtr.Zero;
+            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).DetachRef();
         }
 
         public static IntPtr FromManaged(global::System.Collections.Specialized.NotifyCollectionChangedEventArgs value)
@@ -234,8 +265,7 @@ namespace ABI.System.Collections.Specialized
             {
                 return IntPtr.Zero;
             }
-            using var objRef = CreateMarshaler(value);
-            return objRef.GetRef();
+            return CreateMarshaler2(value).DetachRef();
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }

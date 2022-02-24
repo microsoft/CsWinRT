@@ -47,6 +47,9 @@ namespace ABI.System.ComponentModel
         public static unsafe IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(PropertyChangedEventHandler)));
 
+        public static unsafe ObjectReferenceValue CreateMarshaler2(global::System.ComponentModel.PropertyChangedEventHandler managedDelegate) => 
+            MarshalDelegate.CreateMarshaler2(managedDelegate, GuidGenerator.GetIID(typeof(PropertyChangedEventHandler)));
+
         public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.GetAbi(value);
 
         public static unsafe global::System.ComponentModel.PropertyChangedEventHandler FromAbi(IntPtr nativeDelegate)
@@ -101,25 +104,24 @@ namespace ABI.System.ComponentModel
 #else
                 var abiInvoke = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)(_nativeDelegate.Vftbl.Invoke);
 #endif
-                IObjectReference __sender = default;
-                IObjectReference __e = default;
+                ObjectReferenceValue __sender = default;
+                ObjectReferenceValue __e = default;
                 try
                 {
-                    __sender = MarshalInspectable<object>.CreateMarshaler(sender);
-                    __e = global::ABI.System.ComponentModel.PropertyChangedEventArgs.CreateMarshaler(e);
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInspectable<object>.GetAbi(__sender), global::ABI.System.ComponentModel.PropertyChangedEventArgs.GetAbi(__e)));
+                    __sender = MarshalInspectable<object>.CreateMarshaler2(sender);
+                    __e = global::ABI.System.ComponentModel.PropertyChangedEventArgs.CreateMarshaler2(e);
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInspectable<object>.GetAbi(__sender), MarshalInspectable<object>.GetAbi(__e)));
                 }
                 finally
                 {
                     MarshalInspectable<object>.DisposeMarshaler(__sender);
-                    global::ABI.System.ComponentModel.PropertyChangedEventArgs.DisposeMarshaler(__e);
+                    MarshalInspectable<object>.DisposeMarshaler(__e);
                 }
-
             }
         }
 
-        public static IntPtr FromManaged(global::System.ComponentModel.PropertyChangedEventHandler managedDelegate) =>
-            CreateMarshaler(managedDelegate)?.GetRef() ?? IntPtr.Zero;
+        public static IntPtr FromManaged(global::System.ComponentModel.PropertyChangedEventHandler managedDelegate) => 
+            CreateMarshaler2(managedDelegate).DetachRef();
 
         public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.DisposeMarshaler(value);
 
@@ -160,14 +162,14 @@ namespace ABI.System.ComponentModel
         {
         }
 
-        protected override IObjectReference CreateMarshaler(global::System.ComponentModel.PropertyChangedEventHandler del) =>
-            del is null ? null : PropertyChangedEventHandler.CreateMarshaler(del);
+        protected override ObjectReferenceValue CreateMarshaler(global::System.ComponentModel.PropertyChangedEventHandler del) =>
+            PropertyChangedEventHandler.CreateMarshaler2(del);
 
-        protected override void DisposeMarshaler(IObjectReference marshaler) =>
-            PropertyChangedEventHandler.DisposeMarshaler(marshaler);
+        protected override void DisposeMarshaler(ObjectReferenceValue marshaler) =>
+            marshaler.Dispose();
 
-        protected override IntPtr GetAbi(IObjectReference marshaler) =>
-            marshaler is null ? IntPtr.Zero : PropertyChangedEventHandler.GetAbi(marshaler);
+        protected override IntPtr GetAbi(ObjectReferenceValue marshaler) =>
+            marshaler.GetAbi();
 
         protected override State CreateEventState() =>
             new EventState(_obj.ThisPtr, _index);

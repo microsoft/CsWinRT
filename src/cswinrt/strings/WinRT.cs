@@ -608,11 +608,11 @@ namespace WinRT
             _handlerTuple = (Subscribe, Unsubscribe);
         }
 
-        protected abstract IObjectReference CreateMarshaler(TDelegate del);
+        protected abstract ObjectReferenceValue CreateMarshaler(TDelegate del);
 
-        protected abstract IntPtr GetAbi(IObjectReference marshaler);
+        protected abstract IntPtr GetAbi(ObjectReferenceValue marshaler);
 
-        protected abstract void DisposeMarshaler(IObjectReference marshaler);
+        protected abstract void DisposeMarshaler(ObjectReferenceValue marshaler);
 
         protected abstract State CreateEventState();
 
@@ -691,14 +691,14 @@ namespace WinRT
         {
         }
 
-        protected override IObjectReference CreateMarshaler(System.EventHandler<T> del) =>
-            del is null ? null : ABI.System.EventHandler<T>.CreateMarshaler(del);
+        protected override ObjectReferenceValue CreateMarshaler(System.EventHandler<T> del) => 
+            ABI.System.EventHandler<T>.CreateMarshaler2(del);
 
-        protected override void DisposeMarshaler(IObjectReference marshaler) =>
-            ABI.System.EventHandler<T>.DisposeMarshaler(marshaler);
+        protected override void DisposeMarshaler(ObjectReferenceValue marshaler) =>
+            marshaler.Dispose();
 
-        protected override IntPtr GetAbi(IObjectReference marshaler) =>
-            marshaler is null ? IntPtr.Zero : ABI.System.EventHandler<T>.GetAbi(marshaler);
+        protected override IntPtr GetAbi(ObjectReferenceValue marshaler) => 
+            marshaler.GetAbi();
 
         protected override State CreateEventState() =>
             new EventState(_obj.ThisPtr, _index);

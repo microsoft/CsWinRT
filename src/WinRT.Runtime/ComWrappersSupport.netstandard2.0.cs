@@ -169,12 +169,24 @@ namespace WinRT
             return objRef;
         }
 
-        internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
+        internal static IntPtr CreateCCWForObjectForABI(object obj, Guid iid)
         {
             var wrapper = ComWrapperCache.GetValue(obj, _ => new ComCallableWrapper(obj));
             Marshal.ThrowExceptionForHR(Marshal.QueryInterface(wrapper.IdentityPtr, ref iid, out var iidCcw));
             GC.KeepAlive(wrapper); // This GC.KeepAlive ensures that a newly created wrapper is alive until objRef is created and has AddRef'd the CCW.
-            return ObjectReference<T>.Attach(ref iidCcw);
+            return iidCcw;
+        }
+
+        internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
+        {
+            IntPtr ccw = CreateCCWForObjectForABI(obj, iid);
+            return ObjectReference<T>.Attach(ref ccw);
+        }
+
+        internal static ObjectReferenceValue CreateCCWForObjectForMarshaling(object obj, Guid iid)
+        {
+            IntPtr ccw = CreateCCWForObjectForABI(obj, iid);
+            return new ObjectReferenceValue(ccw);
         }
 
         public static T FindObject<T>(IntPtr thisPtr)

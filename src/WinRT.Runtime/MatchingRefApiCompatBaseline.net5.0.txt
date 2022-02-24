@@ -1,13 +1,23 @@
 Compat issues with assembly WinRT.Runtime:
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.EventHandler<T>.CreateMarshaler2(System.EventHandler<T>)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.EventHandler<T> ABI.System.EventHandler<T>.CreateRcw(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.Nullable<T>.CreateMarshaler2(System.Object)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public ABI.System.Type ABI.System.Type.GetAbi(ABI.System.Type.Pinnable)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Type.Pinnable' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.Uri.CreateMarshaler2(System.Uri)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IDictionaryMethods<K, V>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IEnumerableMethods<T>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.Collections.Generic.IEnumerator<T>.CreateMarshaler2(System.Collections.Generic.IEnumerator<T>)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IListMethods<T>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IReadOnlyDictionaryMethods<K, V>' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.System.Collections.Generic.IReadOnlyListMethods<T>' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.Collections.Generic.KeyValuePair<K, V>.CreateMarshaler2(System.Collections.Generic.KeyValuePair<K, V>)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.CreateMarshaler2(System.Collections.Specialized.NotifyCollectionChangedEventArgs)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.CreateMarshaler2(System.Collections.Specialized.NotifyCollectionChangedEventHandler)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Collections.Specialized.NotifyCollectionChangedEventHandler ABI.System.Collections.Specialized.NotifyCollectionChangedEventHandler.CreateRcw(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.ComponentModel.DataErrorsChangedEventArgs.CreateMarshaler2(System.ComponentModel.DataErrorsChangedEventArgs)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.ComponentModel.PropertyChangedEventArgs.CreateMarshaler2(System.ComponentModel.PropertyChangedEventArgs)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue ABI.System.ComponentModel.PropertyChangedEventHandler.CreateMarshaler2(System.ComponentModel.PropertyChangedEventHandler)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.ComponentModel.PropertyChangedEventHandler ABI.System.ComponentModel.PropertyChangedEventHandler.CreateRcw(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'ABI.WinRT.Interop.IWeakReferenceSourceMethods' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'System.Numerics.VectorExtensions' does not exist in the reference but it does exist in the implementation.
@@ -16,13 +26,27 @@ MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ComWrappersSupp
 MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterObjectForInterface(System.Object, System.IntPtr, System.Runtime.InteropServices.CreateObjectFlags)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'protected void WinRT.IObjectReference.AddRef(System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Int32 WinRT.IObjectReference.TryAs(System.Guid, System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.MarshalDelegate.CreateMarshaler2(System.Object, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public T WinRT.MarshalDelegate.FromAbi<T>(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.MarshalInspectable<T>.CreateMarshaler2(T, System.Boolean)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.MarshalInspectable<T>.CreateMarshaler2(T, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.IObjectReference WinRT.MarshalInspectable<T>.CreateMarshaler<V>(T, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.MarshalInterfaceHelper<T>.MarshalerArray WinRT.MarshalInspectable<T>.CreateMarshalerArray2(T[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.MarshalInspectable<T>.DisposeMarshaler(WinRT.ObjectReferenceValue)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr WinRT.MarshalInspectable<T>.GetAbi(WinRT.ObjectReferenceValue)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.MarshalInterface<T>.CreateMarshaler2(T, System.Guid)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.MarshalInterfaceHelper<T>.MarshalerArray WinRT.MarshalInterface<T>.CreateMarshalerArray2(T[])' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.MarshalInterface<T>.DisposeMarshaler(WinRT.ObjectReferenceValue)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr WinRT.MarshalInterface<T>.GetAbi(WinRT.ObjectReferenceValue)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.MarshalInterfaceHelper<T>.MarshalerArray WinRT.MarshalInterfaceHelper<T>.CreateMarshalerArray2(T[], System.Func<T, WinRT.ObjectReferenceValue>)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public void WinRT.MarshalInterfaceHelper<T>.DisposeMarshaler(WinRT.ObjectReferenceValue)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.IntPtr WinRT.MarshalInterfaceHelper<T>.GetAbi(WinRT.ObjectReferenceValue)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.MarshalString..ctor(System.String)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.MarshalString.Pinnable WinRT.MarshalString.CreatePinnable(System.String)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.IntPtr WinRT.MarshalString.GetAbi()' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.IntPtr WinRT.MarshalString.GetAbi(WinRT.MarshalString.Pinnable)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.MarshalString.Pinnable' does not exist in the reference but it does exist in the implementation.
+TypesMustExist : Type 'WinRT.ObjectReferenceValue' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 27
+Total Issues: 50
