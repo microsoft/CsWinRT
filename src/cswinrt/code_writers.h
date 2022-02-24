@@ -5916,7 +5916,7 @@ public static Guid PIID = Vftbl.PIID;
         auto fast_abi_class_val = get_fast_abi_class_for_interface(iface);
         if (fast_abi_class_val.has_value())
         {
-            if (!interfaces_equal(fast_abi_class_val.value().default_interface, iface))
+            if (fast_abi_class_val.value().contains_other_interface(iface))
             {
                 return;
             }
@@ -5930,7 +5930,7 @@ public static Guid PIID = Vftbl.PIID;
         is_exclusive_to(iface) ? "internal" : internal_if_embedded(), 
         bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false), 
         [&](writer& w) {
-            if (!fast_abi_class_val.has_value()) {
+            if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
                 write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT);
                 return;
             }

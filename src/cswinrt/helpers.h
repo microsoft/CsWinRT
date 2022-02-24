@@ -1088,7 +1088,6 @@ namespace cswinrt
     std::pair<TypeDef, std::vector<TypeDef>> get_default_and_exclusive_interfaces(TypeDef const& classType)
     {
         std::pair<TypeDef, std::vector<TypeDef>> exclusive_ifaces;
-        std::vector<TypeDef> exclusive_interfaces;
         for (auto&& ifaceImpl : classType.InterfaceImpl())
         {
             auto&& sem = get_type_semantics(ifaceImpl.Interface());

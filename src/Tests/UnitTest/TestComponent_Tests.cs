@@ -1089,6 +1089,11 @@ namespace UnitTest
         public void Fast_Abi_Simple()
         {
             var simple = new test_component_fast.Simple();
+            Assert.NotNull(simple);
+            simple = new test_component_fast.Simple("Hello");
+            Assert.Equal("Hello", simple.Property1);
+            Assert.Equal("StaticMethod1", test_component_fast.Simple.StaticMethod1());
+            Assert.Equal("StaticMethod2", test_component_fast.Simple.StaticMethod2());
             Assert.Equal("Method1", simple.Method1());
             Assert.Equal("Method2", simple.Method2());
             Assert.Equal("Method3", simple.Method3());

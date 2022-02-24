@@ -577,6 +577,18 @@ namespace WinRT
             Context.DisposeContextCallback(_contextCallbackPtr);
         }
 
+        public override ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
+        {
+            AddRef(true);
+            var objRef = new ObjectReferenceWithContext<IUnknownVftbl>(ptr, Context.GetContextCallback(), Context.GetContextToken())
+            {
+                IsAggregated = IsAggregated,
+                PreventReleaseOnDispose = IsAggregated,
+                ReferenceTrackerPtr = ReferenceTrackerPtr
+            };
+            return objRef;
+        }
+
         public override unsafe int TryAs<U>(Guid iid, out ObjectReference<U> objRef)
         {
             objRef = null;
