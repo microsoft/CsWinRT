@@ -5,18 +5,22 @@ name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date
 
 stages:
 - stage: Build
+  jobs:
   - template: CsWinRT-BuildAndTest-Stage.yml
 
 - stage: Benchmarks
   dependsOn: BuildAndTest x64_Release
+  jobs:
   - template: CsWinRT-Benchmarks-Stage.yml
 
 - stage: PublishNuget
   dependsOn: 
   - Build
   - Benchmarks
+  jobs:
   - template: CsWinRT-PublishToNuget-Stage.yml
 
 - stage: PublishMaestro
   dependsOn: PublishNuget
+  jobs:
   - template: CsWinRT-PublishToMaestro-Stage.yml
