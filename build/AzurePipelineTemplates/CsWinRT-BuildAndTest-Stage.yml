@@ -428,4 +428,4 @@ stages:
 
   - job: Benchmarks
     dependsOn: BuildAndTest x64_Release
-    - template CsWinRT-Benchmarks-Job.yml
+    - template: CsWinRT-Benchmarks-Job.yml
