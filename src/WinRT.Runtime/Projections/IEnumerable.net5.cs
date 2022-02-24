@@ -74,6 +74,8 @@ namespace System.Collections.Generic
             this._inner = _inner;
         }
 
+        public static IEnumerableImpl<T> CreateRcw(IInspectable obj) => new(obj.ObjRef);
+
         private volatile IObjectReference __iEnumerableObjRef;
         private IObjectReference Make_IEnumerableObjRef()
         {

@@ -441,27 +441,21 @@ namespace WinRT
         protected static readonly Type HelperType = typeof(T).GetHelperType();
         protected static readonly Type AbiType = typeof(T).GetAbiType();
         protected static readonly Type MarshalerType = typeof(T).GetMarshalerType();
-        internal static readonly Type MarshalerArrayType = typeof(T).GetMarshalerArrayType();
 
         public static readonly Func<T, object> CreateMarshaler = (T value) => CreateMarshalerLazy.Value(value);
         private static readonly Lazy<Func<T, object>> CreateMarshalerLazy = new(BindCreateMarshaler);
         private static Func<T, object> BindCreateMarshaler()
         {
-            var parms = new[] { Expression.Parameter(typeof(T), "arg") };
-            return Expression.Lambda<Func<T, object>>(
-                Expression.Convert(Expression.Call(HelperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static), parms),
-                    typeof(object)), parms).Compile();
+            var createMarshaler = HelperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            return (T arg) => createMarshaler.Invoke(null, new object[] { arg });
         }
 
         public static readonly Func<object, object> GetAbi = (object objRef) => GetAbiLazy.Value(objRef);
         private static readonly Lazy<Func<object, object>> GetAbiLazy = new(BindGetAbi);
         private static Func<object, object> BindGetAbi()
         {
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Func<object, object>>(
-                Expression.Convert(Expression.Call(HelperType.GetMethod("GetAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
-                    new[] { Expression.Convert(parms[0], MarshalerType) }),
-                        typeof(object)), parms).Compile();
+            var getAbi = HelperType.GetMethod("GetAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            return (object arg) => getAbi.Invoke(null, new[] { arg });
         }
 
         public static readonly Action<object, IntPtr> CopyAbi = (object box, IntPtr dest) => CopyAbiLazy.Value(box, dest);
@@ -470,30 +464,23 @@ namespace WinRT
         {
             var copyAbi = HelperType.GetMethod("CopyAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (copyAbi == null) return null;
-            var parms = new[] { Expression.Parameter(typeof(object), "arg"), Expression.Parameter(typeof(IntPtr), "dest") };
-            return Expression.Lambda<Action<object, IntPtr>>(
-                Expression.Call(copyAbi,
-                    new Expression[] { Expression.Convert(parms[0], MarshalerType), parms[1] }), parms).Compile();
+            return (object arg, IntPtr dest) => copyAbi.Invoke(null, new[] { arg, dest });
         }
 
         public static readonly Func<object, T> FromAbi = (object box) => FromAbiLazy.Value(box);
         private static readonly Lazy<Func<object, T>> FromAbiLazy = new(BindFromAbi);
         private static Func<object, T> BindFromAbi()
         {
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Func<object, T>>(
-                Expression.Call(HelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
-                    new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
+            var fromAbi = HelperType.GetMethod("FromAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            return (object arg) => (T)fromAbi.Invoke(null, new[] { arg });
         }
 
         public static readonly Func<T, object> FromManaged = (T value) => FromManagedLazy.Value(value);
         private static readonly Lazy<Func<T, object>> FromManagedLazy = new(BindFromManaged);
         private static Func<T, object> BindFromManaged()
         {
-            var parms = new[] { Expression.Parameter(typeof(T), "arg") };
-            return Expression.Lambda<Func<T, object>>(
-                Expression.Convert(Expression.Call(HelperType.GetMethod("FromManaged", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static), parms),
-                    typeof(object)), parms).Compile();
+            var fromManaged = HelperType.GetMethod("FromManaged", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            return (T arg) => fromManaged.Invoke(null, new object[] { arg });
         }
 
         public static readonly Action<T, IntPtr> CopyManaged = (T value, IntPtr dest) => CopyManagedLazy.Value(value, dest);
@@ -502,19 +489,15 @@ namespace WinRT
         {
             var copyManaged = HelperType.GetMethod("CopyManaged", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (copyManaged == null) return null;
-            var parms = new[] { Expression.Parameter(typeof(T), "arg"), Expression.Parameter(typeof(IntPtr), "dest") };
-            return Expression.Lambda<Action<T, IntPtr>>(
-                Expression.Call(copyManaged, parms), parms).Compile();
+            return (T arg, IntPtr dest) => copyManaged.Invoke(null, new object[] { arg, dest });
         }
 
         public static readonly Action<object> DisposeMarshaler = (object objRef) => DisposeMarshalerLazy.Value(objRef);
         private static readonly Lazy<Action<object>> DisposeMarshalerLazy = new(BindDisposeMarshaler);
         private static Action<object> BindDisposeMarshaler()
         {
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Action<object>>(
-                Expression.Call(HelperType.GetMethod("DisposeMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
-                    new[] { Expression.Convert(parms[0], MarshalerType) }), parms).Compile();
+            var disposeMarshaler = HelperType.GetMethod("DisposeMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            return (object arg) => disposeMarshaler.Invoke(null, new [] { arg });
         }
 
         internal static readonly Action<object> DisposeAbi = (object box) => DisposeAbiLazy.Value(box);
@@ -523,9 +506,7 @@ namespace WinRT
         {
             var disposeAbi = HelperType.GetMethod("DisposeAbi", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (disposeAbi == null) return null;
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Action<object>>(
-                Expression.Call(disposeAbi, new[] { Expression.Convert(parms[0], AbiType) }), parms).Compile();
+            return (object arg) => disposeAbi.Invoke(null, new[] { arg });
         }
 
         internal static readonly Func<T[], object> CreateMarshalerArray = (T[] array) => CreateMarshalerArrayLazy.Value(array);
@@ -534,9 +515,7 @@ namespace WinRT
         {
             var createMarshalerArray = HelperType.GetMethod("CreateMarshalerArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (createMarshalerArray == null) return null;
-            var parms = new[] { Expression.Parameter(typeof(T[]), "arg") };
-            return Expression.Lambda<Func<T[], object>>(
-                Expression.Convert(Expression.Call(createMarshalerArray, parms), typeof(object)), parms).Compile();
+            return (T[] arg) => createMarshalerArray.Invoke(null, new object[] { arg });
         }
 
         internal static readonly Func<object, (int, IntPtr)> GetAbiArray = (object box) => GetAbiArrayLazy.Value(box);
@@ -545,9 +524,7 @@ namespace WinRT
         {
             var getAbiArray = HelperType.GetMethod("GetAbiArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (getAbiArray == null) return null;
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Func<object, (int, IntPtr)>>(
-                Expression.Convert(Expression.Call(getAbiArray, parms), typeof((int, IntPtr))), parms).Compile();
+            return (object arg) => ((int, IntPtr))getAbiArray.Invoke(null, new object[] { arg });
         }
 
         internal static readonly Func<object, T[]> FromAbiArray = (object box) => FromAbiArrayLazy.Value(box);
@@ -556,9 +533,7 @@ namespace WinRT
         {
             var fromAbiArray = HelperType.GetMethod("FromAbiArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (fromAbiArray == null) return null;
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Func<object, T[]>>(
-                Expression.Call(fromAbiArray, parms), parms).Compile();
+            return (object arg) => (T[])fromAbiArray.Invoke(null, new[] { arg });
         }
 
         internal static readonly Func<T[], (int, IntPtr)> FromManagedArray = (T[] array) => FromManagedArrayLazy.Value(array);
@@ -567,9 +542,7 @@ namespace WinRT
         {
             var fromManagedArray = HelperType.GetMethod("FromManagedArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (fromManagedArray == null) return null;
-            var parms = new[] { Expression.Parameter(typeof(T[]), "arg") };
-            return Expression.Lambda<Func<T[], (int, IntPtr)>>(
-                Expression.Convert(Expression.Call(fromManagedArray, parms), typeof((int, IntPtr))), parms).Compile();
+            return (T[] arg) => ((int, IntPtr))fromManagedArray.Invoke(null, new object[] { arg });
         }
 
         internal static readonly Action<object> DisposeMarshalerArray = (object box) => DisposeMarshalerArrayLazy.Value(box);
@@ -578,9 +551,7 @@ namespace WinRT
         {
             var disposeMarshalerArray = HelperType.GetMethod("DisposeMarshalerArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (disposeMarshalerArray == null) return null;
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Action<object>>(
-                Expression.Call(disposeMarshalerArray, Expression.Convert(parms[0], MarshalerArrayType)), parms).Compile();
+            return (object arg) => disposeMarshalerArray.Invoke(null, new object[] { arg });
         }
 
         internal static readonly Action<object> DisposeAbiArray = (object box) => DisposeAbiArrayLazy.Value(box);
@@ -589,9 +560,7 @@ namespace WinRT
         {
             var disposeAbiArray = HelperType.GetMethod("DisposeAbiArray", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (disposeAbiArray == null) return null;
-            var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-            return Expression.Lambda<Action<object>>(
-                Expression.Call(disposeAbiArray, parms), parms).Compile();
+            return (object arg) => disposeAbiArray.Invoke(null, new object[] { arg });
         }
 
         private static unsafe void CopyManagedFallback(T value, IntPtr dest)
@@ -1090,11 +1059,8 @@ namespace WinRT
 
         private static Func<T, IObjectReference> BindToAbi()
         {
-            var parms = new[] { Expression.Parameter(typeof(T), "arg") };
-            return Expression.Lambda<Func<T, IObjectReference>>(
-                Expression.MakeMemberAccess(
-                    Expression.Convert(parms[0], HelperType),
-                    HelperType.GetField("_obj", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)), parms).Compile();
+            var objField = HelperType.GetField("_obj", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            return (T arg) => (IObjectReference) objField.GetValue(arg);
         }
 
         private static Func<T, IObjectReference> BindCreateMarshaler()
@@ -1137,11 +1103,8 @@ namespace WinRT
             Type helperType = Projections.FindCustomHelperTypeMapping(publicType, true);
             if (helperType != null)
             {
-                var parms = new[] { Expression.Parameter(typeof(object), "arg") };
-                var createMarshaler = Expression.Lambda<Func<object, IObjectReference>>(
-                    Expression.Call(helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static),
-                        new[] { Expression.Convert(parms[0], publicType) }), parms).Compile();
-                return createMarshaler(o);
+                var createMarshaler = helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                return (IObjectReference) createMarshaler.Invoke(null, new[] { (object) o });
             }
 
             return ComWrappersSupport.CreateCCWForObject<V>(o, iid);

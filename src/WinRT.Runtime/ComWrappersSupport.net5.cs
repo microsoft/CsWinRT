@@ -221,56 +221,46 @@ namespace WinRT
         
         private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
         {
-            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
-
             if (implementationType.IsGenericType)
             {
                 var genericType = implementationType.GetGenericTypeDefinition();
+
+                Type genericImplType = null;
                 if (genericType == typeof(IList<>))
                 {
-                    return Expression.Lambda<Func<IInspectable, object>>(
-                    Expression.New(typeof(IListImpl<>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
-                        Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
-                    parms).Compile();
+                    genericImplType = typeof(IListImpl<>);
                 }
-                if (genericType == typeof(IDictionary<,>))
+                else if (genericType == typeof(IDictionary<,>))
                 {
-                    return Expression.Lambda<Func<IInspectable, object>>(
-                    Expression.New(typeof(IDictionaryImpl<,>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0], implementationType.GetGenericArguments()[1] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
-                        Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
-                    parms).Compile();
+                    genericImplType = typeof(IDictionaryImpl<,>);
                 }
-                if (genericType == typeof(IReadOnlyDictionary<,>))
+                else if (genericType == typeof(IReadOnlyDictionary<,>))
                 {
-                    return Expression.Lambda<Func<IInspectable, object>>(
-                    Expression.New(typeof(IReadOnlyDictionaryImpl<,>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0], implementationType.GetGenericArguments()[1] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
-                        Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
-                    parms).Compile();
+                    genericImplType = typeof(IReadOnlyDictionaryImpl<,>);
                 }
-                if (genericType == typeof(IReadOnlyList<>))
+                else if (genericType == typeof(IReadOnlyList<>))
                 {
-                    return Expression.Lambda<Func<IInspectable, object>>(
-                    Expression.New(typeof(IReadOnlyListImpl<>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
-                        Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
-                    parms).Compile();
+                    genericImplType = typeof(IReadOnlyListImpl<>);
                 }
-                if (genericType == typeof(IEnumerable<>))
+                else if (genericType == typeof(IEnumerable<>))
                 {
-                    return Expression.Lambda<Func<IInspectable, object>>(
-                    Expression.New(typeof(IEnumerableImpl<>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
-                        Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
-                    parms).Compile();
+                    genericImplType = typeof(IEnumerableImpl<>);
+                }
+
+                if (genericImplType != null)
+                {
+                    var createRcw = genericImplType.MakeGenericType(implementationType.GetGenericArguments()).GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(IInspectable) }, null);
+                    return (Func<IInspectable, object>)createRcw.CreateDelegate(typeof(Func<IInspectable, object>));
                 }
             }
+
             if (implementationType.IsInterface)
             {
                 return obj => obj;
             }
 
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.New(implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
-                    Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
-                parms).Compile();
+            var constructor = implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null);
+            return (IInspectable obj) => constructor.Invoke(new[] { obj.ObjRef });
         }
     }
 
