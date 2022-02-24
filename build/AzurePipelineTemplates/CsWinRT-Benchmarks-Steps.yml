@@ -69,6 +69,10 @@ steps:
 
       benchmark.cmd
 
+# Component Detection
+- task: ComponentGovernanceComponentDetection@0
+  displayName: Component Detection
+
 # Stage Benchmark Results
 - task: CopyFiles@2
   displayName: Stage Benchmark Results
