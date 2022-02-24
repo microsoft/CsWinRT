@@ -132,10 +132,22 @@ namespace ABI.System
             _obj = obj;
         }
 
-        internal static T GetValue(IInspectable inspectable)
+        internal static unsafe T GetValue(IInspectable inspectable)
         {
-            var nullable = new Nullable<T>(inspectable.ObjRef);
-            return nullable.Value;
+            IntPtr nullablePtr = IntPtr.Zero;
+            var __params = new object[] { IntPtr.Zero, null };
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref PIID, out nullablePtr));
+                __params[0] = nullablePtr;
+                Marshal.GetDelegateForFunctionPointer((*(IntPtr**)nullablePtr)[6], Vftbl.get_Value_0_Type).DynamicInvokeAbi(__params);
+                return Marshaler<T>.FromAbi(__params[1]);
+            }
+            finally
+            {
+                Marshaler<T>.DisposeAbi(__params[1]);
+                Marshal.Release(nullablePtr);
+            }
         }
 
         public unsafe T Value

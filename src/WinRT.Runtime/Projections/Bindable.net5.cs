@@ -434,9 +434,7 @@ namespace ABI.System.Collections
                 if(enumGenericType != null)
                 {
                     var getEnumerator = enumGenericType.GetMethod("GetEnumerator");
-                    var obj = Expression.Variable(typeof(IWinRTObject));
-                    _enumerator = Expression.Lambda<Func<IWinRTObject, global::System.Collections.IEnumerator>>(
-                        Expression.Call(Expression.Convert(obj, runtimeType), getEnumerator), obj).Compile();
+                    _enumerator = (IWinRTObject obj) => (global::System.Collections.IEnumerator)getEnumerator.Invoke(obj, null);
                 }
             }
 

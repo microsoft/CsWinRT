@@ -123,10 +123,22 @@ $(CsWinRTIncludeWinRTInterop)
 $(CsWinRTEmbeddedParam)
       </CsWinRTParams>
     </PropertyGroup>
+
+    <!-- 
+      During a design-time build, generation of the CsWinRT projection might fail (e.g. input .winmds might
+      not exist if a full build hasn't completed yet). To avoid causing a design-time build break, which can 
+      put the design-time build results of dependent projects into a bad state, we want the build to continue
+      if cswinrt.exe encounters an error during a design-time build.
+    -->
+    <PropertyGroup>
+      <CsWinRTContinueOnError>false</CsWinRTContinueOnError>
+      <CsWinRTContinueOnError Condition="'$(DesignTimeBuild)' == 'true' OR '$(BuildingProject)' != 'true'">true</CsWinRTContinueOnError>
+    </PropertyGroup>
+
     <MakeDir Directories="$(CsWinRTGeneratedFilesDir)" />
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
-    <Exec Command="$(CsWinRTCommand)" />
+    <Exec Command="$(CsWinRTCommand)" ContinueOnError="$(CsWinRTContinueOnError)" />
 
     <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)WinRT.cs')">
       <UpToDateCheckInput Include="$(CsWinRTGeneratedFilesDir)WinRT.cs" />

@@ -46,6 +46,8 @@ namespace System.Collections.Generic
             this._lookupCache = new Dictionary<K, (IntPtr, V)>();
         }
 
+        public static IDictionaryImpl<K, V> CreateRcw(IInspectable obj) => new(obj.ObjRef);
+
         private volatile IObjectReference __iDictionaryObjRef;
         private IObjectReference Make_IDictionaryObjRef()
         {

@@ -7,6 +7,8 @@
 #include <regex>
 #include <concurrent_unordered_map.h>
 
+#define INSPECTABLE_METHOD_COUNT 6
+
 namespace cswinrt
 {
     using namespace winmd::reader;
@@ -2010,46 +2012,57 @@ ComWrappersSupport.RegisterObjectForInterface(this, ThisPtr);
                     {
                         return;
                     }
+                    if (is_fast_abi_class(classType) && is_exclusive_to(ifaceType) && !is_default_interface(ii)) // fast abi non default interface
+                    {
+                        return;
+                    }
     
                     auto objrefname = bind<write_objref_type_name>(semantics);
+                    bool useInner = replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0;
 
-                    w.write(R"(
+                    if (!useInner)
+                    {
+                        w.write(R"(
 private volatile IObjectReference __%;
 private IObjectReference Make__%()
 {
 )",
                         objrefname,
                         objrefname);
-                   
-                    if (replaceDefaultByInner && has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute") && distance(ifaceType.GenericParam()) == 0)
-                    {
-                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, _inner, null);)", objrefname);
-                    }
-                    else if (distance(ifaceType.GenericParam()) == 0)
-                    {
 
-                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).FindHelperType())), null);)", 
-                            objrefname,
-                            bind<write_type_name>(semantics, typedef_name_type::Projected, false)
-                            ); 
-                    }
-                    else
-                    {
-                        w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(typeof(%).FindHelperType().FindVftblType()).Invoke(((IWinRTObject)this).NativeObject, null), null);)",
-                            objrefname,
-                            bind<write_type_name>(semantics, typedef_name_type::Projected, false));
-                    }
+                        if (!classType.Flags().Sealed() && is_fast_abi_class(classType) && is_exclusive_to(ifaceType) && is_default_interface(ii))
+                        {
+                            w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, GetDefaultInterfaceObjRef(%), null);)", objrefname, get_class_hierarchy_index(classType));
+                        } 
+                        else if (distance(ifaceType.GenericParam()) == 0)
+                        {
 
-                     w.write(R"(
-    return __%;
+                            w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, ((IWinRTObject)this).NativeObject.As<IUnknownVftbl>(GuidGenerator.GetIID(typeof(%).GetHelperType())), null);)",
+                                objrefname,
+                                bind<write_type_name>(semantics, typedef_name_type::Projected, false)
+                            );
+                        }
+                        else
+                        {
+                            w.write(R"(global::System.Threading.Interlocked.CompareExchange(ref __%, (IObjectReference)typeof(IObjectReference).GetMethod("As", Type.EmptyTypes).MakeGenericMethod(typeof(%).GetHelperType().FindVftblType()).Invoke(((IWinRTObject)this).NativeObject, null), null);)",
+                                objrefname,
+                                bind<write_type_name>(semantics, typedef_name_type::Projected, false));
+                        }
+
+                        w.write(R"(
+return __%;
 }
 private IObjectReference % => __% ?? Make__%();
-
 )",
                         objrefname,
                         objrefname,
                         objrefname,
                         objrefname);
+                    }
+                    else
+                    {
+                        w.write(R"(private IObjectReference % => _inner;)", objrefname);
+                    }
                 });
         }
     }
@@ -2886,9 +2899,13 @@ remove => %.ErrorsChanged -= value;
         throw_invalid("Could not find property getter interface");
     }
 
+
+
     void write_class_members(writer& w, TypeDef const& type, bool wrapper_type)
     {
         std::map<std::string, std::tuple<std::string, std::string, std::string, std::string, std::string, bool, bool, bool, std::optional<std::pair<type_semantics, Property>>, std::optional<std::pair<type_semantics, Property>>>> properties;
+        auto fast_abi_class_val = get_fast_abi_class_for_class(type);
+
         for (auto&& ii : type.InterfaceImpl())
         {
             auto semantics = get_type_semantics(ii.Interface());
@@ -2901,7 +2918,11 @@ remove => %.ErrorsChanged -= value;
                 auto is_default_interface = has_attribute(ii, "Windows.Foundation.Metadata", "DefaultAttribute");
                 auto static_iface_target = w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::StaticAbiClass, true));
                 auto target = wrapper_type ? write_type_name_temp(w, interface_type, "((%) _comp)") :
-                        (is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())"));
+                    (is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())"));
+
+                auto is_fast_abi_iface = fast_abi_class_val.has_value() && is_exclusive_to(interface_type) && !settings.netstandard_compat;
+                auto semantics_for_abi_call = is_fast_abi_iface ? get_default_iface_as_type_sem(type) : semantics;
+
                 if (!is_default_interface && !wrapper_type)
                 {
                     if (settings.netstandard_compat || is_manually_generated_iface(interface_type))
@@ -2918,7 +2939,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 
                 bool call_static_method = !(settings.netstandard_compat || wrapper_type || is_manually_generated_iface(interface_type));
 
-                if(auto mapping = get_mapped_type(interface_type.TypeNamespace(), interface_type.TypeName()); mapping && mapping->has_custom_members_output)
+                if (auto mapping = get_mapped_type(interface_type.TypeNamespace(), interface_type.TypeName()); mapping && mapping->has_custom_members_output)
                 {
                     bool is_private = is_implemented_as_private_mapped_interface(w, type, interface_type);
                     auto objref_name = w.write_temp("%", bind<write_objref_type_name>(semantics));
@@ -2930,11 +2951,10 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                 auto is_protected_interface = has_attribute(ii, "Windows.Foundation.Metadata", "ProtectedAttribute");
 
                 auto platform_attribute = write_platform_attribute_temp(w, interface_type);
-                
-                w.write_each<write_class_method>(interface_type.MethodList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, call_static_method ? std::optional(semantics) : std::nullopt);
-                w.write_each<write_class_event>(interface_type.EventList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, call_static_method ? std::optional(semantics) : std::nullopt);
 
-                
+                w.write_each<write_class_method>(interface_type.MethodList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, call_static_method ? std::optional(semantics_for_abi_call) : std::nullopt);
+                w.write_each<write_class_event>(interface_type.EventList(), type, is_overridable_interface, is_protected_interface, target, platform_attribute, call_static_method ? std::optional(semantics_for_abi_call) : std::nullopt);
+
                 // Merge property getters/setters, since such may be defined across interfaces
                 for (auto&& prop : interface_type.PropertyList())
                 {
@@ -2943,7 +2963,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                     auto prop_type = write_prop_type(w, prop);
                     auto is_private = getter && is_implemented_as_private_method(w, type, getter);  // for explicitly implemented interfaces, assume there is always a get.
                     auto property_name = is_private ? w.write_temp("%.%", interface_name, prop.Name()) : std::string(prop.Name());
-                    auto [prop_targets, inserted]  = properties.try_emplace(property_name,
+                    auto [prop_targets, inserted] = properties.try_emplace(property_name,
                         prop_type,
                         getter ? target : "",
                         getter ? platform_attribute : "",
@@ -2952,8 +2972,8 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                         is_overridable_interface,
                         !is_protected_interface && !is_overridable_interface, // By default, an overridable member is protected.
                         is_private,
-                        call_static_method && getter ? std::optional(std::pair(semantics, prop)) : std::nullopt,
-                        call_static_method && setter ? std::optional(std::pair(semantics, prop)) : std::nullopt
+                        call_static_method && getter ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt,
+                        call_static_method && setter ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt
                     );
                     if (!inserted)
                     {
@@ -2964,14 +2984,14 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                             XLANG_ASSERT(getter_target.empty());
                             getter_target = target;
                             getter_platform = platform_attribute;
-                            getter_prop = call_static_method ? std::optional(std::pair(semantics, prop)) : std::nullopt;
+                            getter_prop = call_static_method ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt;
                         }
                         if (setter)
                         {
                             XLANG_ASSERT(setter_target.empty());
                             setter_target = target;
                             setter_platform = platform_attribute;
-                            setter_prop = call_static_method ? std::optional(std::pair(semantics, prop)) : std::nullopt;
+                            setter_prop = call_static_method ? std::optional(std::pair(semantics_for_abi_call, prop)) : std::nullopt;
                         }
                         is_overridable |= is_overridable_interface;
                         is_public |= !is_overridable_interface && !is_protected_interface;
@@ -2986,21 +3006,21 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                             bind<write_type_name>(interface_type, typedef_name_type::CCW, false),
                             prop.Name(),
                             bind([&](writer& w)
-                            {
-                                bool base_getter{};
-                                std::string base_getter_platform_attribute{};
-                                TypeDef getter_property_iface;
-                                if (!getter)
                                 {
-                                    auto property_interface = find_property_interface(w, interface_type, prop.Name());
-                                    base_getter = property_interface.second;
-                                    getter_property_iface = property_interface.first;
-                                    base_getter_platform_attribute = write_platform_attribute_temp(w, property_interface.first);
+                                    bool base_getter{};
+                                    std::string base_getter_platform_attribute{};
+                                    TypeDef getter_property_iface;
+                                    if (!getter)
+                                    {
+                                        auto property_interface = find_property_interface(w, interface_type, prop.Name());
+                                        base_getter = property_interface.second;
+                                        getter_property_iface = property_interface.first;
+                                        base_getter_platform_attribute = write_platform_attribute_temp(w, property_interface.first);
 
-                                }
-                                if (getter || base_getter)
-                                {
-                                    w.write("%get => %; ", base_getter_platform_attribute, bind([&](writer& w) {
+                                    }
+                                    if (getter || base_getter)
+                                    {
+                                        w.write("%get => %; ", base_getter_platform_attribute, bind([&](writer& w) {
                                             if (call_static_method)
                                             {
                                                 auto iface = base_getter ? getter_property_iface : prop.Parent();
@@ -3011,14 +3031,14 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                                             {
                                                 w.write("%%", is_private ? target + "." : "", prop.Name());
                                             }
-                                        }));
-                                }
-                            }),
+                                            }));
+                                    }
+                                }),
                             bind([&](writer& w)
-                            {
-                                if (setter)
                                 {
-                                    w.write("set => %;", bind([&](writer& w) {
+                                    if (setter)
+                                    {
+                                        w.write("set => %;", bind([&](writer& w) {
                                             if (call_static_method)
                                             {
                                                 w.write("%", bind<write_abi_set_property_static_method_call>(prop.Parent(), prop,
@@ -3028,16 +3048,16 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
                                             {
                                                 w.write("%% = value", is_private ? target + "." : "", prop.Name());
                                             }
-                                        }));
-                                }
-                            }));
+                                            }));
+                                    }
+                                }));
                     }
                 }
             };
             for_typedef(w, semantics, [&](auto type)
-            {
-                write_class_interface(type);
-            });
+                {
+                    write_class_interface(type);
+                });
         }
 
         // Write properties with merged accessors
@@ -3058,7 +3078,7 @@ private % AsInternal(InterfaceTag<%> _) => % ?? Make_%();
 db_path.stem().string());
     }
 
-    auto get_invoke_info(writer& w, MethodDef const& method)
+    auto get_invoke_info(writer& w, MethodDef const& method, uint32_t const& abi_methods_start_index = INSPECTABLE_METHOD_COUNT)
     {
         TypeDef const& type = method.Parent();
         if (!settings.netstandard_compat && distance(type.GenericParam()) == 0)
@@ -3066,7 +3086,7 @@ db_path.stem().string());
             return std::pair{
                 w.write_temp("(*(delegate* unmanaged[Stdcall]<%, int>**)ThisPtr)[%]",
                     bind<write_abi_parameter_types>(method_signature { method }),
-                    get_vmethod_index(type, method) + 6 /* number of methods in IInspectable */),
+                    get_vmethod_index(type, method) + abi_methods_start_index /* number of methods in IInspectable + previous methods if fastabi*/),
                 false
             };
         }
@@ -3091,7 +3111,7 @@ db_path.stem().string());
 
     void write_event_source_generic_args(writer& w, cswinrt::type_semantics eventTypeSemantics);
 
-    void write_event_source_ctor(writer& w, Event const& evt, int index)
+    void write_event_source_ctor(writer& w, Event const& evt, int index, uint32_t const& abi_methods_start_index)
     {
         if (for_typedef(w, get_type_semantics(evt.EventType()), [&](TypeDef const& eventType)
             {
@@ -3103,8 +3123,8 @@ db_path.stem().string());
 %,
 %))",
 bind<write_type_params>(eventType),
-get_invoke_info(w, add).first,
-get_invoke_info(w, remove).first,
+get_invoke_info(w, add, abi_methods_start_index).first,
+get_invoke_info(w, remove, abi_methods_start_index).first,
 index);
                     return true;
                 }
@@ -3122,8 +3142,8 @@ new %%(_obj,
 %))",
             bind<write_event_source_type_name>(get_type_semantics(evt.EventType())),
             bind<write_event_source_generic_args>(get_type_semantics(evt.EventType())),
-            get_invoke_info(w, add).first,
-            get_invoke_info(w, remove).first,
+            get_invoke_info(w, add, abi_methods_start_index).first,
+            get_invoke_info(w, remove, abi_methods_start_index).first,
             index);
     }
 
@@ -4262,10 +4282,9 @@ remove
         }
     }
 
-    void write_static_abi_class_members(writer& w, TypeDef const& iface)
+    void write_static_abi_class_members(writer& w, TypeDef const& iface, uint32_t const& abi_methods_start_index)
     {
         bool generic_type = distance(iface.GenericParam()) > 0;
-
         auto init_call_variables = [&](writer& w)
         {
             if (generic_type)
@@ -4282,7 +4301,7 @@ remove
                 continue;
             }
             method_signature signature{ method };
-            auto [invoke_target, is_generic] = get_invoke_info(w, method);
+            auto [invoke_target, is_generic] = get_invoke_info(w, method, abi_methods_start_index);
             w.write(R"(
 public static unsafe %% %(IObjectReference %%%)
 {%%}
@@ -4303,7 +4322,7 @@ public static unsafe %% %(IObjectReference %%%)
 
             if (getter)
             {
-                auto [invoke_target, is_generic] = get_invoke_info(w, getter);
+                auto [invoke_target, is_generic] = get_invoke_info(w, getter, abi_methods_start_index);
                 auto signature = method_signature(getter);
                 auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
                 w.write(R"(public static unsafe % get_%(IObjectReference %)
@@ -4317,7 +4336,7 @@ public static unsafe %% %(IObjectReference %%%)
             }
             if (setter)
             {
-                auto [invoke_target, is_generic] = get_invoke_info(w, setter);
+                auto [invoke_target, is_generic] = get_invoke_info(w, setter, abi_methods_start_index);
                 auto signature = method_signature(setter);
                 auto marshalers = get_abi_marshalers(w, signature, is_generic, prop.Name());
                 marshalers[0].param_name = "value";
@@ -4354,7 +4373,7 @@ return eventSource.EventActions;
                         generic_type ? "_genericObj" : "_obj",
                         evt.Name(),
                         bind(init_call_variables),
-                        bind<write_event_source_ctor>(evt, index)
+                        bind<write_event_source_ctor>(evt, index, abi_methods_start_index)
                     );
             index++;
         }
@@ -5845,7 +5864,7 @@ public static Guid PIID = Vftbl.PIID;
                 int index = 0;
                 for (auto&& evt : type.EventList())
                 {
-                    w.write("_% = %;\n", evt.Name(), bind<write_event_source_ctor>(evt, index++));
+                    w.write("_% = %;\n", evt.Name(), bind<write_event_source_ctor>(evt, index++, INSPECTABLE_METHOD_COUNT));
                 }
             },
             [&](writer& w) {
@@ -5896,6 +5915,15 @@ public static Guid PIID = Vftbl.PIID;
 
     void write_static_abi_classes(writer& w, TypeDef const& iface)
     {
+        auto fast_abi_class_val = get_fast_abi_class_for_interface(iface);
+        if (fast_abi_class_val.has_value())
+        {
+            if (fast_abi_class_val.value().contains_other_interface(iface))
+            {
+                return;
+            }
+        }
+
         w.write(R"(% static class %
 {
 %
@@ -5903,7 +5931,20 @@ public static Guid PIID = Vftbl.PIID;
 )", 
         is_exclusive_to(iface) ? "internal" : internal_if_embedded(), 
         bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false), 
-        bind<write_static_abi_class_members>(iface));
+        [&](writer& w) {
+            if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
+                write_static_abi_class_members(w, iface, INSPECTABLE_METHOD_COUNT);
+                return;
+            }
+            auto abi_methods_start_index = INSPECTABLE_METHOD_COUNT;
+            write_static_abi_class_members(w, fast_abi_class_val.value().default_interface, abi_methods_start_index);
+            abi_methods_start_index += distance(fast_abi_class_val.value().default_interface.MethodList()) + get_class_hierarchy_index(fast_abi_class_val.value().class_type);
+            for (auto&& other_iface : fast_abi_class_val.value().other_interfaces)
+            {
+                write_static_abi_class_members(w, other_iface, abi_methods_start_index);
+                abi_methods_start_index += distance(other_iface.MethodList());
+            }
+        });
     }
 
     bool write_abi_interface(writer& w, TypeDef const& type)
@@ -6377,6 +6418,32 @@ private struct InterfaceTag<I>{};
             type_name,
             bind([&](writer& w)
             {
+                if (is_fast_abi_class(type))
+                {
+                    int hierarchy_index = get_class_hierarchy_index(type);
+                    if (!type.Flags().Sealed() || hierarchy_index > 0)
+                    {
+                        auto default_interface = get_default_interface(type);
+                        auto default_iface_method_count = 0;
+                        for_typedef(w, get_type_semantics(default_interface), [&](TypeDef iface)
+                            {
+                                default_iface_method_count = distance(iface.MethodList());
+                            });
+
+                        w.write(R"(
+protected unsafe % IObjectReference GetDefaultInterfaceObjRef(int hierarchyIndex)
+{
+if (hierarchyIndex < %)
+{
+    return ((IWinRTObject)this).NativeObject.AsKnownPtr((*(delegate* unmanaged[Stdcall]<IntPtr, IntPtr>**)_inner.ThisPtr)[% + hierarchyIndex](_inner.ThisPtr));
+}
+return _inner;
+})",
+                            hierarchy_index == 0 ? "virtual" : "override",
+                            hierarchy_index,
+                            INSPECTABLE_METHOD_COUNT + default_iface_method_count);
+                    }
+                }
                 bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
                 if (!type.Flags().Sealed())
                 {
