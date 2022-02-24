@@ -425,3 +425,7 @@ stages:
           dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin
           _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
           exit /b 0 
+
+  - job: Benchmarks
+    dependsOn: BuildAndTest x64_Release
+    - template 
