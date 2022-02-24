@@ -1116,6 +1116,7 @@ namespace cswinrt
                 return sem;
             }
         }
+        throw_invalid("Class does not have a default interface");
     }
 
     void sort_fast_abi_ifaces(std::vector<TypeDef>& fast_abi_ifaces)

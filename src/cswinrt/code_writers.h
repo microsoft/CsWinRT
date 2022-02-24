@@ -2902,7 +2902,6 @@ remove => %.ErrorsChanged -= value;
     {
         std::map<std::string, std::tuple<std::string, std::string, std::string, std::string, std::string, bool, bool, bool, std::optional<std::pair<type_semantics, Property>>, std::optional<std::pair<type_semantics, Property>>>> properties;
         auto fast_abi_class_val = get_fast_abi_class_for_class(type);
-        auto default_type_semantics = get_default_iface_as_type_sem(type);
 
         for (auto&& ii : type.InterfaceImpl())
         {
@@ -2919,7 +2918,7 @@ remove => %.ErrorsChanged -= value;
                     (is_default_interface ? "_default" : write_type_name_temp(w, interface_type, "AsInternal(new InterfaceTag<%>())"));
 
                 auto is_fast_abi_iface = fast_abi_class_val.has_value() && is_exclusive_to(interface_type) && !settings.netstandard_compat;
-                auto semantics_for_abi_call = is_fast_abi_iface ? default_type_semantics : semantics;
+                auto semantics_for_abi_call = is_fast_abi_iface ? get_default_iface_as_type_sem(type) : semantics;
 
                 if (!is_default_interface && !wrapper_type)
                 {
