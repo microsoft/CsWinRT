@@ -1085,6 +1085,52 @@ namespace UnitTest
             Box_type(DateTimeOffset.Now, Tests.Box17);
         }
 
+        [Fact]
+        public void Fast_Abi_Simple()
+        {
+            var simple = new test_component_fast.Simple();
+            Assert.NotNull(simple);
+            simple = new test_component_fast.Simple("Hello");
+            Assert.Equal("Hello", simple.Property1);
+            Assert.Equal("StaticMethod1", test_component_fast.Simple.StaticMethod1());
+            Assert.Equal("StaticMethod2", test_component_fast.Simple.StaticMethod2());
+            Assert.Equal("Method1", simple.Method1());
+            Assert.Equal("Method2", simple.Method2());
+            Assert.Equal("Method3", simple.Method3());
+            Assert.Equal("Method4", simple.Method4());
+            Assert.Equal("Method5", simple.Method5());
+            Assert.Equal("Method6", simple.Method6());
+            Assert.Equal("Method7", simple.Method7());
+            Assert.Equal("Method8", simple.Method8());
+            Assert.Equal("Method9", simple.Method9());
+            simple.Property1 = "Property1";
+            simple.Property3 = "Property3";
+            Assert.Equal("Property1", simple.Property1);
+            Assert.Equal("Property2", simple.Property2);
+            Assert.Equal("Property3", simple.Property3);
+            var ev = "";
+            simple.Event0 += () =>
+            {
+                ev = "Hello";
+            };
+            simple.InvokeEvent0();
+            Assert.Equal("Hello", ev);
+        }
+
+        [Fact]
+        public void Fast_Abi_Composition()
+        {
+            var compositor = new test_component_fast.Composition.Compositor();
+            var sv = compositor.CreateSpriteVisual();
+            sv.Offset = 10;
+            sv.StartAnimationGroup();
+            Assert.Equal("", sv.Serialize(100));
+            Assert.Equal(10, sv.Offset);
+            Assert.Equal(10, sv.Pad);
+            sv.ObjectProperty = new List<int> { 1, 2, 3 };
+            Assert.Equal(3, ((List<int>)sv.ObjectProperty).Count);
+        }
+
         // Nota Bene: this test case must always remain the final one
         [Fact]
         public void Z_Check_Coverage()
@@ -1092,5 +1138,6 @@ namespace UnitTest
             Tests.Simple();
             //Assert.Equal((double)Tests.Percentage, (double)100);
         }
+
     }
 }

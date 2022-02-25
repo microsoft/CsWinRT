@@ -27,6 +27,8 @@ namespace Benchmarks
         ChatMessage message;
         ManagedObjectWithInterfaces managedObject;
         ManagedComposableObjectWithInterfaces composableObject;
+        ClassWithFastAbi fastAbiInstance;
+        ClassWithFastAbiDerived fastAbiDerivedInstance;
 
         [GlobalSetup]
         public void Setup()
@@ -35,6 +37,8 @@ namespace Benchmarks
             message = new ChatMessage();
             managedObject = new ManagedObjectWithInterfaces();
             composableObject = new ManagedComposableObjectWithInterfaces();
+            fastAbiInstance = new ClassWithFastAbi();
+            fastAbiDerivedInstance = new ClassWithFastAbiDerived();
         }
 
         [Benchmark]
@@ -47,6 +51,42 @@ namespace Benchmarks
         public int QueryNonDefaultInterface()
         {
             return instance.IntProperty;
+        }
+
+        [Benchmark]
+        public int QueryFastAbiDefaultInterface()
+        {
+            return fastAbiInstance.DefaultIntProperty;
+        }
+
+        [Benchmark]
+        public int QueryFastAbiNonDefaultInterface()
+        {
+            return fastAbiInstance.NonDefaultIntProperty;
+        }
+
+        [Benchmark]
+        public int QueryFastAbiDerivedDefaultInterface()
+        {
+            return fastAbiDerivedInstance.DerivedDefaultIntProperty;
+        }
+
+        [Benchmark]
+        public int QueryFastAbiComposedNonDefaultInterface()
+        {
+            return fastAbiDerivedInstance.DerivedNonDefaultIntProperty;
+        }
+
+        [Benchmark]
+        public int QueryFastAbiComposedBaseDefaultInterface()
+        {
+            return fastAbiDerivedInstance.DefaultIntProperty;
+        }
+
+        [Benchmark]
+        public int QueryFastAbiComposedBaseNonDefaultInterface()
+        {
+            return fastAbiDerivedInstance.NonDefaultIntProperty;
         }
 
         [Benchmark]
@@ -99,7 +139,7 @@ namespace Benchmarks
             return (ClassWithMarshalingRoutines)instance.NewObject();
         }
 
-        // The following 2 benchmarks try to benchmark the time taken for the first call
+        // The following 4 benchmarks try to benchmark the time taken for the first call
         // rather than the mean time over several calls.  It has the overhead of the object
         // construction, but it can be used to track regressions to performance.
         [Benchmark]
@@ -114,6 +154,48 @@ namespace Benchmarks
         {
             ClassWithMultipleInterfaces instance2 = new ClassWithMultipleInterfaces();
             return instance2.IntProperty;
+        }
+
+        [Benchmark]
+        public int ConstructAndQueryFastAbiDefaultInterfaceFirstCall()
+        {
+            var instance2 = new ClassWithFastAbi();
+            return instance2.DefaultIntProperty;
+        }
+
+        [Benchmark]
+        public int ConstructAndQueryFastAbiNonDefaultInterfaceFirstCall()
+        {
+            var instance2 = new ClassWithFastAbi();
+            return instance2.NonDefaultIntProperty;
+        }
+
+        [Benchmark]
+        public int ConstructAndQueryFastAbiDerivedDefaultInterfaceFirstCall()
+        {
+            var instance2 = new ClassWithFastAbiDerived();
+            return instance2.DerivedDefaultIntProperty;
+        }
+
+        [Benchmark]
+        public int ConstructAndQueryFastAbiDerivedNonDefaultInterfaceFirstCall()
+        {
+            var instance2 = new ClassWithFastAbiDerived();
+            return instance2.DerivedNonDefaultIntProperty;
+        }
+
+        [Benchmark]
+        public int ConstructAndQueryFastAbiDerivedBaseDefaultInterfaceFirstCall()
+        {
+            var instance2 = new ClassWithFastAbiDerived();
+            return instance2.DefaultIntProperty;
+        }
+
+        [Benchmark]
+        public int ConstructAndQueryFastAbiDerivedBaseNonDefaultInterfaceFirstCall()
+        {
+            var instance2 = new ClassWithFastAbiDerived();
+            return instance2.NonDefaultIntProperty;
         }
 
         [Benchmark]
