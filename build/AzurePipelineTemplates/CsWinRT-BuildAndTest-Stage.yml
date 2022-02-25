@@ -425,3 +425,12 @@ stages:
           dir _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin
           _build\$(BuildPlatform)\$(BuildConfiguration)\AuthoringConsumptionTest\bin\AuthoringConsumptionTest.exe --gtest_output=xml:AUTHORINGTEST-$(Build.BuildNumber).xml 
           exit /b 0 
+
+  - job: Benchmarks
+    displayName: Run Benchmarks
+    dependsOn: []
+    pool:
+      vmImage: windows-2019
+    timeoutInMinutes: 120
+    steps:
+    - template: CsWinRT-Benchmarks-Steps.yml
