@@ -187,18 +187,6 @@ namespace WinRT
             }
         }
 
-        internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
-        {
-            IntPtr ccw = CreateCCWForObjectForABI(obj, iid);
-            return ObjectReference<T>.Attach(ref ccw);
-        }
-
-        internal static ObjectReferenceValue CreateCCWForObjectForMarshaling(object obj, Guid iid)
-        {
-            IntPtr ccw = CreateCCWForObjectForABI(obj, iid);
-            return new ObjectReferenceValue(ccw);
-        }
-
         public static unsafe T FindObject<T>(IntPtr ptr)
             where T : class => ComInterfaceDispatch.GetInstance<T>((ComInterfaceDispatch*)ptr);
 
