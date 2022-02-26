@@ -68,6 +68,9 @@ namespace ABI.System
             return value is null ? null : ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(value, PIID);
         }
 
+        public static ObjectReferenceValue CreateMarshaler2(object value) => 
+            ComWrappersSupport.CreateCCWForObjectForMarshaling(value, PIID);
+
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
 
         public static object FromAbi(IntPtr ptr)
@@ -83,8 +86,7 @@ namespace ABI.System
 
         public static unsafe void CopyManaged(object o, IntPtr dest)
         {
-            using var objRef = CreateMarshaler(o);
-            *(IntPtr*)dest.ToPointer() = objRef?.GetRef() ?? IntPtr.Zero;
+            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).Detach();
         }
 
         public static IntPtr FromManaged(object value)
@@ -93,7 +95,7 @@ namespace ABI.System
             {
                 return IntPtr.Zero;
             }
-            return CreateMarshaler(value).GetRef();
+            return CreateMarshaler2(value).Detach();
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }

@@ -44,6 +44,9 @@ namespace ABI.System.Collections.Generic
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IReadOnlyDictionary<K, V> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, GuidGenerator.GetIID(typeof(IReadOnlyDictionary<K, V>)));
 
+        public static ObjectReferenceValue CreateMarshaler2(global::System.Collections.Generic.IReadOnlyDictionary<K, V> obj) => 
+            ComWrappersSupport.CreateCCWForObjectForMarshaling(obj, GuidGenerator.GetIID(typeof(IReadOnlyDictionary<K, V>)));
+
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
 
@@ -51,7 +54,7 @@ namespace ABI.System.Collections.Generic
             thisPtr == IntPtr.Zero ? null : new IReadOnlyDictionary<K, V>(ObjRefFromAbi(thisPtr));
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IReadOnlyDictionary<K, V> value) =>
-            (value is null) ? IntPtr.Zero : CreateMarshaler(value).GetRef();
+            (value is null) ? IntPtr.Zero : CreateMarshaler2(value).Detach();
 
         public static void DisposeMarshaler(IObjectReference objRef) => objRef?.Dispose();
 

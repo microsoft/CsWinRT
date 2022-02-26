@@ -796,7 +796,18 @@ namespace WinRT
                 runtimeClassName = new Lazy<string>(() => TypeNameSupport.GetNameForType(type, TypeNameGenerationFlags.GenerateBoxedName | TypeNameGenerationFlags.NoCustomTypeName));
                 IIDs = iids;
             }
+        }
 
+        internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
+        {
+            IntPtr ccw = CreateCCWForObjectForABI(obj, iid);
+            return ObjectReference<T>.Attach(ref ccw);
+        }
+
+        internal static ObjectReferenceValue CreateCCWForObjectForMarshaling(object obj, Guid iid)
+        {
+            IntPtr ccw = CreateCCWForObjectForABI(obj, iid);
+            return new ObjectReferenceValue(ccw);
         }
     }
 }
