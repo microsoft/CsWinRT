@@ -121,7 +121,7 @@ namespace ABI.System.ComponentModel
         }
 
         public static IntPtr FromManaged(global::System.ComponentModel.PropertyChangedEventHandler managedDelegate) => 
-            CreateMarshaler2(managedDelegate).DetachRef();
+            CreateMarshaler2(managedDelegate).Detach();
 
         public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::System.ComponentModel.PropertyChangedEventHandler>.DisposeMarshaler(value);
 
@@ -164,12 +164,6 @@ namespace ABI.System.ComponentModel
 
         protected override ObjectReferenceValue CreateMarshaler(global::System.ComponentModel.PropertyChangedEventHandler del) =>
             PropertyChangedEventHandler.CreateMarshaler2(del);
-
-        protected override void DisposeMarshaler(ObjectReferenceValue marshaler) =>
-            marshaler.Dispose();
-
-        protected override IntPtr GetAbi(ObjectReferenceValue marshaler) =>
-            marshaler.GetAbi();
 
         protected override State CreateEventState() =>
             new EventState(_obj.ThisPtr, _index);

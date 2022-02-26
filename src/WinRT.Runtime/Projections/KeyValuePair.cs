@@ -60,11 +60,11 @@ namespace ABI.System.Collections.Generic
         }
 
         public static IntPtr FromManaged(global::System.Collections.Generic.KeyValuePair<K, V> obj) => 
-            CreateMarshaler2(obj).DetachRef();
+            CreateMarshaler2(obj).Detach();
 
         internal static unsafe void CopyManaged(global::System.Collections.Generic.KeyValuePair<K, V> o, IntPtr dest)
         {
-            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).DetachRef();
+            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).Detach();
         }
 
         internal static MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.MarshalerArray CreateMarshalerArray(global::System.Collections.Generic.KeyValuePair<K, V>[] array) =>

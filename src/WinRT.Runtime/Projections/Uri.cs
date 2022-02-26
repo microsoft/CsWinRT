@@ -149,7 +149,7 @@ namespace ABI.System
 
         public static unsafe void CopyManaged(global::System.Uri o, IntPtr dest)
         {
-            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).DetachRef();
+            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).Detach();
         }
 
         public static IntPtr FromManaged(global::System.Uri value)
@@ -158,7 +158,7 @@ namespace ABI.System
             {
                 return IntPtr.Zero;
             }
-            return CreateMarshaler2(value).DetachRef();
+            return CreateMarshaler2(value).Detach();
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }

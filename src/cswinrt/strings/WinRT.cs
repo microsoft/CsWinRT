@@ -610,10 +610,6 @@ namespace WinRT
 
         protected abstract ObjectReferenceValue CreateMarshaler(TDelegate del);
 
-        protected abstract IntPtr GetAbi(ObjectReferenceValue marshaler);
-
-        protected abstract void DisposeMarshaler(ObjectReferenceValue marshaler);
-
         protected abstract State CreateEventState();
 
         public void Subscribe(TDelegate del)
@@ -640,7 +636,7 @@ namespace WinRT
                     var marshaler = CreateMarshaler(eventInvoke);
                     try
                     {
-                        var nativeDelegate = GetAbi(marshaler);
+                        var nativeDelegate = marshaler.GetAbi();
                         state.InitalizeReferenceTracking(nativeDelegate);
                         ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out state.token));
                     }
@@ -648,7 +644,7 @@ namespace WinRT
                     {
                         // Dispose our managed reference to the delegate's CCW.
                         // Either the native event holds a reference now or the _addHandler call failed.
-                        DisposeMarshaler(marshaler);
+                        marshaler.Dispose();
                     }
                 }
             }
@@ -693,12 +689,6 @@ namespace WinRT
 
         protected override ObjectReferenceValue CreateMarshaler(System.EventHandler<T> del) => 
             ABI.System.EventHandler<T>.CreateMarshaler2(del);
-
-        protected override void DisposeMarshaler(ObjectReferenceValue marshaler) =>
-            marshaler.Dispose();
-
-        protected override IntPtr GetAbi(ObjectReferenceValue marshaler) => 
-            marshaler.GetAbi();
 
         protected override State CreateEventState() =>
             new EventState(_obj.ThisPtr, _index);

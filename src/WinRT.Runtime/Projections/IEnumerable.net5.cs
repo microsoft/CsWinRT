@@ -152,7 +152,7 @@ namespace ABI.System.Collections.Generic
             objRef?.ThisPtr ?? IntPtr.Zero;
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IEnumerable<T> value) =>
-            (value is null) ? IntPtr.Zero : CreateMarshaler2(value).DetachRef();
+            (value is null) ? IntPtr.Zero : CreateMarshaler2(value).Detach();
 
         public static void DisposeMarshaler(IObjectReference objRef) => objRef?.Dispose();
 
@@ -275,7 +275,7 @@ namespace ABI.System.Collections.Generic
             new IEnumerator<T>(ObjRefFromAbi(thisPtr));
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IEnumerator<T> value) =>
-            (value is null) ? IntPtr.Zero : CreateMarshaler2(value).DetachRef();
+            (value is null) ? IntPtr.Zero : CreateMarshaler2(value).Detach();
 
         public static void DisposeMarshaler(IObjectReference objRef) => objRef?.Dispose();
 

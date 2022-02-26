@@ -808,7 +808,10 @@ namespace WinRT
             internal ObjectReferenceValue[] _objectReferenceValues;
         }
 
-        public static unsafe MarshalerArray CreateMarshalerArray(T[] array, Func<T, IObjectReference> createMarshaler)
+        private static unsafe MarshalerArray CreateMarshalerArray(
+            T[] array, 
+            Func<T, IObjectReference> createMarshaler,
+            Func<T, ObjectReferenceValue> createMarshaler2)
         {
             MarshalerArray m = new MarshalerArray();
             if (array is null)
@@ -821,12 +824,24 @@ namespace WinRT
                 int length = array.Length;
                 var byte_length = length * IntPtr.Size;
                 m._array = Marshal.AllocCoTaskMem(byte_length);
-                m._marshalers = new IObjectReference[length];
                 var element = (IntPtr*)m._array.ToPointer();
-                for (int i = 0; i < length; i++)
+                if (createMarshaler2 != null)
                 {
-                    m._marshalers[i] = createMarshaler(array[i]);
-                    element[i] = GetAbi(m._marshalers[i]);
+                    m._objectReferenceValues = new ObjectReferenceValue[length];
+                    for (int i = 0; i < length; i++)
+                    {
+                        m._objectReferenceValues[i] = createMarshaler2(array[i]);
+                        element[i] = GetAbi(m._objectReferenceValues[i]);
+                    }
+                }
+                else
+                {
+                    m._marshalers = new IObjectReference[length];
+                    for (int i = 0; i < length; i++)
+                    {
+                        m._marshalers[i] = createMarshaler(array[i]);
+                        element[i] = GetAbi(m._marshalers[i]);
+                    }
                 }
                 success = true;
                 return m;
@@ -840,37 +855,11 @@ namespace WinRT
             }
         }
 
-        public static unsafe MarshalerArray CreateMarshalerArray2(T[] array, Func<T, ObjectReferenceValue> createMarshaler)
-        {
-            MarshalerArray m = new MarshalerArray();
-            if (array is null)
-            {
-                return m;
-            }
-            bool success = false;
-            try
-            {
-                int length = array.Length;
-                var byte_length = length * IntPtr.Size;
-                m._array = Marshal.AllocCoTaskMem(byte_length);
-                m._objectReferenceValues = new ObjectReferenceValue[length];
-                var element = (IntPtr*)m._array.ToPointer();
-                for (int i = 0; i < length; i++)
-                {
-                    m._objectReferenceValues[i] = createMarshaler(array[i]);
-                    element[i] = GetAbi(m._objectReferenceValues[i]);
-                }
-                success = true;
-                return m;
-            }
-            finally
-            {
-                if (!success)
-                {
-                    m.Dispose();
-                }
-            }
-        }
+        public static unsafe MarshalerArray CreateMarshalerArray(T[] array, Func<T, IObjectReference> createMarshaler) => 
+            CreateMarshalerArray(array, createMarshaler, null);
+
+        public static unsafe MarshalerArray CreateMarshalerArray2(T[] array, Func<T, ObjectReferenceValue> createMarshaler) => 
+            CreateMarshalerArray(array, null, createMarshaler);
 
         public static (int length, IntPtr data) GetAbiArray(object box)
         {
@@ -1109,12 +1098,12 @@ namespace WinRT
 
         public static IntPtr FromManaged(T value)
         {
-            return CreateMarshaler2(value).DetachRef();
+            return CreateMarshaler2(value).Detach();
         }
 
         public static unsafe void CopyManaged(T value, IntPtr dest)
         {
-            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(value).DetachRef();
+            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(value).Detach();
         }
 
         public static unsafe MarshalInterfaceHelper<T>.MarshalerArray CreateMarshalerArray(T[] array) => MarshalInterfaceHelper<T>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
@@ -1257,12 +1246,12 @@ namespace WinRT
         public static void DisposeAbi(IntPtr ptr) => MarshalInterfaceHelper<T>.DisposeAbi(ptr);
         public static IntPtr FromManaged(T o, bool unwrapObject = true)
         {
-            return CreateMarshaler2(o, unwrapObject).DetachRef();
+            return CreateMarshaler2(o, unwrapObject).Detach();
         }
 
         public static unsafe void CopyManaged(T o, IntPtr dest, bool unwrapObject = true)
         {
-            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o, unwrapObject).DetachRef();
+            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o, unwrapObject).Detach();
         }
 
         public static unsafe MarshalInterfaceHelper<T>.MarshalerArray CreateMarshalerArray(T[] array) => MarshalInterfaceHelper<T>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));

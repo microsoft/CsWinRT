@@ -696,7 +696,7 @@ namespace ABI.System.Collections.Generic
             thisPtr == IntPtr.Zero ? null : (global::System.Collections.Generic.IDictionary<K, V>)(object)new IInspectable(ObjRefFromAbi(thisPtr));
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IDictionary<K, V> value) =>
-            (value is null) ? IntPtr.Zero : CreateMarshaler2(value).DetachRef();
+            (value is null) ? IntPtr.Zero : CreateMarshaler2(value).Detach();
 
         public static void DisposeMarshaler(IObjectReference objRef) => objRef?.Dispose();
 

@@ -658,7 +658,7 @@ namespace WinRT
 
         public readonly IntPtr GetAbi() => ptr;
 
-        public unsafe readonly IntPtr DetachRef()
+        public unsafe readonly IntPtr Detach()
         {
             // If the ptr is not owned by this instance, do an AddRef.
             if (preventReleaseOnDispose && ptr != IntPtr.Zero)

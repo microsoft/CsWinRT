@@ -144,7 +144,7 @@ namespace ABI.System.ComponentModel
 
         public static unsafe void CopyManaged(global::System.ComponentModel.DataErrorsChangedEventArgs o, IntPtr dest)
         {
-            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).DetachRef();
+            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).Detach();
         }
 
         public static IntPtr FromManaged(global::System.ComponentModel.DataErrorsChangedEventArgs value)
@@ -153,7 +153,7 @@ namespace ABI.System.ComponentModel
             {
                 return IntPtr.Zero;
             }
-            return CreateMarshaler2(value).DetachRef();
+            return CreateMarshaler2(value).Detach();
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }

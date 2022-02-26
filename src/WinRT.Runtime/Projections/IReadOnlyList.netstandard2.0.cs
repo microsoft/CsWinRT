@@ -51,7 +51,7 @@ namespace ABI.System.Collections.Generic
             thisPtr == IntPtr.Zero ? null : new IReadOnlyList<T>(ObjRefFromAbi(thisPtr));
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IReadOnlyList<T> value) =>
-            (value is null) ? IntPtr.Zero : CreateMarshaler2(value).DetachRef();
+            (value is null) ? IntPtr.Zero : CreateMarshaler2(value).Detach();
 
         public static void DisposeMarshaler(IObjectReference objRef) => objRef?.Dispose();
 

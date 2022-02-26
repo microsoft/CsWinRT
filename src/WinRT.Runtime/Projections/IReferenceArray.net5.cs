@@ -106,7 +106,7 @@ namespace ABI.Windows.Foundation
 
         public static unsafe void CopyManaged(object o, IntPtr dest)
         {
-            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).DetachRef();
+            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).Detach();
         }
 
         public static IntPtr FromManaged(object value)
@@ -115,7 +115,7 @@ namespace ABI.Windows.Foundation
             {
                 return IntPtr.Zero;
             }
-            return CreateMarshaler2(value).DetachRef();
+            return CreateMarshaler2(value).Detach();
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }

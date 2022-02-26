@@ -6533,7 +6533,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
 %
 public static IntPtr GetAbi(IObjectReference value) => value is null ? IntPtr.Zero : MarshalInterfaceHelper<object>.GetAbi(value);
 public static % FromAbi(IntPtr thisPtr) => %.FromAbi(thisPtr);
-public static IntPtr FromManaged(% obj) => obj is null ? IntPtr.Zero : CreateMarshaler2(obj).DetachRef();
+public static IntPtr FromManaged(% obj) => obj is null ? IntPtr.Zero : CreateMarshaler2(obj).Detach();
 public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArray(%[] array) => MarshalInterfaceHelper<%>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
 public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArray2(%[] array) => MarshalInterfaceHelper<%>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
 public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<%>.GetAbiArray(box);
@@ -6710,7 +6710,7 @@ IntPtr ThisPtr = _nativeDelegate.ThisPtr;
 }
 }
 
-public static IntPtr FromManaged(% managedDelegate) => CreateMarshaler2(managedDelegate).DetachRef();
+public static IntPtr FromManaged(% managedDelegate) => CreateMarshaler2(managedDelegate).Detach();
 
 public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<%>.DisposeMarshaler(value);
 
@@ -7512,12 +7512,6 @@ delegate* unmanaged[Stdcall]<System.IntPtr, WinRT.EventRegistrationToken, int> r
 
 protected override ObjectReferenceValue CreateMarshaler(% del) =>
 %.CreateMarshaler2(del);
-
-protected override void DisposeMarshaler(ObjectReferenceValue marshaler) =>
-marshaler.Dispose();
-
-protected override System.IntPtr GetAbi(ObjectReferenceValue marshaler) =>
-marshaler.GetAbi();
 
 protected override State CreateEventState() =>
 new EventState(_obj.ThisPtr, _index);
