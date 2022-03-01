@@ -109,7 +109,7 @@ Follow these steps to add an application manifest file to your project:
 
 1. In Visual Studio, right click on the project node under **Solution Explorer** and click **Add -> New Item**. Search for the **Text File** template and name your file `YourNativeApp.exe.manifest`.
 
-2. Add your activatable class registrations to the manifest file. Below is an example with a C#/WinRT component `MyAuthoredComponent` and activatable classes `WinRTComponent.Class*`. Note that `WinRT.Host.dll` must be specified as the file name.
+2. Add your activatable class registrations to the manifest file. Below is an example with a C#/WinRT component `MyAuthoredComponent` and activatable classes `WinRTComponent.Class*`. Note that `WinRT.Host.dll` must be specified as the file name, without a relative path.
 
       ```xml
       <?xml version="1.0" encoding="utf-8"?>
@@ -142,10 +142,6 @@ Consuming C#/WinRT components from MSIX-packaged applications is supported with 
 
 - Consuming a C#/WinRT component from packaged C# apps is supported.
 - Consuming a C#/WinRT component from a C++/WinRT packaged app (e.g., a Windows App SDK C++ application) is supported with a few modifications listed below. See the [Simple C#/WinRT component sample](../src/Samples/AuthoringDemo) (specifically the WinUI3CppApp) for an example.
-  - If consuming via project reference, adding a project reference to the C#/WinRT component project in Visual Studio may result in the error: *"A reference to 'MyAuthoredComponent' cannot be added because it is incompatible with this project"*. To workaround this, unload the `.vcxproj` file and add the `ProjectReference` manually, for example:
-      ```xml
-      <ProjectReference Include="..\MyAuthoredComponent\MyAuthoredComponent.csproj" />
-      ```
   - The app consumer needs to add the `ActivatableClass` registrations in the `Package.appxmanifest` file, like below. Note that packaged app consumers do not create a new application manifest (`.exe.manifest`) file.
       ```xml
       <Extensions>
@@ -171,12 +167,20 @@ Components are consumed by projects made from the various other Windows App SDK 
 
 When using a project reference, projects made from the following templates are not supported currently: C++ app with WAP, C++ Unpackaged, and C# Unpackaged. 
 
+Using a package reference to the authored component will work unless authoring a user control, which is not supported yet.
+
 When authoring a custom user control, consuming the component via NuGet package is not supported currently.
 
 If a C++ app is consuming a component that provides a custom user control, an additional entry needs to be made in the `pch.h` header file and in the manifest. 
 
 For the `pch.h` file, add `#include <winrt/MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.h>`.
 For the manifest, add an additional `ActivatableClass` entry for `MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.XamlMetaDataProvider`.
+
+When using a template for a WAP-style project, the manifest entries should be added to the `Package.appxmanifest`. 
+Otherwise, follow the steps above for adding a `Foo.exe.manifest` -- if you get an error in the linker (LNK) 
+typically this is due to multiple manifests being found, and `app.manifest` can be removed to resolve the issue.
+
+There's no inherent need to create a `runtimeconfig.json`; typically the one automatically created suffices.
 
 ## Known Issues and Troubleshooting
 
