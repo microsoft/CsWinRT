@@ -33,6 +33,16 @@ namespace WinRT
 
         public static string GetSignature(Type type)
         {
+            if (type == typeof(object))
+            {
+                return "cinterface(IInspectable)";
+            }
+
+            if (type == typeof(string))
+            {
+                return "string";
+            }
+
             var helperType = type.FindHelperType();
             if (helperType != null)
             {
@@ -41,18 +51,6 @@ namespace WinRT
                 {
                     return (string)sigMethod.Invoke(null, null);
                 }
-            }
-
-            type = type.IsInterface ? (type.GetAuthoringMetadataType() ?? type) : type;
-            if (type == typeof(object))
-            {
-                return "cinterface(IInspectable)";
-            }
-
-            if (type.IsGenericType)
-            {
-                var args = type.GetGenericArguments().Select(t => GetSignature(t));
-                return "pinterface({" + GetGUID(type) + "};" + String.Join(";", args) + ")";
             }
 
             if (type.IsValueType)
@@ -89,19 +87,22 @@ namespace WinRT
                 }
             }
 
-            if (type == typeof(string))
-            {
-                return "string";
-            }
+            type = type.IsInterface ? (type.GetAuthoringMetadataType() ?? type) : type;
 
-            if (Projections.TryGetDefaultInterfaceTypeForRuntimeClassType(type, out Type iface))
+            if (type.IsGenericType)
             {
-                return "rc(" + type.FullName + ";" + GetSignature(iface) + ")";
+                var args = type.GetGenericArguments().Select(t => GetSignature(t));
+                return "pinterface({" + GetGUID(type) + "};" + String.Join(";", args) + ")";
             }
 
             if (type.IsDelegate())
             {
                 return "delegate({" + GetGUID(type) + "})";
+            }
+
+            if (type.IsClass && Projections.TryGetDefaultInterfaceTypeForRuntimeClassType(type, out Type iface))
+            {
+                return "rc(" + type.FullName + ";" + GetSignature(iface) + ")";
             }
 
             return "{" + type.GUID.ToString() + "}";

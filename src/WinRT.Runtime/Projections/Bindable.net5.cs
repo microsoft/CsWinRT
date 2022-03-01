@@ -366,12 +366,12 @@ namespace ABI.Microsoft.UI.Xaml.Interop
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::Microsoft.UI.Xaml.Interop.IBindableIterator).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
-            IObjectReference __value = default;
+            ObjectReferenceValue __value = default;
             uint __index = default;
             byte __retval = default;
             try
             {
-                __value = MarshalInspectable<object>.CreateMarshaler(value);
+                __value = MarshalInspectable<object>.CreateMarshaler2(value);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_2(ThisPtr, MarshalInspectable<object>.GetAbi(__value), &__index, &__retval));
                 index = __index;
                 return __retval != 0;
@@ -434,9 +434,7 @@ namespace ABI.System.Collections
                 if(enumGenericType != null)
                 {
                     var getEnumerator = enumGenericType.GetMethod("GetEnumerator");
-                    var obj = Expression.Variable(typeof(IWinRTObject));
-                    _enumerator = Expression.Lambda<Func<IWinRTObject, global::System.Collections.IEnumerator>>(
-                        Expression.Call(Expression.Convert(obj, runtimeType), getEnumerator), obj).Compile();
+                    _enumerator = (IWinRTObject obj) => (global::System.Collections.IEnumerator)getEnumerator.Invoke(obj, null);
                 }
             }
 
@@ -1311,12 +1309,12 @@ namespace ABI.System.Collections
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
-            IObjectReference __value = default;
+            ObjectReferenceValue __value = default;
             uint __index = default;
             byte __retval = default;
             try
             {
-                __value = MarshalInspectable<object>.CreateMarshaler(value);
+                __value = MarshalInspectable<object>.CreateMarshaler2(value);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.IndexOf_3(ThisPtr, MarshalInspectable<object>.GetAbi(__value), &__index, &__retval));
                 index = __index;
                 return __retval != 0;
@@ -1331,10 +1329,10 @@ namespace ABI.System.Collections
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
-            IObjectReference __value = default;
+            ObjectReferenceValue __value = default;
             try
             {
-                __value = MarshalInspectable<object>.CreateMarshaler(value);
+                __value = MarshalInspectable<object>.CreateMarshaler2(value);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.SetAt_4(ThisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
             }
             finally
@@ -1347,10 +1345,10 @@ namespace ABI.System.Collections
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
-            IObjectReference __value = default;
+            ObjectReferenceValue __value = default;
             try
             {
-                __value = MarshalInspectable<object>.CreateMarshaler(value);
+                __value = MarshalInspectable<object>.CreateMarshaler2(value);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.InsertAt_5(ThisPtr, index, MarshalInspectable<object>.GetAbi(__value)));
             }
             finally
@@ -1370,10 +1368,10 @@ namespace ABI.System.Collections
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Collections.IList).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
-            IObjectReference __value = default;
+            ObjectReferenceValue __value = default;
             try
             {
-                __value = MarshalInspectable<object>.CreateMarshaler(value);
+                __value = MarshalInspectable<object>.CreateMarshaler2(value);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Append_7(ThisPtr, MarshalInspectable<object>.GetAbi(__value)));
             }
             finally

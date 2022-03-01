@@ -74,6 +74,8 @@ namespace System.Collections.Generic
             this._inner = _inner;
         }
 
+        public static IEnumerableImpl<T> CreateRcw(IInspectable obj) => new(obj.ObjRef);
+
         private volatile IObjectReference __iEnumerableObjRef;
         private IObjectReference Make_IEnumerableObjRef()
         {
@@ -143,11 +145,14 @@ namespace ABI.System.Collections.Generic
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IEnumerable<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, PIID);
 
+        public static ObjectReferenceValue CreateMarshaler2(global::System.Collections.Generic.IEnumerable<T> obj) => 
+            ComWrappersSupport.CreateCCWForObjectForMarshaling(obj, PIID);
+
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IEnumerable<T> value) =>
-            (value is null) ? IntPtr.Zero : CreateMarshaler(value).GetRef();
+            (value is null) ? IntPtr.Zero : CreateMarshaler2(value).Detach();
 
         public static void DisposeMarshaler(IObjectReference objRef) => objRef?.Dispose();
 
@@ -257,6 +262,9 @@ namespace ABI.System.Collections.Generic
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IEnumerator<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, PIID);
 
+        public static ObjectReferenceValue CreateMarshaler2(global::System.Collections.Generic.IEnumerator<T> obj) => 
+            ComWrappersSupport.CreateCCWForObjectForMarshaling(obj, PIID);
+
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
 
@@ -267,7 +275,7 @@ namespace ABI.System.Collections.Generic
             new IEnumerator<T>(ObjRefFromAbi(thisPtr));
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IEnumerator<T> value) =>
-            (value is null) ? IntPtr.Zero : CreateMarshaler(value).GetRef();
+            (value is null) ? IntPtr.Zero : CreateMarshaler2(value).Detach();
 
         public static void DisposeMarshaler(IObjectReference objRef) => objRef?.Dispose();
 

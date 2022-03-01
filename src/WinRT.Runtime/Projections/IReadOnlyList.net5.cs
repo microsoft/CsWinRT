@@ -52,6 +52,8 @@ namespace System.Collections.Generic
             this._inner = _inner;
         }
 
+        public static IReadOnlyListImpl<T> CreateRcw(IInspectable obj) => new(obj.ObjRef);
+
         IObjectReference IWinRTObject.NativeObject => _inner;
 
         bool IWinRTObject.HasUnwrappableNativeObject => true;
@@ -210,11 +212,14 @@ namespace ABI.System.Collections.Generic
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IReadOnlyList<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, PIID);
 
+        public static ObjectReferenceValue CreateMarshaler2(global::System.Collections.Generic.IReadOnlyList<T> obj) => 
+            ComWrappersSupport.CreateCCWForObjectForMarshaling(obj, PIID);
+
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IReadOnlyList<T> value) =>
-            (value is null) ? IntPtr.Zero : CreateMarshaler(value).GetRef();
+            (value is null) ? IntPtr.Zero : CreateMarshaler2(value).Detach();
 
         public static void DisposeMarshaler(IObjectReference objRef) => objRef?.Dispose();
 

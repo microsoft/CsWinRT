@@ -8,8 +8,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Tests\TestComponentCSharp\TestComponentCSharp.vcxproj" />
     <ProjectReference Include="..\..\TestWinRT\TestComponent\TestComponent.vcxproj" />
-	  <ProjectReference Include="..\..\TestWinRT\test_component_base\test_component_base.vcxproj" />
-	  <ProjectReference Include="..\..\TestWinRT\test_component_derived\test_component_derived.vcxproj" />
+	<ProjectReference Include="..\..\TestWinRT\test_component_base\test_component_base.vcxproj" />
+	<ProjectReference Include="..\..\TestWinRT\test_component_derived\test_component_derived.vcxproj" />
+    <ProjectReference Include="..\..\TestWinRT\test_component_fast\test_component_fast.vcxproj" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
@@ -19,8 +20,8 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <CsWinRTIncludes>TestComponent;TestComponentCSharp;test_component_base;test_component_derived;</CsWinRTIncludes>
     <CsWinRTExcludes>TestComponentCSharp.AnotherAssembly;</CsWinRTExcludes>
+    <CsWinRTIncludes>TestComponent;TestComponentCSharp;test_component_base;test_component_derived;test_component_fast;</CsWinRTIncludes>
     <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
     <PkgMicrosoft_WinUI Condition="'$(PkgMicrosoft_WinUI)'==''">$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.winui', '$(MicrosoftWinUIVersion)'))</PkgMicrosoft_WinUI>
   </PropertyGroup>

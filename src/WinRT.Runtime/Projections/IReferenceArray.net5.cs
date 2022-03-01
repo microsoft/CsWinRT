@@ -70,6 +70,9 @@ namespace ABI.Windows.Foundation
             return value is null ? null : ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(value, PIID);
         }
 
+        public static ObjectReferenceValue CreateMarshaler2(object value) => 
+            ComWrappersSupport.CreateCCWForObjectForMarshaling(value, PIID);
+
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
 
         public static object FromAbi(IntPtr ptr)
@@ -83,10 +86,27 @@ namespace ABI.Windows.Foundation
             return wrapper.Value;
         }
 
+        internal static unsafe object GetValue(IInspectable inspectable)
+        {
+            IntPtr referenceArrayPtr = IntPtr.Zero;
+            int __retval_length = default;
+            IntPtr __retval_data = default;
+            try
+            {
+                ExceptionHelpers.ThrowExceptionForHR(Marshal.QueryInterface(inspectable.ThisPtr, ref PIID, out referenceArrayPtr));
+                ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, int*, IntPtr*, int>**)referenceArrayPtr)[6](referenceArrayPtr, &__retval_length, &__retval_data));
+                return Marshaler<T>.FromAbiArray((__retval_length, __retval_data));
+            }
+            finally
+            {
+                Marshaler<T>.DisposeAbiArray((__retval_length, __retval_data));
+                Marshal.Release(referenceArrayPtr);
+            }
+        }
+
         public static unsafe void CopyManaged(object o, IntPtr dest)
         {
-            using var objRef = CreateMarshaler(o);
-            *(IntPtr*)dest.ToPointer() = objRef?.GetRef() ?? IntPtr.Zero;
+            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).Detach();
         }
 
         public static IntPtr FromManaged(object value)
@@ -95,7 +115,7 @@ namespace ABI.Windows.Foundation
             {
                 return IntPtr.Zero;
             }
-            return CreateMarshaler(value).GetRef();
+            return CreateMarshaler2(value).Detach();
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }
