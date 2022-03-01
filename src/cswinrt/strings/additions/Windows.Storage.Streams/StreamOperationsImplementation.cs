@@ -152,7 +152,10 @@ namespace Windows.Storage.Streams
                 return dataBuffer;
             };  // readOperation
 
-            return AsyncInfo.Run<IBuffer, uint>(readOperation);
+            // Construct and run the async operation.  Any registered handlers for completion / progress
+            // on this async operation don't run on the captured context if any to avoid deadlock issues when
+            // CreateStreamOverRandomAccessStream is used to create a wrapper around this stream on a STA thread.
+            return AsyncInfo.RunWithoutCapturedContext<IBuffer, uint>(readOperation);
         }  // ReadAsync_AbstractStream
 
         #endregion ReadAsync implementations
@@ -216,8 +219,10 @@ namespace Windows.Storage.Streams
                 };
             }  // if-else
 
-            // Construct and run the async operation:
-            return AsyncInfo.Run<uint, uint>(writeOperation);
+            // Construct and run the async operation.  Any registered handlers for completion / progress
+            // on this async operation don't run on the captured context if any to avoid deadlock issues when
+            // CreateStreamOverRandomAccessStream is used to create a wrapper around this stream on a STA thread.
+            return AsyncInfo.RunWithoutCapturedContext<uint, uint>(writeOperation);
         }  // WriteAsync_AbstractStream
 
         #endregion WriteAsync implementations
@@ -239,8 +244,10 @@ namespace Windows.Storage.Streams
                 return true;
             };
 
-            // Construct and run the async operation:
-            return AsyncInfo.Run<bool>(flushOperation);
+            // Construct and run the async operation.  Any registered handlers for completion / progress
+            // on this async operation don't run on the captured context if any to avoid deadlock issues when
+            // CreateStreamOverRandomAccessStream is used to create a wrapper around this stream on a STA thread.
+            return AsyncInfo.RunWithoutCapturedContext<bool>(flushOperation);
         }
         #endregion FlushAsync implementations
 

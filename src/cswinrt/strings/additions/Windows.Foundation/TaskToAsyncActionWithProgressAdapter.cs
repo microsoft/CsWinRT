@@ -21,9 +21,9 @@ namespace System.Threading.Tasks
                                                      TProgress>,
                               IAsyncActionWithProgress<TProgress>
     {
-        internal TaskToAsyncActionWithProgressAdapter(Delegate taskGenerator)
+        internal TaskToAsyncActionWithProgressAdapter(Delegate taskGenerator, bool executeHandlersOnCapturedContext = true)
 
-             : base(taskGenerator)
+             : base(taskGenerator, executeHandlersOnCapturedContext)
         {
         }
 

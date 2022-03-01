@@ -68,6 +68,14 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             return new TaskToAsyncActionWithProgressAdapter<TProgress>(taskProvider);
         }
 
+        internal static IAsyncActionWithProgress<TProgress> RunWithoutCapturedContext<TProgress>(Func<CancellationToken, IProgress<TProgress>, Task> taskProvider)
+        {
+            if (taskProvider == null)
+                throw new ArgumentNullException(nameof(taskProvider));
+
+            return new TaskToAsyncActionWithProgressAdapter<TProgress>(taskProvider, false);
+        }
+
 
         /// <summary>
         /// Creates and starts  an <see cref="IAsyncOperation{TResult}"/> instance from a function
@@ -90,6 +98,16 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             return new TaskToAsyncOperationAdapter<TResult>(taskProvider);
         }
 
+        internal static IAsyncOperation<TResult> RunWithoutCapturedContext<TResult>(Func<CancellationToken, Task<TResult>> taskProvider)
+        {
+            // This is only internal to reduce the number of public overloads.
+            // Code execution flows through this method when the method above is called. We can always make this public.
+
+            if (taskProvider == null)
+                throw new ArgumentNullException(nameof(taskProvider));
+
+            return new TaskToAsyncOperationAdapter<TResult>(taskProvider, false);
+        }
 
         /// <summary>
         /// Creates and starts  an <see cref="IAsyncOperationWithProgress{TResult, TProgress}"/> instance
@@ -114,6 +132,15 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 throw new ArgumentNullException(nameof(taskProvider));
 
             return new TaskToAsyncOperationWithProgressAdapter<TResult, TProgress>(taskProvider);
+        }
+
+        internal static IAsyncOperationWithProgress<TResult, TProgress> RunWithoutCapturedContext<TResult, TProgress>(
+                                                                    Func<CancellationToken, IProgress<TProgress>, Task<TResult>> taskProvider)
+        {
+            if (taskProvider == null)
+                throw new ArgumentNullException(nameof(taskProvider));
+
+            return new TaskToAsyncOperationWithProgressAdapter<TResult, TProgress>(taskProvider, false);
         }
 
         #endregion Factory methods for creating "normal" IAsyncInfo instances backed by a Task created by a pastProvider delegate

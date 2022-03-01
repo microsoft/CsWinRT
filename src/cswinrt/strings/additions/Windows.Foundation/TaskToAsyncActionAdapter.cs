@@ -18,9 +18,9 @@ namespace System.Threading.Tasks
                         : TaskToAsyncInfoAdapter<AsyncActionCompletedHandler, VoidReferenceTypeParameter, VoidValueTypeParameter, VoidValueTypeParameter>,
                           IAsyncAction
     {
-        internal TaskToAsyncActionAdapter(Delegate taskGenerator)
+        internal TaskToAsyncActionAdapter(Delegate taskGenerator, bool executeHandlersOnCapturedContext = true)
 
-             : base(taskGenerator)
+             : base(taskGenerator, executeHandlersOnCapturedContext)
         {
         }
 

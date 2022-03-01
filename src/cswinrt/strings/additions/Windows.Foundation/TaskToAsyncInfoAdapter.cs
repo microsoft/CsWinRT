@@ -129,7 +129,7 @@ namespace System.Threading.Tasks
         /// <summary>Creates an IAsyncInfo from the specified delegate. The delegate will be called to construct a task that will
         /// represent the future encapsulated by this IAsyncInfo.</summary>
         /// <param name="taskProvider">The task generator to use for creating the task.</param>
-        internal TaskToAsyncInfoAdapter(Delegate taskProvider)
+        internal TaskToAsyncInfoAdapter(Delegate taskProvider, bool executeHandlersOnCapturedContext = true)
         {
             Debug.Assert(taskProvider != null);
             Debug.Assert((null != (taskProvider as Func<Task>))
@@ -139,7 +139,10 @@ namespace System.Threading.Tasks
 
             // The IAsyncInfo is reasonably expected to be created/started by the same code that wires up the Completed and Progress handlers.
             // Record the current SynchronizationContext so that we can invoke completion and progress callbacks in it later.
-            _startingContext = GetStartingContext();
+            if (executeHandlersOnCapturedContext)
+            {
+                _startingContext = GetStartingContext();
+            }
 
             // Construct task from the specified provider:
             Task task = InvokeTaskProvider(taskProvider);
@@ -171,7 +174,9 @@ namespace System.Threading.Tasks
         /// <param name="underlyingProgressDispatcher">A progress listener/pugblisher that receives progress notifications
         /// form <code>underlyingTask</code>.</param>
         internal TaskToAsyncInfoAdapter(Task underlyingTask,
-                                        CancellationTokenSource underlyingCancelTokenSource, Progress<TProgressInfo> underlyingProgressDispatcher)
+                                        CancellationTokenSource underlyingCancelTokenSource, 
+                                        Progress<TProgressInfo> underlyingProgressDispatcher, 
+                                        bool executeHandlersOnCapturedContext = true)
         {
             if (underlyingTask == null)
                 throw new ArgumentNullException(nameof(underlyingTask));
@@ -182,7 +187,10 @@ namespace System.Threading.Tasks
 
             // The IAsyncInfo is reasonably expected to be created/started by the same code that wires up the Completed and Progress handlers.
             // Record the current SynchronizationContext so that we can invoke completion and progress callbacks in it later.
-            _startingContext = GetStartingContext();
+            if (executeHandlersOnCapturedContext)
+            {
+                _startingContext = GetStartingContext();
+            }
 
             // We do not need to invoke any delegates to get the task, it is provided for us:
             _dataContainer = underlyingTask;
