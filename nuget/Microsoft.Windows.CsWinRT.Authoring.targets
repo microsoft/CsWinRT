@@ -108,7 +108,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
       <!-- Make sure all managed binaries/projections are shared across project references made by native apps -->
       <AllItemsFullPathWithTargetPath Include="@(ReferenceCopyLocalPaths)" 
-        Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime' AND '%(ReferenceCopyLocalPaths.Filename)' != 'WinRT.Runtime' AND '$(CsWinRTAuthoring_SkipDependencies)' != 'true'">
+        Condition="'%(ReferenceCopyLocalPaths.AssetType)' == 'runtime' AND '%(ReferenceCopyLocalPaths.Filename)' != 'WinRT.Runtime'">
         <TargetPath>%(ReferenceCopyLocalPaths.DestinationSubDirectory)%(ReferenceCopyLocalPaths.Filename)%(ReferenceCopyLocalPaths.Extension)</TargetPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </AllItemsFullPathWithTargetPath>

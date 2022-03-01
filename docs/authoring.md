@@ -90,6 +90,7 @@ This section describes the steps needed to consume a C#/WinRT component for the 
 - [C# desktop applications](#consuming-from-c-applications) (.NET 5 or later)
 - [Packaged applications](#Consuming-from-packaged-applications)
 - [Out of process components](#Consuming-an-out-of-process-component)
+- [Windows App SDK Support](#Using-Windows-App-SDK)
 
 ### Consuming from C++/WinRT (Unpackaged)
 
@@ -162,11 +163,24 @@ Consuming C#/WinRT components from MSIX-packaged applications is supported with 
 
 C#/WinRT supports authoring out-of-process components that can be consumed by Windows Runtime compatible languages. Currently, consuming an out-of-process component is supported for managed C# apps with the use of a packaging project. This scenario requires creating a `WinRT.Host.runtimeconfig.json` file, as demonstrated in the [background task component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/BgTaskComponent). Native C++ consumption of out-of-process C# components is not fully supported yet.
 
+### Using Windows App SDK
+
+Authoring WinUI types with C#/WinRT is in development and is supported with some exceptions.
+Component authors can implement WinUI types using the Windows App SDK class library template. 
+Components are consumed by projects made from the various other Windows App SDK templates.
+
+When using a project reference, projects made from the following templates are not supported currently: C++ app with WAP, C++ Unpackaged, and C# Unpackaged. 
+
+When authoring a custom user control, consuming the component via NuGet package is not supported currently.
+
+If a C++ app is consuming a component that provides a custom user control, an additional entry needs to be made in the `pch.h` header file and in the manifest. 
+
+For the `pch.h` file, add `#include <winrt/MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.h>`.
+For the manifest, add an additional `ActivatableClass` entry for `MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.XamlMetaDataProvider`.
+
 ## Known Issues and Troubleshooting
 
 - Project reference support (from C++ and C# apps) for C#/WinRT authored components is available with .NET 6. Referencing a C#/WinRT authored component by project reference in a C# app is **not supported with .NET 5**.
-
-- Hosting WinUI3 components is not fully supported yet.
 
 - Authoring issues are [tagged under the *authoring* label](https://github.com/microsoft/CsWinRT/issues?q=is%3Aopen+is%3Aissue+label%3Aauthoring). Feel free to [file an issue](https://github.com/microsoft/CsWinRT/issues/new/choose) tagged with the *authoring* label if you encounter any new issues!
 
