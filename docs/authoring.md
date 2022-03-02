@@ -159,15 +159,16 @@ Consuming C#/WinRT components from MSIX-packaged applications is supported with 
 
 C#/WinRT supports authoring out-of-process components that can be consumed by Windows Runtime compatible languages. Currently, consuming an out-of-process component is supported for managed C# apps with the use of a packaging project. This scenario requires creating a `WinRT.Host.runtimeconfig.json` file, as demonstrated in the [background task component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/BgTaskComponent). Native C++ consumption of out-of-process C# components is not fully supported yet.
 
-### Using Windows App SDK
+### Windows App SDK Applications
 
 Authoring WinUI types with C#/WinRT is in development and is supported with some exceptions.
 Component authors can implement WinUI types using the Windows App SDK class library template. 
-Components are consumed by projects made from the various other Windows App SDK templates.
+Components can be consumed by application projects that reference the Windows App SDK.
 
-When using a project reference, projects made from the following templates are not supported currently: C++ app with WAP, C++ Unpackaged, and C# Unpackaged. 
-
-Using a package reference to the authored component will work unless authoring a user control, which is not supported yet.
+When referencing a C# authored component via project reference, the following application types are not supported currently:
+- C++/WinRT app with Windows Application Packaging Project (WAP)
+- C++ Unpackaged application
+- C# Unpackaged application
 
 When authoring a custom user control, consuming the component via NuGet package is not supported currently.
 
@@ -176,17 +177,20 @@ If a C++ app is consuming a component that provides a custom user control, an ad
 For the `pch.h` file, add `#include <winrt/MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.h>`.
 For the manifest, add an additional `ActivatableClass` entry for `MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.XamlMetaDataProvider`.
 
-When using a template for a WAP-style project, the manifest entries should be added to the `Package.appxmanifest`. 
-Otherwise, follow the steps above for adding a `Foo.exe.manifest` -- if you get an error in the linker (LNK) 
-typically this is due to multiple manifests being found, and `app.manifest` can be removed to resolve the issue.
+When consuming the component from a packaged application, the manifest entries should be addded to the `Package.appxmanifest` file.
+You will need to right-click on the file and select **Open With** -> **XML (Text Editor)** in order to edit the file.
 
-There's no inherent need to create a `runtimeconfig.json`; typically the one automatically created suffices.
+Otherwise, follow the steps above for adding a `Foo.exe.manifest`. 
 
 ## Known Issues and Troubleshooting
 
 - Project reference support (from C++ and C# apps) for C#/WinRT authored components is available with .NET 6. Referencing a C#/WinRT authored component by project reference in a C# app is **not supported with .NET 5**.
 
 - Authoring issues are [tagged under the *authoring* label](https://github.com/microsoft/CsWinRT/issues?q=is%3Aopen+is%3Aissue+label%3Aauthoring). Feel free to [file an issue](https://github.com/microsoft/CsWinRT/issues/new/choose) tagged with the *authoring* label if you encounter any new issues!
+
+- When adding an `exe.manifest`, if you get an error in the linker (LNK) typically this is due to multiple manifests being found, 
+  and `app.manifest` can be removed to resolve the issue.
+
 
 ## Resources
 
