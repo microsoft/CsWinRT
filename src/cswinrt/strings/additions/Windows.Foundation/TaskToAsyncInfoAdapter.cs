@@ -475,7 +475,7 @@ namespace System.Threading.Tasks
             // If the user does not catch it, it will be treated just as any other exception coming from the async execution code:
             // this AsyncInfo will be faulted.
 
-            if (_startingContext == null)
+            if (_startingContext == null || _startingContext == GetStartingContext())
             {
                 // The starting context is null, invoke directly:
                 OnProgress(handler, value);
@@ -651,7 +651,7 @@ namespace System.Threading.Tasks
             // to ensure a diagnostic message and a fail-fast-like teardown.
             try
             {
-                if (_startingContext == null)
+                if (_startingContext == null || _startingContext == GetStartingContext())
                 {
                     // The starting context is null, invoking directly:
                     OnCompletedInvoker(terminationStatus);
