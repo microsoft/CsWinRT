@@ -19,11 +19,11 @@ It is recommended to use .NET 6 and Visual Studio 2022 for C#/WinRT authoring sc
       </PropertyGroup>
       ```
 
-      To access Windows Runtime types, you need to set a specific Windows SDK version in the TFM. See [.NET 5 and later: Use the TFM option](https://docs.microsoft.com/en-us/windows/apps/desktop/modernize/desktop-to-uwp-enhance#net-5-and-later-use-the-target-framework-moniker-option) for more details on the supported versions.
+      To access Windows Runtime types, you need to set a specific Windows SDK version in the TFM. See [.NET 5 and later: Use the TFM option](https://docs.microsoft.com/windows/apps/desktop/modernize/desktop-to-uwp-enhance#net-5-and-later-use-the-target-framework-moniker-option) for more details on the supported versions.
 
 2. Install the [Microsoft.Windows.CsWinRT](https://www.nuget.org/packages/Microsoft.Windows.CsWinRT) NuGet package in your project.
 
-3. Add the following C#/WinRT-specific properties to the project file. The `CsWinRTComponent` property specifies that your project is a Windows Runtime component, so that a WinMD file is generated for the component. 
+3. Add the following C#/WinRT-specific property to the project file. The `CsWinRTComponent` property specifies that your project is a Windows Runtime component, so that a WinMD file is generated when you build the project.
 
       ```xml
       <PropertyGroup>
@@ -35,7 +35,7 @@ It is recommended to use .NET 6 and Visual Studio 2022 for C#/WinRT authoring sc
 
 4. Implement your runtime classes in the class files in your library project, following the necessary [WinRT guidelines and type restrictions](https://docs.microsoft.com/windows/uwp/winrt-components/creating-windows-runtime-components-in-csharp-and-visual-basic#declaring-types-in-windows-runtime-components).
 
-### Packaging your WinRT component
+## Packaging your WinRT component
 
 You may want to distribute and share your component as a NuGet package. To generate a NuGet package for the component, you can choose one of the options below. Your component can then be used in consuming apps by a `PackageReference`.
 
@@ -86,118 +86,137 @@ To make your component available as a NuGet package, it is important to include 
 
 This section describes the steps needed to consume a C#/WinRT component for the following scenarios:
 
-- [C++/WinRT desktop applications (Unpackaged)](#consuming-from-cwinrt-unpackaged)
-- [C# desktop applications](#consuming-from-c-applications) (.NET 5 or later)
-- [Packaged applications](#Consuming-from-packaged-applications)
-- [Out of process components](#Consuming-an-out-of-process-component)
+- [C# desktop applications](#consuming-from-c-applications) 
+- [C++ desktop applications](#consuming-from-c-applications)
 - [Windows App SDK applications](#Windows-App-SDK-applications)
+- [Out of process components](#Consuming-an-out-of-process-component)
 
-### Consuming from C++/WinRT (Unpackaged)
+### Consuming from C# applications
 
-Consuming a C#/WinRT component from a C++/WinRT desktop application is supported by both package reference or project reference:
+Consuming a C#/WinRT component from C#/.NET apps is supported by both package reference or project reference. This scenario is equivalent to consuming any ordinary C# class library and does not involve WinRT activation in most cases. This scenario is fully supported on .NET 6 and later.
+
+**Note:** With C#/WinRT 1.3.5 or later, project references to a C#/WinRT component require .NET 6.
+
+### Consuming from C++ applications
+
+Consuming a C#/WinRT component from a C++/WinRT desktop application is supported by either NuGet package reference or project reference.
 
 - **Package Reference**: In Visual Studio, right-click on the project in Solution Explorer and click **Manage NuGet packages** to search for and install the component package.
 
 - **Project Reference**: In Visual Studio, right-click on the project in Solution Explorer and click **Add** -> **Reference**. Select the C#/WinRT component project under the **Projects** node. 
   - Note: If your authored component is built with C#/WinRT version 1.3.3 or earlier, you also need a file reference to the `*.winmd` generated in the authored component's output directory. To add a file reference, right-click on the project in Solution Explorer and click **Add** -> **Reference**. Select the file from the **Browse** node. 
 
-**Application Manifest file**
+#### Manifest Class Registration
 
-For consumption of C#/WinRT components from unpackaged applications, you need to create an [application manifest file](https://docs.microsoft.com/windows/win32/sbscs/application-manifests) named `YourNativeApp.exe.manifest`. The application manifest file must specify activatable Windows Runtime classes in the DLL that the application will be making use of. At runtime, this directs activation of the component’s classes. See the [sample manifest file](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo/CppConsoleApp/CppConsoleApp.exe.manifest) for an example.
+Consuming a C#/WinRT component from a C++/WinRT desktop application requires manifest class registrations. The specified activatable Windows Runtime class registrations will direct activation of the component’s classes at runtime. There are two different ways to do this depending on if the application is a packaged (with MSIX) or unpackaged C++ app:
 
-Follow these steps to add an application manifest file to your project:
+  - For **packaged** C++ apps: The app consumer needs to add `ActivatableClass` registration entries to the `Package.appxmanifest` package manifest file like below:
 
-1. In Visual Studio, right click on the project node under **Solution Explorer** and click **Add -> New Item**. Search for the **Text File** template and name your file `YourNativeApp.exe.manifest`.
-
-2. Add your activatable class registrations to the manifest file. Below is an example with a C#/WinRT component `MyAuthoredComponent` and activatable classes `WinRTComponent.Class*`. Note that `WinRT.Host.dll` must be specified as the file name, without a relative path.
-
-      ```xml
-      <?xml version="1.0" encoding="utf-8"?>
-      <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
-      <assemblyIdentity version="1.0.0.0" name="CppConsoleApp"/>
-      <file name="WinRT.Host.dll">
-      <activatableClass
-            name="MyAuthoredComponent.Class1"
-            threadingModel="both"
-            xmlns="urn:schemas-microsoft-com:winrt.v1" />
-      <activatableClass
-            name="MyAuthoredComponent.Class2"
-            threadingModel="both"
-            xmlns="urn:schemas-microsoft-com:winrt.v1" />
-      </file>
-      </assembly>
-      ```
-
-3. Modify the project to include the manifest file in the output when deploying the project. Right-click on the file in **Solution Explorer**, select **Properties**, and set the **Content** property to **True** using the drop-down arrow on the right.
-
-### Consuming from C# applications
-
-Consuming a C#/WinRT component from C#/.NET apps is supported by both package reference or project reference. This scenario is equivalent to consuming any ordinary C# class library and does not involve WinRT activation in most cases.
-
-**Note:** With C#/WinRT 1.3.5 or later, project references to a C#/WinRT component require .NET 6.
-
-### Consuming from packaged applications
-
-Consuming C#/WinRT components from MSIX-packaged applications is supported with a few modifications.
-
-- Consuming a C#/WinRT component from packaged C# apps is supported.
-- Consuming a C#/WinRT component from a C++/WinRT packaged app (e.g., a Windows App SDK C++ application) is supported with a few modifications listed below. See the [Simple C#/WinRT component sample](../src/Samples/AuthoringDemo) (specifically the WinUI3CppApp) for an example.
-  - The app consumer needs to add the `ActivatableClass` registrations in the `Package.appxmanifest` file, like below. Note that packaged app consumers do not create a new application manifest (`.exe.manifest`) file.
-      ```xml
+      ``` xml
       <Extensions>
-        <Extension Category="windows.activatableClass.inProcessServer">
-          <InProcessServer>
-            <Path>WinRT.Host.dll</Path>
-              <ActivatableClass ActivatableClassId="MyAuthoredComponent.Class1" ThreadingModel="both" />
-              <ActivatableClass ActivatableClassId="MyAuthoredComponent.Class2" ThreadingModel="both" />
-            </InProcessServer>
-        </Extension>
+            <Extension Category="windows.activatableClass.inProcessServer">
+                  <InProcessServer>
+                        <Path>WinRT.Host.dll</Path>
+                        <ActivatableClass ActivatableClassId="MyAuthoredComponent.Class1" ThreadingModel="both" />
+                        <ActivatableClass ActivatableClassId="MyAuthoredComponent.Class2" ThreadingModel="both" />
+                  </InProcessServer>
+            </Extension>
       </Extensions>
       ```
+
+      See the [Simple C#/WinRT component sample](../src/Samples/AuthoringDemo) (specifically the WinUI3CppApp) for an example.
+
+  - For **unpackaged C++ apps**: The app consumer needs to create an [application manifest file](https://docs.microsoft.com/windows/win32/sbscs/application-manifests) (also known as a "fusion manifest") that follows the naming: `<MyNativeAppName>.exe.manifest`. See this [sample manifest file](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/AuthoringDemo/CppConsoleApp/CppConsoleApp.exe.manifest) for an example.
+
+      Follow these steps to add an application manifest file to your project:
+
+      1. In Visual Studio, right click on the project node under **Solution Explorer** and click **Add -> New Item**. Search for the **Text File** template and name your file `<MyNativeAppName>.exe.manifest`.
+
+      2. Add your activatable class registrations to the manifest file. Below is an example with a C#/WinRT component called `MyAuthoredComponent` and activatable classes `WinRTComponent.Class*`. Note that `WinRT.Host.dll` must be specified as the file name, without a relative path.
+
+            ```xml
+            <?xml version="1.0" encoding="utf-8"?>
+            <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+            <assemblyIdentity version="1.0.0.0" name="CppConsoleApp"/>
+            <file name="WinRT.Host.dll">
+            <activatableClass
+                  name="MyAuthoredComponent.Class1"
+                  threadingModel="both"
+                  xmlns="urn:schemas-microsoft-com:winrt.v1" />
+            <activatableClass
+                  name="MyAuthoredComponent.Class2"
+                  threadingModel="both"
+                  xmlns="urn:schemas-microsoft-com:winrt.v1" />
+            </file>
+            </assembly>
+            ```
+
+      3. Modify the project to include the manifest file in the output when deploying the project. Right-click on the file in **Solution Explorer**, select **Properties**, and set the **Content** property to **True** using the drop-down arrow on the right.
+
+### Windows App SDK Applications
+
+Authoring and consuming WinUI types in Windows App SDK applications is in development and is supported with some exceptions.
+Component authors can implement WinUI types using the Windows App SDK C# class library project template. 
+Components can be consumed by application projects that reference the Windows App SDK.
+
+#### Support Matrix
+
+The following table outlines the Windows App SDK application types that are supported when consuming C#/WinRT authored components implementing WinUI types:
+
+- ✅ means the scenario works
+- 🟨 means the scenario partially works (i.e. with specific limitations)
+- 🟥 means the scenario does not work
+- Note: "WAP" refers to the usage of a separate Windows Application Packaging Project in packaged apps.
+
+|Application Type|Project or Package Reference|Supported?|
+|:--|:-:|:-:|
+|C++ Packaged|Project Reference| ✅ |
+|C++ Packaged with WAP |Project Reference| 🟥 |
+|C++ Unpackaged|Project Reference| 🟥 |
+|C# Packaged|Project Reference| ✅ |
+|C# Packaged with WAP|Project Reference| ✅ |
+|C# Unpackaged|Project Reference|🟥|
+|C++ Packaged|Package Reference|🟨 |
+|C++ Packaged with WAP |Package Reference| 🟥 |
+|C++ Unpackaged|Package Reference|🟨 |
+|C# Packaged|Package Reference| 🟨 |
+|C# Packaged with WAP |Package Reference| 🟨 |
+|C# Unpackaged|Package Reference|🟥 |
+
+**Note for partially supported scenarios**: For components with custom user controls, any type of application consuming these components by NuGet package reference is not currently supported.
+
+#### Consumption of WinUI controls from C++ apps
+
+If a C++ app is consuming a component that provides a custom user control, there are a few extra configuration steps:
+
+1. In the app's `pch.h` header file, add the following line:
+
+      ```cpp
+      #include <winrt/MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.h>
+      ```
+
+2.  In the manifest file, add an additional `ActivatableClass` entry for `MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.XamlMetaDataProvider`, in addition to the manifest entries for the classes being consumed.
+
+      i. For **unpackaged** apps: add an entry similar to the following to `AppName.exe.manifest`:
+
+      ```xml
+      <activatableClass
+            name="MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.XamlMetaDataProvider"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+      ```
+      ii. For **packaged** apps, add an entry similar to the following to `Package.appxmanifest`:
+
+      ```xml
+      <ActivatableClass ActivatableClassId="MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.XamlMetaDataProvider" ThreadingModel="both" />
+      ```
+
+      You will need to right-click on the file and select **Open With** -> **XML (Text Editor)** in order to edit the file.
+      You may need to add the appxmanifest to the solution view; to do this right-click the project and select **Add exisiting item** to select `Package.appxmanifest`.
 
 ### Consuming an out of process component
 
 C#/WinRT supports authoring out-of-process components that can be consumed by Windows Runtime compatible languages. Currently, consuming an out-of-process component is supported for managed C# apps with the use of a packaging project. This scenario requires creating a `WinRT.Host.runtimeconfig.json` file, as demonstrated in the [background task component sample](https://github.com/microsoft/CsWinRT/tree/master/src/Samples/BgTaskComponent). Native C++ consumption of out-of-process C# components is not fully supported yet.
-
-### Windows App SDK Applications
-
-Authoring WinUI types with C#/WinRT is in development and is supported with some exceptions.
-Component authors can implement WinUI types using the Windows App SDK class library template. 
-Components can be consumed by application projects that reference the Windows App SDK.
-
-When referencing a C# authored component via project reference, the following application types are not supported currently:
-- C++/WinRT Desktop app with Windows Application Packaging Project (WAP)
-- C++ Unpackaged application
-- C# Unpackaged application
-
-And these are supported (via project reference):
-- C++/WinRT Desktop app
-- C# Desktop app
-- C# Desktop app with Windows Application Packaging Project (WAP) 
-
-When authoring a custom user control, consuming the component via NuGet package is not supported currently in any project type.
-
-When referencing a component via NuGet package reference, the following application types are not supported currently:
-- C++/WinRT Desktop app with Windows Application Packaging Project (WAP)
-- C# Unpackaged application
-
-And these are supported:
-- C++/WinRT Desktop app
-- C++ Unpackaged
-- C# Desktop
-- C# Desktop app with Windows Application Packaging Project (WAP) 
-
-If a C++ app is consuming a component that provides a custom user control, an additional entry needs to be made in the `pch.h` header file and in the manifest. 
-
-For the `pch.h` file, add `#include <winrt/MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.h>`.
-For the manifest, add an additional `ActivatableClass` entry for `MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.XamlMetaDataProvider`.
-The last entry (and the whole page) of the docs [here](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/troubleshooting#symptoms-and-remedies) have instructions for this.
-
-When consuming the component from a packaged application, the manifest entries should be addded to the `Package.appxmanifest` file.
-You will need to right-click on the file and select **Open With** -> **XML (Text Editor)** in order to edit the file.
-You may need to add the appxmanifest to the solution view; to do this right-click the project and select **Add exisiting item** to select `Package.appxmanifest`.
-
-Otherwise, follow the steps above for adding a `Foo.exe.manifest`. 
 
 ## Known Issues and Troubleshooting
 
@@ -223,4 +242,4 @@ Here are some resources that demonstrate authoring C#/WinRT components and the d
 
 4. [Managed component hosting](https://github.com/microsoft/CsWinRT/blob/master/docs/hosting.md) 
 
-5. [Diagnose component errors](https://docs.microsoft.com/en-us/windows/uwp/csharp-winrt/authoring-diagnostics)
+5. [Diagnose component errors](https://docs.microsoft.com/windows/uwp/csharp-winrt/authoring-diagnostics)
