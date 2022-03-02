@@ -90,7 +90,7 @@ This section describes the steps needed to consume a C#/WinRT component for the 
 - [C# desktop applications](#consuming-from-c-applications) (.NET 5 or later)
 - [Packaged applications](#Consuming-from-packaged-applications)
 - [Out of process components](#Consuming-an-out-of-process-component)
-- [Windows App SDK Support](#Using-Windows-App-SDK)
+- [Windows App SDK applications](#Windows-App-SDK-applications)
 
 ### Consuming from C++/WinRT (Unpackaged)
 
