@@ -166,19 +166,36 @@ Component authors can implement WinUI types using the Windows App SDK class libr
 Components can be consumed by application projects that reference the Windows App SDK.
 
 When referencing a C# authored component via project reference, the following application types are not supported currently:
-- C++/WinRT app with Windows Application Packaging Project (WAP)
+- C++/WinRT Desktop app with Windows Application Packaging Project (WAP)
 - C++ Unpackaged application
 - C# Unpackaged application
 
-When authoring a custom user control, consuming the component via NuGet package is not supported currently.
+And these are supported (via project reference):
+- C++/WinRT Desktop app
+- C# Desktop app
+- C# Desktop app with Windows Application Packaging Project (WAP) 
+
+When authoring a custom user control, consuming the component via NuGet package is not supported currently in any project type.
+
+When referencing a component via NuGet package reference, the following application types are not supported currently:
+- C++/WinRT Desktop app with Windows Application Packaging Project (WAP)
+- C++/WinRT Desktop app
+- C# Unpackaged application
+
+And these are supported:
+- C++ Unpackaged
+- C# Desktop
+- C# Desktop app with Windows Application Packaging Project (WAP) 
 
 If a C++ app is consuming a component that provides a custom user control, an additional entry needs to be made in the `pch.h` header file and in the manifest. 
 
 For the `pch.h` file, add `#include <winrt/MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.h>`.
 For the manifest, add an additional `ActivatableClass` entry for `MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.XamlMetaDataProvider`.
+The last entry (and the whole page) of the docs [here](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/troubleshooting#symptoms-and-remedies) have instructions for this.
 
 When consuming the component from a packaged application, the manifest entries should be addded to the `Package.appxmanifest` file.
 You will need to right-click on the file and select **Open With** -> **XML (Text Editor)** in order to edit the file.
+You may need to add the appxmanifest to the solution view; to do this right-click the project and select **Add exisiting item** to select `Package.appxmanifest`.
 
 Otherwise, follow the steps above for adding a `Foo.exe.manifest`. 
 
