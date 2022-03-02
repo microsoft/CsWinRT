@@ -191,7 +191,17 @@ If a C++ app is consuming a component that provides a custom user control, an ad
 
 For the `pch.h` file, add `#include <winrt/MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.h>`.
 For the manifest, add an additional `ActivatableClass` entry for `MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.XamlMetaDataProvider`.
-The last entry (and the whole page) of the docs [here](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/troubleshooting#symptoms-and-remedies) have instructions for this.
+To update the manifest for unpackaged apps, you'll edit the `AppName.exe.manifest` to this entry:
+      ```xml
+      <activatableClass
+            name="MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.XamlMetaDataProvider"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+      ```
+For packaged and Windows Application Packaging (WAP) projects, update the `Package.appxmanifest` like so:
+      ```xml
+      <ActivatableClass ActivatableClassId="MyAuthoredComponent.MyAuthoredComponent_XamlTypeInfo.XamlMetaDataProvider" ThreadingModel="both" />
+      ```
 
 When consuming the component from a packaged application, the manifest entries should be addded to the `Package.appxmanifest` file.
 You will need to right-click on the file and select **Open With** -> **XML (Text Editor)** in order to edit the file.
@@ -204,6 +214,8 @@ Otherwise, follow the steps above for adding a `Foo.exe.manifest`.
 - Project reference support (from C++ and C# apps) for C#/WinRT authored components is available with .NET 6. Referencing a C#/WinRT authored component by project reference in a C# app is **not supported with .NET 5**.
 
 - Authoring issues are [tagged under the *authoring* label](https://github.com/microsoft/CsWinRT/issues?q=is%3Aopen+is%3Aissue+label%3Aauthoring). Feel free to [file an issue](https://github.com/microsoft/CsWinRT/issues/new/choose) tagged with the *authoring* label if you encounter any new issues!
+
+- The docs [here](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/troubleshooting#symptoms-and-remedies) have useful troubleshooting tips for working with C++/WinRT.
 
 - When adding an `exe.manifest`, if you get an error in the linker (LNK) typically this is due to multiple manifests being found, 
   and `app.manifest` can be removed to resolve the issue.
