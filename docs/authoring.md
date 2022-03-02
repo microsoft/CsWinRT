@@ -179,10 +179,10 @@ When authoring a custom user control, consuming the component via NuGet package 
 
 When referencing a component via NuGet package reference, the following application types are not supported currently:
 - C++/WinRT Desktop app with Windows Application Packaging Project (WAP)
-- C++/WinRT Desktop app
 - C# Unpackaged application
 
 And these are supported:
+- C++/WinRT Desktop app
 - C++ Unpackaged
 - C# Desktop
 - C# Desktop app with Windows Application Packaging Project (WAP) 
