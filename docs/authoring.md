@@ -88,8 +88,8 @@ This section describes the steps needed to consume a C#/WinRT component for the 
 
 - [C# desktop applications](#consuming-from-c-applications) 
 - [C++ desktop applications](#consuming-from-c-applications)
-- [Windows App SDK applications](#Windows-App-SDK-applications)
-- [Out of process components](#Consuming-an-out-of-process-component)
+- [Windows App SDK applications](#windows-app-sdk-applications)
+- [Out of process components](#consuming-an-out-of-process-component)
 
 ### Consuming from C# applications
 
@@ -114,13 +114,13 @@ Consuming a C#/WinRT component from a C++/WinRT desktop application requires man
 
       ``` xml
       <Extensions>
-            <Extension Category="windows.activatableClass.inProcessServer">
-                  <InProcessServer>
-                        <Path>WinRT.Host.dll</Path>
-                        <ActivatableClass ActivatableClassId="MyAuthoredComponent.Class1" ThreadingModel="both" />
-                        <ActivatableClass ActivatableClassId="MyAuthoredComponent.Class2" ThreadingModel="both" />
-                  </InProcessServer>
-            </Extension>
+        <Extension Category="windows.activatableClass.inProcessServer">
+          <InProcessServer>
+            <Path>WinRT.Host.dll</Path>
+            <ActivatableClass ActivatableClassId="MyAuthoredComponent.Class1" ThreadingModel="both" />
+            <ActivatableClass ActivatableClassId="MyAuthoredComponent.Class2" ThreadingModel="both" />
+          </InProcessServer>
+         </Extension>
       </Extensions>
       ```
 
@@ -137,17 +137,15 @@ Consuming a C#/WinRT component from a C++/WinRT desktop application requires man
             ```xml
             <?xml version="1.0" encoding="utf-8"?>
             <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
-            <assemblyIdentity version="1.0.0.0" name="CppConsoleApp"/>
-            <file name="WinRT.Host.dll">
-            <activatableClass
-                  name="MyAuthoredComponent.Class1"
-                  threadingModel="both"
-                  xmlns="urn:schemas-microsoft-com:winrt.v1" />
-            <activatableClass
-                  name="MyAuthoredComponent.Class2"
-                  threadingModel="both"
-                  xmlns="urn:schemas-microsoft-com:winrt.v1" />
-            </file>
+              <assemblyIdentity version="1.0.0.0" name="CppConsoleApp"/>
+              <file name="WinRT.Host.dll">
+                <activatableClass name="MyAuthoredComponent.Class1"
+                                  threadingModel="both"
+                                  xmlns="urn:schemas-microsoft-com:winrt.v1" />
+                <activatableClass name="MyAuthoredComponent.Class2"
+                                  threadingModel="both"
+                                  xmlns="urn:schemas-microsoft-com:winrt.v1" />
+              </file>
             </assembly>
             ```
 
