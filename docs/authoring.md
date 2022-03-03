@@ -87,13 +87,16 @@ To make your component available as a NuGet package, it is important to include 
 This section describes the steps needed to consume a C#/WinRT component for the following scenarios:
 
 - [C# desktop applications](#consuming-from-c-applications) 
-- [C++ desktop applications](#consuming-from-c-applications)
+- [C++ desktop applications](#consuming-from-c-applications-1)
 - [Windows App SDK applications](#windows-app-sdk-applications)
 - [Out of process components](#consuming-an-out-of-process-component)
 
 ### Consuming from C# applications
 
-Consuming a C#/WinRT component from C#/.NET apps is supported by both package reference or project reference. This scenario is equivalent to consuming any ordinary C# class library and does not involve WinRT activation in most cases. This scenario is fully supported on .NET 6 and later.
+Consuming a C#/WinRT component from C#/.NET apps is supported by both package reference or project reference.
+NET apps is supported by both package reference or project reference. 
+This scenario is equivalent to consuming any ordinary C# class library and does not involve WinRT activation in most cases. 
+The exception being in the out-of-process scenario, described below.
 
 **Note:** With C#/WinRT 1.3.5 or later, project references to a C#/WinRT component require .NET 6.
 
@@ -108,7 +111,9 @@ Consuming a C#/WinRT component from a C++/WinRT desktop application is supported
 
 #### Manifest Class Registration
 
-Consuming a C#/WinRT component from a C++/WinRT desktop application requires manifest class registrations. The specified activatable Windows Runtime class registrations will direct activation of the component’s classes at runtime. There are two different ways to do this depending on if the application is a packaged (with MSIX) or unpackaged C++ app:
+Consuming a C#/WinRT component from a C++/WinRT desktop application requires adding manifest class registrations to the application.
+The specified activatable Windows Runtime class registrations will direct activation of the component’s classes at runtime. 
+There are two different ways to do this depending on if the application is a packaged (with MSIX) or unpackaged C++ app:
 
   - For **packaged** C++ apps: The app consumer needs to add `ActivatableClass` registration entries to the `Package.appxmanifest` package manifest file like below:
 
@@ -166,22 +171,25 @@ The following table outlines the Windows App SDK application types that are supp
 - 🟥 means the scenario does not work
 - Note: "WAP" refers to the usage of a separate Windows Application Packaging Project in packaged apps.
 
+##### C++
+|Application Type|Project or Package Reference|Supported?|Tracking issue|
+|:--|:-:|:-:|
+|C++ Packaged|Project Reference| ✅ | n/a |
+|C++ Packaged with WAP |Project Reference| 🟥 | [#1120](https://github.com/microsoft/CsWinRT/issues/1120) |
+|C++ Unpackaged|Project Reference| 🟥 | [#1116](https://github.com/microsoft/CsWinRT/issues/1116) |
+|C++ Packaged|Package Reference|🟨 | [#1118](https://github.com/microsoft/CsWinRT/issues/1118) |
+|C++ Packaged with WAP |Package Reference| 🟥 | [#1123](https://github.com/microsoft/CsWinRT/issues/1123) |
+|C++ Unpackaged|Package Reference|🟨 | [#1118](https://github.com/microsoft/CsWinRT/issues/1118) |
+
+##### C#
 |Application Type|Project or Package Reference|Supported?|
 |:--|:-:|:-:|
-|C++ Packaged|Project Reference| ✅ |
-|C++ Packaged with WAP |Project Reference| 🟥 |
-|C++ Unpackaged|Project Reference| 🟥 |
 |C# Packaged|Project Reference| ✅ |
 |C# Packaged with WAP|Project Reference| ✅ |
-|C# Unpackaged|Project Reference|🟥|
-|C++ Packaged|Package Reference|🟨 |
-|C++ Packaged with WAP |Package Reference| 🟥 |
-|C++ Unpackaged|Package Reference|🟨 |
-|C# Packaged|Package Reference| 🟨 |
-|C# Packaged with WAP |Package Reference| 🟨 |
-|C# Unpackaged|Package Reference|🟥 |
-
-**Note for partially supported scenarios**: For components with custom user controls, any type of application consuming these components by NuGet package reference is not currently supported.
+|C# Unpackaged|Project Reference|🟥| [#1116](https://github.com/microsoft/CsWinRT/issues/1116) |
+|C# Packaged|Package Reference| 🟨 | [#1118](https://github.com/microsoft/CsWinRT/issues/1118) |
+|C# Packaged with WAP |Package Reference| 🟨 | [#1118](https://github.com/microsoft/CsWinRT/issues/1118) |
+|C# Unpackaged|Package Reference|🟥 | [#1116](https://github.com/microsoft/CsWinRT/issues/1116) |
 
 #### Consumption of WinUI controls from C++ apps
 
