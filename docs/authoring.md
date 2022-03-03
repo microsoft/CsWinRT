@@ -173,7 +173,7 @@ The following table outlines the Windows App SDK application types that are supp
 
 ##### C++
 |Application Type|Project or Package Reference|Supported?|Tracking issue|
-|:--|:-:|:-:|
+|:--|:-:|:-:|:-:|
 |C++ Packaged|Project Reference| ✅ | n/a |
 |C++ Packaged with WAP |Project Reference| 🟥 | [#1120](https://github.com/microsoft/CsWinRT/issues/1120) |
 |C++ Unpackaged|Project Reference| 🟥 | [#1116](https://github.com/microsoft/CsWinRT/issues/1116) |
@@ -182,8 +182,8 @@ The following table outlines the Windows App SDK application types that are supp
 |C++ Unpackaged|Package Reference|🟨 | [#1118](https://github.com/microsoft/CsWinRT/issues/1118) |
 
 ##### C#
-|Application Type|Project or Package Reference|Supported?|
-|:--|:-:|:-:|
+|Application Type|Project or Package Reference|Supported?|Tracking issue|
+|:--|:-:|:-:|:-:|
 |C# Packaged|Project Reference| ✅ |
 |C# Packaged with WAP|Project Reference| ✅ |
 |C# Unpackaged|Project Reference|🟥| [#1116](https://github.com/microsoft/CsWinRT/issues/1116) |
