@@ -224,6 +224,8 @@ C#/WinRT supports authoring out-of-process components that can be consumed by Wi
 
 - Authoring issues are [tagged under the *authoring* label](https://github.com/microsoft/CsWinRT/issues?q=is%3Aopen+is%3Aissue+label%3Aauthoring). Feel free to [file an issue](https://github.com/microsoft/CsWinRT/issues/new/choose) tagged with the *authoring* label if you encounter any new issues!
 
+- The docs [here](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/troubleshooting#symptoms-and-remedies) have useful troubleshooting tips for working with C++/WinRT.
+
 - When adding an `exe.manifest`, if you get an error in the linker (LNK) typically this is due to multiple manifests being found, 
   and `app.manifest` can be removed to resolve the issue.
 
