@@ -502,7 +502,11 @@ namespace WinRT
 
             try
             {
-                if (Marshal.QueryInterface(externalComObject, ref inspectableIID, out ptr) == 0)
+                if (ComWrappersSupport.CreateRCWType != null && ComWrappersSupport.CreateRCWType.IsDelegate())
+                {
+                    return ComWrappersSupport.CreateDelegateFactory(ComWrappersSupport.CreateRCWType)(externalComObject);
+                }
+                else if (Marshal.QueryInterface(externalComObject, ref inspectableIID, out ptr) == 0)
                 {
                     var inspectableObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IInspectable.Vftbl>(ptr);
                     ComWrappersHelper.Init(inspectableObjRef);
@@ -533,10 +537,6 @@ namespace WinRT
                     ComWrappersHelper.Init(iunknownObjRef);
 
                     return new SingleInterfaceOptimizedObject(typeof(IWeakReference), iunknownObjRef, false);
-                }
-                else if (ComWrappersSupport.CreateRCWType != null && ComWrappersSupport.CreateRCWType.IsDelegate())
-                {
-                    return ComWrappersSupport.CreateDelegateFactory(ComWrappersSupport.CreateRCWType)(externalComObject);
                 }
                 else
                 {

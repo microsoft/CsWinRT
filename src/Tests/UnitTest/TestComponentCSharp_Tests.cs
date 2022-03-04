@@ -2156,6 +2156,9 @@ namespace UnitTest
 
             ProvideInt intHandler = () => 42;
             Assert.Equal(intHandler, Class.UnboxDelegate(intHandler));
+
+            EnumValue enumValue = EnumValue.Two;
+            Assert.Equal(enumValue, Class.UnboxEnum(enumValue));
         }
 
         [Fact]
@@ -2234,6 +2237,14 @@ namespace UnitTest
             Assert.IsType<ProvideUri>(del);
             var provideUriDel = (ProvideUri) del;
             Assert.Equal(new Uri("http://microsoft.com"), provideUriDel());
+        }
+
+        [Fact]
+        public void TestEnumUnboxing()
+        {
+            var enumVal = Class.BoxedEnum;
+            Assert.IsType<EnumValue>(enumVal);
+            Assert.Equal(EnumValue.Two, enumVal);
         }
 
         internal class ManagedType { }
