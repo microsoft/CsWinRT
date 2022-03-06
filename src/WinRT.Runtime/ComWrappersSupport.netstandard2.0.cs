@@ -328,18 +328,6 @@ namespace WinRT
 
             InspectableInfo = inspectableInfo;
 
-            interfaceTableEntries.Add(new ComInterfaceEntry
-            {
-                IID = IUnknownVftbl.IID,
-                Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
-            });
-
-            interfaceTableEntries.Add(new ComInterfaceEntry
-            {
-                IID = InterfaceIIDs.IInspectable_IID,
-                Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
-            });
-
             InitializeManagedQITable(interfaceTableEntries);
 
             IdentityPtr = _managedQITable[IUnknownVftbl.IID];

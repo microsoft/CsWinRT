@@ -29,6 +29,7 @@ using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
 using System.Reflection;
 using Windows.Devices.Enumeration.Pnp;
+using System.Diagnostics;
 
 #if NET
 using WeakRefNS = System;
@@ -2687,6 +2688,29 @@ namespace UnitTest
             classInstance.IntProperty = 3;
             Assert.True(eventCalled);
             Assert.True(eventCalled2);
+        }
+
+        [Fact]
+        public void TestProxiedDelegate()
+        {
+            var obj = new OOPAsyncAction();
+            var factory = new WinRTClassFactory<OOPAsyncAction>(
+                () => obj,
+                new Dictionary<Guid, Func<object, IntPtr>>()
+                {
+                    { typeof(IAsyncAction).GUID, obj => MarshalInterface<IAsyncAction>.FromManaged((IAsyncAction) obj) },
+                });
+
+            WinRTClassFactory<OOPAsyncAction>.RegisterClass<OOPAsyncAction>(factory);
+
+            var currentExecutingDir = System.IO.Directory.GetCurrentDirectory();
+            var launchExePath = $"{currentExecutingDir}\\OOPExe.exe";
+
+            var proc = Process.Start(launchExePath);
+            Thread.Sleep(1000);
+            obj.Close();
+            Assert.True(obj.delegateCalled);
+            proc.Kill();
         }
 
         [Fact]

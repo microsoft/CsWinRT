@@ -59,7 +59,7 @@ namespace ABI.System
 
         public static global::System.EventHandler<T> CreateRcw(IntPtr ptr)
         {
-            return new global::System.EventHandler<T>(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr)).Invoke);
+            return new global::System.EventHandler<T>(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, PIID)).Invoke);
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -179,11 +179,13 @@ namespace ABI.System
         public static global::System.Delegate AbiInvokeDelegate { get; }
 #endif
 
+        private static readonly Guid IID = new(0xc50898f6, 0xc536, 0x5f47, 0x85, 0x83, 0x8b, 0x2c, 0x24, 0x38, 0xa1, 0x3b);
+
         public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler managedDelegate) =>
-            managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(EventHandler)));
+            managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, IID);
 
         public static unsafe ObjectReferenceValue CreateMarshaler2(global::System.EventHandler managedDelegate) =>
-            MarshalDelegate.CreateMarshaler2(managedDelegate, GuidGenerator.GetIID(typeof(EventHandler)));
+            MarshalDelegate.CreateMarshaler2(managedDelegate, IID);
 
         public static IntPtr GetAbi(IObjectReference value) =>
             value is null ? IntPtr.Zero : MarshalInterfaceHelper<global::System.EventHandler<object>>.GetAbi(value);
@@ -195,7 +197,7 @@ namespace ABI.System
 
         public static global::System.EventHandler CreateRcw(IntPtr ptr)
         {
-            return new global::System.EventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr)).Invoke);
+            return new global::System.EventHandler(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, IID)).Invoke);
         }
 
         [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]

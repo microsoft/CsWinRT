@@ -447,22 +447,7 @@ namespace WinRT
                     return new VtableEntries();
                 }
 
-                var entries = ComWrappersSupport.GetInterfaceTableEntries(type);
-
-                entries.Add(new ComInterfaceEntry
-                {
-                    IID = InterfaceIIDs.IInspectable_IID,
-                    Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
-                });
-
-                // This should be the last entry as it is included / excluded based on the flags.
-                entries.Add(new ComInterfaceEntry
-                {
-                    IID = IUnknownVftbl.IID,
-                    Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
-                });
-
-                return new VtableEntries(entries, type);
+                return new VtableEntries(ComWrappersSupport.GetInterfaceTableEntries(type), type);
             });
 
             count = vtableEntries.Count;
