@@ -2703,7 +2703,7 @@ namespace UnitTest
 
             WinRTClassFactory<OOPAsyncAction>.RegisterClass<OOPAsyncAction>(factory);
 
-            var currentExecutingDir = System.IO.Directory.GetCurrentDirectory();
+            var currentExecutingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var launchExePath = $"{currentExecutingDir}\\OOPExe.exe";
 
             var proc = Process.Start(launchExePath);
