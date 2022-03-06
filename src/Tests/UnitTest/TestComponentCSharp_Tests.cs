@@ -2703,14 +2703,27 @@ namespace UnitTest
 
             WinRTClassFactory<OOPAsyncAction>.RegisterClass<OOPAsyncAction>(factory);
 
-            var currentExecutingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var launchExePath = $"{currentExecutingDir}\\OOPExe.exe";
+            try
+            {
+                var currentExecutingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                var launchExePath = $"{currentExecutingDir}\\OOPExe.exe";
 
-            var proc = Process.Start(launchExePath);
-            Thread.Sleep(1000);
-            obj.Close();
-            Assert.True(obj.delegateCalled);
-            proc.Kill();
+                var proc = Process.Start(launchExePath);
+                Thread.Sleep(1000);
+                obj.Close();
+                Assert.True(obj.delegateCalled);
+                proc.Kill();
+            }
+            catch(Exception)
+            {
+                var currentExecutingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string currentExecutingDirBool = File.Exists(Path.Combine(currentExecutingDir, "OOPExe.exe")) + "";
+                var currentExecutingDir2 = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+                string currentExecutingDir2Bool = File.Exists(Path.Combine(currentExecutingDir2, "OOPExe.exe")) + "";
+                var currentExecutingDir3 = System.IO.Directory.GetCurrentDirectory();
+                string currentExecutingDir3Bool = File.Exists(Path.Combine(currentExecutingDir3, "OOPExe.exe")) + "";
+                throw new FileLoadException(String.Join(", ", new[] { currentExecutingDir, currentExecutingDirBool, currentExecutingDir2, currentExecutingDir2Bool, currentExecutingDir3, currentExecutingDir3Bool, Path.Combine(currentExecutingDir, "OOPExe.exe") }));
+            }
         }
 
         [Fact]
