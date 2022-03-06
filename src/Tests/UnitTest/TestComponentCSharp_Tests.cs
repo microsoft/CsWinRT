@@ -29,6 +29,7 @@ using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
 using System.Reflection;
 using Windows.Devices.Enumeration.Pnp;
+using System.Text;
 
 #if NET
 using WeakRefNS = System;
@@ -390,6 +391,20 @@ namespace UnitTest
             buffer.CopyTo(array);
             Assert.True(array.Length == 0);
         }
+
+#if NET
+        [Fact]
+        public async void TestRandomStreamWithContext()
+        {
+            string str = "UnitTest.TestCSharp+CustomDictionary, UnitTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(str)).AsRandomAccessStream();
+            var buffer = new WindowsRuntimeBuffer(150);
+            var result = await stream.ReadAsync(buffer, 150, InputStreamOptions.None);
+            Assert.NotNull(result);
+            Assert.True(buffer.TryGetUnderlyingData(out byte[] data, out int _));
+            Assert.Equal(str, Encoding.UTF8.GetString(data).Trim('\0'));
+        }
+#endif
 
         [Fact]
         public void TestTypePropertyWithSystemType()
