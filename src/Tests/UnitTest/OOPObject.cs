@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Windows.Foundation;
 using Windows.Win32;
 using Windows.Win32.System.Com;
-using Windows.Foundation;
 
 namespace UnitTest
 {

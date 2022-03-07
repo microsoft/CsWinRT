@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Threading;
-using TestComponentCSharp;
 using Windows.Foundation;
 using Windows.Win32;
 using Windows.Win32.System.Com;
