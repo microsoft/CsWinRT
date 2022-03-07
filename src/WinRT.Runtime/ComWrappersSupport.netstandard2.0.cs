@@ -96,6 +96,12 @@ namespace WinRT
             // has implemented a WinRT interface or inherited from a WinRT class
             // in a .NET (non-projected) type.
 
+            if (o is null)
+            {
+                objRef = null;
+                return false;
+            }
+
             if (o is Delegate del)
             {
                 return TryUnwrapObject(del.Target, out objRef);

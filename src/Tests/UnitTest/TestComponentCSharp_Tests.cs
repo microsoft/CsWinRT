@@ -2714,7 +2714,14 @@ namespace UnitTest
             Thread.Sleep(1000);
             obj.Close();
             Assert.True(obj.delegateCalled);
-            proc.Kill();
+
+            try
+            {
+                proc.Kill();
+            }
+            catch(Exception)
+            {
+            }
         }
 
         [Fact]
