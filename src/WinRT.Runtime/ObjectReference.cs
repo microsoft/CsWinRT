@@ -131,7 +131,7 @@ namespace WinRT
 
         public unsafe TInterface AsInterface<TInterface>()
         {
-            if (typeof(TInterface).GetCustomAttribute(typeof(System.Runtime.InteropServices.ComImportAttribute)) is object)
+            if (typeof(TInterface).IsDefined(typeof(System.Runtime.InteropServices.ComImportAttribute)))
             {
                 Guid iid = typeof(TInterface).GUID;
                 Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr comPtr));
@@ -175,6 +175,16 @@ namespace WinRT
                 objRef.ReferenceTrackerPtr = ReferenceTrackerPtr;
             }
             return hr;
+        }
+
+        public virtual unsafe ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
+        {
+            AddRef(true);
+            var objRef = ObjectReference<IUnknownVftbl>.Attach(ref ptr);
+            objRef.IsAggregated = IsAggregated;
+            objRef.PreventReleaseOnDispose = IsAggregated;
+            objRef.ReferenceTrackerPtr = ReferenceTrackerPtr;
+            return objRef;
         }
 
         // Used only as part of the GetInterface implementation where the
@@ -350,6 +360,24 @@ namespace WinRT
         {
             return ThisPtrFromOriginalContext;
         }
+
+        internal ObjectReferenceValue AsValue()
+        {
+            // Sharing ptr with objref.
+            return new ObjectReferenceValue(ThisPtr, IntPtr.Zero, true, this);
+        }
+
+        internal unsafe ObjectReferenceValue AsValue(Guid iid)
+        {
+            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
+            if (IsAggregated)
+            {
+                Marshal.Release(thatPtr);
+            }
+            AddRefFromTrackerSource();
+
+            return new ObjectReferenceValue(thatPtr, ReferenceTrackerPtr, IsAggregated, this);
+        }
     }
 
 #if EMBED
@@ -448,8 +476,33 @@ namespace WinRT
     {
         private readonly IntPtr _contextCallbackPtr;
         private readonly IntPtr _contextToken;
-        private readonly Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>> _cachedContext;
-        private readonly Lazy<AgileReference> _agileReference;
+
+        private volatile ConcurrentDictionary<IntPtr, ObjectReference<T>> __cachedContext;
+        private ConcurrentDictionary<IntPtr, ObjectReference<T>> CachedContext => __cachedContext ?? Make_CachedContext();
+        private ConcurrentDictionary<IntPtr, ObjectReference<T>> Make_CachedContext()
+        {
+            global::System.Threading.Interlocked.CompareExchange(ref __cachedContext, new(), null);
+            return __cachedContext;
+        }
+
+        // Agile reference can be null, so whether it is set is tracked separately.
+        private volatile bool _isAgileReferenceSet;
+        private volatile AgileReference __agileReference;
+        private AgileReference AgileReference => _isAgileReferenceSet ? __agileReference : Make_AgileReference();
+        private AgileReference Make_AgileReference()
+        { 
+            Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
+
+            // Set after CallInContext callback given callback can fail to occur.
+            _isAgileReferenceSet = true;
+            return __agileReference;
+
+            void InitAgileReference()
+            {
+                global::System.Threading.Interlocked.CompareExchange(ref __agileReference, new AgileReference(this), null);
+            }
+        }
+
         private readonly Guid _iid;
 
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken)
@@ -457,36 +510,11 @@ namespace WinRT
         {
             _contextCallbackPtr = contextCallbackPtr;
             _contextToken = contextToken;
-            _cachedContext = new Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>>();
-            _agileReference = new Lazy<AgileReference>(() => {
-                AgileReference agileReference = null;
-                Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
-                return agileReference;
-
-                void InitAgileReference()
-                {
-                    agileReference = new AgileReference(this);
-                }
-            });
         }
 
         internal ObjectReferenceWithContext(IntPtr thisPtr, IntPtr contextCallbackPtr, IntPtr contextToken, Guid iid)
-            : base(thisPtr)
+            : this(thisPtr, contextCallbackPtr, contextToken)
         {
-            _contextCallbackPtr = contextCallbackPtr;
-            _contextToken = contextToken;
-            _cachedContext = new Lazy<ConcurrentDictionary<IntPtr, ObjectReference<T>>>();
-            _agileReference = new Lazy<AgileReference>(() => {
-                AgileReference agileReference = null;
-                Context.CallInContext(_contextCallbackPtr, _contextToken, InitAgileReference, null);
-                return agileReference;
-
-                void InitAgileReference()
-                {
-                    agileReference = new AgileReference(this);
-                }
-            });
-
             _iid = iid;
         }
 
@@ -524,11 +552,11 @@ namespace WinRT
                 return null;
             }
 
-            return _cachedContext.Value.GetOrAdd(currentContext, CreateForCurrentContext);
+            return CachedContext.GetOrAdd(currentContext, CreateForCurrentContext);
 
             ObjectReference<T> CreateForCurrentContext(IntPtr _)
             {
-                var agileReference = _agileReference.Value;
+                var agileReference = AgileReference;
                 // We may fail to switch context and thereby not get an agile reference.
                 // In these cases, fallback to using the current context.
                 if (agileReference == null)
@@ -536,27 +564,47 @@ namespace WinRT
                     return null;
                 }
 
-                using var referenceInContext = agileReference.Get();
-                if (_iid == Guid.Empty)
+                try
                 {
-                    return referenceInContext.TryAs<T>(out var objRef) >= 0 ? objRef : null;
+                    if (_iid == Guid.Empty)
+                    {
+                        return agileReference.Get<T>(GuidGenerator.GetIID(typeof(T)));
+                    }
+                    else
+                    {
+                        return agileReference.Get<T>(_iid);
+                    }
                 }
-                else
+                catch (Exception)
                 {
-                    return referenceInContext.TryAs<T>(_iid, out var objRef) >= 0 ? objRef : null;
+                    // Fallback to using the current context in case of error.
+                    return null;
                 }
             }
         }
 
         protected override unsafe void Release()
         {
-            if (_cachedContext.IsValueCreated)
+            // Don't initialize cached context by calling through property if it is already null.
+            if (__cachedContext != null)
             {
-                _cachedContext.Value.Clear();
+                CachedContext.Clear();
             }
 
             Context.CallInContext(_contextCallbackPtr, _contextToken, base.Release, ReleaseWithoutContext);
             Context.DisposeContextCallback(_contextCallbackPtr);
+        }
+
+        public override ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
+        {
+            AddRef(true);
+            var objRef = new ObjectReferenceWithContext<IUnknownVftbl>(ptr, Context.GetContextCallback(), Context.GetContextToken())
+            {
+                IsAggregated = IsAggregated,
+                PreventReleaseOnDispose = IsAggregated,
+                ReferenceTrackerPtr = ReferenceTrackerPtr
+            };
+            return objRef;
         }
 
         public override unsafe int TryAs<U>(Guid iid, out ObjectReference<U> objRef)
@@ -581,6 +629,63 @@ namespace WinRT
             }
 
             return hr;
+        }
+    }
+
+    public readonly struct ObjectReferenceValue
+    {
+        internal readonly IntPtr ptr;
+        internal readonly IntPtr referenceTracker;
+        internal readonly bool preventReleaseOnDispose;
+        // Used to keep the original IObjectReference alive as we share the same
+        // referenceTracker instance and in some cases use the same ptr as the
+        // IObjectReference without an addref (i.e preventReleaseOnDispose).
+        internal readonly IObjectReference objRef;
+
+        internal ObjectReferenceValue(IntPtr ptr) : this()
+        {
+            this.ptr = ptr;
+        }
+
+        internal ObjectReferenceValue(IntPtr ptr, IntPtr referenceTracker, bool preventReleaseOnDispose, IObjectReference objRef)
+        {
+            this.ptr = ptr;
+            this.referenceTracker = referenceTracker;
+            this.preventReleaseOnDispose = preventReleaseOnDispose;
+            this.objRef = objRef;
+
+        }
+
+        public readonly IntPtr GetAbi() => ptr;
+
+        public unsafe readonly IntPtr Detach()
+        {
+            // If the ptr is not owned by this instance, do an AddRef.
+            if (preventReleaseOnDispose && ptr != IntPtr.Zero)
+            {
+                (**(IUnknownVftbl**)ptr).AddRef(ptr);
+            }
+
+            // Release tracker source reference as it is no longer a managed ref maintained by RCW.
+            if (referenceTracker != IntPtr.Zero)
+            {
+                (**(IReferenceTrackerVftbl**)referenceTracker).ReleaseFromTrackerSource(referenceTracker);
+            }
+
+            return ptr;
+        }
+
+        public unsafe readonly void Dispose()
+        {
+            if (referenceTracker != IntPtr.Zero)
+            {
+                (**(IReferenceTrackerVftbl**)referenceTracker).ReleaseFromTrackerSource(referenceTracker);
+            }
+
+            if (!preventReleaseOnDispose && ptr != IntPtr.Zero)
+            {
+                (**(IUnknownVftbl**)ptr).Release(ptr);
+            }
         }
     }
 }

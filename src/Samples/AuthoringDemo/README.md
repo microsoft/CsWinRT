@@ -1,9 +1,32 @@
 # C#/WinRT Authoring Sample
 
-This sample demonstrates how to author a simple C#/WinRT component, create a NuGet package for the component, and consume the component as a package reference from a C++/WinRT console app. This sample currently uses [CsWinRT version 1.1.4](https://www.nuget.org/packages/Microsoft.Windows.CsWinRT/1.1.4). Refer to the [authoring docs](https://github.com/microsoft/CsWinRT/blob/master/docs/authoring.md) for more details.
+This sample demonstrates how to author a simple C#/WinRT component and consume the component as a project reference.
 
-- **AuthoringDemo** is is a C# .NET 5 authored component using a **Class Library (.NET Core)** project with some project file modifications. There are two runtime classes authored in *Example.cs* and *FolderEnumeration.cs*, which demonstrate the usage of basic types and WinRT types.
+- **AuthoringDemo** is a C# .NET 6 class library project that uses the C#/WinRT NuGet package to generate a WinRT component. There are two runtime classes authored in *Example.cs* and *FolderEnumeration.cs*, which demonstrate the usage of basic types and WinRT types.
 
-- **CppConsoleApp** is a **Windows Console Application (C++/WinRT)** project that demonstrates consuming the **AuthoringDemo** component with a NuGet package reference.
+The following apps demonstrate how to consume the C#/WinRT component **AuthoringDemo**:
 
-Before building the solution, right click on **AuthoringDemo** solution node and select **Restore NuGet packages**. Set **CppConsoleApp** as the startup project.
+- [**CppConsoleApp**](CppConsoleApp) is a **Windows Console Application (C++/WinRT)** project that consumes the **AuthoringDemo** component with a project reference.
+
+- [**WinUI3CppApp**](WinUI3CppApp) is a C++/WinRT desktop app using the Windows App SDK **Blank App, Packaged (WinUI 3 in Desktop)** template (see [create a WinUI3 C++ Packaged app](https://docs.microsoft.com/windows/apps/winui/winui3/create-your-first-winui3-app?pivots=winui3-packaged-cpp)).
+
+
+
+## Prerequisites
+
+* [.NET 6](https://dotnet.microsoft.com/download/dotnet/6.0)
+* Visual Studio 2022
+
+**Note**: This sample can be modified to target .NET 5 and Visual Studio 2019. This involves editing the `TargetFramework` properties to target `net5.0-windows10.0.19041.0`.
+
+## Building and running the sample
+
+1. Open **AuthoringDemo.sln** in Visual Studio 2022.
+
+2. Ensure that the **CppConsoleApp** project is set as the startup project.
+
+3. From Visual Studio, choose **Start Debugging** (F5). 
+
+## Resources
+
+- [Authoring C#/WinRT components](https://github.com/microsoft/CsWinRT/blob/master/docs/authoring.md)

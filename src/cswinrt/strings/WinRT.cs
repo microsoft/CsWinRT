@@ -466,7 +466,7 @@ namespace WinRT
             // If target no longer exists, destroy cache
             lock (this)
             {
-                using var resolved = this.target.Resolve(typeof(IUnknownVftbl).GUID);
+                using var resolved = this.target.Resolve(InterfaceIIDs.IUnknown_IID);
                 if (resolved == null)
                 {
                     this.target = target;
@@ -482,7 +482,7 @@ namespace WinRT
             // If target no longer exists, destroy cache
             lock (this)
             {
-                using var resolved = this.target.Resolve(typeof(IUnknownVftbl).GUID);
+                using var resolved = this.target.Resolve(InterfaceIIDs.IUnknown_IID);
                 if (resolved == null)
                 {
                     return null;
@@ -522,7 +522,7 @@ namespace WinRT
                     return;
                 }
 #else
-            int hr = obj.TryAs<IUnknownVftbl>(typeof(IWeakReferenceSource).GUID, out var weakRefSource);
+            int hr = obj.TryAs<IUnknownVftbl>(InterfaceIIDs.IWeakReferenceSource_IID, out var weakRefSource);
             if (hr != 0)
             {
                 return;
@@ -608,11 +608,7 @@ namespace WinRT
             _handlerTuple = (Subscribe, Unsubscribe);
         }
 
-        protected abstract IObjectReference CreateMarshaler(TDelegate del);
-
-        protected abstract IntPtr GetAbi(IObjectReference marshaler);
-
-        protected abstract void DisposeMarshaler(IObjectReference marshaler);
+        protected abstract ObjectReferenceValue CreateMarshaler(TDelegate del);
 
         protected abstract State CreateEventState();
 
@@ -640,7 +636,7 @@ namespace WinRT
                     var marshaler = CreateMarshaler(eventInvoke);
                     try
                     {
-                        var nativeDelegate = GetAbi(marshaler);
+                        var nativeDelegate = marshaler.GetAbi();
                         state.InitalizeReferenceTracking(nativeDelegate);
                         ExceptionHelpers.ThrowExceptionForHR(_addHandler(_obj.ThisPtr, nativeDelegate, out state.token));
                     }
@@ -648,7 +644,7 @@ namespace WinRT
                     {
                         // Dispose our managed reference to the delegate's CCW.
                         // Either the native event holds a reference now or the _addHandler call failed.
-                        DisposeMarshaler(marshaler);
+                        marshaler.Dispose();
                     }
                 }
             }
@@ -691,14 +687,8 @@ namespace WinRT
         {
         }
 
-        protected override IObjectReference CreateMarshaler(System.EventHandler<T> del) =>
-            del is null ? null : ABI.System.EventHandler<T>.CreateMarshaler(del);
-
-        protected override void DisposeMarshaler(IObjectReference marshaler) =>
-            ABI.System.EventHandler<T>.DisposeMarshaler(marshaler);
-
-        protected override IntPtr GetAbi(IObjectReference marshaler) =>
-            marshaler is null ? IntPtr.Zero : ABI.System.EventHandler<T>.GetAbi(marshaler);
+        protected override ObjectReferenceValue CreateMarshaler(System.EventHandler<T> del) => 
+            ABI.System.EventHandler<T>.CreateMarshaler2(del);
 
         protected override State CreateEventState() =>
             new EventState(_obj.ThisPtr, _index);
@@ -846,8 +836,14 @@ namespace WinRT
             }
         }
     }
-}
 
+    internal static class InterfaceIIDs
+    {
+        internal static readonly Guid IInspectable_IID = new(0xAF86E2E0, 0xB12D, 0x4c6a, 0x9C, 0x5A, 0xD7, 0xAA, 0x65, 0x10, 0x1E, 0x90);
+        internal static readonly Guid IUnknown_IID = new(0, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+        internal static readonly Guid IWeakReferenceSource_IID = new(0x00000038, 0, 0, 0xC0, 0, 0, 0, 0, 0, 0, 0x46);
+    }
+}
 
 namespace System.Runtime.CompilerServices
 {

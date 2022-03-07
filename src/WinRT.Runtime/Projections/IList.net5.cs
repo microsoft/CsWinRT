@@ -64,6 +64,8 @@ namespace System.Collections.Generic
             this._inner = _inner;
         }
 
+        public static IListImpl<T> CreateRcw(IInspectable obj) => new(obj.ObjRef);
+
         public T this[int index] 
         {
             get => ABI.System.Collections.Generic.IListMethods<T>.Indexer_Get(iListObjRef, index);
@@ -522,11 +524,14 @@ namespace ABI.System.Collections.Generic
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.IList<T> obj) =>
             obj is null ? null : ComWrappersSupport.CreateCCWForObject<Vftbl>(obj, PIID);
 
+        public static ObjectReferenceValue CreateMarshaler2(global::System.Collections.Generic.IList<T> obj) => 
+            ComWrappersSupport.CreateCCWForObjectForMarshaling(obj, PIID);
+
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
 
         public static IntPtr FromManaged(global::System.Collections.Generic.IList<T> value) =>
-            (value is null) ? IntPtr.Zero : CreateMarshaler(value).GetRef();
+            (value is null) ? IntPtr.Zero : CreateMarshaler2(value).Detach();
 
         public static void DisposeMarshaler(IObjectReference objRef) => objRef?.Dispose();
 

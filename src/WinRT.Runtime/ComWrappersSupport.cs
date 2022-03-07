@@ -29,7 +29,6 @@ namespace WinRT
 #endif
     static partial class ComWrappersSupport
     {
-        private readonly static ConcurrentDictionary<string, Func<IInspectable, object>> TypedObjectFactoryCacheForRuntimeClassName = new ConcurrentDictionary<string, Func<IInspectable, object>>(StringComparer.Ordinal);
         private readonly static ConcurrentDictionary<Type, Func<IInspectable, object>> TypedObjectFactoryCacheForType = new ConcurrentDictionary<Type, Func<IInspectable, object>>();
         private readonly static ConditionalWeakTable<object, object> CCWTable = new ConditionalWeakTable<object, object>();
         private readonly static ConcurrentDictionary<Type, Func<IntPtr, object>> DelegateFactoryCache = new ConcurrentDictionary<Type, Func<IntPtr, object>>();
@@ -159,7 +158,7 @@ namespace WinRT
                         Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
                     });
 
-                    if (!hasCustomIMarshalInterface && iid == typeof(ABI.WinRT.Interop.IMarshal.Vftbl).GUID)
+                    if (!hasCustomIMarshalInterface && iid == ABI.WinRT.Interop.IMarshal.IID)
                     {
                         hasCustomIMarshalInterface = true;
                     }
@@ -215,13 +214,13 @@ namespace WinRT
 
             entries.Add(new ComInterfaceEntry
             {
-                IID = typeof(ManagedIStringableVftbl).GUID,
+                IID = ManagedIStringableVftbl.IID,
                 Vtable = ManagedIStringableVftbl.AbiToProjectionVftablePtr
             });
 
             entries.Add(new ComInterfaceEntry
             {
-                IID = typeof(ManagedCustomPropertyProviderVftbl).GUID,
+                IID = ManagedCustomPropertyProviderVftbl.IID,
                 Vtable = ManagedCustomPropertyProviderVftbl.AbiToProjectionVftablePtr
             });
 
@@ -237,7 +236,7 @@ namespace WinRT
             {
                 entries.Add(new ComInterfaceEntry
                 {
-                    IID = typeof(ABI.WinRT.Interop.IMarshal.Vftbl).GUID,
+                    IID = ABI.WinRT.Interop.IMarshal.IID,
                     Vtable = ABI.WinRT.Interop.IMarshal.Vftbl.AbiToProjectionVftablePtr
                 });
             }
@@ -245,7 +244,7 @@ namespace WinRT
             // Add IAgileObject to all CCWs
             entries.Add(new ComInterfaceEntry
             {
-                IID = typeof(ABI.WinRT.Interop.IAgileObject.Vftbl).GUID,
+                IID = ABI.WinRT.Interop.IAgileObject.IID,
                 Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
             });
             return entries;
@@ -282,63 +281,48 @@ namespace WinRT
 
         private static bool IsIReferenceArray(Type implementationType)
         {
-            return implementationType.FullName.StartsWith("Windows.Foundation.IReferenceArray`1", StringComparison.Ordinal);
+            return implementationType.IsGenericType && implementationType.GetGenericTypeDefinition() == typeof(Windows.Foundation.IReferenceArray<>);
         }
 
         private static Func<IInspectable, object> CreateKeyValuePairFactory(Type type)
         {
-            var parms = new[] { Expression.Parameter(typeof(IInspectable), "obj") };
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.Call(type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static), 
-                    parms), parms).Compile();
+            var createRcwFunc = (Func<IInspectable, object>) type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static).
+                    CreateDelegate(typeof(Func<IInspectable, object>));
+            return createRcwFunc;
         }
 
         internal static Func<IntPtr, object> CreateDelegateFactory(Type type)
         {
             return DelegateFactoryCache.GetOrAdd(type, (type) =>
             {
-                var parms = new[] { Expression.Parameter(typeof(IntPtr), "ptr") };
-                return Expression.Lambda<Func<IntPtr, object>>(
-                    Expression.Call(type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static),
-                        parms), parms).Compile();
+                var createRcwFunc = (Func<IntPtr, object>)type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static).
+                        CreateDelegate(typeof(Func<IntPtr, object>));
+                return createRcwFunc;
             });
         }
 
         private static Func<IInspectable, object> CreateNullableTFactory(Type implementationType)
         {
-            Type helperType = implementationType.GetHelperType();
-
-            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.Convert(Expression.Call(helperType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic), 
-                    parms), typeof(object)), parms).Compile();
+            var getValueMethod = implementationType.GetHelperType().GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic);
+            return (IInspectable obj) => getValueMethod.Invoke(null, new[] { obj });
         }
 
         private static Func<IInspectable, object> CreateAbiNullableTFactory(Type implementationType)
         {
-            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.Convert(Expression.Call(implementationType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic),
-                    parms), typeof(object)), parms).Compile();
+            var getValueMethod = implementationType.GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic);
+            return (IInspectable obj) => getValueMethod.Invoke(null, new[] { obj });
         }
 
         private static Func<IInspectable, object> CreateArrayFactory(Type implementationType)
         {
-            Type helperType = implementationType.GetHelperType();
-            Type vftblType = helperType.FindVftblType();
-
-            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
-            var createInterfaceInstanceExpression = Expression.New(helperType.GetConstructor(new[] { typeof(ObjectReference<>).MakeGenericType(vftblType) }),
-                    Expression.Call(parms[0],
-                        typeof(IInspectable).GetMethod(nameof(IInspectable.As)).MakeGenericMethod(vftblType)));
-
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.Property(createInterfaceInstanceExpression, "Value"), parms).Compile();
+            var getValueFunc = (Func<IInspectable, object>)implementationType.GetHelperType().GetMethod("GetValue", BindingFlags.Static | BindingFlags.NonPublic).
+                CreateDelegate(typeof(Func<IInspectable, object>));
+            return getValueFunc;
         }
 
         // This is used to hold the reference to the native value type object (IReference) until the actual value in it (boxed as an object) gets cleaned up by GC
         // This is done to avoid pointer reuse until GC cleans up the boxed object
-        private static ConditionalWeakTable<object, IInspectable> _boxedValueReferenceCache = new();
+        private static readonly ConditionalWeakTable<object, IInspectable> _boxedValueReferenceCache = new();
 
         private static Func<IInspectable, object> CreateReferenceCachingFactory(Func<IInspectable, object> internalFactory)
         {
@@ -358,18 +342,27 @@ namespace WinRT
                 throw new MissingMethodException();
             }
 
-            var parms = new[] { Expression.Parameter(typeof(IInspectable), "obj") };
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.Call(fromAbiMethod, Expression.Property(parms[0], "ThisPtr")), parms).Compile();
+            var fromAbiMethodFunc = (Func<IntPtr, object>) fromAbiMethod.CreateDelegate(typeof(Func<IntPtr, object>));
+            return (IInspectable obj) => fromAbiMethodFunc(obj.ThisPtr);
         }
 
         internal static Func<IInspectable, object> CreateTypedRcwFactory(Type implementationType, string runtimeClassName = null)
         {
-            if (implementationType == null)
+            // If runtime class name is empty or "Object", then just use IInspectable.
+            if (implementationType == null || implementationType == typeof(object))
             {
                 // If we reach here, then we couldn't find a type that matches the runtime class name.
                 // Fall back to using IInspectable directly.
                 return (IInspectable obj) => obj;
+            }
+
+            if (implementationType == typeof(ABI.System.Nullable_string))
+            {
+                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_string.GetValue(obj));
+            }
+            else if (implementationType == typeof(ABI.System.Nullable_Type))
+            {
+                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_Type.GetValue(obj));
             }
 
             var customHelperType = Projections.FindCustomHelperTypeMapping(implementationType, true);
@@ -406,31 +399,15 @@ namespace WinRT
             return CreateFactoryForImplementationType(runtimeClassName, implementationType);
         }
 
-        internal static Func<IInspectable, object> CreateTypedRcwFactory(string runtimeClassName)
-        {
-            // If runtime class name is empty or "Object", then just use IInspectable.
-            if (string.IsNullOrEmpty(runtimeClassName) || 
-                string.CompareOrdinal(runtimeClassName, "Object") == 0)
-            {
-                return (IInspectable obj) => obj;
-            }
-            // PropertySet and ValueSet can return IReference<String> but Nullable<String> is illegal
-            if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<String>") == 0)
-            {
-                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_string.GetValue(obj));
-            }
-            else if (string.CompareOrdinal(runtimeClassName, "Windows.Foundation.IReference`1<Windows.UI.Xaml.Interop.TypeName>") == 0)
-            {
-                return CreateReferenceCachingFactory((IInspectable obj) => ABI.System.Nullable_Type.GetValue(obj));
-            }
-
-            Type implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
-            return CreateTypedRcwFactory(implementationType, runtimeClassName);
-        }
-
-        internal static string GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
+        internal static Type GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
         {
             string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);
+            Type implementationType = null;
+            if (!string.IsNullOrEmpty(runtimeClassName))
+            {
+                implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
+            }
+
             if (staticallyDeterminedType != null && staticallyDeterminedType != typeof(object))
             {
                 // We have a static type which we can use to construct the object.  But, we can't just use it for all scenarios
@@ -441,23 +418,16 @@ namespace WinRT
                 // be cast to the sub class via as operator even if it is really an instance of it per rutimeclass.
                 // To handle these scenarios, we use the runtimeclass if we find it is assignable to the statically determined type.
                 // If it isn't, we use the statically determined type as it is a tear off.
-
-                Type implementationType = null;
-                if (!string.IsNullOrEmpty(runtimeClassName))
-                {
-                    implementationType = TypeNameSupport.FindTypeByNameCached(runtimeClassName);
-                }
-
                 if (!(implementationType != null &&
                     (staticallyDeterminedType == implementationType ||
                      staticallyDeterminedType.IsAssignableFrom(implementationType) ||
                      staticallyDeterminedType.IsGenericType && implementationType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == staticallyDeterminedType.GetGenericTypeDefinition()))))
                 {
-                    runtimeClassName = TypeNameSupport.GetNameForType(staticallyDeterminedType, TypeNameGenerationFlags.GenerateBoxedName);
+                    return staticallyDeterminedType;
                 }
             }
 
-            return runtimeClassName;
+            return implementationType;
         }
 
         private readonly static ConcurrentDictionary<Type, bool> IsIReferenceTypeCache = new ConcurrentDictionary<Type, bool>();
@@ -465,13 +435,13 @@ namespace WinRT
         {
             static bool IsIReferenceTypeHelper(Type type)
             {
-                if ((type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object) ||
+                if (type.IsDefined(typeof(WindowsRuntimeTypeAttribute)) ||
                     WinRT.Projections.IsTypeWindowsRuntimeType(type))
                     return true;
                 type = type.GetAuthoringMetadataType();
                 if (type is object)
                 {
-                    if ((type.GetCustomAttribute<WindowsRuntimeTypeAttribute>() is object) ||
+                    if (type.IsDefined(typeof(WindowsRuntimeTypeAttribute)) ||
                         WinRT.Projections.IsTypeWindowsRuntimeType(type))
                         return true;
                 }
@@ -495,7 +465,7 @@ namespace WinRT
         private static ComInterfaceEntry IPropertyValueEntry =>
             new ComInterfaceEntry
             {
-                IID = global::WinRT.GuidGenerator.GetIID(typeof(global::Windows.Foundation.IPropertyValue)),
+                IID = ManagedIPropertyValueImpl.IID,
                 Vtable = ManagedIPropertyValueImpl.AbiToProjectionVftablePtr
             };
 
@@ -826,7 +796,18 @@ namespace WinRT
                 runtimeClassName = new Lazy<string>(() => TypeNameSupport.GetNameForType(type, TypeNameGenerationFlags.GenerateBoxedName | TypeNameGenerationFlags.NoCustomTypeName));
                 IIDs = iids;
             }
+        }
 
+        internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
+        {
+            IntPtr ccw = CreateCCWForObjectForABI(obj, iid);
+            return ObjectReference<T>.Attach(ref ccw);
+        }
+
+        internal static ObjectReferenceValue CreateCCWForObjectForMarshaling(object obj, Guid iid)
+        {
+            IntPtr ccw = CreateCCWForObjectForABI(obj, iid);
+            return new ObjectReferenceValue(ccw);
         }
     }
 }

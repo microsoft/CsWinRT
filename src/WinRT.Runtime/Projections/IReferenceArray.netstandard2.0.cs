@@ -72,6 +72,9 @@ namespace ABI.Windows.Foundation
             return ComWrappersSupport.CreateCCWForObject<IUnknownVftbl>(value, PIID);
         }
 
+        public static ObjectReferenceValue CreateMarshaler2(object value) =>
+            ComWrappersSupport.CreateCCWForObjectForMarshaling(value, PIID);
+
         public static IntPtr GetAbi(IObjectReference m) => m?.ThisPtr ?? IntPtr.Zero;
 
         public static object FromAbi(IntPtr ptr)
@@ -85,10 +88,15 @@ namespace ABI.Windows.Foundation
             return wrapper.Value;
         }
 
+        internal static object GetValue(IInspectable inspectable)
+        {
+            var array = new IReferenceArray<T>(inspectable.ObjRef);
+            return array.Value;
+        }
+
         public static unsafe void CopyManaged(object o, IntPtr dest)
         {
-            using var objRef = CreateMarshaler(o);
-            *(IntPtr*)dest.ToPointer() = objRef?.GetRef() ?? IntPtr.Zero;
+            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).Detach();
         }
 
         public static IntPtr FromManaged(object value)
@@ -97,7 +105,7 @@ namespace ABI.Windows.Foundation
             {
                 return IntPtr.Zero;
             }
-            return CreateMarshaler(value).GetRef();
+            return CreateMarshaler2(value).Detach();
         }
 
         public static void DisposeMarshaler(IObjectReference m) { m?.Dispose(); }

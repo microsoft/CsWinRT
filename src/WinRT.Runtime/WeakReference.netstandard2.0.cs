@@ -64,7 +64,7 @@ namespace WinRT
             {
                 return null;
             }
-            using var resolved = reference.Resolve(typeof(IUnknownVftbl).GUID);
+            using var resolved = reference.Resolve(IUnknownVftbl.IID);
             return ComWrappersSupport.CreateRcwForComObject<object>(resolved.ThisPtr);
         }
     }

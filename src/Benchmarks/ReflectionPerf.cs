@@ -10,12 +10,14 @@ namespace Benchmarks
     {
         ClassWithMarshalingRoutines instance;
         IDictionary<String, WrappedClass> instanceDictionary;
+        ManagedObjectWithInterfaces managedObject;
 
         [GlobalSetup]
         public void Setup()
         {
             instance = new ClassWithMarshalingRoutines();
             instanceDictionary = instance.ExistingDictionary;
+            managedObject = new ManagedObjectWithInterfaces();
         }
 
         [Benchmark]
@@ -245,6 +247,54 @@ namespace Benchmarks
         public object GetExistingUri()
         {
             return instance.ExistingUri;
+        }
+
+        [Benchmark]
+        public object GetWinRTType()
+        {
+            return instance.NewType;
+        }
+
+        [Benchmark]
+        public void SetWinRTType()
+        {
+            instance.NewType = typeof(ClassWithMarshalingRoutines);
+        }
+
+        [Benchmark]
+        public void SetPrimitiveType()
+        {
+            instance.NewType = typeof(int);
+        }
+
+        [Benchmark]
+        public void SetNonWinRTType()
+        {
+            instance.NewType = typeof(ReflectionPerf);
+        }
+
+        [Benchmark]
+        public object GetExistingWinRTType()
+        {
+            return instance.ExistingType;
+        }
+
+        [Benchmark]
+        public void GetWeakReferenceOfManagedObject()
+        {
+            instance.GetWeakReference(managedObject);
+        }
+
+        [Benchmark]
+        public object GetAndResolveWeakReferenceOfManagedObject()
+        {
+            return instance.GetAndResolveWeakReference(managedObject);
+        }
+
+        [Benchmark]
+        public object GetWeakReferenceOfNativeObject()
+        {
+            return new WeakReference<ClassWithMarshalingRoutines>(instance);
         }
     }
 }

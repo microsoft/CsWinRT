@@ -48,6 +48,9 @@ namespace ABI.System.Collections.Specialized
         public static unsafe IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(NotifyCollectionChangedEventHandler)));
 
+        public static unsafe ObjectReferenceValue CreateMarshaler2(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler managedDelegate) => 
+            MarshalDelegate.CreateMarshaler2(managedDelegate, GuidGenerator.GetIID(typeof(NotifyCollectionChangedEventHandler)));
+
         public static IntPtr GetAbi(IObjectReference value) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.GetAbi(value);
 
         public static unsafe global::System.Collections.Specialized.NotifyCollectionChangedEventHandler FromAbi(IntPtr nativeDelegate)
@@ -102,25 +105,25 @@ namespace ABI.System.Collections.Specialized
 #else
                 var abiInvoke = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)(_nativeDelegate.Vftbl.Invoke);
 #endif
-                IObjectReference __sender = default;
-                IObjectReference __e = default;
+                ObjectReferenceValue __sender = default;
+                ObjectReferenceValue __e = default;
                 try
                 {
-                    __sender = MarshalInspectable<object>.CreateMarshaler(sender);
-                    __e = global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.CreateMarshaler(e);
-                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInspectable<object>.GetAbi(__sender), global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.GetAbi(__e)));
+                    __sender = MarshalInspectable<object>.CreateMarshaler2(sender);
+                    __e = global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.CreateMarshaler2(e);
+                    global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(ThisPtr, MarshalInspectable<object>.GetAbi(__sender), MarshalInspectable<object>.GetAbi(__e)));
                 }
                 finally
                 {
                     MarshalInspectable<object>.DisposeMarshaler(__sender);
-                    global::ABI.System.Collections.Specialized.NotifyCollectionChangedEventArgs.DisposeMarshaler(__e);
+                    MarshalInspectable<object>.DisposeMarshaler(__e);
                 }
 
             }
         }
 
-        public static IntPtr FromManaged(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler managedDelegate) =>
-            CreateMarshaler(managedDelegate)?.GetRef() ?? IntPtr.Zero;
+        public static IntPtr FromManaged(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler managedDelegate) => 
+            CreateMarshaler2(managedDelegate).Detach();
 
         public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::System.Collections.Specialized.NotifyCollectionChangedEventHandler>.DisposeMarshaler(value);
 
@@ -161,14 +164,8 @@ namespace ABI.System.Collections.Specialized
         {
         }
 
-        protected override IObjectReference CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler del) =>
-            del is null ? null : NotifyCollectionChangedEventHandler.CreateMarshaler(del);
-
-        protected override void DisposeMarshaler(IObjectReference marshaler) =>
-            NotifyCollectionChangedEventHandler.DisposeMarshaler(marshaler);
-
-        protected override IntPtr GetAbi(IObjectReference marshaler) =>
-            marshaler is null ? IntPtr.Zero : NotifyCollectionChangedEventHandler.GetAbi(marshaler);
+        protected override ObjectReferenceValue CreateMarshaler(global::System.Collections.Specialized.NotifyCollectionChangedEventHandler del) =>
+            NotifyCollectionChangedEventHandler.CreateMarshaler2(del);
 
         protected override State CreateEventState() =>
             new EventState(_obj.ThisPtr, _index);

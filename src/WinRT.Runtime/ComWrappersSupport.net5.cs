@@ -173,13 +173,13 @@ namespace WinRT
             return ObjectReference<IUnknownVftbl>.Attach(ref ccw);
         }
 
-        internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
+        internal static IntPtr CreateCCWForObjectForABI(object obj, Guid iid)
         {
             IntPtr ccw = ComWrappers.GetOrCreateComInterfaceForObject(obj, CreateComInterfaceFlags.TrackerSupport);
             try
             {
                 Marshal.ThrowExceptionForHR(Marshal.QueryInterface(ccw, ref iid, out var iidCcw));
-                return ObjectReference<T>.Attach(ref iidCcw);
+                return iidCcw;
             }
             finally
             {
@@ -211,61 +211,50 @@ namespace WinRT
             ComWrappers = wrappers;
         }
 
-        internal static Func<IInspectable, object> GetTypedRcwFactory(string runtimeClassName) => TypedObjectFactoryCacheForRuntimeClassName.GetOrAdd(runtimeClassName, className => CreateTypedRcwFactory(className));
         internal static Func<IInspectable, object> GetTypedRcwFactory(Type implementationType) => TypedObjectFactoryCacheForType.GetOrAdd(implementationType, classType => CreateTypedRcwFactory(classType));
         
         private static Func<IInspectable, object> CreateFactoryForImplementationType(string runtimeClassName, Type implementationType)
         {
-            ParameterExpression[] parms = new[] { Expression.Parameter(typeof(IInspectable), "inspectable") };
-
             if (implementationType.IsGenericType)
             {
                 var genericType = implementationType.GetGenericTypeDefinition();
+
+                Type genericImplType = null;
                 if (genericType == typeof(IList<>))
                 {
-                    return Expression.Lambda<Func<IInspectable, object>>(
-                    Expression.New(typeof(IListImpl<>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
-                        Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
-                    parms).Compile();
+                    genericImplType = typeof(IListImpl<>);
                 }
-                if (genericType == typeof(IDictionary<,>))
+                else if (genericType == typeof(IDictionary<,>))
                 {
-                    return Expression.Lambda<Func<IInspectable, object>>(
-                    Expression.New(typeof(IDictionaryImpl<,>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0], implementationType.GetGenericArguments()[1] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
-                        Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
-                    parms).Compile();
+                    genericImplType = typeof(IDictionaryImpl<,>);
                 }
-                if (genericType == typeof(IReadOnlyDictionary<,>))
+                else if (genericType == typeof(IReadOnlyDictionary<,>))
                 {
-                    return Expression.Lambda<Func<IInspectable, object>>(
-                    Expression.New(typeof(IReadOnlyDictionaryImpl<,>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0], implementationType.GetGenericArguments()[1] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
-                        Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
-                    parms).Compile();
+                    genericImplType = typeof(IReadOnlyDictionaryImpl<,>);
                 }
-                if (genericType == typeof(IReadOnlyList<>))
+                else if (genericType == typeof(IReadOnlyList<>))
                 {
-                    return Expression.Lambda<Func<IInspectable, object>>(
-                    Expression.New(typeof(IReadOnlyListImpl<>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
-                        Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
-                    parms).Compile();
+                    genericImplType = typeof(IReadOnlyListImpl<>);
                 }
-                if (genericType == typeof(IEnumerable<>))
+                else if (genericType == typeof(IEnumerable<>))
                 {
-                    return Expression.Lambda<Func<IInspectable, object>>(
-                    Expression.New(typeof(IEnumerableImpl<>).MakeGenericType(new[] { implementationType.GetGenericArguments()[0] }).GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
-                        Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
-                    parms).Compile();
+                    genericImplType = typeof(IEnumerableImpl<>);
+                }
+
+                if (genericImplType != null)
+                {
+                    var createRcw = genericImplType.MakeGenericType(implementationType.GetGenericArguments()).GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(IInspectable) }, null);
+                    return (Func<IInspectable, object>)createRcw.CreateDelegate(typeof(Func<IInspectable, object>));
                 }
             }
+
             if (implementationType.IsInterface)
             {
                 return obj => obj;
             }
 
-            return Expression.Lambda<Func<IInspectable, object>>(
-                Expression.New(implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null),
-                    Expression.Property(parms[0], nameof(WinRT.IInspectable.ObjRef))),
-                parms).Compile();
+            var constructor = implementationType.GetConstructor(BindingFlags.NonPublic | BindingFlags.CreateInstance | BindingFlags.Instance, null, new[] { typeof(IObjectReference) }, null);
+            return (IInspectable obj) => constructor.Invoke(new[] { obj.ObjRef });
         }
     }
 
@@ -462,14 +451,14 @@ namespace WinRT
 
                 entries.Add(new ComInterfaceEntry
                 {
-                    IID = typeof(IInspectable).GUID,
+                    IID = InterfaceIIDs.IInspectable_IID,
                     Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
                 });
 
                 // This should be the last entry as it is included / excluded based on the flags.
                 entries.Add(new ComInterfaceEntry
                 {
-                    IID = typeof(IUnknownVftbl).GUID,
+                    IID = IUnknownVftbl.IID,
                     Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
                 });
 
@@ -507,7 +496,7 @@ namespace WinRT
 
         private static object CreateObject(IntPtr externalComObject)
         {
-            Guid inspectableIID = IInspectable.IID;
+            Guid inspectableIID = InterfaceIIDs.IInspectable_IID;
             Guid weakReferenceIID = ABI.WinRT.Interop.IWeakReference.IID;
             IntPtr ptr = IntPtr.Zero;
 
@@ -526,15 +515,15 @@ namespace WinRT
                         return ComWrappersSupport.GetTypedRcwFactory(ComWrappersSupport.CreateRCWType)(inspectable);
                     }
 
-                    string runtimeClassName = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType);
-                    if (string.IsNullOrEmpty(runtimeClassName))
+                    Type runtimeClassType = ComWrappersSupport.GetRuntimeClassForTypeCreation(inspectable, ComWrappersSupport.CreateRCWType);
+                    if (runtimeClassType == null)
                     {
                         // If the external IInspectable has not implemented GetRuntimeClassName,
                         // we use the Inspectable wrapper directly.
                         return inspectable;
                     }
 
-                    return ComWrappersSupport.GetTypedRcwFactory(runtimeClassName)(inspectable);
+                    return ComWrappersSupport.GetTypedRcwFactory(runtimeClassType)(inspectable);
                 }
                 else if (Marshal.QueryInterface(externalComObject, ref weakReferenceIID, out ptr) == 0)
                 {

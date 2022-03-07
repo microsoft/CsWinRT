@@ -39,69 +39,16 @@ namespace ABI.WinRT.Interop
 {
     using global::WinRT;
 
-    [DynamicInterfaceCastableImplementation]
-    [Guid("C03F6A43-65A4-9818-987E-E0B810D2A6F2")]
-    internal unsafe interface IAgileReference : global::WinRT.Interop.IAgileReference
+    internal static class IAgileReferenceMethods
     {
-        [Guid("C03F6A43-65A4-9818-987E-E0B810D2A6F2")]
-        public struct Vftbl
+        public static unsafe IObjectReference Resolve(IObjectReference _obj, Guid riid)
         {
-            public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-            private void* _Resolve;
-            public delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int> Resolve { get => (delegate* unmanaged[Stdcall]<IntPtr, ref Guid, out IntPtr, int>)_Resolve; set => _Resolve = value; }
+            if (_obj == null) return null;
 
-            public static readonly Vftbl AbiToProjectionVftable;
-            public static readonly IntPtr AbiToProjectionVftablePtr;
-
-#if !NET
-            public delegate int ResolveDelegate(IntPtr thisPtr, Guid* riid, IntPtr* objectReference);
-            private static readonly Delegate[] DelegateCache = new Delegate[1];
-#endif
-            static Vftbl()
-            {
-                AbiToProjectionVftable = new Vftbl
-                {
-                    IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-#if !NET
-                    _Resolve = Marshal.GetFunctionPointerForDelegate(DelegateCache[0] = new ResolveDelegate(Do_Abi_Resolve)).ToPointer(),
-#else
-                    _Resolve = (delegate* unmanaged<IntPtr, Guid*, IntPtr*, int>)&Do_Abi_Resolve
-#endif
-                };
-                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
-                Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
-            }
-
-#if NET
-            [UnmanagedCallersOnly]
-#endif
-            private static int Do_Abi_Resolve(IntPtr thisPtr, Guid* riid, IntPtr* objectReference)
-            {
-                IObjectReference _objectReference = default;
-
-                *objectReference = default;
-
-                try
-                {
-                    _objectReference = global::WinRT.ComWrappersSupport.FindObject<global::WinRT.Interop.IAgileReference>(thisPtr).Resolve(*riid);
-                    *objectReference = _objectReference?.GetRef() ?? IntPtr.Zero;
-                }
-                catch (Exception __exception__)
-                {
-                    return __exception__.HResult;
-                }
-                return 0;
-            }
-        }
-
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
-
-        IObjectReference global::WinRT.Interop.IAgileReference.Resolve(Guid riid)
-        {
-            var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::WinRT.Interop.IAgileReference).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
-
-            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Resolve(ThisPtr, ref riid, out IntPtr ptr));
+            IntPtr ptr = IntPtr.Zero;
+            ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)ThisPtr)[3](
+                ThisPtr, &riid, &ptr));
             try
             {
                 return ComWrappersSupport.GetObjectReferenceForInterface(ptr);
@@ -111,38 +58,81 @@ namespace ABI.WinRT.Interop
                 MarshalInspectable<object>.DisposeAbi(ptr);
             }
         }
+
+        public static unsafe ObjectReference<T> Resolve<T>(IObjectReference _obj, Guid riid)
+        {
+            if (_obj == null) return null;
+
+            var ThisPtr = _obj.ThisPtr;
+            IntPtr ptr = IntPtr.Zero;
+            ExceptionHelpers.ThrowExceptionForHR((*(delegate* unmanaged[Stdcall]<IntPtr, Guid*, IntPtr*, int>**)ThisPtr)[3](
+                ThisPtr, &riid, &ptr));
+            try
+            {
+                return ComWrappersSupport.GetObjectReferenceForInterface<T>(ptr);
+            }
+            finally
+            {
+                MarshalInspectable<object>.DisposeAbi(ptr);
+            }
+        }
+    }
+
+    [DynamicInterfaceCastableImplementation]
+    [Guid("C03F6A43-65A4-9818-987E-E0B810D2A6F2")]
+    internal unsafe interface IAgileReference : global::WinRT.Interop.IAgileReference
+    {
+        public static IntPtr AbiToProjectionVftablePtr;
+        static unsafe IAgileReference()
+        {
+            AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(IAgileReference), sizeof(global::WinRT.Interop.IUnknownVftbl) + sizeof(IntPtr) * 1);
+            *(global::WinRT.Interop.IUnknownVftbl*)AbiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
+            ((delegate* unmanaged<IntPtr, Guid*, IntPtr*, int>*)AbiToProjectionVftablePtr)[3] = &Do_Abi_Resolve;
+        }
+
+        [UnmanagedCallersOnly]
+        private static int Do_Abi_Resolve(IntPtr thisPtr, Guid* riid, IntPtr* objectReference)
+        {
+            IObjectReference _objectReference = default;
+
+            *objectReference = default;
+
+            try
+            {
+                _objectReference = global::WinRT.ComWrappersSupport.FindObject<global::WinRT.Interop.IAgileReference>(thisPtr).Resolve(*riid);
+                *objectReference = _objectReference?.GetRef() ?? IntPtr.Zero;
+            }
+            catch (Exception __exception__)
+            {
+                return __exception__.HResult;
+            }
+            return 0;
+        }
+
+        IObjectReference global::WinRT.Interop.IAgileReference.Resolve(Guid riid)
+        {
+            var _obj = ((IWinRTObject)this).GetObjectReferenceForType(typeof(global::WinRT.Interop.IAgileReference).TypeHandle);
+            return IAgileReferenceMethods.Resolve(_obj, riid);
+        }
     }
 
     [DynamicInterfaceCastableImplementation]
     [Guid("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90")]
     interface IAgileObject : global::WinRT.Interop.IAgileObject
     {
-        [Guid("94ea2b94-e9cc-49e0-c0ff-ee64ca8f5b90")]
-        public struct Vftbl
+        public static IntPtr AbiToProjectionVftablePtr;
+        static unsafe IAgileObject()
         {
-            public global::WinRT.Interop.IUnknownVftbl IUnknownVftbl;
-
-            public static readonly Vftbl AbiToProjectionVftable;
-            public static readonly IntPtr AbiToProjectionVftablePtr;
-
-            static Vftbl()
-            {
-                AbiToProjectionVftable = new Vftbl
-                {
-                    IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
-                };
-                AbiToProjectionVftablePtr = Marshal.AllocHGlobal(Marshal.SizeOf<Vftbl>());
-                Marshal.StructureToPtr(AbiToProjectionVftable, AbiToProjectionVftablePtr, false);
-            }
+            AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(IAgileObject), sizeof(global::WinRT.Interop.IUnknownVftbl));
+            *(global::WinRT.Interop.IUnknownVftbl*)AbiToProjectionVftablePtr = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl;
         }
-
-        public static ObjectReference<Vftbl> FromAbi(IntPtr thisPtr) => ObjectReference<Vftbl>.FromAbi(thisPtr);
-
     }
 
     [Guid("00000146-0000-0000-C000-000000000046")]
     internal sealed unsafe class IGlobalInterfaceTable : global::WinRT.Interop.IGlobalInterfaceTable
     {
+        internal static readonly Guid IID = new(0x00000146, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
+
         [Guid("00000146-0000-0000-C000-000000000046")]
         [StructLayout(LayoutKind.Sequential)]
         public struct Vftbl

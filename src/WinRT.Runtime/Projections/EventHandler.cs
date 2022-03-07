@@ -46,6 +46,9 @@ namespace ABI.System
         public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler<T> managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, PIID);
 
+        public static unsafe ObjectReferenceValue CreateMarshaler2(global::System.EventHandler<T> managedDelegate) => 
+            MarshalDelegate.CreateMarshaler2(managedDelegate, PIID);
+
         public static IntPtr GetAbi(IObjectReference value) =>
             value is null ? IntPtr.Zero : MarshalInterfaceHelper<global::System.EventHandler<T>>.GetAbi(value);
 
@@ -97,12 +100,12 @@ namespace ABI.System
             {
                 IntPtr ThisPtr = _nativeDelegate.ThisPtr;
                 var abiInvoke = Marshal.GetDelegateForFunctionPointer(_nativeDelegate.Vftbl.Invoke, Abi_Invoke_Type);
-                IObjectReference __sender = default;
+                ObjectReferenceValue __sender = default;
                 object __args = default;
                 var __params = new object[] { ThisPtr, null, null };
                 try
                 {
-                    __sender = MarshalInspectable<object>.CreateMarshaler(sender);
+                    __sender = MarshalInspectable<object>.CreateMarshaler2(sender);
                     __params[1] = MarshalInspectable<object>.GetAbi(__sender);
                     __args = Marshaler<T>.CreateMarshaler(args);
                     __params[2] = Marshaler<T>.GetAbi(__args);
@@ -116,8 +119,8 @@ namespace ABI.System
             }
         }
 
-        public static IntPtr FromManaged(global::System.EventHandler<T> managedDelegate) =>
-            CreateMarshaler(managedDelegate)?.GetRef() ?? IntPtr.Zero;
+        public static IntPtr FromManaged(global::System.EventHandler<T> managedDelegate) => 
+            CreateMarshaler2(managedDelegate).Detach();
 
         public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::System.EventHandler<T>>.DisposeMarshaler(value);
 
@@ -179,6 +182,9 @@ namespace ABI.System
         public static unsafe IObjectReference CreateMarshaler(global::System.EventHandler managedDelegate) =>
             managedDelegate is null ? null : MarshalDelegate.CreateMarshaler(managedDelegate, GuidGenerator.GetIID(typeof(EventHandler)));
 
+        public static unsafe ObjectReferenceValue CreateMarshaler2(global::System.EventHandler managedDelegate) =>
+            MarshalDelegate.CreateMarshaler2(managedDelegate, GuidGenerator.GetIID(typeof(EventHandler)));
+
         public static IntPtr GetAbi(IObjectReference value) =>
             value is null ? IntPtr.Zero : MarshalInterfaceHelper<global::System.EventHandler<object>>.GetAbi(value);
 
@@ -234,12 +240,12 @@ namespace ABI.System
 #else
                 var abiInvoke = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, IntPtr, int>)(_nativeDelegate.Vftbl.Invoke);
 #endif
-                IObjectReference __sender = default;
-                IObjectReference __args = default;
+                ObjectReferenceValue __sender = default;
+                ObjectReferenceValue __args = default;
                 try
                 {
-                    __sender = MarshalInspectable<object>.CreateMarshaler(sender);
-                    __args = MarshalInspectable<EventArgs>.CreateMarshaler(args);
+                    __sender = MarshalInspectable<object>.CreateMarshaler2(sender);
+                    __args = MarshalInspectable<EventArgs>.CreateMarshaler2(args);
                     global::WinRT.ExceptionHelpers.ThrowExceptionForHR(abiInvoke(
                         ThisPtr,
                         MarshalInspectable<object>.GetAbi(__sender),
@@ -253,8 +259,8 @@ namespace ABI.System
             }
         }
 
-        public static IntPtr FromManaged(global::System.EventHandler managedDelegate) =>
-            CreateMarshaler(managedDelegate)?.GetRef() ?? IntPtr.Zero;
+        public static IntPtr FromManaged(global::System.EventHandler managedDelegate) => 
+            CreateMarshaler2(managedDelegate).Detach();
 
         public static void DisposeMarshaler(IObjectReference value) => MarshalInterfaceHelper<global::System.EventHandler<object>>.DisposeMarshaler(value);
 
@@ -299,14 +305,8 @@ namespace ABI.System
         {
         }
 
-        protected override IObjectReference CreateMarshaler(global::System.EventHandler del) =>
-            del is null ? null : EventHandler.CreateMarshaler(del);
-
-        protected override void DisposeMarshaler(IObjectReference marshaler) =>
-            EventHandler.DisposeMarshaler(marshaler);
-
-        protected override IntPtr GetAbi(IObjectReference marshaler) =>
-            marshaler is null ? IntPtr.Zero : EventHandler.GetAbi(marshaler);
+        protected override ObjectReferenceValue CreateMarshaler(global::System.EventHandler del) => 
+            EventHandler.CreateMarshaler2(del);
 
         protected override State CreateEventState() =>
             new EventState(_obj.ThisPtr, _index);

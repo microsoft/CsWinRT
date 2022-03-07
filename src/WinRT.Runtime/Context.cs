@@ -19,7 +19,7 @@ namespace WinRT
 
         public static IntPtr GetContextCallback()
         {
-            Guid riid = typeof(IContextCallback).GUID;
+            Guid riid = ABI.WinRT.Interop.IContextCallback.IID;
             Marshal.ThrowExceptionForHR(CoGetObjectContext(ref riid, out IntPtr contextCallbackPtr));
             return contextCallbackPtr;
         }

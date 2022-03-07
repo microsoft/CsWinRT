@@ -150,13 +150,13 @@ namespace ABI.System.Windows.Input
 
         unsafe bool global::System.Windows.Input.ICommand.CanExecute(object parameter)
         {
-            IObjectReference __parameter = default;
+            ObjectReferenceValue __parameter = default;
             byte __retval = default;
             try
             {
                 var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle));
                 var ThisPtr = _obj.ThisPtr;
-                __parameter = MarshalInspectable<object>.CreateMarshaler(parameter);
+                __parameter = MarshalInspectable<object>.CreateMarshaler2(parameter);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.CanExecute_2(ThisPtr, MarshalInspectable<object>.GetAbi(__parameter), out __retval));
                 return __retval != 0;
             }
@@ -170,10 +170,10 @@ namespace ABI.System.Windows.Input
         {
             var _obj = ((ObjectReference<Vftbl>)((IWinRTObject)this).GetObjectReferenceForType(typeof(global::System.Windows.Input.ICommand).TypeHandle));
             var ThisPtr = _obj.ThisPtr;
-            IObjectReference __parameter = default;
+            ObjectReferenceValue __parameter = default;
             try
             {
-                __parameter = MarshalInspectable<object>.CreateMarshaler(parameter);
+                __parameter = MarshalInspectable<object>.CreateMarshaler2(parameter);
                 global::WinRT.ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.Execute_3(ThisPtr, MarshalInspectable<object>.GetAbi(__parameter)));
             }
             finally

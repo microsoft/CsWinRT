@@ -6,6 +6,7 @@ namespace cswinrt
     using namespace winmd::reader;
 
     std::string get_mapped_element_type(ElementType elementType);
+    bool is_default_interface(InterfaceImpl const& ifaceImpl);
 
     static inline bool starts_with(std::string_view const& value, std::string_view const& match) noexcept
     {
@@ -444,7 +445,7 @@ namespace cswinrt
 
         for (auto&& impl : impls)
         {
-            if (has_attribute(impl, "Windows.Foundation.Metadata", "DefaultAttribute"))
+            if (is_default_interface(impl))
             {
                 return impl.Interface();
             }
@@ -995,4 +996,236 @@ namespace cswinrt
             return "Unknown";
         }
     }
+
+    template <typename T>
+    int get_number_of_attributes(T const& row, std::string_view const& type_namespace, std::string_view const& type_name)
+    {
+        auto count = 0;
+        for (auto&& attribute : row.CustomAttribute())
+        {
+            auto pair = attribute.TypeNamespaceAndName();
+
+            if (pair.first == type_namespace && pair.second == type_name)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    int get_class_hierarchy_index(TypeDef const& classType)
+    {
+        auto sem = get_type_semantics(classType.Extends());
+        if (std::holds_alternative<type_definition>(sem))
+        {
+            return get_class_hierarchy_index(std::get<type_definition>(sem)) + 1;
+        }
+        return 0;
+    }
+
+    bool interfaces_equal(TypeDef const& interface1, TypeDef const& interface2)
+    {
+        return interface1.TypeNamespace() == interface2.TypeNamespace()
+            && interface1.TypeName() == interface2.TypeName();
+    }
+
+    template <typename T>
+    auto get_attribute_value(CustomAttribute const& attribute, uint32_t const arg)
+    {
+        return std::get<T>(std::get<ElemSig>(attribute.Value().FixedArgs()[arg].value).value);
+    }
+
+    std::optional<int> get_contract_version(TypeDef const& type)
+    {
+        if (!has_attribute(type, "Windows.Foundation.Metadata", "ContractVersionAttribute"))
+        {
+            return {};
+        }
+        return get_attribute_value<uint32_t>(get_attribute(type, "Windows.Foundation.Metadata"sv, "ContractVersionAttribute"sv), 1);
+    }
+
+    std::optional<int> get_version(TypeDef const& type)
+    {
+        if (!has_attribute(type, "Windows.Foundation.Metadata", "VersionAttribute"))
+        {
+            return {};
+        }
+        return get_attribute_value<uint32_t>(get_attribute(type, "Windows.Foundation.Metadata"sv, "VersionAttribute"sv), 0);
+    }
+
+    bool is_fast_abi_class(TypeDef const& type)
+    {
+        return has_attribute(type, "Windows.Foundation.Metadata"sv, "FastAbiAttribute"sv) && !settings.netstandard_compat;
+    }
+
+    bool is_default_interface(InterfaceImpl const& ifaceImpl)
+    {
+        return has_attribute(ifaceImpl, "Windows.Foundation.Metadata", "DefaultAttribute");
+    }
+
+    std::optional<TypeDef> find_fast_abi_class_type(TypeDef const& iface)
+    {
+        static std::map<TypeDef, std::optional<TypeDef>> cache;
+        if (cache.find(iface) != cache.end())
+        {
+            return cache[iface];
+        }
+        auto exclusiveToAttribute = get_attribute(iface, "Windows.Foundation.Metadata"sv, "ExclusiveToAttribute"sv);
+        if (exclusiveToAttribute)
+        {
+            auto sys_type = get_attribute_value<ElemSig::SystemType>(exclusiveToAttribute, 0);
+            TypeDef exclusiveToClass = iface.get_cache().find_required(sys_type.name);
+            if (!is_fast_abi_class(exclusiveToClass))
+            {
+                return {};
+            }
+            cache[iface] = exclusiveToClass;
+            return exclusiveToClass;
+        }
+        return {};
+    }
+
+    std::pair<TypeDef, std::vector<TypeDef>> get_default_and_exclusive_interfaces(TypeDef const& classType)
+    {
+        std::pair<TypeDef, std::vector<TypeDef>> exclusive_ifaces;
+        for (auto&& ifaceImpl : classType.InterfaceImpl())
+        {
+            auto&& sem = get_type_semantics(ifaceImpl.Interface());
+            if (is_default_interface(ifaceImpl))
+            {
+                exclusive_ifaces.first = std::get<type_definition>(sem);
+            }
+            else if (std::holds_alternative<type_definition>(sem))
+            {
+                if (has_attribute(std::get<type_definition>(sem), "Windows.Foundation.Metadata"sv, "ExclusiveToAttribute"sv))
+                {
+                    exclusive_ifaces.second.push_back(std::get<type_definition>(sem));
+                }
+            }
+        }
+        return exclusive_ifaces;
+    }
+
+    type_semantics get_default_iface_as_type_sem(TypeDef const& classType)
+    {
+        for (auto&& ifaceImpl : classType.InterfaceImpl())
+        {
+            auto&& sem = get_type_semantics(ifaceImpl.Interface());
+            if (is_default_interface(ifaceImpl))
+            {
+                return sem;
+            }
+        }
+        throw_invalid("Class does not have a default interface");
+    }
+
+    void sort_fast_abi_ifaces(std::vector<TypeDef>& fast_abi_ifaces)
+    {
+        std::sort(fast_abi_ifaces.begin(), fast_abi_ifaces.end(), [](TypeDef const& iface, TypeDef const& otherIface)
+        {
+            // compare relative contracts
+            auto relativeContractValueIface = -1 * get_number_of_attributes(iface, "Windows.Foundation.Metadata"sv, "PreviousContractVersionAttribute"sv);
+            auto relativeContractValueOtherIface = -1 * get_number_of_attributes(otherIface, "Windows.Foundation.Metadata"sv, "PreviousContractVersionAttribute"sv);
+            if (relativeContractValueIface != relativeContractValueOtherIface)
+                return relativeContractValueIface < relativeContractValueOtherIface;
+
+            //compare contract versions if they exist
+            auto contractVersionIface = get_contract_version(iface);
+            auto contractVersionOtherIface = get_contract_version(otherIface);
+            if (contractVersionIface.has_value() && contractVersionOtherIface.has_value() && contractVersionIface.value() != contractVersionOtherIface.value())
+                return contractVersionIface.value() < contractVersionOtherIface.value();
+
+            //compare versions
+            auto versionIface = get_version(iface);
+            auto versionOtherIface = get_version(otherIface);
+            if (versionIface.has_value() && versionOtherIface.has_value() && versionIface.value() != versionOtherIface.value())
+                return versionIface.value() < versionOtherIface.value();
+
+            //compare type names
+            return iface.TypeNamespace() == otherIface.TypeNamespace() ? iface.TypeName() < otherIface.TypeName() : iface.TypeNamespace() < otherIface.TypeNamespace();
+        });
+    }
+
+    struct fast_abi_class
+    {
+        const TypeDef class_type;
+        const TypeDef default_interface;
+        const std::vector<TypeDef> other_interfaces;
+
+        fast_abi_class(TypeDef class_type, TypeDef default_interface, std::vector<TypeDef> other_interfaces)
+            : class_type(class_type), default_interface(default_interface), other_interfaces(other_interfaces)
+        {
+            int vtable_start_index = 6;
+            add_property_caches(default_interface, vtable_start_index);
+            vtable_start_index += distance(default_interface.MethodList()) + get_class_hierarchy_index(class_type);
+            for (auto&& other_iface : other_interfaces)
+            {
+                other_interfaces_cache.insert(std::pair(other_iface.TypeNamespace(), other_iface.TypeName()));
+                add_property_caches(other_iface, vtable_start_index);
+                vtable_start_index += distance(other_iface.MethodList());
+            }
+        }
+
+        bool contains_other_interface(TypeDef const& iface)
+        {
+            return other_interfaces_cache.find(std::pair(iface.TypeNamespace(), iface.TypeName())) != other_interfaces_cache.end();
+        }
+
+        std::pair<MethodDef, int> find_property_setter(std::string_view property_name)
+        {
+            return property_setters_cache[property_name];
+        }
+
+        bool contains_setter(std::string_view property_name)
+        {
+            return property_setters_cache.find(property_name) != property_setters_cache.end();
+        }
+
+        bool contains_getter(std::string_view property_name)
+        {
+            return property_getters_cache.find(property_name) != property_getters_cache.end();
+        }
+
+    private:
+        std::set<std::pair<std::string_view, std::string_view>> other_interfaces_cache;
+        std::map<std::string_view, std::pair<MethodDef, int>> property_setters_cache;
+        std::set<std::string_view> property_getters_cache;
+        
+        void add_property_caches(TypeDef const& iface, int vtable_start_index)
+        {
+            for (auto prop : iface.PropertyList())
+            {
+                auto&& [getter, setter] = get_property_methods(prop);
+                if (getter)
+                {
+                    property_getters_cache.insert(prop.Name());
+                }
+                if (setter)
+                {
+                    property_setters_cache[prop.Name()] = std::pair(setter, vtable_start_index);
+                }
+            }
+        }
+    };
+
+    std::optional<fast_abi_class> get_fast_abi_class_for_class(TypeDef const& classType)
+    {
+        if (!is_fast_abi_class(classType))
+        {
+            return {};
+        }
+        auto [default_iface, other_ifaces] = get_default_and_exclusive_interfaces(classType);
+        sort_fast_abi_ifaces(other_ifaces);
+        return fast_abi_class(classType, default_iface, other_ifaces);
+    }
+
+    std::optional<fast_abi_class> get_fast_abi_class_for_interface(TypeDef const& iface)
+    {
+        auto fast_abi_class_type = find_fast_abi_class_type(iface);
+        if (!fast_abi_class_type.has_value()) {
+            return {};
+        }
+        return get_fast_abi_class_for_class(fast_abi_class_type.value());
+    }
+
 }
