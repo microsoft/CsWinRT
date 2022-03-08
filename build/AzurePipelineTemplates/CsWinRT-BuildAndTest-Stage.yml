@@ -169,7 +169,8 @@ stages:
 
           set cswinrt_echo=on
           set cswinrt_build_only=true
-          set cswinrt_build_params=/bl:$(Build.SourcesDirectory)\cswinrt.binlog /p:CleanIntermediateDirs=true /p:AllowedReferenceRelatedFileExtensions=none
+          rem AllowedReferenceRelatedFileExtensions includes all the default extensions other than pdb to address space issues resulting from pdbs being copied for each project reference.
+          set cswinrt_build_params=/bl:$(Build.SourcesDirectory)\cswinrt.binlog /p:CleanIntermediateDirs=true /p:AllowedReferenceRelatedFileExtensions=.xml;.pri;.dll.config;.exe.config
           build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
 
 # Mask BuildConfiguration
