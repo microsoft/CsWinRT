@@ -1407,6 +1407,11 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::unbox_value<hstring>(obj);
     }
 
+    EnumValue Class::UnboxEnum(WF::IInspectable const& obj)
+    {
+        return winrt::unbox_value<EnumValue>(obj);
+    }
+
     winrt::TestComponentCSharp::ProvideInt Class::UnboxDelegate(WF::IInspectable const& obj)
     {
         return winrt::unbox_value<TestComponentCSharp::ProvideInt>(obj);
@@ -1471,6 +1476,12 @@ namespace winrt::TestComponentCSharp::implementation
     {
         TestComponentCSharp::ProvideUri handler = [] { return Windows::Foundation::Uri(L"http://microsoft.com"); };
         return winrt::box_value(handler);
+    }
+
+    WF::IInspectable Class::BoxedEnum()
+    {
+        EnumValue val = EnumValue::Two;
+        return winrt::box_value(val);
     }
 
     hstring Class::Catch(hstring const& /*params*/, hstring& /*lock*/)
