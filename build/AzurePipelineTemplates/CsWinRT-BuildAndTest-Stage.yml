@@ -169,7 +169,7 @@ stages:
 
           set cswinrt_echo=on
           set cswinrt_build_only=true
-          rem AllowedReferenceRelatedFileExtensions includes all the default extensions other than pdb to address space issues resulting from pdbs being copied for each project reference.
+          rem PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
           set cswinrt_build_params=/bl:$(Build.SourcesDirectory)\cswinrt.binlog /p:CleanIntermediateDirs=true /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
           build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
 
