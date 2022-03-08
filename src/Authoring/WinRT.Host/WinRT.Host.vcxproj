@@ -100,26 +100,32 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>WinRT.Host</TargetName>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>WinRT.Host</TargetName>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>WinRT.Host</TargetName>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>WinRT.Host</TargetName>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>WinRT.Host</TargetName>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>WinRT.Host</TargetName>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -141,6 +147,14 @@
       <IgnoreSpecificDefaultLibraries>libcpmtd.lib</IgnoreSpecificDefaultLibraries>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
+    <PostBuildEvent>
+      <Command>mkdir .\en-US
+Muirct -v 2 -x 0x0409 -g 0x0407 .\WinRT.Host.dll .\WinRT.Host.dll .\en-US\WinRT.Host.dll.mui
+Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Invoke MUICRT on WinRT.Host for localization</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -187,6 +201,14 @@
       <IgnoreSpecificDefaultLibraries>libcpmtd.lib</IgnoreSpecificDefaultLibraries>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
+    <PostBuildEvent>
+      <Command>mkdir .\en-US
+Muirct -v 2 -x 0x0409 -g 0x0407 .\WinRT.Host.dll .\WinRT.Host.dll .\en-US\WinRT.Host.dll.mui
+Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Invoke MUICRT on WinRT.Host for localization</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
@@ -209,6 +231,14 @@
       <IgnoreSpecificDefaultLibraries>libcpmtd.lib</IgnoreSpecificDefaultLibraries>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
+    <PostBuildEvent>
+      <Command>mkdir .\en-US
+Muirct -v 2 -x 0x0409 -g 0x0407 .\WinRT.Host.dll .\WinRT.Host.dll .\en-US\WinRT.Host.dll.mui
+Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Invoke MUICRT on WinRT.Host for localization</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -264,10 +294,35 @@
       LINK : fatal error C1047: The object or library file ...libnethost.lib was created by a different version of the compiler than other objects like dllmain.obj... -->
       <AdditionalOptions>/GL- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">mkdir .\en-US
+Muirct -v 2 -x 0x0409 -g 0x0407 .\WinRT.Host.dll .\WinRT.Host.dll .\en-US\WinRT.Host.dll.mui
+Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Invoke MUICRT on WinRT.Host for localization</Message>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">mkdir .\en-US
+Muirct -v 2 -x 0x0409 -g 0x0407 .\WinRT.Host.dll .\WinRT.Host.dll .\en-US\WinRT.Host.dll.mui
+Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Invoke MUICRT on WinRT.Host for localization</Message>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">mkdir .\en-US
+Muirct -v 2 -x 0x0409 -g 0x0407 .\WinRT.Host.dll .\WinRT.Host.dll .\en-US\WinRT.Host.dll.mui
+Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Invoke MUICRT on WinRT.Host for localization</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="hostfxr_status.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -288,12 +343,12 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WinRT.Host.ErrorStrings\WinRT.Host.ErrorStrings.vcxproj">
-      <Project>{29c9b987-5a54-49e0-af4b-fb7be0c8676f}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
       <Project>{0bb8f82d-874e-45aa-bca3-20ce0562164a}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WinRTHostErrorStrings.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
