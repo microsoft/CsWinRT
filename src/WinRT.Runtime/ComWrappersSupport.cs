@@ -123,6 +123,32 @@ namespace WinRT
             }
         }
 
+        public static ObjectReference<T> GetObjectReferenceForInterface<T>(IntPtr externalComObject, Guid iid)
+        {
+            if (externalComObject == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface(externalComObject, ref iid, out IntPtr ptr));
+            ObjectReference<T> objRef = ObjectReference<T>.Attach(ref ptr);
+            if (IsFreeThreaded(objRef))
+            {
+                return objRef;
+            }
+            else
+            {
+                using (objRef)
+                {
+                    return new ObjectReferenceWithContext<T>(
+                        objRef.GetRef(),
+                        Context.GetContextCallback(),
+                        Context.GetContextToken(),
+                        iid);
+                }
+            }
+        }
+
         public static void RegisterProjectionAssembly(Assembly assembly) => TypeNameSupport.RegisterProjectionAssembly(assembly);
 
         internal static object GetRuntimeClassCCWTypeIfAny(object obj)
@@ -143,73 +169,83 @@ namespace WinRT
         internal static List<ComInterfaceEntry> GetInterfaceTableEntries(Type type)
         {
             var entries = new List<ComInterfaceEntry>();
-            var objType = type.GetRuntimeClassCCWType() ?? type;
-            var interfaces = objType.GetInterfaces();
             bool hasCustomIMarshalInterface = false;
-            foreach (var iface in interfaces)
-            {
-                if (Projections.IsTypeWindowsRuntimeType(iface))
-                {
-                    var ifaceAbiType = iface.FindHelperType();
-                    Guid iid = GuidGenerator.GetIID(ifaceAbiType);
-                    entries.Add(new ComInterfaceEntry
-                    {
-                        IID = iid,
-                        Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
-                    });
-
-                    if (!hasCustomIMarshalInterface && iid == ABI.WinRT.Interop.IMarshal.IID)
-                    {
-                        hasCustomIMarshalInterface = true;
-                    }
-                }
-
-                if (iface.IsConstructedGenericType
-                    && Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, out var compatibleIfaces))
-                {
-                    foreach (var compatibleIface in compatibleIfaces)
-                    {
-                        var compatibleIfaceAbiType = compatibleIface.FindHelperType();
-                        entries.Add(new ComInterfaceEntry
-                        {
-                            IID = GuidGenerator.GetIID(compatibleIfaceAbiType),
-                            Vtable = (IntPtr)compatibleIfaceAbiType.GetAbiToProjectionVftblPtr()
-                        });
-                    }
-                }
-            }
 
             if (type.IsDelegate())
             {
+                // Delegates have no interfaces that they implement, so adding default WinRT entries.
                 var helperType = type.FindHelperType();
                 if (helperType is object)
                 {
                     entries.Add(new ComInterfaceEntry
                     {
                         IID = GuidGenerator.GetIID(type),
-                        Vtable = (IntPtr)helperType.GetAbiToProjectionVftblPtr()
+                        Vtable = helperType.GetAbiToProjectionVftblPtr()
                     });
                 }
-            }
 
-            if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
-            {
-                var ifaceAbiType = objType.FindHelperType();
-                entries.Add(new ComInterfaceEntry
+                if (ShouldProvideIReference(type))
                 {
-                    IID = GuidGenerator.GetIID(ifaceAbiType),
-                    Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
-                });
+                    entries.Add(IPropertyValueEntry);
+                    entries.Add(ProvideIReference(type));
+                }
             }
-            else if (ShouldProvideIReference(type))
+            else
             {
-                entries.Add(IPropertyValueEntry);
-                entries.Add(ProvideIReference(type));
-            }
-            else if (ShouldProvideIReferenceArray(type))
-            {
-                entries.Add(IPropertyValueEntry);
-                entries.Add(ProvideIReferenceArray(type));
+                var objType = type.GetRuntimeClassCCWType() ?? type;
+                var interfaces = objType.GetInterfaces();
+                foreach (var iface in interfaces)
+                {
+                    if (Projections.IsTypeWindowsRuntimeType(iface))
+                    {
+                        var ifaceAbiType = iface.FindHelperType();
+                        Guid iid = GuidGenerator.GetIID(ifaceAbiType);
+                        entries.Add(new ComInterfaceEntry
+                        {
+                            IID = iid,
+                            Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
+                        });
+
+                        if (!hasCustomIMarshalInterface && iid == ABI.WinRT.Interop.IMarshal.IID)
+                        {
+                            hasCustomIMarshalInterface = true;
+                        }
+                    }
+
+                    if (iface.IsConstructedGenericType
+                        && Projections.TryGetCompatibleWindowsRuntimeTypesForVariantType(iface, out var compatibleIfaces))
+                    {
+                        foreach (var compatibleIface in compatibleIfaces)
+                        {
+                            var compatibleIfaceAbiType = compatibleIface.FindHelperType();
+                            entries.Add(new ComInterfaceEntry
+                            {
+                                IID = GuidGenerator.GetIID(compatibleIfaceAbiType),
+                                Vtable = (IntPtr)compatibleIfaceAbiType.GetAbiToProjectionVftblPtr()
+                            });
+                        }
+                    }
+                }
+
+                if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+                {
+                    var ifaceAbiType = objType.FindHelperType();
+                    entries.Add(new ComInterfaceEntry
+                    {
+                        IID = GuidGenerator.GetIID(ifaceAbiType),
+                        Vtable = (IntPtr)ifaceAbiType.GetAbiToProjectionVftblPtr()
+                    });
+                }
+                else if (ShouldProvideIReference(type))
+                {
+                    entries.Add(IPropertyValueEntry);
+                    entries.Add(ProvideIReference(type));
+                }
+                else if (ShouldProvideIReferenceArray(type))
+                {
+                    entries.Add(IPropertyValueEntry);
+                    entries.Add(ProvideIReferenceArray(type));
+                }
             }
 
             entries.Add(new ComInterfaceEntry
@@ -247,6 +283,20 @@ namespace WinRT
                 IID = ABI.WinRT.Interop.IAgileObject.IID,
                 Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
             });
+
+            entries.Add(new ComInterfaceEntry
+            {
+                IID = InterfaceIIDs.IInspectable_IID,
+                Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
+            });
+
+            // This should be the last entry as it is included / excluded based on the flags.
+            entries.Add(new ComInterfaceEntry
+            {
+                IID = IUnknownVftbl.IID,
+                Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
+            });
+
             return entries;
         }
 
@@ -297,7 +347,24 @@ namespace WinRT
             {
                 var createRcwFunc = (Func<IntPtr, object>)type.GetHelperType().GetMethod("CreateRcw", BindingFlags.Public | BindingFlags.Static).
                         CreateDelegate(typeof(Func<IntPtr, object>));
-                return createRcwFunc;
+                var iid = GuidGenerator.GetIID(type);
+
+                return (IntPtr externalComObject) =>
+                {
+                    // The CreateRCW function for delegates expect the pointer to be the delegate interface in CsWinRT 1.5.
+                    // But CreateObject is passed the IUnknown interface. This would typically be fine for delegates as delegates
+                    // don't implement interfaces and implementations typically have both the IUnknown vtable and the delegate
+                    // vtable point to the same vtable.  But when the pointer is to a proxy, that can not be relied on.
+                    Marshal.ThrowExceptionForHR(Marshal.QueryInterface(externalComObject, ref iid, out var ptr));
+                    try
+                    {
+                        return createRcwFunc(ptr);
+                    }
+                    finally
+                    {
+                        Marshal.Release(ptr);
+                    }
+                };
             });
         }
 

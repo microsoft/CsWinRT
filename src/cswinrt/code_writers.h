@@ -6671,7 +6671,7 @@ return MarshalDelegate.FromAbi<%>(nativeDelegate);
 
 public static % CreateRcw(IntPtr ptr)
 {
-return new %(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr)).Invoke);
+return new %(new NativeDelegateWrapper(ComWrappersSupport.GetObjectReferenceForInterface<IDelegateVftbl>(ptr, GuidGenerator.GetIID(typeof(@%)))).Invoke);
 }
 
 [global::WinRT.ObjectReferenceWrapper(nameof(_nativeDelegate))]
@@ -6811,6 +6811,8 @@ public static Guid PIID = GuidGenerator.CreateIID(typeof(%));)",
             type_name,
             type_name,
             type_name,
+            type.TypeName(),
+            type_params,
             // NativeDelegateWrapper.Invoke
             bind<write_projection_return_type>(signature),
             bind_list<write_projection_parameter>(", ", signature.params()),

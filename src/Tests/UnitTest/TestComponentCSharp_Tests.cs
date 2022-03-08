@@ -29,6 +29,7 @@ using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
 using System.Reflection;
 using Windows.Devices.Enumeration.Pnp;
+using System.Diagnostics;
 
 #if NET
 using WeakRefNS = System;
@@ -2156,6 +2157,9 @@ namespace UnitTest
 
             ProvideInt intHandler = () => 42;
             Assert.Equal(intHandler, Class.UnboxDelegate(intHandler));
+
+            EnumValue enumValue = EnumValue.Two;
+            Assert.Equal(enumValue, Class.UnboxEnum(enumValue));
         }
 
         [Fact]
@@ -2234,6 +2238,14 @@ namespace UnitTest
             Assert.IsType<ProvideUri>(del);
             var provideUriDel = (ProvideUri) del;
             Assert.Equal(new Uri("http://microsoft.com"), provideUriDel());
+        }
+
+        [Fact]
+        public void TestEnumUnboxing()
+        {
+            var enumVal = Class.BoxedEnum;
+            Assert.IsType<EnumValue>(enumVal);
+            Assert.Equal(EnumValue.Two, enumVal);
         }
 
         internal class ManagedType { }
@@ -2676,6 +2688,40 @@ namespace UnitTest
             classInstance.IntProperty = 3;
             Assert.True(eventCalled);
             Assert.True(eventCalled2);
+        }
+
+        [Fact]
+        public void TestProxiedDelegate()
+        {
+            var obj = new OOPAsyncAction();
+            var factory = new WinRTClassFactory<OOPAsyncAction>(
+                () => obj,
+                new Dictionary<Guid, Func<object, IntPtr>>()
+                {
+                    { typeof(IAsyncAction).GUID, obj => MarshalInterface<IAsyncAction>.FromManaged((IAsyncAction) obj) },
+                });
+
+            WinRTClassFactory<OOPAsyncAction>.RegisterClass<OOPAsyncAction>(factory);
+
+            var currentExecutingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+#if NET
+            var launchExePath = $"{currentExecutingDir}\\OOPExe.exe";
+            var proc = Process.Start(launchExePath);
+#else
+            var launchExePath = $"{currentExecutingDir}\\OOPExe.dll";
+            var proc = Process.Start("dotnet.exe", launchExePath);
+#endif
+            Thread.Sleep(1000);
+            obj.Close();
+            Assert.True(obj.delegateCalled);
+
+            try
+            {
+                proc.Kill();
+            }
+            catch(Exception)
+            {
+            }
         }
 
         [Fact]
