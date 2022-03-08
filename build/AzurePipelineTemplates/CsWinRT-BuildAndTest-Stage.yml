@@ -169,7 +169,7 @@ stages:
 
           set cswinrt_echo=on
           set cswinrt_build_only=true
-          set cswinrt_build_params=/bl:$(Build.SourcesDirectory)\cswinrt.binlog /p:CleanIntermediateDirs=true
+          set cswinrt_build_params=/bl:$(Build.SourcesDirectory)\cswinrt.binlog /p:CleanIntermediateDirs=true /p:AllowedReferenceRelatedFileExtensions=none
           build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
 
 # Mask BuildConfiguration
