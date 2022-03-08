@@ -93,8 +93,7 @@ This section describes the steps needed to consume a C#/WinRT component for the 
 
 ### Consuming from C# applications
 
-Consuming a C#/WinRT component from C#/.NET apps is supported by both package reference or project reference.
-NET apps is supported by both package reference or project reference. 
+Consuming a C#/WinRT component from C#/.NET apps is supported by both package reference and project reference.
 This scenario is equivalent to consuming any ordinary C# class library and does not involve WinRT activation in most cases. 
 The exception being in the out-of-process scenario, described below.
 
@@ -166,9 +165,9 @@ Components can be consumed by application projects that reference the Windows Ap
 
 The following table outlines the Windows App SDK application types that are supported when consuming C#/WinRT authored components implementing WinUI types:
 
-- ✅ means the scenario works
-- 🟨 means the scenario partially works (i.e. with specific limitations)
-- 🟥 means the scenario does not work
+- ✅ Scenario works
+- 🟨 Scenario partially works (i.e. with specific limitations)
+- 🟥 Scenario does not work
 - Note: "WAP" refers to the usage of a separate Windows Application Packaging Project in packaged apps.
 
 ##### C++
@@ -194,6 +193,7 @@ The following table outlines the Windows App SDK application types that are supp
 #### Consumption of WinUI controls from C++ apps
 
 If a C++ app is consuming a component that provides a custom user control, there are a few extra configuration steps:
+Note that "MyAuthoredComponent" should be renamed to your component; "MyAuthoredComponent" is just an example.
 
 1. In the app's `pch.h` header file, add the following line:
 
@@ -230,7 +230,7 @@ C#/WinRT supports authoring out-of-process components that can be consumed by Wi
 
 - Authoring issues are [tagged under the *authoring* label](https://github.com/microsoft/CsWinRT/issues?q=is%3Aopen+is%3Aissue+label%3Aauthoring). Feel free to [file an issue](https://github.com/microsoft/CsWinRT/issues/new/choose) tagged with the *authoring* label if you encounter any new issues!
 
-- The docs [here](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/troubleshooting#symptoms-and-remedies) have useful troubleshooting tips for working with C++/WinRT.
+- The docs [here](https://docs.microsoft.com/windows/uwp/cpp-and-winrt-apis/troubleshooting#symptoms-and-remedies) have useful troubleshooting tips for working with C++/WinRT.
 
 - When adding an `exe.manifest`, if you get an error in the linker (LNK) typically this is due to multiple manifests being found, 
   and `app.manifest` can be removed to resolve the issue.
