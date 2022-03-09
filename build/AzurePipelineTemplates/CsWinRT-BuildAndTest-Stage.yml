@@ -203,7 +203,7 @@ stages:
 # Software Bill of Materials (SBOM)
     - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
       displayName: 'SBOM Generator Task'
-      condition: eq($(BuildConfiguration),'Release')
+      condition: eq('$(BuildConfiguration)','Release')
       inputs:
         BuildDropPath: '$(Build.ArtifactStagingDirectory)'
         PackageName: 'Microsoft.Windows.CsWinRT'
