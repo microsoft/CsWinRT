@@ -199,6 +199,16 @@ stages:
     - task: ComponentGovernanceComponentDetection@0
       displayName: Component Detection
 
+    
+# Software Bill of Materials (SBOM)
+    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+      displayName: 'SBOM Generator Task'
+      condition: eq($(BuildConfiguration),'Release')
+      inputs:
+        BuildDropPath: '$(Build.ArtifactStagingDirectory)'
+        PackageName: 'Microsoft.Windows.CsWinRT'
+        PackageVersion: '$(NugetVersion)'
+
 # Stage BinLog
     - task: CopyFiles@2
       displayName: Stage BinLog
