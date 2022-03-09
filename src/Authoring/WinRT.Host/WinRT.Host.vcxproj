@@ -148,9 +148,12 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir .\en-US
-Muirct -v 2 -x 0x0409 -g 0x0407 .\WinRT.Host.dll .\WinRT.Host.dll .\en-US\WinRT.Host.dll.mui
-Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
+      <Command>Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
+muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
+copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
+copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
+del "$(OutDir)WinRT.Host_LN.dll"
+</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Invoke MUICRT on WinRT.Host for localization</Message>
@@ -202,9 +205,12 @@ Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir .\en-US
-Muirct -v 2 -x 0x0409 -g 0x0407 .\WinRT.Host.dll .\WinRT.Host.dll .\en-US\WinRT.Host.dll.mui
-Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
+      <Command>Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
+muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
+copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
+copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
+del "$(OutDir)WinRT.Host_LN.dll"
+</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Invoke MUICRT on WinRT.Host for localization</Message>
@@ -232,9 +238,12 @@ Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir .\en-US
-Muirct -v 2 -x 0x0409 -g 0x0407 .\WinRT.Host.dll .\WinRT.Host.dll .\en-US\WinRT.Host.dll.mui
-Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
+      <Command>Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
+muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
+copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
+copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
+del "$(OutDir)WinRT.Host_LN.dll"
+</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Invoke MUICRT on WinRT.Host for localization</Message>
@@ -295,25 +304,34 @@ Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
       <AdditionalOptions>/GL- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">mkdir .\en-US
-Muirct -v 2 -x 0x0409 -g 0x0407 .\WinRT.Host.dll .\WinRT.Host.dll .\en-US\WinRT.Host.dll.mui
-Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
+muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
+copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
+copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
+del "$(OutDir)WinRT.Host_LN.dll"
+</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Invoke MUICRT on WinRT.Host for localization</Message>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">mkdir .\en-US
-Muirct -v 2 -x 0x0409 -g 0x0407 .\WinRT.Host.dll .\WinRT.Host.dll .\en-US\WinRT.Host.dll.mui
-Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
+muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
+copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
+copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
+del "$(OutDir)WinRT.Host_LN.dll"
+</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Invoke MUICRT on WinRT.Host for localization</Message>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">mkdir .\en-US
-Muirct -v 2 -x 0x0409 -g 0x0407 .\WinRT.Host.dll .\WinRT.Host.dll .\en-US\WinRT.Host.dll.mui
-Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
+muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
+copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
+copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
+del "$(OutDir)WinRT.Host_LN.dll"
+</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Invoke MUICRT on WinRT.Host for localization</Message>
@@ -349,6 +367,9 @@ Muirct -c WinRT.Host.dll -e en-US\WinRT.Host.dll.mui</Command>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WinRTHostErrorStrings.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="WinRTHost.rcconfig.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
