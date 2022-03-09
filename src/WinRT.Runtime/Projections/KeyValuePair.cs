@@ -37,6 +37,9 @@ namespace ABI.System.Collections.Generic
         public static IObjectReference CreateMarshaler(global::System.Collections.Generic.KeyValuePair<K, V> obj) =>
             MarshalInterface<global::System.Collections.Generic.KeyValuePair<K, V>>.CreateMarshaler(obj);
 
+        public static ObjectReferenceValue CreateMarshaler2(global::System.Collections.Generic.KeyValuePair<K, V> obj) => 
+            MarshalInterface<global::System.Collections.Generic.KeyValuePair<K, V>>.CreateMarshaler2(obj);
+
         public static IntPtr GetAbi(IObjectReference objRef) =>
             objRef?.ThisPtr ?? IntPtr.Zero;
 
@@ -56,17 +59,19 @@ namespace ABI.System.Collections.Generic
             return new global::System.Collections.Generic.KeyValuePair<K, V>(pair.Key, pair.Value);
         }
 
-        public static IntPtr FromManaged(global::System.Collections.Generic.KeyValuePair<K, V> obj) =>
-            CreateMarshaler(obj)?.GetRef() ?? IntPtr.Zero;
+        public static IntPtr FromManaged(global::System.Collections.Generic.KeyValuePair<K, V> obj) => 
+            CreateMarshaler2(obj).Detach();
 
         internal static unsafe void CopyManaged(global::System.Collections.Generic.KeyValuePair<K, V> o, IntPtr dest)
         {
-            using var objRef = CreateMarshaler(o);
-            *(IntPtr*)dest.ToPointer() = objRef?.GetRef() ?? IntPtr.Zero;
+            *(IntPtr*)dest.ToPointer() = CreateMarshaler2(o).Detach();
         }
 
         internal static MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.MarshalerArray CreateMarshalerArray(global::System.Collections.Generic.KeyValuePair<K, V>[] array) =>
             MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
+
+        internal static MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.MarshalerArray CreateMarshalerArray2(global::System.Collections.Generic.KeyValuePair<K, V>[] array) => 
+            MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
 
         internal static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.GetAbiArray(box);
 
