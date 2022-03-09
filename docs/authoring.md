@@ -163,7 +163,7 @@ Components can be consumed by application projects that reference the Windows Ap
 
 #### Support Matrix
 
-The following table outlines the Windows App SDK application types that are supported when consuming C#/WinRT authored components implementing WinUI types:
+The following tables outline the Windows App SDK application types that are supported when consuming C#/WinRT authored components implementing WinUI types:
 
 - ✅ Scenario works
 - 🟨 Scenario partially works (i.e. with specific limitations)
@@ -189,6 +189,17 @@ The following table outlines the Windows App SDK application types that are supp
 |C# Packaged|Package Reference| 🟨 | [#1118](https://github.com/microsoft/CsWinRT/issues/1118) |
 |C# Packaged with WAP |Package Reference| 🟨 | [#1118](https://github.com/microsoft/CsWinRT/issues/1118) |
 |C# Unpackaged|Package Reference|🟥 | [#1116](https://github.com/microsoft/CsWinRT/issues/1116) |
+
+#### Authoring a C# component with Windows App SDK
+
+In addition to the instructions outlined above in [Authoring a C#/WinRT Component](#authoring-a-cwinrt-component), you will also need to add the following property to your C# library project file:
+
+```xml
+<PropertyGroup>
+      <!-- Needed for enabling project references to C# libraries from C++ applications -->
+      <WindowsAppContainer>true</WindowsAppContainer> 
+<PropertyGroup>
+```
 
 #### Consumption of WinUI controls from C++ apps
 
