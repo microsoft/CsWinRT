@@ -2690,6 +2690,7 @@ namespace UnitTest
             Assert.True(eventCalled2);
         }
 
+#if NET
         [Fact]
         public void TestProxiedDelegate()
         {
@@ -2723,6 +2724,7 @@ namespace UnitTest
             {
             }
         }
+#endif
 
         [Fact]
         private async Task TestPnpPropertiesInLoop()
