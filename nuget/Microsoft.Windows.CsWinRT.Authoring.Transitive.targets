@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <!-- Managed, WinRT and SDK.NET dlls -->   
-    <HostingAssets Include="$(MSBuildThisFileDirectory)..\lib\net5.0*\*.dll"/>
+    <HostingAssets Include="$(MSBuildThisFileDirectory)..\lib\net*.0*\*.dll"/>
     <!-- Managed DLLs from packages the component depends on --> 
     <HostingAssets Include="$(MSBuildThisFileDirectory)..\build\native\*.dll"/>
     <!-- Add the runtimeconfig.json -->
@@ -27,13 +27,17 @@
   </ItemGroup>
     
   <!-- Add the WinMD file as a reference of the native app so a projection gets made --> 
-  <Target Name="CsWinRTAddAuthoredWinMDReference" Condition="'$(TargetFramework)' == 'native' OR '$(TargetFramework)' == ''" Outputs="@(Reference)">  
+  <Target Name="CsWinRTAddAuthoredWinMDReference"  Outputs="@(Reference)">  
 
-    <ItemGroup> 
-      <Reference Include="$(MSBuildThisFileDirectory)..\lib\net5.0*\winmd\*.winmd">
+    <ItemGroup Condition="'$(TargetFramework)' == 'native' OR '$(TargetFramework)' == ''"> 
+      <Reference Include="$(MSBuildThisFileDirectory)..\lib\net*\winmd\*.winmd">
         <IsWinMDFile>true</IsWinMDFile>
         <Implementation>WinRT.Host.dll</Implementation>
       </Reference>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' != 'native' AND '$(TargetFramework)' != ''"> 
+      <ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)..\lib\net*\winmd\*.winmd"/>
     </ItemGroup>
 
   </Target>
