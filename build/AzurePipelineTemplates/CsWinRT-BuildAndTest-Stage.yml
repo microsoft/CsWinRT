@@ -201,7 +201,7 @@ stages:
 
     
 # Software Bill of Materials (SBOM)
-    - ${{ if eq(variables.BuildConfiguration, 'Release') }}:
+    - ${{ if eq($env:BuildConfiguration, 'Release') }}:
       - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
         displayName: 'SBOM Generator Task'
         inputs:
