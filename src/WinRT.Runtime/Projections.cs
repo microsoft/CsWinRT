@@ -470,5 +470,7 @@ namespace WinRT
             type = null;
             return false;
         }
+
+        public static bool RegisterTypedRcwFactory(Type implementationType, Func<IInspectable, object> rcwFactory) => ComWrappersSupport.RegisterTypedRcwFactory(implementationType, rcwFactory);
     }
 }

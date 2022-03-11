@@ -6355,6 +6355,8 @@ _defaultLazy = new Lazy<%>(() => GetDefaultReference<%.Vftbl>());
 [global::WinRT.ObjectReferenceWrapper(nameof(_inner))]
 %% %class %%, IWinRTObject, IEquatable<%>
 {
+private static bool _initializeRcwFactory = Projections.RegisterTypedRcwFactory(typeof(%), (IInspectable inspectable) => new %(inspectable.ObjRef));
+
 private IntPtr ThisPtr => _inner == null ? (((IWinRTObject)this).NativeObject).ThisPtr : _inner.ThisPtr;
 
 private IObjectReference _inner = null;
@@ -6394,6 +6396,8 @@ private struct InterfaceTag<I>{};
             bind<write_class_modifiers>(type),
             type_name,
             bind<write_type_inheritance>(type, base_semantics, true, false),
+            type_name,
+            type_name,
             type_name,
             bind<write_lazy_interface_initialization>(type),
             bind([&](writer& w)

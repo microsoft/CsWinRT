@@ -466,6 +466,12 @@ namespace WinRT
             return CreateFactoryForImplementationType(runtimeClassName, implementationType);
         }
 
+        internal static bool RegisterTypedRcwFactory(Type implementationType, Func<IInspectable, object> rcwFactory)
+        {
+            TypedObjectFactoryCacheForType[implementationType] = rcwFactory;
+            return true;
+        }
+
         internal static Type GetRuntimeClassForTypeCreation(IInspectable inspectable, Type staticallyDeterminedType)
         {
             string runtimeClassName = inspectable.GetRuntimeClassName(noThrow: true);

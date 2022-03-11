@@ -47,6 +47,7 @@ MembersMustExist : Member 'public System.IntPtr WinRT.MarshalString.GetAbi()' do
 MembersMustExist : Member 'public System.IntPtr WinRT.MarshalString.GetAbi(WinRT.MarshalString.Pinnable)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.MarshalString.Pinnable' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.ObjectReferenceValue' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Boolean WinRT.Projections.RegisterTypedRcwFactory(System.Type, System.Func<WinRT.IInspectable, System.Object>)' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 50
+Total Issues: 51
