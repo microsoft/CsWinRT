@@ -203,7 +203,7 @@ stages:
 # Generate SBOM 
     - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
       displayName: 'SBOM Generator Task'
-      condition: eq(variables['BuildConfiguration','Release'])
+      condition: eq(variables['BuildConfiguration'],'Release')
       inputs:
         BuildDropPath: '$(Build.ArtifactStagingDirectory)'
         PackageName: 'Microsoft.Windows.CsWinRT'
