@@ -232,6 +232,132 @@ namespace Benchmarks
         }
 
         [Benchmark]
+        public object CreateObjectList()
+        {
+            var list = instance.NewObjectList(false);
+            list.Add(instance);
+            list.Add(new ClassWithMarshalingRoutines());
+            list.Add(new ManagedObjectWithInterfaces());
+            return list;
+        }
+
+        [Benchmark]
+        public object IterateObjectList()
+        {
+            var list = instance.NewObjectList(true);
+            ClassWithMarshalingRoutines obj = null;
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] is ClassWithMarshalingRoutines marshalingRoutines)
+                {
+                    obj = marshalingRoutines;
+                }
+            }
+            return obj;
+        }
+
+        [Benchmark]
+        public bool CreateAndIterateObjectDictionary()
+        {
+            var dict = instance.NewObjectDictionary(false);
+            dict[instance] = new WrappedClass();
+            dict[new WrappedClass()] = new ClassWithMultipleInterfaces();
+            dict[instance] = new WrappedClass();
+            bool found = false;
+            foreach (var entry in dict)
+            {
+                var key = entry.Key;
+                var value = entry.Value;
+                if(key == instance && value != null)
+                {
+                    found = true;
+                }
+            }
+            return found;
+        }
+
+        [Benchmark]
+        public object CreateInterfaceList()
+        {
+            var list = instance.NewInterfaceList(false);
+            list.Add(managedObject);
+            list.Add(new ClassWithMultipleInterfaces());
+            list.Add(new ManagedObjectWithInterfaces());
+            return list;
+        }
+
+        [Benchmark]
+        public object IterateInterfaceList()
+        {
+            var list = instance.NewInterfaceList(true);
+            ClassWithMultipleInterfaces obj = null;
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] is ClassWithMultipleInterfaces multipleInterfaces)
+                {
+                    obj = multipleInterfaces;
+                }
+            }
+            return obj;
+        }
+
+        [Benchmark]
+        public object IterateInterfaceDictionary()
+        {
+            var dict = instance.NewInterfaceDictionary(true);
+            (IIntProperties, WrappedClass) tuple = (null, null);
+            foreach (var entry in dict)
+            {
+                var key = entry.Key;
+                var value = entry.Value;
+                tuple = (key, value);
+            }
+            return tuple;
+        }
+
+        [Benchmark]
+        public object CreateClassList()
+        {
+            var list = instance.NewClassList(false);
+            var wrappedClass = new WrappedClass();
+            list.Add(new WrappedClass());
+            list.Add(wrappedClass);
+            list.Add(wrappedClass);
+            return list;
+        }
+
+        [Benchmark]
+        public object IterateClassList()
+        {
+            var list = instance.NewClassList(true);
+            WrappedClass obj = null;
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i].DefaultIntProperty == 4)
+                {
+                    obj = list[i];
+                }
+            }
+            return obj;
+        }
+
+        [Benchmark]
+        public object IterateClassDictionary()
+        {
+            var dict = instance.NewClassDictionary(true);
+            WrappedClass obj = null;
+            foreach (var entry in dict)
+            {
+                var key = entry.Key;
+                if(entry.Value)
+                {
+                    obj = key;
+                }
+            }
+            return obj;
+        }
+
+        [Benchmark]
         public object GetUri()
         {
             return instance.NewUri;
