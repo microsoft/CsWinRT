@@ -27,6 +27,8 @@ MembersMustExist : Member 'public WinRT.ObjectReference<T> WinRT.ComWrappersSupp
 MembersMustExist : Member 'public void WinRT.ComWrappersSupport.RegisterObjectForInterface(System.Object, System.IntPtr, System.Runtime.InteropServices.CreateObjectFlags)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'protected void WinRT.IObjectReference.AddRef(System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReference<WinRT.Interop.IUnknownVftbl> WinRT.IObjectReference.AsKnownPtr(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.IObjectReference.AsValue()' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.IObjectReference.AsValue(System.Guid)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.Int32 WinRT.IObjectReference.TryAs(System.Guid, System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.MarshalDelegate.CreateMarshaler2(System.Object, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public T WinRT.MarshalDelegate.FromAbi<T>(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
@@ -51,4 +53,4 @@ TypesMustExist : Type 'WinRT.MarshalString.Pinnable' does not exist in the refer
 TypesMustExist : Type 'WinRT.ObjectReferenceValue' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 52
+Total Issues: 54
