@@ -75,6 +75,10 @@ namespace WinRT
                 {
                     return new AgileReference<T>(objref);
                 }
+                else if (marshal is ObjectReferenceValue objrefValue)
+                {
+                    return new AgileReference<T>(objrefValue);
+                }
             }
             finally
             {

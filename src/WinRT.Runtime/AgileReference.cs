@@ -20,12 +20,22 @@ namespace WinRT
         private readonly IntPtr _cookie;
         private bool disposed;
 
-        public unsafe AgileReference(IObjectReference instance) 
+        public AgileReference(IObjectReference instance)
+            : this(instance?.ThisPtr ?? IntPtr.Zero)
         {
-            if(instance?.ThisPtr == null)
+        }
+
+        internal AgileReference(in ObjectReferenceValue instance)
+            : this(instance.GetAbi())
+        {
+        }
+
+        internal unsafe AgileReference(IntPtr thisPtr)
+        {
+            if (thisPtr == IntPtr.Zero)
             {
                 return;
-            }   
+            }
 
             IntPtr agileReference = default;
             Guid iid = IUnknownVftbl.IID;
@@ -34,19 +44,20 @@ namespace WinRT
                 Marshal.ThrowExceptionForHR(Platform.RoGetAgileReference(
                     0 /*AGILEREFERENCE_DEFAULT*/,
                     ref iid,
-                    instance.ThisPtr,
+                    thisPtr,
                     &agileReference));
                 _agileReference = ObjectReference<IUnknownVftbl>.Attach(ref agileReference);
             }
-            catch(TypeLoadException)
+            catch (TypeLoadException)
             {
-                _cookie = Git.Value.RegisterInterfaceInGlobal(instance, iid);
+                _cookie = Git.Value.RegisterInterfaceInGlobal(thisPtr, iid);
             }
             finally
             {
                 MarshalInterface<IAgileReference>.DisposeAbi(agileReference);
             }
         }
+
 
         public IObjectReference Get() => _cookie == IntPtr.Zero ? ABI.WinRT.Interop.IAgileReferenceMethods.Resolve(_agileReference, IUnknownVftbl.IID) : Git.Value?.GetInterfaceFromGlobal(_cookie, IUnknownVftbl.IID);
 
@@ -113,7 +124,12 @@ namespace WinRT
     sealed class AgileReference<T> : AgileReference
         where T : class
     {
-        public unsafe AgileReference(IObjectReference instance)
+        public AgileReference(IObjectReference instance)
+            : base(instance)
+        {
+        }
+
+        internal AgileReference(in ObjectReferenceValue instance)
             : base(instance)
         {
         }

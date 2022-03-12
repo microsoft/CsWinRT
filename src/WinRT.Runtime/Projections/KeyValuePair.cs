@@ -68,9 +68,6 @@ namespace ABI.System.Collections.Generic
         }
 
         internal static MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.MarshalerArray CreateMarshalerArray(global::System.Collections.Generic.KeyValuePair<K, V>[] array) =>
-            MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
-
-        internal static MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.MarshalerArray CreateMarshalerArray2(global::System.Collections.Generic.KeyValuePair<K, V>[] array) => 
             MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
 
         internal static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<global::System.Collections.Generic.KeyValuePair<K, V>>.GetAbiArray(box);
