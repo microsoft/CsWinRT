@@ -35,11 +35,9 @@ MembersMustExist : Member 'public T WinRT.MarshalDelegate.FromAbi<T>(System.IntP
 MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.MarshalInspectable<T>.CreateMarshaler2(T, System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.MarshalInspectable<T>.CreateMarshaler2(T, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.IObjectReference WinRT.MarshalInspectable<T>.CreateMarshaler<V>(T, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
-MembersMustExist : Member 'public WinRT.MarshalInterfaceHelper<T>.MarshalerArray WinRT.MarshalInspectable<T>.CreateMarshalerArray2(T[])' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.MarshalInspectable<T>.DisposeMarshaler(WinRT.ObjectReferenceValue)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.IntPtr WinRT.MarshalInspectable<T>.GetAbi(WinRT.ObjectReferenceValue)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.MarshalInterface<T>.CreateMarshaler2(T, System.Guid)' does not exist in the reference but it does exist in the implementation.
-MembersMustExist : Member 'public WinRT.MarshalInterfaceHelper<T>.MarshalerArray WinRT.MarshalInterface<T>.CreateMarshalerArray2(T[])' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public void WinRT.MarshalInterface<T>.DisposeMarshaler(WinRT.ObjectReferenceValue)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public System.IntPtr WinRT.MarshalInterface<T>.GetAbi(WinRT.ObjectReferenceValue)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.MarshalInterfaceHelper<T>.MarshalerArray WinRT.MarshalInterfaceHelper<T>.CreateMarshalerArray2(T[], System.Func<T, WinRT.ObjectReferenceValue>)' does not exist in the reference but it does exist in the implementation.
@@ -53,4 +51,4 @@ TypesMustExist : Type 'WinRT.MarshalString.Pinnable' does not exist in the refer
 TypesMustExist : Type 'WinRT.ObjectReferenceValue' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 54
+Total Issues: 52
