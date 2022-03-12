@@ -361,13 +361,13 @@ namespace WinRT
             return ThisPtrFromOriginalContext;
         }
 
-        internal ObjectReferenceValue AsValue()
+        public ObjectReferenceValue AsValue()
         {
             // Sharing ptr with objref.
             return new ObjectReferenceValue(ThisPtr, IntPtr.Zero, true, this);
         }
 
-        internal unsafe ObjectReferenceValue AsValue(Guid iid)
+        public unsafe ObjectReferenceValue AsValue(Guid iid)
         {
             Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
             if (IsAggregated)
@@ -654,6 +654,13 @@ namespace WinRT
             this.preventReleaseOnDispose = preventReleaseOnDispose;
             this.objRef = objRef;
 
+        }
+
+        public static ObjectReferenceValue Attach(ref IntPtr thisPtr)
+        {
+            var obj = new ObjectReferenceValue(thisPtr);
+            thisPtr = IntPtr.Zero;
+            return obj;
         }
 
         public readonly IntPtr GetAbi() => ptr;
