@@ -28,7 +28,7 @@ namespace WinRT.Interop
     [Guid("00000146-0000-0000-C000-000000000046")]
     internal interface IGlobalInterfaceTable
     {
-        IntPtr RegisterInterfaceInGlobal(IObjectReference objRef, Guid riid);
+        IntPtr RegisterInterfaceInGlobal(IntPtr ptr, Guid riid);
         void RevokeInterfaceFromGlobal(IntPtr cookie);
         IObjectReference GetInterfaceFromGlobal(IntPtr cookie, Guid riid);
     }
@@ -225,9 +225,9 @@ namespace ABI.WinRT.Interop
             _obj = obj;
         }
 
-        public IntPtr RegisterInterfaceInGlobal(IObjectReference objRef, Guid riid)
+        public IntPtr RegisterInterfaceInGlobal(IntPtr ptr, Guid riid)
         {
-            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RegisterInterfaceInGlobal(ThisPtr, objRef.ThisPtr, ref riid, out IntPtr cookie));
+            ExceptionHelpers.ThrowExceptionForHR(_obj.Vftbl.RegisterInterfaceInGlobal(ThisPtr, ptr, ref riid, out IntPtr cookie));
             return cookie;
 
         }
