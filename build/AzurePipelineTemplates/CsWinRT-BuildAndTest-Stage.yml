@@ -209,6 +209,13 @@ stages:
         PackageName: 'Microsoft.Windows.CsWinRT'
         PackageVersion: '$(NugetVersion)'
 
+# Stage SBOM
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish TransportPackage and SBOM to build artifacts'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'SBOM'
+
 # Stage BinLog
     - task: CopyFiles@2
       displayName: Stage BinLog
