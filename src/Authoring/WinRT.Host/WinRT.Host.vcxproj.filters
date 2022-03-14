@@ -47,6 +47,7 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="Directory.Build.targets" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WinRTHostErrorStrings.rc">

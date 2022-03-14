@@ -100,32 +100,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>WinRT.Host</TargetName>
-    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>WinRT.Host</TargetName>
-    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>WinRT.Host</TargetName>
-    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>WinRT.Host</TargetName>
-    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>WinRT.Host</TargetName>
-    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>WinRT.Host</TargetName>
-    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -147,17 +141,6 @@
       <IgnoreSpecificDefaultLibraries>libcpmtd.lib</IgnoreSpecificDefaultLibraries>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
-    <PostBuildEvent>
-      <Command>Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
-muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
-copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
-copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
-del "$(OutDir)WinRT.Host_LN.dll"
-</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message>Invoke MUICRT on WinRT.Host for localization</Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -204,17 +187,6 @@ del "$(OutDir)WinRT.Host_LN.dll"
       <IgnoreSpecificDefaultLibraries>libcpmtd.lib</IgnoreSpecificDefaultLibraries>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
-    <PostBuildEvent>
-      <Command>Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
-muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
-copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
-copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
-del "$(OutDir)WinRT.Host_LN.dll"
-</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message>Invoke MUICRT on WinRT.Host for localization</Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
@@ -237,17 +209,6 @@ del "$(OutDir)WinRT.Host_LN.dll"
       <IgnoreSpecificDefaultLibraries>libcpmtd.lib</IgnoreSpecificDefaultLibraries>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
-    <PostBuildEvent>
-      <Command>Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
-muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
-copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
-copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
-del "$(OutDir)WinRT.Host_LN.dll"
-</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message>Invoke MUICRT on WinRT.Host for localization</Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -303,39 +264,6 @@ del "$(OutDir)WinRT.Host_LN.dll"
       LINK : fatal error C1047: The object or library file ...libnethost.lib was created by a different version of the compiler than other objects like dllmain.obj... -->
       <AdditionalOptions>/GL- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-    <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
-muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
-copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
-copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
-del "$(OutDir)WinRT.Host_LN.dll"
-</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Invoke MUICRT on WinRT.Host for localization</Message>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
-muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
-copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
-copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
-del "$(OutDir)WinRT.Host_LN.dll"
-</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Invoke MUICRT on WinRT.Host for localization</Message>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
-muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
-copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
-copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
-del "$(OutDir)WinRT.Host_LN.dll"
-</Command>
-    </PostBuildEvent>
-    <PostBuildEvent>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Invoke MUICRT on WinRT.Host for localization</Message>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="hostfxr_status.h" />
@@ -355,6 +283,7 @@ del "$(OutDir)WinRT.Host_LN.dll"
     <ClCompile Include="WinRT.Host.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Directory.Build.targets" />
     <None Include="module.def" />
     <None Include="NetHost.targets" />
     <None Include="NetHostDir.csproj" />

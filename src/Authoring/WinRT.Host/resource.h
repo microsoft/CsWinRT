@@ -2,40 +2,40 @@
 // Microsoft Visual C++ generated include file.
 // Used by WinRTHostErrorStrings.rc
 //
-#define InvalidArgFailureStr            101
-#define CoreHostLibLoadFailureStr       102
-#define CoreHostLibMissingFailureStr    103
-#define CoreHostEntryPointFailureStr    104
-#define CoreHostCurHostFindFailureStr   105
-#define CoreClrResolveFailureStr        106
-#define CoreClrBindFailureStr           107
-#define CoreClrInitFailureStr           108
-#define CoreClrExeFailureStr            109
-#define ResolverInitFailureStr          110
-#define ResolverResolveFailureStr       111
-#define LibHostCurExeFindFailureStr     112
-#define LibHostInitFailureStr           113
-#define LibHostSdkFindFailureStr        114
-#define LibHostInvalidArgsStr           115
-#define InvalidConfigFileStr            116
-#define AppArgNotRunnableStr            117
-#define AppHostExeNotBoundFailureStr    118
-#define FrameworkMissingFailureStr      119
-#define HostApiFailedStr                120
-#define HostApiBufferTooSmallStr        121
-#define LibHostUnknownCommandStr        122
-#define LibHostAppRootFindFailureStr    123
-#define SdkResolverResolveFailureStr    124
-#define FrameworkCompatFailureStr       125
-#define FrameworkCompatRetryStr         126
-#define BundleExtractionFailureStr      127
-#define BundleExtractionIOErrorStr      128
-#define LibHostDuplicatePropertyStr     129
-#define HostApiUnsupportedVersionStr    130
-#define HostInvalidStateStr             131
-#define HostPropertyNotFoundStr         132
-#define CoreHostIncompatibleConfigStr   133
-#define HostApiUnsupportedScenarioStr   134
+#define InvalidArgFailureStr            103
+#define CoreHostLibLoadFailureStr       104
+#define CoreHostLibMissingFailureStr    105
+#define CoreHostEntryPointFailureStr    106
+#define CoreHostCurHostFindFailureStr   107
+#define CoreClrResolveFailureStr        108
+#define CoreClrBindFailureStr           109
+#define CoreClrInitFailureStr           110
+#define CoreClrExeFailureStr            111
+#define ResolverInitFailureStr          112
+#define ResolverResolveFailureStr       113
+#define LibHostCurExeFindFailureStr     114
+#define LibHostInitFailureStr           115
+#define LibHostSdkFindFailureStr        116
+#define LibHostInvalidArgsStr           117
+#define InvalidConfigFileStr            118
+#define AppArgNotRunnableStr            119
+#define AppHostExeNotBoundFailureStr    120
+#define FrameworkMissingFailureStr      121
+#define HostApiFailedStr                122
+#define HostApiBufferTooSmallStr        123
+#define LibHostUnknownCommandStr        124
+#define LibHostAppRootFindFailureStr    125
+#define SdkResolverResolveFailureStr    126
+#define FrameworkCompatFailureStr       127
+#define FrameworkCompatRetryStr         128
+#define BundleExtractionFailureStr      129
+#define BundleExtractionIOErrorStr      130
+#define LibHostDuplicatePropertyStr     131
+#define HostApiUnsupportedVersionStr    132
+#define HostInvalidStateStr             133
+#define HostPropertyNotFoundStr         134
+#define CoreHostIncompatibleConfigStr   135
+#define HostApiUnsupportedScenarioStr   136
 
 // Next default values for new objects
 // 

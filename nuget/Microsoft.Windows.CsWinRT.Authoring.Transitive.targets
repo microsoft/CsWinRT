@@ -23,7 +23,7 @@
     <!-- Get the proper WinRT.Host.dll -->
     <HostingAssets Include="$(MSBuildThisFileDirectory)..\runtimes\win-$(_NormalizedPlatform)\native\WinRT.Host.dll" />
     <!-- Get the proper WinRT.Host.ErrorStrings.dll -->
-    <HostingAssets Include="$(MSBuildThisFileDirectory)..\runtimes\win-$(_NormalizedPlatform)\native\WinRT.Host.ErrorStrings.dll" />
+    <HostingAssets Include="$(MSBuildThisFileDirectory)..\runtimes\win-$(_NormalizedPlatform)\native\en-us\WinRT.Host.dll.mui" />
   </ItemGroup>
     
   <!-- Add the WinMD file as a reference of the native app so a projection gets made --> 

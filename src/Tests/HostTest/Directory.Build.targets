@@ -9,7 +9,7 @@
   <!--Rename host/test dlls for various tests (requires disabling hardlinks)-->
   <Target Name="CopyTestAssets">
     <Copy SourceFiles="
-            $(BuildOutDir)WinRT.Host.ErrorStrings\bin\WinRT.Host.ErrorStrings.dll;
+            $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll.mui;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
@@ -18,7 +18,7 @@
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll" 
           DestinationFiles="
-            $(OutDir)WinRT.Host.ErrorStrings.dll;
+            $(OutDir)WinRT.Host.dll.mui;
             $(OutDir)WinRT.Host.dll;
             $(OutDir)Test.Host.dll;
             $(OutDir)MappedTarget.Host.dll;

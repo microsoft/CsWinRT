@@ -1,0 +1,23 @@
+<!--
+***********************************************************************************************
+Copyright (C) Microsoft Corporation. All rights reserved.
+***********************************************************************************************
+-->
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <Target Name="SplitWinRTHostIntoMUI"
+            Inputs="$(OutDir)WinRT.Host.dll"
+            Outputs="$(OutDir)WinRT.Host.dll.mui"
+            AfterTargets="CopyFilesToOutputDirectory">
+        <PropertyGroup>
+            <WinRTHostMuirctCommand>Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
+muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
+copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
+copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
+del "$(OutDir)WinRT.Host_LN.dll"
+</WinRTHostMuirctCommand>
+        </PropertyGroup>
+        <Exec Command="$(WinRTHostMuirctCommand)" />
+    </Target>
+
+</Project>
