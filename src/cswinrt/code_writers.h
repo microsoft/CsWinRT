@@ -3354,7 +3354,7 @@ event % %;)",
             {
                 w.write("% = %.GetAbi%(%);\n",
                     get_param_local(w),
-                    is_marshal_by_object_reference_value() && !is_array() ? "MarshalInspectable<object>" : marshaler_type,
+                    is_marshal_by_object_reference_value() ? "MarshalInspectable<object>" : marshaler_type,
                     is_array() ? "Array" : "",
                     get_marshaler_local(w));
             }
@@ -3440,7 +3440,7 @@ event % %;)",
             }
 
             w.write("%.GetAbi%(%%)",
-                is_marshal_by_object_reference_value() && !is_array() ? "MarshalInspectable<object>" : marshaler_type,
+                is_marshal_by_object_reference_value() ? "MarshalInspectable<object>" : marshaler_type,
                 is_array() ? "Array" : "",
                 is_pinnable ? "ref " : "",
                 get_marshaler_local(w));
@@ -3557,7 +3557,7 @@ event % %;)",
             else
             {
                 w.write("%.DisposeMarshaler%(%);\n",
-                    is_marshal_by_object_reference_value() && !is_array() ? "MarshalInspectable<object>" : marshaler_type,
+                    is_marshal_by_object_reference_value() ? "MarshalInspectable<object>" : marshaler_type,
                     is_array() ? "Array" : "",
                     get_marshaler_local(w));
             }
@@ -3613,37 +3613,37 @@ event % %;)",
                 break;
             case category::interface_type:
                 m.marshaler_type = "MarshalInterface<" + m.param_type + ">";
-                m.marshal_by_object_reference_value = true;
                 if (m.is_array())
                 {
                     m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
                 }
                 else
                 {
+                    m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
                 }
                 break;
             case category::class_type:
                 m.marshaler_type = w.write_temp("%", bind<write_type_name>(semantics, typedef_name_type::ABI, true));
-                m.marshal_by_object_reference_value = true;
                 if (m.is_array())
                 {
                     m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
                 }
                 else
                 {
+                    m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
                 }
                 break;
             case category::delegate_type:
                 m.marshaler_type = get_abi_type();
-                m.marshal_by_object_reference_value = true;
                 if (m.is_array())
                 {
                     m.local_type = w.write_temp("MarshalInterfaceHelper<%>.MarshalerArray", m.param_type);
                 }
                 else
                 {
+                    m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
                 }
                 break;
@@ -3654,13 +3654,13 @@ event % %;)",
             [&](object_type)
             {
                 m.marshaler_type = "MarshalInspectable<object>";
-                m.marshal_by_object_reference_value = true;
                 if (m.is_array())
                 {
                     m.local_type = "MarshalInterfaceHelper<object>.MarshalerArray";
                 }
                 else
                 {
+                    m.marshal_by_object_reference_value = true;
                     m.local_type = m.is_out() ? "IntPtr" : "ObjectReferenceValue";
                 }
             },
@@ -6538,8 +6538,7 @@ global::System.Collections.Concurrent.ConcurrentDictionary<RuntimeTypeHandle, ob
 public static IntPtr GetAbi(IObjectReference value) => value is null ? IntPtr.Zero : MarshalInterfaceHelper<object>.GetAbi(value);
 public static % FromAbi(IntPtr thisPtr) => %.FromAbi(thisPtr);
 public static IntPtr FromManaged(% obj) => obj is null ? IntPtr.Zero : CreateMarshaler2(obj).Detach();
-public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArray(%[] array) => MarshalInterfaceHelper<%>.CreateMarshalerArray(array, (o) => CreateMarshaler(o));
-public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArray2(%[] array) => MarshalInterfaceHelper<%>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
+public static unsafe MarshalInterfaceHelper<%>.MarshalerArray CreateMarshalerArray(%[] array) => MarshalInterfaceHelper<%>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
 public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<%>.GetAbiArray(box);
 public static unsafe %[] FromAbiArray(object box) => MarshalInterfaceHelper<%>.FromAbiArray(box, FromAbi);
 public static (int length, IntPtr data) FromManagedArray(%[] array) => MarshalInterfaceHelper<%>.FromManagedArray(array, (o) => FromManaged(o));
@@ -6590,9 +6589,6 @@ public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%
             }),
             projected_type_name,
             ccw_type_name,
-            projected_type_name,
-            projected_type_name,
-            projected_type_name,
             projected_type_name,
             projected_type_name,
             projected_type_name,

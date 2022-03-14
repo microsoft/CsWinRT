@@ -137,9 +137,12 @@ namespace System.Threading.Tasks
                             || (null != (taskProvider as Func<IProgress<TProgressInfo>, Task>))
                             || (null != (taskProvider as Func<CancellationToken, IProgress<TProgressInfo>, Task>)));
 
-            // The IAsyncInfo is reasonably expected to be created/started by the same code that wires up the Completed and Progress handlers.
-            // Record the current SynchronizationContext so that we can invoke completion and progress callbacks in it later.
-            _startingContext = GetStartingContext();
+            // The IAsyncInfo is not expected to trigger the Completed and Progress handlers on the same context as the async operation.
+            // Instead the awaiter (co_await in C++/WinRT, await in C#) is expected to make sure the handler runs on the context that the caller
+            // wants it to based on how it was configured.  For instance, in C#, by default the await runs on the same context, but a caller
+            // can use ConfigureAwait to say it doesn't want to run on the same context and that should be respected which it is
+            // by allowing the awaiter to decide the context.
+            _startingContext = null;
 
             // Construct task from the specified provider:
             Task task = InvokeTaskProvider(taskProvider);
@@ -180,9 +183,12 @@ namespace System.Threading.Tasks
             if (underlyingTask.Status == TaskStatus.Created)
                 throw new InvalidOperationException(SR.InvalidOperation_UnstartedTaskSpecified);
 
-            // The IAsyncInfo is reasonably expected to be created/started by the same code that wires up the Completed and Progress handlers.
-            // Record the current SynchronizationContext so that we can invoke completion and progress callbacks in it later.
-            _startingContext = GetStartingContext();
+            // The IAsyncInfo is not expected to trigger the Completed and Progress handlers on the same context as the async operation.
+            // Instead the awaiter (co_await in C++/WinRT, await in C#) is expected to make sure the handler runs on the context that the caller
+            // wants it to based on how it was configured.  For instance, in C#, by default the await runs on the same context, but a caller
+            // can use ConfigureAwait to say it doesn't want to run on the same context and that should be respected which it is
+            // by allowing the awaiter to decide the context.
+            _startingContext = null;
 
             // We do not need to invoke any delegates to get the task, it is provided for us:
             _dataContainer = underlyingTask;
