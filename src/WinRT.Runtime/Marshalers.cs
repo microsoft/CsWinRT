@@ -1045,7 +1045,6 @@ namespace WinRT
         private static readonly Type HelperType = typeof(T).GetHelperType();
         private static Func<T, IObjectReference> _ToAbi;
         private static Func<T, IObjectReference> _CreateMarshaler;
-        private static Guid _iid = default;
 
         public static T FromAbi(IntPtr ptr)
         {
@@ -1142,8 +1141,6 @@ namespace WinRT
         }
 
         public static MarshalInterfaceHelper<T>.MarshalerArray CreateMarshalerArray(T[] array) => MarshalInterfaceHelper<T>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
-
-        public static MarshalInterfaceHelper<T>.MarshalerArray CreateMarshalerArray2(T[] array) => MarshalInterfaceHelper<T>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
 
         public static (int length, IntPtr data) GetAbiArray(object box) => MarshalInterfaceHelper<T>.GetAbiArray(box);
 
@@ -1302,8 +1299,6 @@ namespace WinRT
         }
 
         public static MarshalInterfaceHelper<T>.MarshalerArray CreateMarshalerArray(T[] array) => MarshalInterfaceHelper<T>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
-
-        public static unsafe MarshalInterfaceHelper<T>.MarshalerArray CreateMarshalerArray2(T[] array) => MarshalInterfaceHelper<T>.CreateMarshalerArray2(array, (o) => CreateMarshaler2(o));
 
         public static (int length, IntPtr data) GetAbiArray(T box) => MarshalInterfaceHelper<T>.GetAbiArray(box);
 
