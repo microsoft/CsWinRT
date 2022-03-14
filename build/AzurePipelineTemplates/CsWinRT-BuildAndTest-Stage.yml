@@ -391,6 +391,7 @@ stages:
 # Stage SBOM
     - task: PublishBuildArtifacts@1
       displayName: 'Publish SBOM to build artifacts'
+      condition: eq(variables['BuildConfiguration'],'Release')
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)\_manifest'
         ArtifactName: 'SBOM'
