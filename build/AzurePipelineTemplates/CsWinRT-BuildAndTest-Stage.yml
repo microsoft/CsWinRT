@@ -200,21 +200,6 @@ stages:
       displayName: Component Detection
 
     
-# Generate SBOM 
-    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
-      displayName: 'SBOM Generator Task'
-      condition: eq(variables['BuildConfiguration'],'Release')
-      inputs:
-        BuildDropPath: '$(Build.ArtifactStagingDirectory)'
-        PackageName: 'Microsoft.Windows.CsWinRT'
-        PackageVersion: '$(NugetVersion)'
-
-# Stage SBOM
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish SBOM to build artifacts'
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-        ArtifactName: 'SBOM'
 
 # Stage BinLog
     - task: CopyFiles@2
@@ -393,6 +378,22 @@ stages:
       inputs:
         PathtoPublish: $(Build.ArtifactStagingDirectory)\release_net5.0
         ArtifactName: net5.0
+
+# Generate SBOM 
+    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+      displayName: 'SBOM Generator Task'
+      condition: eq(variables['BuildConfiguration'],'Release')
+      inputs:
+        BuildDropPath: '$(Build.ArtifactStagingDirectory)'
+        PackageName: 'Microsoft.Windows.CsWinRT'
+        PackageVersion: '$(NugetVersion)'
+
+# Stage SBOM
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish SBOM to build artifacts'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)\_manifest'
+        ArtifactName: 'SBOM'
 
 # Run Unit Tests
     - task: DotNetCoreCLI@2
