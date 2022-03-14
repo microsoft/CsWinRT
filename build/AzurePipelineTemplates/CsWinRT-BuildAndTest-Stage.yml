@@ -392,7 +392,7 @@ stages:
       condition: eq(variables['BuildConfiguration'],'Release')
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)\_manifest'
-        ArtifactName: 'SBOM'
+        ArtifactName: SBOM_$(BuildPlatform)
 
 # Run Unit Tests
     - task: DotNetCoreCLI@2
