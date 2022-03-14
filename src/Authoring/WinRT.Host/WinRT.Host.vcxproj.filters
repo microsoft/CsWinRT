@@ -21,6 +21,9 @@
     <ClInclude Include="hostfxr_status.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WinRT.Host.cpp">
@@ -44,5 +47,14 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="Directory.Build.targets" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WinRTHostErrorStrings.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="WinRTHost.rcconfig.xml" />
   </ItemGroup>
 </Project>

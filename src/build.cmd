@@ -242,7 +242,7 @@ set netstandard2_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net
 set net5_runtime=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net5.0\WinRT.Runtime.dll
 set source_generator=%this_dir%Authoring\WinRT.SourceGenerator\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
-set winrt_host_resource_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host.ErrorStrings\bin\WinRT.Host.ErrorStrings.dll
+set winrt_host_resource_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll.mui
 set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net5.0\WinRT.Host.Shim.dll
 set guid_patch=%this_dir%Perf\IIDOptimizer\bin\%cswinrt_configuration%\net5.0\*.*
 rem Now call pack

@@ -268,6 +268,7 @@
   <ItemGroup>
     <ClInclude Include="hostfxr_status.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -282,18 +283,22 @@
     <ClCompile Include="WinRT.Host.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Directory.Build.targets" />
     <None Include="module.def" />
     <None Include="NetHost.targets" />
     <None Include="NetHostDir.csproj" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WinRT.Host.ErrorStrings\WinRT.Host.ErrorStrings.vcxproj">
-      <Project>{29c9b987-5a54-49e0-af4b-fb7be0c8676f}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
       <Project>{0bb8f82d-874e-45aa-bca3-20ce0562164a}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WinRTHostErrorStrings.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="WinRTHost.rcconfig.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

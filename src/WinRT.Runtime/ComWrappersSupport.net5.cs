@@ -187,12 +187,6 @@ namespace WinRT
             }
         }
 
-        internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
-        {
-            IntPtr ccw = CreateCCWForObjectForABI(obj, iid);
-            return ObjectReference<T>.Attach(ref ccw);
-        }
-
         public static unsafe T FindObject<T>(IntPtr ptr)
             where T : class => ComInterfaceDispatch.GetInstance<T>((ComInterfaceDispatch*)ptr);
 
@@ -453,22 +447,7 @@ namespace WinRT
                     return new VtableEntries();
                 }
 
-                var entries = ComWrappersSupport.GetInterfaceTableEntries(type);
-
-                entries.Add(new ComInterfaceEntry
-                {
-                    IID = InterfaceIIDs.IInspectable_IID,
-                    Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
-                });
-
-                // This should be the last entry as it is included / excluded based on the flags.
-                entries.Add(new ComInterfaceEntry
-                {
-                    IID = IUnknownVftbl.IID,
-                    Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
-                });
-
-                return new VtableEntries(entries, type);
+                return new VtableEntries(ComWrappersSupport.GetInterfaceTableEntries(type), type);
             });
 
             count = vtableEntries.Count;
@@ -508,7 +487,11 @@ namespace WinRT
 
             try
             {
-                if (Marshal.QueryInterface(externalComObject, ref inspectableIID, out ptr) == 0)
+                if (ComWrappersSupport.CreateRCWType != null && ComWrappersSupport.CreateRCWType.IsDelegate())
+                {
+                    return ComWrappersSupport.CreateDelegateFactory(ComWrappersSupport.CreateRCWType)(externalComObject);
+                }
+                else if (Marshal.QueryInterface(externalComObject, ref inspectableIID, out ptr) == 0)
                 {
                     var inspectableObjRef = ComWrappersSupport.GetObjectReferenceForInterface<IInspectable.Vftbl>(ptr);
                     ComWrappersHelper.Init(inspectableObjRef);
@@ -539,10 +522,6 @@ namespace WinRT
                     ComWrappersHelper.Init(iunknownObjRef);
 
                     return new SingleInterfaceOptimizedObject(typeof(IWeakReference), iunknownObjRef, false);
-                }
-                else if (ComWrappersSupport.CreateRCWType != null && ComWrappersSupport.CreateRCWType.IsDelegate())
-                {
-                    return ComWrappersSupport.CreateDelegateFactory(ComWrappersSupport.CreateRCWType)(externalComObject);
                 }
                 else
                 {

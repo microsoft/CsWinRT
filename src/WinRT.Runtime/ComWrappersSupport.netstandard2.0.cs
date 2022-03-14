@@ -41,7 +41,11 @@ namespace WinRT
             Func<IntPtr, System.WeakReference<object>> rcwFactory = (_) =>
             {
                 object runtimeWrapper = null;
-                if (identity.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
+                if (typeof(T).IsDelegate())
+                {
+                    runtimeWrapper = CreateDelegateFactory(typeof(T))(ptr);
+                }
+                else if (identity.TryAs<IInspectable.Vftbl>(out var inspectableRef) == 0)
                 {
                     var inspectable = new IInspectable(identity);
                     Type runtimeClassType = GetRuntimeClassForTypeCreation(inspectable, typeof(T));
@@ -50,10 +54,6 @@ namespace WinRT
                 else if (identity.TryAs<ABI.WinRT.Interop.IWeakReference.Vftbl>(out var weakRef) == 0)
                 {
                     runtimeWrapper = new ABI.WinRT.Interop.IWeakReference(weakRef);
-                }
-                else if (typeof(T).IsDelegate())
-                {
-                    runtimeWrapper = CreateDelegateFactory(typeof(T))(ptr);
                 }
 
                 keepAliveSentinel = runtimeWrapper; // We don't take a strong reference on runtimeWrapper at any point, so we need to make sure it lives until it can get assigned to rcw.
@@ -95,6 +95,12 @@ namespace WinRT
             // The unwrapping here needs to be an exact type match in case the user
             // has implemented a WinRT interface or inherited from a WinRT class
             // in a .NET (non-projected) type.
+
+            if (o is null)
+            {
+                objRef = null;
+                return false;
+            }
 
             if (o is Delegate del)
             {
@@ -169,12 +175,12 @@ namespace WinRT
             return objRef;
         }
 
-        internal static ObjectReference<T> CreateCCWForObject<T>(object obj, Guid iid)
+        internal static IntPtr CreateCCWForObjectForABI(object obj, Guid iid)
         {
             var wrapper = ComWrapperCache.GetValue(obj, _ => new ComCallableWrapper(obj));
             Marshal.ThrowExceptionForHR(Marshal.QueryInterface(wrapper.IdentityPtr, ref iid, out var iidCcw));
             GC.KeepAlive(wrapper); // This GC.KeepAlive ensures that a newly created wrapper is alive until objRef is created and has AddRef'd the CCW.
-            return ObjectReference<T>.Attach(ref iidCcw);
+            return iidCcw;
         }
 
         public static T FindObject<T>(IntPtr thisPtr)
@@ -327,18 +333,6 @@ namespace WinRT
             var (inspectableInfo, interfaceTableEntries) = ComWrappersSupport.PregenerateNativeTypeInformation(ManagedObject.GetType());
 
             InspectableInfo = inspectableInfo;
-
-            interfaceTableEntries.Add(new ComInterfaceEntry
-            {
-                IID = IUnknownVftbl.IID,
-                Vtable = IUnknownVftbl.AbiToProjectionVftblPtr
-            });
-
-            interfaceTableEntries.Add(new ComInterfaceEntry
-            {
-                IID = InterfaceIIDs.IInspectable_IID,
-                Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr
-            });
 
             InitializeManagedQITable(interfaceTableEntries);
 

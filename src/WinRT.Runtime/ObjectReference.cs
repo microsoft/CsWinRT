@@ -177,6 +177,16 @@ namespace WinRT
             return hr;
         }
 
+        public virtual unsafe ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
+        {
+            AddRef(true);
+            var objRef = ObjectReference<IUnknownVftbl>.Attach(ref ptr);
+            objRef.IsAggregated = IsAggregated;
+            objRef.PreventReleaseOnDispose = IsAggregated;
+            objRef.ReferenceTrackerPtr = ReferenceTrackerPtr;
+            return objRef;
+        }
+
         // Used only as part of the GetInterface implementation where the
         // result is an reference passed across the ABI and doesn't need to
         // be tracked as an internal reference.  This is separate to handle
@@ -349,6 +359,24 @@ namespace WinRT
         private protected virtual IntPtr GetThisPtrForCurrentContext()
         {
             return ThisPtrFromOriginalContext;
+        }
+
+        internal ObjectReferenceValue AsValue()
+        {
+            // Sharing ptr with objref.
+            return new ObjectReferenceValue(ThisPtr, IntPtr.Zero, true, this);
+        }
+
+        internal unsafe ObjectReferenceValue AsValue(Guid iid)
+        {
+            Marshal.ThrowExceptionForHR(VftblIUnknown.QueryInterface(ThisPtr, ref iid, out IntPtr thatPtr));
+            if (IsAggregated)
+            {
+                Marshal.Release(thatPtr);
+            }
+            AddRefFromTrackerSource();
+
+            return new ObjectReferenceValue(thatPtr, ReferenceTrackerPtr, IsAggregated, this);
         }
     }
 
@@ -567,6 +595,18 @@ namespace WinRT
             Context.DisposeContextCallback(_contextCallbackPtr);
         }
 
+        public override ObjectReference<IUnknownVftbl> AsKnownPtr(IntPtr ptr)
+        {
+            AddRef(true);
+            var objRef = new ObjectReferenceWithContext<IUnknownVftbl>(ptr, Context.GetContextCallback(), Context.GetContextToken())
+            {
+                IsAggregated = IsAggregated,
+                PreventReleaseOnDispose = IsAggregated,
+                ReferenceTrackerPtr = ReferenceTrackerPtr
+            };
+            return objRef;
+        }
+
         public override unsafe int TryAs<U>(Guid iid, out ObjectReference<U> objRef)
         {
             objRef = null;
@@ -589,6 +629,63 @@ namespace WinRT
             }
 
             return hr;
+        }
+    }
+
+    public readonly struct ObjectReferenceValue
+    {
+        internal readonly IntPtr ptr;
+        internal readonly IntPtr referenceTracker;
+        internal readonly bool preventReleaseOnDispose;
+        // Used to keep the original IObjectReference alive as we share the same
+        // referenceTracker instance and in some cases use the same ptr as the
+        // IObjectReference without an addref (i.e preventReleaseOnDispose).
+        internal readonly IObjectReference objRef;
+
+        internal ObjectReferenceValue(IntPtr ptr) : this()
+        {
+            this.ptr = ptr;
+        }
+
+        internal ObjectReferenceValue(IntPtr ptr, IntPtr referenceTracker, bool preventReleaseOnDispose, IObjectReference objRef)
+        {
+            this.ptr = ptr;
+            this.referenceTracker = referenceTracker;
+            this.preventReleaseOnDispose = preventReleaseOnDispose;
+            this.objRef = objRef;
+
+        }
+
+        public readonly IntPtr GetAbi() => ptr;
+
+        public unsafe readonly IntPtr Detach()
+        {
+            // If the ptr is not owned by this instance, do an AddRef.
+            if (preventReleaseOnDispose && ptr != IntPtr.Zero)
+            {
+                (**(IUnknownVftbl**)ptr).AddRef(ptr);
+            }
+
+            // Release tracker source reference as it is no longer a managed ref maintained by RCW.
+            if (referenceTracker != IntPtr.Zero)
+            {
+                (**(IReferenceTrackerVftbl**)referenceTracker).ReleaseFromTrackerSource(referenceTracker);
+            }
+
+            return ptr;
+        }
+
+        public unsafe readonly void Dispose()
+        {
+            if (referenceTracker != IntPtr.Zero)
+            {
+                (**(IReferenceTrackerVftbl**)referenceTracker).ReleaseFromTrackerSource(referenceTracker);
+            }
+
+            if (!preventReleaseOnDispose && ptr != IntPtr.Zero)
+            {
+                (**(IUnknownVftbl**)ptr).Release(ptr);
+            }
         }
     }
 }

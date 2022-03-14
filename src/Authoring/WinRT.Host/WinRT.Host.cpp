@@ -16,7 +16,7 @@
 // provides CString, used to retrieve error messages from Resource string table
 #include "atlstr.h"
 // provides mappings for hostfxr error codes and error strings
-#include "../WinRT.Host.ErrorStrings/resource.h"
+#include "resource.h"
 
 using namespace winrt;
 using namespace winrt::Windows::Storage;
@@ -32,6 +32,10 @@ using namespace winrt::Windows::Data::Json;
 #include <hostfxr.h>
 
 #include <mscoree.h>
+
+#define SUFFICIENTLY_LARGE_ERROR_BUFFER (1024*2)
+#define SUFFICIENTLY_LARGE_STRING_BUFFER (MAX_PATH*2)
+#define WINRT_HOST_FILE_PATH (L"WinRT.Host.dll.mui")
 
 // Global function pointers
 typedef int (CORECLR_DELEGATE_CALLTYPE* get_activation_factory_fn)(
@@ -98,21 +102,35 @@ static load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_
     }
 
     if (string_table_entry != 0)
-    { 
-        // The longest string in the table is 460 characters, we make a buffer of 461 to allow enough space for any case.
-        TCHAR buf[461];
-        HMODULE resources_handle;
-        resources_handle = LoadLibrary(L"WinRT.Host.ErrorStrings.dll");
-        if (resources_handle)
+    {
+        WCHAR error_string[SUFFICIENTLY_LARGE_STRING_BUFFER];
+        WCHAR error_string_buffer[SUFFICIENTLY_LARGE_ERROR_BUFFER];
+
+        HMODULE resources_handle = LoadLibraryExW(WINRT_HOST_FILE_PATH, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE);
+        
+        if (!resources_handle)
         {
-            LoadString(resources_handle, string_table_entry, buf, sizeof(buf));
-            // Done
+            // Error if we fail to load WinRT.Host resource file 
+            swprintf_s(error_string_buffer, SUFFICIENTLY_LARGE_ERROR_BUFFER, L"Error: Unable to load the resource container module, last error = %d", GetLastError());
+            MessageBoxW(NULL, error_string_buffer, L"WinRT.Host ERROR!", MB_OK | MB_ICONERROR);
+        } 
+        else if (LoadStringW(resources_handle, string_table_entry, error_string, SUFFICIENTLY_LARGE_STRING_BUFFER) == 0)
+        {
+            // Error if we fail to load the string
+            swprintf_s(error_string_buffer, SUFFICIENTLY_LARGE_ERROR_BUFFER, L"Error: Unable to load the resource string, last error = %d.", GetLastError());
+            MessageBoxW(NULL, error_string_buffer, L"WinRT.Host ERROR!", MB_OK | MB_ICONERROR);
             FreeLibrary(resources_handle);
         }
-        throw hresult_error(result, buf);
+        else
+        {
+            // Everything loaded fine, load the retrieved string and finish
+            swprintf_s(error_string_buffer, SUFFICIENTLY_LARGE_STRING_BUFFER, L"%s", error_string);
+            FreeLibrary(resources_handle);
+            throw hresult_error(result, error_string_buffer);
+        }
     }
     
-    winrt::throw_hresult(result);
+    //winrt::throw_hresult(result);
 }
 
 inline void check_hostfxr_hresult(hresult const result)
