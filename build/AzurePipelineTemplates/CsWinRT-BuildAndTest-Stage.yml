@@ -211,7 +211,7 @@ stages:
 
 # Stage SBOM
     - task: PublishBuildArtifacts@1
-      displayName: 'Publish TransportPackage and SBOM to build artifacts'
+      displayName: 'Publish SBOM to build artifacts'
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'SBOM'
