@@ -130,7 +130,7 @@ static load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_
         }
     }
     
-    //winrt::throw_hresult(result);
+    winrt::throw_hresult(result);
 }
 
 inline void check_hostfxr_hresult(hresult const result)

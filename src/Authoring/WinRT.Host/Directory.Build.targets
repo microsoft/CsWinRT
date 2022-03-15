@@ -9,14 +9,19 @@ Copyright (C) Microsoft Corporation. All rights reserved.
             Inputs="$(OutDir)WinRT.Host.dll"
             Outputs="$(OutDir)WinRT.Host.dll.mui"
             AfterTargets="CopyFilesToOutputDirectory">
-        <PropertyGroup>
+
+        <!-- Invoke the muicrt tool to split Winrt.Host into language neutral parts and localizable resources
+            Then invoke the tool again to apply the checksum from the neutral part to the mui
+            Finally, replace the initially built WinRT.Host with the language neutral version -->
+        <PropertyGroup> 
             <WinRTHostMuirctCommand>Muirct.exe -q "$(MSBuildThisFileDirectory)WinRTHost.rcconfig.xml" -v 2 -x 0x0409 -g 0x0409 "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll.mui"
 muirct.exe -c "$(OutDir)WinRT.Host_LN.dll" -e "$(OutDir)WinRT.Host.dll.mui"
 copy /y "$(OutDir)WinRT.Host.dll" "$(OutDir)WinRT.Host.Original.exe"
 copy /y "$(OutDir)WinRT.Host_LN.dll" "$(OutDir)WinRT.Host.dll"
 del "$(OutDir)WinRT.Host_LN.dll"
-</WinRTHostMuirctCommand>
+            </WinRTHostMuirctCommand>
         </PropertyGroup>
+
         <Exec Command="$(WinRTHostMuirctCommand)" />
     </Target>
 
