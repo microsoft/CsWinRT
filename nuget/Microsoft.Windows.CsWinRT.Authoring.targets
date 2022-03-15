@@ -343,19 +343,19 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <PackagePath>runtimes\win-arm64\native</PackagePath>
       </Content>
       <!-- Package the MUI for WinRT.Host error strings -->
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-x64\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)runtimes\win-x64\native\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-x64\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)runtimes\win-x64\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
         <PackagePath>runtimes\win-x64\native\en-us</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-x86\native\en-us\WinRT.Host.Host.dll.mui')" Include="$(CsWinRTPath)runtimes\win-x86\native\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-x86\native\en-us\WinRT.Host.Host.dll.mui')" Include="$(CsWinRTPath)runtimes\win-x86\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
         <PackagePath>runtimes\win-x86\native\en-us</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-arm\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)runtimes\win-arm\native\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-arm\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)runtimes\win-arm\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
         <PackagePath>runtimes\win-arm\native\en-us</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-arm64\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)runtimes\win-arm64\native\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-arm64\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)runtimes\win-arm64\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
         <PackagePath>runtimes\win-arm64\native\en-us</PackagePath>
       </Content>
