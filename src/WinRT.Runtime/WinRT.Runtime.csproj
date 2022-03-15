@@ -60,17 +60,17 @@
   </ItemGroup> 
   
   <ItemGroup>
-    <Compile Update="WinRTRuntimeWinRTRuntimeErrorStrings.Designer.cs">
+    <Compile Update="WinRTRuntimeErrorStrings.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>WinRTRuntimeWinRTRuntimeErrorStrings.resx</DependentUpon>
+      <DependentUpon>WinRTRuntimeErrorStrings.resx</DependentUpon>
     </Compile>
   </ItemGroup> 
   
   <ItemGroup>
-    <EmbeddedResource Update="WinRTRuntimeWinRTRuntimeErrorStrings.resx">
+    <EmbeddedResource Update="WinRTRuntimeErrorStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>WinRTRuntimeWinRTRuntimeErrorStrings.Designer.cs</LastGenOutput>
+      <LastGenOutput>WinRTRuntimeErrorStrings.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
 

@@ -61,16 +61,16 @@ BEGIN
     CoreHostCurHostFindFailureStr 
                             "Could not deduce installation location from current module."
     CoreClrResolveFailureStr "The coreclr library could not be found."
-    CoreClrBindFailureStr   "The loaded coreclr library doesn't have one of the required entry points."""
+    CoreClrBindFailureStr   "The loaded coreclr library doesn't have one of the required entry points."
     CoreClrInitFailureStr   "The call to coreclr_initialize failed."
     CoreClrExeFailureStr    "The call to coreclr_execute_assembly failed."
-    ResolverInitFailureStr  "Initialization of the hostpolicy dependency resolver failed."
-    ResolverResolveFailureStr 
-                            "Resolution of dependencies in hostpolicy failed."
 END
 
 STRINGTABLE
 BEGIN
+    ResolverInitFailureStr  "Initialization of the hostpolicy dependency resolver failed."
+    ResolverResolveFailureStr 
+                            "Resolution of dependencies in hostpolicy failed."
     LibHostCurExeFindFailureStr 
                             "Failure to determine the location of the current executable."
     LibHostInitFailureStr   "Initialization of the hostpolicy library failed."
@@ -94,12 +94,12 @@ BEGIN
                             "hostfxr_resolve_sdk2 failed to find matching SDK."
     FrameworkCompatFailureStr 
                             "The .runtimeconfig.json contains two incompatible framework references."
-    FrameworkCompatRetryStr "A previously processed framework reference was reprocessed."
-    BundleExtractionFailureStr "Error extracting single-file apphost bundle."
 END
 
 STRINGTABLE
 BEGIN
+    FrameworkCompatRetryStr "A previously processed framework reference was reprocessed."
+    BundleExtractionFailureStr "Error extracting single-file apphost bundle."
     BundleExtractionIOErrorStr 
                             "Error reading or writing files during single-file apphost bundle extraction."
     LibHostDuplicatePropertyStr 

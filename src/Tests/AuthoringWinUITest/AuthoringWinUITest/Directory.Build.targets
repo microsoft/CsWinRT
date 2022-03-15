@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <Target Name="CopyTestAssets">
-    <Copy SourceFiles="$(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll"
-          DestinationFiles="$(OutDir)WinRT.Host.dll"
-          UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
-
     <Copy SourceFiles="$(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll.mui"
           DestinationFiles="$(OutDir)WinRT.Host.dll.mui"
           UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />

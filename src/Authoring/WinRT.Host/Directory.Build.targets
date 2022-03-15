@@ -7,7 +7,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <Target Name="SplitWinRTHostIntoMUI"
             Inputs="$(OutDir)WinRT.Host.dll"
-            Outputs="$(OutDir)WinRT.Host.dll.mui"
+            Outputs="$(OutDir)WinRT.Host.dll;$(OutDir)WinRT.Host.dll.mui"
             AfterTargets="CopyFilesToOutputDirectory">
 
         <!-- Invoke the muicrt tool to split Winrt.Host into language neutral parts and localizable resources
