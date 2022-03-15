@@ -583,7 +583,12 @@ namespace ABI.System.Collections
     }
 
     [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
-    public static class IEnumerable_Delegates
+#if EMBED
+    internal
+#else
+    public 
+#endif 
+    static class IEnumerable_Delegates
     {
         public unsafe delegate int First_0(IntPtr thisPtr, IntPtr* result);
     }

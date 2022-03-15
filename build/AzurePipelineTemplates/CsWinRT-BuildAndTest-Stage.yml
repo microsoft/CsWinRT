@@ -378,6 +378,23 @@ stages:
         PathtoPublish: $(Build.ArtifactStagingDirectory)\release_net5.0
         ArtifactName: net5.0
 
+# Generate SBOM 
+    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+      displayName: 'SBOM Generator Task'
+      condition: eq(variables['BuildConfiguration'],'Release')
+      inputs:
+        BuildDropPath: '$(Build.ArtifactStagingDirectory)'
+        PackageName: 'Microsoft.Windows.CsWinRT'
+        PackageVersion: '$(NugetVersion)'
+
+# Stage SBOM
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish SBOM to build artifacts'
+      condition: eq(variables['BuildConfiguration'],'Release')
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)\_manifest'
+        ArtifactName: SBOM_$(BuildPlatform)
+
 # Run Unit Tests
     - task: DotNetCoreCLI@2
       displayName: Run Unit Tests
