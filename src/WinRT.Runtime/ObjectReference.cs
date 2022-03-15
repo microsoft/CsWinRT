@@ -632,7 +632,12 @@ namespace WinRT
         }
     }
 
-    public readonly struct ObjectReferenceValue
+#if EMBED
+    internal
+#else
+    public
+#endif
+    readonly struct ObjectReferenceValue
     {
         internal readonly IntPtr ptr;
         internal readonly IntPtr referenceTracker;
