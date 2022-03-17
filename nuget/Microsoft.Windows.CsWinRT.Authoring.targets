@@ -15,10 +15,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <GetCopyToOutputDirectoryItemsDependsOn>$(GetCopyToOutputDirectoryItemsDependsOn);CsWinRTAuthoring_AddManagedDependencies</GetCopyToOutputDirectoryItemsDependsOn>
   </PropertyGroup>
 
+<!--
   <PropertyGroup>
     <CsWinRTAuthoring_Platform Condition="'$(Platform)'=='AnyCPU'">x86</CsWinRTAuthoring_Platform>
     <CsWinRTAuthoring_Platform Condition="'$(Platform)'!='AnyCPU'">$(Platform)</CsWinRTAuthoring_Platform>
   </PropertyGroup>
+ -->
 
   <ItemGroup>
     <CompilerVisibleProperty Include="AssemblyName" />
@@ -55,21 +57,34 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     
   </Target>
 
-  <!-- For Project Reference consumers, copy the necessary WinRT DLLs to output directory --> 
-  <ItemGroup> 
 
-    <None Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll">
-      <TargetPath>WinRT.Host.Shim.dll</TargetPath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+  <Target Name="CsWinRTAuthoring_AddHostingDependencies"
+          BeforeTargets="GetCopyToOutputDirectoryItems"
+          Returns="@(AllItemsFullPathWithTargetPath)">
 
-    <None Condition="Exists('$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll')" 
-          Include="$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll">
-      <TargetPath>WinRT.Host.dll</TargetPath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <PropertyGroup>
+      <CsWinRTAuthoring_Platform>$(PROCESSOR_ARCHITECTURE)</CsWinRTAuthoring_Platform>
+      <CsWinRTAuthoring_Platform Condition="'$(CsWinRTAuthoring_Platform)' == 'AMD64'">x64</CsWinRTAuthoring_Platform>
+      <CsWinRTAuthoring_OutDir>$(OutDir)</CsWinRTAuthoring_OutDir>
+    </PropertyGroup>
 
- </ItemGroup>
+    <ItemGroup>
+      <AllItemsFullPathWithTargetPath Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll">
+        <TargetPath>WinRT.Host.Shim.dll</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </AllItemsFullPathWithTargetPath>
+<!--
+      <AllItemsFullPathWithTargetPath Include="$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll">
+        <TargetPath>WinRT.Host.dll</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </AllItemsFullPathWithTargetPath>
+-->
+    </ItemGroup>
+
+    <Copy SourceFiles="$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll"
+          DestinationFolder="$(TargetDir)"/>
+
+  </Target>
 
   <!-- Any managed dependencies of the WinRT component won't automatically be brought 
         in by a referencing C++ app, so we manually set them to be copied here -->
