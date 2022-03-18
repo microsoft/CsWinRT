@@ -75,7 +75,7 @@ BEGIN
                             "Failure to determine the location of the current executable."
     LibHostInitFailureStr   "Initialization of the hostpolicy library failed."
     LibHostSdkFindFailureStr 
-                            "Failure to find the requested SDK. This happens in the hostfxr when an SDK (also called CLI) command is used with dotnet. In this case the hosting layer tries to find an installed. NET SDK to run the command on. The search is based on deduced install locationand on the requested version from potential global. json file. If either no matching SDK version can be found, or that version exists, but it's missing the dotnet. dll file, this error code is returned."""
+                            "Failure to find the requested SDK. This happens in the hostfxr when an SDK (also called CLI) command is used with dotnet. In this case the hosting layer tries to find an installed. NET SDK to run the command on. The search is based on deduced install locationand on the requested version from potential global. json file. If either no matching SDK version can be found, or that version exists, but it's missing the dotnet. dll file, this error code is returned."
     LibHostInvalidArgsStr   "Arguments to hostpolicy are invalid."
     InvalidConfigFileStr    "The .runtimeconfig.json file is invalid."
     AppArgNotRunnableStr    "The command line for dotnet.exe doesn't contain the path to the application."

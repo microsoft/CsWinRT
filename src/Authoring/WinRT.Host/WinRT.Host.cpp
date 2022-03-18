@@ -98,6 +98,7 @@ static load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_
         if (elem.status == result)
         {
             string_table_entry = elem.resourceID;
+            break;
         }
     }
 
@@ -112,14 +113,14 @@ static load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_
         {
             // Error if we fail to load WinRT.Host resource file 
             swprintf_s(error_string_buffer, SUFFICIENTLY_LARGE_ERROR_BUFFER, L"Error: Unable to load the resource container module, last error = %d", GetLastError());
-            MessageBoxW(NULL, error_string_buffer, L"WinRT.Host ERROR!", MB_OK | MB_ICONERROR);
-        } 
+            throw hresult_error(result, error_string_buffer);
+        }
         else if (LoadStringW(resources_handle, string_table_entry, error_string, SUFFICIENTLY_LARGE_STRING_BUFFER) == 0)
         {
             // Error if we fail to load the string
             swprintf_s(error_string_buffer, SUFFICIENTLY_LARGE_ERROR_BUFFER, L"Error: Unable to load the resource string, last error = %d.", GetLastError());
-            MessageBoxW(NULL, error_string_buffer, L"WinRT.Host ERROR!", MB_OK | MB_ICONERROR);
             FreeLibrary(resources_handle);
+            throw hresult_error(result, error_string_buffer);
         }
         else
         {
