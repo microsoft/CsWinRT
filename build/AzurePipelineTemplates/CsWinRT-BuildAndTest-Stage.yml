@@ -370,6 +370,34 @@ stages:
           zh-Hant/System.CommandLine.resources.dll 
         TargetFolder: $(Build.ArtifactStagingDirectory)\release_net5.0\IIDOptimizer
 
+# Stage WinRT.Runtime ResX
+    - task: CopyFiles@2
+      displayName: Stage WinRT.Runtime ResX
+      condition: succeeded()
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Runtime
+        Contents: |
+          WinRTRuntimeErrorStrings.resx
+        TargetFolder: $(Build.ArtifactStagingDirectory)\resx\WinRT.Runtime
+
+# Stage Authoring Diagnostics ResX
+    - task: CopyFiles@2
+      displayName: Stage Authoring Diagnostics ResX
+      condition: succeeded()
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator
+        Contents: |
+          CsWinRTDiagnosticStrings.resx
+        TargetFolder: $(Build.ArtifactStagingDirectory)\resx\WinRT.SourceGenerator
+
+# Publish ResX
+    - task: PublishBuildArtifacts@1
+      displayName: Publish ResX files
+      condition: succeeded()
+      inputs:
+        PathtoPublish: $(Build.ArtifactStagingDirectory)\resx
+        ArtifactName: ResX
+
 # Publish Net5.0
     - task: PublishBuildArtifacts@1
       displayName: Publish Net5.0
