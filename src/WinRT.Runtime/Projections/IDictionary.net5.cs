@@ -311,7 +311,7 @@ namespace ABI.System.Collections.Generic
             uint size = IMapMethods<K, V>.get_Size(obj);
             if (((uint)int.MaxValue) < size)
             {
-                throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingDictionaryTooLarge);
+                throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_CollectionBackingDictionaryTooLarge);
             }
             return (int)size;
         }
@@ -347,10 +347,10 @@ namespace ABI.System.Collections.Generic
                 throw new ArgumentOutOfRangeException(nameof(arrayIndex));
 
             if (array.Length <= arrayIndex && get_Count(obj) > 0)
-                throw new ArgumentException(ErrorStrings.Argument_IndexOutOfArrayBounds);
+                throw new ArgumentException(WinRTRuntimeErrorStrings.Argument_IndexOutOfArrayBounds);
 
             if (array.Length - arrayIndex < get_Count(obj))
-                throw new ArgumentException(ErrorStrings.Argument_InsufficientSpaceToCopyCollection);
+                throw new ArgumentException(WinRTRuntimeErrorStrings.Argument_InsufficientSpaceToCopyCollection);
 
             foreach (global::System.Collections.Generic.KeyValuePair<K, V> mapping in (new IEnumerableImpl<global::System.Collections.Generic.KeyValuePair<K, V>>(iEnumerableObjRef)))
             {
@@ -395,7 +395,7 @@ namespace ABI.System.Collections.Generic
                 throw new ArgumentNullException(nameof(key));
 
             if (ContainsKey(obj, key))
-                throw new ArgumentException(ErrorStrings.Argument_AddingDuplicate);
+                throw new ArgumentException(WinRTRuntimeErrorStrings.Argument_AddingDuplicate);
 
             Insert(obj, key, value);
         }
@@ -456,7 +456,7 @@ namespace ABI.System.Collections.Generic
             catch (global::System.Exception ex)
             {
                 if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                    throw new KeyNotFoundException(ErrorStrings.Arg_KeyNotFound);
+                    throw new KeyNotFoundException(WinRTRuntimeErrorStrings.Arg_KeyNotFound);
                 throw;
             }
         }
@@ -496,9 +496,9 @@ namespace ABI.System.Collections.Generic
                 if (index < 0)
                     throw new ArgumentOutOfRangeException(nameof(index));
                 if (array.Length <= index && this.Count > 0)
-                    throw new ArgumentException(ErrorStrings.Arg_IndexOutOfRangeException);
+                    throw new ArgumentException(WinRTRuntimeErrorStrings.Arg_IndexOutOfRangeException);
                 if (array.Length - index < IDictionaryMethods<K, V>.get_Count(iDictionaryObjRef))
-                    throw new ArgumentException(ErrorStrings.Argument_InsufficientSpaceToCopyCollection);
+                    throw new ArgumentException(WinRTRuntimeErrorStrings.Argument_InsufficientSpaceToCopyCollection);
 
                 int i = index;
                 foreach (global::System.Collections.Generic.KeyValuePair<K, V> mapping in (new IEnumerableImpl<global::System.Collections.Generic.KeyValuePair<K, V>>(iEnumerableObjRef)))
@@ -513,12 +513,12 @@ namespace ABI.System.Collections.Generic
 
             void global::System.Collections.Generic.ICollection<K>.Add(K item)
             {
-                throw new NotSupportedException(ErrorStrings.NotSupported_KeyCollectionSet);
+                throw new NotSupportedException(WinRTRuntimeErrorStrings.NotSupported_KeyCollectionSet);
             }
 
             void global::System.Collections.Generic.ICollection<K>.Clear()
             {
-                throw new NotSupportedException(ErrorStrings.NotSupported_KeyCollectionSet);
+                throw new NotSupportedException(WinRTRuntimeErrorStrings.NotSupported_KeyCollectionSet);
             }
 
             public bool Contains(K item)
@@ -528,7 +528,7 @@ namespace ABI.System.Collections.Generic
 
             bool global::System.Collections.Generic.ICollection<K>.Remove(K item)
             {
-                throw new NotSupportedException(ErrorStrings.NotSupported_KeyCollectionSet);
+                throw new NotSupportedException(WinRTRuntimeErrorStrings.NotSupported_KeyCollectionSet);
             }
 
             global::System.Collections.IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
@@ -592,9 +592,9 @@ namespace ABI.System.Collections.Generic
                 if (index < 0)
                     throw new ArgumentOutOfRangeException(nameof(index));
                 if (array.Length <= index && this.Count > 0)
-                    throw new ArgumentException(ErrorStrings.Arg_IndexOutOfRangeException);
+                    throw new ArgumentException(WinRTRuntimeErrorStrings.Arg_IndexOutOfRangeException);
                 if (array.Length - index < IDictionaryMethods<K, V>.get_Count(iDictionaryObjRef))
-                    throw new ArgumentException(ErrorStrings.Argument_InsufficientSpaceToCopyCollection);
+                    throw new ArgumentException(WinRTRuntimeErrorStrings.Argument_InsufficientSpaceToCopyCollection);
 
                 int i = index;
                 foreach (global::System.Collections.Generic.KeyValuePair<K, V> mapping in (new IEnumerableImpl<global::System.Collections.Generic.KeyValuePair<K, V>>(iEnumerableObjRef)))
@@ -609,12 +609,12 @@ namespace ABI.System.Collections.Generic
 
             void global::System.Collections.Generic.ICollection<V>.Add(V item)
             {
-                throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
+                throw new NotSupportedException(WinRTRuntimeErrorStrings.NotSupported_ValueCollectionSet);
             }
 
             void global::System.Collections.Generic.ICollection<V>.Clear()
             {
-                throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
+                throw new NotSupportedException(WinRTRuntimeErrorStrings.NotSupported_ValueCollectionSet);
             }
 
             public bool Contains(V item)
@@ -628,7 +628,7 @@ namespace ABI.System.Collections.Generic
 
             bool global::System.Collections.Generic.ICollection<V>.Remove(V item)
             {
-                throw new NotSupportedException(ErrorStrings.NotSupported_ValueCollectionSet);
+                throw new NotSupportedException(WinRTRuntimeErrorStrings.NotSupported_ValueCollectionSet);
             }
 
             IEnumerator global::System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
@@ -722,7 +722,7 @@ namespace ABI.System.Collections.Generic
                 if (!keyFound)
                 {
                     Debug.Assert(key != null);
-                    Exception e = new KeyNotFoundException(ErrorStrings.Format(ErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
+                    Exception e = new KeyNotFoundException(String.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
                     e.SetHResult(ExceptionHelpers.E_BOUNDS);
                     throw e;
                 }
@@ -757,7 +757,7 @@ namespace ABI.System.Collections.Generic
                 if (!removed)
                 {
                     Debug.Assert(key != null);
-                    Exception e = new KeyNotFoundException(ErrorStrings.Format(ErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
+                    Exception e = new KeyNotFoundException(String.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
                     e.SetHResult(ExceptionHelpers.E_BOUNDS);
                     throw e;
                 }

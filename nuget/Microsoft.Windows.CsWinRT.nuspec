@@ -36,6 +36,10 @@
     <file src="$winrt_host_x86$" target ="runtimes\win-x86\native"/>
     <file src="$winrt_host_arm$" target ="runtimes\win-arm\native"/>
     <file src="$winrt_host_arm64$" target ="runtimes\win-arm64\native"/>
+    <file src="$winrt_host_resource_x64$" target ="runtimes\win-x64\native\en-us"/>
+    <file src="$winrt_host_resource_x86$" target ="runtimes\win-x86\native\en-us"/>
+    <file src="$winrt_host_resource_arm$" target ="runtimes\win-arm\native\en-us"/>
+    <file src="$winrt_host_resource_arm64$" target ="runtimes\win-arm64\native\en-us"/>
     <file src="$winrt_shim$" target ="lib\net5.0\"/>
     
     <!-- Add the WinRT.Runtime sources to the pkg for embedded scenarios -->

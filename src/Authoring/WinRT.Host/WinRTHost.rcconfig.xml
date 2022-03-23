@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<localization>
+  <resources>
+    <win32Resources fileType="Application">
+      <neutralResources>
+      </neutralResources>
+      <localizedResources>
+        <!-- #6 is for string table resource 
+         https://docs.microsoft.com/en-us/windows/win32/intl/preparing-a-resource-configuration-file#resourcetype-element-->
+        <resourceType typeNameId="#6"/>
+      </localizedResources>
+    </win32Resources>
+  </resources>
+</localization>

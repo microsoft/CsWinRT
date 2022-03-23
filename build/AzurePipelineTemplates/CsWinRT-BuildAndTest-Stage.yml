@@ -264,6 +264,7 @@ stages:
         Contents: |
           WinRT.Host.dll
           WinRT.Host.pdb
+          WinRT.Host.dll.mui
         TargetFolder: $(Build.ArtifactStagingDirectory)\native
 
 # Stage Unit Test 

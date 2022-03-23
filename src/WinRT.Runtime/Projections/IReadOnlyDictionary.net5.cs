@@ -195,7 +195,7 @@ namespace ABI.System.Collections.Generic
 
             if (((uint)int.MaxValue) < size)
             {
-                throw new InvalidOperationException(ErrorStrings.InvalidOperation_CollectionBackingDictionaryTooLarge);
+                throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_CollectionBackingDictionaryTooLarge);
             }
 
             return (int)size;
@@ -263,7 +263,7 @@ namespace ABI.System.Collections.Generic
             catch (Exception ex)
             {
                 if (ExceptionHelpers.E_BOUNDS == ex.HResult)
-                    throw new KeyNotFoundException(ErrorStrings.Format(ErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
+                    throw new KeyNotFoundException(String.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
                 throw;
             }
         }
@@ -529,7 +529,7 @@ namespace ABI.System.Collections.Generic
 
                 if (!keyFound)
                 {
-                    Exception e = new KeyNotFoundException(ErrorStrings.Format(ErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
+                    Exception e = new KeyNotFoundException(String.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
                     e.SetHResult(ExceptionHelpers.E_BOUNDS);
                     throw e;
                 }
@@ -627,7 +627,7 @@ namespace ABI.System.Collections.Generic
 
                     if (!found)
                     {
-                        Exception e = new KeyNotFoundException(ErrorStrings.Format(ErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
+                        Exception e = new KeyNotFoundException(String.Format(WinRTRuntimeErrorStrings.Arg_KeyNotFoundWithKey, key.ToString()));
                         e.SetHResult(ExceptionHelpers.E_BOUNDS);
                         throw e;
                     }
@@ -725,8 +725,8 @@ namespace ABI.System.Collections.Generic
                 {
                     get
                     {
-                        if (_current < _start) throw new InvalidOperationException(ErrorStrings.InvalidOperation_EnumNotStarted);
-                        if (_current > _end) throw new InvalidOperationException(ErrorStrings.InvalidOperation_EnumEnded);
+                        if (_current < _start) throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_EnumNotStarted);
+                        if (_current > _end) throw new InvalidOperationException(WinRTRuntimeErrorStrings.InvalidOperation_EnumEnded);
                         return _array[_current];
                     }
                 }

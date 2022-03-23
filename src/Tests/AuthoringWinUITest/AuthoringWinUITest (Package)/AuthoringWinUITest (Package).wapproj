@@ -63,6 +63,10 @@
       <Link>WinRT.Host.dll</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll.mui">
+      <Link>WinRT.Host.dll.mui</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\..\AuthoringTest\bin\$(_WinMDPlatform)\$(Configuration)\net5.0\AuthoringTest.dll">
       <Link>AuthoringTest.dll</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
