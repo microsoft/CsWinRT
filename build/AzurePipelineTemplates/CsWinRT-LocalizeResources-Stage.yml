@@ -68,7 +68,7 @@ stages:
       displayName: Publish TDBuild Output
       condition: succeeded()
       inputs:
-        PathtoPublish: $(Build.ArtifactStagingDirectory)\loc
+        PathtoPublish: $(Build.SourcesDirectory)\loc
         ArtifactName: TDBuildLoc
 
     - task: PowerShell@2

@@ -8,6 +8,6 @@ variables:
   value: '$(Agent.TempDirectory)\Temp\LocOutput'
 
 stages:
-- template: CsWinRT-BuildAndTest-Stage.yml
+- template: CsWinRT-SimpleBuild-Stage.yml
 
 - template: CsWinRT-LocalizeResources-Stage.yml
