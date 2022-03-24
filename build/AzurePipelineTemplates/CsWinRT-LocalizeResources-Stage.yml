@@ -53,13 +53,23 @@ stages:
         cultureMappingType: 'None'
         gitAction: NONE 
 
-# Stage Authoring Diagnostics ResX
+    # Stage TDBuild Output
     - task: CopyFiles@2
       displayName: Stage TDBuild Output
       condition: succeeded()
       inputs:
         SourceFolder: $(LocOutputDir)
         TargetFolder: $(Build.SourcesDirectory)\loc
+
+    # skipping copy to ArtificatStagingDirectory as it seems ubiquitous to do so
+
+    # Publish TDBuild Output
+    - task: PublishBuildArtifacts@1
+      displayName: Publish TDBuild Output
+      condition: succeeded()
+      inputs:
+        PathtoPublish: $(Build.ArtifactStagingDirectory)\loc
+        ArtifactName: TDBuildLoc
 
     - task: PowerShell@2
       inputs:
