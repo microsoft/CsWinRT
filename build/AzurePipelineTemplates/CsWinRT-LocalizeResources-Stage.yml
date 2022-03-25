@@ -54,12 +54,12 @@ stages:
   #      gitAction: NONE 
 
     # Stage TDBuild Output
-    - task: CopyFiles@2
-      displayName: Stage TDBuild Output
-      condition: succeeded()
-      inputs:
-        SourceFolder: $(LocOutputDir)
-        TargetFolder: $(Build.ArtificatStagingDirectory)\loc
+  #  - task: CopyFiles@2
+  #    displayName: Stage TDBuild Output
+  #    condition: succeeded()
+  #    inputs:
+  #      SourceFolder: $(LocOutputDir)
+  #      TargetFolder: $(Build.ArtificatStagingDirectory)\loc
 
     # Copy TDBuild Output for WinRT.Host
     - task: CopyFiles@2
