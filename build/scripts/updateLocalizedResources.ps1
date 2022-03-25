@@ -5,7 +5,7 @@
 $teamProject = $env:SYSTEM_TEAMPROJECT
 $repoName= $env:Build_Repository_Name
 $pipelineName = $env:Build_DefinitionName
-$PAT = $env:CsWinRTPullRequestPAT
+$cswinrtPRToken = $env:CsWinRTPullRequestPAT
 
 Write-host "Azure DevOps organization: $env:System_TeamFoundationCollectionUri"
 Write-host "Team Project: $teamProject"
@@ -28,7 +28,7 @@ git config --global user.email "jlarkin@microsoft.com"
 git config --global user.name "jlarkin"
 
 #Set git password. NOTE: PAT Personal Access token for user to create Pull Request or commit
-$encodedPat = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(":$(PAT)"))
+$encodedPat = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(":$cswinrtPRToken)"))
 
 $gitURI = "$(env:Build_Repository_Uri)"
 git config "http.$gitURI.extraheader AUTHORIZATION: Basic $encodedPat"
@@ -50,7 +50,9 @@ $branchName = "update-localization/$d"
 
 git checkout -b $branchName
 git push --set-upstream origin $branchName
-git add -A
+git add src\Authoring\WinRT.Host\LocalizedMUI
+git add src\Authoring\WinRT.SourceGenerator\LocalizedResX
+git add src\WinRT.Runtime\LocalizedResX
 git commit -m "TDBuild latest localization" -a
 git push
 

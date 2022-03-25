@@ -35,23 +35,23 @@ stages:
         extractTars: false
 
     # Run TouchdownBuild
-    - task: TouchdownBuildTask@1
-      inputs:
-        environment: 'PRODEXT'
-        teamId: $(CsWinRTTDBuildTeamID)
-        authType: 'OAuth'
-        authId: $(CsWinRTTDBuildAuthID)
-        authKey: $(CsWinRTTDBuildAuthKey)
-        localizationTarget: true
-        isPreview: false
-        resourceFilePath: |
-          $(Build.SourcesDirectory)\release_x64\WinRT.Host.dll.mui
-          $(Build.SourcesDirectory)\ResX\WinRT.SourceGenerator\CsWinRTDiagnosticStrings.resx
-          $(Build.SourcesDirectory)\ResX\WinRT.Runtime\WinRTRuntimeErrorStrings.resx
-        outputDirectoryRoot: $(LocOutputDir) 
-        appendRelativeDir: true
-        cultureMappingType: 'None'
-        gitAction: NONE 
+  #  - task: TouchdownBuildTask@1
+  #    inputs:
+  #      environment: 'PRODEXT'
+  #      teamId: $(CsWinRTTDBuildTeamID)
+  #      authType: 'OAuth'
+  #      authId: $(CsWinRTTDBuildAuthID)
+  #      authKey: $(CsWinRTTDBuildAuthKey)
+  #      localizationTarget: true
+  #      isPreview: false
+  #      resourceFilePath: |
+  #        $(Build.SourcesDirectory)\release_x64\WinRT.Host.dll.mui
+  #        $(Build.SourcesDirectory)\ResX\WinRT.SourceGenerator\CsWinRTDiagnosticStrings.resx
+  #        $(Build.SourcesDirectory)\ResX\WinRT.Runtime\WinRTRuntimeErrorStrings.resx
+  #      outputDirectoryRoot: $(LocOutputDir) 
+  #      appendRelativeDir: true
+  #      cultureMappingType: 'None'
+  #      gitAction: NONE 
 
     # Stage TDBuild Output
     - task: CopyFiles@2
@@ -59,18 +59,43 @@ stages:
       condition: succeeded()
       inputs:
         SourceFolder: $(LocOutputDir)
-        TargetFolder: $(Build.SourcesDirectory)\loc
+        TargetFolder: $(Build.ArtificatStagingDirectory)\loc
 
-    # skipping copy to ArtificatStagingDirectory as it seems ubiquitous to do so
-
-    # Publish TDBuild Output
-    - task: PublishBuildArtifacts@1
-      displayName: Publish TDBuild Output
+    # Copy TDBuild Output for WinRT.Host
+    - task: CopyFiles@2
+      displayName: Copy Localized Resources for WinRT.Host
       condition: succeeded()
       inputs:
-        PathtoPublish: $(Build.SourcesDirectory)\loc
-        ArtifactName: TDBuildLoc
+        # SourceFolder: $(Build.ArtificatStagingDirectory)\loc\release_x64
+        SourceFolder: $(Build.SourcesDirectory)\release_x64
+        TargetFolder: $(Build.SourcesDirectory)src\Authoring\WinRT.Host\LocalizedMUI
 
+    # Copy TDBuild Output for WinRT.Runtime
+    - task: CopyFiles@2
+      displayName: Copy Localized Resources for WinRT.Runtime
+      condition: succeeded()
+      inputs:
+        SourceFolder: $(Build.ArtificatStagingDirectory)\loc\ResX\WinRT.Runtime
+        TargetFolder: $(Build.SourcesDirectory)src\WinRT.Runtime\LocalizedResX
+
+    # Copy TDBuild Output for WinRT.Runtime
+    - task: CopyFiles@2
+      displayName: Copy Localized Resources for WinRT.SourceGenerator
+      condition: succeeded()
+      inputs:
+        # SourceFolder: $(Build.ArtificatStagingDirectory)\loc\ResX\WinRT.SourceGenerator
+        SourceFolder: $(Build.SourcesDirectory)\ResX\WinRT.SourceGenerator
+        TargetFolder: $(Build.SourcesDirectory)src\Authoring\WinRT.SourceGenerator\LocalizedResX
+
+    # Publish TDBuild Output
+  #  - task: PublishBuildArtifacts@1
+  #    displayName: Publish TDBuild Output
+  #    condition: succeeded()
+  #    inputs:
+  #      PathtoPublish: $(Build.ArtificatStagingDirectory)\loc
+  #      ArtifactName: TDBuildLoc
+
+    # Create pull request with new mui files
     - task: PowerShell@2
       inputs:
         filePath: '$(Build.SourcesDirectory)\build\scripts\updateLocalizedResources.ps1'
