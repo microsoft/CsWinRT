@@ -10,7 +10,7 @@ $PAT = $env:CsWinRTPullRequestPAT
 Write-host "Azure DevOps organization: $env:System_TeamFoundationCollectionUri"
 Write-host "Team Project: $teamProject"
 Write-host "Repo Name: $repoName"
-Write-host "Source Branch: $(Build.SourceBranch)"
+Write-host "Source Branch: $env:Build_SourceBranch"
 
 
 if ("$(git status)".Contains("nothing to commit")) {
@@ -30,7 +30,7 @@ git config --global user.name "jlarkin"
 #Set git password. NOTE: PAT Personal Access token for user to create Pull Request or commit
 $encodedPat = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(":$(PAT)"))
 
-$gitURI = "$(Build.Repository.Uri)"
+$gitURI = "$(env:Build_Repository_Uri)"
 git config "http.$gitURI.extraheader AUTHORIZATION: Basic $encodedPat"
 
 Write-Host "##[endgroup]"
@@ -45,7 +45,7 @@ Write-Host "##[group] Create Branch and push changes"
 Write-Host "Creating Branch" 
 
 $d = (Get-Date).ToString("yyyyMMdd-hhmm")
-$branchName = "tdbuild/$d"
+$branchName = "update-localization/$d"
 #Write-Host "##vso[task.setvariable variable=branchName;]$branchName"
 
 git checkout -b $branchName
