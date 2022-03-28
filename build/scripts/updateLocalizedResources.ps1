@@ -30,7 +30,7 @@ git config --global user.name "jlarkin"
 #Set git password. NOTE: PAT Personal Access token for user to create Pull Request or commit
 $encodedPat = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(":$cswinrtPRToken)"))
 
-$gitURI = "$(env:Build_Repository_Uri)"
+$gitURI = "https://github.com/microsoft/CsWinRT"
 git config "http.$gitURI.extraheader AUTHORIZATION: Basic $encodedPat"
 
 Write-Host "##[endgroup]"
