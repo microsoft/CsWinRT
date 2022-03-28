@@ -75,7 +75,8 @@ stages:
       displayName: Copy Localized Resources for WinRT.Runtime
       condition: succeeded()
       inputs:
-        SourceFolder: $(Build.ArtificatStagingDirectory)\loc\ResX\WinRT.Runtime
+        # SourceFolder: $(Build.ArtificatStagingDirectory)\loc\ResX\WinRT.Runtime
+        SourceFolder: $(Build.ArtificatStagingDirectory)\ResX\WinRT.Runtime
         TargetFolder: $(Build.SourcesDirectory)src\WinRT.Runtime\LocalizedResX
 
     # Copy TDBuild Output for WinRT.Runtime
@@ -84,7 +85,7 @@ stages:
       condition: succeeded()
       inputs:
         # SourceFolder: $(Build.ArtificatStagingDirectory)\loc\ResX\WinRT.SourceGenerator
-        SourceFolder: $(Build.SourcesDirectory)\ResX\WinRT.SourceGenerator
+        SourceFolder: $(Build.ArtificatStagingDirectory)\ResX\WinRT.SourceGenerator
         TargetFolder: $(Build.SourcesDirectory)src\Authoring\WinRT.SourceGenerator\LocalizedResX
 
     # Publish TDBuild Output
