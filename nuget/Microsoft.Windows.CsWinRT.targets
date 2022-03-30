@@ -137,10 +137,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -include WinRT.Interop
       </CsWinRTIncludeWinRTInterop>
 
-      <!-- TODO: change cswinrt.exe to use -internal instead of -embedded 
-      -->
-      <CsWinRTInternalProjection Condition="'$(CsWinRTPrivateProjection)' == 'true'">-embedded</CsWinRTInternalProjection>
-      <CsWinRTEmbeddedProjection Condition="'$(CsWinRTEmbedded)' == 'true'">-embedded</CsWinRTEmbeddedProjection>
+      <CsWinRTInternalProjection Condition="'$(CsWinRTPrivateProjection)' == 'true'">-private</CsWinRTInternalProjection>
+      <CsWinRTEmbeddedProjection Condition="'$(CsWinRTEmbedded)' == 'true'">-private</CsWinRTEmbeddedProjection>
 
       <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5">$(TargetFramework)</CsWinRTExeTFM>
       <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>

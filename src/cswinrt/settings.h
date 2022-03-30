@@ -12,7 +12,7 @@ namespace cswinrt
         winmd::reader::filter filter;
         bool netstandard_compat{};
         bool component{};
-        bool embedded{};
+        bool private{};
     };
 
     extern settings_type settings;
