@@ -69,8 +69,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
 
-    <None Condition="Exists('$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\en-us\WinRT.Host.dll.mui')"
-          Include="$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\en-us\WinRT.Host.dll.mui">
+    <None Condition="Exists('$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\en-US\WinRT.Host.dll.mui')"
+          Include="$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\en-US\WinRT.Host.dll.mui">
       <TargetPath>WinRT.Host.dll.mui</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

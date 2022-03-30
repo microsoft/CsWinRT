@@ -36,12 +36,22 @@
     <file src="$winrt_host_x86$" target ="runtimes\win-x86\native"/>
     <file src="$winrt_host_arm$" target ="runtimes\win-arm\native"/>
     <file src="$winrt_host_arm64$" target ="runtimes\win-arm64\native"/>
-    <file src="$winrt_host_resource_x64$" target ="runtimes\win-x64\native\en-us"/>
-    <file src="$winrt_host_resource_x86$" target ="runtimes\win-x86\native\en-us"/>
-    <file src="$winrt_host_resource_arm$" target ="runtimes\win-arm\native\en-us"/>
-    <file src="$winrt_host_resource_arm64$" target ="runtimes\win-arm64\native\en-us"/>
     <file src="$winrt_shim$" target ="lib\net5.0\"/>
+
+    <!-- Localized resources for error strings --> 
     
+    <file src="..\src\Authoring\WinRT.Host\MUI\**" target ="runtimes\win-x64\native"/>
+    <file src="..\src\Authoring\WinRT.Host\MUI\**" target ="runtimes\win-x86\native"/>
+    <file src="..\src\Authoring\WinRT.Host\MUI\**" target ="runtimes\win-arm\native"/>
+    <file src="..\src\Authoring\WinRT.Host\MUI\**" target ="runtimes\win-arm64\native"/>
+    <file src="$winrt_host_resource_x64$" target ="runtimes\win-x64\native\en-US"/>
+    <file src="$winrt_host_resource_x86$" target ="runtimes\win-x86\native\en-US"/>
+    <file src="$winrt_host_resource_arm$" target ="runtimes\win-arm\native\en-US"/>
+    <file src="$winrt_host_resource_arm64$" target ="runtimes\win-arm64\native\en-US"/>
+
+    <file src="..\src\WinRT.Runtime\ResX\**" target ="lib\net5.0\"/>
+    <file src="..\src\Authoring\WinRT.SourceGenerator\ResX\**" target ="analyzers\dotnet\cs\"/>
+
     <!-- Add the WinRT.Runtime sources to the pkg for embedded scenarios -->
 
     <file src="..\src\WinRT.Runtime\*.cs" exclude="..\src\WinRT.Runtime\*.net*.cs" target="embedded\any\" />

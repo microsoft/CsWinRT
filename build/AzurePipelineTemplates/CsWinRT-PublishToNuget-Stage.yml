@@ -94,6 +94,9 @@ stages:
           release_arm64\WinRT.Host.dll
           net5.0\IIDOptimizer\IIDOptimizer.exe
           net5.0\IIDOptimizer\IIDOptimizer.dll
+          Authoring\WinRT.Host\MUI\**\WinRT.Host.dll.mui
+          Authoring\WinRT.SourceGenerator\ResX\**\CsWinRTDiagnosticStrings.resx
+          WinRT.Runtime\ResX\**\WinRTRuntimeErrorStrings.resx 
         UseMinimatch: true
         signConfigType: inlineSignParams
         inlineOperation: |
