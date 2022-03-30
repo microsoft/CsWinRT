@@ -1,0 +1,70 @@
+stages:
+- stage: LocalizeStrings
+  displayName: Call TDBuild to Localize Resources
+  jobs:
+  - job: Localize
+    pool: 
+      vmImage: windows-2019
+    timeoutInMinutes: 90
+    steps:
+    - checkout: self
+      clean: true
+      persistCredentials: true
+
+    # This is needed to avoid credentials errors for later in the TDBuild Task
+    - script: |
+        git config --global user.email "DoNotEmailThis@dev.null.microsoft.com"
+        git config --global user.name "TDBuild"
+
+    # Download x64
+    - task: DownloadBuildArtifacts@0
+      displayName: Download x64
+      inputs:
+        artifactName: release_x64
+        itemPattern: ''
+        downloadPath: $(Build.SourcesDirectory)
+        extractTars: false
+
+    # Download RESX
+    - task: DownloadBuildArtifacts@0
+      displayName: Download ResX
+      inputs:
+        artifactName: ResX
+        itemPattern: ''
+        downloadPath: $(Build.SourcesDirectory)
+        extractTars: false
+
+    # Run TouchdownBuild
+    - task: TouchdownBuildTask@1
+      inputs:
+        environment: 'PRODEXT'
+        teamId: $(CsWinRTTDBuildTeamID)
+        authType: 'OAuth'
+        authId: $(CsWinRTTDBuildAuthID)
+        authKey: $(CsWinRTTDBuildAuthKey)
+        localizationTarget: true
+        isPreview: false
+        resourceFilePath: |
+          $(Build.SourcesDirectory)\release_x64\WinRT.Host.dll.mui
+          $(Build.SourcesDirectory)\ResX\WinRT.SourceGenerator\CsWinRTDiagnosticStrings.resx
+          $(Build.SourcesDirectory)\ResX\WinRT.Runtime\WinRTRuntimeErrorStrings.resx
+        outputDirectoryRoot: $(LocOutputDir) 
+        appendRelativeDir: true
+        cultureMappingType: 'None'
+        gitAction: NONE 
+
+    # Stage TDBuild Output
+    - task: CopyFiles@2
+      displayName: Stage TouchdownBuild Output
+      condition: succeeded()
+      inputs:
+        SourceFolder: $(LocOutputDir)
+        TargetFolder: $(Build.ArtifactStagingDirectory)\loc
+
+    # Publish Net5.0
+    - task: PublishBuildArtifacts@1
+      displayName: Publish TouchdownBuild Output
+      condition: succeeded()
+      inputs:
+        PathtoPublish: $(Build.ArtifactStagingDirectory)\loc
+        ArtifactName: LocalizedResources
