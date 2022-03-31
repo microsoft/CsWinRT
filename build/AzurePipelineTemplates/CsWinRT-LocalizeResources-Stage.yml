@@ -61,7 +61,7 @@ stages:
         SourceFolder: $(LocOutputDir)
         TargetFolder: $(Build.ArtifactStagingDirectory)\loc
 
-    # Publish Net5.0
+    # Publish TDBuild Output
     - task: PublishBuildArtifacts@1
       displayName: Publish TouchdownBuild Output
       condition: succeeded()
