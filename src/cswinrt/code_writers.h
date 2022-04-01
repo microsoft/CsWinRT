@@ -3240,6 +3240,7 @@ event % %;)",
         bool is_value_type;
         bool is_pinnable;
         bool marshal_by_object_reference_value;
+        bool is_generic_marshaler;
 
         bool is_out() const
         {
@@ -3271,6 +3272,11 @@ event % %;)",
         bool is_marshal_by_object_reference_value() const
         {
             return marshal_by_object_reference_value;
+        }
+
+        bool use_create_marshaler2() const
+        {
+            return is_marshal_by_object_reference_value() || is_generic_marshaler;
         }
 
         std::string get_marshaler_local(writer& w) const
@@ -3329,7 +3335,7 @@ event % %;)",
             w.write("%.CreateMarshaler%%(%)",
                 marshaler_type,
                 is_array() ? "Array" : "",
-                is_marshal_by_object_reference_value() ? "2" : "",
+                use_create_marshaler2() ? "2" : "",
                 source);
         }
 
@@ -3347,7 +3353,7 @@ event % %;)",
                 get_marshaler_local(w),
                 marshaler_type,
                 is_array() ? "Array" : "",
-                is_marshal_by_object_reference_value() ? "2" : "",
+                use_create_marshaler2() ? "2" : "",
                 bind<write_escaped_identifier>(param_name));
 
             if (is_generic() || is_array())
@@ -3673,6 +3679,7 @@ event % %;)",
                 m.param_type = w.write_temp("%", bind<write_projection_type>(semantics));
                 m.marshaler_type = w.write_temp("Marshaler<%>", m.param_type);
                 m.local_type = "object";
+                m.is_generic_marshaler = true;
             },
             [&](generic_type_instance const& type)
             {

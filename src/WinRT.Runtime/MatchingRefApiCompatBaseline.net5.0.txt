@@ -32,6 +32,7 @@ MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.IObjectRefere
 MembersMustExist : Member 'public System.Int32 WinRT.IObjectReference.TryAs(System.Guid, System.IntPtr)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.MarshalDelegate.CreateMarshaler2(System.Object, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public T WinRT.MarshalDelegate.FromAbi<T>(System.IntPtr)' does not exist in the reference but it does exist in the implementation.
+MembersMustExist : Member 'public System.Func<T, System.Object> System.Func<T, System.Object> WinRT.Marshaler<T>.CreateMarshaler2' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.MarshalInspectable<T>.CreateMarshaler2(T, System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.ObjectReferenceValue WinRT.MarshalInspectable<T>.CreateMarshaler2(T, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
 MembersMustExist : Member 'public WinRT.IObjectReference WinRT.MarshalInspectable<T>.CreateMarshaler<V>(T, System.Guid, System.Boolean)' does not exist in the reference but it does exist in the implementation.
@@ -51,4 +52,4 @@ TypesMustExist : Type 'WinRT.MarshalString.Pinnable' does not exist in the refer
 TypesMustExist : Type 'WinRT.ObjectReferenceValue' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReference' does not exist in the reference but it does exist in the implementation.
 TypesMustExist : Type 'WinRT.Interop.IWeakReferenceSource' does not exist in the reference but it does exist in the implementation.
-Total Issues: 52
+Total Issues: 53

@@ -1593,7 +1593,7 @@ namespace WinRT
         public static readonly Type AbiType;
         public static readonly Type RefAbiType;
         public static readonly Func<T, object> CreateMarshaler;
-        internal static readonly Func<T, object> CreateMarshaler2;
+        public static readonly Func<T, object> CreateMarshaler2;
         public static readonly Func<object, object> GetAbi;
         public static readonly Action<object, IntPtr> CopyAbi;
         public static readonly Func<object, T> FromAbi;
