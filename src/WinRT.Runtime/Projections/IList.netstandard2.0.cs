@@ -798,7 +798,7 @@ namespace ABI.System.Collections.Generic
             var __params = new object[] { ThisPtr, null, null, null };
             try
             {
-                __value = Marshaler<T>.CreateMarshaler(value);
+                __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[1] = Marshaler<T>.GetAbi(__value);
                 _obj.Vftbl.IndexOf_3.DynamicInvokeAbi(__params);
                 index = (uint)__params[2];
@@ -816,7 +816,7 @@ namespace ABI.System.Collections.Generic
             var __params = new object[] { ThisPtr, index, null };
             try
             {
-                __value = Marshaler<T>.CreateMarshaler(value);
+                __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[2] = Marshaler<T>.GetAbi(__value);
                 _obj.Vftbl.SetAt_4.DynamicInvokeAbi(__params);
             }
@@ -832,7 +832,7 @@ namespace ABI.System.Collections.Generic
             var __params = new object[] { ThisPtr, index, null };
             try
             {
-                __value = Marshaler<T>.CreateMarshaler(value);
+                __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[2] = Marshaler<T>.GetAbi(__value);
                 _obj.Vftbl.InsertAt_5.DynamicInvokeAbi(__params);
             }
@@ -853,7 +853,7 @@ namespace ABI.System.Collections.Generic
             var __params = new object[] { ThisPtr, null };
             try
             {
-                __value = Marshaler<T>.CreateMarshaler(value);
+                __value = Marshaler<T>.CreateMarshaler2(value);
                 __params[1] = Marshaler<T>.GetAbi(__value);
                 _obj.Vftbl.Append_7.DynamicInvokeAbi(__params);
             }
