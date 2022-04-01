@@ -1372,7 +1372,7 @@ namespace WinRT
             (object value, IntPtr dest) => *(int*)dest.ToPointer() = (int)Convert.ChangeType(value, typeof(int));
         internal static unsafe Action<object, IntPtr> CopyUIntEnumFunc =
             (object value, IntPtr dest) => *(uint*)dest.ToPointer() = (uint)Convert.ChangeType(value, typeof(uint));
-        internal static Action<object, Lazy<Action<object>>> DisposeMarshaler = (object arg, Lazy<Action<object>> disposeMarshalerFallback) =>
+        internal static Action<object, Lazy<Action<object>>> DisposeMarshaler = (object arg, Lazy<Action<object>> genericDisposeMarshaler) =>
         {
             if (arg is ObjectReferenceValue objectReferenceValue)
             {
@@ -1380,10 +1380,10 @@ namespace WinRT
             }
             else
             {
-                disposeMarshalerFallback.Value(arg);
+                genericDisposeMarshaler.Value(arg);
             }
         };
-        internal static Func<object, Lazy<Func<object, object>>, object> GetAbi = (object arg, Lazy<Func<object, object>> getAbiFallback) => arg is ObjectReferenceValue objectReferenceValue ? objectReferenceValue.GetAbi() : getAbiFallback.Value(arg);
+        internal static Func<object, Lazy<Func<object, object>>, object> GetAbi = (object arg, Lazy<Func<object, object>> genericGetAbi) => arg is ObjectReferenceValue objectReferenceValue ? objectReferenceValue.GetAbi() : genericGetAbi.Value(arg);
     }
 
 #if EMBED
