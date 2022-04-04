@@ -1,10 +1,6 @@
-dependsOn: Job_1
+dependsOn: Publish
 pool:
   name: Azure Pipelines
-variables:
-  MajorVersion: '1'
-  MinorVersion: '4'
-  PatchVersion: '2'
 
 steps:
 - script: |
@@ -75,7 +71,7 @@ steps:
   condition: eq($(Build.Reason),'true')
   errorActionPreference: continue
   ignoreLASTEXITCODE: true
-  displayName: 'Run WinUI UpdateCSWinRT Pipeline'
+  displayName: 'Run WinUI CI Pipeline'
   continueOnError: true
   env:
     AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
