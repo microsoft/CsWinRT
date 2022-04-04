@@ -386,6 +386,15 @@ namespace WinRT
             {
                 return null;
             }
+
+            // For empty arrays, we can end up returning the same managed object
+            // when using ReadOnlySpan.ToArray. But a unique object is expected
+            // by the caller for RCW creation.
+            if (abi.length == 0)
+            {
+                return new T[0];
+            }
+
             var abiSpan = new ReadOnlySpan<T>(abi.data.ToPointer(), abi.length);
             return abiSpan.ToArray();
         }
