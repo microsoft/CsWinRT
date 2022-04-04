@@ -95,10 +95,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <PropertyGroup>
 
       <_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest Condition="'@(_CsWinRTDeDupRuntime_NETSDK)' == ''">true</_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest>
+      <_CsWinRTDeDupRuntime_NoCsWinRT_Reference Condition="'@(_CsWinRTDeDupRuntime_CsWinRT)' == ''">true</_CsWinRTDeDupRuntime_NoCsWinRT_Reference>
 
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest)' != 'true'">
+    <PropertyGroup Condition="'$(_CsWinRTDeDupRuntime_CsWinRT_Version_IsLatest)' != 'true' and '$(_CsWinRTDeDupRuntime_NoCsWinRT_Reference)' != 'true'">
 
       <_CsWinRTDeDupRuntime_NETSDK_Version>%(_CsWinRTDeDupRuntime_NETSDK.FileVersion)</_CsWinRTDeDupRuntime_NETSDK_Version>
       <_CsWinRTDeDupRuntime_CsWinRT_Version>%(_CsWinRTDeDupRuntime_CsWinRT.NuGetPackageVersion)</_CsWinRTDeDupRuntime_CsWinRT_Version>
