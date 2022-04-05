@@ -890,6 +890,28 @@ namespace UnitTest
         }
 
         [Fact]
+        public void TestValueSetArrays()
+        {
+            var map = new Dictionary<string, long[]>
+            { 
+                ["foo"] = new long[] { 1, 2, 3 },
+                ["hello"] = new long[0], 
+                ["world"] = new long[] { 1, 2, 3 }, 
+                ["bar"] = new long[0]
+            };
+            var valueSet = new Windows.Foundation.Collections.ValueSet();
+            foreach (var item in map)
+            {
+                valueSet[item.Key] = item.Value;
+            }
+            Assert.Equal(map.Count, valueSet.Count);
+            foreach (var item in map)
+            {
+                Assert.Equal(valueSet[item.Key], item.Value);
+            }
+        }
+
+        [Fact]
         public void TestFactories()
         {
             var cls1 = new Class();
