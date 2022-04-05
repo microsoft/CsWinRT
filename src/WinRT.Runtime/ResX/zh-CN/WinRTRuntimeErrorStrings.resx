@@ -117,4 +117,58 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArgumentOutOfRange_Index" xml:space="preserve">
+    <value>索引超出范围。必须为非负数，并且必须小于集合的大小。</value>
+  </data>
+  <data name="ArgumentOutOfRange_IndexLargerThanMaxValue" xml:space="preserve">
+    <value>此集合无法使用大于 Int32.MaxValue - 1 (0x7FFFFFFF - 1)的索引。</value>
+  </data>
+  <data name="Argument_AddingDuplicate" xml:space="preserve">
+    <value>已添加具有相同键的项。</value>
+  </data>
+  <data name="Argument_AddingDuplicateWithKey" xml:space="preserve">
+    <value>已添加具有相同键的项。密钥： {0}</value>
+  </data>
+  <data name="Argument_IndexOutOfArrayBounds" xml:space="preserve">
+    <value>指定的索引超出指定数组的界限。</value>
+  </data>
+  <data name="Argument_InsufficientSpaceToCopyCollection" xml:space="preserve">
+    <value>指定的空间不足，无法从此集合复制元素。</value>
+  </data>
+  <data name="Arg_IndexOutOfRangeException" xml:space="preserve">
+    <value>索引超出了数组的界限。</value>
+  </data>
+  <data name="Arg_KeyNotFound" xml:space="preserve">
+    <value>字典中不存在给定的键。</value>
+  </data>
+  <data name="Arg_KeyNotFoundWithKey" xml:space="preserve">
+    <value>字典中不存在给定的键'{0}'。</value>
+  </data>
+  <data name="Arg_RankMultiDimNotSupported" xml:space="preserve">
+    <value>请求的操作只支持一维数组。</value>
+  </data>
+  <data name="InvalidOperation_CannotRemoveLastFromEmptyCollection" xml:space="preserve">
+    <value>无法从空集合中删除最后一个元素。</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
+    <value>支持此字典的集合包含太多元素。</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
+    <value>支持此列表的集合包含的元素太多。</value>
+  </data>
+  <data name="InvalidOperation_EnumEnded" xml:space="preserve">
+    <value>枚举已完成。</value>
+  </data>
+  <data name="InvalidOperation_EnumFailedVersion" xml:space="preserve">
+    <value>已修改集合；可能无法执行枚举操作。</value>
+  </data>
+  <data name="InvalidOperation_EnumNotStarted" xml:space="preserve">
+    <value>枚举尚未启动。调用 MoveNext。</value>
+  </data>
+  <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
+    <value>不允许对从字典派生的密钥集合进行变异。</value>
+  </data>
+  <data name="NotSupported_ValueCollectionSet" xml:space="preserve">
+    <value>不允许对从字典派生的值集合进行变异。</value>
+  </data>
 </root>

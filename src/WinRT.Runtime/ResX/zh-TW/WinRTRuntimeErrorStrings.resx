@@ -117,4 +117,58 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArgumentOutOfRange_Index" xml:space="preserve">
+    <value>索引超出範圍。不能是負數，且不能超過集合的大小。</value>
+  </data>
+  <data name="ArgumentOutOfRange_IndexLargerThanMaxValue" xml:space="preserve">
+    <value>此集合無法與大於 Int32.MaxValue - 1 (0x7FFFFFFF - 1)的索引搭配使用。</value>
+  </data>
+  <data name="Argument_AddingDuplicate" xml:space="preserve">
+    <value>已新增具有相同索引鍵的專案。</value>
+  </data>
+  <data name="Argument_AddingDuplicateWithKey" xml:space="preserve">
+    <value>已新增具有相同索引鍵的專案。金鑰： {0}</value>
+  </data>
+  <data name="Argument_IndexOutOfArrayBounds" xml:space="preserve">
+    <value>指定的索引超出指定陣列的範圍。</value>
+  </data>
+  <data name="Argument_InsufficientSpaceToCopyCollection" xml:space="preserve">
+    <value>指定的空間不足，無法從這個集合複製元素。</value>
+  </data>
+  <data name="Arg_IndexOutOfRangeException" xml:space="preserve">
+    <value>索引超出陣列的範圍。</value>
+  </data>
+  <data name="Arg_KeyNotFound" xml:space="preserve">
+    <value>字典中沒有指定的索引鍵。</value>
+  </data>
+  <data name="Arg_KeyNotFoundWithKey" xml:space="preserve">
+    <value>字典中沒有指定的索引鍵'{0}'。</value>
+  </data>
+  <data name="Arg_RankMultiDimNotSupported" xml:space="preserve">
+    <value>所要求的動作只支援單一維度陣列。</value>
+  </data>
+  <data name="InvalidOperation_CannotRemoveLastFromEmptyCollection" xml:space="preserve">
+    <value>無法從空的集合移除最後一個元素。</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
+    <value>支援此字典的集合包含太多元素。</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
+    <value>支援此清單的集合包含太多元素。</value>
+  </data>
+  <data name="InvalidOperation_EnumEnded" xml:space="preserve">
+    <value>列舉已完成。</value>
+  </data>
+  <data name="InvalidOperation_EnumFailedVersion" xml:space="preserve">
+    <value>集合已被修改; 無法執行列舉操作。</value>
+  </data>
+  <data name="InvalidOperation_EnumNotStarted" xml:space="preserve">
+    <value>尚未啟動列舉。呼叫 MoveNext。</value>
+  </data>
+  <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
+    <value>不允許將衍生自字典的金鑰集合設為靜音。</value>
+  </data>
+  <data name="NotSupported_ValueCollectionSet" xml:space="preserve">
+    <value>不允許將衍生自字典的值集合設為靜音。</value>
+  </data>
 </root>

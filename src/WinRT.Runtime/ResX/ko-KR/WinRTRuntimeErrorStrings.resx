@@ -117,4 +117,58 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArgumentOutOfRange_Index" xml:space="preserve">
+    <value>인덱스가 범위를 벗어났습니다. 음수가 아니고 컬렉션 크기보다 작아야 합니다.</value>
+  </data>
+  <data name="ArgumentOutOfRange_IndexLargerThanMaxValue" xml:space="preserve">
+    <value>이 컬렉션은 Int32.MaxValue - 1(0x7FFFFFFF - 1)보다 큰 인덱스를 사용할 수 없습니다.</value>
+  </data>
+  <data name="Argument_AddingDuplicate" xml:space="preserve">
+    <value>같은 키를 가진 항목이 이미 추가되었습니다.</value>
+  </data>
+  <data name="Argument_AddingDuplicateWithKey" xml:space="preserve">
+    <value>같은 키를 가진 항목이 이미 추가되었습니다. 키: {0}</value>
+  </data>
+  <data name="Argument_IndexOutOfArrayBounds" xml:space="preserve">
+    <value>지정한 인덱스가 지정한 배열의 범위를 벗어났습니다.</value>
+  </data>
+  <data name="Argument_InsufficientSpaceToCopyCollection" xml:space="preserve">
+    <value>지정한 공간이 부족하여 이 컬렉션에서 요소를 복사할 수 없습니다.</value>
+  </data>
+  <data name="Arg_IndexOutOfRangeException" xml:space="preserve">
+    <value>인덱스가 배열 범위를 벗어났습니다.</value>
+  </data>
+  <data name="Arg_KeyNotFound" xml:space="preserve">
+    <value>지정된 키가 사전에 없습니다.</value>
+  </data>
+  <data name="Arg_KeyNotFoundWithKey" xml:space="preserve">
+    <value>지정한 키 '{0}' 사전에 없습니다.</value>
+  </data>
+  <data name="Arg_RankMultiDimNotSupported" xml:space="preserve">
+    <value>요청한 작업에는 1차원 배열만 지원됩니다.</value>
+  </data>
+  <data name="InvalidOperation_CannotRemoveLastFromEmptyCollection" xml:space="preserve">
+    <value>빈 컬렉션에서 마지막 요소를 제거할 수 없습니다.</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
+    <value>이 사전을 지원하는 컬렉션에 요소가 너무 많습니다.</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
+    <value>이 목록을 지원하는 컬렉션에 요소가 너무 많습니다.</value>
+  </data>
+  <data name="InvalidOperation_EnumEnded" xml:space="preserve">
+    <value>열거가 이미 완료되었습니다.</value>
+  </data>
+  <data name="InvalidOperation_EnumFailedVersion" xml:space="preserve">
+    <value>컬렉션이 수정되었습니다. 열거 작업을 실행할 수 없습니다.</value>
+  </data>
+  <data name="InvalidOperation_EnumNotStarted" xml:space="preserve">
+    <value>열거가 시작되지 않았습니다. MoveNext를 호출합니다.</value>
+  </data>
+  <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
+    <value>사전에서 파생된 키 컬렉션은 변경할 수 없습니다.</value>
+  </data>
+  <data name="NotSupported_ValueCollectionSet" xml:space="preserve">
+    <value>사전에서 파생된 값 컬렉션은 변경할 수 없습니다.</value>
+  </data>
 </root>

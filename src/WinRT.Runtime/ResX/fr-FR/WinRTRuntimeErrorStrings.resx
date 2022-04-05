@@ -117,4 +117,58 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArgumentOutOfRange_Index" xml:space="preserve">
+    <value>L’index ne situait en dehors de la plage indiquée. Il ne doit pas être négatif et sa taille doit être inférieure à la taille de la collection.</value>
+  </data>
+  <data name="ArgumentOutOfRange_IndexLargerThanMaxValue" xml:space="preserve">
+    <value>Cette collection ne peut pas fonctionner avec des index supérieurs à Int32.MaxValue - 1 (0x7FFFFFFF - 1).</value>
+  </data>
+  <data name="Argument_AddingDuplicate" xml:space="preserve">
+    <value>Un élément avec la même clé a déjà été ajouté.</value>
+  </data>
+  <data name="Argument_AddingDuplicateWithKey" xml:space="preserve">
+    <value>Un élément avec la même clé a déjà été ajouté. Clé : {0}</value>
+  </data>
+  <data name="Argument_IndexOutOfArrayBounds" xml:space="preserve">
+    <value>L’index spécifié est hors limites du tableau spécifié.</value>
+  </data>
+  <data name="Argument_InsufficientSpaceToCopyCollection" xml:space="preserve">
+    <value>L’espace spécifié n’est pas suffisant pour copier les éléments de cette collection.</value>
+  </data>
+  <data name="Arg_IndexOutOfRangeException" xml:space="preserve">
+    <value>L’index se trouvait en dehors des limites du tableau.</value>
+  </data>
+  <data name="Arg_KeyNotFound" xml:space="preserve">
+    <value>La clé donnée n’était pas présente dans le dictionnaire.</value>
+  </data>
+  <data name="Arg_KeyNotFoundWithKey" xml:space="preserve">
+    <value>La clé spécifiée '{0}' n’était pas présente dans le dictionnaire.</value>
+  </data>
+  <data name="Arg_RankMultiDimNotSupported" xml:space="preserve">
+    <value>Seuls les tableaux unidimensionnels sont pris en charge pour l'action demandée.</value>
+  </data>
+  <data name="InvalidOperation_CannotRemoveLastFromEmptyCollection" xml:space="preserve">
+    <value>Impossible de supprimer le dernier élément d’une collection vide.</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
+    <value>La collection qui contient ce dictionnaire contient trop d’éléments.</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
+    <value>La collection qui stocke cette liste contient trop d’éléments.</value>
+  </data>
+  <data name="InvalidOperation_EnumEnded" xml:space="preserve">
+    <value>Énumération déjà terminée.</value>
+  </data>
+  <data name="InvalidOperation_EnumFailedVersion" xml:space="preserve">
+    <value>La collection a été modifiée ; l'opération d'énumération ne peut pas être exécutée.</value>
+  </data>
+  <data name="InvalidOperation_EnumNotStarted" xml:space="preserve">
+    <value>L’énumération n’a pas démarré. Appelez MoveNext.</value>
+  </data>
+  <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
+    <value>La mutation d’une collection de clés dérivée d’un dictionnaire n’est pas autorisée.</value>
+  </data>
+  <data name="NotSupported_ValueCollectionSet" xml:space="preserve">
+    <value>La mutation d’une collection de valeurs dérivée d’un dictionnaire n’est pas autorisée.</value>
+  </data>
 </root>

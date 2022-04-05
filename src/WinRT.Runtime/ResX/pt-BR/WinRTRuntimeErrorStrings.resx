@@ -117,4 +117,58 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArgumentOutOfRange_Index" xml:space="preserve">
+    <value>O índice estava fora do intervalo. Deve ser não negativo e menor que o tamanho da coleção.</value>
+  </data>
+  <data name="ArgumentOutOfRange_IndexLargerThanMaxValue" xml:space="preserve">
+    <value>Esta coleção não pode funcionar com índices maiores que Int32.MaxValue - 1 (0x7FFFFFFF - 1).</value>
+  </data>
+  <data name="Argument_AddingDuplicate" xml:space="preserve">
+    <value>Um item com a mesma chave já foi adicionado.</value>
+  </data>
+  <data name="Argument_AddingDuplicateWithKey" xml:space="preserve">
+    <value>Um item com a mesma chave já foi adicionado. Chave: {0}</value>
+  </data>
+  <data name="Argument_IndexOutOfArrayBounds" xml:space="preserve">
+    <value>O índice especificado está fora dos limites da matriz especificada.</value>
+  </data>
+  <data name="Argument_InsufficientSpaceToCopyCollection" xml:space="preserve">
+    <value>O espaço especificado não é suficiente para copiar os elementos desta Coleção.</value>
+  </data>
+  <data name="Arg_IndexOutOfRangeException" xml:space="preserve">
+    <value>O índice estava fora dos limites da matriz.</value>
+  </data>
+  <data name="Arg_KeyNotFound" xml:space="preserve">
+    <value>A chave fornecida não estava presente no dicionário.</value>
+  </data>
+  <data name="Arg_KeyNotFoundWithKey" xml:space="preserve">
+    <value>A chave '{0}' fornecida não estava presente no dicionário.</value>
+  </data>
+  <data name="Arg_RankMultiDimNotSupported" xml:space="preserve">
+    <value>Só há suporte a matrizes dimensionais únicas na ação solicitada.</value>
+  </data>
+  <data name="InvalidOperation_CannotRemoveLastFromEmptyCollection" xml:space="preserve">
+    <value>Não é possível remover o último elemento de uma coleção vazia.</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
+    <value>A coleção que faz o backup deste Dicionário contém muitos elementos.</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
+    <value>A coleção que faz backup desta Lista contém muitos elementos.</value>
+  </data>
+  <data name="InvalidOperation_EnumEnded" xml:space="preserve">
+    <value>Enumeração já concluída.</value>
+  </data>
+  <data name="InvalidOperation_EnumFailedVersion" xml:space="preserve">
+    <value>A coleção foi modificada. Talvez a operação de enumeração não seja executada.</value>
+  </data>
+  <data name="InvalidOperation_EnumNotStarted" xml:space="preserve">
+    <value>Enumeração não iniciada. Chamar MoveNext.</value>
+  </data>
+  <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
+    <value>Não é permitido modificar uma coleção de chaves derivada de um dicionário.</value>
+  </data>
+  <data name="NotSupported_ValueCollectionSet" xml:space="preserve">
+    <value>Não é permitido modificar uma coleção de valores derivada de um dicionário.</value>
+  </data>
 </root>

@@ -117,4 +117,58 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArgumentOutOfRange_Index" xml:space="preserve">
+    <value>Индекс выходит за рамки диапазона. Он должен быть неотрицательным и меньше размера коллекции.</value>
+  </data>
+  <data name="ArgumentOutOfRange_IndexLargerThanMaxValue" xml:space="preserve">
+    <value>Эта коллекция не может работать с индексами больше Int32.MaxValue - 1 (0x7FFFFFFF - 1).</value>
+  </data>
+  <data name="Argument_AddingDuplicate" xml:space="preserve">
+    <value>Элемент с таким ключом уже добавлен.</value>
+  </data>
+  <data name="Argument_AddingDuplicateWithKey" xml:space="preserve">
+    <value>Элемент с таким ключом уже добавлен. Ключ: {0}</value>
+  </data>
+  <data name="Argument_IndexOutOfArrayBounds" xml:space="preserve">
+    <value>Указанный индекс выходит за границы указанного массива.</value>
+  </data>
+  <data name="Argument_InsufficientSpaceToCopyCollection" xml:space="preserve">
+    <value>Указанного пространства недостаточно для копирования элементов из этой коллекции.</value>
+  </data>
+  <data name="Arg_IndexOutOfRangeException" xml:space="preserve">
+    <value>Индекс находится вне границ массива.</value>
+  </data>
+  <data name="Arg_KeyNotFound" xml:space="preserve">
+    <value>Данный ключ отсутствует в словаре.</value>
+  </data>
+  <data name="Arg_KeyNotFoundWithKey" xml:space="preserve">
+    <value>Указанный ключ '{0}' отсутствует в словаре.</value>
+  </data>
+  <data name="Arg_RankMultiDimNotSupported" xml:space="preserve">
+    <value>Запрошенное действие поддерживает только одномерные массивы.</value>
+  </data>
+  <data name="InvalidOperation_CannotRemoveLastFromEmptyCollection" xml:space="preserve">
+    <value>Невозможно удалить последний элемент из пустой коллекции.</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
+    <value>Коллекция, содержащая этот словарь, содержит слишком много элементов.</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
+    <value>Коллекция, содержащая этот список, содержит слишком много элементов.</value>
+  </data>
+  <data name="InvalidOperation_EnumEnded" xml:space="preserve">
+    <value>Перечисление уже завершено.</value>
+  </data>
+  <data name="InvalidOperation_EnumFailedVersion" xml:space="preserve">
+    <value>Коллекция была изменена; операция перечисления не может быть выполнена.</value>
+  </data>
+  <data name="InvalidOperation_EnumNotStarted" xml:space="preserve">
+    <value>Перечисление не запущено. Вызов MoveNext.</value>
+  </data>
+  <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
+    <value>Изменение коллекции ключей, производной от словаря, запрещено.</value>
+  </data>
+  <data name="NotSupported_ValueCollectionSet" xml:space="preserve">
+    <value>Изменение коллекции значений, производной от словаря, запрещено.</value>
+  </data>
 </root>

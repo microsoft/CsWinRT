@@ -117,4 +117,58 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArgumentOutOfRange_Index" xml:space="preserve">
+    <value>El índice está fuera del intervalo. No puede ser negativo y su tamaño ha de ser menor que el de la colección.</value>
+  </data>
+  <data name="ArgumentOutOfRange_IndexLargerThanMaxValue" xml:space="preserve">
+    <value>Esta colección no puede funcionar con índices mayores que Int32.MaxValue - 1 (0x7FFFFFFF - 1).</value>
+  </data>
+  <data name="Argument_AddingDuplicate" xml:space="preserve">
+    <value>Ya se ha agregado un elemento con la misma clave.</value>
+  </data>
+  <data name="Argument_AddingDuplicateWithKey" xml:space="preserve">
+    <value>Ya se ha agregado un elemento con la misma clave. Clave: {0}</value>
+  </data>
+  <data name="Argument_IndexOutOfArrayBounds" xml:space="preserve">
+    <value>El índice especificado está fuera de los límites de la matriz especificada.</value>
+  </data>
+  <data name="Argument_InsufficientSpaceToCopyCollection" xml:space="preserve">
+    <value>El espacio especificado no es suficiente para copiar los elementos de esta colección.</value>
+  </data>
+  <data name="Arg_IndexOutOfRangeException" xml:space="preserve">
+    <value>El índice estaba fuera de los límites de la matriz.</value>
+  </data>
+  <data name="Arg_KeyNotFound" xml:space="preserve">
+    <value>La clave dada no estaba presente en el diccionario.</value>
+  </data>
+  <data name="Arg_KeyNotFoundWithKey" xml:space="preserve">
+    <value>El '{0}' de clave especificado no estaba presente en el diccionario.</value>
+  </data>
+  <data name="Arg_RankMultiDimNotSupported" xml:space="preserve">
+    <value>La acción solicitada solo es compatible con matrices unidimensionales.</value>
+  </data>
+  <data name="InvalidOperation_CannotRemoveLastFromEmptyCollection" xml:space="preserve">
+    <value>No se puede quitar el último elemento de una colección vacía.</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
+    <value>La colección que respalda este diccionario contiene demasiados elementos.</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
+    <value>La colección que respalda esta lista contiene demasiados elementos.</value>
+  </data>
+  <data name="InvalidOperation_EnumEnded" xml:space="preserve">
+    <value>La enumeración ya ha finalizado.</value>
+  </data>
+  <data name="InvalidOperation_EnumFailedVersion" xml:space="preserve">
+    <value>Se ha modificado la recopilación; es posible que la operación de enumeración no se ejecute.</value>
+  </data>
+  <data name="InvalidOperation_EnumNotStarted" xml:space="preserve">
+    <value>No se ha iniciado la enumeración. Llamar a MoveNext.</value>
+  </data>
+  <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
+    <value>No se permite mutar una colección de claves derivada de un diccionario.</value>
+  </data>
+  <data name="NotSupported_ValueCollectionSet" xml:space="preserve">
+    <value>No se permite mutar una colección de valores derivada de un diccionario.</value>
+  </data>
 </root>

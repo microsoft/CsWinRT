@@ -117,4 +117,58 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ArgumentOutOfRange_Index" xml:space="preserve">
+    <value>Indice fuori intervallo. Non deve essere negativo e deve essere minore della dimensione della raccolta.</value>
+  </data>
+  <data name="ArgumentOutOfRange_IndexLargerThanMaxValue" xml:space="preserve">
+    <value>Questa raccolta non può funzionare con indici di dimensioni maggiori di Int32.MaxValue - 1 (0x7FFFFFFF - 1).</value>
+  </data>
+  <data name="Argument_AddingDuplicate" xml:space="preserve">
+    <value>È già stato aggiunto un elemento con la stessa chiave.</value>
+  </data>
+  <data name="Argument_AddingDuplicateWithKey" xml:space="preserve">
+    <value>È già stato aggiunto un elemento con la stessa chiave. Chiave: {0}</value>
+  </data>
+  <data name="Argument_IndexOutOfArrayBounds" xml:space="preserve">
+    <value>L'indice specificato non è compreso nell'intervallo della matrice specificata.</value>
+  </data>
+  <data name="Argument_InsufficientSpaceToCopyCollection" xml:space="preserve">
+    <value>Lo spazio specificato non è sufficiente per copiare gli elementi da questa raccolta.</value>
+  </data>
+  <data name="Arg_IndexOutOfRangeException" xml:space="preserve">
+    <value>Indice esterno ai limiti della matrice.</value>
+  </data>
+  <data name="Arg_KeyNotFound" xml:space="preserve">
+    <value>La chiave specificata non è presente nel dizionario.</value>
+  </data>
+  <data name="Arg_KeyNotFoundWithKey" xml:space="preserve">
+    <value>La chiave specificata '{0}' non è presente nel dizionario.</value>
+  </data>
+  <data name="Arg_RankMultiDimNotSupported" xml:space="preserve">
+    <value>Per l'azione richiesta sono supportate solo matrici unidimensionali.</value>
+  </data>
+  <data name="InvalidOperation_CannotRemoveLastFromEmptyCollection" xml:space="preserve">
+    <value>Impossibile rimuovere l'ultimo elemento da una raccolta vuota.</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
+    <value>La raccolta che supporta questo dizionario contiene troppi elementi.</value>
+  </data>
+  <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
+    <value>La raccolta che supporta questo elenco contiene troppi elementi.</value>
+  </data>
+  <data name="InvalidOperation_EnumEnded" xml:space="preserve">
+    <value>Enumerazione già completata.</value>
+  </data>
+  <data name="InvalidOperation_EnumFailedVersion" xml:space="preserve">
+    <value>Raccolta modificata. L'operazione di enumerazione potrebbe non essere eseguita.</value>
+  </data>
+  <data name="InvalidOperation_EnumNotStarted" xml:space="preserve">
+    <value>Enumerazione non avviata. Chiama MoveNext.</value>
+  </data>
+  <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
+    <value>Non è consentito modificare una raccolta di chiavi derivata da un dizionario.</value>
+  </data>
+  <data name="NotSupported_ValueCollectionSet" xml:space="preserve">
+    <value>La modifica di una raccolta di valori derivata da un dizionario non è consentita.</value>
+  </data>
 </root>
