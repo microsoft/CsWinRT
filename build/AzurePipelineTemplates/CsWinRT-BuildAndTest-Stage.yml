@@ -88,6 +88,7 @@ stages:
           exit /b 0 
 
   - job: Benchmarks
+    condition: eq(variables['_RunBenchmarks'],'true')
     displayName: Run Benchmarks
     dependsOn: []
     pool:
