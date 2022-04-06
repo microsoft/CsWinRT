@@ -173,27 +173,23 @@ stages:
           set cswinrt_build_params=/bl:$(Build.SourcesDirectory)\cswinrt.binlog /p:CleanIntermediateDirs=true /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
           build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
 
-# Mask BuildConfiguration
+# Build Tool for Embedded Sample
     - task: CmdLine@2
-      displayName: Mask BuildConfiguration
-      enabled: False
+      displayName: Build TestEmbedded Sample
       inputs:
+        workingDirectory: $(Build.SourcesDirectory)\src\Samples\TestEmbedded
         script: |
-          @echo off
-
-          rem Although BuildConfiguration is PipelineRelease or PipelineDebug, the build outputs still go to Release or Debug 
-          rem change BuildConfiguration variable so staging succeeds 
-          rem the alternative would be to add configuration property for Pipeline* to every project in cswinrt.sln 
-          
-          if "$(BuildConfiguration)"=="PipelineRelease" ( 
-            set NewBuildConfiguration=Release
-          ) else if "$(BuildConfiguration)"=="PipelineDebug" ( 
-            set NewBuildConfiguration=Debug
+          if "%VSCMD_VER%"=="" (
+            pushd c:
+            call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" >nul 2>&1
+            popd
           )
 
-          if "%NewBuildConfiguration%"!="" (
-            echo ##vso[task.setvariable variable=BuildConfiguration;]%NewBuildConfiguration%
-          )
+          set echo_build=on
+          set only_build=true
+          rem PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
+          set embed_build_params=/p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+          build.cmd $(BuildPlatform) $(BuildConfiguration)
 
 # Component Detection
     - task: ComponentGovernanceComponentDetection@0
@@ -206,6 +202,15 @@ stages:
       inputs:
         SourceFolder: $(Build.SourcesDirectory)
         Contents: cswinrt.binlog
+        TargetFolder: $(Build.ArtifactStagingDirectory)\binlog
+
+# Stage BinLog
+    - task: CopyFiles@2
+      displayName: Stage Embedded Sample BinLog
+      condition: always()
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\Samples\TestEmbedded
+        Contents: embeddedsample.binlog
         TargetFolder: $(Build.ArtifactStagingDirectory)\binlog
 
 # Publish BinLog
@@ -264,7 +269,6 @@ stages:
         Contents: |
           WinRT.Host.dll
           WinRT.Host.pdb
-          WinRT.Host.dll.mui
         TargetFolder: $(Build.ArtifactStagingDirectory)\native
 
 # Stage Unit Test 
@@ -401,9 +405,19 @@ stages:
       condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
       inputs:
         command: test
-        projects: 'src/Tests/UnitTest/UnitTest.csproj '
+        projects: 'src/Tests/UnitTest/UnitTest.csproj'
         arguments: --diag $(Build.ArtifactStagingDirectory)\unittest\test.log --no-build --logger xunit;LogFilePath=UNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
         testRunTitle: Unit Tests
+
+# Run Embedded Unit Tests
+    - task: DotNetCoreCLI@2
+      displayName: Run Embedded Unit Tests
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        command: test
+        projects: 'src/Samples/TestEmbedded/UnitTestEmbedded/UnitTestEmbedded.csproj'
+        arguments: --diag $(Build.ArtifactStagingDirectory)\unittestembedded\test.log --no-build --logger xunit;LogFilePath=EMBEDDEDUNITTEST-$(Build.BuildNumber).xml /nologo /m /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        testRunTitle: Embedded Unit Tests
 
 # Run Object Lifetime Tests
     - task: VSTest@2
@@ -420,6 +434,14 @@ stages:
       inputs:
         PathtoPublish: $(Build.ArtifactStagingDirectory)\unittest
         ArtifactName: $(BuildConfiguration)_$(BuildPlatform)_UnitTest
+
+# Publish Embedded Test Log
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Embedded Test Log
+      condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildPlatform'], 'x64')))
+      inputs:
+        PathtoPublish: $(Build.ArtifactStagingDirectory)\unittestembedded
+        ArtifactName: $(BuildConfiguration)_$(BuildPlatform)_UnitTestEmbedded
 
 # Run Host Tests
     - task: CmdLine@2
@@ -446,7 +468,6 @@ stages:
           exit /b 0 
 
   - job: Benchmarks
-    condition: eq(variables['_RunBenchmarks'],'true')
     displayName: Run Benchmarks
     dependsOn: []
     pool:
