@@ -1,0 +1,22 @@
+stages:
+- stage: BuildOnly
+  displayName: Build for Release|x64
+  jobs: 
+  - job: Build
+    pool:
+      vmImage: windows-2019
+    timeoutInMinutes: 90
+    # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases?view=azure-devops&tabs=yaml#multi-job-configuration
+    strategy:
+      maxParallel: 10
+      matrix:
+       x64_Release:
+          BuildPlatform: 'x64'
+          BuildConfiguration: 'release'
+    steps:
+    - checkout: self
+      clean: true
+      persistCredentials: true
+
+# Build Steps 
+    - template: CsWinRT-Build-Steps.yml
