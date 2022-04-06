@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net5.0;net6.0</TargetFrameworks>
@@ -8,25 +8,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSdk" Version="1.0.0" GeneratePathProperty="true">
+      <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
+    </PackageReference>
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
     <ProjectReference Include="..\..\cswinrt\cswinrt.vcxproj" />
     <ProjectReference Include="..\Windows\Windows.csproj" />
+    <!-- 
     <PackageReference Include="Microsoft.ProjectReunion" Version="0.5.7" GeneratePathProperty="true">
       <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
     </PackageReference>
-      <PackageReference Include="Microsoft.ProjectReunion.Foundation" Version="0.5.7" GeneratePathProperty="true">
-      <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
-    </PackageReference>
-      <PackageReference Include="Microsoft.ProjectReunion.WinUI" Version="0.5.7" GeneratePathProperty="true">
-      <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
-    </PackageReference>
+    -->
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
   <PropertyGroup>
     <CsWinRTFilters>
 -exclude Windows
+-exclude Microsoft.Windows
 -include Microsoft
 # The current WinUI nuget incorrectly references several Windows.* types that should be
 # Microsoft.* types instead.  Temporarily include these to enable the build
@@ -43,17 +43,16 @@
 -include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute
 -include Windows.UI.Xaml.Media.Animation.IndependentlyAnimatableAttribute
 -include Windows.UI.Xaml.Media.Animation.ConditionallyIndependentlyAnimatableAttribute      
+-include Windows.Foundation
     </CsWinRTFilters>
     <!--PkgMicrosoft_WinUI is set in in obj\*.csproj.nuget.g.props with TargetFramework condition, doesn't support multi-targeting-->
-    <PkgMicrosoft_ReunionWinUI>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.projectreunion.winui', '0.5.7'))</PkgMicrosoft_ReunionWinUI>    
-    <PkgMicrosoft_ReunionFoundation>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.projectreunion.foundation', '0.5.7'))</PkgMicrosoft_ReunionFoundation>    
+    <PkgMicrosoft_WindowsAppSdk>$([MSBuild]::NormalizeDirectory('$(NuGetPackageRoot)', 'microsoft.windowsappsdk', '1.0.0'))</PkgMicrosoft_WindowsAppSdk>    
     <SignAssembly>true</SignAssembly>    
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <!--Explicitly reference WinUI winmds from TFM uap10.0-->
-    <CsWinRTInputs Include="$(PkgMicrosoft_ReunionWinUI)/**/*.winmd" />
-    <CsWinRTInputs Include="$(PkgMicrosoft_ReunionFoundation)/**/*.winmd" />
+    <CsWinRTInputs Include="$(PkgMicrosoft_WindowsAppSdk)/**/*.winmd" />
   </ItemGroup>
   
 </Project>

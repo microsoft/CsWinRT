@@ -12,7 +12,7 @@
         <PrepareMsixPackageDependsOn></PrepareMsixPackageDependsOn>
         <PublishReadyToRun>false</PublishReadyToRun>
         <ProjectReunionVerifyWinrtRuntimeVersion>false</ProjectReunionVerifyWinrtRuntimeVersion>
-        <WindowsPackageType>Desktop</WindowsPackageType>
+        <WindowsPackageType>MSIX</WindowsPackageType>
     </PropertyGroup>
     <ItemGroup>
         <None Remove="Images\LockScreenLogo.scale-200.png" />
@@ -52,6 +52,7 @@
             <Version>16.10.0-release-20210429-01</Version>
             <ExcludeAssets>build</ExcludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.WindowsAppSdk" Version="1.0.0" ExcludeAssets="Compile"/>
         <PackageReference Include="MSTest.TestAdapter">
             <Version>2.2.4-preview-20210513-02</Version>
         </PackageReference>
@@ -63,13 +64,6 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
         <ProjectReference Include="..\..\Projections\Reunion\Reunion.csproj" />
-    </ItemGroup>
-    
-    <ItemGroup>
-        <PackageReference Include="Microsoft.ProjectReunion.WinUI">
-            <Version>0.5.7</Version>
-            <ExcludeAssets>compile</ExcludeAssets>
-        </PackageReference>
     </ItemGroup>
    
 </Project>

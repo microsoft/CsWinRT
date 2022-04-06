@@ -1,4 +1,5 @@
 <Project>
-    <Import Project="CSWinRTInApp.targets"/>
-    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />    
+    <!-- <Import Project="CSWinRTInApp.targets"/> 
+    -->
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../../'))" />    
 </Project>

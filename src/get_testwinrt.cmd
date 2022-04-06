@@ -5,16 +5,16 @@ set this_dir=%~dp0
 setlocal EnableDelayedExpansion
 if not exist %this_dir%TestWinRT\. (
 	echo Cloning TestWinRT
-	git clone https://github.com/microsoft/TestWinRT %this_dir%TestWinRT
+	git clone https://github.com/j0shuams/TestWinRT %this_dir%TestWinRT
 	if ErrorLevel 1 popd & exit /b !ErrorLevel!
 )
 pushd %this_dir%TestWinRT
 echo Syncing TestWinRT
-git checkout -f master
+git checkout -f toolset-142
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
 git fetch -f
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
-git reset -q --hard d7acaf7d18d7902f7181ee094a27966b2b5b87f0
+git reset -q --hard 322f2aae18ba9a822ac905c7a4711612658bcef2
 if ErrorLevel 1 popd & exit /b !ErrorLevel!
 echo Restoring Nuget
 %this_dir%.nuget\nuget.exe restore
