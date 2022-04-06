@@ -43,6 +43,7 @@
         $(WinRTRuntimeSourcesDir)CastExtensions.cs;
         $(WinRTRuntimeSourcesDir)Attributes.cs;
         $(WinRTRuntimeSourcesDir)AgileReference.cs;
+        $(WinRTRuntimeSourcesDir)WinRTRuntimeErrorStrings.Designer.cs;
         $(WinRTRuntimeSourcesDir)Projections\EventHandler.cs;
         $(WinRTRuntimeSourcesDir)Projections\Geometry.cs;
         $(WinRTRuntimeSourcesDir)Projections\IStringable.cs;
