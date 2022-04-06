@@ -1,0 +1,12 @@
+name: $(MajorVersion).$(MinorVersion).$(PatchVersion)$(PrereleaseVersion).$(date:yyMMdd)$(rev:.r)
+
+variables:
+- template: CsWinRT-Variables.yml
+- group: CsWinRT-TouchdownBuild-Secrets
+- name: LocOutputDir
+  value: '$(Agent.TempDirectory)\Temp\LocOutput'
+
+stages:
+- template: CsWinRT-BuildOnly-Stage.yml
+
+- template: CsWinRT-LocalizeResources-Stage.yml
