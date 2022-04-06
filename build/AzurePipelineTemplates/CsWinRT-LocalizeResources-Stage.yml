@@ -70,26 +70,6 @@ stages:
           release_x64\ru-RU\WinRT.Host.dll.mui
           release_x64\zh-CN\WinRT.Host.dll.mui
           release_x64\zh-TW\WinRT.Host.dll.mui
-          ResX\WinRT.SourceGenerator\de-DE\CsWinRTDiagnosticStrings.resx
-          ResX\WinRT.SourceGenerator\es-ES\CsWinRTDiagnosticStrings.resx
-          ResX\WinRT.SourceGenerator\fr-FR\CsWinRTDiagnosticStrings.resx
-          ResX\WinRT.SourceGenerator\it-IT\CsWinRTDiagnosticStrings.resx
-          ResX\WinRT.SourceGenerator\ja-JP\CsWinRTDiagnosticStrings.resx
-          ResX\WinRT.SourceGenerator\ko-KR\CsWinRTDiagnosticStrings.resx
-          ResX\WinRT.SourceGenerator\pt-BR\CsWinRTDiagnosticStrings.resx
-          ResX\WinRT.SourceGenerator\ru-RU\CsWinRTDiagnosticStrings.resx
-          ResX\WinRT.SourceGenerator\zh-CN\CsWinRTDiagnosticStrings.resx
-          ResX\WinRT.SourceGenerator\zh-TW\CsWinRTDiagnosticStrings.resx
-          ResX\WinRT.Runtime\de-DE\WinRTRuntimeErrorStrings.resx 
-          ResX\WinRT.Runtime\es-ES\WinRTRuntimeErrorStrings.resx 
-          ResX\WinRT.Runtime\fr-FR\WinRTRuntimeErrorStrings.resx 
-          ResX\WinRT.Runtime\it-IT\WinRTRuntimeErrorStrings.resx 
-          ResX\WinRT.Runtime\ja-JP\WinRTRuntimeErrorStrings.resx 
-          ResX\WinRT.Runtime\ko-KR\WinRTRuntimeErrorStrings.resx 
-          ResX\WinRT.Runtime\pt-BR\WinRTRuntimeErrorStrings.resx 
-          ResX\WinRT.Runtime\ru-RU\WinRTRuntimeErrorStrings.resx 
-          ResX\WinRT.Runtime\zh-CN\WinRTRuntimeErrorStrings.resx 
-          ResX\WinRT.Runtime\zh-TW\WinRTRuntimeErrorStrings.resx 
         UseMinimatch: true
         signConfigType: inlineSignParams
         inlineOperation: |
