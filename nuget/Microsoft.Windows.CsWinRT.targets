@@ -137,8 +137,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -include WinRT.Interop
       </CsWinRTIncludeWinRTInterop>
 
-      <CsWinRTInternalProjection Condition="'$(CsWinRTPrivateProjection)' == 'true'">-private</CsWinRTInternalProjection>
-      <CsWinRTEmbeddedProjection Condition="'$(CsWinRTEmbedded)' == 'true'">-private</CsWinRTEmbeddedProjection>
+      <CsWinRTInternalProjection Condition="'$(CsWinRTPrivateProjection)' == 'true'">-internal</CsWinRTInternalProjection>
+      <CsWinRTEmbeddedProjection Condition="'$(CsWinRTEmbedded)' == 'true'">-internal</CsWinRTEmbeddedProjection>
 
       <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5">$(TargetFramework)</CsWinRTExeTFM>
       <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
