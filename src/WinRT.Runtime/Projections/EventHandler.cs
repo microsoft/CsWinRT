@@ -107,7 +107,7 @@ namespace ABI.System
                 {
                     __sender = MarshalInspectable<object>.CreateMarshaler2(sender);
                     __params[1] = MarshalInspectable<object>.GetAbi(__sender);
-                    __args = Marshaler<T>.CreateMarshaler(args);
+                    __args = Marshaler<T>.CreateMarshaler2(args);
                     __params[2] = Marshaler<T>.GetAbi(__args);
                     abiInvoke.DynamicInvokeAbi(__params);
                 }

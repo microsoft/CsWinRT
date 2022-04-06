@@ -68,7 +68,7 @@ namespace WinRT
                 return new AgileReference<T>(null);
             }
 
-            var marshal = Marshaler<T>.CreateMarshaler(value);
+            var marshal = Marshaler<T>.CreateMarshaler2(value);
             try
             {
                 if (marshal is IObjectReference objref)

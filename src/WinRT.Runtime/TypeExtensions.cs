@@ -81,6 +81,11 @@ namespace WinRT
 
         public static Type GetMarshalerType(this Type type)
         {
+            return type.GetHelperType().GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).ReturnType;
+        }
+
+        internal static Type GetMarshaler2Type(this Type type)
+        {
             var helperType = type.GetHelperType();
             var createMarshaler = helperType.GetMethod("CreateMarshaler2", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static) ??
                 helperType.GetMethod("CreateMarshaler", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
