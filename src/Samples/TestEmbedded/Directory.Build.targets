@@ -20,9 +20,6 @@
           AfterTargets="CsWinRTGenerateProjection"
           BeforeTargets="CsWinRTIncludeProjection"> 
   
-    <Message Importance="high" Text="$(WinRTRuntimeSourcesDir)" />
-    <Message Importance="high" Text="$(CsWinRTEmbeddedTFMNet5OrGreater)" />
-
     <PropertyGroup>
       <EmbeddedAnyFiles>
         $(WinRTRuntimeSourcesDir)TypeNameSupport.cs;
@@ -75,8 +72,6 @@
       <CsWinRTEmbeddedSourcesAny Include="$(EmbeddedAnyFiles)" />
     </ItemGroup>
     
-    <Message Importance="high" Text="%(CsWinRTEmbeddedSourcesAny.FileName)" />
-
     <Copy SourceFiles="@(CsWinRTEmbeddedSourcesAny)"
           DestinationFolder="$(CsWinRTGeneratedFilesDir)"
           UseHardlinksIfPossible="false"
