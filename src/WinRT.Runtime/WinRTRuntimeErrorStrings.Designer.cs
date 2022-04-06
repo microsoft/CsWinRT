@@ -39,7 +39,7 @@ namespace WinRT {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("WinRT.WinRTRuntimeWinRTRuntimeErrorStrings", typeof(WinRTRuntimeErrorStrings).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("WinRT.WinRTRuntimeErrorStrings", typeof(WinRTRuntimeErrorStrings).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

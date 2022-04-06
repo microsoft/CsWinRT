@@ -1086,6 +1086,74 @@ namespace UnitTest
         }
 
         [Fact]
+        public void Box_LongArray()
+        {
+            long[] arr = new long[] { 2, 4, 6 };
+            Box_type(arr, Tests.Box18);
+
+            long[] arr2 = new long[] { 2, 4, 6 };
+            Box_type(arr2, Tests.Box18);
+            Box_type(arr2, Tests.Box18);
+
+            long[] arr3 = new long[0];
+            Box_type(arr3, Tests.Box18);
+
+            long[] arr4 = new long[0];
+            Box_type(arr4, Tests.Box18);
+        }
+
+        [Fact]
+        public void Box_BoolArray()
+        {
+            bool[] arr = new bool[] { true, false, true };
+            Box_type(arr, Tests.Box19);
+
+            bool[] arr2 = new bool[] { true, false, true };
+            Box_type(arr2, Tests.Box19);
+            Box_type(arr2, Tests.Box19);
+
+            bool[] arr3 = new bool[0];
+            Box_type(arr3, Tests.Box19);
+
+            bool[] arr4 = new bool[0];
+            Box_type(arr4, Tests.Box19);
+        }
+
+        [Fact]
+        public void Box_StringArray()
+        {
+            string[] arr = new string[] { "one", "two", "three" };
+            Box_type(arr, Tests.Box20);
+
+            string[] arr2 = new string[] { "four", "five", "six" };
+            Box_type(arr2, Tests.Box20);
+            Box_type(arr2, Tests.Box20);
+
+            string[] arr3 = new string[0];
+            Box_type(arr3, Tests.Box20);
+
+            string[] arr4 = new string[0];
+            Box_type(arr4, Tests.Box20);
+        }
+
+        [Fact]
+        public void Box_TimeSpanArray()
+        {
+            TimeSpan[] arr = new TimeSpan[] { TimeSpan.FromMilliseconds(4), TimeSpan.FromMilliseconds(5), TimeSpan.FromMilliseconds(6) };
+            Box_type(arr, Tests.Box21);
+
+            TimeSpan[] arr2 = new TimeSpan[] { TimeSpan.FromMilliseconds(4), TimeSpan.FromMilliseconds(5), TimeSpan.FromMilliseconds(6) };
+            Box_type(arr2, Tests.Box21);
+            Box_type(arr2, Tests.Box21);
+
+            TimeSpan[] arr3 = new TimeSpan[0];
+            Box_type(arr3, Tests.Box21);
+
+            TimeSpan[] arr4 = new TimeSpan[0];
+            Box_type(arr4, Tests.Box21);
+        }
+
+        [Fact]
         public void Fast_Abi_Simple()
         {
             var simple = new test_component_fast.Simple();
