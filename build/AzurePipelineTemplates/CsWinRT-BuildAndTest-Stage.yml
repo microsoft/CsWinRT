@@ -269,6 +269,7 @@ stages:
         Contents: |
           WinRT.Host.dll
           WinRT.Host.pdb
+          WinRT.Host.dll.mui
         TargetFolder: $(Build.ArtifactStagingDirectory)\native
 
 # Stage Unit Test 
@@ -469,6 +470,7 @@ stages:
 
   - job: Benchmarks
     displayName: Run Benchmarks
+    condition: eq(variables['_RunBenchmarks'],'true')
     dependsOn: []
     pool:
       vmImage: windows-2019
