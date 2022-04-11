@@ -20,63 +20,21 @@
           AfterTargets="CsWinRTGenerateProjection"
           BeforeTargets="CsWinRTIncludeProjection"> 
   
-    <Message Importance="high" Text="$(WinRTRuntimeSourcesDir)" />
-    <Message Importance="high" Text="$(CsWinRTEmbeddedTFMNet5OrGreater)" />
-
-    <PropertyGroup>
-      <EmbeddedAnyFiles>
-        $(WinRTRuntimeSourcesDir)TypeNameSupport.cs;
-        $(WinRTRuntimeSourcesDir)TypeExtensions.cs;
-        $(WinRTRuntimeSourcesDir)Projections.cs;
-        $(WinRTRuntimeSourcesDir)ObjectReference.cs;
-        $(WinRTRuntimeSourcesDir)MonoSupport.cs;
-        $(WinRTRuntimeSourcesDir)Module.cs;
-        $(WinRTRuntimeSourcesDir)Marshalers.cs;
-        $(WinRTRuntimeSourcesDir)IInspectable.cs;
-        $(WinRTRuntimeSourcesDir)GuidGenerator.cs;
-        $(WinRTRuntimeSourcesDir)FundamentalMarshalers.cs;
-        $(WinRTRuntimeSourcesDir)ExceptionHelpers.cs;
-        $(WinRTRuntimeSourcesDir)EventRegistrationToken.cs;
-        $(WinRTRuntimeSourcesDir)DerivedComposed.cs;
-        $(WinRTRuntimeSourcesDir)Context.cs;
-        $(WinRTRuntimeSourcesDir)ComWrappersSupport.cs;
-        $(WinRTRuntimeSourcesDir)CastExtensions.cs;
-        $(WinRTRuntimeSourcesDir)Attributes.cs;
-        $(WinRTRuntimeSourcesDir)AgileReference.cs;
-        $(WinRTRuntimeSourcesDir)WinRTRuntimeErrorStrings.Designer.cs;
-        $(WinRTRuntimeSourcesDir)Projections\EventHandler.cs;
-        $(WinRTRuntimeSourcesDir)Projections\Geometry.cs;
-        $(WinRTRuntimeSourcesDir)Projections\IStringable.cs;
-        $(WinRTRuntimeSourcesDir)Projections\KeyValuePair.cs;
-        $(WinRTRuntimeSourcesDir)Projections\NotifyCollectionChangedAction.cs;
-        $(WinRTRuntimeSourcesDir)Projections\NotifyCollectionChangedEventArgs.cs;
-        $(WinRTRuntimeSourcesDir)Projections\NotifyCollectionChangedEventHandler.cs;
-        $(WinRTRuntimeSourcesDir)Projections\Nullable.cs;
-        $(WinRTRuntimeSourcesDir)Projections\Numerics.cs;
-        $(WinRTRuntimeSourcesDir)Projections\PropertyChangedEventArgs.cs;
-        $(WinRTRuntimeSourcesDir)Projections\PropertyChangedEventHandler.cs;
-        $(WinRTRuntimeSourcesDir)Projections\SystemTypes.cs;
-        $(WinRTRuntimeSourcesDir)Projections\Type.cs;
-        $(WinRTRuntimeSourcesDir)Projections\Uri.cs;
-        $(WinRTRuntimeSourcesDir)Projections\DataErrorsChangedEventArgs.cs;
-        $(WinRTRuntimeSourcesDir)Interop\IReferenceTracker.cs;
-        $(WinRTRuntimeSourcesDir)Interop\IUnknownVftbl.cs;
-        $(WinRTRuntimeSourcesDir)Interop\StandardDelegates.cs;
-        $(WinRTRuntimeSourcesDir)Interop\ExceptionErrorInfo.cs;
-        $(WinRTRuntimeSourcesDir)Interop\IActivationFactory.cs;
-        $(WinRTRuntimeSourcesDir)Interop\IContextCallback.cs;
-        $(WinRTRuntimeSourcesDir)Interop\IMarshal.cs;
-      </EmbeddedAnyFiles>
-    </PropertyGroup>
-    
+    <ItemGroup>
+      <_Net2Sources Include="$(WinRTRuntimeSourcesDir)**\*netstandard2.0.cs" />
+      <_Net5Sources Include="$(WinRTRuntimeSourcesDir)**\*net5.cs" />
+      <_AnySources Include="$(WinRTRuntimeSourcesDir)**\*.cs" />
+      <_AnySources Remove="@(_Net2Sources)" />
+      <_AnySources Remove="@(_Net5Sources)" />
+      <_AnySources Remove="$(WinRTRuntimeSourcesDir)obj\**\*.cs" />
+      <_AnySources Remove="$(WinRTRuntimeSourcesDir)bin\**\*.cs" />
+    </ItemGroup>
     
     <ItemGroup>
       <CsWinRTEmbeddedSourcesAny Remove="@(CsWinRTEmbeddedSourcesAny)" />
-      <CsWinRTEmbeddedSourcesAny Include="$(EmbeddedAnyFiles)" />
+      <CsWinRTEmbeddedSourcesAny Include="@(_AnySources)" />
     </ItemGroup>
     
-    <Message Importance="high" Text="%(CsWinRTEmbeddedSourcesAny.FileName)" />
-
     <Copy SourceFiles="@(CsWinRTEmbeddedSourcesAny)"
           DestinationFolder="$(CsWinRTGeneratedFilesDir)"
           UseHardlinksIfPossible="false"
