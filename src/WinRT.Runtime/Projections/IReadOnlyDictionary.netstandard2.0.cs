@@ -670,7 +670,7 @@ namespace ABI.System.Collections.Generic
             var __params = new object[] { ThisPtr, null, null };
             try
             {
-                __key = Marshaler<K>.CreateMarshaler(key);
+                __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.Lookup_0.DynamicInvokeAbi(__params);
                 return Marshaler<V>.FromAbi(__params[2]);
@@ -688,7 +688,7 @@ namespace ABI.System.Collections.Generic
             var __params = new object[] { ThisPtr, null, null };
             try
             {
-                __key = Marshaler<K>.CreateMarshaler(key);
+                __key = Marshaler<K>.CreateMarshaler2(key);
                 __params[1] = Marshaler<K>.GetAbi(__key);
                 _obj.Vftbl.HasKey_2.DynamicInvokeAbi(__params);
                 return (byte)__params[2] != 0;
