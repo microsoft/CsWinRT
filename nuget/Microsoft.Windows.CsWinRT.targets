@@ -75,7 +75,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="CsWinRTGenerateProjection"
           DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences"
           Condition="'$(CsWinRTGenerateProjection)' == 'true'"
-          Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTExcludes);$(CsWinRTIncludes);$(CsWinRTPrivateExcludes);$(CsWinRTPrivateIncludes);$(CsWinRTFilters);$(CsWinRTWindowsMetadata)"
+          Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTExcludes);$(CsWinRTIncludes);$(CsWinRTExcludesPrivate);$(CsWinRTIncludesPrivate);$(CsWinRTFilters);$(CsWinRTWindowsMetadata)"
           Outputs="$(CsWinRTGeneratedFilesDir)cswinrt.rsp">
     
     <PropertyGroup>
