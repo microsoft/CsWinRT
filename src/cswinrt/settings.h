@@ -13,6 +13,7 @@ namespace cswinrt
         bool netstandard_compat{};
         bool component{};
         bool internal{};
+        bool embedded{};
     };
 
     extern settings_type settings;

@@ -36,6 +36,7 @@ namespace cswinrt
         { "component", 0, 0, {}, "Generate component projection." },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
         { "internal", 0, 0, {}, "Generate the projection as internal."},
+        { "embedded", 0, 0, {}, "Generate the projection as internal."},
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
     };
@@ -95,6 +96,7 @@ Where <spec> is one or more of:
         settings.netstandard_compat = target == "netstandard2.0";
         settings.component = args.exists("component");
         settings.internal = args.exists("internal");
+        settings.embedded = args.exists("embedded");
         settings.input = args.files("input", database::is_database);
 
         for (auto && include : args.values("include"))

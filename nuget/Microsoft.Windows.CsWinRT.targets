@@ -132,13 +132,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -include WinRT.Interop
       </CsWinRTIncludeWinRTInterop>
 
-      <CsWinRTIncludeWinRTInterop Condition="$(CsWinRTPrivateFilters.Contains('-include Windows&#x0d;&#x0a;')) or $(CsWinRTPrivateFilters.Contains('-include Windows&#x0a;'))">
+      <CsWinRTPrivateIncludeWinRTInterop Condition="$(CsWinRTPrivateFilters.Contains('-include Windows&#x0d;&#x0a;')) or $(CsWinRTPrivateFilters.Contains('-include Windows&#x0a;'))">
 -input $(CsWinRTInteropMetadata)
 -include WinRT.Interop
-      </CsWinRTIncludeWinRTInterop>
+      </CsWinRTPrivateIncludeWinRTInterop>
 
       <CsWinRTInternalProjection Condition="'$(CsWinRTPrivateProjection)' == 'true'">-internal</CsWinRTInternalProjection>
-      <CsWinRTEmbeddedProjection Condition="'$(CsWinRTEmbedded)' == 'true'">-internal</CsWinRTEmbeddedProjection>
+      <CsWinRTEmbeddedProjection Condition="'$(CsWinRTEmbedded)' == 'true'">-embedded</CsWinRTEmbeddedProjection>
 
       <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5">$(TargetFramework)</CsWinRTExeTFM>
       <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
@@ -161,7 +161,7 @@ $(CsWinRTWindowsMetadataInput)
 -input @(CsWinRTInputs->'"%(FullPath)"', ' ')
 -output "$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
 $(CsWinRTPrivateFilters)
-$(CsWinRTIncludeWinRTInterop)
+$(CsWinRTPrivateIncludeWinRTInterop)
 $(CsWinRTInternalProjection)
       </CsWinRTPrivateParams>
     </PropertyGroup>
