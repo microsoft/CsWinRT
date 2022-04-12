@@ -10,16 +10,18 @@ This means you can keep uses of your component's projection(s) internal to your 
 
 The process is nearly identical to how you generate a projection today. The difference is a new set of build properties that look similar to the properties used to generate projections globally.
 First you must set a property `CsWinRTPrivateProjection` to `true`. Then specify your includes/excludes using `CsWinRTIncludesPrivate` and `CsWinRTExcludesPrivate`. 
-For example, you could 
+
 
 ## Notes
 
-Note that this means projected types are not accessible outside the module. Therefore
+Note that this means projected types are not accessible outside the module.
 
 You can generate part of your projection as global and part as private, but you must take care to keep the types disjoint otherwise you will generate duplicates of the types projected as both.
 Similarly, an app can't reference two libraries that both make the same private projection -- this is an ambiguity issue because types of the same name exist in different assemblies. 
 
 ## Difference with Embedded Projection
 
-Embedded projections include WinRT.Runtime sources and module generating an embedded projection uses its own assembly to resolve types. 
-Where as private projections still use the global `WinRT.Runtime.dll`, and just keep the projection private to the module.
+Private projection support allows developers to include their component's projection sources in their library or app without exposing it 
+as part of the library or app's public API surface and without needing to create a separate projection binary for it. 
+While embedded support does something similar, embedded support makes all interactions with the WinRT projections (and the support needed for it) embedded in the developer's library or app.
+This hides the uses of WinRT from the library/app's public API surface, allowing developers to use any TargetFramework. 
