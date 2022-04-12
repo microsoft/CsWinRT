@@ -138,6 +138,25 @@ steps:
       set cswinrt_build_params=/bl:$(Build.SourcesDirectory)\cswinrt.binlog /p:CleanIntermediateDirs=true /p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
       build.cmd $(BuildPlatform) $(BuildConfiguration) $(VersionNumber) $(Build.BuildNumber) $(WinRT.Runtime.AssemblyVersion) 
 
+# Build Tool for Embedded Sample
+- task: CmdLine@2
+  displayName: Build TestEmbedded Sample
+  inputs:
+    workingDirectory: $(Build.SourcesDirectory)\src\Samples\TestEmbedded
+    script: |
+      if "%VSCMD_VER%"=="" (
+        pushd c:
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\VsDevCmd.bat" >nul 2>&1
+        popd
+      )
+
+      set echo_build=on
+      set only_build=true
+      rem PDBs being copied for each project reference are causing out of disk space issues in the pipeline.  Making use of AllowedReferenceRelatedFileExtensions to avoid them being copied.
+      set embed_build_params=/p:AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+      build.cmd $(BuildPlatform) $(BuildConfiguration)
+
+
 # Mask BuildConfiguration
 - task: CmdLine@2
   displayName: Mask BuildConfiguration

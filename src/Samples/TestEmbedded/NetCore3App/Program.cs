@@ -3,7 +3,7 @@
 namespace NetCore3App
 {
        class Program
-        {
+       {
             static void Main(string[] args)
             {
                 Console.WriteLine("Hello World!");
@@ -19,7 +19,7 @@ namespace NetCore3App
 
                 Console.WriteLine("Expect 5, Got " + testLib.Test4());
 
-                testLib.Test5();
+                Console.WriteLine("Expect 20, Got " + testLib.Test5());
             }
-        }
+       }
 }
