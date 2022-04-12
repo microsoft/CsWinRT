@@ -4,14 +4,14 @@
     <TargetFrameworks>netcoreapp2.0;net5.0;net6.0</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
     <IsPackable>false</IsPackable>
+    <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <LangVersion>9</LangVersion>
+    <CsWinRTEnabled>false</CsWinRTEnabled>
     <CsWinRTGenerateProjection>false</CsWinRTGenerateProjection>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
-    <!-- We only need the CsWinRT reference for the targets to block NETSDK1130 -->
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="1.4.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

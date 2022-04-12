@@ -11,12 +11,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <DefineConstants>$(DefineConstants);EMBED</DefineConstants>
 <!-- Path to runtime sources, must update if their location changes in the .nuspec --> 
     <CsWinRTEmbeddedTFMNet5OrGreater Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5">true</CsWinRTEmbeddedTFMNet5OrGreater>
+    <WinRTRuntimeSourcesDir Condition="'$(WinRTRuntimeSourcesDir)' == ''">$(CsWinRTPath)embedded\</WinRTRuntimeSourcesDir>
   </PropertyGroup>
 
   <ItemGroup>
-    <CsWinRTEmbeddedSourcesAny Include="$(CsWinRTPath)embedded\any\*.cs"/>
-    <CsWinRTEmbeddedSourcesNet5 Include="$(CsWinRTPath)embedded\net5.0\*.cs"/>
-    <CsWinRTEmbeddedSourcesNet2 Include="$(CsWinRTPath)embedded\netstandard2.0\*.cs"/>
+    <CsWinRTEmbeddedSourcesAny Include="$(WinRTRuntimeSourcesDir)any\*.cs"/>
+    <CsWinRTEmbeddedSourcesNet5 Include="$(WinRTRuntimeSourcesDir)net5.0\*.cs"/>
+    <CsWinRTEmbeddedSourcesNet2 Include="$(WinRTRuntimeSourcesDir)netstandard2.0\*.cs"/>
   </ItemGroup>
  
 <!-- Copy sources that are for any framework -->
