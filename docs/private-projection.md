@@ -3,14 +3,11 @@
 ## Overview
 
 Support for private projections is an option on the C#/WinRT tool that allows for projections to be generated with accessibility scoped to the module generating the projection. 
-This means you can keep uses of your component's projection(s) internal to your project, rather than having a dependency on projections like the one for the Windows SDK (`Microsoft.Windows.SDK.NET.dll`). 
-
 
 ## How-To
 
 The process is nearly identical to how you generate a projection today. The difference is a new set of build properties that look similar to the properties used to generate projections globally.
 First you must set a property `CsWinRTPrivateProjection` to `true`. Then specify your includes/excludes using `CsWinRTIncludesPrivate` and `CsWinRTExcludesPrivate`. 
-
 
 ## Notes
 

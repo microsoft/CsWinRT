@@ -5808,7 +5808,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             bind<write_winrt_attribute>(type),
             bind<write_guid_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
-            is_exclusive_to(type) || (is_projection_internal(type) || settings.internal) ? "internal" : "public",
+            is_exclusive_to(type) || (is_projection_internal(type) || (settings.internal || settings.embedded)) ? "internal" : "public",
             type_name,
             bind<write_type_inheritance>(type, object_type{}, false, false),
             bind<write_interface_member_signatures>(type)
