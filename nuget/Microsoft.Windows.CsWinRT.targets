@@ -110,7 +110,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 -include WinRT.Interop
       </CsWinRTIncludeWinRTInterop>
       <CsWinRTEmbeddedParam Condition="'$(CsWinRTEmbedded)' == 'true'">-embedded</CsWinRTEmbeddedParam>
-      <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5">$(TargetFramework)</CsWinRTExeTFM>
+      <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5">net5.0</CsWinRTExeTFM>
+      <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) > 5">net6.0</CsWinRTExeTFM>
       <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
       <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
 $(CsWinRTCommandVerbosity)
