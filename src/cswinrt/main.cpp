@@ -35,7 +35,8 @@ namespace cswinrt
         { "target", 0, 1, "<net6.0|net5.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with newest TFM (net5.0)." },
         { "component", 0, 0, {}, "Generate component projection." },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
-        { "embedded", 0, 0, {}, "Generate the projection as internal."},
+        { "internal", 0, 0, {}, "Generates a private projection."},
+        { "embedded", 0, 0, {}, "Generates an embedded projection."},
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
     };
@@ -94,6 +95,7 @@ Where <spec> is one or more of:
         }
         settings.netstandard_compat = target == "netstandard2.0";
         settings.component = args.exists("component");
+        settings.internal = args.exists("internal");
         settings.embedded = args.exists("embedded");
         settings.input = args.files("input", database::is_database);
 
