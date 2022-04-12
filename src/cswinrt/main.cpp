@@ -35,8 +35,8 @@ namespace cswinrt
         { "target", 0, 1, "<net6.0|net5.0|netstandard2.0>", "Target TFM for projection. Omit for compatibility with newest TFM (net5.0)." },
         { "component", 0, 0, {}, "Generate component projection." },
         { "verbose", 0, 0, {}, "Show detailed progress information" },
-        { "internal", 0, 0, {}, "Generate the projection as internal."},
-        { "embedded", 0, 0, {}, "Generate the projection as internal."},
+        { "internal", 0, 0, {}, "Generates a private projection."},
+        { "embedded", 0, 0, {}, "Generates an embedded projection."},
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
     };
