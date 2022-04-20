@@ -36,20 +36,20 @@ namespace Microsoft.System
             /// </remarks>
             private static void** InitVtbl()
             {
-                void** lpVtbl = (void**)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(DispatcherQueueProxyHandler), sizeof(void*) * 4);
+                void** vtbl = (void**)RuntimeHelpers.AllocateTypeAssociatedMemory(typeof(DispatcherQueueProxyHandler), sizeof(void*) * 4);
 
-                lpVtbl[0] = (delegate* unmanaged<DispatcherQueueProxyHandler*, Guid*, void**, int>)&Impl.QueryInterface;
-                lpVtbl[1] = (delegate* unmanaged<DispatcherQueueProxyHandler*, uint>)&Impl.AddRef;
-                lpVtbl[2] = (delegate* unmanaged<DispatcherQueueProxyHandler*, uint>)&Impl.Release;
-                lpVtbl[3] = (delegate* unmanaged<DispatcherQueueProxyHandler*, int>)&Impl.Invoke;
+                vtbl[0] = (delegate* unmanaged<DispatcherQueueProxyHandler*, Guid*, void**, int>)&Impl.QueryInterface;
+                vtbl[1] = (delegate* unmanaged<DispatcherQueueProxyHandler*, uint>)&Impl.AddRef;
+                vtbl[2] = (delegate* unmanaged<DispatcherQueueProxyHandler*, uint>)&Impl.Release;
+                vtbl[3] = (delegate* unmanaged<DispatcherQueueProxyHandler*, int>)&Impl.Invoke;
 
-                return lpVtbl;
+                return vtbl;
             }
 
             /// <summary>
             /// The vtable pointer for the current instance.
             /// </summary>
-            private void** lpVtbl;
+            private void** vtbl;
 
             /// <summary>
             /// The <see cref="GCHandle"/> to the captured <see cref="SendOrPostCallback"/>.
@@ -80,7 +80,7 @@ namespace Microsoft.System
                 DispatcherQueueProxyHandler* @this = (DispatcherQueueProxyHandler*)Marshal.AllocHGlobal(sizeof(DispatcherQueueProxyHandler));
 #endif
 
-                @this->lpVtbl = Vtbl;
+                @this->vtbl = Vtbl;
                 @this->callbackHandle = GCHandle.Alloc(handler);
                 @this->stateHandle = state is not null ? GCHandle.Alloc(state) : default;
                 @this->referenceCount = 1;

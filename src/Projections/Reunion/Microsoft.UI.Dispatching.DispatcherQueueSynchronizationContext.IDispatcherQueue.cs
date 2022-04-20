@@ -17,7 +17,7 @@ namespace Microsoft.System
             /// <summary>
             /// The vtable pointer for the current instance.
             /// </summary>
-            private readonly void** lpVtbl;
+            private readonly void** vtbl;
 
             /// <summary>
             /// Native API for <see cref="DispatcherQueue.TryEnqueue(DispatcherQueueHandler)"/>.
@@ -29,7 +29,7 @@ namespace Microsoft.System
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int TryEnqueue(void* callback, bool* result)
             {
-                return ((delegate* unmanaged<IDispatcherQueue*, void*, byte*, int>)lpVtbl[7])((IDispatcherQueue*)Unsafe.AsPointer(ref this), callback, (byte*)result);
+                return ((delegate* unmanaged<IDispatcherQueue*, void*, byte*, int>)vtbl[7])((IDispatcherQueue*)Unsafe.AsPointer(ref this), callback, (byte*)result);
             }
         }
     }
