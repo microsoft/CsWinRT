@@ -27,9 +27,9 @@ namespace Microsoft.System
             /// <returns>The <c>HRESULT</c> for the operation.</returns>
             /// <remarks>The <paramref name="callback"/> parameter is assumed to be a pointer to an <c>IDispatcherQueueHandler</c> object.</remarks>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public int TryEnqueue(void* callback, byte* result)
+            public int TryEnqueue(void* callback, bool* result)
             {
-                return ((delegate* unmanaged<IDispatcherQueue*, void*, byte*, int>)lpVtbl[7])((IDispatcherQueue*)Unsafe.AsPointer(ref this), callback, result);
+                return ((delegate* unmanaged<IDispatcherQueue*, void*, byte*, int>)lpVtbl[7])((IDispatcherQueue*)Unsafe.AsPointer(ref this), callback, (byte*)result);
             }
         }
     }

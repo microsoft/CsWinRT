@@ -47,7 +47,7 @@ namespace Microsoft.System
             try
             {
                 IDispatcherQueue* dispatcherQueue = (IDispatcherQueue*)((IWinRTObject)m_dispatcherQueue).NativeObject.ThisPtr;
-                byte success;
+                bool success;
 
                 hResult = dispatcherQueue->TryEnqueue(dispatcherQueueProxyHandler, &success);
 
