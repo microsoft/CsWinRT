@@ -28,16 +28,11 @@ namespace Microsoft.System
         {
             if (d is null)
             {
-                static void ThrowArgumentNullException()
-                {
-                    throw new ArgumentNullException(nameof(d));
-                }
-
-                ThrowArgumentNullException();
+                throw new ArgumentNullException(nameof(d));
             }
 
 #if NET5_0_OR_GREATER
-            DispatcherQueueProxyHandler* dispatcherQueueProxyHandler = DispatcherQueueProxyHandler.Create(d!, state);
+            DispatcherQueueProxyHandler* dispatcherQueueProxyHandler = DispatcherQueueProxyHandler.Create(d, state);
             int hResult;
 
             try
