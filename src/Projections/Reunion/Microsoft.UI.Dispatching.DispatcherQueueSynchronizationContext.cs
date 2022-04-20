@@ -3,6 +3,9 @@ using System.Threading;
 using WinRT;
 
 #nullable enable
+
+// CA1416 is "validate platform compatibility". This suppresses the warnings for IWinRTObject.NativeObject and
+// IObjectReference.ThisPtr only being supported on Windows (since WASDK as a whole only works on Windows anyway).
 #pragma warning disable CA1416
 
 namespace Microsoft.System
