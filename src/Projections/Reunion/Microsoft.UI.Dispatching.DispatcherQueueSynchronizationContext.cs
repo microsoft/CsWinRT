@@ -26,19 +26,15 @@ namespace Microsoft.System
         /// <inheritdoc/>
         public override unsafe void Post(SendOrPostCallback d, object? state)
         {
-#if NET6_0
-            ArgumentNullException.ThrowIfNull(d, nameof(d));
-#else
-            static void ThrowArgumentNullException()
-            {
-                throw new ArgumentNullException(nameof(d));
-            }
-
             if (d is null)
             {
+                static void ThrowArgumentNullException()
+                {
+                    throw new ArgumentNullException(nameof(d));
+                }
+
                 ThrowArgumentNullException();
             }
-#endif
 
 #if NET5_0_OR_GREATER
             DispatcherQueueProxyHandler* dispatcherQueueProxyHandler = DispatcherQueueProxyHandler.Create(d!, state);
