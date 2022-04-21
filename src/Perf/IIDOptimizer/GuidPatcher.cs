@@ -175,14 +175,10 @@ namespace GuidPatch
         {
             SignaturePart rootSignaturePart = signatureGenerator.GetSignatureParts(type);
             var methodName = $"<IIDData>{type.FullName}";
-            MethodReference guidDataMethodReference;
-            if (methodCache.ContainsKey(methodName))
+
+            if (!methodCache.TryGetValue(methodName, out var guidDataMethodReference))
             {
-                guidDataMethodReference = methodCache[methodName];
-            }
-            else
-            {
-                var guidDataMethod = new MethodDefinition($"<IIDData>{type.FullName}", MethodAttributes.Assembly | MethodAttributes.Static, readOnlySpanOfByte);
+                var guidDataMethod = new MethodDefinition(methodName, MethodAttributes.Assembly | MethodAttributes.Static, readOnlySpanOfByte);
 
                 guidImplementationDetailsType.Methods.Add(guidDataMethod);
 
