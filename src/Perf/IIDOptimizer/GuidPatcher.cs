@@ -28,8 +28,9 @@ namespace GuidPatch
         private readonly Dictionary<TypeReference, MethodDefinition> ClosedTypeGuidDataMapping = new Dictionary<TypeReference, MethodDefinition>();
         private readonly TypeDefinition guidImplementationDetailsType;
         private readonly TypeDefinition guidDataBlockType;
-        private SignatureGenerator signatureGenerator;
-       
+        private readonly SignatureGenerator signatureGenerator;
+        private readonly Dictionary<string, MethodReference> methodCache;
+
         public GuidPatcher(AssemblyDefinition winRTRuntime, AssemblyDefinition targetAssembly)
         {
             assembly = targetAssembly;
@@ -68,14 +69,14 @@ namespace GuidPatch
 
             getTypeFromHandleMethod = systemType.Methods.First(m => string.CompareOrdinal(m.Name, "GetTypeFromHandle") == 0);
 
-            guidGeneratorType = null; 
+            guidGeneratorType = null;
 
-            TypeDefinition? typeExtensionsType = null; 
+            TypeDefinition? typeExtensionsType = null;
 
             // Use the type definition if we are patching WinRT.Runtime, otherwise lookup the types as references 
             if (string.CompareOrdinal(assembly.Name.Name, "WinRT.Runtime") == 0)
             {
-                guidGeneratorType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => string.CompareOrdinal(typeDef.Name, "GuidGenerator") == 0).First(); 
+                guidGeneratorType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => string.CompareOrdinal(typeDef.Name, "GuidGenerator") == 0).First();
                 typeExtensionsType = winRTRuntimeAssembly.MainModule.Types.Where(typeDef => string.CompareOrdinal(typeDef.Name, "TypeExtensions") == 0).First();
             }
 
@@ -101,6 +102,7 @@ namespace GuidPatch
             }
 
             signatureGenerator = new SignatureGenerator(assembly, guidAttributeType!, winRTRuntimeAssembly);
+            methodCache = new Dictionary<string, MethodReference>();
         }
 
         public int ProcessAssembly()
@@ -172,25 +174,35 @@ namespace GuidPatch
         private bool PatchGenericTypeIID(MethodBody body, int startILIndex, TypeReference type, int numberOfInstructionsToOverwrite)
         {
             SignaturePart rootSignaturePart = signatureGenerator.GetSignatureParts(type);
-
-            var guidDataMethod = new MethodDefinition($"<IIDData>{type.FullName}", MethodAttributes.Assembly | MethodAttributes.Static, readOnlySpanOfByte);
-
-            guidImplementationDetailsType.Methods.Add(guidDataMethod);
-
-            var emitter = new SignatureEmitter(type, guidDataMethod); 
-            VisitSignature(rootSignaturePart, emitter);
-        
-            emitter.EmitGuidGetter(guidDataBlockType, guidImplementationDetailsType, readOnlySpanOfByte, readOnlySpanOfByteCtor, guidGeneratorType!);
-
-            MethodReference guidDataMethodReference = guidDataMethod;
-            if (guidDataMethodReference.HasGenericParameters)
+            var methodName = $"<IIDData>{type.FullName}";
+            MethodReference guidDataMethodReference;
+            if (methodCache.ContainsKey(methodName))
             {
-                var genericGuidDataMethodReference = new GenericInstanceMethod(guidDataMethodReference);
-                foreach (var param in guidDataMethodReference.GenericParameters)
+                guidDataMethodReference = methodCache[methodName];
+            }
+            else
+            {
+                var guidDataMethod = new MethodDefinition($"<IIDData>{type.FullName}", MethodAttributes.Assembly | MethodAttributes.Static, readOnlySpanOfByte);
+
+                guidImplementationDetailsType.Methods.Add(guidDataMethod);
+
+                var emitter = new SignatureEmitter(type, guidDataMethod);
+                VisitSignature(rootSignaturePart, emitter);
+
+                emitter.EmitGuidGetter(guidDataBlockType, guidImplementationDetailsType, readOnlySpanOfByte, readOnlySpanOfByteCtor, guidGeneratorType!);
+
+                guidDataMethodReference = guidDataMethod;
+                if (guidDataMethodReference.HasGenericParameters)
                 {
-                    genericGuidDataMethodReference.GenericArguments.Add(emitter.GenericParameterMapping[param]);
+                    var genericGuidDataMethodReference = new GenericInstanceMethod(guidDataMethodReference);
+                    foreach (var param in guidDataMethodReference.GenericParameters)
+                    {
+                        genericGuidDataMethodReference.GenericArguments.Add(emitter.GenericParameterMapping[param]);
+                    }
+                    guidDataMethodReference = genericGuidDataMethodReference;
                 }
-                guidDataMethodReference = genericGuidDataMethodReference;
+
+                methodCache[methodName] = guidDataMethodReference;
             }
 
             ReplaceWithCallToGuidDataGetter(body, startILIndex, numberOfInstructionsToOverwrite, guidDataMethodReference);
@@ -214,7 +226,7 @@ namespace GuidPatch
             {
                 case BasicSignaturePart basic:
                     {
-                       emitter.PushString(basic.Type switch
+                        emitter.PushString(basic.Type switch
                         {
                             SignatureType.@string => "string",
                             SignatureType.iinspectable => "cinterface(IInspectable)",
@@ -258,7 +270,7 @@ namespace GuidPatch
                     break;
             }
         }
-   
+
         private int ProcessMethodBody(MethodBody body, MethodDefinition getTypeFromHandleMethod, MethodDefinition getIidMethod, MethodDefinition createIidMethod)
         {
             int numberOfReplacements = 0;
@@ -367,6 +379,6 @@ namespace GuidPatch
                 }
             }
             return numberOfReplacements;
-        }        
+        }
     }
 }
