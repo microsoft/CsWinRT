@@ -21,8 +21,8 @@
     <!-- Add the runtimeconfig.json -->
     <HostingAssets Include="$(MSBuildThisFileDirectory)..\build\native\WinRT.Host.runtimeconfig.json"/>
     <!-- Get the proper WinRT.Host.dll -->
-    <HostingAssets Include="$(MSBuildThisFileDirectory)..\hosting\win-$(_NormalizedPlatform)\native\WinRT.Host.dll" />
-    <HostingAssets Include="$(MSBuildThisFileDirectory)..\hosting\win-$(_NormalizedPlatform)\native\en-us\WinRT.Host.dll.mui" />
+    <HostingAssets Include="$(MSBuildThisFileDirectory)..\hosting\$(_NormalizedPlatform)\native\WinRT.Host.dll" />
+    <HostingAssets Include="$(MSBuildThisFileDirectory)..\hosting\$(_NormalizedPlatform)\native\en-us\WinRT.Host.dll.mui" />
   </ItemGroup>
     
   <!-- Add the WinMD file as a reference of the native app so a projection gets made --> 

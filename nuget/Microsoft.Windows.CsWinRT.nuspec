@@ -32,14 +32,14 @@
     <file src="readme.txt"/>
     <file src="$net5_runtime$" target="lib\net5.0\"/>
     <file src="$source_generator$" target="analyzers\dotnet\cs\"/>
-    <file src="$winrt_host_x64$" target ="hosting\win-x64\native"/>
-    <file src="$winrt_host_x86$" target ="hosting\win-x86\native"/>
-    <file src="$winrt_host_arm$" target ="hosting\win-arm\native"/>
-    <file src="$winrt_host_arm64$" target ="hosting\win-arm64\native"/>
-    <file src="$winrt_host_resource_x64$" target ="hosting\win-x64\native\en-us"/>
-    <file src="$winrt_host_resource_x86$" target ="hosting\win-x86\native\en-us"/>
-    <file src="$winrt_host_resource_arm$" target ="hosting\win-arm\native\en-us"/>
-    <file src="$winrt_host_resource_arm64$" target ="hosting\win-arm64\native\en-us"/>
+    <file src="$winrt_host_x64$" target ="hosting\x64\native"/>
+    <file src="$winrt_host_x86$" target ="hosting\x86\native"/>
+    <file src="$winrt_host_arm$" target ="hosting\arm\native"/>
+    <file src="$winrt_host_arm64$" target ="hosting\arm64\native"/>
+    <file src="$winrt_host_resource_x64$" target ="hosting\x64\native\en-us"/>
+    <file src="$winrt_host_resource_x86$" target ="hosting\x86\native\en-us"/>
+    <file src="$winrt_host_resource_arm$" target ="hosting\arm\native\en-us"/>
+    <file src="$winrt_host_resource_arm64$" target ="hosting\arm64\native\en-us"/>
     <file src="$winrt_shim$" target ="lib\net5.0\"/>
     
     <!-- Add the WinRT.Runtime sources to the pkg for embedded scenarios -->
