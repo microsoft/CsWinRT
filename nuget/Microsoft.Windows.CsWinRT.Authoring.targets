@@ -15,11 +15,6 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <GetCopyToOutputDirectoryItemsDependsOn>$(GetCopyToOutputDirectoryItemsDependsOn);CsWinRTAuthoring_AddManagedDependencies</GetCopyToOutputDirectoryItemsDependsOn>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <CsWinRTAuthoring_Platform Condition="'$(Platform)'=='AnyCPU'">x86</CsWinRTAuthoring_Platform>
-    <CsWinRTAuthoring_Platform Condition="'$(Platform)'!='AnyCPU'">$(Platform)</CsWinRTAuthoring_Platform>
-  </PropertyGroup>
-
   <ItemGroup>
     <CompilerVisibleProperty Include="AssemblyName" />
     <CompilerVisibleProperty Include="AssemblyVersion" />
@@ -55,22 +50,20 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     
   </Target>
 
-  <!-- For Project Reference consumers, copy the necessary WinRT DLLs to output directory --> 
-  <ItemGroup> 
+  <!-- For C++ projects referencing the component, copy the necessary hosting dlls to the output directory -->
+  <ItemGroup Condition="'$(CsWinRTHostPlatform)' == 'x64' or ('$(CsWinRTHostPlatform)' == 'x86' or '$(CsWinRTHostPlatform)' == 'arm64')"> 
 
-    <None Condition="Exists('$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll')" Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll">
+    <None Include="$(CsWinRTPath)lib\net5.0\WinRT.Host.Shim.dll">
       <TargetPath>WinRT.Host.Shim.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
 
-    <None Condition="Exists('$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll')" 
-          Include="$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll">
+    <None Include="$(CsWinRTPath)hosting\win-$(CsWinRTHostPlatform)\native\WinRT.Host.dll">
       <TargetPath>WinRT.Host.dll</TargetPath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
 
-    <None Condition="Exists('$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\en-us\WinRT.Host.dll.mui')"
-          Include="$(CsWinRTPath)runtimes\win-$(CsWinRTAuthoring_Platform)\native\en-us\WinRT.Host.dll.mui">
+    <None Include="$(CsWinRTPath)hosting\win-$(CsWinRTHostPlatform)\native\en-us\WinRT.Host.dll.mui">
       <TargetPath>WinRT.Host.dll.mui</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -294,38 +287,38 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       </Content>
 
       <!-- We package a version of WinRT.Host.dll for each possible architecture -->
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-x64\native\WinRT.Host.dll')" Include="$(CsWinRTPath)runtimes\win-x64\native\WinRT.Host.dll">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\win-x64\native\WinRT.Host.dll')" Include="$(CsWinRTPath)hosting\win-x64\native\WinRT.Host.dll">
         <Pack>true</Pack>
-        <PackagePath>runtimes\win-x64\native</PackagePath>
+        <PackagePath>hosting\win-x64\native</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-x86\native\WinRT.Host.dll')" Include="$(CsWinRTPath)runtimes\win-x86\native\WinRT.Host.dll">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\win-x86\native\WinRT.Host.dll')" Include="$(CsWinRTPath)hosting\win-x86\native\WinRT.Host.dll">
         <Pack>true</Pack>
-        <PackagePath>runtimes\win-x86\native</PackagePath>
+        <PackagePath>hosting\win-x86\native</PackagePath>
       </Content> 
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-arm\native\WinRT.Host.dll')" Include="$(CsWinRTPath)runtimes\win-arm\native\WinRT.Host.dll">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\win-arm\native\WinRT.Host.dll')" Include="$(CsWinRTPath)hosting\win-arm\native\WinRT.Host.dll">
         <Pack>true</Pack>
-        <PackagePath>runtimes\win-arm\native</PackagePath>
+        <PackagePath>hosting\win-arm\native</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-arm64\native\WinRT.Host.dll')" Include="$(CsWinRTPath)runtimes\win-arm64\native\WinRT.Host.dll">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\win-arm64\native\WinRT.Host.dll')" Include="$(CsWinRTPath)hosting\win-arm64\native\WinRT.Host.dll">
         <Pack>true</Pack>
-        <PackagePath>runtimes\win-arm64\native</PackagePath>
+        <PackagePath>hosting\win-arm64\native</PackagePath>
       </Content>
       <!-- Package the MUI for WinRT.Host error strings -->
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-x64\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)runtimes\win-x64\native\en-us\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\win-x64\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)hosting\win-x64\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
-        <PackagePath>runtimes\win-x64\native\en-us</PackagePath>
+        <PackagePath>hosting\win-x64\native\en-us</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-x86\native\en-us\WinRT.Host.Host.dll.mui')" Include="$(CsWinRTPath)runtimes\win-x86\native\en-us\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\win-x86\native\en-us\WinRT.Host.Host.dll.mui')" Include="$(CsWinRTPath)hosting\win-x86\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
-        <PackagePath>runtimes\win-x86\native\en-us</PackagePath>
+        <PackagePath>hosting\win-x86\native\en-us</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-arm\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)runtimes\win-arm\native\en-us\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\win-arm\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)hosting\win-arm\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
-        <PackagePath>runtimes\win-arm\native\en-us</PackagePath>
+        <PackagePath>hosting\win-arm\native\en-us</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)runtimes\win-arm64\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)runtimes\win-arm64\native\en-us\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\win-arm64\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)hosting\win-arm64\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
-        <PackagePath>runtimes\win-arm64\native\en-us</PackagePath>
+        <PackagePath>hosting\win-arm64\native\en-us</PackagePath>
       </Content>
    </ItemGroup>
 

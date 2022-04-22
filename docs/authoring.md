@@ -105,8 +105,20 @@ Consuming a C#/WinRT component from a C++/WinRT desktop application is supported
 
 - **Package Reference**: In Visual Studio, right-click on the project in Solution Explorer and click **Manage NuGet packages** to search for and install the component package.
 
-- **Project Reference**: In Visual Studio, right-click on the project in Solution Explorer and click **Add** -> **Reference**. Select the C#/WinRT component project under the **Projects** node. 
+- **Project Reference**: In Visual Studio, right-click on the project in Solution Explorer and click **Add** -> **Reference**. Select the C#/WinRT component project under the **Projects** node. You will need to follow the steps below on distributing hosting binaries and creating a manifest.
   - Note: If your authored component is built with C#/WinRT version 1.3.3 or earlier, you also need a file reference to the `*.winmd` generated in the authored component's output directory. To add a file reference, right-click on the project in Solution Explorer and click **Add** -> **Reference**. Select the file from the **Browse** node. 
+
+#### Distribute Hosting Binaries
+
+Using a C#/WinRT component from native code requires the following files distributed in the C#/WinRT NuPkg: `WinRT.Host.dll`, `WinRT.Host.dll.mui` and 
+`WinRT.Host.Shim.dll`. These files are runtime dependencies of your component's assembly, and the C#/WinRT NuPkg provides build logic to distribute them. 
+To use this, set `CsWinRTHostPlatform` in your component's project file to the platform of the **C++** project. 
+Because the component builds for AnyCPU, you must set this value depending on how you want the **C++** app to build.
+
+`CsWinRTHostPlatform` must be set to one of `x64`, `x86` or `arm64`.
+
+**Note:** If you want to use your component in a C++ and C# project under the same solution, then this build logic will distribute the hosting assets 
+to the C# project output directory as well. They will not be used by the component when the C# app runs.
 
 #### Manifest Class Registration
 
