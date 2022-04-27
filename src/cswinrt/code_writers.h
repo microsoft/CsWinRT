@@ -1099,6 +1099,20 @@ namespace cswinrt
             }
         }
 
+        bool method_return_matches;
+        if (is_object_equals_method(method, &method_return_matches) ||
+            is_object_hashcode_method(method, &method_return_matches))
+        {
+            if (method_return_matches)
+            {
+                method_spec = "override ";
+            }
+            else
+            {
+                method_spec += "new ";
+            }
+        }
+
         bool is_private = is_implemented_as_private_method(w, class_type, method);
         auto static_method_params = call_static_method.has_value() ? std::optional(std::pair(call_static_method.value(), method)) : std::nullopt;
         if (!is_private)
@@ -6229,9 +6243,7 @@ _defaultLazy = new Lazy<%>(() => ifc);
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
 public static bool operator !=(% x, % y) => !(x == y);
-public bool Equals(% other) => this == other;
-public override bool Equals(object obj) => obj is % that && this == that;
-public override int GetHashCode() => ThisPtr.GetHashCode();
+%
 %
 
 private struct InterfaceTag<I>{};
@@ -6281,8 +6293,23 @@ GC.RemoveMemoryPressure(%);
             type_name,
             type_name,
             type_name,
-            type_name,
-            type_name,
+            bind([&](writer& w)
+            {
+                if (!has_class_equals_method(type))
+                {
+                    w.write("public bool Equals(% other) => this == other;", type_name);
+                }
+
+                if (!has_object_equals_method(type))
+                {
+                    w.write("public override bool Equals(object obj) => obj is % that && this == that;", type_name);
+                }
+
+                if (!has_object_hashcode_method(type))
+                {
+                    w.write("public override int GetHashCode() => ThisPtr.GetHashCode();");
+                }
+            }),
             bind([&](writer& w)
             {
                 bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
@@ -6378,9 +6405,7 @@ _inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
 public static bool operator !=(% x, % y) => !(x == y);
-public bool Equals(% other) => this == other;
-public override bool Equals(object obj) => obj is % that && this == that;
-public override int GetHashCode() => ThisPtr.GetHashCode();
+%
 %
 
 private struct InterfaceTag<I>{};
@@ -6430,8 +6455,23 @@ private struct InterfaceTag<I>{};
             type_name,
             type_name,
             type_name,
-            type_name,
-            type_name,
+            bind([&](writer& w)
+            {
+                if (!has_class_equals_method(type))
+                {
+                    w.write("public bool Equals(% other) => this == other;", type_name);
+                }
+
+                if (!has_object_equals_method(type))
+                {
+                    w.write("public override bool Equals(object obj) => obj is % that && this == that;", type_name);
+                }
+
+                if (!has_object_hashcode_method(type))
+                {
+                    w.write("public override int GetHashCode() => ThisPtr.GetHashCode();");
+                }
+            }),
             bind([&](writer& w)
             {
                 if (is_fast_abi_class(type))
