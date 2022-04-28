@@ -63,14 +63,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
 
-    <None Condition="Exists('$(CsWinRTPath)hosting\win-$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll')" 
-          Include="$(CsWinRTPath)hosting\win-$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll">
+    <None Condition="Exists('$(CsWinRTPath)hosting\$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll')" 
+          Include="$(CsWinRTPath)hosting\$(CsWinRTAuthoring_Platform)\native\WinRT.Host.dll">
       <TargetPath>WinRT.Host.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
 
-    <None Condition="Exists('$(CsWinRTPath)hosting\win-$(CsWinRTAuthoring_Platform)\native\en-us\WinRT.Host.dll.mui')"
-          Include="$(CsWinRTPath)hosting\win-$(CsWinRTAuthoring_Platform)\native\en-us\WinRT.Host.dll.mui">
+    <None Condition="Exists('$(CsWinRTPath)hosting\$(CsWinRTAuthoring_Platform)\native\en-us\WinRT.Host.dll.mui')"
+          Include="$(CsWinRTPath)hosting\$(CsWinRTAuthoring_Platform)\native\en-us\WinRT.Host.dll.mui">
       <TargetPath>WinRT.Host.dll.mui</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
