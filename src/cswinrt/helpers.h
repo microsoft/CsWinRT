@@ -463,9 +463,9 @@ namespace cswinrt
     bool is_param_expected_type(TypeSig const& param, T const& expected_type)
     {
         auto semantics = get_type_semantics(param);
-        if (auto ft = std::get_if<T>(&semantics))
+        if (auto variant_type = std::get_if<T>(&semantics))
         {
-            return *ft == expected_type;
+            return *variant_type == expected_type;
         }
 
         return false;
