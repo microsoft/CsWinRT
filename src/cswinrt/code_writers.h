@@ -6295,19 +6295,26 @@ GC.RemoveMemoryPressure(%);
             type_name,
             bind([&](writer& w)
             {
-                if (!has_class_equals_method(type))
+                bool return_type_matches = false;
+                if (!has_class_equals_method(type, &return_type_matches))
                 {
-                    w.write("public bool Equals(% other) => this == other;", type_name);
+                    w.write("public bool Equals(% other) => this == other;\n", type_name);
+                }
+                // Even though there is an equals method defined, it doesn't match the signature for IEquatable
+                // so we define an explicitly implemented one.
+                else if (!return_type_matches)
+                {
+                    w.write("bool IEquatable<%>.Equals(% other) => this == other;\n", type_name, type_name);
                 }
 
                 if (!has_object_equals_method(type))
                 {
-                    w.write("public override bool Equals(object obj) => obj is % that && this == that;", type_name);
+                    w.write("public override bool Equals(object obj) => obj is % that && this == that;\n", type_name);
                 }
 
                 if (!has_object_hashcode_method(type))
                 {
-                    w.write("public override int GetHashCode() => ThisPtr.GetHashCode();");
+                    w.write("public override int GetHashCode() => ThisPtr.GetHashCode();\n");
                 }
             }),
             bind([&](writer& w)
@@ -6457,19 +6464,26 @@ private struct InterfaceTag<I>{};
             type_name,
             bind([&](writer& w)
             {
-                if (!has_class_equals_method(type))
+                bool return_type_matches = false;
+                if (!has_class_equals_method(type, &return_type_matches))
                 {
-                    w.write("public bool Equals(% other) => this == other;", type_name);
+                    w.write("public bool Equals(% other) => this == other;\n", type_name);
+                }
+                // Even though there is an equals method defined, it doesn't match the signature for IEquatable
+                // so we define an explicitly implemented one.
+                else if (!return_type_matches)
+                {
+                    w.write("bool IEquatable<%>.Equals(% other) => this == other;\n", type_name, type_name);
                 }
 
                 if (!has_object_equals_method(type))
                 {
-                    w.write("public override bool Equals(object obj) => obj is % that && this == that;", type_name);
+                    w.write("public override bool Equals(object obj) => obj is % that && this == that;\n", type_name);
                 }
 
                 if (!has_object_hashcode_method(type))
                 {
-                    w.write("public override int GetHashCode() => ThisPtr.GetHashCode();");
+                    w.write("public override int GetHashCode() => ThisPtr.GetHashCode();\n");
                 }
             }),
             bind([&](writer& w)
