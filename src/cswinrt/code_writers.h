@@ -1502,10 +1502,24 @@ remove => %;
                 },
                 [&](std::string_view type_name)
                 {
+                    bool previous_char_escape = false;
                     std::string sanitized_type_name;
                     sanitized_type_name.reserve(type_name.length() * 2);
                     for (const auto& c : type_name)
                     {
+                        if (c == '\\' && !previous_char_escape)
+                        {
+                            previous_char_escape = true;
+                            continue;
+                        }
+
+                        // We only handle the following escape characters for now.
+                        if (previous_char_escape && c != '\\' && c != '\'' && c != '"')
+                        {
+                            sanitized_type_name += '\\';
+                        }
+                        previous_char_escape = false;
+
                         sanitized_type_name += c;
                         if (c == '"')
                         {

@@ -542,7 +542,7 @@ And this is another one"
       void f();
     }
 
-    [attr_string("a string with embedded quotes, like the string \"quotes\"")]
+    [attr_string("a string with embedded escape characters, like the string \"quotes\" and string \\\"quotes\\\" and string \'char\'")]
     runtimeclass EmbeddedQuotesTest
     {
         void f();
