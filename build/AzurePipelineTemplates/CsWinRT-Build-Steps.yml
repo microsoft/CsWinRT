@@ -55,7 +55,7 @@ steps:
     
       [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
             
-      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET5_SDK_VERSION)" -Architecture "x86" -AzureFeed "$($env:NET5_SDK_FEED)" -Runtime windowsdesktop
+      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET5_SDK_VERSION)" -Architecture "x86" -AzureFeed "$($env:NET5_SDK_FEED)" -Runtime dotnet
 
 # Install .NET 6 SDK 
 - task: PowerShell@2
@@ -82,7 +82,7 @@ steps:
      
      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
           
-     &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x86" -AzureFeed "$($env:NET5_SDK_FEED)" -Runtime windowsdesktop
+     &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x86" -AzureFeed "$($env:NET5_SDK_FEED)" -Runtime dotnet
 
 # Verify .NET SDK
 - task: CmdLine@2
