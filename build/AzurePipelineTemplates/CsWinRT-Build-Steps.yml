@@ -34,7 +34,7 @@ steps:
 
 # Install .NET 5 SDK
 - task: PowerShell@2 
-  displayName: Install .NET 5 SDK
+  displayName: Install .NET 5 SDK (x64)
   inputs:
     targetType: inline
     failOnStderr: true
@@ -45,9 +45,21 @@ steps:
             
       &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET5_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
 
+- task: PowerShell@2 
+  displayName: Install .NET 5 SDK (x86)
+  inputs:
+    targetType: inline
+    failOnStderr: true
+    script: |
+      Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH};
+    
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
+            
+      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET5_SDK_VERSION)" -Architecture "x86" -AzureFeed "$($env:NET5_SDK_FEED)"
+
 # Install .NET 6 SDK 
 - task: PowerShell@2
-  displayName: Install .NET 6 SDK
+  displayName: Install .NET 6 SDK (x64)
   inputs:
     targetType: inline
     failOnStderr: true
@@ -59,6 +71,20 @@ steps:
      dotnet new globaljson --sdk-version "$($env:NET6_SDK_VERSION)" 
      
      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
+
+- task: PowerShell@2
+  displayName: Install .NET 6 SDK (x86)
+  inputs:
+    targetType: inline
+    failOnStderr: true
+    script: |
+     Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
+     
+     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
+     
+     dotnet new globaljson --sdk-version "$($env:NET6_SDK_VERSION)" 
+     
+     &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x86" -AzureFeed "$($env:NET5_SDK_FEED)"
 
 # Verify .NET SDK
 - task: CmdLine@2
