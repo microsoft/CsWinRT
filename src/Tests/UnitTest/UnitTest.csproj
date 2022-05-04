@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!--Target .NET Core 2.0 to test .NET Standard 2.0 projection -->
-    <TargetFrameworks>netcoreapp2.0;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
     <Platforms>x64;x86</Platforms>
     <ProjectName>UnitTest</ProjectName>
     <NoWarn>1701;1702;0436;1658</NoWarn>
@@ -11,7 +11,7 @@
     <CsWinRTEnabled>false</CsWinRTEnabled>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
     <CsWinRTIIDOptimizerOptOut>true</CsWinRTIIDOptimizerOptOut>
   </PropertyGroup>
   
@@ -40,7 +40,7 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
     <Compile Remove="**/*.net5.cs" />
     <None Include="**/*.net5.cs" />
   </ItemGroup>
