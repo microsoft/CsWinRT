@@ -81,9 +81,7 @@ steps:
      Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
      
      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
-     
-     dotnet new globaljson --sdk-version "$($env:NET6_SDK_VERSION)" 
-     
+          
      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x86" -AzureFeed "$($env:NET5_SDK_FEED)"
 
 # Verify .NET SDK
