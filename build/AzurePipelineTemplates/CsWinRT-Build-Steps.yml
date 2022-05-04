@@ -46,7 +46,7 @@ steps:
       &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET5_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
 
 - task: PowerShell@2 
-  displayName: Install .NET 5 SDK (x86)
+  displayName: Install .NET 5 runtime (x86)
   inputs:
     targetType: inline
     failOnStderr: true
@@ -55,7 +55,7 @@ steps:
     
       [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
             
-      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET5_SDK_VERSION)" -Architecture "x86" -AzureFeed "$($env:NET5_SDK_FEED)"
+      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET5_SDK_VERSION)" -Architecture "x86" -AzureFeed "$($env:NET5_SDK_FEED)" -Runtime windowsdesktop
 
 # Install .NET 6 SDK 
 - task: PowerShell@2
@@ -73,7 +73,7 @@ steps:
      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
 
 - task: PowerShell@2
-  displayName: Install .NET 6 SDK (x86)
+  displayName: Install .NET 6 runtime (x86)
   inputs:
     targetType: inline
     failOnStderr: true
@@ -82,7 +82,7 @@ steps:
      
      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
           
-     &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x86" -AzureFeed "$($env:NET5_SDK_FEED)"
+     &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x86" -AzureFeed "$($env:NET5_SDK_FEED)" -Runtime windowsdesktop
 
 # Verify .NET SDK
 - task: CmdLine@2
