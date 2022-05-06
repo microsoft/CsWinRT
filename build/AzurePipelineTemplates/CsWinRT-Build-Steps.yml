@@ -59,7 +59,7 @@ steps:
     targetType: inline
     failOnStderr: true
     script: |
-      Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH};
+      Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet\x86;${env:PATH};
     
       [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
             
@@ -86,7 +86,7 @@ steps:
     targetType: inline
     failOnStderr: true
     script: |
-     Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH}; 
+     Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet\x86;${env:PATH}; 
      
      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
           
@@ -100,6 +100,8 @@ steps:
     script: |
       where dotnet
       dotnet --info
+      dir "C:\Program Files (x86)\dotnet\"
+      "C:\Program Files (x86)\dotnet\dotnet.exe" --info
 
 # Parse Version
 - task: CmdLine@2
