@@ -281,6 +281,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <PackagePath>lib\$(TargetFramework)</PackagePath>
       </Content>
 
+      <!-- Pack any XAML resource PRI files next to the .winmd -->
+      <Content Include="$(ProjectPriFullPath)">
+        <Pack>true</Pack>
+        <PackagePath>lib\$(TargetFramework)\winmd</PackagePath>
+      </Content>    
+
       <!-- Pack the WinMD we generated in its own folder, under the managed TFM folder -->
       <Content Include="$(TargetDir)$(AssemblyName).winmd">
         <Pack>true</Pack> 
