@@ -53,18 +53,6 @@ steps:
             
       &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET5_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
 
-- task: PowerShell@2 
-  displayName: Install .NET 5 runtime (x86)
-  inputs:
-    targetType: inline
-    failOnStderr: true
-    script: |
-      Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet\x86;${env:PATH};
-    
-      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
-            
-      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET5_SDK_VERSION)" -Architecture "x86" -InstallDir ${env:LocalAppData}\Microsoft\dotnet\x86 -AzureFeed "$($env:NET5_SDK_FEED)"
-
 # Install .NET 6 SDK 
 - task: PowerShell@2
   displayName: Install .NET 6 SDK (x64)
@@ -86,11 +74,11 @@ steps:
     targetType: inline
     failOnStderr: true
     script: |
-     Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet\x86;${env:PATH}; 
-     
-     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
-          
-     &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET6_SDK_VERSION)" -Architecture "x86" -InstallDir ${env:LocalAppData}\Microsoft\dotnet\x86 -AzureFeed "$($env:NET5_SDK_FEED)"
+     $downloadurl = "https://download.visualstudio.microsoft.com/download/pr/05b30243-5cd2-48c3-a9bb-6ac83d7d481b/03a25aecb5cf4ba53c8b9cf5194e3c86/windowsdesktop-runtime-6.0.4-win-x86.exe"
+     Invoke-WebRequest $downloadurl -OutFile $env:Agent_TempDirectory\dotnet-windowsdesktop-runtime-installer.exe
+     Write-Host "Install dotnet runtime"
+     $env:Agent_TempDirectory\dotnet-windowsdesktop-runtime-installer.exe /quiet /install /norestart /log $env:Agent_TempDirectory\dotnetinstalllog.txt |Out-Null
+     Get-Content $env:Agent_TempDirectory\dotnetinstalllog.txt
 
 # Verify .NET SDK
 - task: CmdLine@2
