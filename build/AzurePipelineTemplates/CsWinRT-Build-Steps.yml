@@ -73,16 +73,17 @@ steps:
   inputs:
     targetType: inline
     failOnStderr: true
+    workingDirectory: $($env:Agent_TempDirectory)
     script: |
      $downloadurl = "https://download.visualstudio.microsoft.com/download/pr/05b30243-5cd2-48c3-a9bb-6ac83d7d481b/03a25aecb5cf4ba53c8b9cf5194e3c86/windowsdesktop-runtime-6.0.4-win-x86.exe"
 
-     Invoke-WebRequest $downloadurl -OutFile $($env:Agent_TempDirectory)\dotnet-windowsdesktop-runtime-installer.exe
+     Invoke-WebRequest $downloadurl -OutFile dotnet-windowsdesktop-runtime-installer.exe
 
-     Write-Host "Install dotnet runtime $($env:Agent_TempDirectory)"
+     Write-Host "Install dotnet runtime"
 
-     $($env:Agent_TempDirectory)\dotnet-windowsdesktop-runtime-installer.exe /quiet /install /norestart /log $($env:Agent_TempDirectory)\dotnetinstalllog.txt |Out-Null
+     .\dotnet-windowsdesktop-runtime-installer.exe /quiet /install /norestart /log dotnetinstalllog.txt |Out-Null
 
-     Get-Content $($env:Agent_TempDirectory)\dotnetinstalllog.txt
+     Get-Content dotnetinstalllog.txt
 
 # Verify .NET SDK
 - task: CmdLine@2
