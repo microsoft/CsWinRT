@@ -93,9 +93,6 @@ steps:
     script: |
       where dotnet
       dotnet --info
-      dir C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\
-      dir C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\x86
-      C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\x86\dotnet.exe --info
 
 # Parse Version
 - task: CmdLine@2
