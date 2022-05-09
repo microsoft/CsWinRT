@@ -78,6 +78,16 @@ namespace Generator
             return false;
         }
 
+        public static bool ShouldSkipGeneratingSources(this GeneratorExecutionContext context)
+        {
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CSWinMD", out var isCsWinMDStr))
+            {
+                return bool.TryParse(isCsWinMDStr, out var isCsWinMD) && isCsWinMD;
+            }
+
+            return false;
+        }
+
         public static string GetCsWinRTExe(this GeneratorExecutionContext context)
         {
             context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTExe", out var cswinrtExe);

@@ -1522,6 +1522,11 @@ namespace Generator
                 {
                     encoder.SystemType(type);
                 }
+                else if (argument is INamedTypeSymbol namedTypeSymbol)
+                {
+                    var typeEntity = GetTypeReference(namedTypeSymbol);
+                    encoder.Builder.WriteReference(CodedIndex.TypeDefOrRef(typeEntity), false);
+                }
                 else
                 {
                     encoder.Constant(argument);
@@ -1713,7 +1718,9 @@ namespace Generator
             Logger.Log("# constructor found: " + attributeType.Constructors.Length);
             var matchingConstructor = attributeType.Constructors.Where(constructor =>
                 constructor.Parameters.Length == primitiveValues.Count &&
-                constructor.Parameters.Select(param => param.Type).SequenceEqual(primitiveTypes));
+                constructor.Parameters.Select(param => (param.Type is IErrorTypeSymbol) ?
+                    Model.Compilation.GetTypeByMetadataName(param.Type.ToDisplayString()) : param.Type)
+                .SequenceEqual(primitiveTypes));
 
             Logger.Log("# matching constructor found: " + matchingConstructor.Count());
             Logger.Log("matching constructor found: " + matchingConstructor.First());
@@ -2578,12 +2585,22 @@ namespace Generator
             }
         }
 
+        public static string XmlDocCustomAttributeTypeName { get; set; } = "CppComponent.DocStringAttribute";
+
         public void FinalizeGeneration()
         {
             Logger.Log("finalizing");
             var classTypeDeclarations = typeDefinitionMapping.Values
                 .Where(declaration => declaration.Node is INamedTypeSymbol symbol && symbol.TypeKind == TypeKind.Class)
                 .ToList();
+
+
+            var xmlDocCustomAttributeType = Model.Compilation.GetTypeByMetadataName(XmlDocCustomAttributeTypeName);
+            if (xmlDocCustomAttributeType != null)
+            {
+                GenerateXmlDocCustomAttributes();
+            }
+
             foreach (var classTypeDeclaration in classTypeDeclarations)
             {
                 INamedTypeSymbol classSymbol = classTypeDeclaration.Node as INamedTypeSymbol;
@@ -2725,6 +2742,54 @@ namespace Generator
                         AddCustomAttributes(typeDefinitionMapping[typeDeclaration.StaticInterface], typeDeclaration.StaticInterface);
                     }
                 }
+            }
+        }
+
+        private void GenerateXmlDocCustomAttributes()
+        {
+            throw new NotSupportedException();
+            var xdcTypes = typeDefinitionMapping.Values.Where(d => d.Node is INamedTypeSymbol);
+            foreach (var type in xdcTypes)
+            {
+                AddXmlDocumentation(type);
+
+                foreach (var methodDefs in type.MethodReferences)
+                {
+                    var xdc = methodDefs.Key.GetDocumentationCommentXml();
+                    if (!string.IsNullOrEmpty(xdc))
+                    {
+                        foreach (var eh in methodDefs.Value)
+                        {
+                            AddCustomAttributes(XmlDocCustomAttributeTypeName,
+                                new[] { Model.Compilation.GetSpecialType(SpecialType.System_String) },
+                                new[] { xdc },
+                                eh);
+                        }
+                    }
+                }
+                foreach (var fieldDef in type.FieldDefinitions)
+                {
+                    var xdc = fieldDef.Key.GetDocumentationCommentXml();
+                    if (!string.IsNullOrEmpty(xdc))
+                    {
+                        AddCustomAttributes(XmlDocCustomAttributeTypeName,
+                            new[] { Model.Compilation.GetSpecialType(SpecialType.System_String) },
+                            new[] { xdc },
+                            fieldDef.Value);
+                    }
+                }
+            }
+        }
+
+        private void AddXmlDocumentation(TypeDeclaration classTypeDeclaration)
+        {
+            var xdc = classTypeDeclaration.Node.GetDocumentationCommentXml();
+            if (!string.IsNullOrEmpty(xdc))
+            {
+                AddCustomAttributes(XmlDocCustomAttributeTypeName,
+                    new[] { Model.Compilation.GetSpecialType(SpecialType.System_String) },
+                    new[] { xdc },
+                    classTypeDeclaration.Handle);
             }
         }
 

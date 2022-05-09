@@ -180,7 +180,10 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 writer.FinalizeGeneration();
 
                 GenerateWinMD(metadataBuilder);
-                GenerateSources();
+                if (!context.ShouldSkipGeneratingSources())
+                {
+                    GenerateSources();
+                }
             }
             catch (Exception e)
             {
@@ -206,6 +209,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
             var isTest = string.CompareOrdinal(Process.GetCurrentProcess().ProcessName, "testhost") == 0;
             if (!isTest && !context.IsCsWinRTComponent())
             {
+                System.Diagnostics.Debug.WriteLine($"Skipping component {context.GetAssemblyName()}");
                 return;
             }
 
