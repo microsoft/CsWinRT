@@ -30,6 +30,7 @@ using Windows.Security.Cryptography.Core;
 using System.Reflection;
 using Windows.Devices.Enumeration.Pnp;
 using System.Diagnostics;
+using System.Text;
 
 #if NET
 using WeakRefNS = System;
@@ -2729,13 +2730,31 @@ namespace UnitTest
             var currentExecutingDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 #if NET
             var launchExePath = $"{currentExecutingDir}\\OOPExe.exe";
-            var proc = Process.Start(launchExePath);
+            Process proc = new Process();
+            proc.StartInfo.FileName = launchExePath;
+            proc.StartInfo.RedirectStandardError = true;
+            proc.StartInfo.RedirectStandardOutput = true;
+            proc.StartInfo.UseShellExecute = false;
+            proc.Start();
+            //            var proc = Process.Start(launchExePath);
 #else
             var launchExePath = $"{currentExecutingDir}\\OOPExe.dll";
             var proc = Process.Start("dotnet.exe", launchExePath);
 #endif
             Thread.Sleep(1000);
-            obj.Close();
+            try
+            {
+                obj.Close();
+            }
+            catch (Exception)
+            {
+                StringBuilder b = new();
+                b.Append(proc.StandardOutput.ReadToEnd());
+                b.Append(" ");
+                b.Append(proc.StandardError.ReadToEnd());
+                b.Append(" " + proc.ExitCode);
+                throw new Exception(b.ToString());
+            }
             Assert.True(obj.delegateCalled);
 
             try
