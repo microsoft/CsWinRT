@@ -140,8 +140,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
       <CsWinRTInternalProjection Condition="'$(CsWinRTPrivateProjection)' == 'true'">-internal</CsWinRTInternalProjection>
       <CsWinRTEmbeddedProjection Condition="'$(CsWinRTEmbedded)' == 'true'">-embedded</CsWinRTEmbeddedProjection>
-	    <CsWinRTEmbeddedEnums Condition="'$(CsWinRTEmbeddedPublicEnums)' == 'true'">-public_enums</CsWinRTEmbeddedEnums>
-	    <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5">net5.0</CsWinRTExeTFM>
+      <CsWinRTEmbeddedEnums Condition="'$(CsWinRTEmbeddedPublicEnums)' == 'true'">-public_enums</CsWinRTEmbeddedEnums>
+      <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5">net5.0</CsWinRTExeTFM>
       <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) > 5">net6.0</CsWinRTExeTFM>
       <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
 
