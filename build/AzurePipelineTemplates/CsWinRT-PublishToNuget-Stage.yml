@@ -90,7 +90,9 @@ stages:
           net5.0\WinRT.Runtime.dll
           net5.0\WinRT.Host.Shim.dll
           release_x64\WinRT.Host.dll
+          release_x64\WinRT.Host.dll.mui
           release_x86\WinRT.Host.dll
+          release_x86\WinRT.Host.dll.mui
           release_arm64\WinRT.Host.dll
           net5.0\IIDOptimizer\IIDOptimizer.exe
           net5.0\IIDOptimizer\IIDOptimizer.dll
