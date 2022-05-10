@@ -2752,7 +2752,7 @@ namespace UnitTest
                 b.Append(proc.StandardOutput.ReadToEnd());
                 b.Append(" ");
                 b.Append(proc.StandardError.ReadToEnd());
-                b.Append(" " + proc.ExitCode);
+                b.Append(" " + proc.ExitCode + " " + launchExePath);
                 throw new Exception(b.ToString());
             }
             Assert.True(obj.delegateCalled);
