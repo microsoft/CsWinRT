@@ -133,7 +133,7 @@
     <value>El índice especificado está fuera de los límites de la matriz especificada.</value>
   </data>
   <data name="Argument_InsufficientSpaceToCopyCollection" xml:space="preserve">
-    <value>El espacio especificado no es suficiente para copiar los elementos de esta colección.</value>
+    <value>El espacio especificado no es suficiente para copiar los elementos de esta Colección.</value>
   </data>
   <data name="Arg_IndexOutOfRangeException" xml:space="preserve">
     <value>El índice estaba fuera de los límites de la matriz.</value>
@@ -154,7 +154,7 @@
     <value>La colección que respalda este diccionario contiene demasiados elementos.</value>
   </data>
   <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
-    <value>La colección que respalda esta lista contiene demasiados elementos.</value>
+    <value>La colección que respalda esta Lista contiene demasiados elementos.</value>
   </data>
   <data name="InvalidOperation_EnumEnded" xml:space="preserve">
     <value>La enumeración ya ha finalizado.</value>
@@ -163,7 +163,7 @@
     <value>Se ha modificado la recopilación; es posible que la operación de enumeración no se ejecute.</value>
   </data>
   <data name="InvalidOperation_EnumNotStarted" xml:space="preserve">
-    <value>No se ha iniciado la enumeración. Llamar a MoveNext.</value>
+    <value>No se inició la enumeración. Llamar a MoveNext.</value>
   </data>
   <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
     <value>No se permite mutar una colección de claves derivada de un diccionario.</value>

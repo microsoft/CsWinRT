@@ -133,7 +133,7 @@
     <value>지정한 인덱스가 지정한 배열의 범위를 벗어났습니다.</value>
   </data>
   <data name="Argument_InsufficientSpaceToCopyCollection" xml:space="preserve">
-    <value>지정한 공간이 부족하여 이 컬렉션에서 요소를 복사할 수 없습니다.</value>
+    <value>지정된 공간이 이 컬렉션의 요소를 복사하기에 충분하지 않습니다.</value>
   </data>
   <data name="Arg_IndexOutOfRangeException" xml:space="preserve">
     <value>인덱스가 배열 범위를 벗어났습니다.</value>
@@ -151,10 +151,10 @@
     <value>빈 컬렉션에서 마지막 요소를 제거할 수 없습니다.</value>
   </data>
   <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
-    <value>이 사전을 지원하는 컬렉션에 요소가 너무 많습니다.</value>
+    <value>이 사전을 지원하는 컬렉션에 너무 많은 요소가 포함되어 있습니다.</value>
   </data>
   <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
-    <value>이 목록을 지원하는 컬렉션에 요소가 너무 많습니다.</value>
+    <value>이 목록을 지원하는 컬렉션에 너무 많은 요소가 포함되어 있습니다.</value>
   </data>
   <data name="InvalidOperation_EnumEnded" xml:space="preserve">
     <value>열거가 이미 완료되었습니다.</value>
@@ -166,9 +166,9 @@
     <value>열거가 시작되지 않았습니다. MoveNext를 호출합니다.</value>
   </data>
   <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
-    <value>사전에서 파생된 키 컬렉션은 변경할 수 없습니다.</value>
+    <value>사전에서 파생된 키 컬렉션을 변경하는 것은 허용되지 않습니다.</value>
   </data>
   <data name="NotSupported_ValueCollectionSet" xml:space="preserve">
-    <value>사전에서 파생된 값 컬렉션은 변경할 수 없습니다.</value>
+    <value>사전에서 파생된 값 컬렉션을 변경하는 것은 허용되지 않습니다.</value>
   </data>
 </root>

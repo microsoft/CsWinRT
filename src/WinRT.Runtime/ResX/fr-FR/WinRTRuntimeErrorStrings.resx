@@ -121,7 +121,7 @@
     <value>L’index ne situait en dehors de la plage indiquée. Il ne doit pas être négatif et sa taille doit être inférieure à la taille de la collection.</value>
   </data>
   <data name="ArgumentOutOfRange_IndexLargerThanMaxValue" xml:space="preserve">
-    <value>Cette collection ne peut pas fonctionner avec des index supérieurs à Int32.MaxValue - 1 (0x7FFFFFFF - 1).</value>
+    <value>Cette collection ne peut pas fonctionner avec des index supérieurs à Int32.MaxValue – 1 (0x7FFFFFFF – 1).</value>
   </data>
   <data name="Argument_AddingDuplicate" xml:space="preserve">
     <value>Un élément avec la même clé a déjà été ajouté.</value>
@@ -151,13 +151,13 @@
     <value>Impossible de supprimer le dernier élément d’une collection vide.</value>
   </data>
   <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
-    <value>La collection qui contient ce dictionnaire contient trop d’éléments.</value>
+    <value>La collection qui stocke ce dictionnaire contient trop d’éléments.</value>
   </data>
   <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
     <value>La collection qui stocke cette liste contient trop d’éléments.</value>
   </data>
   <data name="InvalidOperation_EnumEnded" xml:space="preserve">
-    <value>Énumération déjà terminée.</value>
+    <value>L’énumération est déjà terminée.</value>
   </data>
   <data name="InvalidOperation_EnumFailedVersion" xml:space="preserve">
     <value>La collection a été modifiée ; l'opération d'énumération ne peut pas être exécutée.</value>
@@ -166,7 +166,7 @@
     <value>L’énumération n’a pas démarré. Appelez MoveNext.</value>
   </data>
   <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
-    <value>La mutation d’une collection de clés dérivée d’un dictionnaire n’est pas autorisée.</value>
+    <value>La mutation d’une collection clé dérivée d’un dictionnaire n’est pas autorisée.</value>
   </data>
   <data name="NotSupported_ValueCollectionSet" xml:space="preserve">
     <value>La mutation d’une collection de valeurs dérivée d’un dictionnaire n’est pas autorisée.</value>

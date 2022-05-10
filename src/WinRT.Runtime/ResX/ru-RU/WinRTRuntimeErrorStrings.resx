@@ -151,10 +151,10 @@
     <value>Невозможно удалить последний элемент из пустой коллекции.</value>
   </data>
   <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
-    <value>Коллекция, содержащая этот словарь, содержит слишком много элементов.</value>
+    <value>Коллекция, являющаяся основой этого словаря, содержит слишком много элементов.</value>
   </data>
   <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
-    <value>Коллекция, содержащая этот список, содержит слишком много элементов.</value>
+    <value>Коллекция, являющаяся основой этого списка, содержит слишком много элементов.</value>
   </data>
   <data name="InvalidOperation_EnumEnded" xml:space="preserve">
     <value>Перечисление уже завершено.</value>
@@ -163,12 +163,12 @@
     <value>Коллекция была изменена; операция перечисления не может быть выполнена.</value>
   </data>
   <data name="InvalidOperation_EnumNotStarted" xml:space="preserve">
-    <value>Перечисление не запущено. Вызов MoveNext.</value>
+    <value>Перечисление не начато. Вызов MoveNext.</value>
   </data>
   <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
-    <value>Изменение коллекции ключей, производной от словаря, запрещено.</value>
+    <value>Изменение коллекции ключей, полученной из словаря, запрещено.</value>
   </data>
   <data name="NotSupported_ValueCollectionSet" xml:space="preserve">
-    <value>Изменение коллекции значений, производной от словаря, запрещено.</value>
+    <value>Изменение коллекции значений, полученной из словаря, запрещено.</value>
   </data>
 </root>

@@ -133,10 +133,10 @@
     <value>Der angegebene Index liegt außerhalb des gültigen Bereichs des angegebenen Arrays.</value>
   </data>
   <data name="Argument_InsufficientSpaceToCopyCollection" xml:space="preserve">
-    <value>Der angegebene Speicherplatz reicht nicht aus, um die Elemente aus dieser Sammlung zu kopieren.</value>
+    <value>Der angegebene Speicherplatz reicht nicht aus, um die Elemente aus dieser Auflistung zu kopieren.</value>
   </data>
   <data name="Arg_IndexOutOfRangeException" xml:space="preserve">
-    <value>Der Index lag außerhalb des Arraybereichs.</value>
+    <value>Der Index lag außerhalb der Grenzen des Arrays.</value>
   </data>
   <data name="Arg_KeyNotFound" xml:space="preserve">
     <value>Der angegebene Schlüssel war im Wörterbuch nicht vorhanden.</value>
@@ -151,24 +151,24 @@
     <value>Das letzte Element kann nicht aus einer leeren Auflistung entfernt werden.</value>
   </data>
   <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
-    <value>Die Sammlung, die dieses Wörterbuch unterstützt, enthält zu viele Elemente.</value>
+    <value>Die Auflistung, die dieses Wörterbuch unterstützt, enthält zu viele Elemente.</value>
   </data>
   <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
     <value>Die Auflistung, die diese Liste unterstützt, enthält zu viele Elemente.</value>
   </data>
   <data name="InvalidOperation_EnumEnded" xml:space="preserve">
-    <value>Die Enumeration ist bereits abgeschlossen.</value>
+    <value>Die Enumeration wurde bereits abgeschlossen.</value>
   </data>
   <data name="InvalidOperation_EnumFailedVersion" xml:space="preserve">
     <value>"Collection" wurde geändert. Der Enumerationsvorgang wird möglicherweise nicht ausgeführt.</value>
   </data>
   <data name="InvalidOperation_EnumNotStarted" xml:space="preserve">
-    <value>Die Enumeration wurde nicht gestartet. MoveNext aufrufen.</value>
+    <value>Die Enumeration wurde nicht gestartet. Rufen Sie MoveNext auf.</value>
   </data>
   <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
-    <value>Das Mutieren einer aus einem Wörterbuch abgeleiteten Schlüsselsammlung ist nicht zulässig.</value>
+    <value>Das Ändern einer von einem Wörterbuch abgeleiteten Schlüsselsammlung ist nicht erlaubt.</value>
   </data>
   <data name="NotSupported_ValueCollectionSet" xml:space="preserve">
-    <value>Das Mutieren einer aus einem Wörterbuch abgeleiteten Wertsammlung ist nicht zulässig.</value>
+    <value>Das Ändern einer von einem Wörterbuch abgeleiteten Wertesammlung ist nicht erlaubt.</value>
   </data>
 </root>

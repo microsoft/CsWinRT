@@ -121,7 +121,7 @@
     <value>インデックスが範囲外でした。コレクションのサイズ未満かつ負でない必要があります。</value>
   </data>
   <data name="ArgumentOutOfRange_IndexLargerThanMaxValue" xml:space="preserve">
-    <value>このコレクションは Int32.MaxValue - 1 (0x7FFFFFFF - 1) より大きいインデックスでは動作しません。</value>
+    <value>このコレクションは、Int32.MaxValue - 1 (0x7FFFFFFF - 1) より大きいインデックスでは機能しません。</value>
   </data>
   <data name="Argument_AddingDuplicate" xml:space="preserve">
     <value>同じキーを持つ項目が既に追加されています。</value>
@@ -133,7 +133,7 @@
     <value>指定されたインデックスは、指定された配列の範囲外です。</value>
   </data>
   <data name="Argument_InsufficientSpaceToCopyCollection" xml:space="preserve">
-    <value>指定された領域は、このコレクションから要素をコピーするのに十分ではありません。</value>
+    <value>指定されたスペースは、このコレクションから要素をコピーするのに十分ではありません。</value>
   </data>
   <data name="Arg_IndexOutOfRangeException" xml:space="preserve">
     <value>インデックスが配列の範囲外でした。</value>
@@ -151,10 +151,10 @@
     <value>空のコレクションから最後の要素を削除することはできません。</value>
   </data>
   <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
-    <value>この辞書をバッキングしているコレクションに含まれている要素が多すぎます。</value>
+    <value>この辞書を裏付けるコレクションには、要素が多すぎます。</value>
   </data>
   <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
-    <value>このリストをバッキングしているコレクションに含まれている要素が多すぎます。</value>
+    <value>このリストを裏付けるコレクションには、要素が多すぎます。</value>
   </data>
   <data name="InvalidOperation_EnumEnded" xml:space="preserve">
     <value>列挙は既に完了しています。</value>
@@ -166,9 +166,9 @@
     <value>列挙が開始されていません。MoveNext を呼び出します。</value>
   </data>
   <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
-    <value>辞書から派生したキー コレクションの変更は許可されていません。</value>
+    <value>辞書から派生したキー コレクションを変更することは許可されていません。</value>
   </data>
   <data name="NotSupported_ValueCollectionSet" xml:space="preserve">
-    <value>辞書から派生した値コレクションを変更することはできません。</value>
+    <value>辞書から派生した値コレクションを変更することは許可されていません。</value>
   </data>
 </root>

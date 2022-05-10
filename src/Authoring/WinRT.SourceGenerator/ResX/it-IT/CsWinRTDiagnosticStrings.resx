@@ -183,7 +183,7 @@
     <value>Nessun tipo pubblico definito</value>
   </data>
   <data name="NoPublicTypesRule_Text" xml:space="preserve">
-    <value>Windows Runtime componenti devono avere almeno un tipo pubblico</value>
+    <value>I componenti Windows Runtime devono avere almeno un tipo pubblico</value>
   </data>
   <data name="OperatorOverloadedRule_Brief" xml:space="preserve">
     <value>Overload dell'operatore esposto</value>

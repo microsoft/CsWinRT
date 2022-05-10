@@ -71,7 +71,7 @@
     <value>Remova esses atributos ou substitua-os pelo atributo Windows Runtime apropriado, se necessário.</value>
   </data>
   <data name="ArrayOutputParamMarkedRead_Brief" xml:space="preserve">
-    <value>Parâmetro de matriz marcado como 'out' e ReadOnlyArray</value>
+    <value>Parâmetro de matriz marcado como `out` e ReadOnlyArray</value>
   </data>
   <data name="ArrayOutputParamMarkedRead_Text1" xml:space="preserve">
     <value>O '{0}' tem um parâmetro de '{1}' que é uma matriz, mas que tem o atributo ReadOnlyArray.</value>
@@ -104,7 +104,7 @@
     <value>Classes não podem ter vários construtores do mesmo arity no Windows Runtime, a classe {0} tem vários construtores {1}-arity</value>
   </data>
   <data name="DisjointNamespaceRule_Brief" xml:space="preserve">
-    <value>O namespace não é adjacente do namespace principal (winmd)</value>
+    <value>Namespace não contíguo com o namespace principal (winmd)</value>
   </data>
   <data name="DisjointNamespaceRule_Text1" xml:space="preserve">
     <value>Um tipo público tem um namespace ('{1}') que não compartilha prefixo comum com outros namespaces ('{0}').</value>
@@ -134,16 +134,16 @@
     <value>O '{0}' tem uma matriz multidimensional do tipo '{1}' em sua assinatura; matrizes em Windows Runtime assinaturas de método devem ser unidimensionais</value>
   </data>
   <data name="MultipleDefaultOverloadAttribute_Brief" xml:space="preserve">
-    <value>Somente uma sobrecarga deve ser designada como padrão</value>
+    <value>Apenas uma sobrecarga deve ser designada como padrão</value>
   </data>
   <data name="MultipleDefaultOverloadAttribute_Text1" xml:space="preserve">
-    <value>Na classe {2}: várias sobrecargas {0} parâmetro de '{1}' são decoradas com Windows.Foundation.Metadata.DefaultOverloadAttribute.</value>
+    <value>Na classe {2}: várias sobrecargas de {0} parâmetro(s) de '{1}' são decoradas com Windows.Foundation.Metadata.DefaultOverloadAttribute.</value>
   </data>
   <data name="MultipleDefaultOverloadAttribute_Text2" xml:space="preserve">
     <value>O atributo só pode ser aplicado a uma sobrecarga do método.</value>
   </data>
   <data name="NamespacesDifferByCase_Brief" xml:space="preserve">
-    <value>Os nomes de namespace não podem diferir somente por maiúsculas e minúsculas</value>
+    <value>Os nomes de namespace não podem diferir apenas por letras maiúsculas e minúsculas</value>
   </data>
   <data name="NamespacesDifferByCase_Text" xml:space="preserve">
     <value>Vários namespaces encontrados com o nome '{0}'; nomes de namespace não podem diferir somente por maiúsculas e minúsculas no Windows Runtime</value>
@@ -153,13 +153,13 @@
     <value>Várias sobrecargas vistas sem o atributo DefaultOverload</value>
   </data>
   <data name="NeedDefaultOverloadAttribute_Text" xml:space="preserve">
-    <value>Na classe {2}: as sobrecargas {0}-parâmetro de {1} devem ter exatamente um método especificado como a sobrecarga padrão decorando-o com Windows.Foundation.Metadata.DefaultOverloadAttribute</value>
+    <value>Na classe {2}: as sobrecargas de {0} parâmetro(s) de {1} devem ter exatamente um método especificado como a sobrecarga padrão decorando-a com Windows.Foundation.Metadata.DefaultOverloadAttribute</value>
   </data>
   <data name="NonArrayMarkedInOrOut_Brief" xml:space="preserve">
     <value>Parâmetro (não tipo de matriz) marcado como InAttribute ou OutAttribute</value>
   </data>
   <data name="NonArrayMarkedInOrOut_Text1" xml:space="preserve">
-    <value>O método '{0}' tem parâmetro '{1}' com System.Runtime.InteropServices.InAttribute ou System.Runtime.InteropServices.OutAttribute.Windows Runtime não dá suporte à marcação de parâmetros com System.Runtime.InteropServices.InAttribute ou System.Runtime.InteropServices.OutAttribute.</value>
+    <value>O método '{0}' tem o parâmetro '{1}' com um System.Runtime.InteropServices.InAttribute ou System.Runtime.InteropServices.OutAttribute. O Windows Runtime não oferece suporte à marcação de parâmetros com System.Runtime.InteropServices.InAttribute ou System.Runtime.InteropServices.OutAttribute.</value>
   </data>
   <data name="NonArrayMarkedInOrOut_Text2" xml:space="preserve">
     <value>Considere remover System.Runtime.InteropServices.InAttribute e substituir System.Runtime.InteropServices.OutAttribute pelo modificador 'out'.</value>
@@ -186,7 +186,7 @@
     <value>Windows Runtime componentes devem ter pelo menos um tipo público</value>
   </data>
   <data name="OperatorOverloadedRule_Brief" xml:space="preserve">
-    <value>Sobrecarga de operador exposta</value>
+    <value>Sobrecarga do operador exposta</value>
   </data>
   <data name="OperatorOverloadedRule_Text" xml:space="preserve">
     <value>{0} é uma sobrecarga de operador, os tipos gerenciados não podem expor sobrecargas de operador no Windows Runtime</value>
@@ -211,7 +211,7 @@
     <value>O '{0}' tem parâmetro '{1}' marcado como 'ref'; parâmetros de referência não são permitidos Windows Runtime</value>
   </data>
   <data name="StructHasConstFieldRule_Brief" xml:space="preserve">
-    <value>Campo Const em struct</value>
+    <value>Campo const em struct</value>
   </data>
   <data name="StructHasConstFieldRule_Text" xml:space="preserve">
     <value>Estrutura {0} tem campo const - constantes só podem aparecer em Windows Runtime enumerações.</value>
@@ -223,7 +223,7 @@
     <value>Estrutura {0} tem campo do tipo {1}; {1} não é um tipo de campo Windows Runtime válido.</value>
   </data>
   <data name="StructHasInvalidFieldRule_Text2" xml:space="preserve">
-    <value>Cada campo em uma estrutura Windows Runtime só pode ser UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum ou uma estrutura.</value>
+    <value>Cada campo em uma estrutura Windows Runtime só pode ser UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Único, Duplo, Booliano, Cadeia de caracteres, Enum ou uma estrutura em si.</value>
   </data>
   <data name="StructHasPrivateFieldRule_Brief" xml:space="preserve">
     <value>Campo privado no struct</value>
@@ -244,10 +244,10 @@
     <value>O '{0}' classe não implementa corretamente a interface '{1}' porque o '{2}' membro está ausente ou não é público</value>
   </data>
   <data name="UnsealedClassRule_Brief" xml:space="preserve">
-    <value>A classe está sem selado</value>
+    <value>A classe não está selada</value>
   </data>
   <data name="UnsealedClassRule_Text" xml:space="preserve">
-    <value>Não há suporte para a exportação de tipos não selados em CsWinRT. Marque o tipo {0} como selado</value>
+    <value>Não há suporte para a exportação de tipos não selados no CsWinRT. marque o tipo {0} como selado</value>
     <comment>{0} will be some user-defined keyword</comment>
   </data>
   <data name="UnsupportedTypeRule_Brief" xml:space="preserve">

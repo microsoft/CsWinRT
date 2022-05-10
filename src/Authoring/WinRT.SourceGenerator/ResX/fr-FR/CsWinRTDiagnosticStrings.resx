@@ -71,7 +71,7 @@
     <value>Supprimez ces attributs ou remplacez-les par l’attribut Windows Runtime approprié si nécessaire.</value>
   </data>
   <data name="ArrayOutputParamMarkedRead_Brief" xml:space="preserve">
-    <value>Paramètre de tableau marqué 'out' et ReadOnlyArray</value>
+    <value>Paramètre de tableau marqué `out` et ReadOnlyArray</value>
   </data>
   <data name="ArrayOutputParamMarkedRead_Text1" xml:space="preserve">
     <value>La méthode '{0}' a un paramètre de sortie '{1}' qui est un tableau, mais qui a l’attribut ReadOnlyArray.</value>
@@ -89,7 +89,7 @@
     <value>Dans le Windows Runtime, les paramètres du tableau de contenu doivent être lisibles ou accessibles en écriture. Supprimez l’un des attributs de '{1}'.</value>
   </data>
   <data name="ArrayParamNotMarked_Brief" xml:space="preserve">
-    <value>Paramètre array non marqué Comme ReadOnlyArray ou WriteOnlyArray</value>
+    <value>Paramètre de tableau non marqué avec ReadOnlyArray ou WriteOnlyArray</value>
   </data>
   <data name="ArrayParamNotMarked_Text1" xml:space="preserve">
     <value>La méthode '{0}' a un paramètre '{1}' qui est un tableau.</value>
@@ -131,13 +131,13 @@
     <value>Signature de tableau trouvée avec un tableau multidimensionnel, qui n’est pas un type Windows Runtime valide</value>
   </data>
   <data name="MultiDimensionalArrayRule_Text" xml:space="preserve">
-    <value>La méthode '{0}' possède un tableau multidimensionnel de type '{1}' dans sa signature ; les tableaux dans les signatures de méthode Windows Runtime doivent être unidimensionnels</value>
+    <value>La méthode « {0} » possède un tableau multidimensionnel de type « {1} » dans sa signature ; les tableaux dans les signatures de méthode Windows Runtime doivent être unidimensionnels</value>
   </data>
   <data name="MultipleDefaultOverloadAttribute_Brief" xml:space="preserve">
     <value>Une seule surcharge doit être désignée par défaut</value>
   </data>
   <data name="MultipleDefaultOverloadAttribute_Text1" xml:space="preserve">
-    <value>Dans la classe {2} : plusieurs surcharges de paramètres {0} de '{1}' sont décorées avec Windows.Foundation.Metadata.DefaultOverloadAttribute.</value>
+    <value>Dans la classe {2} : plusieurs surcharges de {0}-paramètre de « {1} » sont décorées avec Windows.Foundation.Metadata.DefaultOverloadAttribute.</value>
   </data>
   <data name="MultipleDefaultOverloadAttribute_Text2" xml:space="preserve">
     <value>L’attribut ne peut être appliqué qu’à une seule surcharge de la méthode.</value>
@@ -153,37 +153,37 @@
     <value>Surcharges multiples rencontrées sans attribut DefaultOverload</value>
   </data>
   <data name="NeedDefaultOverloadAttribute_Text" xml:space="preserve">
-    <value>Dans la classe {2} : les surcharges de paramètres {0} de {1} doivent avoir exactement une méthode spécifiée comme surcharge par défaut en la déprotégeant avec Windows.Foundation.Metadata.DefaultOverloadAttribute</value>
+    <value>Dans la classe {2} : les surcharges de {0}-paramètre de {1} doivent avoir exactement une méthode spécifiée comme surcharge par défaut en la décorant avec Windows.Foundation.Metadata.DefaultOverloadAttribute</value>
   </data>
   <data name="NonArrayMarkedInOrOut_Brief" xml:space="preserve">
-    <value>Paramètre (non de type tableau) marqué InAttribute ou OutAttribute</value>
+    <value>Paramètre (non de type de tableau) marqué InAttribute ou OutAttribute</value>
   </data>
   <data name="NonArrayMarkedInOrOut_Text1" xml:space="preserve">
-    <value>La méthode '{0}' a un paramètre '{1}' avec System.Runtime.InteropServices.InAttribute ou System.Runtime.InteropServices.OutAttribute.Windows Runtime ne prend pas en charge le marquage de paramètres avec System.Runtime.InteropServices.InAttribute ou System.Runtime.InteropServices.OutAttribute.</value>
+    <value>La méthode « {0} » a un paramètre « {1} » avec System.Runtime.InteropServices.InAttribute ou System.Runtime.InteropServices.OutAttribute.Windows Runtime ne prend pas en charge le marquage de paramètres avec System.Runtime.InteropServices.InAttribute ou System.Runtime.InteropServices.OutAttribute.</value>
   </data>
   <data name="NonArrayMarkedInOrOut_Text2" xml:space="preserve">
     <value>Supprimez System.Runtime.InteropServices.InAttribute et remplacez System.Runtime.InteropServices.OutAttribute par le modificateur 'out' à la place.</value>
   </data>
   <data name="NonArrayMarked_Brief" xml:space="preserve">
-    <value>Paramètre non-array marqué avec ReadOnlyArray ou WriteOnlyArray</value>
+    <value>Paramètre autre qu’un tableau marqué avec ReadOnlyArray ou WriteOnlyArray</value>
   </data>
   <data name="NonArrayMarked_Text1" xml:space="preserve">
     <value>La méthode '{0}' a un paramètre '{1}' qui n’est pas un tableau et qui possède un attribut ReadOnlyArray ou WriteOnlyArray.</value>
   </data>
   <data name="NonArrayMarked_Text2" xml:space="preserve">
-    <value>Windows Runtime ne prend pas en charge le marquage de paramètres non-array avec ReadOnlyArray ou WriteOnlyArray.</value>
+    <value>Windows Runtime ne prend pas en charge le marquage de paramètres autres que tableau avec ReadOnlyArray ou WriteOnlyArray.</value>
   </data>
   <data name="NonWinRTInterface_Brief" xml:space="preserve">
     <value>Interface non valide héritée</value>
   </data>
   <data name="NonWinRTInterface_Text" xml:space="preserve">
-    <value>Windows Runtime type de composant {0} ne peut pas implémenter {1} d’interface, car l’interface n’est pas une interface Windows Runtime valide</value>
+    <value>Le type de composant Windows Runtime {0} ne peut pas implémenter l’interface {1}, car l’interface n’est pas une interface Windows Runtime valide</value>
   </data>
   <data name="NoPublicTypesRule_Brief" xml:space="preserve">
     <value>Aucun type public défini</value>
   </data>
   <data name="NoPublicTypesRule_Text" xml:space="preserve">
-    <value>Windows Runtime composants doivent avoir au moins un type public</value>
+    <value>Les composants Windows Runtime doivent avoir au moins un type public</value>
   </data>
   <data name="OperatorOverloadedRule_Brief" xml:space="preserve">
     <value>Surcharge d’opérateur exposée</value>
@@ -217,7 +217,7 @@
     <value>Le {0} de structure a un champ const - les constantes ne peuvent apparaître que sur Windows Runtime énumérations.</value>
   </data>
   <data name="StructHasInvalidFieldRule_Brief" xml:space="preserve">
-    <value>Champ non valide dans le struct</value>
+    <value>Champ non valide dans struct</value>
   </data>
   <data name="StructHasInvalidFieldRule_Text1" xml:space="preserve">
     <value>Le {0} de structure a un champ de type {1}; {1} n’est pas un type de champ Windows Runtime valide.</value>
@@ -226,7 +226,7 @@
     <value>Chaque champ d’une structure Windows Runtime peut uniquement être UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum ou lui-même une structure.</value>
   </data>
   <data name="StructHasPrivateFieldRule_Brief" xml:space="preserve">
-    <value>Champ privé dans le struct</value>
+    <value>Champ privé dans struct</value>
   </data>
   <data name="StructHasPrivateFieldRule_Text" xml:space="preserve">
     <value>Le {0} de structure a un champ non public. Tous les champs doivent être publics pour les structures Windows Runtime.</value>
@@ -247,11 +247,11 @@
     <value>La classe n’est pas scellée</value>
   </data>
   <data name="UnsealedClassRule_Text" xml:space="preserve">
-    <value>L’exportation de types non scellés n’est pas prise en charge dans CsWinRT. Marquez le type {0} comme sealed</value>
+    <value>L’exportation de types non scellés n’est pas prise en charge dans CsWinRT. Marquez le type {0} comme scellé</value>
     <comment>{0} will be some user-defined keyword</comment>
   </data>
   <data name="UnsupportedTypeRule_Brief" xml:space="preserve">
-    <value>Exposition du type non pris en charge</value>
+    <value>Exposition du type non prise en charge</value>
   </data>
   <data name="UnsupportedTypeRule_Text1" xml:space="preserve">
     <value>Le membre '{0}' a le type '{1}' dans sa signature.</value>
@@ -265,7 +265,7 @@
     <value>Cependant, le type (ou ses paramètres génériques) implémente des interfaces qui sont des types Windows Runtime valides.</value>
   </data>
   <data name="UnsupportedTypeRule_Text4" xml:space="preserve">
-    <value>Changez le type '{1} dans la signature de membre en l’un des types suivants à partir de System.Collections.Generic : {2}.</value>
+    <value>Changez le type « {1} » dans la signature de membre en l’un des types suivants à partir de System.Collections.Generic : {2}.</value>
     <comment>{1} and {2} will be keywords (types) from DotNet</comment>
   </data>
 </root>

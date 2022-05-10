@@ -151,19 +151,19 @@
     <value>Não é possível remover o último elemento de uma coleção vazia.</value>
   </data>
   <data name="InvalidOperation_CollectionBackingDictionaryTooLarge" xml:space="preserve">
-    <value>A coleção que faz o backup deste Dicionário contém muitos elementos.</value>
+    <value>A coleção que oferece suporte a este Dicionário contém muitos elementos.</value>
   </data>
   <data name="InvalidOperation_CollectionBackingListTooLarge" xml:space="preserve">
-    <value>A coleção que faz backup desta Lista contém muitos elementos.</value>
+    <value>A coleção que oferece suporte a esta Lista contém muitos elementos.</value>
   </data>
   <data name="InvalidOperation_EnumEnded" xml:space="preserve">
-    <value>Enumeração já concluída.</value>
+    <value>A enumeração já foi concluída.</value>
   </data>
   <data name="InvalidOperation_EnumFailedVersion" xml:space="preserve">
     <value>A coleção foi modificada. Talvez a operação de enumeração não seja executada.</value>
   </data>
   <data name="InvalidOperation_EnumNotStarted" xml:space="preserve">
-    <value>Enumeração não iniciada. Chamar MoveNext.</value>
+    <value>A enumeração não foi iniciada. Chame MoveNext.</value>
   </data>
   <data name="NotSupported_KeyCollectionSet" xml:space="preserve">
     <value>Não é permitido modificar uma coleção de chaves derivada de um dicionário.</value>

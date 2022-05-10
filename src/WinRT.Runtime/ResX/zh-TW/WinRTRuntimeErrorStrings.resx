@@ -121,7 +121,7 @@
     <value>索引超出範圍。不能是負數，且不能超過集合的大小。</value>
   </data>
   <data name="ArgumentOutOfRange_IndexLargerThanMaxValue" xml:space="preserve">
-    <value>此集合無法與大於 Int32.MaxValue - 1 (0x7FFFFFFF - 1)的索引搭配使用。</value>
+    <value>此集合無法處理大於 Int32.MaxValue - 1 (0x7FFFFFFF - 1) 的索引。</value>
   </data>
   <data name="Argument_AddingDuplicate" xml:space="preserve">
     <value>已新增具有相同索引鍵的專案。</value>
@@ -136,7 +136,7 @@
     <value>指定的空間不足，無法從這個集合複製元素。</value>
   </data>
   <data name="Arg_IndexOutOfRangeException" xml:space="preserve">
-    <value>索引超出陣列的範圍。</value>
+    <value>索引超出陣列範圍。</value>
   </data>
   <data name="Arg_KeyNotFound" xml:space="preserve">
     <value>字典中沒有指定的索引鍵。</value>
