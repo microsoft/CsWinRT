@@ -542,10 +542,52 @@ And this is another one"
       void f();
     }
 
-    [attr_string("a string with embedded quotes, like the string \"quotes\"")]
+    [attr_string("a string with embedded escape characters, like the string \"quotes\" and string \\\"quotes\\\" and string \'char\'")]
     runtimeclass EmbeddedQuotesTest
     {
         void f();
+    }
+
+    [default_interface]
+    runtimeclass CustomEquals
+    {
+        Int32 Value{ get; set; };
+
+        CustomEquals();
+        [default_overload]
+        Boolean Equals(Object obj);
+        Int32 GetHashCode();
+        Boolean Equals(CustomEquals other);
+    }
+
+    [default_interface]
+    runtimeclass CustomEquals2
+    {
+        Int32 Value{ get; set; };
+
+        CustomEquals2();
+        [default_overload]
+        Int32 Equals(Object obj);
+        Int32 Equals(CustomEquals2 other);
+    }
+
+    [default_interface]
+    unsealed runtimeclass UnSealedCustomEquals
+    {
+        Int32 Value{ get; set; };
+
+        UnSealedCustomEquals();
+        Int32 GetHashCode();
+    }
+
+    [default_interface]
+    runtimeclass DerivedCustomEquals : UnSealedCustomEquals
+    {
+        DerivedCustomEquals();
+        [default_overload]
+        Boolean Equals(Object obj);
+        Int32 GetHashCode();
+        Boolean Equals(UnSealedCustomEquals other);
     }
 
     // Compile time test for sub windows namespace
