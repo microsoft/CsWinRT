@@ -72,7 +72,7 @@ stages:
         $buildUrl = $runInfo.url.Replace("_apis/build/Builds/","_build/results?buildId=")
    
         Start-Process $buildUrl
-      condition: eq('$(Build.Reason)','Schedule')
+      condition: eq(variables['Build.Reason'],'Schedule')
       errorActionPreference: continue
       ignoreLASTEXITCODE: true
       displayName: 'Run WinUI CI Pipeline'
