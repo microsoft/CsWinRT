@@ -106,7 +106,7 @@ stages:
 
   - job: Benchmarks
     displayName: Run Benchmarks
-    condition: eq(variables['_RunBenchmarks'],'true')
+    condition: and(eq(variables['_RunBenchmarks'],'true'), eq(variables['Build.Reason'],'Schedule'))
     dependsOn: []
     pool:
       vmImage: windows-2019
