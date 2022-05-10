@@ -459,6 +459,180 @@ namespace cswinrt
         return {};
     }
 
+    template<typename T>
+    bool is_param_expected_type(TypeSig const& param, T const& expected_type)
+    {
+        auto semantics = get_type_semantics(param);
+        if (auto variant_type = std::get_if<T>(&semantics))
+        {
+            return *variant_type == expected_type;
+        }
+
+        return false;
+    }
+
+    // Checks for expected method name and parameters and returns true if those
+    // match (ignoring the return type). The parameter return_type_matches indicates whether
+    // the return type also matches.
+    template <typename ParamMatches, typename ReturnMatches>
+    bool is_expected_method(
+        MethodDef const& method,
+        std::string_view expected_method,
+        ParamMatches&& check_expected_params,
+        ReturnMatches&& check_expected_return,
+        bool* return_type_matches = nullptr)
+    {
+        if (method.Name() != expected_method)
+        {
+            return false;
+        }
+
+        method_signature signature(method);
+        if (!check_expected_params(signature))
+        {
+            return false;
+        }
+
+        if (return_type_matches)
+        {
+            *return_type_matches = false;
+            if (check_expected_return(signature))
+            {
+                *return_type_matches = true;
+            }
+        }
+
+        return true;
+    }
+
+    // Checks for Equals(object obj).
+    bool is_object_equals_method(MethodDef const& method, bool* return_type_matches = nullptr)
+    {
+        auto checkParams = [](method_signature signature)
+        {
+            return signature.has_params() && 
+                signature.params().size() == 1 && 
+                std::holds_alternative<object_type>(get_type_semantics(signature.params()[0].second->Type()));
+        };
+
+        auto checkReturn = [](method_signature signature)
+        {
+            if (auto return_sig = signature.return_signature())
+            {
+                if (is_param_expected_type(return_sig.Type(), fundamental_type::Boolean))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        return is_expected_method(method, "Equals"sv, checkParams, checkReturn, return_type_matches);
+    }
+
+    // Checks for Equals(Class obj).
+    bool is_class_equals_method(MethodDef const& method, std::string_view expected_namespace, std::string_view expected_type_name, bool* return_type_matches = nullptr)
+    {
+        auto checkParams = [&expected_namespace, &expected_type_name](method_signature signature)
+        {
+            if (signature.has_params() && signature.params().size() == 1)
+            {
+                auto semantics = get_type_semantics(signature.params()[0].second->Type());
+                if (auto td = std::get_if<type_definition>(&semantics))
+                {
+                    return td->TypeNamespace() == expected_namespace && td->TypeName() == expected_type_name;
+                }
+            }
+
+            return false;
+        };
+
+        auto checkReturn = [](method_signature signature)
+        {
+            if (auto return_sig = signature.return_signature())
+            {
+                if (is_param_expected_type(return_sig.Type(), fundamental_type::Boolean))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        return is_expected_method(method, "Equals"sv, checkParams, checkReturn, return_type_matches);
+    }
+
+    // Checks for GetHashCode().
+    bool is_object_hashcode_method(MethodDef const& method, bool* return_type_matches = nullptr)
+    {
+        auto checkParams = [](method_signature signature)
+        {
+            return !signature.has_params();
+        };
+
+        auto checkReturn = [](method_signature signature)
+        {
+            if (auto return_sig = signature.return_signature())
+            {
+                if (is_param_expected_type(return_sig.Type(), fundamental_type::Int32))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        return is_expected_method(method, "GetHashCode"sv, checkParams, checkReturn, return_type_matches);
+    }
+
+    bool has_object_equals_method(TypeDef const& type, bool* return_type_matches = nullptr)
+    {
+        XLANG_ASSERT(get_category(type) == category::class_type);
+
+        for (auto&& method : type.MethodList())
+        {
+            if (is_object_equals_method(method, return_type_matches))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool has_class_equals_method(TypeDef const& type, bool* return_type_matches = nullptr)
+    {
+        XLANG_ASSERT(get_category(type) == category::class_type);
+
+        for (auto&& method : type.MethodList())
+        {
+            if (is_class_equals_method(method, type.TypeNamespace(), type.TypeName(), return_type_matches))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool has_object_hashcode_method(TypeDef const& type, bool* return_type_matches = nullptr)
+    {
+        XLANG_ASSERT(get_category(type) == category::class_type);
+
+        for (auto&& method : type.MethodList())
+        {
+            if (is_object_hashcode_method(method, return_type_matches))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     struct mapped_type
     {
         std::string_view abi_name;

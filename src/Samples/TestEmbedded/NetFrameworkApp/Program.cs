@@ -2,7 +2,7 @@
 using Alpha;
 using Beta;
 using Gamma;
-using Windows.Devices.Geolocation;
+using Windows.Media;
 
 namespace NetFrameworkApp
 {
@@ -23,8 +23,7 @@ namespace NetFrameworkApp
 
             Console.WriteLine("Expect 5, Got " + testLib.Test4());
 
-            testLib.Test5();
-
+            Console.WriteLine("Expect 20, Got " + testLib.Test5());
         }
     }
 
@@ -46,21 +45,8 @@ namespace NetFrameworkApp
 
     public class TestLib 
     {
-        Geolocator g;
         public TestLib()
-        {
-            WinRT.ComWrappersSupport.RegisterProjectionAssembly(typeof(TestLib).Assembly);
-            g = new();
-        }
-
-        public void SetDesiredAccuracy()
-        {
-            g.DesiredAccuracy = PositionAccuracy.Default;
-        }
-
-        public void ShowDesiredAccuracy()
-        {
-            Console.WriteLine("Desired accuracy = " + g.DesiredAccuracy);
+        {            
         }
 
         internal int Test1_Helper(IAlpha alpha) { return alpha.Five(); }
@@ -71,8 +57,6 @@ namespace NetFrameworkApp
             MyGreek g = new();
             return Test1_Helper(a) + Test1_Helper(g);
         }
-
-        internal IBeta Test2_Helper(IBeta beta) { return beta; }
 
         public int Test2()
         {
@@ -98,17 +82,14 @@ namespace NetFrameworkApp
             return qiAgent.Run(x);
         }
 
-        async System.Threading.Tasks.Task CallGeoAsyncApi()
+        public int Test5()
         {
-            Geolocator g = new();
-            g.DesiredAccuracy = PositionAccuracy.Default;
-            Console.WriteLine("Desired accuracy " + g.DesiredAccuracy);
-            Geoposition pos = await g.GetGeopositionAsync();
-        }
-
-        public void Test5()
-        {
-            CallGeoAsyncApi().Wait(1000);
+            // make a Windows.Media.AudioFrame   
+            var aframe = new Windows.Media.AudioFrame(20);
+            using (AudioBuffer abuff = aframe.LockBuffer(AudioBufferAccessMode.Read))
+            {
+                return (int)abuff.Capacity;
+            }
         }
     }
 

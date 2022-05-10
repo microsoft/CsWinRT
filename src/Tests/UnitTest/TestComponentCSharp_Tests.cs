@@ -2848,5 +2848,62 @@ namespace UnitTest
             WarningStatic.WarningEvent += (object s, Int32 v) => { }; // warning CA1416
         }
 #endif
+
+        [Fact]
+        public void TestObjectFunctions()
+        {
+            CustomEquals first = new()
+            {
+                Value = 2
+            };
+            CustomEquals second = new()
+            {
+                Value = 4
+            };
+            CustomEquals third = new()
+            {
+                Value = 2
+            };
+
+            Assert.False(first.Equals(second));
+            Assert.True(first.Equals(third));
+            Assert.True(first.Equals(first));
+            Assert.True(Object.Equals(first, second));
+            Assert.True(Object.Equals(second, third));
+            Assert.Equal(5, first.GetHashCode());
+            Assert.Equal(5, second.GetHashCode());
+
+            Class fourth = new();
+            Class fifth = new();
+            Assert.True(fourth.Equals(fourth));
+            Assert.False(fourth.Equals(fifth));
+            Assert.False(Object.Equals(fourth, fifth));
+            Assert.True(Object.Equals(fifth, fifth));
+            fourth.GetHashCode();
+
+            CustomEquals2 sixth = new()
+            {
+                Value = 4
+            };
+            Assert.Equal(4, sixth.Equals(sixth));
+            Assert.Equal(4, sixth.Equals(fifth));
+            Assert.False(object.Equals(sixth, fifth));
+            Assert.True(object.Equals(sixth, sixth));
+            Assert.False(((IEquatable<CustomEquals2>)sixth).Equals(new CustomEquals2()));
+            Assert.True(((IEquatable<CustomEquals2>)sixth).Equals(sixth));
+
+            UnSealedCustomEquals seventh = new()
+            {
+                Value = 2
+            };
+            DerivedCustomEquals eighth = new()
+            {
+                Value = 2
+            };
+            Assert.Equal(10, eighth.GetHashCode());
+            // Uses Equals defined on derived.
+            Assert.True(eighth.Equals(seventh));
+            Assert.False(seventh.Equals(eighth));
+        }
     }
 }

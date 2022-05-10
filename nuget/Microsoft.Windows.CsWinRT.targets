@@ -69,49 +69,81 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <Target Name="CsWinRTCleanGenerateProjectionOutputs">
     <Delete Files="$(CsWinRTGeneratedFilesDir)cswinrt.rsp" />
+    <Delete Files="$(CsWinRTGeneratedFilesDir)cswinrt_internal.rsp" />
   </Target>
 
   <Target Name="CsWinRTGenerateProjection"
           DependsOnTargets="CsWinRTPrepareProjection;CsWinRTRemoveWinMDReferences"
           Condition="'$(CsWinRTGenerateProjection)' == 'true'"
-          Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTExcludes);$(CsWinRTIncludes);$(CsWinRTFilters);$(CsWinRTWindowsMetadata)"
+          Inputs="$(MSBuildAllProjects);@(CsWinRTInputs);$(CsWinRTExcludes);$(CsWinRTIncludes);$(CsWinRTExcludesPrivate);$(CsWinRTIncludesPrivate);$(CsWinRTFilters);$(CsWinRTWindowsMetadata)"
           Outputs="$(CsWinRTGeneratedFilesDir)cswinrt.rsp">
+    
     <PropertyGroup>
       <CsWinRTResponseFile>$(CsWinRTGeneratedFilesDir)cswinrt.rsp</CsWinRTResponseFile>
+      <CsWinRTResponseFilePrivateProjection>$(CsWinRTGeneratedFilesDir)cswinrt_internal.rsp</CsWinRTResponseFilePrivateProjection>
       <!-- %40 is an MSBuild escape code for the @ character; 
        https://docs.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2015/msbuild/msbuild-special-characters?view=vs-2015&redirectedfrom=MSDN 
   -->
       <CsWinRTCommand>"$(CsWinRTExe)" %40"$(CsWinRTResponseFile)"</CsWinRTCommand>
+      <CsWinRTCommandPrivateProjection>"$(CsWinRTExe)" %40"$(CsWinRTResponseFilePrivateProjection)"</CsWinRTCommandPrivateProjection>
       <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(TargetPlatformVersion)</CsWinRTWindowsMetadata>
       <CsWinRTWindowsMetadataInput Condition="'$(CsWinRTWindowsMetadata)' != ''">-input $(CsWinRTWindowsMetadata)</CsWinRTWindowsMetadataInput>
     </PropertyGroup>
+
     <ItemGroup>
       <CsWinRTDetectWindowsMetadata Include="@(CsWinRTInputs)" Condition="'%(CsWinRTInputs.Filename)%(CsWinRTInputs.Extension)' == 'Windows.Foundation.FoundationContract.winmd'"></CsWinRTDetectWindowsMetadata>
       <CsWinRTDetectWindowsMetadata Include="@(CsWinRTInputs)" Condition="'%(CsWinRTInputs.Filename)%(CsWinRTInputs.Extension)' == 'Windows.winmd'"></CsWinRTDetectWindowsMetadata>
     </ItemGroup>
+    
     <Error Condition="'$(CsWinRTParams)$(CsWinRTFilters)$(CsWinRTWindowsMetadata)@(CsWinRTDetectWindowsMetadata)' == ''"
       Text="Windows Metadata not provided or detected.  See https://github.com/microsoft/CsWinRT/tree/master/nuget/readme.md" />
+    
     <PropertyGroup>
       <CsWinRTExcludes Condition="'$(CsWinRTExcludes)' == ''">Windows;Microsoft</CsWinRTExcludes>
+      <CsWinRTExcludesPrivate Condition="'$(CsWinRTExcludesPrivate)' == ''">Windows;Microsoft</CsWinRTExcludesPrivate>
     </PropertyGroup>
+    
+    <!-- Inputs set by users -->      
+    <ItemGroup>
+      <CsWinRTExcludePrivateItems Include="$(CsWinRTExcludesPrivate)"/>
+      <CsWinRTIncludePrivateItems Include="$(CsWinRTIncludesPrivate)"/>
+    </ItemGroup>
+
     <ItemGroup>
       <CsWinRTExcludeItems Include="$(CsWinRTExcludes)"/>
       <CsWinRTIncludeItems Include="$(CsWinRTIncludes)"/>
     </ItemGroup>
+    
     <PropertyGroup>
+      <CsWinRTPrivateFilters Condition="'$(CsWinRTPrivateFilters)' == ''">
+@(CsWinRTExcludePrivateItems->'-exclude %(Identity)', '&#x0d;&#x0a;')
+@(CsWinRTIncludePrivateItems->'-include %(Identity)', '&#x0d;&#x0a;')
+      </CsWinRTPrivateFilters>
+
       <CsWinRTFilters Condition="'$(CsWinRTFilters)' == ''">
 @(CsWinRTExcludeItems->'-exclude %(Identity)', '&#x0d;&#x0a;')
 @(CsWinRTIncludeItems->'-include %(Identity)', '&#x0d;&#x0a;')
       </CsWinRTFilters>
+
       <CsWinRTInteropMetadata Condition="'$(CsWinRTInteropMetadata)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..\metadata\WinRT.Interop.winmd'))</CsWinRTInteropMetadata>
       <CsWinRTIncludeWinRTInterop Condition="$(CsWinRTFilters.Contains('-include Windows&#x0d;&#x0a;')) or $(CsWinRTFilters.Contains('-include Windows&#x0a;'))">
 -input $(CsWinRTInteropMetadata)
 -include WinRT.Interop
       </CsWinRTIncludeWinRTInterop>
-      <CsWinRTEmbeddedParam Condition="'$(CsWinRTEmbedded)' == 'true'">-embedded</CsWinRTEmbeddedParam>
-      <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) >= 5">$(TargetFramework)</CsWinRTExeTFM>
+
+
+      <CsWinRTPrivateIncludeWinRTInterop Condition="$(CsWinRTPrivateFilters.Contains('-include Windows&#x0d;&#x0a;')) or $(CsWinRTPrivateFilters.Contains('-include Windows&#x0a;'))">
+-input $(CsWinRTInteropMetadata)
+-include WinRT.Interop
+      </CsWinRTPrivateIncludeWinRTInterop>
+
+      <CsWinRTInternalProjection Condition="'$(CsWinRTPrivateProjection)' == 'true'">-internal</CsWinRTInternalProjection>
+      <CsWinRTEmbeddedProjection Condition="'$(CsWinRTEmbedded)' == 'true'">-embedded</CsWinRTEmbeddedProjection>
+      <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) == 5">net5.0</CsWinRTExeTFM>
+      <CsWinRTExeTFM Condition="$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)')) > 5">net6.0</CsWinRTExeTFM>
       <CsWinRTExeTFM Condition="'$(CsWinRTExeTFM)' == ''">netstandard2.0</CsWinRTExeTFM>
+
       <CsWinRTParams Condition="'$(CsWinRTParams)' == ''">
 $(CsWinRTCommandVerbosity)
 -target $(CsWinRTExeTFM)
@@ -120,8 +152,19 @@ $(CsWinRTWindowsMetadataInput)
 -output "$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
 $(CsWinRTFilters)
 $(CsWinRTIncludeWinRTInterop)
-$(CsWinRTEmbeddedParam)
+$(CsWinRTEmbeddedProjection)
       </CsWinRTParams>
+
+      <CsWinRTPrivateParams Condition="'$(CsWinRTPrivateParams)' == ''">
+$(CsWinRTCommandVerbosity)
+-target $(CsWinRTExeTFM)
+$(CsWinRTWindowsMetadataInput)
+-input @(CsWinRTInputs->'"%(FullPath)"', ' ')
+-output "$(CsWinRTGeneratedFilesDir.TrimEnd('\'))"
+$(CsWinRTPrivateFilters)
+$(CsWinRTPrivateIncludeWinRTInterop)
+$(CsWinRTInternalProjection)
+      </CsWinRTPrivateParams>
     </PropertyGroup>
 
     <!-- 
@@ -137,8 +180,12 @@ $(CsWinRTEmbeddedParam)
 
     <MakeDir Directories="$(CsWinRTGeneratedFilesDir)" />
     <WriteLinesToFile File="$(CsWinRTResponseFile)" Lines="$(CsWinRTParams)" Overwrite="true" />
+    <WriteLinesToFile File="$(CsWinRTResponseFilePrivateProjection)" Lines="$(CsWinRTPrivateParams)" Overwrite="true" />
     <Message Text="$(CsWinRTCommand)" Importance="$(CsWinRTMessageImportance)" />
     <Exec Command="$(CsWinRTCommand)" ContinueOnError="$(CsWinRTContinueOnError)" />
+    
+    <Message Text="$(CsWinRTCommandPrivateProjection)" Importance="$(CsWinRTMessageImportance)" />
+    <Exec Command="$(CsWinRTCommandPrivateProjection)" ContinueOnError="$(CsWinRTContinueOnError)" Condition="'$(CsWinRTPrivateProjection)' == 'true'"/>
 
     <ItemGroup Condition="'$(CsWinRTComponent)' != 'true' and Exists('$(CsWinRTGeneratedFilesDir)WinRT.cs')">
       <UpToDateCheckInput Include="$(CsWinRTGeneratedFilesDir)WinRT.cs" />

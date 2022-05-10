@@ -32,8 +32,11 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTMessageImportance | low \| *normal \| high | Sets the [importance](https://docs.microsoft.com/en-us/visualstudio/msbuild/message-task?view=vs-2017) of C#/WinRT build messages (see below) |
 | CsWinRTInputs | *@(ReferencePath) | Specifies WinMD files (beyond the Windows SDK) to read metadata from |
 | CsWinRTExcludes | "Windows;Microsoft" | Specifies types or namespaces to exclude from projection output |
+| CsWinRTExcludesPrivate | "Windows;Microsoft" | Specifies types or namespaces to exclude from projection output |
 | CsWinRTIncludes | "" | Specifies types or namespaces to include in projection output |
+| CsWinRTIncludesPrivate | "" | Specifies types or namespaces to include in projection output as internal types |
 | CsWinRTFilters | "" | **Specifies the -includes and -excludes to include in projection output |
+| CsWinRTPrivateFilters | "" | **Specifies the -includes and -excludes to include in projection output as internal types |
 | CsWinRTParams | "" | ***Custom cswinrt.exe command-line parameters, replacing default settings below |
 | CsWinRTComponent | true \| *false | Specifies whether to generate a component (producing) projection from project sources |
 | CsWinRTEnableLogging | true \| *false | Generates a log.txt file to help with diagnosing issues with generating the metadata file and sources for a C#/WinRT authoring component |

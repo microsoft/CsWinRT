@@ -1,2 +1,19 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Microsoft.Windows.CsWinRT.props', '$(MSBuildThisFileDirectory)../../../nuget'))"
+    Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(SimulateCsWinRTNugetReference)' == 'true'" />
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../../'))" />
+
+  <PropertyGroup>
+
+    <BuildPlatform>$(Platform)</BuildPlatform>
+    <BuildOutDir>$([MSBuild]::NormalizeDirectory('$(SolutionDir)../../_build', '$(BuildPlatform)', '$(Configuration)'))</BuildOutDir>
+    <CsWinRTPath>$([MSBuild]::NormalizeDirectory('$(BuildOutDir)', 'cswinrt', 'bin'))</CsWinRTPath>
+    <CsWinRTPath Condition="'$(Platform)'=='ARM' or '$(Platform)'=='ARM64'">$([MSBuild]::NormalizeDirectory('$(SolutionDir)../../_build', 'x86', '$(Configuration)', 'cswinrt', 'bin'))</CsWinRTPath>
+    <CsWinRTExe>$(CsWinRTPath)cswinrt.exe</CsWinRTExe>
+    <WinRTRuntimeSourcesDir>$([MSBuild]::NormalizeDirectory('$(SolutionDir)../../WinRT.Runtime'))</WinRTRuntimeSourcesDir>
+    
+  </PropertyGroup>
+  
 </Project>

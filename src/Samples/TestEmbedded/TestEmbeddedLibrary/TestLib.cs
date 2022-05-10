@@ -2,7 +2,7 @@
 using Alpha;
 using Beta;
 using Gamma;
-using Windows.Devices.Geolocation;
+using Windows.Media;
 
 namespace TestEmbeddedLibrary
 {
@@ -61,20 +61,14 @@ namespace TestEmbeddedLibrary
             return qiAgent.Run(x);
         }
 
-        async System.Threading.Tasks.Task CallGeoAsyncApi()
+        public int Test5()
         {
-            Console.WriteLine("Making a Microsoft.Devices.Geolocation.Geolocator object...");
-            Geolocator g = new();
-            Console.WriteLine("Setting the Desired Accuracy to Default on the Geolocator object...");
-            g.DesiredAccuracy = PositionAccuracy.Default;
-            Console.WriteLine("Accessing the Desired Accuracy, shows: " + g.DesiredAccuracy);
-            Console.WriteLine("Calling GetGeopositionAsync...");
-            Geoposition pos = await g.GetGeopositionAsync();
-        }
-
-        public void Test5()
-        {
-            CallGeoAsyncApi().Wait(1000);
+            // make a Windows.Media.AudioFrame   
+            var aframe = new Windows.Media.AudioFrame(20);
+            using (AudioBuffer abuff = aframe.LockBuffer(AudioBufferAccessMode.Read))
+            {
+                return (int)abuff.Capacity;
+            }
         }
     }
 
