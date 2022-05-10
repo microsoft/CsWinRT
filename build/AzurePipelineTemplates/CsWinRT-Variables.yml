@@ -1,7 +1,7 @@
 variables:
   MajorVersion: 1
   MinorVersion: 6
-  PatchVersion: 2
+  PatchVersion: 4
   WinRT.Runtime.AssemblyVersion: '1.6.0.0'
   Net5.SDK.Feed: 'https://dotnetcli.blob.core.windows.net/dotnet'
   Net5.SDK.Version: '5.0.404'
@@ -12,5 +12,6 @@ variables:
   # E.g. '_IsRelease' defaults to empty string, but if 'IsRelease' is set at queue time that value will be used.
 
   _IsRelease: $[coalesce(variables.IsRelease, '')]
+  _RunBenchmarks: $[coalesce(variables.RunBenchmarks, 'true')]
   _DotNetRuntimeVersion: $[coalesce(variables.DotNetRuntimeVersion, '5.0.13')]  
-  _WindowsSdkVersionSuffix: $[coalesce(variables.WindowsSdkPackageVersionSuffix, '23')]  
+  _WindowsSdkVersionSuffix: $[coalesce(variables.WindowsSdkPackageVersionSuffix, '25')]  

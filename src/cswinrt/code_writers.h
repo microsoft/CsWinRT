@@ -66,9 +66,9 @@ namespace cswinrt
         return w.write_temp("%_%", method.Name(), get_vmethod_index(type, method));
     }
 
-    std::string internal_if_embedded() 
+    std::string internal_accessibility() 
     {
-        return (settings.embedded) ? "internal" : "public";
+        return (settings.internal || settings.embedded) ? "internal" : "public";
     }
 
     bool is_type_blittable(type_semantics const& semantics, bool for_array = false)
@@ -1099,6 +1099,20 @@ namespace cswinrt
             }
         }
 
+        bool method_return_matches;
+        if (is_object_equals_method(method, &method_return_matches) ||
+            is_object_hashcode_method(method, &method_return_matches))
+        {
+            if (method_return_matches)
+            {
+                method_spec = "override ";
+            }
+            else
+            {
+                method_spec += "new ";
+            }
+        }
+
         bool is_private = is_implemented_as_private_method(w, class_type, method);
         auto static_method_params = call_static_method.has_value() ? std::optional(std::pair(call_static_method.value(), method)) : std::nullopt;
         if (!is_private)
@@ -1488,10 +1502,24 @@ remove => %;
                 },
                 [&](std::string_view type_name)
                 {
+                    bool previous_char_escape = false;
                     std::string sanitized_type_name;
                     sanitized_type_name.reserve(type_name.length() * 2);
                     for (const auto& c : type_name)
                     {
+                        if (c == '\\' && !previous_char_escape)
+                        {
+                            previous_char_escape = true;
+                            continue;
+                        }
+
+                        // We only handle the following escape characters for now.
+                        if (previous_char_escape && c != '\\' && c != '\'' && c != '"')
+                        {
+                            sanitized_type_name += '\\';
+                        }
+                        previous_char_escape = false;
+
                         sanitized_type_name += c;
                         if (c == '"')
                         {
@@ -3107,7 +3135,7 @@ db_path.stem().string());
 %})",
             bind<write_winrt_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
-            internal_if_embedded(),
+            internal_accessibility(),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             bind<write_attributed_types>(type)
         );
@@ -5772,7 +5800,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
 )",
             bind<write_winrt_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
-            internal_if_embedded(),
+            internal_accessibility(),
             type_name,
             [&](writer& w)
             {
@@ -5808,7 +5836,7 @@ IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
             bind<write_winrt_attribute>(type),
             bind<write_guid_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
-            is_exclusive_to(type) || (is_projection_internal(type) || settings.embedded) ? "internal" : "public",
+            is_exclusive_to(type) || (is_projection_internal(type) || (settings.internal || settings.embedded)) ? "internal" : "public",
             type_name,
             bind<write_type_inheritance>(type, object_type{}, false, false),
             bind<write_interface_member_signatures>(type)
@@ -5847,7 +5875,7 @@ _obj = obj;%
 )",
             // Interface abi implementation
             bind<write_guid_attribute>(type),
-            internal_if_embedded(),
+            internal_accessibility(),
             type_name,
             bind<write_type_name>(type, typedef_name_type::CCW, false),
             // Vftbl
@@ -5920,7 +5948,7 @@ public static Guid PIID = Vftbl.PIID;
 {
 %}
 )",
-                internal_if_embedded(),
+                internal_accessibility(),
                 nongenerics_class,
                 bind_each(nongeneric_delegates));
         }
@@ -5945,7 +5973,7 @@ public static Guid PIID = Vftbl.PIID;
 %
 }
 )", 
-        is_exclusive_to(iface) ? "internal" : internal_if_embedded(), 
+        is_exclusive_to(iface) ? "internal" : internal_accessibility(), 
         bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false), 
         [&](writer& w) {
             if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
@@ -6046,7 +6074,7 @@ AbiToProjectionVftablePtr = ComWrappersSupport.AllocateVtableMemory(typeof(@), s
 {
 %}
 )",
-internal_if_embedded(),
+internal_accessibility(),
 nongenerics_class,
 bind_each(nongeneric_delegates));
         }
@@ -6229,9 +6257,7 @@ _defaultLazy = new Lazy<%>(() => ifc);
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
 public static bool operator !=(% x, % y) => !(x == y);
-public bool Equals(% other) => this == other;
-public override bool Equals(object obj) => obj is % that && this == that;
-public override int GetHashCode() => ThisPtr.GetHashCode();
+%
 %
 
 private struct InterfaceTag<I>{};
@@ -6242,7 +6268,7 @@ private % AsInternal(InterfaceTag<%> _) => _default;
 )",
             bind<write_winrt_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
-            internal_if_embedded(),
+            internal_accessibility(),
             bind<write_class_modifiers>(type),
             type_name,
             bind<write_type_inheritance>(type, base_semantics, true, false),
@@ -6281,8 +6307,30 @@ GC.RemoveMemoryPressure(%);
             type_name,
             type_name,
             type_name,
-            type_name,
-            type_name,
+            bind([&](writer& w)
+            {
+                bool return_type_matches = false;
+                if (!has_class_equals_method(type, &return_type_matches))
+                {
+                    w.write("public bool Equals(% other) => this == other;\n", type_name);
+                }
+                // Even though there is an equals method defined, it doesn't match the signature for IEquatable
+                // so we define an explicitly implemented one.
+                else if (!return_type_matches)
+                {
+                    w.write("bool IEquatable<%>.Equals(% other) => this == other;\n", type_name, type_name);
+                }
+
+                if (!has_object_equals_method(type))
+                {
+                    w.write("public override bool Equals(object obj) => obj is % that && this == that;\n", type_name);
+                }
+
+                if (!has_object_hashcode_method(type))
+                {
+                    w.write("public override int GetHashCode() => ThisPtr.GetHashCode();\n");
+                }
+            }),
             bind([&](writer& w)
             {
                 bool has_base_type = !std::holds_alternative<object_type>(get_type_semantics(type.Extends()));
@@ -6378,9 +6426,7 @@ _inner = objRef.As(GuidGenerator.GetIID(typeof(%).GetHelperType()));
 
 public static bool operator ==(% x, % y) => (x?.ThisPtr ?? IntPtr.Zero) == (y?.ThisPtr ?? IntPtr.Zero);
 public static bool operator !=(% x, % y) => !(x == y);
-public bool Equals(% other) => this == other;
-public override bool Equals(object obj) => obj is % that && this == that;
-public override int GetHashCode() => ThisPtr.GetHashCode();
+%
 %
 
 private struct InterfaceTag<I>{};
@@ -6390,7 +6436,7 @@ private struct InterfaceTag<I>{};
 )",
             bind<write_winrt_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
-            internal_if_embedded(),
+            internal_accessibility(),
             bind<write_class_modifiers>(type),
             type_name,
             bind<write_type_inheritance>(type, base_semantics, true, false),
@@ -6430,8 +6476,30 @@ private struct InterfaceTag<I>{};
             type_name,
             type_name,
             type_name,
-            type_name,
-            type_name,
+            bind([&](writer& w)
+            {
+                bool return_type_matches = false;
+                if (!has_class_equals_method(type, &return_type_matches))
+                {
+                    w.write("public bool Equals(% other) => this == other;\n", type_name);
+                }
+                // Even though there is an equals method defined, it doesn't match the signature for IEquatable
+                // so we define an explicitly implemented one.
+                else if (!return_type_matches)
+                {
+                    w.write("bool IEquatable<%>.Equals(% other) => this == other;\n", type_name, type_name);
+                }
+
+                if (!has_object_equals_method(type))
+                {
+                    w.write("public override bool Equals(object obj) => obj is % that && this == that;\n", type_name);
+                }
+
+                if (!has_object_hashcode_method(type))
+                {
+                    w.write("public override int GetHashCode() => ThisPtr.GetHashCode();\n");
+                }
+            }),
             bind([&](writer& w)
             {
                 if (is_fast_abi_class(type))
@@ -6548,7 +6616,7 @@ public static void DisposeAbi(IntPtr abi) => MarshalInspectable<object>.DisposeA
 public static unsafe void DisposeAbiArray(object box) => MarshalInspectable<object>.DisposeAbiArray(box);
 }
 )",
-            internal_if_embedded(),
+            internal_accessibility(),
             abi_type_name,
             bind([&](writer& w)
             {
@@ -6615,7 +6683,7 @@ public static ObjectReferenceValue CreateMarshaler2(% obj) => MarshalInterface<%
 )",
             bind<write_winrt_attribute>(type),
             bind<write_type_custom_attributes>(type, false),
-            internal_if_embedded(),
+            internal_accessibility(),
             bind<write_projection_return_type>(signature),
             bind<write_type_name>(type, typedef_name_type::Projected, false),
             bind_list<write_projection_parameter>(", ", signature.params()));
@@ -6724,7 +6792,7 @@ private static unsafe int Do_Abi_Invoke%
 
 )",
             bind<write_guid_attribute>(type),
-            internal_if_embedded(),
+            internal_accessibility(),
             type.TypeName(),
             type_params,
             [&](writer& w) {
@@ -6956,7 +7024,7 @@ global::WinRT.ComWrappersSupport.FindObject<%>(%).Invoke(%)
 )", 
         bind<write_winrt_attribute>(type),
         bind<write_type_custom_attributes>(type, true),
-        internal_if_embedded(),
+        internal_accessibility(),
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
         {
             for (auto&& field : type.FieldList())
@@ -7024,7 +7092,7 @@ public override int GetHashCode() => %;
             // struct
             bind<write_winrt_attribute>(type),
             bind<write_type_custom_attributes>(type, true),
-            internal_if_embedded(),
+            internal_accessibility(),
             name,
             name,
             bind_each([](writer& w, auto&& field)
@@ -7070,7 +7138,7 @@ public override int GetHashCode() => %;
         }
 
         w.write("[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]\n% struct %\n{\n", 
-            internal_if_embedded(),
+            internal_accessibility(),
             bind<write_type_name>(type, typedef_name_type::ABI, false));
 
         for (auto&& field : type.FieldList())
@@ -7444,7 +7512,7 @@ return IntPtr.Zero;
 }
 }
 )",
-    internal_if_embedded(),
+    internal_accessibility(),
 bind_each([](writer& w, TypeDef const& type)
     {
         w.write(R"(
