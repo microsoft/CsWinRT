@@ -290,11 +290,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WinRT.Host.Shim\WinRT.Host.Shim.csproj">
-      <Project>{0bb8f82d-874e-45aa-bca3-20ce0562164a}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="WinRTHostErrorStrings.rc" />
   </ItemGroup>
   <ItemGroup>
