@@ -1,8 +1,8 @@
 @echo off
 if /i "%cswinrt_echo%" == "on" @echo on
 
-set CsWinRTBuildNetSDKVersion=6.0.101
-set CsWinRTNet5SdkVersion=5.0.404
+set CsWinRTBuildNetSDKVersion=6.0.300
+set CsWinRTNet5SdkVersion=5.0.408
 set this_dir=%~dp0
 
 :dotnet
@@ -12,17 +12,6 @@ set DOTNET_ROOT(86)=%LocalAppData%\Microsoft\dotnet\x86
 set path=%DOTNET_ROOT%;%path%
 set DownloadTimeout=1200
 
-rem Install .net5 to run our projects  targeting it
-powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
-&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTNet5SdkVersion%' -InstallDir '%DOTNET_ROOT%' -Architecture 'x64' -DownloadTimeout %DownloadTimeout% ^
--AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
-powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^
-&([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) ^
--Version '%CsWinRTNet5SdkVersion%' -InstallDir '%DOTNET_ROOT(86)%' -Architecture 'x86' -DownloadTimeout %DownloadTimeout% ^
--AzureFeed 'https://dotnetcli.blob.core.windows.net/dotnet'
 rem Install .NET Version used to build projection
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ^
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; ^

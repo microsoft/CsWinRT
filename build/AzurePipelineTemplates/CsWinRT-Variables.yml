@@ -4,8 +4,8 @@ variables:
   PatchVersion: 4
   WinRT.Runtime.AssemblyVersion: '1.6.0.0'
   Net5.SDK.Feed: 'https://dotnetcli.blob.core.windows.net/dotnet'
-  Net5.SDK.Version: '5.0.404'
-  Net6.SDK.Version: '6.0.101'
+  Net5.SDK.Version: '5.0.408'
+  Net6.SDK.Version: '6.0.300'
   NoSamples: 'false'
   
   # This 'coalesce' pattern allows the yml to define a default value for a variable but allows the value to be overridden at queue time.
@@ -13,5 +13,5 @@ variables:
 
   _IsRelease: $[coalesce(variables.IsRelease, '')]
   _RunBenchmarks: $[coalesce(variables.RunBenchmarks, 'true')]
-  _DotNetRuntimeVersion: $[coalesce(variables.DotNetRuntimeVersion, '5.0.13')]  
+  _DotNetRuntimeVersion: $[coalesce(variables.DotNetRuntimeVersion, '5.0.17')]  
   _WindowsSdkVersionSuffix: $[coalesce(variables.WindowsSdkPackageVersionSuffix, '25')]  

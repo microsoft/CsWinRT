@@ -32,19 +32,6 @@ steps:
     installationPath: C:\Users\VssAdministrator\AppData\Local\Microsoft\dotnet\
     performMultiLevelLookup: true
 
-# Install .NET 5 SDK
-- task: PowerShell@2 
-  displayName: Install .NET 5 SDK
-  inputs:
-    targetType: inline
-    failOnStderr: true
-    script: |
-      Write-Host ##vso[task.setvariable variable=PATH;]${env:LocalAppData}\Microsoft\dotnet;${env:PATH};
-    
-      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
-            
-      &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$($env:NET5_SDK_VERSION)" -Architecture "x64" -AzureFeed "$($env:NET5_SDK_FEED)"
-
 # Install .NET 6 SDK 
 - task: PowerShell@2
   displayName: Install .NET 6 SDK
