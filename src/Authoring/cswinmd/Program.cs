@@ -120,18 +120,16 @@ namespace Generator
         private static string GetWindowsWinMdPath(string? sdkVersion)
         {
             using (var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
+            using (var roots = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows Kits\Installed Roots"))
             {
-                using (var roots = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows Kits\Installed Roots"))
-                {
-                    var kitsRoot10 = (string)roots.GetValue("KitsRoot10");
-                    var unionMetadata = Path.Combine(kitsRoot10, "UnionMetadata");
-                    if (sdkVersion == null) {
-                        var dirs = Directory.EnumerateDirectories(unionMetadata);
-                        sdkVersion = Path.GetFileName(dirs.Where(IsVersion).Last());
-                    }
-                    var path = Path.Combine(kitsRoot10, "UnionMetadata", sdkVersion, "Windows.winmd");
-                    return path;
+                var kitsRoot10 = (string)roots.GetValue("KitsRoot10");
+                var unionMetadata = Path.Combine(kitsRoot10, "UnionMetadata");
+                if (sdkVersion == null) {
+                    var dirs = Directory.EnumerateDirectories(unionMetadata);
+                    sdkVersion = Path.GetFileName(dirs.Where(IsVersion).Last());
                 }
+                var path = Path.Combine(kitsRoot10, "UnionMetadata", sdkVersion, "Windows.winmd");
+                return path;
             }
             throw new ArgumentException("Could not determine Windows.winmd path in the Windows SDK");
         }

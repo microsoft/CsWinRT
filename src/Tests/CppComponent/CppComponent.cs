@@ -13,9 +13,6 @@ namespace CppComponent
         string TheString { get; }
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
     public struct S
     {
         public string Field;
