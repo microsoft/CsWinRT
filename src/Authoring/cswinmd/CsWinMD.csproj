@@ -3,6 +3,23 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <Authors>Microsoft Corporation</Authors>
+    <Company>Microsoft Corporation</Company>
+    <Product>C#/WinRT</Product>
+    <PackageId>CsWinMD</PackageId>
+
+    <FileVersion>$(VersionNumber)</FileVersion>
+    <Version>$(VersionNumber)</Version>
+    <AssemblyVersion>$(VersionNumber)</AssemblyVersion>
+    <InformationalVersion>$(VersionNumber)</InformationalVersion>
+    <NeutralLanguage>en</NeutralLanguage>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+
+    <Description>C# to WinMD authoring tool Preview $(VersionString)</Description>
+    <AssemblyTitle>C# to WinMD authoring tool Preview v$(VersionString)</AssemblyTitle>
+    <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
+
   </PropertyGroup>
 
   <ItemGroup>

@@ -42,43 +42,50 @@ namespace Generator
         /// <param name="i">Input WinMD path</param>
         /// <param name="o">Output directory</param>
         /// <param name="sdkVersion">Optional sdk version</param>
+        /// <param name="verbose">Verbose logging</param>
+        /// <param name="nologo">Don't print logo</param>
         /// Uses System.CommandLine.Dragonfruit
-        public static void Main(string[] i, string o, string? sdkVersion)
+        public static void Main(string[] i, string o, string? sdkVersion, bool? verbose, bool? nologo)
         {
-            if (i.Length == 0)
+            if (!nologo.HasValue || !nologo.Value)
             {
-                Console.Error.WriteLine("No C# source files specified");
-                return;
+                Console.WriteLine($"CSWinMD {Assembly.GetExecutingAssembly().GetName().Version}");
             }
-
-            string inputFile = i[0];
-
-            Console.Write($"Compiling {inputFile}");
-
-            string inputText = File.ReadAllText(inputFile);
-
-            string componentName = Path.GetFileNameWithoutExtension(inputFile);
-
-            var assemblyName = componentName;
-
-            var windows_winmd = GetWindowsWinMdPath(sdkVersion);
-            var compilation = CSharpCompilation.Create(
-                assemblyName: componentName,
-                syntaxTrees: new[] { CSharpSyntaxTree.ParseText(inputText, new CSharpParseOptions(LanguageVersion.Preview), inputFile) },
-                references: new[] { MetadataReference.CreateFromFile(windows_winmd),
-                MetadataReference.CreateFromFile(typeof(Binder).Assembly.Location)
-                },
-                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
-                );
-
-            var g = new SourceGenerator();
             var outFolder = string.IsNullOrEmpty(o) ? Environment.GetEnvironmentVariable("TEMP") : o;
-            if (!Directory.Exists(outFolder))
-            {
-                Directory.CreateDirectory(outFolder);
-            }
             try
             {
+                if (i.Length == 0)
+                {
+                    Console.Error.WriteLine("No C# source files specified");
+                    return;
+                }
+
+                string inputFile = i[0];
+
+                Console.Write($"Compiling {inputFile}");
+
+                string inputText = File.ReadAllText(inputFile);
+
+                string componentName = Path.GetFileNameWithoutExtension(inputFile);
+
+                var assemblyName = componentName;
+
+                var windows_winmd = GetWindowsWinMdPath(sdkVersion);
+                var compilation = CSharpCompilation.Create(
+                    assemblyName: componentName,
+                    syntaxTrees: new[] { CSharpSyntaxTree.ParseText(inputText, new CSharpParseOptions(LanguageVersion.Preview), inputFile) },
+                    references: new[] { MetadataReference.CreateFromFile(windows_winmd),
+                MetadataReference.CreateFromFile(typeof(Binder).Assembly.Location)
+                    },
+                    options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                    );
+
+                var g = new SourceGenerator();
+                
+                if (!Directory.Exists(outFolder))
+                {
+                    Directory.CreateDirectory(outFolder);
+                }
                 var cp = new ConfigProvider();
                 var config = cp.GlobalOptions as ConfigOptions;
                 config.Values["build_property.AssemblyName"] = assemblyName;
@@ -109,7 +116,17 @@ namespace Generator
             }
             catch (Exception e)
             {
-                Console.WriteLine(File.ReadAllText(Path.Join(outFolder, "log.txt")));
+                Console.WriteLine();
+                Console.Error.WriteLine(e);
+                if (verbose.HasValue && verbose.Value)
+                {
+                    var log_txt = Path.Join(outFolder, "log.txt");
+                    try
+                    {
+                        Console.Error.WriteLine(File.ReadAllText(log_txt));
+                    }
+                    catch { }
+                }
             }
         }
 
@@ -119,19 +136,17 @@ namespace Generator
         }
         private static string GetWindowsWinMdPath(string? sdkVersion)
         {
-            using (var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-            using (var roots = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows Kits\Installed Roots"))
+            using var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
+            using var roots = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows Kits\Installed Roots");
+            var kitsRoot10 = (string)roots.GetValue("KitsRoot10");
+            var unionMetadata = Path.Combine(kitsRoot10, "UnionMetadata");
+            if (sdkVersion == null)
             {
-                var kitsRoot10 = (string)roots.GetValue("KitsRoot10");
-                var unionMetadata = Path.Combine(kitsRoot10, "UnionMetadata");
-                if (sdkVersion == null) {
-                    var dirs = Directory.EnumerateDirectories(unionMetadata);
-                    sdkVersion = Path.GetFileName(dirs.Where(IsVersion).Last());
-                }
-                var path = Path.Combine(kitsRoot10, "UnionMetadata", sdkVersion, "Windows.winmd");
-                return path;
+                var dirs = Directory.EnumerateDirectories(unionMetadata);
+                sdkVersion = Path.GetFileName(dirs.Where(IsVersion).Last());
             }
-            throw new ArgumentException("Could not determine Windows.winmd path in the Windows SDK");
+            var path = Path.Combine(kitsRoot10, "UnionMetadata", sdkVersion, "Windows.winmd");
+            return path;
         }
     }
 }
