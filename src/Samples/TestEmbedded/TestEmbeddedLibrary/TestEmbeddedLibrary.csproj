@@ -11,6 +11,8 @@
     <CsWinRTWindowsMetadata>10.0.19041.0</CsWinRTWindowsMetadata>
     <SimulateCsWinRTNugetReference>true</SimulateCsWinRTNugetReference>
     <CsWinRTGenerateProjection>true</CsWinRTGenerateProjection>
+    <!-- Will expose enums as public in the projection
+      <CsWinRTEmbeddedPublicEnums>true</CsWinRTEmbeddedPublicEnums> -->
   </PropertyGroup>
 
   <ItemGroup>
