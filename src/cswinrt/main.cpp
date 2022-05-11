@@ -37,6 +37,7 @@ namespace cswinrt
         { "verbose", 0, 0, {}, "Show detailed progress information" },
         { "internal", 0, 0, {}, "Generates a private projection."},
         { "embedded", 0, 0, {}, "Generates an embedded projection."},
+        { "public_enums", 0, 0, {}, "Used with embedded option to generate enums as public"},
         { "help", 0, option::no_max, {}, "Show detailed help" },
         { "?", 0, option::no_max, {}, {} },
     };
@@ -97,6 +98,7 @@ Where <spec> is one or more of:
         settings.component = args.exists("component");
         settings.internal = args.exists("internal");
         settings.embedded = args.exists("embedded");
+        settings.public_enums = args.exists("public_enums");
         settings.input = args.files("input", database::is_database);
 
         for (auto && include : args.values("include"))

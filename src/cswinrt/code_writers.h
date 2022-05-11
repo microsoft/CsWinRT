@@ -7024,7 +7024,7 @@ global::WinRT.ComWrappersSupport.FindObject<%>(%).Invoke(%)
 )", 
         bind<write_winrt_attribute>(type),
         bind<write_type_custom_attributes>(type, true),
-        internal_accessibility(),
+        (settings.internal || settings.embedded) ? (settings.public_enums ? "public" : "internal") : "public",
         bind<write_type_name>(type, typedef_name_type::Projected, false), enum_underlying_type);
         {
             for (auto&& field : type.FieldList())
