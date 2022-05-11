@@ -9,3 +9,5 @@ stages:
 - template: CsWinRT-PublishToNuget-Stage.yml
 
 - template: CsWinRT-PublishToMaestro-Stage.yml
+
+- template: CsWinRT-UpdateWinUIRepo-Stage.yml
