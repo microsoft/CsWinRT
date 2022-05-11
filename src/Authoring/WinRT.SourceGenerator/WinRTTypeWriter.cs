@@ -2585,21 +2585,12 @@ namespace Generator
             }
         }
 
-        public static string XmlDocCustomAttributeTypeName { get; set; } = "CppComponent.DocStringAttribute";
-
         public void FinalizeGeneration()
         {
             Logger.Log("finalizing");
             var classTypeDeclarations = typeDefinitionMapping.Values
                 .Where(declaration => declaration.Node is INamedTypeSymbol symbol && symbol.TypeKind == TypeKind.Class)
                 .ToList();
-
-
-            var xmlDocCustomAttributeType = Model.Compilation.GetTypeByMetadataName(XmlDocCustomAttributeTypeName);
-            if (xmlDocCustomAttributeType != null)
-            {
-                GenerateXmlDocCustomAttributes();
-            }
 
             foreach (var classTypeDeclaration in classTypeDeclarations)
             {
@@ -2742,54 +2733,6 @@ namespace Generator
                         AddCustomAttributes(typeDefinitionMapping[typeDeclaration.StaticInterface], typeDeclaration.StaticInterface);
                     }
                 }
-            }
-        }
-
-        private void GenerateXmlDocCustomAttributes()
-        {
-            throw new NotSupportedException();
-            var xdcTypes = typeDefinitionMapping.Values.Where(d => d.Node is INamedTypeSymbol);
-            foreach (var type in xdcTypes)
-            {
-                AddXmlDocumentation(type);
-
-                foreach (var methodDefs in type.MethodReferences)
-                {
-                    var xdc = methodDefs.Key.GetDocumentationCommentXml();
-                    if (!string.IsNullOrEmpty(xdc))
-                    {
-                        foreach (var eh in methodDefs.Value)
-                        {
-                            AddCustomAttributes(XmlDocCustomAttributeTypeName,
-                                new[] { Model.Compilation.GetSpecialType(SpecialType.System_String) },
-                                new[] { xdc },
-                                eh);
-                        }
-                    }
-                }
-                foreach (var fieldDef in type.FieldDefinitions)
-                {
-                    var xdc = fieldDef.Key.GetDocumentationCommentXml();
-                    if (!string.IsNullOrEmpty(xdc))
-                    {
-                        AddCustomAttributes(XmlDocCustomAttributeTypeName,
-                            new[] { Model.Compilation.GetSpecialType(SpecialType.System_String) },
-                            new[] { xdc },
-                            fieldDef.Value);
-                    }
-                }
-            }
-        }
-
-        private void AddXmlDocumentation(TypeDeclaration classTypeDeclaration)
-        {
-            var xdc = classTypeDeclaration.Node.GetDocumentationCommentXml();
-            if (!string.IsNullOrEmpty(xdc))
-            {
-                AddCustomAttributes(XmlDocCustomAttributeTypeName,
-                    new[] { Model.Compilation.GetSpecialType(SpecialType.System_String) },
-                    new[] { xdc },
-                    classTypeDeclaration.Handle);
             }
         }
 

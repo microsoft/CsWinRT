@@ -180,7 +180,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
                 writer.FinalizeGeneration();
 
                 GenerateWinMD(metadataBuilder);
-                if (!context.ShouldSkipGeneratingSources())
+                if (!context.ShouldGenerateWinMDOnly())
                 {
                     GenerateSources();
                 }
@@ -207,7 +207,7 @@ namespace System.Runtime.InteropServices.WindowsRuntime
         public void Execute(GeneratorExecutionContext context)
         {
             var isTest = string.CompareOrdinal(Process.GetCurrentProcess().ProcessName, "testhost") == 0;
-            if (!isTest && !context.IsCsWinRTComponent())
+            if (!isTest && !context.IsCsWinRTComponent() && !context.ShouldGenerateWinMDOnly())
             {
                 System.Diagnostics.Debug.WriteLine($"Skipping component {context.GetAssemblyName()}");
                 return;

@@ -84,9 +84,8 @@ namespace Generator
                 config.Values["build_property.AssemblyName"] = assemblyName;
                 config.Values["build_property.AssemblyVersion"] = "0.0.0.1";
                 config.Values["build_property.CsWinRTGeneratedFilesDir"] = outFolder;
-                config.Values["build_property.CsWinRTComponent"] = "true";
                 config.Values["build_property.CsWinRTEnableLogging"] = "true";
-                config.Values["build_property.CSWinMD"] = "true";
+                config.Values["build_property.CsWinRTGenerateWinMDOnly"] = "true";
 
                 var driver = CSharpGeneratorDriver.Create(
                     generators: ImmutableArray.Create(g),

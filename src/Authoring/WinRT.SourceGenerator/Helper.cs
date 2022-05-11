@@ -78,11 +78,11 @@ namespace Generator
             return false;
         }
 
-        public static bool ShouldSkipGeneratingSources(this GeneratorExecutionContext context)
+        public static bool ShouldGenerateWinMDOnly(this GeneratorExecutionContext context)
         {
-            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CSWinMD", out var isCsWinMDStr))
+            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.CsWinRTGenerateWinMDOnly", out var CsWinRTGenerateWinMDOnlyStr))
             {
-                return bool.TryParse(isCsWinMDStr, out var isCsWinMD) && isCsWinMD;
+                return bool.TryParse(CsWinRTGenerateWinMDOnlyStr, out var CsWinRTGenerateWinMDOnly) && CsWinRTGenerateWinMDOnly;
             }
 
             return false;
