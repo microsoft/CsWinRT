@@ -437,13 +437,13 @@ namespace Windows.Graphics.Display
 
         public static DisplayInformation GetForWindow(IntPtr window)
         {
-            Guid iid = GuidGenerator.CreateIID(typeof(DisplayInformation));
+            Guid iid = GuidGenerator.CreateIID(typeof(IDisplayInformation));
             return (DisplayInformation)displayInformationInterop.GetForWindow(window, iid);
         }
 
         public static DisplayInformation GetForMonitor(IntPtr monitor)
         {
-            Guid iid = GuidGenerator.CreateIID(typeof(DisplayInformation));
+            Guid iid = GuidGenerator.CreateIID(typeof(IDisplayInformation));
             return (DisplayInformation)displayInformationInterop.GetForMonitor(monitor, iid);
         }
     }
