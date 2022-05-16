@@ -94,6 +94,7 @@ stages:
           release_x86\WinRT.Host.dll
           release_x86\WinRT.Host.dll.mui
           release_arm64\WinRT.Host.dll
+          release_arm64\WinRT.Host.dll.mui
           net5.0\IIDOptimizer\IIDOptimizer.exe
           net5.0\IIDOptimizer\IIDOptimizer.dll
         UseMinimatch: true
