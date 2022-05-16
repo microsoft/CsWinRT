@@ -1,0 +1,271 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ArrayMarkedInOrOut_Brief" xml:space="preserve">
+    <value>Parametro di matrice contrassegnato come InAttribute o OutAttribute</value>
+  </data>
+  <data name="ArrayMarkedInOrOut_Text1" xml:space="preserve">
+    <value>Il metodo '{0}' ha un parametro '{1}' che è una matrice e che contiene System.Runtime.InteropServices.InAttribute o System.Runtime.InteropServices.OutAttribute.</value>
+  </data>
+  <data name="ArrayMarkedInOrOut_Text2" xml:space="preserve">
+    <value>Nel Windows Runtime i parametri di matrice devono avere ReadOnlyArray o WriteOnlyArray.</value>
+  </data>
+  <data name="ArrayMarkedInOrOut_Text3" xml:space="preserve">
+    <value>Rimuovere questi attributi o sostituirli con l'attributo Windows Runtime appropriato, se necessario.</value>
+  </data>
+  <data name="ArrayOutputParamMarkedRead_Brief" xml:space="preserve">
+    <value>Parametro di matrice contrassegnato come 'out' e ReadOnlyArray</value>
+  </data>
+  <data name="ArrayOutputParamMarkedRead_Text1" xml:space="preserve">
+    <value>Il metodo '{0}' dispone di un parametro di output '{1}' che è una matrice, ma che ha l'attributo ReadOnlyArray.</value>
+  </data>
+  <data name="ArrayOutputParamMarkedRead_Text2" xml:space="preserve">
+    <value>Nel Windows Runtime, il contenuto delle matrici di output è scrivibile. Rimuovere l'attributo dal '{1}'.</value>
+  </data>
+  <data name="ArrayParamMarkedBoth_Brief" xml:space="preserve">
+    <value>Parametro di matrice contrassegnato sia come ReadOnlyArray che come WriteOnlyArray</value>
+  </data>
+  <data name="ArrayParamMarkedBoth_Text1" xml:space="preserve">
+    <value>Il metodo '{0}' ha un parametro '{1}' che è una matrice e che contiene sia ReadOnlyArray che WriteOnlyArray.</value>
+  </data>
+  <data name="ArrayParamMarkedBoth_Text2" xml:space="preserve">
+    <value>Nel Windows Runtime i parametri della matrice del contenuto devono essere leggibili o scrivibili. Rimuovere uno degli attributi dal '{1}'.</value>
+  </data>
+  <data name="ArrayParamNotMarked_Brief" xml:space="preserve">
+    <value>Parametro di matrice non contrassegnato come ReadOnlyArray o WriteOnlyArray</value>
+  </data>
+  <data name="ArrayParamNotMarked_Text1" xml:space="preserve">
+    <value>Il metodo '{0}' contiene un '{1}' di parametro che è una matrice.</value>
+  </data>
+  <data name="ArrayParamNotMarked_Text2" xml:space="preserve">
+    <value>Nel Windows Runtime, il contenuto dei parametri della matrice deve essere leggibile o scrivibile; applicare ReadOnlyArray o WriteOnlyArray a '{1}'.</value>
+  </data>
+  <data name="ClassConstructorRule_Brief" xml:space="preserve">
+    <value>Regola costruttore classe</value>
+  </data>
+  <data name="ClassConstructorRule_Text" xml:space="preserve">
+    <value>Le classi non possono avere più costruttori dello stesso grado nel Windows Runtime. La classe {0} ha più costruttori {1}-arity</value>
+  </data>
+  <data name="DisjointNamespaceRule_Brief" xml:space="preserve">
+    <value>Lo spazio dei nomi è disgiunto dallo spazio dei nomi principale (winmd)</value>
+  </data>
+  <data name="DisjointNamespaceRule_Text1" xml:space="preserve">
+    <value>Uno spazio dei nomi ('{1}') di un tipo pubblico non condivide alcun prefisso comune con altri spazi dei nomi ('{0}').</value>
+    <comment>{1} and {0} will be some user-defined keyword</comment>
+  </data>
+  <data name="DisjointNamespaceRule_Text2" xml:space="preserve">
+    <value>Tutti i tipi all'interno di un file di metadati Windows devono essere presenti in uno spazio dei nomi secondario dello spazio dei nomi implicito nel nome del file.</value>
+    <comment>"sub namespace" means a namespace defined within another namespace</comment>
+  </data>
+  <data name="GenericTypeRule_Brief" xml:space="preserve">
+    <value>La classe (o l'interfaccia) è generica</value>
+  </data>
+  <data name="GenericTypeRule_Text" xml:space="preserve">
+    <value>Il tipo {0} è generico, Windows Runtime tipi non possono essere generici</value>
+    <comment>{0} will be some user-defined keyword</comment>
+  </data>
+  <data name="JaggedArrayRule_Brief" xml:space="preserve">
+    <value>È stata trovata una firma della matrice con matrice di matrici, che non è un tipo WinRT valido</value>
+  </data>
+  <data name="JaggedArrayRule_Text" xml:space="preserve">
+    <value>Nella firma del metodo {0} è presente una matrice annidata di tipo {1}; non è possibile annidare matrici nella firma del metodo Windows Runtime</value>
+  </data>
+  <data name="MultiDimensionalArrayRule_Brief" xml:space="preserve">
+    <value>Trovata firma di matrice con matrice multidimensionale, che non è un tipo di Windows Runtime valido</value>
+  </data>
+  <data name="MultiDimensionalArrayRule_Text" xml:space="preserve">
+    <value>Nella firma del metodo '{0}' è presente una matrice multidimensionale di tipo '{1}'. le matrici nelle firme del metodo Windows Runtime devono essere unidimensionali</value>
+  </data>
+  <data name="MultipleDefaultOverloadAttribute_Brief" xml:space="preserve">
+    <value>È necessario designare come predefinito un solo overload</value>
+  </data>
+  <data name="MultipleDefaultOverloadAttribute_Text1" xml:space="preserve">
+    <value>Nella classe {2}: più overload di parametri {0} di '{1}' sono decorati con Windows.Foundation.Metadata.DefaultOverloadAttribute.</value>
+  </data>
+  <data name="MultipleDefaultOverloadAttribute_Text2" xml:space="preserve">
+    <value>L'attributo può essere applicato solo a un overload del metodo.</value>
+  </data>
+  <data name="NamespacesDifferByCase_Brief" xml:space="preserve">
+    <value>I nomi degli spazi dei nomi non possono differire solo per maiuscole e minuscole</value>
+  </data>
+  <data name="NamespacesDifferByCase_Text" xml:space="preserve">
+    <value>Sono stati trovati più spazi dei nomi con il nome '{0}'; i nomi degli spazi dei nomi non possono differire solo per la distinzione tra maiuscole e minuscole nel Windows Runtime</value>
+    <comment>{0} will be some user-defined keyword</comment>
+  </data>
+  <data name="NeedDefaultOverloadAttribute_Brief" xml:space="preserve">
+    <value>Più overload rilevati senza attributo DefaultOverload</value>
+  </data>
+  <data name="NeedDefaultOverloadAttribute_Text" xml:space="preserve">
+    <value>Nella classe {2}: per gli overload del parametro {0} di {1} deve essere specificato esattamente un metodo come overload predefinito decorandolo con Windows.Foundation.Metadata.DefaultOverloadAttribute</value>
+  </data>
+  <data name="NonArrayMarkedInOrOut_Brief" xml:space="preserve">
+    <value>Parametro (non tipo matrice) contrassegnato come InAttribute o OutAttribute</value>
+  </data>
+  <data name="NonArrayMarkedInOrOut_Text1" xml:space="preserve">
+    <value>Il metodo '{0}' ha un parametro '{1}' con System.Runtime.InteropServices.InAttribute o System.Runtime.InteropServices.OutAttribute.Windows Runtime non supporta il contrassegno di parametri con System.Runtime.InteropServices.InAttribute o System.Runtime.InteropServices.OutAttribute.</value>
+  </data>
+  <data name="NonArrayMarkedInOrOut_Text2" xml:space="preserve">
+    <value>Provare a rimuovere System.Runtime.InteropServices.InAttribute e sostituire System.Runtime.InteropServices.OutAttribute con il modificatore 'out'.</value>
+  </data>
+  <data name="NonArrayMarked_Brief" xml:space="preserve">
+    <value>Parametro non di matrice contrassegnato con ReadOnlyArray o WriteOnlyArray</value>
+  </data>
+  <data name="NonArrayMarked_Text1" xml:space="preserve">
+    <value>Il metodo '{0}' ha un parametro '{1}' che non è una matrice e che ha un attributo ReadOnlyArray o WriteOnlyArray.</value>
+  </data>
+  <data name="NonArrayMarked_Text2" xml:space="preserve">
+    <value>Windows Runtime non supporta il contrassegno di parametri non di matrice con ReadOnlyArray o WriteOnlyArray.</value>
+  </data>
+  <data name="NonWinRTInterface_Brief" xml:space="preserve">
+    <value>Interfaccia ereditata non valida</value>
+  </data>
+  <data name="NonWinRTInterface_Text" xml:space="preserve">
+    <value>Windows Runtime tipo di componente {0} non può implementare l'interfaccia {1}. L'interfaccia non è un'interfaccia Windows Runtime valida</value>
+  </data>
+  <data name="NoPublicTypesRule_Brief" xml:space="preserve">
+    <value>Nessun tipo pubblico definito</value>
+  </data>
+  <data name="NoPublicTypesRule_Text" xml:space="preserve">
+    <value>I componenti Windows Runtime devono avere almeno un tipo pubblico</value>
+  </data>
+  <data name="OperatorOverloadedRule_Brief" xml:space="preserve">
+    <value>Overload dell'operatore esposto</value>
+  </data>
+  <data name="OperatorOverloadedRule_Text" xml:space="preserve">
+    <value>{0} è un overload dell'operatore. I tipi gestiti non possono esporre overload di operatori nel Windows Runtime</value>
+  </data>
+  <data name="ParameterNamedValueRule_Brief" xml:space="preserve">
+    <value>Regola del valore denominato del parametro</value>
+  </data>
+  <data name="ParameterNamedValueRule_Text" xml:space="preserve">
+    <value>Il nome del parametro {1} nel metodo {0} è uguale al nome del parametro del valore restituito utilizzato nell'interoperabilità C#/WinRT generata; usa un nome di parametro diverso</value>
+  </data>
+  <data name="PrivateGetterRule_Brief" xml:space="preserve">
+    <value>La proprietà deve avere un getter pubblico</value>
+  </data>
+  <data name="PrivateGetterRule_Text" xml:space="preserve">
+    <value>La proprietà '{0}' non dispone di un metodo getter pubblico. Windows Runtime non supporta proprietà solo setter.</value>
+    <comment>{0} will be some user-defined keyword</comment>
+  </data>
+  <data name="RefParameterFound_Brief" xml:space="preserve">
+    <value>Parametro passato per riferimento</value>
+  </data>
+  <data name="RefParameterFound_Text" xml:space="preserve">
+    <value>Il metodo '{0}' ha un parametro '{1}' contrassegnato come 'ref'; parametri di riferimento non consentiti in Windows Runtime</value>
+  </data>
+  <data name="StructHasConstFieldRule_Brief" xml:space="preserve">
+    <value>Campo costante nello struct</value>
+  </data>
+  <data name="StructHasConstFieldRule_Text" xml:space="preserve">
+    <value>La struttura {0} contiene un campo costante. Le costanti possono essere visualizzate solo nelle enumerazioni Windows Runtime.</value>
+  </data>
+  <data name="StructHasInvalidFieldRule_Brief" xml:space="preserve">
+    <value>Campo non valido nello struct</value>
+  </data>
+  <data name="StructHasInvalidFieldRule_Text1" xml:space="preserve">
+    <value>La struttura {0} ha un campo di tipo {1}; {1} non è un tipo di campo Windows Runtime valido.</value>
+  </data>
+  <data name="StructHasInvalidFieldRule_Text2" xml:space="preserve">
+    <value>Ogni campo di una struttura Windows Runtime può essere solo UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Single, Double, Boolean, String, Enum o una struttura stessa.</value>
+  </data>
+  <data name="StructHasPrivateFieldRule_Brief" xml:space="preserve">
+    <value>Campo privato nello struct</value>
+  </data>
+  <data name="StructHasPrivateFieldRule_Text" xml:space="preserve">
+    <value>La struttura {0} contiene un campo non pubblico. Tutti i campi devono essere pubblici per le strutture Windows Runtime.</value>
+  </data>
+  <data name="StructWithNoFieldsRule_Brief" xml:space="preserve">
+    <value>Regola di struct vuota</value>
+  </data>
+  <data name="StructWithNoFieldsRule_Text" xml:space="preserve">
+    <value>La struttura {0} non contiene campi pubblici. Windows Runtime strutture devono contenere almeno un campo pubblico.</value>
+  </data>
+  <data name="UnimplementedInterface_Brief" xml:space="preserve">
+    <value>La classe implementa in modo errato un'interfaccia</value>
+  </data>
+  <data name="UnimplementedInterface_Text" xml:space="preserve">
+    <value>La classe '{0}' non implementa correttamente l'interfaccia '{1}' perché il '{2}' membro è mancante o non pubblico</value>
+  </data>
+  <data name="UnsealedClassRule_Brief" xml:space="preserve">
+    <value>Classe non eseguito</value>
+  </data>
+  <data name="UnsealedClassRule_Text" xml:space="preserve">
+    <value>L'esportazione di tipi non sealed non è supportata in CsWinRT. Contrassegnare il tipo {0} come sealed</value>
+    <comment>{0} will be some user-defined keyword</comment>
+  </data>
+  <data name="UnsupportedTypeRule_Brief" xml:space="preserve">
+    <value>Esposizione del tipo non supportato</value>
+  </data>
+  <data name="UnsupportedTypeRule_Text1" xml:space="preserve">
+    <value>Il '{0}' membro ha il tipo '{1}' nella relativa firma.</value>
+    <comment>{0} and {1} will be user-defined keywords</comment>
+  </data>
+  <data name="UnsupportedTypeRule_Text2" xml:space="preserve">
+    <value>Il tipo '{1}' non è un tipo di Windows Runtime valido.</value>
+    <comment>{1} will be some user-defined keyword</comment>
+  </data>
+  <data name="UnsupportedTypeRule_Text3" xml:space="preserve">
+    <value>Tuttavia, il tipo (o i relativi parametri generici) implementa interfacce valide Windows Runtime tipi.</value>
+  </data>
+  <data name="UnsupportedTypeRule_Text4" xml:space="preserve">
+    <value>Provare a modificare il tipo '{1} nella firma del membro in uno dei tipi seguenti da System.Collections.Generic: {2}.</value>
+    <comment>{1} and {2} will be keywords (types) from DotNet</comment>
+  </data>
+</root>
