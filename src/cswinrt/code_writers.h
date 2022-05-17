@@ -5973,7 +5973,7 @@ public static Guid PIID = Vftbl.PIID;
 %
 }
 )", 
-        is_exclusive_to(iface) ? "internal" : internal_accessibility(), 
+        (is_exclusive_to(iface) || is_projection_internal(iface)) ? "internal" : internal_accessibility(),
         bind<write_type_name>(iface, typedef_name_type::StaticAbiClass, false), 
         [&](writer& w) {
             if (!fast_abi_class_val.has_value() || (!fast_abi_class_val.value().contains_other_interface(iface) && !interfaces_equal(fast_abi_class_val.value().default_interface, iface))) {
