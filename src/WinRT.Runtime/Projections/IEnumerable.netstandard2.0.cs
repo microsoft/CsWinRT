@@ -454,7 +454,7 @@ namespace ABI.System.Collections.Generic
             public IEnumerator_Delegates.MoveNext_2 MoveNext_2;
             public IEnumerator_Delegates.GetMany_3 GetMany_3;
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IEnumerator<T>));
-            private static readonly Type get_Current_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
+            private static readonly Type get_Current_0_Type = IEnumerator_DelegatesGeneric.GetCurrentDelegateType(typeof(T), Marshaler<T>.AbiType);
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
@@ -674,5 +674,43 @@ namespace ABI.System.Collections.Generic
     {
         public unsafe delegate int MoveNext_2(IntPtr thisPtr, out byte __return_value__);
         public unsafe delegate int GetMany_3(IntPtr thisPtr, int __itemsSize, IntPtr items, out uint __return_value__);
+    }
+
+    internal static class IEnumerator_DelegatesGeneric
+    {
+        public unsafe delegate int GetCurrent_0_IntPtr(void* thisPtr, out IntPtr __return_value__);
+        public unsafe delegate int GetCurrent_0_Type(void* thisPtr, out ABI.System.Type __return_value__);
+
+        public static Type GetCurrentDelegateType(Type type, Type abiType)
+        {
+            if (type == typeof(String) ||
+                (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)))
+            {
+                return typeof(GetCurrent_0_IntPtr);
+            }
+            else if (type == typeof(Type))
+            {
+                return typeof(GetCurrent_0_Type);
+            }
+            else if (type.IsValueType)
+            {
+                return (Type)typeof(IEnumerator_DelegatesGeneric<>).MakeGenericType(new[] { abiType }).GetMethod("GetCurrentDelegateType").Invoke(null, Array.Empty<object>());
+//                return Expression.GetDelegateType(new Type[] { typeof(void*), abiType.MakeByRefType(), typeof(int) });
+            }
+            else
+            {
+                return typeof(GetCurrent_0_IntPtr);
+            }
+        }
+    }
+
+    internal static class IEnumerator_DelegatesGeneric<T>
+    {
+        public unsafe delegate int GetCurrent_0_ValueT(void* thisPtr, out T __return_value__);
+
+        public static Type GetCurrentDelegateType()
+        {
+            return typeof(GetCurrent_0_ValueT);
+        }
     }
 }
