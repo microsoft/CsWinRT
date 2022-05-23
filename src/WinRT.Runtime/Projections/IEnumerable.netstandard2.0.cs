@@ -455,6 +455,7 @@ namespace ABI.System.Collections.Generic
             public IEnumerator_Delegates.GetMany_3 GetMany_3;
             public static Guid PIID = GuidGenerator.CreateIID(typeof(IEnumerator<T>));
             private static readonly Type get_Current_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
+            private static readonly Type Do_Get_Current_0_Type = Expression.GetDelegateType(new Type[] { typeof(byte).MakeByRefType(), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
 
             internal unsafe Vftbl(IntPtr thisPtr)
             {
@@ -474,7 +475,7 @@ namespace ABI.System.Collections.Generic
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    get_Current_0 = global::System.Delegate.CreateDelegate(get_Current_0_Type, typeof(Vftbl).GetMethod("Do_Abi_get_Current_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
+                    get_Current_0 = global::System.Delegate.CreateDelegate(Do_Get_Current_0_Type, typeof(Vftbl).GetMethod("Do_Abi_get_Current_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
                     get_HasCurrent_1 = Do_Abi_get_HasCurrent_1,
                     MoveNext_2 = Do_Abi_MoveNext_2,
                     GetMany_3 = Do_Abi_GetMany_3
@@ -538,7 +539,7 @@ namespace ABI.System.Collections.Generic
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_get_Current_0<TAbi>(void* thisPtr, out TAbi __return_value__)
+            private static unsafe int Do_Abi_get_Current_0<TAbi>(ref byte thisPtr, out TAbi __return_value__)
             {
                 T ____return_value__ = default;
 
@@ -546,8 +547,11 @@ namespace ABI.System.Collections.Generic
 
                 try
                 {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr))._Current;
-                    __return_value__ = (TAbi)Marshaler<T>.FromManaged(____return_value__);
+                    fixed (void* ptr = &thisPtr)
+                    {
+                        ____return_value__ = FindAdapter(new IntPtr(ptr))._Current;
+                        __return_value__ = (TAbi)Marshaler<T>.FromManaged(____return_value__);
+                    }
                 }
                 catch (Exception __exception__)
                 {

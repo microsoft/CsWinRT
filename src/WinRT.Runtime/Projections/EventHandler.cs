@@ -23,14 +23,19 @@ namespace ABI.System
     {
         public static Guid PIID = GuidGenerator.CreateIID(typeof(global::System.EventHandler<T>));
         private static readonly global::System.Type Abi_Invoke_Type = Expression.GetDelegateType(new global::System.Type[] { typeof(void*), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int) });
-
+#if !NET
+        private static readonly global::System.Type Do_Abi_Invoke_Type = Expression.GetDelegateType(new global::System.Type[] { typeof(byte).MakeByRefType(), typeof(IntPtr), Marshaler<T>.AbiType, typeof(int) });
+#endif
         private static readonly global::WinRT.Interop.IDelegateVftbl AbiToProjectionVftable;
         public static readonly IntPtr AbiToProjectionVftablePtr;
 
         static EventHandler()
         {
-            AbiInvokeDelegate = global::System.Delegate.CreateDelegate(Abi_Invoke_Type, typeof(EventHandler<T>).GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(new global::System.Type[] { Marshaler<T>.AbiType })
-            );
+#if NET
+            AbiInvokeDelegate = global::System.Delegate.CreateDelegate(Abi_Invoke_Type, typeof(EventHandler<T>).GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(new global::System.Type[] { Marshaler<T>.AbiType }));
+#else
+            AbiInvokeDelegate = global::System.Delegate.CreateDelegate(Do_Abi_Invoke_Type, typeof(EventHandler<T>).GetMethod(nameof(Do_Abi_Invoke), BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(new global::System.Type[] { Marshaler<T>.AbiType }));
+#endif
             AbiToProjectionVftable = new global::WinRT.Interop.IDelegateVftbl
             {
                 IUnknownVftbl = global::WinRT.Interop.IUnknownVftbl.AbiToProjectionVftbl,
@@ -126,7 +131,11 @@ namespace ABI.System
 
         public static void DisposeAbi(IntPtr abi) => MarshalInterfaceHelper<global::System.EventHandler<T>>.DisposeAbi(abi);
 
+#if NET
         private static unsafe int Do_Abi_Invoke<TAbi>(void* thisPtr, IntPtr sender, TAbi args)
+#else
+        private static unsafe int Do_Abi_Invoke<TAbi>(ref byte thisPtr, IntPtr sender, TAbi args)
+#endif
         {
             try
             {
@@ -134,10 +143,13 @@ namespace ABI.System
                 var invoke = ComWrappersSupport.FindObject<global::System.EventHandler<T>>(new IntPtr(thisPtr));
                 invoke.Invoke(MarshalInspectable<object>.FromAbi(sender), Marshaler<T>.FromAbi(args));
 #else
-                global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(new IntPtr(thisPtr), (global::System.EventHandler<T> invoke) =>
+                fixed (void* ptr = &thisPtr)
                 {
-                    invoke.Invoke(MarshalInspectable<object>.FromAbi(sender), Marshaler<T>.FromAbi(args));
-                });
+                    global::WinRT.ComWrappersSupport.MarshalDelegateInvoke(new IntPtr(ptr), (global::System.EventHandler<T> invoke) =>
+                    {
+                        invoke.Invoke(MarshalInspectable<object>.FromAbi(sender), Marshaler<T>.FromAbi(args));
+                    });
+                }
 #endif
             }
             catch (global::System.Exception __exception__)

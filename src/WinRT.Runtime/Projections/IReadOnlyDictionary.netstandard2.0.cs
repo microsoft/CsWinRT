@@ -519,6 +519,9 @@ namespace ABI.System.Collections.Generic
             private static readonly Type Lookup_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, Marshaler<V>.AbiType.MakeByRefType(), typeof(int) });
             private static readonly Type HasKey_2_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<K>.AbiType, typeof(byte).MakeByRefType(), typeof(int) });
 
+            private static readonly Type Do_Lookup_0_Type = Expression.GetDelegateType(new Type[] { typeof(byte).MakeByRefType(), Marshaler<K>.AbiType, Marshaler<V>.AbiType.MakeByRefType(), typeof(int) });
+            private static readonly Type Do_HasKey_2_Type = Expression.GetDelegateType(new Type[] { typeof(byte).MakeByRefType(), Marshaler<K>.AbiType, typeof(byte).MakeByRefType(), typeof(int) });
+
             internal unsafe Vftbl(IntPtr thisPtr)
             {
                 var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
@@ -537,9 +540,9 @@ namespace ABI.System.Collections.Generic
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    Lookup_0 = global::System.Delegate.CreateDelegate(Lookup_0_Type, typeof(Vftbl).GetMethod("Do_Abi_Lookup_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<K>.AbiType, Marshaler<V>.AbiType)),
+                    Lookup_0 = global::System.Delegate.CreateDelegate(Do_Lookup_0_Type, typeof(Vftbl).GetMethod("Do_Abi_Lookup_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<K>.AbiType, Marshaler<V>.AbiType)),
                     get_Size_1 = Do_Abi_get_Size_1,
-                    HasKey_2 = global::System.Delegate.CreateDelegate(HasKey_2_Type, typeof(Vftbl).GetMethod("Do_Abi_HasKey_2", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<K>.AbiType)),
+                    HasKey_2 = global::System.Delegate.CreateDelegate(Do_HasKey_2_Type, typeof(Vftbl).GetMethod("Do_Abi_HasKey_2", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<K>.AbiType)),
                     Split_3 = Do_Abi_Split_3
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
@@ -561,7 +564,7 @@ namespace ABI.System.Collections.Generic
                 return _adapterTable.GetValue(__this, (dictionary) => new ToAbiHelper(dictionary));
             }
 
-            private static unsafe int Do_Abi_Lookup_0<KAbi, VAbi>(void* thisPtr, KAbi key, out VAbi __return_value__)
+            private static unsafe int Do_Abi_Lookup_0<KAbi, VAbi>(ref byte thisPtr, KAbi key, out VAbi __return_value__)
             {
                 V ____return_value__ = default;
 
@@ -569,8 +572,11 @@ namespace ABI.System.Collections.Generic
 
                 try
                 {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).Lookup(Marshaler<K>.FromAbi(key));
-                    __return_value__ = (VAbi)Marshaler<V>.FromManaged(____return_value__);
+                    fixed (void* ptr = &thisPtr)
+                    {
+                        ____return_value__ = FindAdapter(new IntPtr(ptr)).Lookup(Marshaler<K>.FromAbi(key));
+                        __return_value__ = (VAbi)Marshaler<V>.FromManaged(____return_value__);
+                    }
                 }
                 catch (Exception __exception__)
                 {
@@ -579,7 +585,7 @@ namespace ABI.System.Collections.Generic
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_HasKey_2<KAbi>(void* thisPtr, KAbi key, out byte __return_value__)
+            private static unsafe int Do_Abi_HasKey_2<KAbi>(ref byte thisPtr, KAbi key, out byte __return_value__)
             {
                 bool ____return_value__ = default;
 
@@ -587,8 +593,11 @@ namespace ABI.System.Collections.Generic
 
                 try
                 {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).HasKey(Marshaler<K>.FromAbi(key));
-                    __return_value__ = (byte)(____return_value__ ? 1 : 0);
+                    fixed (void* ptr = &thisPtr)
+                    {
+                        ____return_value__ = FindAdapter(new IntPtr(ptr)).HasKey(Marshaler<K>.FromAbi(key));
+                        __return_value__ = (byte)(____return_value__ ? 1 : 0);
+                    }
                 }
                 catch (Exception __exception__)
                 {

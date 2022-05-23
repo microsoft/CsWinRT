@@ -225,6 +225,9 @@ namespace ABI.System.Collections.Generic
             private static readonly Type GetAt_0_Type = Expression.GetDelegateType(new Type[] { typeof(void*), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
             private static readonly Type IndexOf_2_Type = Expression.GetDelegateType(new Type[] { typeof(void*), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
 
+            private static readonly Type Do_GetAt_0_Type = Expression.GetDelegateType(new Type[] { typeof(byte).MakeByRefType(), typeof(uint), Marshaler<T>.AbiType.MakeByRefType(), typeof(int) });
+            private static readonly Type Do_IndexOf_2_Type = Expression.GetDelegateType(new Type[] { typeof(byte).MakeByRefType(), Marshaler<T>.AbiType, typeof(uint).MakeByRefType(), typeof(byte).MakeByRefType(), typeof(int) });
+
             internal unsafe Vftbl(IntPtr thisPtr)
             {
                 var vftblPtr = Marshal.PtrToStructure<VftblPtr>(thisPtr);
@@ -243,9 +246,9 @@ namespace ABI.System.Collections.Generic
                 AbiToProjectionVftable = new Vftbl
                 {
                     IInspectableVftbl = global::WinRT.IInspectable.Vftbl.AbiToProjectionVftable,
-                    GetAt_0 = global::System.Delegate.CreateDelegate(GetAt_0_Type, typeof(Vftbl).GetMethod("Do_Abi_GetAt_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
+                    GetAt_0 = global::System.Delegate.CreateDelegate(Do_GetAt_0_Type, typeof(Vftbl).GetMethod("Do_Abi_GetAt_0", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
                     get_Size_1 = Do_Abi_get_Size_1,
-                    IndexOf_2 = global::System.Delegate.CreateDelegate(IndexOf_2_Type, typeof(Vftbl).GetMethod("Do_Abi_IndexOf_2", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
+                    IndexOf_2 = global::System.Delegate.CreateDelegate(Do_IndexOf_2_Type, typeof(Vftbl).GetMethod("Do_Abi_IndexOf_2", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod(Marshaler<T>.AbiType)),
                     GetMany_3 = Do_Abi_GetMany_3
                 };
                 var nativeVftbl = (IntPtr*)Marshal.AllocCoTaskMem(Marshal.SizeOf<global::WinRT.IInspectable.Vftbl>() + sizeof(IntPtr) * 4);
@@ -267,15 +270,17 @@ namespace ABI.System.Collections.Generic
                 return _adapterTable.GetValue(__this, (list) => new ToAbiHelper(list));
             }
 
-            private static unsafe int Do_Abi_GetAt_0<TAbi>(void* thisPtr, uint index, out TAbi __return_value__)
+            private static unsafe int Do_Abi_GetAt_0<TAbi>(ref byte thisPtr, uint index, out TAbi __return_value__)
             {
                 T ____return_value__ = default;
                 __return_value__ = default;
                 try
                 {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).GetAt(index);
-                    __return_value__ = (TAbi)Marshaler<T>.FromManaged(____return_value__);
-
+                    fixed (void* ptr = &thisPtr)
+                    {
+                        ____return_value__ = FindAdapter(new IntPtr(ptr)).GetAt(index);
+                        __return_value__ = (TAbi)Marshaler<T>.FromManaged(____return_value__);
+                    }
                 }
                 catch (Exception __exception__)
                 {
@@ -284,7 +289,7 @@ namespace ABI.System.Collections.Generic
                 }
                 return 0;
             }
-            private static unsafe int Do_Abi_IndexOf_2<TAbi>(void* thisPtr, TAbi value, out uint index, out byte __return_value__)
+            private static unsafe int Do_Abi_IndexOf_2<TAbi>(ref byte thisPtr, TAbi value, out uint index, out byte __return_value__)
             {
                 bool ____return_value__ = default;
 
@@ -294,10 +299,12 @@ namespace ABI.System.Collections.Generic
 
                 try
                 {
-                    ____return_value__ = FindAdapter(new IntPtr(thisPtr)).IndexOf(Marshaler<T>.FromAbi(value), out __index);
-                    index = __index;
-                    __return_value__ = (byte)(____return_value__ ? 1 : 0);
-
+                    fixed (void* ptr = &thisPtr)
+                    {
+                        ____return_value__ = FindAdapter(new IntPtr(ptr)).IndexOf(Marshaler<T>.FromAbi(value), out __index);
+                        index = __index;
+                        __return_value__ = (byte)(____return_value__ ? 1 : 0);
+                    }
                 }
                 catch (Exception __exception__)
                 {
