@@ -63,7 +63,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
 
-    <None Include="$(CsWinRTPath)hosting\$(CsWinRTHostPlatform)\native\en-us\WinRT.Host.dll.mui">
+    <None Condition="Exists('$(CsWinRTPath)hosting\$(CsWinRTAuthoring_Platform)\native\en-US\WinRT.Host.dll.mui')"
+          Include="$(CsWinRTPath)hosting\$(CsWinRTAuthoring_Platform)\native\en-US\WinRT.Host.dll.mui">
       <TargetPath>WinRT.Host.dll.mui</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -274,6 +275,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <PackagePath>lib\$(TargetFramework)</PackagePath>
       </Content>
 
+      <!-- Pack any XAML resource PRI files next to the .winmd -->
+      <Content Include="$(ProjectPriFullPath)">
+        <Pack>true</Pack>
+        <PackagePath>lib\$(TargetFramework)\winmd</PackagePath>
+      </Content>    
+
       <!-- Pack the WinMD we generated in its own folder, under the managed TFM folder -->
       <Content Include="$(TargetDir)$(AssemblyName).winmd">
         <Pack>true</Pack> 
@@ -308,7 +315,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <Pack>true</Pack>
         <PackagePath>hosting\x64\native\en-us</PackagePath>
       </Content>
-      <Content Condition="Exists('$(CsWinRTPath)hosting\x86\native\en-us\WinRT.Host.Host.dll.mui')" Include="$(CsWinRTPath)hosting\x86\native\en-us\WinRT.Host.dll.mui">
+      <Content Condition="Exists('$(CsWinRTPath)hosting\x86\native\en-us\WinRT.Host.dll.mui')" Include="$(CsWinRTPath)hosting\x86\native\en-us\WinRT.Host.dll.mui">
         <Pack>true</Pack>
         <PackagePath>hosting\x86\native\en-us</PackagePath>
       </Content>

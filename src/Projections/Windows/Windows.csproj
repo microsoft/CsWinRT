@@ -35,7 +35,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DefineConstants>TRACE;MANUAL_IUNKNOWN,UAC_VERSION_13</DefineConstants>
+    <DefineConstants>TRACE;MANUAL_IUNKNOWN,UAC_VERSION_15</DefineConstants>
   </PropertyGroup>
  
 </Project>
