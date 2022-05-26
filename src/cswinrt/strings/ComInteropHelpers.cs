@@ -426,6 +426,9 @@ namespace Windows.UI.ViewManagement
 namespace Windows.Graphics.Display
 {
 #if UAC_VERSION_15
+#if NET
+    [global::System.Runtime.Versioning.SupportedOSPlatform("Windows10.0.22621.0")]
+#endif
 #if EMBED
     internal
 #else
