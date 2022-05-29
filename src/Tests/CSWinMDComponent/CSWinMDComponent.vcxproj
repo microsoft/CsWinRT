@@ -7,8 +7,8 @@
     <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
     <MinimalCoreWin>true</MinimalCoreWin>
     <ProjectGuid>{d10dc47a-db45-491c-852e-2b2165f25f86}</ProjectGuid>
-    <ProjectName>CppComponent</ProjectName>
-    <RootNamespace>CppComponent</RootNamespace>
+    <ProjectName>CSWinMDComponent</ProjectName>
+    <RootNamespace>CSWinMDComponent</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <AppContainerApplication>true</AppContainerApplication>
@@ -98,7 +98,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <ModuleDefinitionFile>CppComponent.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>CSWinMDComponent.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -128,8 +128,8 @@
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="CppComponent.cs" />
-    <None Include="CppComponent.def" />
+    <None Include="CSWinMDComponent.cs" />
+    <None Include="CSWinMDComponent.def" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -139,7 +139,7 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <CSharpCppComponent Include="CppComponent.cs" />
+    <CSWinMDComponent Include="CSWinMDComponent.cs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <PropertyGroup Label="CSWinMD overrides">

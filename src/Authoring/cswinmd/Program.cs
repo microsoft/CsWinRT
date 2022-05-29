@@ -45,19 +45,23 @@ namespace Generator
         /// <param name="verbose">Verbose logging</param>
         /// <param name="nologo">Don't print logo</param>
         /// Uses System.CommandLine.Dragonfruit
+        #nullable enable
         public static void Main(string[] i, string o, string? sdkVersion, bool? verbose, bool? nologo)
         {
             if (!nologo.HasValue || !nologo.Value)
             {
                 Console.WriteLine($"CSWinMD {Assembly.GetExecutingAssembly().GetName().Version}");
             }
-            var outFolder = string.IsNullOrEmpty(o) ? Environment.GetEnvironmentVariable("TEMP") : o;
+            var outFolder = string.IsNullOrEmpty(o) ? Environment.GetEnvironmentVariable("TEMP")! : o!;
             try
             {
                 if (i.Length == 0)
                 {
                     Console.Error.WriteLine("No C# source files specified");
                     return;
+                } else if (i.Length > 1)
+                {
+                    throw new NotImplementedException("Compiling more than one file is not yet implemented");
                 }
 
                 string inputFile = i[0];
@@ -87,7 +91,7 @@ namespace Generator
                     Directory.CreateDirectory(outFolder);
                 }
                 var cp = new ConfigProvider();
-                var config = cp.GlobalOptions as ConfigOptions;
+                var config = (cp.GlobalOptions as ConfigOptions)!;
                 config.Values["build_property.AssemblyName"] = assemblyName;
                 config.Values["build_property.AssemblyVersion"] = "0.0.0.1";
                 config.Values["build_property.CsWinRTGeneratedFilesDir"] = outFolder;
@@ -106,12 +110,16 @@ namespace Generator
                 var res = d.GetRunResult();
                 if (!res.Diagnostics.IsEmpty)
                 {
+                    Console.WriteLine();
                     foreach (var v in res.Diagnostics)
                     {
                         Console.WriteLine(v.GetMessage());
                         Console.WriteLine($"\t\tIn {v.Location.GetLineSpan()}");
                     }
                     Console.WriteLine();
+                } else
+                {
+                    Console.WriteLine($" => {outFolder}\\{componentName}.winmd");
                 }
             }
             catch (Exception e)
@@ -130,23 +138,30 @@ namespace Generator
             }
         }
 
+
         private static bool IsVersion(string v)
         {
             return Version.TryParse(Path.GetFileName(v), out var _);
         }
+
+        [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "CSWinMD only runs on Windows")]
         private static string GetWindowsWinMdPath(string? sdkVersion)
         {
             using var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
             using var roots = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows Kits\Installed Roots");
-            var kitsRoot10 = (string)roots.GetValue("KitsRoot10");
+            var kitsRoot10 = (string)roots!.GetValue("KitsRoot10")!;
             var unionMetadata = Path.Combine(kitsRoot10, "UnionMetadata");
             if (sdkVersion == null)
             {
                 var dirs = Directory.EnumerateDirectories(unionMetadata);
-                sdkVersion = Path.GetFileName(dirs.Where(IsVersion).Last());
+                var versions = dirs.Where(IsVersion).ToList();
+                versions.Sort();
+                sdkVersion = Path.GetFileName(versions.Last());
             }
             var path = Path.Combine(kitsRoot10, "UnionMetadata", sdkVersion, "Windows.winmd");
             return path;
         }
+
+        #nullable restore
     }
 }

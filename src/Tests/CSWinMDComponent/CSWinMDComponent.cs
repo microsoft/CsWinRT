@@ -1,4 +1,4 @@
-namespace CppComponent
+namespace CSWinMDComponent
 {
     public enum E1
     {

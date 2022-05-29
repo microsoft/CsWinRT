@@ -19,8 +19,8 @@
     <ClInclude Include="Class1.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="CppComponent.def" />
-    <None Include="CppComponent.cs" />
+    <None Include="CSWinMDComponent.def" />
+    <None Include="CSWinMDComponent.cs" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

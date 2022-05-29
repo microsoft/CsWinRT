@@ -3,11 +3,12 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
+    <RollForward>Major</RollForward>
     <LangVersion>preview</LangVersion>
     <Authors>Microsoft Corporation</Authors>
     <Company>Microsoft Corporation</Company>
     <Product>C#/WinRT</Product>
-    <PackageId>CsWinMD</PackageId>
+    <PackageId>Microsoft.Windows.CsWinMD</PackageId>
 
     <FileVersion>$(VersionNumber)</FileVersion>
     <Version>$(VersionNumber)</Version>

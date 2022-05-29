@@ -2,7 +2,7 @@
 #include "Class1.g.h"
 #include <iostream>
 
-namespace winrt::CppComponent::implementation
+namespace winrt::CSWinMDComponent::implementation
 {
   struct Class1 : Class1T<Class1>
   {
@@ -13,7 +13,7 @@ namespace winrt::CppComponent::implementation
     }
   };
 }
-namespace winrt::CppComponent::factory_implementation
+namespace winrt::CSWinMDComponent::factory_implementation
 {
   struct Class1 : Class1T<Class1, implementation::Class1>
   {
