@@ -30,6 +30,19 @@ namespace WinRT
                     return customMapping;
                 }
 
+                var helperTypeAtribute = type.GetCustomAttribute<WindowsRuntimeHelperTypeAttribute>();
+                if (helperTypeAtribute is object)
+                {
+                    if (type.IsGenericType)
+                    {
+                        return helperTypeAtribute.HelperType.MakeGenericType(type.GetGenericArguments());
+                    }
+                    else
+                    {
+                        return helperTypeAtribute.HelperType;
+                    }
+                }
+
                 string fullTypeName = type.FullName;
                 string ccwTypePrefix = "ABI.Impl.";
                 if (fullTypeName.StartsWith(ccwTypePrefix, StringComparison.Ordinal))

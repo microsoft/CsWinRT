@@ -7,6 +7,7 @@ namespace Windows.Storage
     using Microsoft.Win32.SafeHandles;
     // Available in 14393 (RS1) and later
     [Guid("5CA296B2-2C25-4D22-B785-B885C8201E6A")]
+    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.Storage.IStorageItemHandleAccess))]
     internal interface IStorageItemHandleAccess
     {
         SafeFileHandle Create(
