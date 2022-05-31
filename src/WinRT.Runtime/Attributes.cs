@@ -65,4 +65,29 @@ namespace WinRT
 
         public string SourceMetadata { get; }
     }
+
+    /// <summary>
+    /// When applied to a type, it specifies the provided type, if one is provided, is the ABI helper type for this type.
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Delegate | AttributeTargets.Struct | AttributeTargets.Enum, Inherited = false, AllowMultiple = false)]
+#if EMBED
+    internal
+#else
+    public
+#endif
+    sealed class WindowsRuntimeHelperTypeAttribute : Attribute
+    {
+        // Indicates no associated helper types (i.e. blittable types).
+        public WindowsRuntimeHelperTypeAttribute()
+        {
+        }
+
+        public WindowsRuntimeHelperTypeAttribute(Type helperType)
+        {
+            HelperType = helperType;
+        }
+
+        public Type HelperType { get; }
+    }
 }

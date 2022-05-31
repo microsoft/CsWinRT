@@ -13,6 +13,7 @@ namespace Windows.Foundation
     }
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
+    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.Foundation.Point))]
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal
@@ -105,6 +106,7 @@ namespace Windows.Foundation
     }
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
+    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.Foundation.Rect))]
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal
@@ -429,6 +431,7 @@ namespace Windows.Foundation
     }
 
     [global::WinRT.WindowsRuntimeType("Windows.Foundation.FoundationContract")]
+    [global::WinRT.WindowsRuntimeHelperType(typeof(global::ABI.Windows.Foundation.Size))]
     [StructLayout(LayoutKind.Sequential)]
 #if EMBED
     internal
